@@ -5,9 +5,9 @@
    [clojure.test :refer [deftest is testing]]))
 
 
-(deftest test-add-hook
+(deftest test-add-app-hook
 
-  (testing "add-hook adds to :bread/hooks and sorts by priority"
+  (testing "add-app-hook adds to :bread/hooks and sorts by priority"
     ;; NOTE: :bread/a is completely arbitrary. Hooks can use any keyword you like.
     (let [app {:bread/hooks {:bread/a [{:bread/priority 0 :bread/f inc}
                                        {:bread/priority 2 :bread/f dec}]}}
@@ -16,26 +16,26 @@
       (is (= {:bread/hooks {:bread/a [{:bread/priority 0 :bread/f inc}
                                       {:bread/priority 1 :bread/f some-fn}
                                       {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-hook app :bread/a some-fn)))
+             (bread/add-app-hook app :bread/a some-fn)))
       ;; Insert with a specific priority.
       (is (= {:bread/hooks {:bread/a [{:bread/priority 0 :bread/f inc}
                                       {:bread/priority 1.2 :bread/f some-fn}
                                       {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-hook app :bread/a some-fn 1.2)))
+             (bread/add-app-hook app :bread/a some-fn 1.2)))
       ;; Allow specifying extra metadata about a given hook.
       (is (= {:bread/hooks {:bread/a [{:bread/priority 0 :bread/f inc}
                                       {:bread/priority 1 :bread/f some-fn :my/meta :whatevs}
                                       {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-hook app :bread/a some-fn 1 {:meta {:my/meta :whatevs}})))))
+             (bread/add-app-hook app :bread/a some-fn 1 {:meta {:my/meta :whatevs}})))))
 
-  (testing "add-hook supports using a custom comparator for sorting"
+  (testing "add-app-hook supports using a custom comparator for sorting"
     (let [app {:bread/hooks {:bread/custom-sorted [{:my/priority 0 :bread/f inc}
                                                    {:my/priority 2 :bread/f dec}]}}
           some-fn identity]
       (is (= {:bread/hooks {:bread/custom-sorted [{:my/priority 0 :bread/f inc}
                                                   {:my/priority 1 :bread/f some-fn}
                                                   {:my/priority 2 :bread/f dec}]}}
-             (bread/add-hook app :bread/custom-sorted some-fn 1 {:sort-by :my/priority})))
+             (bread/add-app-hook app :bread/custom-sorted some-fn 1 {:sort-by :my/priority})))
       (is (= {:bread/hooks {:bread/custom-sorted [{:my/priority 2 :bread/f dec}
                                                   ;; Without a non-keyword :sort-by, :bread/priority
                                                   ;; still gets populated and may or may not be used
@@ -43,11 +43,11 @@
                                                   {:my/priority 1 :bread/priority 123 :bread/f some-fn}
                                                   {:my/priority 0 :bread/f inc}]}}
              ;; Sort using a custom comparator that sorts in reverse order of :my/priority
-             (bread/add-hook app :bread/custom-sorted some-fn 123 {:sort-by (comp #(* -1 %) :my/priority)
+             (bread/add-app-hook app :bread/custom-sorted some-fn 123 {:sort-by (comp #(* -1 %) :my/priority)
                                                                    :meta {:my/priority 1}})))
       (is (thrown-with-msg?
            clojure.lang.ExceptionInfo #"Custom comparator threw exception: java.lang.NullPointerException:"
-           (bread/add-hook app :bread/custom-sorted some-fn 123 {:sort-by (comp #(* -1 %) :non-existent-key)})))))
+           (bread/add-app-hook app :bread/custom-sorted some-fn 123 {:sort-by (comp #(* -1 %) :non-existent-key)})))))
 
   (testing "add-effect adds to :bread.hook/effects hook"
     (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
@@ -75,18 +75,18 @@
                                                  {:bread/priority 2 :bread/f dec}]}}
              (bread/add-effect app identity 1.5 {:meta {:my/meta 123}})))))
 
-  (testing "add-hook-val wraps passed value in (constantly ,,,)"
-    (let [app (bread/add-hook-val {} :my/value 123)]
+  (testing "add-app-value-hook wraps passed value in (constantly ,,,)"
+    (let [app (bread/add-app-value-hook {} :my/value 123)]
       (is (= 123 (bread/hook-value app :my/value)))))
 
-  (testing "add-hook-val honors priority"
+  (testing "add-app-value-hook honors priority"
     (let [app (-> {}
-                  (bread/add-hook-val :my/value :NOPE)
-                  (bread/add-hook-val :my/value :overridden! 2))]
+                  (bread/add-app-value-hook :my/value :NOPE)
+                  (bread/add-app-value-hook :my/value :overridden! 2))]
       (is (= :overridden! (bread/hook-value app :my/value)))))
 
-  (testing "add-hook-val honors priority & options"
-    (let [app (bread/add-hook-val {} :my/value 123 1 {:meta {:my/meta :something}})]
+  (testing "add-app-value-hook honors priority & options"
+    (let [app (bread/add-app-value-hook {} :my/value 123 1 {:meta {:my/meta :something}})]
       (is (= :something
              (-> app (bread/hooks-for :my/value) first :my/meta))))))
 
@@ -121,7 +121,7 @@
 
   (testing "hook-value supports arbitrarily modifying app"
     (let [my-hook #(assoc % :my/config :configured!)
-          app (bread/add-hook {} :my/modify-config my-hook)]
+          app (bread/add-app-hook {} :my/modify-config my-hook)]
       (is (= :configured!
              (:my/config (bread/hook-value app :my/modify-config app))))
       ;; hook is a special case of hook-value that passes app
@@ -132,7 +132,7 @@
   (testing "hook supports arbitrary arities"
     (let [my-hook (fn [app & args]
                     (assoc app :my/extra args))
-          app (bread/add-hook {} :my/add-extra my-hook)]
+          app (bread/add-app-hook {} :my/add-extra my-hook)]
       (is (= [:one :two :three]
              (:my/extra (bread/hook app :my/add-extra :one :two :three))))))
 
@@ -142,13 +142,13 @@
           child-hook  (fn [app x]
                         (assoc app :my/added-in-child x))
           app (-> {}
-                  (bread/add-hook :parent-hook parent-hook)
-                  (bread/add-hook :child-hook child-hook))]
+                  (bread/add-app-hook :parent-hook parent-hook)
+                  (bread/add-app-hook :child-hook child-hook))]
       (is (= 123
              (:my/added-in-child (bread/hook app :parent-hook 123))))))
 
   (testing "hook-value supports arity 2"
-    (let [app (bread/add-hook {} :my/hook (constantly :my-value))]
+    (let [app (bread/add-app-hook {} :my/hook (constantly :my-value))]
       (is (= :my-value (bread/hook-value app :my/hook)))))
 
   (testing "hook-value is a noop with a non-existent hook"
@@ -229,9 +229,9 @@
 
 (deftest load-plugins-applies-all-plugin-fns
   (let [plugin-a (fn [app]
-                   (bread/add-hook app :plugin.a/inc inc))
+                   (bread/add-app-hook app :plugin.a/inc inc))
         plugin-b (fn [app]
-                   (bread/add-hook app :plugin.b/dec dec 2))
+                   (bread/add-app-hook app :plugin.b/dec dec 2))
         app (bread/load-plugins {:bread/plugins [plugin-a plugin-b]})]
     (is (= [{:bread/priority 1 :bread/f inc}]
            (bread/hooks-for app :plugin.a/inc)))
@@ -256,12 +256,6 @@
       (is (= app
              (:bread/app (bread/hook app :bread.hook/request {:url "/"}))))))
 
-  ; (testing "it loads config correctly"
-  ;   (let [configurator (fn [app]
-  ;                        (-> app
-  ;                            (bread/add-hook-val )))
-  ;         app (bread/with-plugins (bread/default-app) [])]))
-
   (testing "it runs default hooks in the right order"
     (let [state (atom {:num 3 :extra :stuff})
          effectful-plugin (fn [app]
@@ -284,15 +278,15 @@
                               ;; the router.
                                dispatcher (fn [app req]
                                             (let [route ((app->router app) req)]
-                                              (bread/add-hook app :bread.hook/render route)))]
+                                              (bread/add-app-hook app :bread.hook/render route)))]
                            (-> app
                               ;; Routing plugins typically let you define your own routes via
                               ;; the :bread.hook/routes hook.
-                               (bread/add-hook :bread.hook/routes (constantly my-routes))
+                               (bread/add-app-hook :bread.hook/routes (constantly my-routes))
                               ;; Dispatching the matched route is run in a separater step.
-                               (bread/add-hook :bread.hook/dispatch dispatcher))))
+                               (bread/add-app-hook :bread.hook/dispatch dispatcher))))
          excited-plugin (fn [app]
-                          (bread/add-hook app
+                          (bread/add-app-hook app
                                           :bread.hook/render
                                           (fn [response]
                                             (update response

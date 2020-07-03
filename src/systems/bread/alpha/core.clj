@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.core)
 
 
-(defn add-hook
+(defn add-app-hook
   ([app h f priority options]
    (update-in app
               [:bread/hooks h]
@@ -23,26 +23,26 @@
                                                :bread/f f})))))))
 
   ([app h f priority]
-   (add-hook app h f priority {}))
+   (add-app-hook app h f priority {}))
 
   ([app h f]
-   (add-hook app h f 1 {})))
+   (add-app-hook app h f 1 {})))
 
 (defn add-effect
   ([app f priority options]
-   (add-hook app :bread.hook/effects f priority options))
+   (add-app-hook app :bread.hook/effects f priority options))
   ([app f priority]
-   (add-hook app :bread.hook/effects f priority {}))
+   (add-app-hook app :bread.hook/effects f priority {}))
   ([app f]
-   (add-hook app :bread.hook/effects f 1 {})))
+   (add-app-hook app :bread.hook/effects f 1 {})))
 
-(defn add-hook-val
+(defn add-app-value-hook
   ([app h x priority options]
-   (add-hook app h (constantly x) priority options))
+   (add-app-hook app h (constantly x) priority options))
   ([app h x priority]
-   (add-hook app h (constantly x) priority))
+   (add-app-hook app h (constantly x) priority))
   ([app h x]
-   (add-hook app h (constantly x))))
+   (add-app-hook app h (constantly x))))
 
 (defn set-config [app k v & extra]
   (if (odd? (count extra))
@@ -112,10 +112,10 @@
 (defn default-app []
   (-> {:bread/plugins []
        :bread/hooks {:bread.hook/effects []}}
-      (add-hook :bread.hook/load-config (fn [app config]
+      (add-app-hook :bread.hook/load-config (fn [app config]
                                           (merge app config)))
-      (add-hook :bread.hook/load-plugins load-plugins)
-      (add-hook :bread.hook/request (fn [app req]
+      (add-app-hook :bread.hook/load-plugins load-plugins)
+      (add-app-hook :bread.hook/request (fn [app req]
                                       (assoc req :bread/app app)))))
 
 
