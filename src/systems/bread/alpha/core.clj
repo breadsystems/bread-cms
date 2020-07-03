@@ -70,7 +70,7 @@
   ([app h hook-fn]
    (remove-hook app h hook-fn 1)))
 
-(defn run-hook
+(defn hook-value
   ([app h x & args]
    (let [hooks (get-in app [:bread/hooks h])]
      (if (seq hooks)
@@ -82,16 +82,16 @@
        x)))
   
   ([app h]
-   (run-hook app h nil)))
+   (hook-value app h nil)))
 
-(defn filter-app [app h & args]
-  (apply run-hook app h app args))
+(defn hook [app h & args]
+  (apply hook-value app h app args))
 
 (defn config [app k]
   (get-in app [:bread/config k]))
 
 (defn apply-effects [app]
-  (run-hook app :bread.hook/effects app)
+  (hook-value app :bread.hook/effects app)
   app)
 
 (defn hooks [app]
@@ -120,12 +120,12 @@
 
 
 (defn run [app req]
-  (let [loaded (filter-app app :bread.hook/load-plugins)
-        req (filter-app app :bread.hook/request req)]
+  (let [loaded (hook app :bread.hook/load-plugins)
+        req (hook app :bread.hook/request req)]
     (-> loaded
-        (filter-app :bread.hook/dispatch req)
+        (hook :bread.hook/dispatch req)
         (apply-effects)
-        (run-hook :bread.hook/render req))))
+        (hook-value :bread.hook/render req))))
 
 
 (comment

@@ -77,13 +77,13 @@
 
   (testing "add-hook-val wraps passed value in (constantly ,,,)"
     (let [app (bread/add-hook-val {} :my/value 123)]
-      (is (= 123 (bread/run-hook app :my/value)))))
+      (is (= 123 (bread/hook-value app :my/value)))))
 
   (testing "add-hook-val honors priority"
     (let [app (-> {}
                   (bread/add-hook-val :my/value :NOPE)
                   (bread/add-hook-val :my/value :overridden! 2))]
-      (is (= :overridden! (bread/run-hook app :my/value)))))
+      (is (= :overridden! (bread/hook-value app :my/value)))))
 
   (testing "add-hook-val honors priority & options"
     (let [app (bread/add-hook-val {} :my/value 123 1 {:meta {:my/meta :something}})]
@@ -110,54 +110,54 @@
     (is (= app (bread/remove-hook app :bread/a inc 99)))))
 
 
-(deftest test-run-hook
+(deftest test-hook-value
 
-  (testing "run-hook returns the value returned from applying each hook"
+  (testing "hook-value returns the value returned from applying each hook"
     (let [app {:bread/hooks {:bread/decrement
                              [{:bread/f inc}
                               {:bread/f #(* 2 %)}
                               {:bread/f dec}]}}]
-      (is (= 7 (bread/run-hook app :bread/decrement 3)))))
+      (is (= 7 (bread/hook-value app :bread/decrement 3)))))
 
-  (testing "run-hook supports arbitrarily modifying app"
+  (testing "hook-value supports arbitrarily modifying app"
     (let [my-hook #(assoc % :my/config :configured!)
           app (bread/add-hook {} :my/modify-config my-hook)]
       (is (= :configured!
-             (:my/config (bread/run-hook app :my/modify-config app))))
-      ;; filter-app is a special case of run-hook that passes app
+             (:my/config (bread/hook-value app :my/modify-config app))))
+      ;; hook is a special case of hook-value that passes app
       ;; as the first arg to the callback.
       (is (= :configured!
-             (:my/config (bread/filter-app app :my/modify-config))))))
+             (:my/config (bread/hook app :my/modify-config))))))
 
-  (testing "filter-app supports arbitrary arities"
+  (testing "hook supports arbitrary arities"
     (let [my-hook (fn [app & args]
                     (assoc app :my/extra args))
           app (bread/add-hook {} :my/add-extra my-hook)]
       (is (= [:one :two :three]
-             (:my/extra (bread/filter-app app :my/add-extra :one :two :three))))))
+             (:my/extra (bread/hook app :my/add-extra :one :two :three))))))
 
   (testing "hooks support recursion"
     (let [parent-hook (fn [app x]
-                        (bread/filter-app app :child-hook x))
+                        (bread/hook app :child-hook x))
           child-hook  (fn [app x]
                         (assoc app :my/added-in-child x))
           app (-> {}
                   (bread/add-hook :parent-hook parent-hook)
                   (bread/add-hook :child-hook child-hook))]
       (is (= 123
-             (:my/added-in-child (bread/filter-app app :parent-hook 123))))))
+             (:my/added-in-child (bread/hook app :parent-hook 123))))))
 
-  (testing "run-hook supports arity 2"
+  (testing "hook-value supports arity 2"
     (let [app (bread/add-hook {} :my/hook (constantly :my-value))]
-      (is (= :my-value (bread/run-hook app :my/hook)))))
+      (is (= :my-value (bread/hook-value app :my/hook)))))
 
-  (testing "run-hook is a noop with a non-existent hook"
+  (testing "hook-value is a noop with a non-existent hook"
     (let [app {:bread/hooks {}}]
-      (is (= 123 (bread/run-hook app :non-existent-hook 123)))))
+      (is (= 123 (bread/hook-value app :non-existent-hook 123)))))
 
-  (testing "run-hook is a noop with an empty chain of hooks"
+  (testing "hook-value is a noop with an empty chain of hooks"
     (let [app {:bread/hooks {:empty-hook []}}]
-      (is (= 123 (bread/run-hook app :empty-hook 123)))))
+      (is (= 123 (bread/hook-value app :empty-hook 123)))))
 
   (testing "apply-effects runs the :bread.hook/effects hook"
     (let [state (atom {:a 0 :b 1})
@@ -254,7 +254,7 @@
   (testing "it enriches the request with the app data itself"
     (let [app (bread/default-app)]
       (is (= app
-             (:bread/app (bread/filter-app app :bread.hook/request {:url "/"}))))))
+             (:bread/app (bread/hook app :bread.hook/request {:url "/"}))))))
 
   ; (testing "it loads config correctly"
   ;   (let [configurator (fn [app]
@@ -275,7 +275,7 @@
                     "/hello" hello-handler}
          router-plugin (fn [app]
                          (let [app->router (fn [app]
-                                             (let [routes (bread/run-hook app :bread.hook/routes nil)]
+                                             (let [routes (bread/hook-value app :bread.hook/routes nil)]
                                               ;; A router is function that matches a request to a route,
                                               ;; and presumably returns and handler.
                                                (fn [req]
