@@ -49,7 +49,7 @@
            clojure.lang.ExceptionInfo #"Custom comparator threw exception: java.lang.NullPointerException:"
            (bread/add-app-hook app :bread/custom-sorted some-fn 123 {:sort-by (comp #(* -1 %) :non-existent-key)})))))
 
-  (testing "add-effect adds to :bread.hook/effects hook"
+  (testing "add-app-effect adds to :bread.hook/effects hook"
     (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
                                                   {:bread/priority 2 :bread/f dec}]
                              :bread.hook/fake [:misc :fake :hooks]}}]
@@ -57,155 +57,131 @@
                                                  {:bread/priority 1 :bread/f identity}
                                                  {:bread/priority 2 :bread/f dec}]
                             :bread.hook/fake [:misc :fake :hooks]}}
-             (bread/add-effect app identity)))))
+             (bread/add-app-effect app identity)))))
 
-  (testing "add-effect honors priority"
+  (testing "add-app-effect honors priority"
     (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
                                                   {:bread/priority 2 :bread/f dec}]}}]
       (is (= {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
                                                  {:bread/priority 1.5 :bread/f identity}
                                                  {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-effect app identity 1.5)))))
+             (bread/add-app-effect app identity 1.5)))))
 
-  (testing "add-effect honors priority & options"
+  (testing "add-app-effect honors priority & options"
     (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
                                                   {:bread/priority 2 :bread/f dec}]}}]
       (is (= {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
                                                  {:bread/priority 1.5 :bread/f identity :my/meta 123}
                                                  {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-effect app identity 1.5 {:meta {:my/meta 123}})))))
+             (bread/add-app-effect app identity 1.5 {:meta {:my/meta 123}})))))
 
   (testing "add-app-value-hook wraps passed value in (constantly ,,,)"
     (let [app (bread/add-app-value-hook {} :my/value 123)]
-      (is (= 123 (bread/hook-value app :my/value)))))
+      (is (= 123 (bread/app-value-hook app :my/value)))))
 
   (testing "add-app-value-hook honors priority"
     (let [app (-> {}
                   (bread/add-app-value-hook :my/value :NOPE)
                   (bread/add-app-value-hook :my/value :overridden! 2))]
-      (is (= :overridden! (bread/hook-value app :my/value)))))
+      (is (= :overridden! (bread/app-value-hook app :my/value)))))
 
   (testing "add-app-value-hook honors priority & options"
     (let [app (bread/add-app-value-hook {} :my/value 123 1 {:meta {:my/meta :something}})]
       (is (= :something
-             (-> app (bread/hooks-for :my/value) first :my/meta))))))
+             (-> app (bread/app->hooks-for :my/value) first :my/meta))))))
 
-(deftest remove-hook-removes-the-fn-from-app-hooks
+(deftest remove-app-hook-removes-the-fn-from-app-hooks
   (let [app {:bread/hooks {:bread/a [{:bread/priority 1 :bread/f inc}
                                      {:bread/priority 2 :bread/f dec}
                                      {:bread/priority 1 :bread/f identity}]}}]
     ;; Match on priority by default.
     (is (= {:bread/hooks {:bread/a [{:bread/priority 2 :bread/f dec}
                                     {:bread/priority 1 :bread/f identity}]}}
-           (bread/remove-hook app :bread/a inc)))
+           (bread/remove-app-hook app :bread/a inc)))
     ;; Match on exact priority.
     (is (= {:bread/hooks {:bread/a [{:bread/priority 1 :bread/f inc}
                                     {:bread/priority 1 :bread/f identity}]}}
-           (bread/remove-hook app :bread/a dec 2)))
+           (bread/remove-app-hook app :bread/a dec 2)))
     ;; Noop on non-existent hook.
-    (is (= app (bread/remove-hook app :non-existent identity)))
+    (is (= app (bread/remove-app-hook app :non-existent identity)))
     ;; No change when we can't find a matching fn.
-    (is (= app (bread/remove-hook app :bread/a +)))
+    (is (= app (bread/remove-app-hook app :bread/a +)))
     ;; No change when we can't find a matching fn/priority
-    (is (= app (bread/remove-hook app :bread/a inc 99)))))
+    (is (= app (bread/remove-app-hook app :bread/a inc 99)))))
 
 
-(deftest test-hook-value
+(deftest test-app-value-hook
 
-  (testing "hook-value returns the value returned from applying each hook"
+  (testing "app-value-hook returns the value returned from applying each hook"
     (let [app {:bread/hooks {:bread/decrement
                              [{:bread/f inc}
                               {:bread/f #(* 2 %)}
                               {:bread/f dec}]}}]
-      (is (= 7 (bread/hook-value app :bread/decrement 3)))))
+      (is (= 7 (bread/app-value-hook app :bread/decrement 3)))))
 
-  (testing "hook-value supports arbitrarily modifying app"
+  (testing "app-value-hook supports arbitrarily modifying app"
     (let [my-hook #(assoc % :my/config :configured!)
           app (bread/add-app-hook {} :my/modify-config my-hook)]
       (is (= :configured!
-             (:my/config (bread/hook-value app :my/modify-config app))))
-      ;; hook is a special case of hook-value that passes app
+             (:my/config (bread/app-value-hook app :my/modify-config app))))
+      ;; hook is a special case of app-value-hook that passes app
       ;; as the first arg to the callback.
       (is (= :configured!
-             (:my/config (bread/hook app :my/modify-config))))))
+             (:my/config (bread/app-hook app :my/modify-config))))))
 
   (testing "hook supports arbitrary arities"
     (let [my-hook (fn [app & args]
                     (assoc app :my/extra args))
           app (bread/add-app-hook {} :my/add-extra my-hook)]
       (is (= [:one :two :three]
-             (:my/extra (bread/hook app :my/add-extra :one :two :three))))))
+             (:my/extra (bread/app-hook app :my/add-extra :one :two :three))))))
 
   (testing "hooks support recursion"
     (let [parent-hook (fn [app x]
-                        (bread/hook app :child-hook x))
+                        (bread/app-hook app :child-hook x))
           child-hook  (fn [app x]
                         (assoc app :my/added-in-child x))
           app (-> {}
                   (bread/add-app-hook :parent-hook parent-hook)
                   (bread/add-app-hook :child-hook child-hook))]
       (is (= 123
-             (:my/added-in-child (bread/hook app :parent-hook 123))))))
+             (:my/added-in-child (bread/app-hook app :parent-hook 123))))))
 
-  (testing "hook-value supports arity 2"
+  (testing "app-value-hook supports arity 2"
     (let [app (bread/add-app-hook {} :my/hook (constantly :my-value))]
-      (is (= :my-value (bread/hook-value app :my/hook)))))
+      (is (= :my-value (bread/app-value-hook app :my/hook)))))
 
-  (testing "hook-value is a noop with a non-existent hook"
+  (testing "app-value-hook is a noop with a non-existent hook"
     (let [app {:bread/hooks {}}]
-      (is (= 123 (bread/hook-value app :non-existent-hook 123)))))
+      (is (= 123 (bread/app-value-hook app :non-existent-hook 123)))))
 
-  (testing "hook-value is a noop with an empty chain of hooks"
+  (testing "app-value-hook is a noop with an empty chain of hooks"
     (let [app {:bread/hooks {:empty-hook []}}]
-      (is (= 123 (bread/hook-value app :empty-hook 123)))))
-
-  (testing "apply-effects runs the :bread.hook/effects hook"
-    (let [state (atom {:a 0 :b 1})
-          app (-> {}
-                  ;; Effects are (presumably) effectful...
-                  (bread/add-effect (fn [_app] (swap! state update :a inc)))
-                  ;; 1 × 2 = 2
-                  (bread/add-effect (fn [_app] (swap! state update :b * 2)))
-                  ;; 2 - 3 = -1
-                  (bread/add-effect (fn [_app] (swap! state update :b - 3)) 2))]
-      (bread/apply-effects app)
-      (is (= {:a 1 :b -1}
-             @state))))
-
-  (testing "effects receive app as their sole argument"
-    (let [state (atom {:num 1 :extra-stuff :xyz})
-          app (-> {:start 3}
-                  ;; Here we start with 3, i.e. (:start app)
-                  ;; 2 × 3 = 6
-                  (bread/add-effect (fn [{:keys [start]}]
-                                      (swap! state assoc :num (* 2 start))))
-                  ;; 6 - 3 = 3
-                  (bread/add-effect (fn [_app] (swap! state update :num - 3)) 2))]
-      (bread/apply-effects app)
-      (is (= {:num 3 :extra-stuff :xyz} @state)))))
+      (is (= 123 (bread/app-value-hook app :empty-hook 123))))))
 
 
-(deftest set-config-adds-values-in-config-map
+
+(deftest set-app-config-adds-values-in-config-map
 
   (testing "with a single key/value pair"
     (let [app (-> {}
-                  (bread/set-config :my/config :NOPE)
-                  (bread/set-config :my/config 456))]
-      (is (= 456 (bread/config app :my/config)))))
+                  (bread/set-app-config :my/config :NOPE)
+                  (bread/set-app-config :my/config 456))]
+      (is (= 456 (bread/app->config app :my/config)))))
 
   (testing "with multiple key/value pairs"
     (let [app (-> {}
-                  (bread/set-config :my/config 456
+                  (bread/set-app-config :my/config 456
                                     :other/config :xyz
                                     :special/config :extra-special))]
-      (is (= 456 (bread/config app :my/config)))
-      (is (= :xyz (bread/config app :other/config)))
-      (is (= :extra-special (bread/config app :special/config)))))
+      (is (= 456 (bread/app->config app :my/config)))
+      (is (= :xyz (bread/app->config app :other/config)))
+      (is (= :extra-special (bread/app->config app :special/config)))))
   
   (testing "with an odd number of extra args"
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"set-config expects an even number of extra args, 3 extra args passed."
-                          (bread/set-config {} :a :a :b :b :c)))))
+                          #"set-app-config expects an even number of extra args, 3 extra args passed."
+                          (bread/set-app-config {} :a :a :b :b :c)))))
 
 
 (deftest hooks-gives-data-about-added-hooks
@@ -216,27 +192,27 @@
     (is (= {:bread/x [{:bread/priority 2 :bread/f dec}
                       {:bread/priority 1 :bread/f my-fn}
                       {:bread/priority 0 :bread/f inc}]}
-           (bread/hooks app)))))
+           (bread/app->hooks app)))))
 
 
-(deftest hooks-for-gives-data-about-a-specific-hook
+(deftest app->hooks-for-gives-data-about-a-specific-hook
   (let [app {:bread/hooks {:bread/x [{:bread/priority 2 :bread/f dec}
                                      {:bread/priority 0 :bread/f inc}]}}]
     (is (= [{:bread/priority 2 :bread/f dec}
             {:bread/priority 0 :bread/f inc}]
-           (bread/hooks-for app :bread/x)))))
+           (bread/app->hooks-for app :bread/x)))))
 
 
-(deftest load-plugins-applies-all-plugin-fns
+(deftest load-app-plugins-applies-all-plugin-fns
   (let [plugin-a (fn [app]
                    (bread/add-app-hook app :plugin.a/inc inc))
         plugin-b (fn [app]
                    (bread/add-app-hook app :plugin.b/dec dec 2))
-        app (bread/load-plugins {:bread/plugins [plugin-a plugin-b]})]
+        app (bread/load-app-plugins {:bread/plugins [plugin-a plugin-b]})]
     (is (= [{:bread/priority 1 :bread/f inc}]
-           (bread/hooks-for app :plugin.a/inc)))
+           (bread/app->hooks-for app :plugin.a/inc)))
     (is (= [{:bread/priority 2 :bread/f dec}]
-           (bread/hooks-for app :plugin.b/dec)))))
+           (bread/app->hooks-for app :plugin.b/dec)))))
 
 
 (deftest with-plugins-adds-to-bread-plugins
@@ -249,17 +225,17 @@
            (:bread/plugins app)))))
 
 
-(deftest run-runs-the-entire-app-lifecycle
+#_(deftest run-runs-the-entire-app-lifecycle
 
   (testing "it enriches the request with the app data itself"
     (let [app (bread/default-app)]
       (is (= app
-             (:bread/app (bread/hook app :bread.hook/request {:url "/"}))))))
+             (:bread/app (bread/app-hook app :bread.hook/request {:url "/"}))))))
 
   (testing "it runs default hooks in the right order"
     (let [state (atom {:num 3 :extra :stuff})
          effectful-plugin (fn [app]
-                            (bread/add-effect app (fn [_app]
+                            (bread/add-app-effect app (fn [_app]
                                                     (swap! state update :num * 3))))
          hello-handler (fn [req]
                          (println "hello!!")
@@ -269,7 +245,7 @@
                     "/hello" hello-handler}
          router-plugin (fn [app]
                          (let [app->router (fn [app]
-                                             (let [routes (bread/hook-value app :bread.hook/routes nil)]
+                                             (let [routes (bread/app-value-hook app :bread.hook/routes nil)]
                                               ;; A router is function that matches a request to a route,
                                               ;; and presumably returns and handler.
                                                (fn [req]
