@@ -1,6 +1,6 @@
-(ns bread.core-test
+(ns systems.bread.core-test
   (:require
-   [bread.core :as bread]
+   [systems.bread.alpha.core :as bread]
    [clojure.string :refer [upper-case]]
    [clojure.test :refer [deftest is testing]]))
 
