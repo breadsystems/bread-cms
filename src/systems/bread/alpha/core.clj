@@ -1,6 +1,77 @@
 (ns systems.bread.alpha.core)
 
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;    APP HELPER FUNCTIONS    ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Helper functions for generating and working with app data directly.
+;;
+
+(defn load-app-plugins [app]
+  (let [plugins (:bread/plugins app [])
+        run-plugin (fn [app plugin]
+                     (plugin app))]
+    (reduce run-plugin app plugins)))
+
+(defn with-plugins [app plugins]
+  (update app :bread/plugins concat plugins))
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;      CONFIG FUNCTIONS      ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Functions for working with config data, in either requests or directly in app maps.
+;;
+
+(defn app->config [app k]
+  (get-in app [:bread/config k]))
+
+(defn req->config [req k]
+  (get-in req [:bread/app :bread/config k]))
+
+(defn set-app-config [app k v & extra]
+  (if (odd? (count extra))
+    (throw (ex-info (str "set-app-config expects an even number of extra args, "
+                         (count extra) " extra args passed.")
+                    {:extra-args extra}))
+    (update app :bread/config #(apply assoc % k v extra))))
+
+(defn set-config [req k v & extra]
+  (when (odd? (count extra))
+    (throw (ex-info (str "set-config expects an even number of extra args, "
+                         (count extra) " extra args passed.")
+                    {:extra-args extra})))
+  (apply update req :bread/app set-app-config k v extra))
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;     APP HOOK FUNCTIONS     ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; These fns work on app maps directly, rather than on requests.
+;; Used less commonly than request hooks fns, since most of the time you will be dealing with
+;; requests directly. Request hook fns defer to these fns under the hood.
+;;
+
+(defn app->hooks [app]
+  (:bread/hooks app))
+
+(defn app->hooks-for [app h]
+  (get-in app [:bread/hooks h]))
+
 (defn add-app-hook
   ([app h f priority options]
    (update-in app
@@ -44,13 +115,6 @@
   ([app h x]
    (add-app-hook app h (constantly x))))
 
-(defn set-app-config [app k v & extra]
-  (if (odd? (count extra))
-    (throw (ex-info (str "set-app-config expects an even number of extra args, "
-                         (count extra) " extra args passed.")
-                    {}))
-    (update app :bread/config #(apply assoc % k v extra))))
-
 (defn remove-app-hook
   ([app h hook-fn hook-pri]
    (if (get-in app [:bread/hooks h])
@@ -70,7 +134,9 @@
   ([app h hook-fn]
    (remove-app-hook app h hook-fn 1)))
 
-(defn app-value-hook
+;; TODO remove-app-value-hook
+
+(defn app-hook->
   ([app h x & args]
    (let [hooks (get-in app [:bread/hooks h])]
      (if (seq hooks)
@@ -82,52 +148,67 @@
        x)))
   
   ([app h]
-   (app-value-hook app h nil)))
+   (app-hook-> app h nil)))
 
 (defn app-hook [app h & args]
-  (apply app-value-hook app h app args))
-
-(defn app->config [app k]
-  (get-in app [:bread/config k]))
-
-(defn app->hooks [app]
-  (:bread/hooks app))
-
-(defn app->hooks-for [app h]
-  (get-in app [:bread/hooks h]))
-
-(defn load-app-plugins [app]
-  (let [plugins (:bread/plugins app [])
-        run-plugin (fn [app plugin]
-                     (plugin app))]
-    (reduce run-plugin app plugins)))
-
-(defn with-plugins [app plugins]
-  (update app :bread/plugins concat plugins))
-
-(defn default-app []
-  (-> {:bread/plugins []
-       :bread/hooks {:bread.hook/effects []}}
-      (add-app-hook :bread.hook/load-config (fn [app config]
-                                          (merge app config)))
-      (add-app-hook :bread.hook/load-plugins load-app-plugins)
-      (add-app-hook :bread.hook/request (fn [app req]
-                                      (assoc req :bread/app app)))))
+  (apply app-hook-> app h app args))
 
 
-(defn run [app req]
-  (let [loaded (app-hook app :bread.hook/load-plugins)
-        req (app-hook app :bread.hook/request req)]
-    (-> loaded
-        (app-hook :bread.hook/dispatch req)
-        (app-value-hook :bread.hook/render req))))
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;   REQUEST HOOK FUNCTIONS   ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; The main API for working with request hooks directly.
+;; Defers to the app hook API under the hood.
+;;
+
+(defn req->hooks [req]
+  (get-in req [:bread/app :bread/hooks]))
+
+(defn req->hooks-for [req h]
+  (get-in req [:bread/app :bread/hooks h]))
+
+(defn add-hook [req h f & args]
+  (apply update req :bread/app add-app-hook h f args))
+
+(defn remove-hook [req h f & args]
+  (apply update req :bread/app remove-app-hook h f args))
+
+(defn add-effect [req f & args]
+  (apply update req :bread/app add-app-effect f args))
+
+(defn add-value-hook [req h v & args]
+  (apply update req :bread/app add-app-value-hook h v args))
+
+(defn hook-> [{:bread/keys [app]} h & args]
+  (apply app-hook-> app h args))
+
+(defn hook [req h & args]
+  (apply update req :bread/app app-hook h args))
 
 
 (comment
-  (let [app {:bread/hooks [#:bread{:priority 1 :f #(* 2 %)}
-                           #:bread{:priority 2 :f inc}
-                           #:bread{:priority 0 :f dec}]}]
-    (app->hooks app))
+  (let [req (-> {:bread/app {:n 3}}
+                (add-hook :my/value #(update % :n inc) 0)
+                (add-hook :my/value #(update % :n * 2) 1)
+                (add-hook :my/value #(update % :n dec) 2))]
+    (-> req (hook :my/value) :bread/app :n))
 
-  (let [{:bread.db/keys [as-of]} {:bread.db/as-of "2020-01-01"}]
-    as-of))
+  (let [req (-> {}
+                (add-hook :my/value inc 0)
+                (add-hook :my/value #(* 2 %) 1)
+                (add-hook :my/value dec 2))]
+    (hook-> req :my/value 3))
+
+  (let [req (add-hook {} :my/value inc 0)]
+    (try
+      (hook req :my/value 3)
+      (catch clojure.lang.ExceptionInfo e
+        [(.getMessage e) (ex-data e)])))
+
+  ;;
+  )
