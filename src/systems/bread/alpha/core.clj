@@ -11,6 +11,20 @@
 ;; Helper functions for generating and working with app data directly.
 ;;
 
+(declare add-app-hook)
+
+(defn- enrich-request [req app]
+  (assoc req :bread/app app))
+
+(defn app
+  ([{:keys [plugins]}]
+   (-> {:bread/plugins (or plugins [])
+        :bread/hooks   {}
+        :bread/config  {}}
+       (add-app-hook :bread.hook/enrich-request enrich-request)))
+  ([]
+   (app {})))
+
 (defn load-app-plugins [app]
   (let [plugins (:bread/plugins app [])
         run-plugin (fn [app plugin]

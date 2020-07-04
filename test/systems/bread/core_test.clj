@@ -381,14 +381,21 @@
            (bread/hook req :my/hook))))))
 
 
+(deftest app-populates-itself-with-passed-data
+  (let [app (bread/app {:plugins [:some :fake :plugins]})]
+    (is (= [:some :fake :plugins]
+           (:bread/plugins app)))))
+
+
 #_(deftest run-runs-the-entire-app-lifecycle
 
   (testing "it enriches the request with the app data itself"
-    (let [app (bread/default-app)]
+    (let [app (bread/app)
+          req {:url "/"}]
       (is (= app
-             (:bread/app (bread/app-hook app :bread.hook/request {:url "/"}))))))
+             (:bread/app (bread/hook-> req :bread.hook/enrich-request app))))))
 
-  (testing "it runs default hooks in the right order"
+  #_(testing "it runs default hooks in the right order"
     (let [state (atom {:num 3 :extra :stuff})
          effectful-plugin (fn [app]
                             (bread/add-app-effect app (fn [_app]
