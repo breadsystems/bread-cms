@@ -202,11 +202,29 @@
 (defn add-value-hook [req h v & args]
   (apply update req :bread/app add-app-value-hook h v args))
 
-(defn hook-> [{:bread/keys [app]} h & args]
-  (apply app-hook-> app h args))
+; (defn hook-> [{:bread/keys [app]} h & args]
+;   (apply app-hook-> app h args))
+
+(defn hook->
+  ([req h x & args]
+   (let [hooks (get-in req [:bread/app :bread/hooks h])]
+     (if (seq hooks)
+       (try
+         (loop [x x
+               [{:bread/keys [f]} & fs] hooks]
+          (if (seq fs)
+            (recur (apply f x args) fs)
+            (apply f x args)))
+         (catch java.lang.Exception e
+           (throw (ex-info (str h " hook threw an exception: " e)
+                           {:hook h :value x :extra-args args :app req}))))
+       x)))
+  
+  ([req h]
+   (hook-> req h nil)))
 
 (defn hook [req h & args]
-  (apply update req :bread/app app-hook h args))
+  (apply hook-> req h req args))
 
 
 (comment

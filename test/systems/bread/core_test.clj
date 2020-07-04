@@ -358,20 +358,20 @@
 
 (deftest test-hook->
   
-  (testing "it runs the value hook on the app inside the request"
-    (let [req {:bread/app {:bread/hooks {:my/hook [{:bread/f inc}
-                                                   {:bread/f #(* 2 %)}
-                                                   {:bread/f dec}]}}}]
-      (is (= 7 (bread/hook-> req :my/hook 3))))))
+  (testing "it runs the threaded hook on the request"
+    (let [req {:bread/app {:bread/hooks {:my/value [{:bread/f inc}
+                                                    {:bread/f #(* 2 %)}
+                                                    {:bread/f dec}]}}}]
+      (is (= 7 (bread/hook-> req :my/value 3))))))
 
 (deftest test-hook
   
-  (testing "it runs the hook on the app inside the request"
+  (testing "it runs the hook repeatedly on the request"
     (let [req {:bread/app {:bread/hooks {:my/value [{:bread/f #(update % :my/num inc)}
                                                     {:bread/f #(update % :my/num * 2)}
-                                                    {:bread/f #(update % :my/num dec)}]}
-                           :my/num 3}}]
-      (is (= 7 (-> req (bread/hook :my/value) :bread/app :my/num)))))
+                                                    {:bread/f #(update % :my/num dec)}]}}
+               :my/num 3}]
+      (is (= 7 (-> req (bread/hook :my/value) :my/num)))))
   
   (testing "it explains exceptions thrown by callbacks"
     (let [req (-> {} (bread/add-hook :my/hook inc))]
