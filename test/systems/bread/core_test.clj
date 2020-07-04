@@ -371,7 +371,14 @@
                                                     {:bread/f #(update % :my/num * 2)}
                                                     {:bread/f #(update % :my/num dec)}]}
                            :my/num 3}}]
-      (is (= 7 (-> req (bread/hook :my/value) :bread/app :my/num))))))
+      (is (= 7 (-> req (bread/hook :my/value) :bread/app :my/num)))))
+  
+  (testing "it explains exceptions thrown by callbacks"
+    (let [req (-> {} (bread/add-hook :my/hook inc))]
+      (is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           #":my/hook hook threw an exception: "
+           (bread/hook req :my/hook))))))
 
 
 #_(deftest run-runs-the-entire-app-lifecycle

@@ -140,11 +140,15 @@
   ([app h x & args]
    (let [hooks (get-in app [:bread/hooks h])]
      (if (seq hooks)
-       (loop [x x
-              [{:bread/keys [f]} & fs] hooks]
-         (if (seq fs)
-           (recur (apply f x args) fs)
-           (apply f x args)))
+       (try
+         (loop [x x
+               [{:bread/keys [f]} & fs] hooks]
+          (if (seq fs)
+            (recur (apply f x args) fs)
+            (apply f x args)))
+         (catch java.lang.Exception e
+           (throw (ex-info (str h " hook threw an exception: " e)
+                           {:hook h :value x :extra-args args :app app}))))
        x)))
   
   ([app h]
