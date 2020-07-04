@@ -13,7 +13,7 @@
 
 (declare add-app-hook)
 
-(defn- enrich-request [req app]
+(defn- enrich-request [app req]
   (assoc req :bread/app app))
 
 (defn app

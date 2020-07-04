@@ -387,13 +387,12 @@
            (:bread/plugins app)))))
 
 
-#_(deftest run-runs-the-entire-app-lifecycle
+(deftest test-app
 
   (testing "it enriches the request with the app data itself"
     (let [app (bread/app)
-          req {:url "/"}]
-      (is (= app
-             (:bread/app (bread/hook-> req :bread.hook/enrich-request app))))))
+          req (bread/app-hook app :bread.hook/enrich-request {:url "/"})]
+      (is (= app (:bread/app req)))))
 
   #_(testing "it runs default hooks in the right order"
     (let [state (atom {:num 3 :extra :stuff})
