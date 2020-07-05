@@ -5,7 +5,7 @@
    [clojure.test :refer [deftest is testing]]))
 
 
-(deftest load-app-plugins-applies-all-plugin-fns
+(deftest load-plugins-applies-all-plugin-fns
   (let [plugin-a (fn [app]
                    (bread/add-app-hook app :plugin.a/inc inc))
         plugin-b (fn [app]
@@ -15,16 +15,6 @@
            (bread/app->hooks-for app :plugin.a/inc)))
     (is (= [{:bread/priority 2 :bread/f dec}]
            (bread/app->hooks-for app :plugin.b/dec)))))
-
-
-(deftest with-plugins-adds-to-bread-plugins
-  (let [my-plugin (fn [_] :does-a-thing)
-        some-other-plugin (fn [_] :does-something-else)
-        app (bread/with-plugins
-              {:bread/plugins [some-other-plugin]}
-              [my-plugin])]
-    (is (= [some-other-plugin my-plugin]
-           (:bread/plugins app)))))
 
 
 (deftest test-set-app-config
@@ -134,30 +124,22 @@
 (deftest test-add-app-effect
 
   (testing "it adds to :bread.hook/effects hook"
-    (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                  {:bread/priority 2 :bread/f dec}]
-                             :bread.hook/fake [:misc :fake :hooks]}}]
-      (is (= {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                 {:bread/priority 1 :bread/f identity}
-                                                 {:bread/priority 2 :bread/f dec}]
-                            :bread.hook/fake [:misc :fake :hooks]}}
-             (bread/add-app-effect app identity)))))
-
-  (testing "it honors priority"
-    (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                  {:bread/priority 2 :bread/f dec}]}}]
-      (is (= {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                 {:bread/priority 1.5 :bread/f identity}
-                                                 {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-app-effect app identity 1.5)))))
-
-  (testing "it honors priority & options"
-    (let [app {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                  {:bread/priority 2 :bread/f dec}]}}]
-      (is (= {:bread/hooks {:bread.hook/effects [{:bread/priority 0 :bread/f inc}
-                                                 {:bread/priority 1.5 :bread/f identity :my/meta 123}
-                                                 {:bread/priority 2 :bread/f dec}]}}
-             (bread/add-app-effect app identity 1.5 {:meta {:my/meta 123}}))))))
+    (let [app (-> {}
+                  (bread/add-app-effect inc 0)
+                  ;; Set metadata
+                  (bread/add-app-effect dec 2 {:meta {:my/value :whoa-meta}})
+                  ;; Use default priority of 1
+                  (bread/add-app-effect identity))]
+      (is (= [{:bread/priority 0 :bread/f inc}
+              {:bread/priority 1 :bread/f identity}
+              {:bread/priority 2 :bread/f dec :my/value :whoa-meta}]
+             (bread/app->hooks-for app :bread.hook/effects)))))
+  
+  (testing "it queues side-effects"
+    (let [state (atom {:my/num 3})
+          app (bread/add-app-effect {} (fn [_] (swap! state update :my/num inc)))]
+      (bread/app-hook app :bread.hook/effects)
+      (is (= 4 (:my/num @state))))))
 
 
 (deftest test-add-app-value-hook
@@ -367,11 +349,16 @@
 (deftest test-hook
   
   (testing "it runs the hook repeatedly on the request"
-    (let [req {:bread/app {:bread/hooks {:my/value [{:bread/f #(update % :my/num inc)}
-                                                    {:bread/f #(update % :my/num * 2)}
-                                                    {:bread/f #(update % :my/num dec)}]}}
-               :my/num 3}]
-      (is (= 7 (-> req (bread/hook :my/value) :my/num)))))
+    (let [req (-> {:my/num 3 :my/extra-value nil}
+                  (bread/add-hook :my/calculation #(update % :my/num inc) 0)
+                  (bread/add-hook :my/calculation #(update % :my/num * 2) 1)
+                  (bread/add-hook :my/calculation #(update % :my/num dec) 2)
+                  (bread/add-hook :my/extra #(assoc % :my/extra-value :NEW!)))
+          threaded (-> req
+                       (bread/hook :my/calculation)
+                       (bread/hook :my/extra))]
+      (is (= 7 (:my/num threaded)))
+      (is (= :NEW! (:my/extra-value threaded)))))
   
   (testing "it explains exceptions thrown by callbacks"
     (let [req (-> {} (bread/add-hook :my/hook inc))]
@@ -381,64 +368,109 @@
            (bread/hook req :my/hook))))))
 
 
+
 (deftest app-populates-itself-with-passed-data
   (let [app (bread/app {:plugins [:some :fake :plugins]})]
     (is (= [:some :fake :plugins]
            (:bread/plugins app)))))
 
-
 (deftest test-app
 
   (testing "it enriches the request with the app data itself"
-    (let [app (bread/app)
-          req (bread/app-hook app :bread.hook/enrich-request {:url "/"})]
-      (is (= app (:bread/app req)))))
+    (let [app (bread/app)]
+      (is (true? true))
+      (is (= [{:bread/priority 1 :bread/f bread/load-plugins}]
+             (bread/app->hooks-for app :bread.hook/load-plugins))))))
 
-  #_(testing "it runs default hooks in the right order"
-    (let [state (atom {:num 3 :extra :stuff})
-         effectful-plugin (fn [app]
-                            (bread/add-app-effect app (fn [_app]
-                                                    (swap! state update :num * 3))))
-         hello-handler (fn [req]
-                         (println "hello!!")
-                         {:status 200
-                          :body (str "hello, " (:name (:params req)))})
-         my-routes {"/" (constantly {:status 200 :body "home"})
-                    "/hello" hello-handler}
-         router-plugin (fn [app]
-                         (let [app->router (fn [app]
-                                             (let [routes (bread/app-hook-> app :bread.hook/routes nil)]
-                                              ;; A router is function that matches a request to a route,
-                                              ;; and presumably returns and handler.
-                                               (fn [req]
-                                                 (get routes (:url req)))))
-                              ;; A dispatcher is a function that calls the handler we get from 
-                              ;; the router.
-                               dispatcher (fn [app req]
-                                            (let [route ((app->router app) req)]
-                                              (bread/add-app-hook app :bread.hook/render route)))]
-                           (-> app
-                              ;; Routing plugins typically let you define your own routes via
-                              ;; the :bread.hook/routes hook.
-                               (bread/add-app-hook :bread.hook/routes (constantly my-routes))
-                              ;; Dispatching the matched route is run in a separater step.
-                               (bread/add-app-hook :bread.hook/dispatch dispatcher))))
-         excited-plugin (fn [app]
+(deftest test-app->handler
+
+  (testing "it returns a function that loads plugins"
+    (let [my-effect (fn [_app] 'do-a-thing)
+          my-plugin #(bread/add-app-effect % my-effect)
+          app (bread/app {:plugins [my-plugin]})
+          handler (bread/app->handler app)
+          response (handler {:url "/"})]
+      (is (= [{:bread/priority 1 :bread/f my-effect}]
+             (bread/req->hooks-for response :bread.hook/effects)))))
+
+  (testing "it returns a function that loads config"
+    ;; config DSL: (configurator :my/config :it's-configured!)
+    (let [configurator-plugin (fn [app]
+                                (bread/set-app-config app :my/config :it's-configured!))
+          handler (bread/app->handler (bread/app {:plugins [configurator-plugin]}))]
+      (is (= :it's-configured!
+             (bread/req->config (handler {:url "/"}) :my/config)))))
+
+  (testing "it returns a function that applies side-effects"
+    (let [;; Test side-effects
+          state (atom {:num 3 :extra :stuff})
+          effectful-plugin #(do
+                              (bread/add-app-effect % (fn [_app]
+                                                        (swap! state update :num * 3))))
+          app (assoc (bread/app {:plugins [effectful-plugin]}) :yo :YO.)
+          handler (bread/app->handler app)]
+      ;; Run the app, with side-effects
+      (handler {:url "/hello" :params {:name "world"}})
+      ;; Assert that the expected side-effects took place
+      (is (= 9 (:num @state)))))
+
+  (testing "it supports loading from a datastore"
+    (let [datastore {"about" {:type :page :content "All about that bass"}
+                     "contact" {:type :page :content "I don't want no scrub"}}
+          datastore-plugin (fn [app]
+                             (bread/set-app-config app :datastore datastore))
+          dispatcher (fn [req]
+                       (let [slug (:slug (:params req))
+                             store (bread/req->config req :datastore)
+                             content (:content (store slug))]
+                         {:status 200 :body content}))
+          router-plugin (fn [app]
                           (bread/add-app-hook app
-                                          :bread.hook/render
-                                          (fn [response]
-                                            (update response
-                                                    :body
-                                                    #(str (upper-case %) "!!")))))
-         app (bread/with-plugins (bread/default-app) [effectful-plugin
-                                                      excited-plugin
-                                                      router-plugin])
-         response (bread/run app {:url "/hello"
-                                  :params {:name "world"}})]
+                                              :bread.hook/dispatch
+                                              dispatcher))
+          handler (bread/app->handler (bread/app {:plugins [datastore-plugin
+                                                            router-plugin]}))]
+      (is (= {:status 200 :body "All about that bass"}
+             (handler {:params {:slug "about"}})))))
+
+  (testing "it supports only defining a render hook"
+    (let [res {:status 200 :body "lorem ipsum"}
+          renderer-plugin (fn [app]
+                            (bread/add-app-hook app :bread.hook/render (constantly res)))
+          handler (bread/app->handler (bread/app {:plugins [renderer-plugin]}))]
+      (is (= res (handler {})))))
+
+  (testing "it returns a function that runs the dispatch and render hooks"
+    (let [hello-handler (fn [req]
+                          {:status 200
+                           :body (str "hello, " (:name (:params req)))})
+          my-routes {"/" (constantly {:status 200 :body "home"})
+                     "/hello" hello-handler}
+          ;; TODO router DSL: (routes-map->plugin {"/" ,,,})
+          ;; This simplistic routing plugin closes around the my-routes map and uses it to
+          ;; dispatch the current request. In a more realistic situation, a routing plugin
+          ;; typically lets you define your own routes via :bread.hook/routes.
+          router-plugin (fn [app]
+                          (let [;; A dispatcher is a function that calls the handler we get from 
+                                ;; the router.
+                                ;; TODO dispatcher DSL: (bread.routing/dispatcher)
+                                dispatcher (fn [req]
+                                             (let [handler (get my-routes (:url req))]
+                                               (bread/add-hook req :bread.hook/render handler)))]
+                            ;; Dispatching the matched route is run in a separater step.
+                            (bread/add-app-hook app :bread.hook/dispatch dispatcher)))
+          ;; renderer DSL: (add-body-renderer #(str (upper-case %) "!!"))
+          excited-plugin (fn [app]
+                           (bread/add-app-hook app
+                                               :bread.hook/render
+                                               (fn [response]
+                                                 (update response
+                                                         :body
+                                                         #(str (upper-case %) "!!")))))
+          handler (bread/app->handler (bread/app {:plugins [router-plugin excited-plugin]}))]
      ;; Assert that the HTTP response is correct.
-     (is (= {:status 200
-             :body "HELLO, WORLD!!"}
-            response))
-     ;; Assert that the correct side-effects took place.
-     (is (= {:num 9 :extra :stuff}
-            @state)))))
+      (is (= {:status 200
+              :body "HELLO, WORLD!!"}
+              (handler {:url "/hello"
+                        :params {:name "world"}}))))))
+      

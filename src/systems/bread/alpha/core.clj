@@ -1,40 +1,6 @@
 (ns systems.bread.alpha.core)
 
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   ;;                            ;;
-  ;;    APP HELPER FUNCTIONS    ;;
- ;;                            ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;
-;; Helper functions for generating and working with app data directly.
-;;
-
-(declare add-app-hook)
-
-(defn- enrich-request [app req]
-  (assoc req :bread/app app))
-
-(defn app
-  ([{:keys [plugins]}]
-   (-> {:bread/plugins (or plugins [])
-        :bread/hooks   {}
-        :bread/config  {}}
-       (add-app-hook :bread.hook/enrich-request enrich-request)))
-  ([]
-   (app {})))
-
-(defn load-app-plugins [app]
-  (let [plugins (:bread/plugins app [])
-        run-plugin (fn [app plugin]
-                     (plugin app))]
-    (reduce run-plugin app plugins)))
-
-(defn with-plugins [app plugins]
-  (update app :bread/plugins concat plugins))
-
-
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
@@ -202,8 +168,6 @@
 (defn add-value-hook [req h v & args]
   (apply update req :bread/app add-app-value-hook h v args))
 
-; (defn hook-> [{:bread/keys [app]} h & args]
-;   (apply app-hook-> app h args))
 
 (defn hook->
   ([req h x & args]
@@ -211,10 +175,10 @@
      (if (seq hooks)
        (try
          (loop [x x
-               [{:bread/keys [f]} & fs] hooks]
-          (if (seq fs)
-            (recur (apply f x args) fs)
-            (apply f x args)))
+                [{:bread/keys [f]} & fs] hooks]
+           (if (seq fs)
+             (recur (apply f x args) fs)
+             (apply f x args)))
          (catch java.lang.Exception e
            (throw (ex-info (str h " hook threw an exception: " e)
                            {:hook h :value x :extra-args args :app req}))))
@@ -225,6 +189,52 @@
 
 (defn hook [req h & args]
   (apply hook-> req h req args))
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;    APP HELPER FUNCTIONS    ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Helper functions for generating and working with app data directly.
+;;
+
+(defn load-app-plugins [app]
+  (let [plugins (:bread/plugins app [])
+        run-plugin (fn [app plugin]
+                     (plugin app))]
+    (reduce run-plugin app plugins)))
+
+(defn load-plugins [req]
+  (update req :bread/app load-app-plugins))
+
+(defn- enrich-request [req app]
+  (assoc req :bread/app app))
+
+(defn apply-effects [req]
+  (hook req :bread.hook/effects)
+  req)
+
+(defn app
+  ([{:keys [plugins]}]
+   (-> {:bread/plugins (or plugins [])
+        :bread/hooks   {}
+        :bread/config  {}}
+       (add-app-hook :bread.hook/load-plugins load-plugins)))
+  ([]
+   (app {})))
+
+(defn app->handler [app]
+  (fn [req]
+    (-> (enrich-request req app)
+        (hook :bread.hook/load-plugins)
+        (hook :bread.hook/dispatch)
+        (apply-effects)
+        (hook :bread.hook/render))))
+
 
 
 (comment
