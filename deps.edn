@@ -1,10 +1,12 @@
 {:paths ["src" "resources"]
- :deps {http-kit             {:mvn/version "2.3.0"}
-        mount                {:mvn/version "0.1.16"}
-        ring                 {:mvn/version "1.7.0"}}
-
+ :deps {org.clojure/clojure {:mvn/version "1.10.0"}}
  :aliases {:dev {:extra-paths ["env/dev"]
-                 :extra-deps {nrepl/nrepl          {:mvn/version "0.7.0"}
-                              lambdaisland/kaocha  {:mvn/version "0.0-529"}}}
-           :prod {:extra-paths ["env/prod"]}}}
+                 :extra-deps {http-kit             {:mvn/version "2.3.0"}
+                              mount                {:mvn/version "0.1.16"}
+                              org.clojure/clojurescript {:mvn/version "1.10.764"}
+                              ring                 {:mvn/version "1.7.0"}
+                              rum                  {:mvn/version "0.12.3"
+                                                    :exclusions [cljsjs/react cljsjs/react-dom]}
+                              nrepl/nrepl          {:mvn/version "0.7.0"}
+                              lambdaisland/kaocha  {:mvn/version "0.0-529"}}}}}
 
