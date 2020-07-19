@@ -1,16 +1,24 @@
 (ns breadbox.app
   (:require
-   [org.httpkit.server :as http]
-   [mount.core :as mount :refer [defstate]]
-
    [breadbox.env]
-   [ring.middleware.reload :refer [wrap-reload]]))
+   [systems.bread.alpha.core :as bread]
+   [systems.bread.alpha.plugins :as plugins]
+   [mount.core :as mount :refer [defstate]]
+   [org.httpkit.server :as http]
+   [ring.middleware.reload :refer [wrap-reload]]
+   [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]))
 
 
-(defn app [_]
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body "hello"})
+(def handler (-> {:plugins [(plugins/static-response-plugin
+                             {:body [:html
+                                     [:head
+                                      [:title "Breadbox"]
+                                      [:meta {:charset "utf-8"}]]
+                                     [:body
+                                      [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
+                            (plugins/renderer-plugin rum/render-html)]}
+                 (bread/app)
+                 (bread/app->handler)))
 
 
 (defonce stop-http (atom nil))
@@ -18,7 +26,7 @@
 (defn start! []
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 8080))]
     (println (str "Running HTTP server at localhost:" port))
-    (reset! stop-http (http/run-server (wrap-reload app) {:port port})))
+    (reset! stop-http (http/run-server (wrap-reload handler) {:port port})))
   nil)
 
 (defn stop! []
