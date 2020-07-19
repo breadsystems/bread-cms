@@ -9,14 +9,14 @@
    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]))
 
 
-(def handler (-> {:plugins [(plugins/static-response-plugin
+(def handler (-> {:plugins [(plugins/response->plugin
                              {:body [:html
                                      [:head
                                       [:title "Breadbox"]
                                       [:meta {:charset "utf-8"}]]
                                      [:body
                                       [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
-                            (plugins/renderer-plugin rum/render-html)]}
+                            (plugins/renderer->plugin rum/render-html)]}
                  (bread/app)
                  (bread/app->handler)))
 
