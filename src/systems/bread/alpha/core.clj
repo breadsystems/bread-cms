@@ -9,14 +9,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
-;; Functions for working with config data, in either requests or directly in app maps.
+;; Functions for working with config data
 ;;
-
-(defn app->config [app k]
-  (get-in app [:bread/config k]))
 
 (defn req->config [req k]
   (get-in req [:bread/app :bread/config k]))
+
+(defn config [app k]
+  (get-in app [::config k]))
 
 (defn set-app-config [app k v & extra]
   (if (odd? (count extra))
@@ -30,7 +30,7 @@
     (throw (ex-info (str "set-config expects an even number of extra args, "
                          (count extra) " extra args passed.")
                     {:extra-args extra})))
-  (apply update req :bread/app set-app-config k v extra))
+  (update req ::config #(apply assoc % k v extra)))
 
 
 
