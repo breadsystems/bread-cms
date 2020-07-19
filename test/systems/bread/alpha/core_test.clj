@@ -1,8 +1,8 @@
-(ns systems.bread.alpha2-core-test
+(ns systems.bread.alpha.core-test
   (:require
    [clojure.string :refer [upper-case]]
    [clojure.test :refer [deftest is testing]]
-   [systems.bread.alpha2.core :as bread]))
+   [systems.bread.alpha.core :as bread]))
 
 
 (deftest test-config

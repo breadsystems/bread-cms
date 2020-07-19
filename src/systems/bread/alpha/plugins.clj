@@ -5,10 +5,10 @@
 
 (defn static-response-plugin [response]
   (fn [app]
-    (core/add-app-hook app :bread.hook/dispatch (fn [req]
-                                                  (merge req response)))))
+    (core/add-hook app ::core/hook:dispatch (fn [req]
+                                              (merge req response)))))
 
 (defn renderer-plugin [render]
   (fn [app]
-    (core/add-app-hook app :bread.hook/render (fn [response]
-                                                (update response :body render)))))
+    (core/add-hook app ::core/hook:render (fn [response]
+                                            (update response :body render)))))
