@@ -103,15 +103,15 @@
 
 (deftest test-add-effect
 
-  (testing "it adds to the ::bread/hook:effects hook inside app"
+  (testing "it adds to the :hook/effects hook inside app"
     (let [req (-> {}
                   (bread/add-effect inc)
                   (bread/add-effect dec {:precedence 2})
                   (bread/add-effect identity {:precedence 1.5
                                               :extra {:my/extra 123}}))]
-      (is (= {::bread/hook:effects [{::bread/precedence 1   ::bread/f inc}
-                                    {::bread/precedence 1.5 ::bread/f identity :my/extra 123}
-                                    {::bread/precedence 2   ::bread/f dec}]}
+      (is (= {:hook/effects [{::bread/precedence 1   ::bread/f inc}
+                             {::bread/precedence 1.5 ::bread/f identity :my/extra 123}
+                             {::bread/precedence 2   ::bread/f dec}]}
              (bread/hooks req))))))
 
 (deftest test-add-value-hook
@@ -198,7 +198,7 @@
   (testing "it enriches the request with the app data itself"
     (let [app (bread/app)]
       (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins}]
-             (bread/hooks-for app ::bread/hook:load-plugins))))))
+             (bread/hooks-for app :hook/load-plugins))))))
 
 (deftest test-app->handler
 
@@ -208,7 +208,7 @@
           handler (bread/app->handler app)
           response (handler {:url "/"})]
       (is (= [{::bread/precedence 1 ::bread/f identity}]
-             (bread/hooks-for response ::bread/hook:effects)))))
+             (bread/hooks-for response :hook/effects)))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
@@ -242,9 +242,7 @@
                              content (:content (store slug))]
                          {:status 200 :body content}))
           router-plugin (fn [app]
-                          (bread/add-hook app
-                                          ::bread/hook:dispatch
-                                          dispatcher))
+                          (bread/add-hook app :hook/dispatch dispatcher))
           handler (bread/app->handler (bread/app {:plugins [datastore-plugin
                                                             router-plugin]}))]
       (is (= {:status 200 :body "All about that bass"}
@@ -253,7 +251,7 @@
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
           renderer-plugin (fn [app]
-                            (bread/add-hook app ::bread/hook:render (constantly res)))
+                            (bread/add-hook app :hook/render (constantly res)))
           handler (bread/app->handler (bread/app {:plugins [renderer-plugin]}))]
       (is (= res (handler {})))))
 
@@ -266,20 +264,20 @@
           ;; TODO router DSL: (routes-map->plugin {"/" ,,,})
           ;; This simplistic routing plugin closes around the my-routes map and uses it to
           ;; dispatch the current request. In a more realistic situation, a routing plugin
-          ;; typically lets you define your own routes via :bread.hook/routes.
+          ;; typically lets you define your own routes via :hook/routes.
           router-plugin (fn [app]
                           (let [;; A dispatcher is a function that calls the handler we get from 
                                 ;; the router.
                                 ;; TODO dispatcher DSL: (bread.routing/dispatcher)
                                 dispatcher (fn [req]
                                              (let [handler (get my-routes (:url req))]
-                                               (bread/add-hook req ::bread/hook:render handler)))]
+                                               (bread/add-hook req :hook/render handler)))]
                             ;; Dispatching the matched route is run in a separater step.
-                            (bread/add-hook app ::bread/hook:dispatch dispatcher)))
+                            (bread/add-hook app :hook/dispatch dispatcher)))
           ;; renderer DSL: (add-body-renderer #(str (upper-case %) "!!"))
           excited-plugin (fn [app]
                            (bread/add-hook app
-                                           ::bread/hook:render
+                                           :hook/render
                                            (fn [response]
                                              (update response
                                                      :body

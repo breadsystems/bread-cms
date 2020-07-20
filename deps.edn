@@ -12,4 +12,3 @@
            :test
            {:extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
             :main-opts ["-m" "kaocha.runner"]}}}
-

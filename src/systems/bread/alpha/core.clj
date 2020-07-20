@@ -33,7 +33,7 @@
     (reduce run-plugin app plugins)))
 
 (defn- apply-effects [app]
-  (hook app ::hook:effects)
+  (hook app :hook/effects)
   app)
 
 
@@ -68,9 +68,9 @@
 
 (defn add-effect
   ([app f options]
-   (add-hook app ::hook:effects f options))
+   (add-hook app :hook/effects f options))
   ([app f]
-   (add-hook app ::hook:effects f {})))
+   (add-hook app :hook/effects f {})))
 
 (defn add-value-hook
   ([app h x options]
@@ -129,14 +129,14 @@
    (-> {::plugins (or plugins [])
         ::hooks   {}
         ::config  {}}
-       (add-hook ::hook:load-plugins load-plugins)))
+       (add-hook :hook/load-plugins load-plugins)))
   ([]
    (app {})))
 
 (defn app->handler [app]
   (fn [req]
     (-> (merge req app)
-        (hook ::hook:load-plugins)
-        (hook ::hook:dispatch)
+        (hook :hook/load-plugins)
+        (hook :hook/dispatch)
         (apply-effects)
-        (hook ::hook:render))))
+        (hook :hook/render))))

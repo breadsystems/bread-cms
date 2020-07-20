@@ -5,10 +5,10 @@
 
 (defn response->plugin [response]
   (fn [app]
-    (core/add-hook app ::core/hook:dispatch (fn [req]
-                                              (merge req response)))))
+    (core/add-hook app :hook/dispatch (fn [req]
+                                        (merge req response)))))
 
 (defn renderer->plugin [render-fn]
   (fn [app]
-    (core/add-hook app ::core/hook:render (fn [response]
-                                            (update response :body render-fn)))))
+    (core/add-hook app :hook/render (fn [response]
+                                      (update response :body render-fn)))))
