@@ -5,6 +5,14 @@
    [systems.bread.alpha.core :as bread]))
 
 
+(deftest test-response
+  
+  (testing "it persists plugins, hooks, and config"
+    (let [raw {:status 200 :headers {} :body [:main]}]
+      (is (= #{:status :headers :body
+               ::bread/plugins ::bread/hooks ::bread/config}
+             (set (keys (bread/response (bread/app {:url "/"}) raw))))))))
+
 (deftest test-config
 
   (testing "it returns the config value from the app inside the request"

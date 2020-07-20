@@ -13,6 +13,9 @@
 ;; Helper functions for generating and working with app data directly.
 ;;
 
+(defn response [req raw]
+  (merge raw (select-keys req [::config ::hooks ::plugins])))
+
 (defn config [app k]
   (get-in app [::config k]))
 
