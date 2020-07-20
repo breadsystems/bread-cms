@@ -25,11 +25,11 @@
 
 
 (defprotocol TemporalDatastore
-  (as-of [store instant])
+  (as-of [store timepoint])
   (history [store])
-  (q [store query])
   (pull [store struct lookup-ref])
-  (with [store tx]))
+  (q [store query])
+  (db-with [store timepoint]))
 
 (defprotocol TransactionalDatastoreConnection
-  (transact [conn tx]))
+  (transact [conn timepoint]))
