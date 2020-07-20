@@ -2,3 +2,4 @@
 *.jar
 pom.properties
 inputFiles.lst
+/target
