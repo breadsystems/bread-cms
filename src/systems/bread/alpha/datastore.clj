@@ -26,6 +26,7 @@
 
 (defprotocol TemporalDatastore
   (as-of [store instant])
+  (history [store])
   (q [store query])
   (pull [store struct lookup-ref])
   (with [store tx]))
