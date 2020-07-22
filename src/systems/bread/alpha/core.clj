@@ -16,8 +16,11 @@
 (defn response [req raw]
   (merge raw (select-keys req [::config ::hooks ::plugins])))
 
-(defn config [app k]
-  (get-in app [::config k]))
+(defn config
+  ([app k default]
+   (get-in app [::config k] default))
+  ([app k]
+   (get-in app [::config k])))
 
 (defn set-config [app k v & extra]
   (if (odd? (count extra))

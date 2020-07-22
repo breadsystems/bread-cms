@@ -18,7 +18,10 @@
   (testing "it returns the config value from the app inside the request"
     (let [req {:url "/"
                ::bread/config {:my/value 3 :other/value 2}}]
-      (is (= 3 (bread/config req :my/value))))))
+      (is (= 3 (bread/config req :my/value)))))
+
+  (testing "it accepts a default arg"
+    (is (= :qwerty (bread/config :non-existent-key {} :qwerty)))))
 
 (deftest test-set-config
 
