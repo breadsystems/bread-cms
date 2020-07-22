@@ -8,7 +8,8 @@
                          org.clojure/clojurescript {:mvn/version "1.10.764"}
                          ring                      {:mvn/version "1.7.0"}
                          rum                       {:mvn/version "0.12.3"
-                                                    :exclusions [cljsjs/react cljsjs/react-dom]}}}
+                                                    :exclusions [cljsjs/react cljsjs/react-dom]}}
+            :main-opts ["-m" "breadbox.app"]}
            :test
            {:extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
             :main-opts ["-m" "kaocha.runner"]}}}
