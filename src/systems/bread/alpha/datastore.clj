@@ -33,3 +33,14 @@
 
 (defprotocol TransactionalDatastoreConnection
   (transact [conn timepoint]))
+
+
+(defmulti connect! :datastore/type)
+
+(defmethod connect! :default [{:datastore/keys [type] :as config}]
+  (let [msg (if (nil? type)
+              "No :datastore/type specified in datastore config!"
+              (str "Unknown :datastore/type `" type "`!"
+                   " Did you forget to load a plugin?"))]
+    (throw (ex-info msg {:config config
+                         :bread.context :datastore/connect!}))))
