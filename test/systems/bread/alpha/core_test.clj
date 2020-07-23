@@ -92,12 +92,12 @@
 
   (testing "it returns false for a non-match on extra data in hook"
     (let [app (-> (bread/app {})
-                  (bread/add-hook :my/hook identity {:extra {:some :thing}}))]
+                  (bread/add-hook :my/hook identity {:some :thing}))]
       (is (false? (bread/hook-for? app :my/hook identity {:something :else})))))
 
   (testing "it returns true for a matching hook"
     (let [app (-> (bread/app {})
-                  (bread/add-hook :my/hook identity {:extra {:my/extra 123}}))]
+                  (bread/add-hook :my/hook identity {:my/extra 123}))]
       (is (true? (bread/hook-for? app :my/hook identity {:my/extra 123}))))))
 
 (deftest test-add-hook
@@ -120,7 +120,7 @@
 
   (testing "it honors options"
     (let [req (-> {:url "/"}
-                  (bread/add-hook :my/hook inc {:extra {:my/extra 123}}))]
+                  (bread/add-hook :my/hook inc {:my/extra 123}))]
       (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123}]
              (bread/hooks-for req :my/hook))))))
 
@@ -131,7 +131,7 @@
                   (bread/add-effect inc)
                   (bread/add-effect dec {:precedence 2})
                   (bread/add-effect identity {:precedence 1.5
-                                              :extra {:my/extra 123}}))]
+                                              :my/extra 123}))]
       (is (= {:hook/effects [{::bread/precedence 1   ::bread/f inc}
                              {::bread/precedence 1.5 ::bread/f identity :my/extra 123}
                              {::bread/precedence 2   ::bread/f dec}]}

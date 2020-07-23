@@ -74,9 +74,10 @@
      (boolean (some #(hook-matches? % f options) hooks)))))
 
 (defn- append-hook [hooks f options]
-  (sort-by ::precedence (conj hooks (merge (:extra options {})
-                                         {::precedence (:precedence options 1)
-                                          ::f f}))))
+  (let [hook (assoc (dissoc options :precedence)
+                    ::f f
+                    ::precedence (or (:precedence options 1)))]
+    (sort-by ::precedence (conj hooks hook))))
 
 (defn add-hook
   ([app h f options]
