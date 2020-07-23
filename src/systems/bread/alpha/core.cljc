@@ -1,4 +1,6 @@
-(ns systems.bread.alpha.core)
+(ns systems.bread.alpha.core
+  (:require
+   [clojure.set :refer [rename-keys]]))
 
 
 (declare hook)
@@ -57,6 +59,20 @@
 (defn hooks-for [app h]
   (get-in app [::hooks h]))
 
+(defn- hook-matches? [hook f opts]
+  (and
+   (= f (::f hook))
+   (let [match-options (rename-keys opts {:precedence ::precedence})
+         intersection (select-keys hook (keys match-options))]
+     (= match-options intersection))))
+
+(defn hook-for?
+  ([app h f]
+   (hook-for? app h f {}))
+  ([app h f options]
+   (let [hooks (hooks-for app h)]
+     (boolean (some #(hook-matches? % f options) hooks)))))
+
 (defn- append-hook [hooks f options]
   (sort-by ::precedence (conj hooks (merge (:extra options {})
                                          {::precedence (:precedence options 1)
@@ -82,20 +98,13 @@
    (add-hook app h (constantly x))))
 
 (defn- remove-hook* [hooks hook-fn options]
-  (let [hook-pri (:precedence options 1)
-        matches? (fn [hook]
-                   (let [extra-opts (dissoc options :precedence)
-                         hook-extra (select-keys hook (keys extra-opts))]
-                     (and (= hook-pri (::precedence hook))
-                          (= hook-fn (::f hook))
-                          (= hook-extra extra-opts))))]
-    (loop [idx 0 hooks hooks]
-      (if (matches? (get hooks idx))
-        (let [[head tail] (split-at idx hooks)]
-          (concat head (next tail)))
-        (if (>= idx (count hooks))
-          hooks
-          (recur (inc idx) hooks))))))
+  (loop [idx 0 hooks hooks]
+    (if (hook-matches? (get hooks idx) hook-fn options)
+      (let [[head tail] (split-at idx hooks)]
+        (concat head (next tail)))
+      (if (>= idx (count hooks))
+        hooks
+        (recur (inc idx) hooks)))))
 
 (defn remove-hook
   ([app h hook-fn options]

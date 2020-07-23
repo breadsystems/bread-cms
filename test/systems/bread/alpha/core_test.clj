@@ -80,6 +80,26 @@
               {::bread/precedence 0 ::bread/f inc}]
              (bread/hooks-for app :bread/x))))))
 
+(deftest test-hook-for?
+
+  (testing "it returns false for a non-existent hook"
+    (is (false? (bread/hook-for? (bread/app {}) :non-existent-hook inc))))
+
+  (testing "it returns false for a non-matching fn"
+    (let [app (-> (bread/app {})
+                  (bread/add-hook :my/hook identity))]
+      (is (false? (bread/hook-for? app :my/hook juxt)))))
+
+  (testing "it returns false for a non-match on extra data in hook"
+    (let [app (-> (bread/app {})
+                  (bread/add-hook :my/hook identity {:extra {:some :thing}}))]
+      (is (false? (bread/hook-for? app :my/hook identity {:something :else})))))
+
+  (testing "it returns true for a matching hook"
+    (let [app (-> (bread/app {})
+                  (bread/add-hook :my/hook identity {:extra {:my/extra 123}}))]
+      (is (true? (bread/hook-for? app :my/hook identity {:my/extra 123}))))))
+
 (deftest test-add-hook
 
   (testing "it operates on the app inside request"
@@ -161,6 +181,9 @@
              (bread/hooks-for (bread/remove-hook app :bread/a inc {:precedence 1
                                                                    :my/extra :extra!})
                               :bread/a))))))
+
+;; TODO remove-value-hook
+;; TODO replace-hook
 
 (deftest test-hook->
   
