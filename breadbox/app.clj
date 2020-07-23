@@ -42,3 +42,14 @@
 
 (defn -main [& _args]
   (mount/start))
+
+
+(defn restart []
+  (mount/stop #'http-server)
+  (mount/start #'http-server))
+
+
+(comment
+  (mount/stop #'http-server)
+  (mount/start #'http-server)
+  (restart))
