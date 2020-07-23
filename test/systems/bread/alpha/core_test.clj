@@ -97,7 +97,9 @@
 
   (testing "it returns true for a matching hook"
     (let [app (-> (bread/app {})
-                  (bread/add-hook :my/hook identity {:my/extra 123}))]
+                  (bread/add-hook :my/hook identity {:my/extra 123})
+                  (bread/add-hook :my/hook identity {:precedence 42})
+                  (bread/add-hook :my/hook inc))]
       (is (true? (bread/hook-for? app :my/hook identity {:my/extra 123}))))))
 
 (deftest test-add-hook
