@@ -127,8 +127,11 @@
             (recur (apply f x args) fs)
             (apply f x args)))
          (catch java.lang.Exception e
-           (throw (ex-info (str h " hook threw an exception: " e)
-                           {:hook h :value x :extra-args args :app app}))))
+           ;; If bread.core threw this exception, don't wrap it
+           (throw (if (-> e ex-data ::core?)
+                    e
+                    (ex-info (str h " hook threw an exception: " e)
+                             {:hook h :value x :extra-args args :app app ::core? true})))))
        x)))
   
   ([app h]
