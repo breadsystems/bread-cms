@@ -3,7 +3,7 @@
    [clojure.set :refer [rename-keys]]))
 
 
-(declare hook)
+(declare hook->)
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
@@ -38,8 +38,7 @@
     (reduce run-plugin app plugins)))
 
 (defn- apply-effects [app]
-  (hook app :hook/effects)
-  app)
+  (or (hook-> app :hook/effects) app))
 
 
 
