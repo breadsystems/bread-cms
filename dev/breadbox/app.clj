@@ -10,7 +10,8 @@
 
 
 (def handler (-> {:plugins [(plugins/response->plugin
-                             {:body [:html
+                             {:headers {"Content-Type" "text/html"}
+                              :body [:html
                                      [:head
                                       [:title "Breadbox"]
                                       [:meta {:charset "utf-8"}]]

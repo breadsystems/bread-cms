@@ -12,3 +12,7 @@
   (fn [app]
     (core/add-hook app :hook/render (fn [response]
                                       (update response :body render-fn)))))
+
+(defn store->plugin [store]
+  (fn [app]
+    (core/add-value-hook app :hook/datastore store)))
