@@ -9,7 +9,8 @@
    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]))
 
 
-(def handler (-> {:plugins [(plugins/response->plugin
+(def handler (-> {:plugins [;; TODO logging plugin
+                            (plugins/response->plugin
                              {:headers {"Content-Type" "text/html"}
                               :body [:html
                                      [:head
@@ -17,9 +18,16 @@
                                       [:meta {:charset "utf-8"}]]
                                      [:body
                                       [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
-                            (plugins/renderer->plugin rum/render-html)]}
+                            (fn [app]
+                              (bread/add-hook app :hook/dispatch (fn [req]
+                                                                   (prn (select-keys req [:headers]))
+                                                                   req)))
+                            (plugins/renderer->plugin rum/render-static-markup)]}
                  (bread/app)
                  (bread/app->handler)))
+
+(comment
+  (rum/render-static-markup [:p "hi"]))
 
 
 (defonce stop-http (atom nil))
