@@ -99,3 +99,25 @@
              (:body (handler {:headers {"accept" "application/json"}}))))
       (is (= [:p "content"]
              (:body (handler {:headers {"accept" "application/transit+json"}})))))))
+
+(deftest test-response->plugin
+
+  (testing "it adds a dispatcher hook that returns a static response"
+    (let [dispatcher-plugin (tpl/response->plugin {:body [:main "lorem ipsum"]})
+          handler (bread/app->handler (bread/app {:plugins [dispatcher-plugin]}))]
+      (is (= [:main "lorem ipsum"]
+             (:body (handler {:url "/"})))))))
+
+(deftest test-renderer->plugin
+
+  (testing "it adds a render hook"
+    (let [;; Define a simplistic renderer that just wraps the body
+          renderer (fn [body]
+                     [:div.wrap body])
+          handler (bread/app->handler
+                   (bread/app {:plugins [;; Generate a static response to wrap
+                                         (tpl/response->plugin {:body [:main "lorem ipsum"]})
+                                         (tpl/renderer->plugin renderer)]}))
+          response (handler {:url "/"})]
+      (is (= [:div.wrap [:main "lorem ipsum"]]
+             (:body response))))))

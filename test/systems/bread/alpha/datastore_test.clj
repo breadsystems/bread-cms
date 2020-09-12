@@ -89,3 +89,13 @@
       (is (nil? (d/get-key updated "my-post"))))
     ;;
     ))
+
+(deftest test-datastore->plugin
+
+  (testing "it adds a datastore value hook"
+    (let [;; Define a simplistic datastore with a single post in it
+          post {:post/slug "abc" :post/type :post.type/blog}
+          store (d/key-value-store {"abc" post})
+          handler (bread/app->handler (bread/app {:plugins [(d/store->plugin store)]}))
+          app (handler {:url "/"})]
+      (is (= post (d/slug->post app :_ "abc"))))))

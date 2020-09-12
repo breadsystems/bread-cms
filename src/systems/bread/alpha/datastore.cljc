@@ -165,6 +165,10 @@
 (defn key-value-store [store]
   (KeyValueBreadStore. store))
 
+(defn store->plugin [store]
+  (fn [app]
+    (bread/add-value-hook app :hook/datastore store)))
+
 (comment
   (let [store (key-value-store {"my-post" {:type :post :slug "my-post"}
                                 "my-page" {:type :page :slug "my-page"}

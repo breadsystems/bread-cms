@@ -66,6 +66,11 @@
     (bread/add-hook app :hook/dispatch (fn [req]
                                         (merge req res)))))
 
+(defn renderer->plugin [render-fn]
+  (fn [app]
+    (bread/add-hook app :hook/render (fn [response]
+                                       (update response :body render-fn)))))
+
 (defn layout-predicate->plugin
   "Given a predicate, i.e. one returned from (layout-predicate), returns a plugin that
    adds a :hook/render-layout? hook using that predicate."
