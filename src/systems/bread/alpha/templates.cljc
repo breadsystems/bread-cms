@@ -52,9 +52,13 @@
 (defn render-layout? [req]
   (bread/hook req :hook/render-layout?))
 
+(defn layout-context [initial-context res]
+  (bread/hook-> res :hook/layout-context initial-context res))
+
 (defn with-layout [res layout]
   (if (render-layout? res)
-    (update res :body #(layout {:content %}))
+    (update res :body (fn [body]
+                        (layout (layout-context {:content body} res))))
     res))
 
 
@@ -70,6 +74,15 @@
   (fn [app]
     (bread/add-hook app :hook/render (fn [response]
                                        (update response :body render-fn)))))
+
+(defn layout-context-plugin
+  "Given a function f, returns a plugin that adds a :hook/layout-context hook
+   calling (f context req), where context is a map like {:content <body content>}:
+   f should return an enriched context map with all the data the layout fn is
+   expecting."
+  [f]
+  (fn [req]
+    (bread/add-hook req :hook/layout-context f)))
 
 (defn layout-predicate->plugin
   "Given a predicate, i.e. one returned from (layout-predicate), returns a plugin that

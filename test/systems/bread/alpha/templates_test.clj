@@ -98,7 +98,29 @@
       (is (= [:p "content"]
              (:body (handler {:headers {"accept" "application/json"}}))))
       (is (= [:p "content"]
-             (:body (handler {:headers {"accept" "application/transit+json"}})))))))
+             (:body (handler {:headers {"accept" "application/transit+json"}}))))))
+
+  (testing "with layout context hook"
+    (let [my-layout (fn [{:keys [content header-content footer-content]}]
+                      [:div#layout
+                       [:header header-content]
+                       [:main content]
+                       [:footer footer-content]])
+          handler (-> (bread/app {:plugins [;; The layout context hook injects other
+                                            ;; data to be passed to the layout fn.
+                                            (tpl/layout-context-plugin
+                                             (fn [context _req]
+                                               (merge context
+                                                      {:header-content "HEADER"
+                                                       :footer-content "FOOTER"})))
+                                            (tpl/layout->plugin my-layout)
+                                            (tpl/response->plugin {:body [:p "MAIN"]})]})
+                      (bread/app->handler))]
+      (is (= [:div#layout
+              [:header "HEADER"]
+              [:main [:p "MAIN"]]
+              [:footer "FOOTER"]]
+             (:body (handler {:headers {"accept" "*/*"}})))))))
 
 (deftest test-response->plugin
 
