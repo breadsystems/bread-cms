@@ -3,6 +3,7 @@
    [systems.bread.alpha.core :as core]))
 
 
+;; TODO move these into their own nss
 (defn response->plugin [response]
   (fn [app]
     (core/add-hook app :hook/dispatch (fn [req]
