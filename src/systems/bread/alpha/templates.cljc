@@ -54,7 +54,7 @@
 
 (defn with-layout [res layout]
   (if (render-layout? res)
-    (update res :body layout)
+    (update res :body #(layout {:content %}))
     res))
 
 

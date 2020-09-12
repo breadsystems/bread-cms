@@ -55,7 +55,7 @@
 (deftest test-layout-plugins
 
   (testing "layout->plugin and layout-predicate->plugin compose"
-    (let [my-layout (fn [content]
+    (let [my-layout (fn [{:keys [content]}]
                       [:div#layout content])
           handler (-> (bread/app {:plugins [;; The predicate tells us whether to render a layout or not
                                             (tpl/layout-predicate->plugin (tpl/layout-predicate "text/html"))
@@ -76,7 +76,7 @@
              (:body (handler {:url "/"}))))))
 
   (testing "with ajax-predicate"
-    (let [my-layout (fn [content]
+    (let [my-layout (fn [{:keys [content]}]
                       [:div#layout content])
           handler (-> (bread/app {:plugins [;; The predicate tells us whether to render a layout or not.
                                             ;; In this case, we want a layout UNLESS the Accept header matches.
