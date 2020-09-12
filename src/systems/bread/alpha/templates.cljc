@@ -70,7 +70,10 @@
     (bread/add-hook app :hook/dispatch (fn [req]
                                         (merge req res)))))
 
-(defn renderer->plugin [render-fn]
+(defn renderer->plugin
+  "Given a rendered function r, returns a plugin that adds r as a :hook/render
+   callback. Example: (renderer->plugin rum/render-static-markup)"
+  [render-fn]
   (fn [app]
     (bread/add-hook app :hook/render (fn [response]
                                        (update response :body render-fn)))))
