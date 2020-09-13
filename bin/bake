@@ -1,0 +1,106 @@
+#!/usr/bin/env bb
+
+(ns systems.bread.alpha.cli
+  (:require
+   [clojure.java.io :as io]
+   [clojure.java.shell :refer [sh]]
+   [clojure.pprint :as pp]
+   [clojure.string :as str]
+   [clojure.tools.cli :refer [parse-opts]]))
+
+(def SEP java.io.File/separator)
+
+(defn ->path [& steps]
+  (str/join SEP (filter seq steps)))
+
+(defn ns->path [ns]
+  (str/join SEP (map #(str/replace % #"-+" "_") (str/split ns #"\."))))
+
+(defn mkdir! [path]
+  (sh "mkdir" "-p" path))
+
+(defn write! [path content]
+  (if (string? content)
+    (spit path content)
+    ;; Treat Clojure data structures as literal data (e.g. EDN) to be dumped
+    (binding [*out* (io/writer path)]
+      (pp/pprint content))))
+
+;;
+(defn generate-file-tree! [{:keys [path content]}]
+  (cond
+    (vector? content) (do
+                        (mkdir! path)
+                        (for [tree content]
+                          (let [tree (update tree :path #(->path path %))]
+                            (generate-file-tree! tree))))
+    :else (write! path content)))
+
+(defn generate-example [{:keys [name ns]}]
+  ;; TODO default ns
+  (generate-file-tree! {:path (->path "examples" name)
+                        :content [{:path "deps.edn"
+                                  ;; TODO figure out an extensible way to manage deps
+                                   :content '{:paths ["src" "resources"]
+                                              :deps {org.clojure/clojure {:mvn/version "1.10.0"}
+                                                     http-kit            {:mvn/version "2.3.0"}
+                                                     ring                {:mvn/version "1.7.0"}
+                                                     rum                 {:mvn/version "0.12.3"}}}}
+                                  {:path (apply ->path "src" (str/split ns #"\."))
+                                   :content [{:path "app.clj"
+                                              :content '(ns foo)}]}]}))
+
+(def cli-opts
+  {:main [["-h" "--help" "Print this help text"]
+          ["-v" "--verbose" "Verbose mode"]
+          [""]
+          ["COMMANDS:"]
+          ["generate" nil "Generate a new Bread app"]]
+   :generate [[nil "--ns NAMESPACE" "App namespace e.g. `com.example`"]]})
+
+(defn- parse-for [cmd args]
+  (parse-opts args (get cli-opts cmd)))
+
+(defn- generate [args]
+  (let [{:keys [arguments errors options summary]} (parse-for :generate args)]
+    (if (seq args)
+      (let [[app-name app-root] arguments
+            dir (or app-root app-name)
+            ;; TODO fix --ns option
+            app-ns (or (:ns options) app-name)]
+        (generate-file-tree! {:path (->path dir)
+                              :content [{:path "deps.edn"
+                                         :content '{:paths ["src" "resources"]
+                                                    :deps {org.clojure/clojure {:mvn/version "1.10.0"}
+                                                           rum {:mvn/version "0.12.3"
+                                                                :exclusions [cljsjs/react cljsjs/react-dom]}
+                                                           http-kit {:mvn/version "2.3.0"}
+                                                           ring {:mvn/version "1.7.0"}
+                                                           systems.bread/bread-core {:mvn/version "0.5.0-alpha"}}}}
+                                        {:path (->path "src" (ns->path app-ns))
+                                         :content [{:path "app.clj"
+                                                    :content (list 'ns (symbol (str app-ns ".app")))}]}]}))
+      (println summary))))
+
+(defn- main [args]
+  (let [{:keys [arguments options summary #_errors] :as opts} (parse-opts args (:main cli-opts))
+        cmd (first arguments)]
+    (cond
+      ;; Generic, global -h option was specified
+      (:help options)
+      (let [cmd-opts (if cmd
+                       (parse-opts (next arguments) (get cli-opts (keyword cmd)))
+                       opts)]
+        (println (:summary cmd-opts)))
+
+      (empty? cmd)
+      (println summary)
+
+      :else
+      (case cmd
+        "generate" (generate (next args))
+        (do
+          (println "Unknown command:" cmd)
+          (System/exit 1))))))
+
+(main *command-line-args*)
