@@ -2,7 +2,7 @@
   (:require
    [breadbox.env]
    [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.plugins :as plugins]
+   [systems.bread.alpha.templates :as tpl]
    [mount.core :as mount :refer [defstate]]
    [org.httpkit.server :as http]
    [ring.middleware.reload :refer [wrap-reload]]
@@ -10,7 +10,7 @@
 
 
 (def handler (-> {:plugins [;; TODO logging plugin
-                            (plugins/response->plugin
+                            (tpl/response->plugin
                              {:headers {"Content-Type" "text/html"}
                               :body [:html
                                      [:head
@@ -22,7 +22,7 @@
                               (bread/add-hook app :hook/dispatch (fn [req]
                                                                    (prn (select-keys req [:headers]))
                                                                    req)))
-                            (plugins/renderer->plugin rum/render-static-markup)]}
+                            (tpl/renderer->plugin rum/render-static-markup)]}
                  (bread/app)
                  (bread/app->handler)))
 
