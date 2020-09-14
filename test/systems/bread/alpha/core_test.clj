@@ -249,15 +249,18 @@
   (testing "it returns a function that applies side-effects"
     (let [;; Test side-effects
           state (atom {:num 3 :extra :stuff})
+          init-plugin (fn [app]
+                        (bread/add-value-hook app :initial/data :should-be-persisted))
           effectful-plugin (fn [app]
                              (bread/add-effect app (fn [app]
                                                      (swap! state update :num * 3)
                                                      (bread/add-value-hook app :ran? true))))
-          app (assoc (bread/app {:plugins [effectful-plugin]}) :yo :YO.)
+          app (assoc (bread/app {:plugins [init-plugin effectful-plugin]}) :yo :YO.)
           handler (bread/app->handler app)
           ;; Run the app, with side-effects
           result (handler {:url "/hello" :params {:name "world"}})]
       (is (true? (bread/hook result :ran?)))
+      (is (= :should-be-persisted (bread/hook result :initial/data)))
       ;; Assert that the expected side-effects took place
       (is (= 9 (:num @state)))))
 
