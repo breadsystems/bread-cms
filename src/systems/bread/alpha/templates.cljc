@@ -70,13 +70,20 @@
     (bread/add-hook app :hook/dispatch (fn [req]
                                         (merge req res)))))
 
-(defn renderer->plugin
-  "Given a rendered function r, returns a plugin that adds r as a :hook/render
-   callback. Example: (renderer->plugin rum/render-static-markup)"
+(defn renderer->template
+  "Given a renderer function r, returns a template function that takes a ring
+   response (map) and calls (update response :body r)"
   [render-fn]
+  ;; TODO accept view data
+  (fn [response]
+    (update response :body render-fn)))
+
+(defn renderer->plugin
+  "Given a renderer function r, returns a plugin that adds r as a :hook/render
+   callback. Example: (renderer->plugin rum/render-static-markup)"
+  [render-fn & args]
   (fn [app]
-    (bread/add-hook app :hook/render (fn [response]
-                                       (update response :body render-fn)))))
+    (apply bread/add-hook app :hook/render (renderer->template render-fn) args)))
 
 (defn layout-context-plugin
   "Given a function f, returns a plugin that adds a :hook/layout-context hook
