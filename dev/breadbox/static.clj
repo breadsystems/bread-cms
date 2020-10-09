@@ -2,8 +2,10 @@
   (:require
    [clojure.string :as string]
    [clojure.java.io :as io]
+   [markdown.core :as md]
    [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.datastore :as d])
+   [systems.bread.alpha.datastore :as d]
+   [systems.bread.alpha.templates :as tpl])
   (:import
    [systems.bread.alpha.datastore BreadStore]))
 
@@ -36,20 +38,27 @@
   (let [datastore (d/datastore req)
         post (d/slug->post datastore :default (bread/hook req :slug))]
     (-> req
-        (bread/response {:body (str (java.util.Date.) "!! " (:content post))})
+        ;; Produce a raw response from the post content
+        (bread/response {:body (:content post)})
+        ;; Persist the post data directly
         (bread/add-value-hook :post post))))
 
-(defn static-site-plugin [{:keys [src dest extension]}]
+(defn static-site-plugin [{:keys [src dest extension renderer]}]
   ;; TODO
   ;; * compute sitemap
   ;; * compile each route in sitemap
   ;; * eventually: model dependency tree and re-compile in real time
   (fn [req]
-    (let [datastore-opts {:src src :dest dest :extension (or extension ".md")}]
+    (let [datastore-opts {:src src
+                          :dest dest
+                          :extension (or extension ".md")}
+          template (tpl/renderer->template (or renderer md/md-to-html-string))]
       (-> req
+          (d/set-datastore (FileSystemStore. datastore-opts))
           ;; TODO get this from the router?
           (bread/add-value-hook :slug (string/replace (:url req) #"/" ""))
           (bread/add-hook :hook/dispatch persist-post)
-          (bread/add-effect (fn [{:keys [body] :as res}]
-                              (d/update-post! res :default {:content body})))
-          (bread/add-value-hook :hook/datastore (FileSystemStore. datastore-opts))))))
+          (bread/add-hook :hook/render template {:precedence 0})
+          (bread/add-hook :hook/decorate (fn [{:keys [body] :as res}]
+                                           (d/update-post! res :default {:content body})
+                                           res))))))

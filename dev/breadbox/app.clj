@@ -29,8 +29,13 @@
                                         [:meta {:charset "utf-8"}]]
                                        [:body
                                         [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
-                            (static/static-site-plugin {:src "pages" :dest "dist"})
-                            #_(tpl/renderer->plugin rum/render-static-markup)]}
+                            (static/static-site-plugin {:src "pages"
+                                                        :dest "dist"})
+                            (tpl/renderer->plugin (fn [body]
+                                                    [:main
+                                                     [:h1 "Main Title"]
+                                                     [:article (tpl/dangerous body)]]))
+                            (tpl/renderer->plugin rum/render-static-markup {:precedence 2})]}
                  (bread/app)
                  (bread/app->handler)))
 

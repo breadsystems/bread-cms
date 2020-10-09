@@ -62,6 +62,11 @@
     res))
 
 
+(defn dangerous
+  "React compat function for getting a {:dangerouslySetInnerHTML {:__html x}} object"
+  [s]
+  {:dangerouslySetInnerHTML {:__html s}})
+
 (defn response->plugin
   "Given a response map, returns a plugin that adds a :hook/dispatch hook which in
    turn returns the given response."
