@@ -30,6 +30,15 @@
                {:slug "hey"
                 :content "Hey you, out there in the cold..."}))
 
+(defn persist-post
+  "Query for and set :post in the request context"
+  [req]
+  (let [datastore (d/datastore req)
+        post (d/slug->post datastore :default (bread/hook req :slug))]
+    (-> req
+        (bread/response {:body (str (java.util.Date.) "!! " (:content post))})
+        (bread/add-value-hook :post post))))
+
 (defn static-site-plugin [{:keys [src dest extension]}]
   ;; TODO
   ;; * compute sitemap
@@ -38,7 +47,9 @@
   (fn [req]
     (let [datastore-opts {:src src :dest dest :extension (or extension ".md")}]
       (-> req
-          (assoc :slug (string/replace (:url req) #"/" ""))
-          (bread/add-effect (fn [{:keys [body slug] :as res}]
-                              (d/update-post! res slug {:content body})))
+          ;; TODO get this from the router?
+          (bread/add-value-hook :slug (string/replace (:url req) #"/" ""))
+          (bread/add-hook :hook/dispatch persist-post)
+          (bread/add-effect (fn [{:keys [body] :as res}]
+                              (d/update-post! res :default {:content body})))
           (bread/add-value-hook :hook/datastore (FileSystemStore. datastore-opts))))))

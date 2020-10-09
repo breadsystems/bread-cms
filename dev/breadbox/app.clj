@@ -30,16 +30,6 @@
                                        [:body
                                         [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
                             (static/static-site-plugin {:src "pages" :dest "dist"})
-                            (fn [app]
-                              (bread/add-hook
-                               app
-                               :hook/dispatch
-                               (fn [{:keys [slug] :as req}]
-                                 (let [datastore (d/datastore req)
-                                       post (d/slug->post datastore :_ slug)]
-                                   (-> req
-                                       (bread/response {:body (str (java.util.Date.) (:content post))})
-                                       (bread/add-value-hook :post post))))))
                             #_(tpl/renderer->plugin rum/render-static-markup)]}
                  (bread/app)
                  (bread/app->handler)))
