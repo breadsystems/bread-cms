@@ -1,7 +1,11 @@
 (ns breadbox.app
   (:require
    [breadbox.env]
+   [breadbox.static :as static]
+   [clojure.string :as str]
+   [clojure.java.io :as io]
    [systems.bread.alpha.core :as bread]
+   [systems.bread.alpha.datastore :as d]
    [systems.bread.alpha.templates :as tpl]
    [mount.core :as mount :refer [defstate]]
    [org.httpkit.server :as http]
@@ -9,25 +13,43 @@
    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]))
 
 
+(comment
+  (defn fsroot->app [root]
+    (-> {:plugins [(d/store->plugin (FileSystemStore. root))]}
+        bread/app
+        bread/load-plugins))
+  (d/slug->post (fsroot->app ".") :type/post "one"))
+
 (def handler (-> {:plugins [;; TODO logging plugin
-                            (tpl/response->plugin
-                             {:headers {"Content-Type" "text/html"}
-                              :body [:html
-                                     [:head
-                                      [:title "Breadbox"]
-                                      [:meta {:charset "utf-8"}]]
-                                     [:body
-                                      [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
+                            #_(tpl/response->plugin
+                               {:headers {"Content-Type" "text/html"}
+                                :body [:html
+                                       [:head
+                                        [:title "Breadbox"]
+                                        [:meta {:charset "utf-8"}]]
+                                       [:body
+                                        [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
+                            (static/static-site-plugin {:src "pages" :dest "dist"})
                             (fn [app]
-                              (bread/add-hook app :hook/dispatch (fn [req]
-                                                                   (prn (select-keys req [:headers]))
-                                                                   req)))
-                            (tpl/renderer->plugin rum/render-static-markup)]}
+                              (bread/add-hook
+                               app
+                               :hook/dispatch
+                               (fn [{:keys [slug] :as req}]
+                                 (let [datastore (d/datastore req)
+                                       post (d/slug->post datastore :_ slug)]
+                                   (-> req
+                                       (bread/response {:body (str (java.util.Date.) (:content post))})
+                                       (bread/add-value-hook :post post))))))
+                            #_(tpl/renderer->plugin rum/render-static-markup)]}
                  (bread/app)
                  (bread/app->handler)))
 
 (comment
-  (rum/render-static-markup [:p "hi"]))
+  (rum/render-static-markup [:p "hi"])
+  (bread/hook (handler {:url "one"}) :post)
+  (:body (handler {:url "one"}))
+  (:body (handler {:url "two"}))
+  )
 
 
 (defonce stop-http (atom nil))

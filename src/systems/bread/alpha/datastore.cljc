@@ -169,6 +169,12 @@
   (fn [app]
     (bread/add-value-hook app :hook/datastore store)))
 
+(defn datastore [app]
+  (bread/hook app :hook/datastore))
+
+(defn set-datastore [app store]
+  (bread/add-value-hook app :hook/datastore store))
+
 (comment
   (let [store (key-value-store {"my-post" {:type :post :slug "my-post"}
                                 "my-page" {:type :page :slug "my-page"}

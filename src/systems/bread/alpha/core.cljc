@@ -152,6 +152,8 @@
   (fn [req]
     (-> (merge req app)
         (hook :hook/load-plugins)
+        (hook :hook/context)
         (hook :hook/dispatch)
         (apply-effects)
-        (hook :hook/render))))
+        (hook :hook/render)
+        (hook :hook/decorate))))

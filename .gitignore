@@ -4,3 +4,5 @@
 pom.properties
 inputFiles.lst
 /target
+/ref
+/dist
