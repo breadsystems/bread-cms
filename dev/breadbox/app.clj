@@ -2,8 +2,6 @@
   (:require
    [breadbox.env]
    [breadbox.static :as static]
-   [clojure.string :as str]
-   [clojure.java.io :as io]
    [systems.bread.alpha.core :as bread]
    [systems.bread.alpha.datastore :as d]
    [systems.bread.alpha.templates :as tpl]
