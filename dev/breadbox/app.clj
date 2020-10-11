@@ -32,19 +32,64 @@
                             (static/static-site-plugin {:src "pages"
                                                         :dest "dist"})
                             (tpl/renderer->plugin (fn [body]
-                                                    [:main
-                                                     [:h1 "Main Title"]
-                                                     [:article (tpl/dangerous body)]]))
+                                                    ;; TODO i18n
+                                                    [:html {:lang "en"}
+                                                     [:head
+                                                      ;; TODO SEO
+                                                      [:title "Main Title"]]
+                                                     [:body
+                                                      [:main
+                                                       [:h1 "Main Title"]
+                                                       [:article (tpl/dangerous body)]]]]))
                             (tpl/renderer->plugin rum/render-static-markup {:precedence 2})]}
                  (bread/app)
                  (bread/app->handler)))
 
 (comment
   (rum/render-static-markup [:p "hi"])
-  (bread/hook (handler {:url "one"}) :post)
+  (bread/hook (handler {:url "one"}) :slug)
   (:body (handler {:url "one"}))
-  (:body (handler {:url "two"}))
-  )
+  ;; TODO test this out!
+  (static/generate! handler)
+
+  (defn translate-string [s] s)
+  ;; TODO ideas for i18n
+  ;; Dispatch on content field vs. hard-coded transation keys in markup...
+  (def html [:html {:lang "en"}
+             [:head
+              [:title :text/hello]]
+             [:body
+              [:main
+               [:h1 :text/hello]
+               [:h2 :text/invalid]
+               [:article (tpl/dangerous (translate-string "Some rich text content..."))]]]])
+
+  ;; Here we delegate to tempura or similar
+  ;; https://github.com/ptaoussanis/tempura
+  (defn tr [x]
+    (let [dict {:missing "MISSING"
+                :hello "Hello"}]
+      (get dict x (:missing dict))))
+
+  (defn i18n [x]
+    ;; TODO
+    (if (and (keyword? x) (= "text" (namespace x)))
+      (tr (keyword (name x)))
+      x))
+
+  (clojure.walk/postwalk i18n html)
+
+  (defn profiler-for-hooks [hooks f]
+    (fn [call]
+      (when (contains? hooks (:hook call)) (f call))))
+
+  (defn prn-keys [ks m]
+    (prn (select-keys m ks)))
+
+  (binding [bread/*hook-profiler* (profiler-for-hooks #{:hook/render} (partial prn-keys [:hook :args]))]
+    (handler {:url "one"})
+    (slurp "dist/one.html"))
+  (:body (handler {:url "two"})))
 
 
 (defonce stop-http (atom nil))
