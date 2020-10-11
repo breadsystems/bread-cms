@@ -1,6 +1,8 @@
 .cpcache
 .calva
+.idea
 *.jar
+*.iml
 pom.properties
 inputFiles.lst
 /target
