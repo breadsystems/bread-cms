@@ -5,6 +5,25 @@
 
 (declare hook)
 
+(def ^{:dynamic true
+       :doc
+       "Dynamic var for debugging. If this var bound to a function f,
+        causes (hook-> h ...) to call:
+
+       (f {:hook h    ;; the hook being called
+           :f f       ;; the hook callback to be invoked
+           :args args ;; the args being passed (the first of which is the result
+                      ;; of the previous invocation, if there was one)
+        })
+
+       before each invocation of each hook."}
+  *hook-profiler*)
+
+(defn- profile-hook! [h f x args]
+  (when (fn? *hook-profiler*)
+    (*hook-profiler* {:hook h :f f :args (cons x args)})))
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
   ;;    APP HELPER FUNCTIONS    ;;
@@ -119,20 +138,22 @@
   ([app h x & args]
    (let [hooks (get-in app [::hooks h])]
      (if (seq hooks)
-       (try
-         (loop [x x
-               [{::keys [f]} & fs] hooks]
-          (if (seq fs)
-            (recur (apply f x args) fs)
-            (apply f x args)))
-         (catch java.lang.Exception e
-           ;; If bread.core threw this exception, don't wrap it
-           (throw (if (-> e ex-data ::core?)
-                    e
-                    (ex-info (str h " hook threw an exception: " e)
-                             {:hook h :value x :extra-args args :app app ::core? true})))))
+       (loop [x x
+              [{::keys [f]} & fs] hooks]
+         (if (seq fs)
+           (recur (do (profile-hook! h f x args) (apply f x args)) fs)
+           (try
+             (profile-hook! h f x args)
+             (apply f x args)
+             (catch java.lang.Exception e
+                 ;; If bread.core threw this exception, don't wrap it
+               (throw (if (-> e ex-data ::core?)
+                        e
+                        (ex-info (str h " hook threw an exception: " e)
+                                 {:hook h :value x :extra-args args :app app ::core? true})))))))
+
        x)))
-  
+
   ([app h]
    (hook-> app h nil)))
 

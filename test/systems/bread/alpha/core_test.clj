@@ -6,7 +6,7 @@
 
 
 (deftest test-response
-  
+
   (testing "it persists plugins, hooks, and config"
     (let [raw {:status 200 :headers {} :body [:main]}]
       (is (= #{:status :headers :body
@@ -176,7 +176,7 @@
               {::bread/precedence 1 ::bread/f identity}]
              (bread/hooks-for (bread/remove-hook app :bread/a dec {:precedence 2})
                               :bread/a))))
-    
+
     (testing "it matches on extra"
       (is (= [{::bread/precedence 2 ::bread/f dec}
               {::bread/precedence 1 ::bread/f identity}]
@@ -188,7 +188,7 @@
 ;; TODO replace-hook
 
 (deftest test-hook->
-  
+
   (testing "it runs the threaded hook on the request"
     (let [req {::bread/hooks {:my/value [{::bread/f inc}
                                          {::bread/f #(* 2 %)}
@@ -196,7 +196,7 @@
       (is (= 7 (bread/hook-> req :my/value 3))))))
 
 (deftest test-hook
-  
+
   (testing "it runs the hook repeatedly on the request"
     (let [req (-> {:my/num 3 :my/extra-value nil}
                   (bread/add-hook :my/calculation #(update % :my/num inc) {:precedence 0})
@@ -208,16 +208,32 @@
                        (bread/hook :my/extra))]
       (is (= 7 (:my/num threaded)))
       (is (= :NEW! (:my/extra-value threaded)))))
-  
+
   (testing "it explains exceptions thrown by callbacks"
-    (let [req (-> {} (bread/add-hook :my/hook inc))]
+    (let [;; This should throw:
+          ;; java.lang.ClassCastException: class clojure.lang.PersistentArrayMap
+          ;; cannot be cast to class java.lang.Number
+          req (-> {} (bread/add-hook :my/hook inc))]
       (is (thrown-with-msg?
            clojure.lang.ExceptionInfo
            #":my/hook hook threw an exception: "
-           (bread/hook req :my/hook))))))
+           (bread/hook req :my/hook)))))
+
+  (testing "it honors the bound profiler"
+    (let [my-hook-invocations (atom [])
+          app (-> (bread/app {})
+                  (bread/add-hook :my/hook inc {:precedence 2})
+                  (bread/add-value-hook :my/hook 1))
+          record-args! (fn [{:keys [hook args]}]
+                         (when (= :my/hook hook)
+                           (swap! my-hook-invocations conj args)))
+          result (binding [bread/*hook-profiler* record-args!]
+                   (bread/hook app :my/hook))]
+      (is (= 2 result))
+      (is (= [[app] [1]] @my-hook-invocations)))))
 
 (deftest test-app
-  
+
   (testing "it populates itself with passed plugins"
     (let [app (bread/app {:plugins [:some :fake :plugins]})]
       (is (= [:some :fake :plugins]
@@ -299,7 +315,7 @@
           ;; dispatch the current request. In a more realistic situation, a routing plugin
           ;; typically lets you define your own routes via :hook/routes.
           router-plugin (fn [app]
-                          (let [;; A dispatcher is a function that calls the handler we get from 
+                          (let [;; A dispatcher is a function that calls the handler we get from
                                 ;; the router.
                                 ;; TODO dispatcher DSL: (bread.routing/dispatcher)
                                 dispatcher (fn [req]
