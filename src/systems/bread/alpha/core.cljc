@@ -97,12 +97,15 @@
                     ::precedence (or (:precedence options 1)))]
     (sort-by ::precedence (conj hooks hook))))
 
-(defn add-hook
+(defn add-hook*
   ([app h f options]
    (update-in app [::hooks h] append-hook f options))
 
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
+
+(defmacro add-hook [app h f & [options]]
+  `(add-hook* ~app ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
 
 (defn add-effect
   ([app f options]

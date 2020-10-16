@@ -88,7 +88,7 @@
    callback. Example: (renderer->plugin rum/render-static-markup)"
   [render-fn & args]
   (fn [app]
-    (apply bread/add-hook app :hook/render (renderer->template render-fn) args)))
+    (bread/add-hook app :hook/render (renderer->template render-fn))))
 
 (defn layout-context-plugin
   "Given a function f, returns a plugin that adds a :hook/layout-context hook

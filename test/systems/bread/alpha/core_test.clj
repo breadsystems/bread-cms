@@ -54,9 +54,9 @@
           plugin-b (fn [app]
                      (bread/add-hook app :plugin.b/dec dec {:precedence 2}))
           app (bread/load-plugins {::bread/plugins [plugin-a plugin-b]})]
-      (is (= [{::bread/precedence 1 ::bread/f inc}]
+      (is (= [{::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}]
              (bread/hooks-for app :plugin.a/inc)))
-      (is (= [{::bread/precedence 2 ::bread/f dec}]
+      (is (= [{::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
              (bread/hooks-for app :plugin.b/dec))))))
 
 (deftest test-hooks
@@ -107,7 +107,7 @@
   (testing "it operates on the app inside request"
     (let [req (-> {:url "/" :bread/app {}}
                   (bread/add-hook :my/hook inc))]
-      (is (= [{::bread/precedence 1 ::bread/f inc}]
+      (is (= [{::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}]
              (bread/hooks-for req :my/hook)))))
 
   (testing "it honors precedence"
@@ -115,15 +115,15 @@
                   (bread/add-hook :my/hook inc {:precedence 1})
                   (bread/add-hook :my/hook dec {:precedence 2})
                   (bread/add-hook :my/hook identity {:precedence 0}))]
-      (is (= [{::bread/precedence 0 ::bread/f identity}
-              {::bread/precedence 1 ::bread/f inc}
-              {::bread/precedence 2 ::bread/f dec}]
+      (is (= [{::bread/precedence 0 ::bread/f identity ::bread/added-in *ns*}
+              {::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}
+              {::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
              (bread/hooks-for req :my/hook)))))
 
   (testing "it honors options"
     (let [req (-> {:url "/"}
                   (bread/add-hook :my/hook inc {:my/extra 123}))]
-      (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123}]
+      (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123 ::bread/added-in *ns*}]
              (bread/hooks-for req :my/hook))))))
 
 (deftest test-add-effect
@@ -134,9 +134,9 @@
                   (bread/add-effect dec {:precedence 2})
                   (bread/add-effect identity {:precedence 1.5
                                               :my/extra 123}))]
-      (is (= {:hook/effects [{::bread/precedence 1   ::bread/f inc}
-                             {::bread/precedence 1.5 ::bread/f identity :my/extra 123}
-                             {::bread/precedence 2   ::bread/f dec}]}
+      (is (= {:hook/effects [{::bread/precedence 1   ::bread/f inc ::bread/added-in *ns*}
+                             {::bread/precedence 1.5 ::bread/f identity :my/extra 123 ::bread/added-in *ns*}
+                             {::bread/precedence 2   ::bread/f dec ::bread/added-in *ns*}]}
              (bread/hooks req))))))
 
 (deftest test-add-value-hook
@@ -241,7 +241,7 @@
 
   (testing "it enriches the request with the app data itself"
     (let [app (bread/app)]
-      (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins}]
+      (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins ::bread/added-in *ns*}]
              (bread/hooks-for app :hook/load-plugins))))))
 
 (deftest test-app->handler
@@ -251,7 +251,7 @@
           app (bread/app {:plugins [my-plugin]})
           handler (bread/app->handler app)
           response (handler {:url "/"})]
-      (is (= [{::bread/precedence 1 ::bread/f identity}]
+      (is (= [{::bread/precedence 1 ::bread/f identity ::bread/added-in *ns*}]
              (bread/hooks-for response :hook/effects)))))
 
   (testing "it returns a function that loads config"
