@@ -99,6 +99,7 @@
 
 (defn add-hook*
   ([app h f options]
+   ^{:pre [(ifn? f)]}
    (update-in app [::hooks h] append-hook f options))
 
   ([app h f]
@@ -142,21 +143,19 @@
    (let [hooks (get-in app [::hooks h])]
      (if (seq hooks)
        (loop [x x
-              [{::keys [f]} & fs] hooks]
+              [{::keys [f] :as hook} & fs] hooks]
          (if (seq fs)
            (recur (do (profile-hook! h f x args) (apply f x args)) fs)
            (try
              (profile-hook! h f x args)
              (apply f x args)
-             (catch java.lang.Exception e
-                 ;; If bread.core threw this exception, don't wrap it
+             (catch java.lang.Throwable e
+               ;; If bread.core threw this exception, don't wrap it
                (throw (if (-> e ex-data ::core?)
                         e
-                        (ex-info (str h " hook threw an exception: " e)
-                                 {:hook h :value x :extra-args args :app app ::core? true})))))))
-
+                        (ex-info (str h " hook threw an exception: " (str (class e) ": " (.getCause e)))
+                                 {:name h :hook hook :value x :extra-args args :app app ::core? true})))))))
        x)))
-
   ([app h]
    (hook-> app h nil)))
 

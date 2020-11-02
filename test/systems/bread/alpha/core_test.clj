@@ -1,8 +1,9 @@
 (ns systems.bread.alpha.core-test
   (:require
-   [clojure.string :refer [upper-case]]
-   [clojure.test :refer [deftest is testing]]
-   [systems.bread.alpha.core :as bread]))
+    [clojure.string :refer [upper-case]]
+    [clojure.test :refer [deftest is testing]]
+    [systems.bread.alpha.core :as bread])
+  (:import (clojure.lang ExceptionInfo)))
 
 
 (deftest test-response
@@ -42,7 +43,7 @@
       (is (= :extra-special (bread/config req :special/config)))))
 
   (testing "with an odd number of extra args"
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"set-config expects an even number of extra args, 3 extra args passed."
                           (bread/set-config {} :a :a :b :b :c)))))
 
@@ -215,9 +216,9 @@
           ;; cannot be cast to class java.lang.Number
           req (-> {} (bread/add-hook :my/hook inc))]
       (is (thrown-with-msg?
-           clojure.lang.ExceptionInfo
-           #":my/hook hook threw an exception: "
-           (bread/hook req :my/hook)))))
+            ExceptionInfo
+            #":my/hook hook threw an exception: "
+            (bread/hook req :my/hook)))))
 
   (testing "it honors the bound profiler"
     (let [my-hook-invocations (atom [])
@@ -225,8 +226,7 @@
                   (bread/add-hook :my/hook inc {:precedence 2})
                   (bread/add-value-hook :my/hook 1))
           record-args! (fn [{:keys [hook args]}]
-                         (when (= :my/hook hook)
-                           (swap! my-hook-invocations conj args)))
+                         (swap! my-hook-invocations conj args))
           result (binding [bread/*hook-profiler* record-args!]
                    (bread/hook app :my/hook))]
       (is (= 2 result))
