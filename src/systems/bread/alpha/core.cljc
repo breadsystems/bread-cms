@@ -1,9 +1,14 @@
 (ns systems.bread.alpha.core
   (:require
-   [clojure.set :refer [rename-keys]]))
+    [clojure.spec.alpha :as s]
+    [clojure.set :refer [rename-keys]]))
 
 
-(declare hook)
+(s/def ::config map?)
+(s/def ::hooks map?)
+(s/def ::plugins vector?)
+
+(s/def ::app (s/keys :req [::config ::hooks ::plugins]))
 
 (def ^{:dynamic true
        :doc
@@ -33,6 +38,8 @@
 ;;
 ;; Helper functions for generating and working with app data directly.
 ;;
+
+(declare hook)
 
 (defn response [req raw]
   (merge raw (select-keys req [::config ::hooks ::plugins])))
@@ -99,7 +106,7 @@
 
 (defn add-hook*
   ([app h f options]
-   ^{:pre [(ifn? f)]}
+   {:pre [(ifn? f)]}
    (update-in app [::hooks h] append-hook f options))
 
   ([app h f]
