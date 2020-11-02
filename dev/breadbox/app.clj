@@ -1,24 +1,17 @@
 (ns breadbox.app
   (:require
    [breadbox.env]
-   [breadbox.static :as static]
-   [clojure.string :as str]
    [clojure.java.io :as io]
+   [systems.bread.alpha.static :as static]
    [systems.bread.alpha.core :as bread]
    [systems.bread.alpha.datastore :as d]
    [systems.bread.alpha.templates :as tpl]
+   [markdown.core :as md]
    [mount.core :as mount :refer [defstate]]
    [org.httpkit.server :as http]
    [ring.middleware.reload :refer [wrap-reload]]
    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]))
 
-
-(comment
-  (defn fsroot->app [root]
-    (-> {:plugins [(d/store->plugin (FileSystemStore. root))]}
-        bread/app
-        bread/load-plugins))
-  (d/slug->post (fsroot->app ".") :type/post "one"))
 
 (def handler (-> {:plugins [;; TODO logging plugin
                             #_(tpl/response->plugin
@@ -30,7 +23,8 @@
                                        [:body
                                         [:div.bread-app [:h1 "Hello, Breadster!"]]]]})
                             (static/static-site-plugin {:src "pages"
-                                                        :dest "dist"})
+                                                        :dest "dist"
+                                                        :renderer md/md-to-html-string})
                             (tpl/renderer->plugin (fn [body]
                                                     ;; TODO i18n
                                                     [:html {:lang "en"}
@@ -46,9 +40,18 @@
                  (bread/app->handler)))
 
 (comment
-  (rum/render-static-markup [:p "hi"])
-  (bread/hook (handler {:url "one"}) :slug)
   (:body (handler {:url "one"}))
+  (defn profiler-for-hooks [hooks f]
+    (fn [call]
+      (when (contains? hooks (:hook call)) (f call))))
+
+  (defn prn-keys [ks m]
+    (prn (select-keys m ks)))
+
+  (binding [bread/*hook-profiler* (profiler-for-hooks #{:hook/render} (partial prn-keys [:hook :args]))]
+    (handler {:url "one"})
+    (slurp "dist/one.html"))
+
   ;; TODO test this out!
   (static/generate! handler)
 
@@ -78,24 +81,13 @@
       x))
 
   (clojure.walk/postwalk i18n html)
-
-  (defn profiler-for-hooks [hooks f]
-    (fn [call]
-      (when (contains? hooks (:hook call)) (f call))))
-
-  (defn prn-keys [ks m]
-    (prn (select-keys m ks)))
-
-  (binding [bread/*hook-profiler* (profiler-for-hooks #{:hook/render} (partial prn-keys [:hook :args]))]
-    (handler {:url "one"})
-    (slurp "dist/one.html"))
   (:body (handler {:url "two"})))
 
 
 (defonce stop-http (atom nil))
 
 (defn start! []
-  (let [port (Integer. (or (System/getenv "HTTP_PORT") 8080))]
+  (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running HTTP server at localhost:" port))
     (reset! stop-http (http/run-server (wrap-reload handler) {:port port})))
   nil)
