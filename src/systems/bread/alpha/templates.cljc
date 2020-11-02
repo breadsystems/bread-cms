@@ -86,9 +86,12 @@
 (defn renderer->plugin
   "Given a renderer function r, returns a plugin that adds r as a :hook/render
    callback. Example: (renderer->plugin rum/render-static-markup)"
-  [render-fn & args]
-  (fn [app]
-    (apply bread/add-hook app :hook/render (renderer->template render-fn) args)))
+  ([render-fn]
+   (fn [app]
+     (bread/add-hook app :hook/render (renderer->template render-fn))))
+  ([render-fn options]
+   (fn [app]
+     (bread/add-hook app :hook/render (renderer->template render-fn) options))))
 
 (defn layout-context-plugin
   "Given a function f, returns a plugin that adds a :hook/layout-context hook
