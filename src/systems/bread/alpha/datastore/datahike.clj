@@ -1,3 +1,4 @@
+;; TODO migrate to CLJC
 (ns systems.bread.alpha.datastore.datahike
   (:require
     [datahike.api :as d]
