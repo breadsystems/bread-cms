@@ -138,6 +138,7 @@
 (defprotocol ValueStore
   (-vals [store] "Get all values within the key/value store"))
 
+;; TODO cljs
 (extend-protocol ValueStore
   clojure.lang.PersistentArrayMap
   (-vals [m] (vals m))
