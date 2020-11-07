@@ -1,23 +1,25 @@
 (ns systems.bread.alpha.datastore-test
   (:require
-   [clojure.test :refer [deftest is testing]]
-   [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.datastore :as d :refer [BreadStore]]))
+    [clojure.test :refer [deftest is testing]]
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as d :refer [BreadStore]])
+  (:import
+    [clojure.lang ExceptionInfo]))
 
 
 (deftest test-connect!
 
   (testing "it gives a friendly error message if you forget :datastore/type"
     (is (thrown-with-msg?
-         clojure.lang.ExceptionInfo
-         #"No :datastore/type specified in datastore config!"
-         (d/connect! {:datastore/typo :datahike}))))
+          ExceptionInfo
+          #"No :datastore/type specified in datastore config!"
+          (d/connect! {:datastore/typo :datahike}))))
 
   (testing "it gives a friendly error message if you pass a bad :datastore/type"
     (is (thrown-with-msg?
-         clojure.lang.ExceptionInfo
-         #"Unknown :datastore/type `:oops`! Did you forget to load a plugin?"
-         (d/connect! {:datastore/type :oops})))))
+          ExceptionInfo
+          #"Unknown :datastore/type `:oops`! Did you forget to load a plugin?"
+          (d/connect! {:datastore/type :oops})))))
 
 (deftest test-map-datastore
 
@@ -39,13 +41,13 @@
     (let [store (atom {:my/key :my/value})]
       (is (= :my/value
              (d/get-key store :my/key)))))
-  
+
   (testing "it implements set-key"
     (let [store (atom {:a :b})]
       (d/set-key store :my/key :my/value)
       (is (= {:a :b :my/key :my/value}
              @store))))
-  
+
   (testing "it implements delete-key"
     (let [store (atom {:a :b :my/key :my/value})]
       (d/delete-key store :my/key)
@@ -60,8 +62,8 @@
   (let [my-post {:post/slug "my-post" :post/type :post.type/blog}
         my-page {:post/slug "my-page" :post/type :post.type/page}
         other-page {:post/slug "other-page" :post/type :post.type/page}
-        store (d/key-value-store {"my-post" my-post
-                                  "my-page" my-page
+        store (d/key-value-store {"my-post"    my-post
+                                  "my-page"    my-page
                                   "other-page" other-page})
         app (bread/add-value-hook (bread/app) :hook/datastore store)]
 
