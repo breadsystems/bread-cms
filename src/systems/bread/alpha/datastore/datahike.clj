@@ -46,6 +46,7 @@
 
 (extend-protocol store/TransactionalDatastoreConnection
   clojure.lang.Atom
+  (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
 

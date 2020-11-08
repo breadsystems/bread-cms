@@ -48,12 +48,13 @@
 
     (let [conn (init-db)]
       (is (= #{["angela" :post.type/revolutionary "Angela Davis"]}
-             (store/q @conn '[:find ?slug ?type ?title
-                              :where
-                              [?e :post/slug "angela"]
-                              [?e :post/slug ?slug]
-                              [?e :post/type ?type]
-                              [?e :post/title ?title]])))))
+             (store/q (store/db conn)
+                      '[:find ?slug ?type ?title
+                        :where
+                        [?e :post/slug "angela"]
+                        [?e :post/slug ?slug]
+                        [?e :post/type ?type]
+                        [?e :post/title ?title]])))))
 
   (deftest test-pull
 
@@ -61,6 +62,6 @@
       (is (= #:post{:title "Angela Davis"
                     :slug  "angela"
                     :type  :post.type/revolutionary}
-             (store/pull @conn
+             (store/pull (store/db conn)
                          '[:post/title :post/slug :post/type]
                          [:post/uuid (:post/uuid angela)]))))))
