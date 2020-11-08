@@ -1,9 +1,6 @@
 (ns systems.bread.alpha.datastore-datahike-test
   (:require
-    [datahike.api :as d]
-    [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.datastore.datahike :as plugin]
     [clojure.test :refer [deftest is testing use-fixtures]]))
 
 
@@ -21,11 +18,11 @@
 
       datahike-fixture (fn [f]
                          ;; Clean up after any prior failures, just in case.
-                         (d/delete-database config)
-                         (d/create-database config)
+                         (store/delete-database! config)
+                         (store/create-database! config)
                          (f)
                          ;; Eagerly clean up after ourselves.
-                         (d/delete-database config))
+                         (store/delete-database! config))
 
       angela {:name "Angela" :age 76}
       bobby {:name "Bobby" :age 84}
@@ -98,60 +95,3 @@
                                      [{:db/id [:name "Angela"] :age 77}])]
           (is (= 77 (:age (store/pull with-db '[:age] [:name "Angela"])))))))))
 
-
-(deftest test-datahike-plugin
-  (let [config {:datahike {:store {:backend :mem
-                                   :id "plugin-db"}}}
-        config->handler (fn [conf]
-                          (-> {:plugins [(plugin/datahike-plugin conf)]}
-                              (bread/app)
-                              (bread/app->handler)))
-        handle (fn [req]
-                 ((config->handler config) req))]
-
-    (testing "it configures as-of-param"
-      (let [app (handle {})]
-        (is (= :as-of (bread/config app :datastore/as-of-param)))))
-
-    (testing "it honors custom as-of-param"
-      (let [app (handle {})]
-        (is (= :as-of (bread/config app :datastore/as-of-param)))))
-
-    (testing "it configures db connection"
-      (let [app (handle {})]
-        (is (instance? clojure.lang.Atom (bread/config app :datastore/connection)))))
-
-    (testing ":hook/datastore returns the present snapshot by default"
-      (let [response ((config->handler config) {:url "/"})]
-        (is (instance? datahike.db.DB (bread/hook response :hook/datastore)))))
-
-    (testing ":hook/datastore.req->timepoint honors as-of param"
-      (let [handler (config->handler config)
-            response (handler {:url "/"
-                               ;; pass a literal date here
-                               :params {:as-of "2020-01-01 00:00:00 PDT"}})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
-
-    (testing ":hook/datastore.req->timepoint honors as-of-format config"
-      (let [handler (config->handler (assoc config :as-of-format "yyyy-MM-dd"))
-            response (handler {:url "/"
-                               ;; pass a literal date here
-                               :params {:as-of "2020-01-01"}})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
-
-    (testing ":hook/datastore honors as-of-tx")
-
-    (testing ":hook/datastore.req->timepoint gracefully handles bad date strings"
-      (let [handler (config->handler config)
-            response (handler {:url "/"
-                               :params {:as-of "nonsense date string"}})]
-        (is (instance? datahike.db.DB (bread/hook response :hook/datastore)))))
-
-    (testing "it honors a custom :hook/datastore.req->timepoint callback"
-      (let [->timepoint (constantly (java.util.Date.))
-            app (-> {:plugins [(plugin/datahike-plugin config)]}
-                    (bread/app)
-                    (bread/add-hook :hook/datastore.req->timepoint ->timepoint))
-            handler (bread/app->handler app)
-            response (handler {})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))))

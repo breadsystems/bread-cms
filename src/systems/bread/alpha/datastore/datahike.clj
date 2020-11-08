@@ -3,7 +3,9 @@
   (:require
     [datahike.api :as d]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.datastore :as store])
+  (:import
+    [clojure.lang ExceptionInfo]))
 
 
 
@@ -60,26 +62,23 @@
 ;; TransactionalDatastoreConnection protocols
 ;;
 
-(def ^:private created-dbs (atom {}))
-
 (defn connect [datahike-config]
-  (try
-    (let [db-id (get-in datahike-config [:store :id])]
-      (when (nil? (get @created-dbs db-id))
-        (d/create-database (assoc datahike-config :initial-tx datahike-config))
-        (swap! created-dbs assoc db-id {:created true})))
-    (catch clojure.lang.ExceptionInfo _
-      (println "db detected")))
   (try
     (d/connect datahike-config)
     (catch java.lang.IllegalArgumentException e
       (throw (ex-info (str "Exception connecting to datahike: " (.getMessage e))
                       {:exception e
-                       :message (.getMessage e)
-                       :config datahike-config})))))
+                       :message   (.getMessage e)
+                       :config    datahike-config})))))
 
 (defmethod store/connect! :datahike [config]
   (connect config))
+
+(defmethod store/create-database! :datahike [config]
+  (d/create-database config))
+
+(defmethod store/delete-database! :datahike [config]
+  (d/delete-database config))
 
 (defn req->timepoint
   "Takes a request and returns a Datahike timepoint"
@@ -110,7 +109,7 @@
         ->datastore (:req->datastore config req->datastore)]
     (fn [app]
       (-> app
-          (bread/set-config :datastore/connection (connect datahike))
+          (bread/set-config :datastore/connection (store/connect! datahike))
           (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
@@ -122,27 +121,26 @@
         db (connect {:store {:backend :mem :id "qwerty"}})]
     (store/as-of @db as-of))
 
-  (def schema [{:db/ident :slug
-                :db/valueType :db.type/string
-                :db/unique :db.unique/identity
-                :db/index true
+  (def schema [{:db/ident       :slug
+                :db/valueType   :db.type/string
+                :db/unique      :db.unique/identity
+                :db/index       true
                 :db/cardinality :db.cardinality/one}
-               {:db/ident :title
-                :db/valueType :db.type/string
-                :db/index true
+               {:db/ident       :title
+                :db/valueType   :db.type/string
+                :db/index       true
                 :db/cardinality :db.cardinality/one}
-               {:db/ident :type
-                :db/valueType :db.type/keyword
+               {:db/ident       :type
+                :db/valueType   :db.type/keyword
                 :db/cardinality :db.cardinality/one}])
 
   (def config {:datastore/type :datahike
-               :store {:backend :mem :id "my-store2"}
-               :initial-tx schema})
+               :store          {:backend :mem :id "my-store2"}
+               :initial-tx     schema})
 
+  (store/create-database! config)
+  (store/delete-database! config)
   (def conn (store/connect! config))
-
-  (d/create-database config)
-  (d/delete-database config)
 
   (do
     (store/transact conn [{:post/type :page :title "Hello" :slug "hello"}

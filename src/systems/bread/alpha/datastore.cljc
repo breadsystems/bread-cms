@@ -4,6 +4,8 @@
 
 
 (defmulti connect! :datastore/type)
+(defmulti create-database! :datastore/type)
+(defmulti delete-database! :datastore/type)
 
 (defmethod connect! :default [{:datastore/keys [type] :as config}]
   (let [msg (if (nil? type)
