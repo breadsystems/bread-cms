@@ -13,15 +13,15 @@
 
 ;; Set up a bunch of boilerplate to share between tests.
 (let [config {:datastore/type :datahike
-              :store          {:backend :mem :id "postdb"}
-              ;; TODO put this in a migration
-              :initial-tx     (schema/initial-schema)}
+              :store          {:backend :mem :id "postdb"}}
 
       datahike-fixture (fn [run]
                          ;; Clean up after any prior failures, just in case.
                          (store/delete-database! config)
                          (store/create-database! config)
                          (try
+                           (let [conn (store/connect! config)]
+                             (store/transact conn (schema/initial-schema)))
                            (run)
                            (catch Throwable e
                              (throw e))

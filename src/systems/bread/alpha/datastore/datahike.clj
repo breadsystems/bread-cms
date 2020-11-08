@@ -3,9 +3,7 @@
   (:require
     [datahike.api :as d]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store])
-  (:import
-    [clojure.lang ExceptionInfo]))
+    [systems.bread.alpha.datastore :as store]))
 
 
 
@@ -98,7 +96,6 @@
   [req]
   (let [conn (bread/config req :datastore/connection)
         timepoint (bread/hook req :hook/datastore.req->timepoint)]
-    (println timepoint)
     (if timepoint
       (store/as-of @conn timepoint)
       @conn)))
