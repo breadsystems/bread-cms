@@ -103,13 +103,14 @@ Liberate your content.
     (:require [my.project.blog :as blog]
               [systems.bread.alpha.core :as bread]))
 
-(def app (-> (bread/app)
-             (bread/post-type :blog-post
-                              {:browse blog/find
-                               :read   blog/details
-                               :edit   blog/edit
-                               :add    blog/add
-                               :delete blog/delete})))
+(def handler (-> (bread/app)
+                 (bread/post-type :blog-post
+                                  {:browse blog/find
+                                   :read   blog/details
+                                   :edit   blog/edit
+                                   :add    blog/add
+                                   :delete blog/delete})
+                 (bread/app->handler)))
 
 (handler {:uri "/posts"
           :query-string "month=2020-11"})
