@@ -24,22 +24,22 @@
     (d/as-of store instant))
   (history [store]
     (d/history store))
-  (q [store query]
-    (d/q query store))
+  (q [store query args]
+    (apply d/q query store args))
   (pull [store query ident]
     (d/pull store query ident))
   (db-with [store tx]
     (d/db-with store tx))
 
   datahike.db.AsOfDB
-  (q [store query]
-    (d/q query store))
+  (q [store query args]
+    (apply d/q query store args))
   (pull [store query ident]
     (d/pull store query ident))
 
   datahike.db.HistoricalDB
-  (q [store query]
-    (d/q query store)))
+  (q [store query args]
+    (apply d/q query store args)))
 
 
 (extend-protocol store/TransactionalDatastoreConnection
@@ -47,6 +47,20 @@
   (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
+
+
+(extend-protocol store/BreadStore
+  datahike.db.DB
+  (-slug->post [datahike-db slug]
+    (d/q
+      '[:find ?slug ?type ?title
+        :in $ ?slug
+        :where
+        [?e :post/slug ?slug]
+        [?e :post/title ?title]
+        [?e :post/type ?type]]
+      datahike-db
+      slug)))
 
 
 
@@ -90,6 +104,9 @@
         (.parse (java.text.SimpleDateFormat. format) as-of)
         (catch java.text.ParseException _e nil)))))
 
+()
+
+;; TODO make this a multimethod
 (defn req->datastore
   "Takes a request and returns a datastore instance, optionally configured
    as a temporal-db (via as-of) or with-db (via db-with)"
@@ -100,6 +117,7 @@
       (store/as-of @conn timepoint)
       @conn)))
 
+;; TODO make this a multimethod
 (defn datahike-plugin [config]
   (let [{:keys [as-of-param as-of-format datahike]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
@@ -137,8 +155,14 @@
                :initial-tx     schema})
 
   (store/create-database! config)
-  (store/delete-database! config)
   (def conn (store/connect! config))
+
+  (def app (bread/load-plugins (bread/app {:plugins [(datahike-plugin {:datahike config})]})))
+  (req->datastore app)
+  (d/q '[:find ?x :where [?e :slug ?x]] (req->datastore app) "slug")
+  (store/slug->post app :_ "asdf")
+
+  (store/delete-database! config)
 
   (do
     (store/transact conn [{:post/type :page :title "Hello" :slug "hello"}

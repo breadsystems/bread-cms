@@ -38,6 +38,7 @@
                    :type  :post.type/revolutionary}
       init-db (fn []
                 (let [conn (store/connect! config)]
+                  (prn 'transact angela bobby)
                   (store/transact conn [angela bobby])
                   conn))]
 
@@ -54,7 +55,8 @@
                         [?e :post/slug "angela"]
                         [?e :post/slug ?slug]
                         [?e :post/type ?type]
-                        [?e :post/title ?title]])))))
+                        [?e :post/title ?title]]
+                      [])))))
 
   (deftest test-pull
 
@@ -64,4 +66,12 @@
                     :type  :post.type/revolutionary}
              (store/pull (store/db conn)
                          '[:post/title :post/slug :post/type]
-                         [:post/uuid (:post/uuid angela)]))))))
+                         [:post/uuid (:post/uuid angela)])))))
+
+  (deftest test-post-api-basic
+
+    (let [app (bread/load-plugins
+                (bread/app {:plugins [(plugin/datahike-plugin {:datahike config})]}))
+          post (store/slug->post app :_ "angela")]
+      (store/add-post! app angela)
+      (is (= "Angela Davis" (:post/title post))))))

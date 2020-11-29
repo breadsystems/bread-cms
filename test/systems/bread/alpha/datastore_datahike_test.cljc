@@ -42,7 +42,7 @@
 
     (let [conn (init-db)]
       (is (= #{["Angela" 76] ["Bobby" 84]}
-             (store/q @conn query-all)))))
+             (store/q @conn query-all [])))))
 
   (deftest test-pull
 
@@ -63,9 +63,9 @@
       ;; Happy birthday, Angela!
       (store/transact conn [{:db/id [:name "Angela"] :age 77}])
       (is (= #{["Angela" 77] ["Bobby" 84]}
-             (store/q @conn query-all)))
+             (store/q @conn query-all [])))
       (is (= #{["Angela" 76] ["Bobby" 84]}
-             (store/q (store/as-of @conn init-date) query-all)))
+             (store/q (store/as-of @conn init-date) query-all [])))
 
       (testing "it composes with pull"
         (let [db (store/as-of @conn init-date)]
@@ -81,7 +81,7 @@
       (store/transact conn [{:db/id [:name "Angela"] :age 77}])
       (store/transact conn [{:db/id [:name "Angela"] :age 78}])
       (is (= #{[76] [77] [78]}
-             (store/q (store/history @conn) query-ages)))))
+             (store/q (store/history @conn) query-ages [])))))
 
   (deftest test-db-with
 

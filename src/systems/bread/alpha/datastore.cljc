@@ -1,18 +1,23 @@
 (ns systems.bread.alpha.datastore
   (:require
-   [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread]))
 
 
 (defmulti connect! :datastore/type)
 (defmulti create-database! :datastore/type)
 (defmulti delete-database! :datastore/type)
+(defmulti connection :datastore/type)
+(defmulti req->datastore :datastore/type)
+
+(defmethod connection :default [app]
+  (bread/config app :datastore/connection))
 
 (defmethod connect! :default [{:datastore/keys [type] :as config}]
   (let [msg (if (nil? type)
               "No :datastore/type specified in datastore config!"
               (str "Unknown :datastore/type `" type "`!"
                    " Did you forget to load a plugin?"))]
-    (throw (ex-info msg {:config config
+    (throw (ex-info msg {:config        config
                          :bread.context :datastore/connect!}))))
 
 
@@ -29,7 +34,7 @@
     (assoc m k v))
   (delete-key [m k]
     (dissoc m k))
-  
+
   clojure.lang.Atom
   (get-key [a k]
     (get (deref a) k))
@@ -43,12 +48,14 @@
   (as-of [store timepoint])
   (history [store])
   (pull [store struct lookup-ref])
-  (q [store query])
+  (q [store query args])
   (db-with [store timepoint]))
+
+;; TODO (defn q [query store & args] ...)
 
 (defprotocol TransactionalDatastoreConnection
   (db [conn])
-  (transact [conn timepoint]))
+  (transact [conn tx]))
 
 (defprotocol BreadStore
   (-type->posts [store t] "get all posts of type t")
@@ -71,7 +78,7 @@
     [?p :post/tags ?tag]]
 
   (pull {:datastore/type :datastore.type/datahike
-         :datahike {}}
+         :datahike       {}}
         [:db/id :post/title :post/type :post/slug :post/content
          {:post/tags [:db/id :tag/title :tag/slug]}]
         [:post/slug "some-page"])
@@ -82,18 +89,18 @@
          ~body)))
 
   (defposttype :post.type/lesson
-    (slug->post
-     [req _t slug]
-      (let [store (lesson/store req)]
-        (try
-          (-slug->post store slug)
-          (catch lessons.exception.ApiError e
-            (log/error e {:context "slug->post"
-                          :post/type :post.type/lesson
-                          :post/slug slug})
-            nil)))))
+               (slug->post
+                 [req _t slug]
+                 (let [store (lesson/store req)]
+                   (try
+                     (-slug->post store slug)
+                     (catch lessons.exception.ApiError e
+                       (log/error e {:context   "slug->post"
+                                     :post/type :post.type/lesson
+                                     :post/slug slug})
+                       nil)))))
 
-  (defmethod slug->post [_t ])
+  (defmethod slug->post [_t])
 
   ;;  
   )
@@ -102,7 +109,7 @@
   (bread/hook req :hook/datastore))
 
 (defmulti type->posts (fn [t _req]
-                       t))
+                        t))
 
 (defmethod type->posts :default [req t]
   (when-let [store (req->store req)]
@@ -123,11 +130,11 @@
     (-update-post! store ident post)))
 
 (defmulti add-post! (fn [_req post]
-                         (:post/type post)))
+                      (:post/type post)))
 
 (defmethod add-post! :default [req post]
-  (when-let [store (req->store req)]
-    (-add-post! store post)))
+  (when-let [conn (connection req)]
+    (transact conn [post])))
 
 (defmulti delete-post! (fn [_req post]
                          (:post/type post)))
@@ -144,7 +151,7 @@
 (extend-protocol ValueStore
   clojure.lang.PersistentArrayMap
   (-vals [m] (vals m))
-  
+
   clojure.lang.Atom
   (-vals [a] (vals (deref a))))
 
@@ -181,9 +188,9 @@
 (comment
   (let [store (key-value-store {"my-post" {:type :post :slug "my-post"}
                                 "my-page" {:type :page :slug "my-page"}
-                                "home" {:type :page :slug "home"}})]
-    {'type->post (-type->posts store :page)
-     'slug->post (-slug->post store "home")
+                                "home"    {:type :page :slug "home"}})]
+    {'type->post   (-type->posts store :page)
+     'slug->post   (-slug->post store "home")
      'update-post! (-update-post! store "home" {:type :page :slug "home" :content "new content"})
-     'add-post! (-add-post! store {:type :page :slug "new-post"})
+     'add-post!    (-add-post! store {:type :page :slug "new-post"})
      'delete-post! (-delete-post! store "home")}))

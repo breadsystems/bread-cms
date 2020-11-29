@@ -54,7 +54,7 @@
       (is (= {:a :b}
              @store)))))
 
-(deftest test-datastore-methods
+#_(deftest test-datastore-methods
 
   ;; KeyValueBreadStore might be helpful for a super-simple static site,
   ;; but mostly it's just a reference implementation of the BreadStore protocol,
@@ -88,9 +88,7 @@
       (is (= new-post (d/get-key updated "new-post"))))
 
     (let [updated (d/delete-post! app "my-post")]
-      (is (nil? (d/get-key updated "my-post"))))
-    ;;
-    ))
+      (is (nil? (d/get-key updated "my-post"))))))
 
 (deftest test-datastore->plugin
 
