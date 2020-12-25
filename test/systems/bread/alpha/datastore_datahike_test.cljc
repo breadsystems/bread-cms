@@ -59,16 +59,17 @@
   (deftest test-as-of
 
     (let [conn (init-db)
-          init-date (java.util.Date.)]
+          {{tx :max-tx} :db-before}
+          (store/transact conn [{:db/id [:name "Angela"] :age 77}])]
       ;; Happy birthday, Angela!
-      (store/transact conn [{:db/id [:name "Angela"] :age 77}])
       (is (= #{["Angela" 77] ["Bobby" 84]}
              (store/q @conn query-all [])))
+      ;; As of tx
       (is (= #{["Angela" 76] ["Bobby" 84]}
-             (store/q (store/as-of @conn init-date) query-all [])))
+             (store/q (store/as-of @conn tx) query-all [])))
 
       (testing "it composes with pull"
-        (let [db (store/as-of @conn init-date)]
+        (let [db (store/as-of @conn tx)]
           (is (= 76 (:age (store/pull db '[:age] [:name "Angela"]))))))))
 
   (deftest test-history
@@ -94,4 +95,3 @@
         (let [with-db (store/db-with @conn
                                      [{:db/id [:name "Angela"] :age 77}])]
           (is (= 77 (:age (store/pull with-db '[:age] [:name "Angela"])))))))))
-

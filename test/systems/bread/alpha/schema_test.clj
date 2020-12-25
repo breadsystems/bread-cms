@@ -57,7 +57,7 @@
                         [?e :post/title ?title]]
                       [])))))
 
-  (deftest test-pull
+  #_(deftest test-pull
 
     (let [conn (init-db)]
       (is (= #:post{:title "Angela Davis"
@@ -67,7 +67,7 @@
                          '[:post/title :post/slug :post/type]
                          [:post/uuid (:post/uuid angela)])))))
 
-  (deftest test-post-api-basic
+  #_(deftest test-post-api-basic
 
     (let [app (-> (bread/app {:plugins [(plugin/datahike-plugin
                                          {:datahike config})]})
