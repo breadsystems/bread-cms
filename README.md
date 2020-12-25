@@ -114,32 +114,54 @@ Liberate your content.
 
 (handler {:uri "/posts"
           :query-string "month=2020-11"})
-;; => [:html
-;;     [:head
-;;      [:meta {:charset "utf-8"}]
-;;      [:title "Blog search"]]
-;;     [:body
-;;      [:header
-;;       [:h1 "Posted in November 2020"]]
-;;      [:main
-;;       [:div.blog-cards
-;;        [:article.blog-card
-;;         [:h1 "Last post in November"]
-;;         [:h3 "Nov 27"]
-;;         [:div.excerpt "Lorem ipsum dolor sit amet."]]
-;;        [:article.blog-card
-;;         [:h1 "Another post in November]
-;;         [:h3 "Nov 26"]
-;;         [:div.excerpt "Impedit deleniti mollit tempor fuga ea anim quos."]]
-;;        [:article.blog-card
-;;         [:h1 "Yet another post from November"]
-;;         [:h3 "Nov 18"]
-;;         [:div.excerpt "Magna distinctio eu fugiat possimus mollitia."]]
-;;        ...]
-;;       [:section.pagination
-;;        [:a {:href "?month=2020-10"} "Previous Month"]
-;;        [:a {:href "?month=2020-11"} "Next Month"]]
-;;      [:footer
-;;       [:p "Main footer content"]]]]
+;; =>
+[:html
+ [:head
+  [:meta {:charset "utf-8"}]
+  [:title "Blog search"]]
+ [:body
+  [:header
+   [:h1 "Posted in November 2020"]]
+  [:main
+   [:div.blog-cards
+    [:article.blog-card
+     [:h1 "Last post in November"]
+     [:h3 "Nov 27"]
+     [:div.excerpt "Lorem ipsum dolor sit amet."]]
+    [:article.blog-card
+     [:h1 "Another post in November]
+     [:h3 "Nov 26"]
+     [:div.excerpt "Impedit deleniti mollit tempor fuga ea anim quos."]]
+    [:article.blog-card
+     [:h1 "Yet another post from November"]
+     [:h3 "Nov 18"]
+     [:div.excerpt "Magna distinctio eu fugiat possimus mollitia."]]
+    ...]
+   [:section.pagination
+    [:a {:href "?month=2020-10"} "Previous Month"]
+    [:a {:href "?month=2020-11"} "Next Month"]]
+  [:footer
+   [:p "Main footer content"]]]]
 ```
 
+### Resolvers
+
+Resolvers in BreadCMS are conceptually similar to GraphQL/Pathom resolvers, but operate at a higher level of abstraction. They are responsible for taking a Ring request and resolving it to one or more Posts. As such, they can take arbitrary data on the request into account.
+
+The standard, built-in resolvers use post slugs and parent/child post hierarchies as their criteria for resolving posts. For example, when handling a request for `/parent/child`, the standard post resolver queries for a post:
+
+1. whose slug is `"child"`, and
+2. whose parent is a post whose slug is `"parent"`
+
+You can declare resolvers to trigger specifically for certain routes:
+
+```clj
+;; TODO what does this API actually look like?
+(bread/route "/parent" {:route/key :parent
+                        :route/resolver {:post/type :post.type/page
+                                         :post/parent nil}})
+```
+
+In a custom routing scheme that declares a top-level `/parent/*` route (i.e. a wildcard route dispatched by slug underneath the umbrella `/parent` route),  Bread will recognize the fact that we are no longer looking for a parent page whose slug is `"parent"`, but are instead looking for posts of a certain type, or status, or whatever other criteria you want to define for your custom route.
+
+Bread also has an API for defining your own resolvers that operate on arbitrary request data.
