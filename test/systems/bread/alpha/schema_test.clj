@@ -1,11 +1,10 @@
 (ns systems.bread.alpha.schema-test
   (:require
-    [datahike.api :as d]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as plugin]
     [systems.bread.alpha.schema :as schema]
-    [clojure.test :refer :all])
+    [clojure.test :refer [deftest is use-fixtures]])
   (:import
     [java.util UUID]))
 
@@ -70,8 +69,10 @@
 
   (deftest test-post-api-basic
 
-    (let [app (bread/load-plugins
-                (bread/app {:plugins [(plugin/datahike-plugin {:datahike config})]}))
-          post (store/slug->post app :_ "angela")]
-      (store/add-post! app angela)
-      (is (= "Angela Davis" (:post/title post))))))
+    (let [app (-> (bread/app {:plugins [(plugin/datahike-plugin
+                                         {:datahike config})]})
+                  bread/load-plugins)]
+      (prn ((juxt :db-before :db-after) (store/add-post! app angela)))
+      (prn (store/datastore app))
+      (let [post (store/slug->post app "angela")]
+        (is (= "Angela Davis" (:post/title post)))))))

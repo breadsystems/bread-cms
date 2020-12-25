@@ -51,8 +51,6 @@
   (q [store query args])
   (db-with [store timepoint]))
 
-;; TODO (defn q [query store & args] ...)
-
 (defprotocol TransactionalDatastoreConnection
   (db [conn])
   (transact [conn tx]))
@@ -108,40 +106,13 @@
 (defn req->store [req]
   (bread/hook req :hook/datastore))
 
-(defmulti type->posts (fn [t _req]
-                        t))
-
-(defmethod type->posts :default [req t]
-  (when-let [store (req->store req)]
-    (-type->posts store t)))
-
-(defmulti slug->post (fn [_app t _slug]
-                       t))
-
-(defmethod slug->post :default [req _ slug]
+(defn slug->post [req slug]
   (when-let [store (req->store req)]
     (-slug->post store slug)))
 
-(defmulti update-post! (fn [_req _ident post]
-                         (:post/type post)))
-
-(defmethod update-post! :default [req ident post]
-  (when-let [store (req->store req)]
-    (-update-post! store ident post)))
-
-(defmulti add-post! (fn [_req post]
-                      (:post/type post)))
-
-(defmethod add-post! :default [req post]
+(defn add-post! [req post]
   (when-let [conn (connection req)]
     (transact conn [post])))
-
-(defmulti delete-post! (fn [_req post]
-                         (:post/type post)))
-
-(defmethod delete-post! :default [req ident]
-  (when-let [store (req->store req)]
-    (-delete-post! store ident)))
 
 
 (defprotocol ValueStore

@@ -98,4 +98,4 @@
           store (d/key-value-store {"abc" post})
           handler (bread/app->handler (bread/app {:plugins [(d/store->plugin store)]}))
           app (handler {:url "/"})]
-      (is (= post (d/slug->post app :_ "abc"))))))
+      (is (= post (d/slug->post app "abc"))))))

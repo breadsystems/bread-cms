@@ -25,9 +25,9 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
    {:db/ident :post/fields
-    :db/doc "EDN-serialized vector containing zero or more content fields"
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one}
+    :db/doc "Zero or more content fields"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
    {:db/ident :post/parent
     :db/doc "Entity ID of the parent post, if any"
     :db/valueType :db.type/ref
@@ -52,6 +52,16 @@
     :db/doc "Zero or more entity IDs of a Post's taxons"
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many}
+
+   ;; Post fields
+   {:db/ident :field/ord
+    :db/doc "Ordinal number for this field"
+    :db/valueType :db.type/double
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :field/content
+    :db/doc "Field content as an EDN string"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
 
    ;; Post taxons
    {:db/ident :taxon/taxonomy
@@ -100,6 +110,10 @@
     :db/cardinality :db.cardinality/one}
 
    ;; Comments
+   {:db/ident :comment/uuid
+    :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
    {:db/ident :comment/post-id
     :db/doc "The entity ID of the Post that this comment refers to"
     :db/valueType :db.type/ref

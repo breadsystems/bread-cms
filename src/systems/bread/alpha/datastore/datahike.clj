@@ -1,9 +1,12 @@
 ;; TODO migrate to CLJC
 (ns systems.bread.alpha.datastore.datahike
   (:require
-    [datahike.api :as d]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]))
+   [datahike.api :as d]
+   [systems.bread.alpha.schema :as schema]
+   [systems.bread.alpha.core :as bread]
+   [systems.bread.alpha.datastore :as store])
+  (:import
+   [java.util UUID]))
 
 
 
@@ -104,8 +107,6 @@
         (.parse (java.text.SimpleDateFormat. format) as-of)
         (catch java.text.ParseException _e nil)))))
 
-()
-
 ;; TODO make this a multimethod
 (defn req->datastore
   "Takes a request and returns a datastore instance, optionally configured
@@ -180,29 +181,184 @@
   ;;      ["New Post" "new-post" 536870915]
   ;;      ["Hello" "hello" 536870914]
   ;;      ["Another Post" "another-post" 536870915]}
-
+  
   (store/q (store/as-of @conn 536870914)
            '[:find ?title ?slug ?tx
              :where
              [?e :title ?title ?tx]
              [?e :slug ?slug ?tx]])
   ;; => #{["Goodbye" "goodbye" 536870914] ["Hello" "hello" 536870914]}
-
+  
   (store/pull (store/as-of @conn 536870914)
               '[:title :slug]
               [:slug "hello"])
   ;; => {:title "Hello", :slug "hello"}
-
+  
   (let [db (store/db-with @conn [{:db/id [:slug "hello"] :title "Hello!!"}])]
     (store/pull db '[:title :slug] [:slug "hello"]))
   ;; => Syntax error compiling at (core.clj:189:12).
   ;;    Unable to resolve symbol: conn in this context
-
+  
   ;; => {:title "Hello!!", :slug "hello"}
-
+  
   (store/history @conn)
 
   (let [handler (-> {:plugins [(datahike-plugin {:as-of-param :timestamp})]}
                     (bread/app)
                     (bread/app->handler))]
-    (handler {:params {:timestamp "2020-01-01"}})))
+    (handler {:params {:timestamp "2020-01-01"}}))
+
+
+  ;; TODO (store/install! config) ?
+  
+  (def $config {:datastore/type :datahike
+                :store {:backend :mem
+                        :id "my-db"}})
+
+  (store/delete-database! $config)
+
+  (map (juxt :migration/key :db/ident) (schema/initial-schema))
+
+  (do
+    (store/create-database! $config)
+    (store/transact (store/connect! $config) (schema/initial-schema)))
+
+  (def $conn (store/connect! $config))
+
+  (store/q (store/db $conn)
+           '[:find ?key ?ident ?desc
+             :where
+             [?e :migration/key ?key]
+             [?e :db/ident ?ident]
+             [?m :migration/key ?key]
+             [?m :migration/description ?desc]]
+           [])
+
+  (store/q (store/db $conn)
+           '[:find ?e ?key ?desc
+             :where
+             [?e :migration/description ?desc]
+             [?e :migration/key ?key]]
+           [])
+
+  (def $app (-> (bread/app {:plugins [(datahike-plugin
+                                       {:datahike $config})]})
+                (bread/load-plugins)))
+
+  (store/add-post! $app {:post/type :post.type/page
+                         :post/uuid (UUID/randomUUID)
+                         :post/title "Parent Page"
+                         :post/slug "parent-page"})
+
+  (store/add-post! $app {:post/type :post.type/page
+                         :post/uuid (UUID/randomUUID)
+                         :post/title "Child Page"
+                         :post/slug "child-page"
+                         :post/parent 40
+                         :post/fields #{{:field/content "asdf"
+                                         :field/ord 1.0}
+                                        {:field/content "qwerty"
+                                         :field/ord 1.1}}
+                         :post/taxons #{{:taxon/slug "my-cat"
+                                         :taxon/name "My Cat"
+                                         :taxon/taxonomy :taxon.taxonomy/category}}})
+
+  (store/q (store/datastore $app)
+           '[:find ?e
+             :where
+             [?e :taxon/taxonomy :taxon.taxonomy/category]]
+           [])
+  (store/pull (store/datastore $app)
+              (store/q (store/datastore $app)
+                       '[:find ?e
+                         :where
+                         [?e :taxon/taxonomy :taxon.taxonomy/category]]
+                       []))
+
+  (store/db $conn)
+  (store/datastore $app)
+
+  (ffirst (store/q (store/datastore $app)
+                   '[:find ?e
+                     :where
+                     [?e :post/parent 0]
+                     [?e :post/slug "page-with-cats"]]
+                   []))
+
+  (store/q (store/datastore $app)
+           {:query '{:find [?e]
+                     :where
+                     [[?e :post/slug "page-with-cats"]]}}
+           [])
+
+  (def $ent (ffirst (store/q (store/datastore $app)
+                             '{:find [?e]
+                               :in [$ $slug]
+                               :where
+                               [[?e :post/slug $slug]]}
+                             [(store/datastore $app) "page-with-cats"])))
+
+  (def query '[:find ?e :where])
+  (conj query '[?e :post/slug "child-page"])
+
+  (def path ["root" "parent-page" "child-page"])
+  (let [[ancestors child] path
+        parent-sym (gensym "?p")]
+    (if (seq ancestors)
+      [['?e :post/slug child] ['?e :post/parent (first ancestors)]]
+      ;; base case: root ancestor
+      [[parent-sym :post/slug child]]))
+
+  (defn path->constraints
+    ([path]
+     (path->constraints path {}))
+    ([path {:keys [child-sym]}]
+     (vec (loop [query [] descendant-sym (or child-sym '?e) path path]
+            (let [where [[descendant-sym :post/slug (last path)]]]
+              (if (= 1 (count path))
+                (concat query where)
+                (let [ancestor-sym (gensym "?p")
+                      ancestry [descendant-sym :post/parent ancestor-sym]]
+                  (recur
+                   (concat query where [ancestry])
+                   ancestor-sym
+                   (butlast path)))))))))
+
+  (path->constraints ["a" "b"])
+
+  (defn resolve-by-hierarchy [path]
+    (vec (concat [:find '?e :where]
+                 (path->constraints path))))
+
+  (defn path->post [app path]
+    (let [db (store/datastore app)
+          ent (ffirst (store/q db (resolve-by-hierarchy path) []))]
+      (store/pull db
+                  [:db/id
+                   :post/uuid
+                   :post/title
+                   :post/slug
+                   :post/type
+                   :post/status
+                   {:post/parent
+                    [:db/id
+                     :post/uuid
+                     :post/slug
+                     :post/title
+                     :post/type
+                     :post/status]}
+                   {:post/fields
+                    [:db/id
+                     :field/content
+                     :field/ord]}
+                   {:post/taxons
+                    [:taxon/taxonomy
+                     :taxon/uuid
+                     :taxon/slug
+                     :taxon/name]}]
+                  ent)))
+
+  (path->post $app ["parent-page" "child-page"])
+
+  ;;  
+  )
