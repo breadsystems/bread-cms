@@ -5,6 +5,8 @@
 
 (defmulti connect! :datastore/type)
 (defmulti create-database! :datastore/type)
+(defmulti install! :datastore/type)
+(defmulti installed? :datastore/type)
 (defmulti delete-database! :datastore/type)
 (defmulti connection :datastore/type)
 (defmulti req->datastore :datastore/type)
