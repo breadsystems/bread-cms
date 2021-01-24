@@ -68,26 +68,14 @@
 
 (defn handler [req]
   (let [handle (bread/atom->handler app)]
-    (prn req)
     (handle req)))
 
+(defonce stop-http (atom nil))
+
 (comment
-  (def $conn (store/connect! $config))
-
-  (def $path ["parent-page" "child-page"])
-  (def $db (store/db $conn))
-  $db
-  (store/q $db
-           '{:find [?e ?title]
-             :where
-             [[(missing? $ ?e :post/parent)]
-              [?e :post/slug "child-page"]
-              [?e :post/title ?title]]}
-           [$db 123])
-
-  (store/q (store/datastore $app) (posts/resolve-by-hierarchy $path) [])
-  (posts/path->post $app $path)
-
+  (posts/path->post @app ["parent-page"])
+  (posts/path->post @app ["parent-page" "child-page"])
+  (posts/path->post @app ["child-page"])
 
   (rum/render-static-markup [:p "hi"])
   (bread/hook (handler {:url "one"}) :slug)
