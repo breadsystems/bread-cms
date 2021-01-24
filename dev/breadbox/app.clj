@@ -1,6 +1,6 @@
 (ns breadbox.app
   (:require
-    [breadbox.static :as static]
+    ;[breadbox.static :as static]
     [clojure.string :as str]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
@@ -40,17 +40,20 @@
 
 (defn thingy [app]
   (let [slug (:slug (:params app))
-        path (filter #(pos? (count %)) (str/split (:uri app) #"/"))]
+        path (filter #(pos? (count %)) (str/split (:uri app) #"/"))
+        post (posts/path->post app path)]
     (merge app {:headers {"Content-Type" "text/html"}
+                :status (if post 200 404)
                 :body [:html
                        [:head
                         [:title "Breadbox"]
                         [:meta {:charset "utf-8"}]]
                        [:body
-                        [:div.bread-app [:h1 "Hello, Breadster!"]
-                         [:pre "path = " path "\n"
-                          (posts/path->post app path)
-                          ]]]]})))
+                        [:div.bread-app
+                         [:h1 (or (:post/title post) "404 Not Found")]
+                         (for [field (posts/fields post)]
+                           [:section (:field/content field)])
+                         [:footer "this the footer"]]]]})))
 
 (def app (bread/app-atom
            {:plugins [(store/config->plugin $config)
@@ -94,8 +97,6 @@
 
   ;;
   )
-
-(defonce stop-http (atom nil))
 
 (defn start! []
   ;; TODO config

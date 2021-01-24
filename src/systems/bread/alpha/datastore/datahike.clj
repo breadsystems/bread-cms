@@ -248,7 +248,6 @@
         ->datastore (:req->datastore config req->datastore)
         transact-initial (fn [app]
                            (when initial
-                             (prn 'INITIAL!)
                              (store/transact (store/connection app) initial))
                            app)]
     (when reinstall?
