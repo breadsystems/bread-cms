@@ -170,7 +170,7 @@
 
   (def config {:datastore/type :datahike
                :store          {:backend :mem :id "my-store2"}
-               :initial-tx     schema})
+               :initial-tx     (schema/initial-schema)})
 
   (store/create-database! config)
   (def conn (store/connect! config))
@@ -178,46 +178,48 @@
   (def app (bread/load-plugins (bread/app {:plugins [(datahike-plugin {:datahike config})]})))
   (req->datastore app)
   (d/q '[:find ?x :where [?e :slug ?x]] (req->datastore app) "slug")
-  (store/slug->post app :_ "asdf")
+  (store/slug->post app "asdf")
 
   (store/delete-database! config)
 
   (do
-    (store/transact conn [{:post/type :page :title "Hello" :slug "hello"}
-                          {:post/type :page :title "Goodbye" :slug "goodbye"}])
-    (store/transact conn [{:post/type :page :title "New Post" :slug "new-post"}
-                          {:post/type :page :title "Another Post" :slug "another-post"}]))
+    (store/transact conn [{:post/type :page :post/title "Hello" :post/slug "hello"}
+                          {:post/type :page :post/title "Goodbye" :post/slug "goodbye"}])
+    (store/transact conn [{:post/type :page :post/title "New Post" :post/slug "new-post"}
+                          {:post/type :page :post/title "Another Post" :post/slug "another-post"}]))
 
   @conn
 
   (store/q @conn '[:find ?title ?slug ?tx
                    :where
-                   [?e :title ?title ?tx]
-                   [?e :slug ?slug ?tx]])
+                   [?e :post/title ?title ?tx]
+                   [?e :post/slug ?slug ?tx]]
+           [])
   ;; => #{["Goodbye" "goodbye" 536870914]
   ;;      ["New Post" "new-post" 536870915]
   ;;      ["Hello" "hello" 536870914]
   ;;      ["Another Post" "another-post" 536870915]}
-  
+
   (store/q (store/as-of @conn 536870914)
            '[:find ?title ?slug ?tx
              :where
-             [?e :title ?title ?tx]
-             [?e :slug ?slug ?tx]])
+             [?e :post/title ?title ?tx]
+             [?e :post/slug ?slug ?tx]]
+           [])
   ;; => #{["Goodbye" "goodbye" 536870914] ["Hello" "hello" 536870914]}
-  
+
   (store/pull (store/as-of @conn 536870914)
               '[:title :slug]
               [:slug "hello"])
   ;; => {:title "Hello", :slug "hello"}
-  
+
   (let [db (store/db-with @conn [{:db/id [:slug "hello"] :title "Hello!!"}])]
     (store/pull db '[:title :slug] [:slug "hello"]))
   ;; => Syntax error compiling at (core.clj:189:12).
   ;;    Unable to resolve symbol: conn in this context
-  
+
   ;; => {:title "Hello!!", :slug "hello"}
-  
+
   (store/history @conn)
 
   (let [handler (-> {:plugins [(datahike-plugin {:as-of-param :timestamp})]}
@@ -227,7 +229,7 @@
 
 
   ;; TODO (store/install! config) ?
-  
+
   (def $config {:datastore/type :datahike
                 :store {:backend :mem
                         :id "my-db"}})
@@ -299,13 +301,13 @@
                    '[:find ?e
                      :where
                      [?e :post/parent 0]
-                     [?e :post/slug "page-with-cats"]]
+                     [?e :post/slug "child-page"]]
                    []))
 
   (store/q (store/datastore $app)
            {:query '{:find [?e]
                      :where
-                     [[?e :post/slug "page-with-cats"]]}}
+                     [[?e :post/slug "child-page"]]}}
            [])
 
   (def $ent (ffirst (store/q (store/datastore $app)
@@ -313,7 +315,7 @@
                                :in [$ $slug]
                                :where
                                [[?e :post/slug $slug]]}
-                             [(store/datastore $app) "page-with-cats"])))
+                             [(store/datastore $app) "child-page"])))
 
   (def query '[:find ?e :where])
   (conj query '[?e :post/slug "child-page"])
@@ -377,5 +379,5 @@
 
   (path->post $app ["parent-page" "child-page"])
 
-  ;;  
+  ;;
   )
