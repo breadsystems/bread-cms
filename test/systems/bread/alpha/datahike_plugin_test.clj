@@ -6,9 +6,9 @@
     [systems.bread.alpha.datastore.datahike :as plugin]))
 
 
-(let [config {:datahike {:datastore/type :datahike
-                         :store {:backend :mem
-                                 :id "plugin-db"}}}
+(let [config {:datastore/type :datahike
+              :store {:backend :mem
+                      :id "plugin-db"}}
       config->handler (fn [conf]
                         (-> {:plugins [(plugin/datahike-plugin conf)]}
                             (bread/app)
@@ -17,11 +17,11 @@
                ((config->handler config) req))]
 
   (use-fixtures :each (fn [f]
-                        (store/delete-database! (:datahike config))
-                        (store/create-database! (:datahike config))
-                        (store/connect! (:datahike config))
+                        (store/delete-database! config)
+                        (store/create-database! config)
+                        (store/connect! config)
                         (f)
-                        (store/delete-database! (:datahike config))))
+                        (store/delete-database! config)))
 
   (deftest test-datahike-plugin
 

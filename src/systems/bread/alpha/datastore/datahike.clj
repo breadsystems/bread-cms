@@ -137,13 +137,13 @@
 
 ;; TODO make this a multimethod
 (defn datahike-plugin [config]
-  (let [{:keys [as-of-param as-of-format datahike]} config
+  (let [{:keys [as-of-param as-of-format]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         ->timepoint (:req->timepoint config req->timepoint)
         ->datastore (:req->datastore config req->datastore)]
     (fn [app]
       (-> app
-          (bread/set-config :datastore/connection (store/connect! datahike))
+          (bread/set-config :datastore/connection (store/connect! config))
           (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
