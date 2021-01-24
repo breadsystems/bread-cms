@@ -65,46 +65,6 @@
   (-delete-post! [store ident] "delete a post from the datastore")
   (-field [store ident k] "get an arbitrary field from a post identified by ident"))
 
-(comment
-
-  ;; OK, let's think about queries.
-  '[:find ?p ?title ?type ?slug ?content ?tags
-    :in $ $slug
-    :where
-    [?p :post/slug $slug]
-    [?p :post/title ?title]
-    [?p :post/type ?type]
-    [?p :post/content ?content]
-    [?p :post/tags ?tag]]
-
-  (pull {:datastore/type :datastore.type/datahike
-         :datahike       {}}
-        [:db/id :post/title :post/type :post/slug :post/content
-         {:post/tags [:db/id :tag/title :tag/slug]}]
-        [:post/slug "some-page"])
-
-  (defmacro defposttype [t body]
-    `(do
-       (defmethod slug->post ~t [req _t slug]
-         ~body)))
-
-  (defposttype :post.type/lesson
-               (slug->post
-                 [req _t slug]
-                 (let [store (lesson/store req)]
-                   (try
-                     (-slug->post store slug)
-                     (catch lessons.exception.ApiError e
-                       (log/error e {:context   "slug->post"
-                                     :post/type :post.type/lesson
-                                     :post/slug slug})
-                       nil)))))
-
-  (defmethod slug->post [_t])
-
-  ;;  
-  )
-
 (defn req->store [req]
   (bread/hook req :hook/datastore))
 
