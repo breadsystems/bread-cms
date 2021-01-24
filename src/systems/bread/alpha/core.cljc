@@ -178,16 +178,11 @@
   ([]
    (app {})))
 
-(defn app-atom [opts]
-  (-> (app opts)
-      (hook :hook/bootstrap)
-      (hook :hook/load-plugins)
-      (hook :hook/init)
-      (atom)))
-
-(defn atom->handler [a]
+(defn app->handler [app]
   (fn [req]
-    (-> (merge req @a)
+    (-> (merge req app)
+        (hook :hook/bootstrap)
+        (hook :hook/load-plugins)
         (hook :hook/init)
         (hook :hook/dispatch)
         (hook :hook/expand)
@@ -195,11 +190,16 @@
         (hook :hook/render)
         (hook :hook/shutdown))))
 
-(defn app->handler [app]
+(defn app-atom [opts]
+  (-> (app opts)
+      (hook :hook/bootstrap)
+      (hook :hook/load-plugins)
+      (hook :hook/init)
+      (atom)))
+
+(defn handler [app]
   (fn [req]
     (-> (merge req app)
-        (hook :hook/bootstrap)
-        (hook :hook/load-plugins)
         (hook :hook/init)
         (hook :hook/dispatch)
         (hook :hook/expand)

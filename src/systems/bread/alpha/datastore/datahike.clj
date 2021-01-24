@@ -251,7 +251,6 @@
                              (store/transact (store/connection app) initial))
                            app)]
     (when reinstall?
-      (prn 'REINSTALL)
       (store/delete-database! config)
       (store/install! config))
     (fn [app]

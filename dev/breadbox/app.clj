@@ -7,6 +7,7 @@
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.posts :as posts]
     [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.templates :as tpl]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
@@ -47,13 +48,15 @@
                 :body [:html
                        [:head
                         [:title "Breadbox"]
-                        [:meta {:charset "utf-8"}]]
+                        [:meta {:charset "utf-8"}]
+                        (theme/head app)]
                        [:body
                         [:div.bread-app
                          [:h1 (or (:post/title post) "404 Not Found")]
                          (for [field (posts/fields post)]
                            [:section (:field/content field)])
-                         [:footer "this the footer"]]]]})))
+                         [:footer "this the footer"]
+                         (theme/footer app)]]]})))
 
 (def app (bread/app-atom
            {:plugins [(store/config->plugin $config)
@@ -62,12 +65,24 @@
                       (tpl/renderer->plugin rum/render-static-markup
                                             {:precedence 2})]}))
 
+(defn my-theme [app]
+  (-> app
+      (theme/add-to-head [:style "*{color:green}"])
+      (theme/add-to-footer [:script "console.log(123)"])))
+
+(comment
+  (swap! app #(bread/add-hook % :hook/init my-theme))
+  ;; TODO this doesn't work yet:
+  (swap! app #(bread/remove-hook % :hook/init my-theme))
+  (bread/hook-> @app :hook/head nil)
+  )
+
 (defstate db
   :start (store/install! $config)
   :stop (store/delete-database! $config))
 
 (defn handler [req]
-  (let [handle (bread/atom->handler app)]
+  (let [handle (bread/handler @app)]
     (handle req)))
 
 (defonce stop-http (atom nil))
