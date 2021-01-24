@@ -1,6 +1,8 @@
 .cpcache
 .calva
 .idea
+.lsp
+.clj-kondo
 *.jar
 *.iml
 pom.properties

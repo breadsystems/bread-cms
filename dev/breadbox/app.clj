@@ -1,6 +1,5 @@
 (ns breadbox.app
   (:require
-   [breadbox.env]
    [breadbox.static :as static]
    [systems.bread.alpha.core :as bread]
    [systems.bread.alpha.datastore :as d]
