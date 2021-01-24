@@ -1,3 +1,4 @@
+;; Tests for the low-level functionality of the Datahike datastore integration.
 (ns systems.bread.alpha.datastore-datahike-test
   (:require
     [systems.bread.alpha.datastore :as store]

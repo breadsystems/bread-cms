@@ -123,7 +123,6 @@
         (.parse (java.text.SimpleDateFormat. format) as-of)
         (catch java.text.ParseException _e nil)))))
 
-;; TODO make this a multimethod
 (defn req->datastore
   "Takes a request and returns a datastore instance, optionally configured
    as a temporal-db (via as-of) or with-db (via db-with)"
@@ -134,14 +133,14 @@
       (store/as-of @conn timepoint)
       @conn)))
 
-;; TODO make this a multimethod
-(defn datahike-plugin [config]
+(defmethod store/config->plugin :datahike [config]
   (let [{:keys [as-of-param as-of-format]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         ->timepoint (:req->timepoint config req->timepoint)
         ->datastore (:req->datastore config req->datastore)]
     (fn [app]
       (-> app
+          (bread/set-config :datastore/config config)
           (bread/set-config :datastore/connection (store/connect! config))
           (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))

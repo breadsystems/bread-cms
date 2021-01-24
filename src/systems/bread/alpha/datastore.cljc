@@ -2,14 +2,13 @@
   (:require
     [systems.bread.alpha.core :as bread]))
 
-
 (defmulti connect! :datastore/type)
 (defmulti create-database! :datastore/type)
 (defmulti install! :datastore/type)
 (defmulti installed? :datastore/type)
 (defmulti delete-database! :datastore/type)
 (defmulti connection :datastore/type)
-(defmulti req->datastore :datastore/type)
+(defmulti config->plugin :datastore/type)
 
 (defmethod connection :default [app]
   (bread/config app :datastore/connection))

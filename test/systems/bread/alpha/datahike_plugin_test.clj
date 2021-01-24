@@ -10,7 +10,7 @@
               :store {:backend :mem
                       :id "plugin-db"}}
       config->handler (fn [conf]
-                        (-> {:plugins [(plugin/datahike-plugin conf)]}
+                        (-> {:plugins [(store/config->plugin conf)]}
                             (bread/app)
                             (bread/app->handler)))
       handle (fn [req]
@@ -65,7 +65,7 @@
 
     (testing "it honors a custom :hook/datastore.req->timepoint callback"
       (let [->timepoint (constantly (java.util.Date.))
-            app (-> {:plugins [(plugin/datahike-plugin config)]}
+            app (-> {:plugins [(store/config->plugin config)]}
                     (bread/app)
                     (bread/add-hook :hook/datastore.req->timepoint ->timepoint))
             handler (bread/app->handler app)
