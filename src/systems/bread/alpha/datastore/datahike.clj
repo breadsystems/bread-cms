@@ -40,22 +40,127 @@
     (d/as-of store instant))
   (history [store]
     (d/history store))
-  (q [store query args]
-    (apply d/q query store args))
+  (q
+    ([store query]
+     (d/q query store))
+    ([store query a]
+     (d/q query store a))
+    ([store query a b]
+     (d/q query store a b))
+    ([store query a b c]
+     (d/q query store a b c))
+    ([store query a b c d]
+     (d/q query store a b c d))
+    ([store query a b c d e]
+     (d/q query store a b c d e))
+    ([store query a b c d e f]
+     (d/q query store a b c d e f))
+    ([store query a b c d e f g]
+     (d/q query store a b c d e f g))
+    ([store query a b c d e f g h]
+     (d/q query store a b c d e f g h))
+    ([store query a b c d e f g h i]
+     (d/q query store a b c d e f g h i))
+    ([store query a b c d e f g h i j]
+     (d/q query store a b c d e f g h i j))
+    ([store query a b c d e f g h i j k]
+     (d/q query store a b c d e f g h i j k))
+    ([store query a b c d e f g h i j k l]
+     (d/q query store a b c d e f g h i j k l))
+    ([store query a b c d e f g h i j k l m]
+     (d/q query store a b c d e f g h i j k l m))
+    ([store query a b c d e f g h i j k l m n]
+     (d/q query store a b c d e f g h i j k l m n))
+    ([store query a b c d e f g h i j k l m n o]
+     (d/q query store a b c d e f g h i j k l m n o))
+    ([store query a b c d e f g h i j k l m n o p]
+     (d/q query store a b c d e f g h i j k l m n o p))
+    ([store query a b c d e f g h i j k l m n o p r]
+     (d/q query store a b c d e f g h i j k l m n o p r)))
   (pull [store query ident]
     (d/pull store query ident))
   (db-with [store tx]
     (d/db-with store tx))
 
   datahike.db.AsOfDB
-  (q [store query args]
-    (apply d/q query store args))
+  (q
+    ([store query]
+     (d/q query store))
+    ([store query a]
+     (d/q query store a))
+    ([store query a b]
+     (d/q query store a b))
+    ([store query a b c]
+     (d/q query store a b c))
+    ([store query a b c d]
+     (d/q query store a b c d))
+    ([store query a b c d e]
+     (d/q query store a b c d e))
+    ([store query a b c d e f]
+     (d/q query store a b c d e f))
+    ([store query a b c d e f g]
+     (d/q query store a b c d e f g))
+    ([store query a b c d e f g h]
+     (d/q query store a b c d e f g h))
+    ([store query a b c d e f g h i]
+     (d/q query store a b c d e f g h i))
+    ([store query a b c d e f g h i j]
+     (d/q query store a b c d e f g h i j))
+    ([store query a b c d e f g h i j k]
+     (d/q query store a b c d e f g h i j k))
+    ([store query a b c d e f g h i j k l]
+     (d/q query store a b c d e f g h i j k l))
+    ([store query a b c d e f g h i j k l m]
+     (d/q query store a b c d e f g h i j k l m))
+    ([store query a b c d e f g h i j k l m n]
+     (d/q query store a b c d e f g h i j k l m n))
+    ([store query a b c d e f g h i j k l m n o]
+     (d/q query store a b c d e f g h i j k l m n o))
+    ([store query a b c d e f g h i j k l m n o p]
+     (d/q query store a b c d e f g h i j k l m n o p))
+    ([store query a b c d e f g h i j k l m n o p r]
+     (d/q query store a b c d e f g h i j k l m n o p r)))
   (pull [store query ident]
     (d/pull store query ident))
 
   datahike.db.HistoricalDB
-  (q [store query args]
-    (apply d/q query store args)))
+  (q
+    ([store query]
+     (d/q query store))
+    ([store query a]
+     (d/q query store a))
+    ([store query a b]
+     (d/q query store a b))
+    ([store query a b c]
+     (d/q query store a b c))
+    ([store query a b c d]
+     (d/q query store a b c d))
+    ([store query a b c d e]
+     (d/q query store a b c d e))
+    ([store query a b c d e f]
+     (d/q query store a b c d e f))
+    ([store query a b c d e f g]
+     (d/q query store a b c d e f g))
+    ([store query a b c d e f g h]
+     (d/q query store a b c d e f g h))
+    ([store query a b c d e f g h i]
+     (d/q query store a b c d e f g h i))
+    ([store query a b c d e f g h i j]
+     (d/q query store a b c d e f g h i j))
+    ([store query a b c d e f g h i j k]
+     (d/q query store a b c d e f g h i j k))
+    ([store query a b c d e f g h i j k l]
+     (d/q query store a b c d e f g h i j k l))
+    ([store query a b c d e f g h i j k l m]
+     (d/q query store a b c d e f g h i j k l m))
+    ([store query a b c d e f g h i j k l m n]
+     (d/q query store a b c d e f g h i j k l m n))
+    ([store query a b c d e f g h i j k l m n o]
+     (d/q query store a b c d e f g h i j k l m n o))
+    ([store query a b c d e f g h i j k l m n o p]
+     (d/q query store a b c d e f g h i j k l m n o p))
+    ([store query a b c d e f g h i j k l m n o p r]
+     (d/q query store a b c d e f g h i j k l m n o p r))))
 
 
 (extend-protocol store/TransactionalDatastoreConnection
@@ -94,7 +199,11 @@
 
 (defmethod store/install! :datahike [config]
   (d/create-database config)
-  (d/transact (store/connect! config) (schema/initial-schema)))
+  (let [conn (store/connect! config)
+        initial (:initial config)]
+    (d/transact conn (schema/initial-schema))
+    (when initial
+      (d/transact conn initial))))
 
 (defmethod store/installed? :datahike [config]
   (try
@@ -102,8 +211,7 @@
       (boolean (seq
                 (store/q db
                          '[:find ?e :where
-                           [?e :migration/key :bread.migration/initial]]
-                         []))))
+                           [?e :migration/key :bread.migration/initial]]))))
     (catch clojure.lang.ExceptionInfo e
       (when (not= (:type (ex-data e)) :backend-does-not-exist)
         (throw e))
@@ -134,15 +242,25 @@
       @conn)))
 
 (defmethod store/config->plugin :datahike [config]
-  (let [{:keys [as-of-param as-of-format]} config
+  (let [{:keys [as-of-param as-of-format initial reinstall?]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         ->timepoint (:req->timepoint config req->timepoint)
-        ->datastore (:req->datastore config req->datastore)]
+        ->datastore (:req->datastore config req->datastore)
+        transact-initial (fn [app]
+                           (when initial
+                             (prn 'INITIAL!)
+                             (store/transact (store/connection app) initial))
+                           app)]
+    (when reinstall?
+      (prn 'REINSTALL)
+      (store/delete-database! config)
+      (store/install! config))
     (fn [app]
       (-> app
           (bread/set-config :datastore/config config)
           (bread/set-config :datastore/connection (store/connect! config))
           (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
+          (bread/add-hook :hook/init transact-initial)
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
           (bread/add-hook :hook/datastore ->datastore)))))

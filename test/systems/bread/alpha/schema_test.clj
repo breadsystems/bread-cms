@@ -54,8 +54,7 @@
                         [?e :post/slug "angela"]
                         [?e :post/slug ?slug]
                         [?e :post/type ?type]
-                        [?e :post/title ?title]]
-                      [])))))
+                        [?e :post/title ?title]])))))
 
   #_(deftest test-pull
 

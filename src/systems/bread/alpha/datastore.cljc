@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.datastore
   (:require
+    [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]))
 
 (defmulti connect! :datastore/type)
@@ -17,7 +18,25 @@
   (as-of [store timepoint])
   (history [store])
   (pull [store struct lookup-ref])
-  (q [store query args])
+  (q [store query]
+     [store query a]
+     [store query a b]
+     [store query a b c]
+     [store query a b c d]
+     [store query a b c d e]
+     [store query a b c d e f]
+     [store query a b c d e f g]
+     [store query a b c d e f g h]
+     [store query a b c d e f g h i]
+     [store query a b c d e f g h i j]
+     [store query a b c d e f g h i j k]
+     [store query a b c d e f g h i j k l]
+     [store query a b c d e f g h i j k l m]
+     [store query a b c d e f g h i j k l m n]
+     [store query a b c d e f g h i j k l m n o]
+     [store query a b c d e f g h i j k l m n o p]
+     [store query a b c d e f g h i j k l m n o p q]
+     [store query a b c d e f g h i j k l m n o p q r])
   (db-with [store timepoint]))
 
 (defmethod connect! :default [{:datastore/keys [type] :as config}]

@@ -7,6 +7,7 @@
 
 
 (let [config {:datastore/type :datahike
+              :datastore/initial-txns []
               :store {:backend :mem
                       :id "plugin-db"}}
       config->handler (fn [conf]
