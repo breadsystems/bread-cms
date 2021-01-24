@@ -10,10 +10,23 @@
 
 
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                           ;;
+  ;;           Specs           ;;
+ ;;                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                           ;;
-;;    Datastore Protocols    ;;
-;;                           ;;
+
+;;
+;; TODO
+;;
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                           ;;
+  ;;    Datastore Protocols    ;;
+ ;;                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
@@ -52,25 +65,11 @@
     (d/transact conn tx)))
 
 
-(extend-protocol store/BreadStore
-  datahike.db.DB
-  (-slug->post [datahike-db slug]
-    (d/q
-      '[:find ?slug ?type ?title
-        :in $ ?slug
-        :where
-        [?e :post/slug ?slug]
-        [?e :post/title ?title]
-        [?e :post/type ?type]]
-      datahike-db
-      slug)))
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                           ;;
-;;   Utility & Plugin fns    ;;
-;;                           ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                           ;;
+  ;;   Utility & Plugin fns    ;;
+ ;;                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
@@ -148,159 +147,3 @@
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
           (bread/add-hook :hook/datastore ->datastore)))))
-
-
-(comment
-  ;; TODO (store/install! config) ?
-
-  (def $config {:datastore/type :datahike
-                :store {:backend :mem
-                        :id "my-db"}})
-
-  (store/delete-database! $config)
-
-  (map (juxt :migration/key :db/ident) (schema/initial-schema))
-
-  (do
-    (store/create-database! $config)
-    (store/transact (store/connect! $config) (schema/initial-schema)))
-
-  (def $conn (store/connect! $config))
-
-  (store/q (store/db $conn)
-           '[:find ?key ?ident ?desc
-             :where
-             [?e :migration/key ?key]
-             [?e :db/ident ?ident]
-             [?m :migration/key ?key]
-             [?m :migration/description ?desc]]
-           [])
-
-  (store/q (store/db $conn)
-           '[:find ?e ?key ?desc
-             :where
-             [?e :migration/description ?desc]
-             [?e :migration/key ?key]]
-           [])
-
-  (def $app (-> (bread/app {:plugins [(datahike-plugin
-                                       {:datahike $config})]})
-                (bread/load-plugins)))
-
-  (store/add-post! $app {:post/type :post.type/page
-                         :post/uuid (UUID/randomUUID)
-                         :post/title "Parent Page"
-                         :post/slug "parent-page"})
-
-  (store/add-post! $app {:post/type :post.type/page
-                         :post/uuid (UUID/randomUUID)
-                         :post/title "Child Page"
-                         :post/slug "child-page"
-                         :post/parent 40
-                         :post/fields #{{:field/content "asdf"
-                                         :field/ord 1.0}
-                                        {:field/content "qwerty"
-                                         :field/ord 1.1}}
-                         :post/taxons #{{:taxon/slug "my-cat"
-                                         :taxon/name "My Cat"
-                                         :taxon/taxonomy :taxon.taxonomy/category}}})
-
-  (store/q (store/datastore $app)
-           '[:find ?e
-             :where
-             [?e :taxon/taxonomy :taxon.taxonomy/category]]
-           [])
-  (store/pull (store/datastore $app)
-              (store/q (store/datastore $app)
-                       '[:find ?e
-                         :where
-                         [?e :taxon/taxonomy :taxon.taxonomy/category]]
-                       []))
-
-  (store/db $conn)
-  (store/datastore $app)
-
-  (ffirst (store/q (store/datastore $app)
-                   '[:find ?e
-                     :where
-                     [?e :post/parent 0]
-                     [?e :post/slug "child-page"]]
-                   []))
-
-  (store/q (store/datastore $app)
-           {:query '{:find [?e]
-                     :where
-                     [[?e :post/slug "child-page"]]}}
-           [])
-
-  (def $ent (ffirst (store/q (store/datastore $app)
-                             '{:find [?e]
-                               :in [$ $slug]
-                               :where
-                               [[?e :post/slug $slug]]}
-                             [(store/datastore $app) "child-page"])))
-
-  (def query '[:find ?e :where])
-  (conj query '[?e :post/slug "child-page"])
-
-  (def path ["root" "parent-page" "child-page"])
-  (let [[ancestors child] path
-        parent-sym (gensym "?p")]
-    (if (seq ancestors)
-      [['?e :post/slug child] ['?e :post/parent (first ancestors)]]
-      ;; base case: root ancestor
-      [[parent-sym :post/slug child]]))
-
-  (defn path->constraints
-    ([path]
-     (path->constraints path {}))
-    ([path {:keys [child-sym]}]
-     (vec (loop [query [] descendant-sym (or child-sym '?e) path path]
-            (let [where [[descendant-sym :post/slug (last path)]]]
-              (if (= 1 (count path))
-                (concat query where)
-                (let [ancestor-sym (gensym "?p")
-                      ancestry [descendant-sym :post/parent ancestor-sym]]
-                  (recur
-                   (concat query where [ancestry])
-                   ancestor-sym
-                   (butlast path)))))))))
-
-  (path->constraints ["a" "b"])
-
-  (defn resolve-by-hierarchy [path]
-    (vec (concat [:find '?e :where]
-                 (path->constraints path))))
-
-  (defn path->post [app path]
-    (let [db (store/datastore app)
-          ent (ffirst (store/q db (resolve-by-hierarchy path) []))]
-      (store/pull db
-                  [:db/id
-                   :post/uuid
-                   :post/title
-                   :post/slug
-                   :post/type
-                   :post/status
-                   {:post/parent
-                    [:db/id
-                     :post/uuid
-                     :post/slug
-                     :post/title
-                     :post/type
-                     :post/status]}
-                   {:post/fields
-                    [:db/id
-                     :field/content
-                     :field/ord]}
-                   {:post/taxons
-                    [:taxon/taxonomy
-                     :taxon/uuid
-                     :taxon/slug
-                     :taxon/name]}]
-                  ent)))
-
-  (path->post $app ["parent-page" "child-page"])
-
-  ;;
-  )
