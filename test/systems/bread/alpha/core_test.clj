@@ -2,7 +2,8 @@
   (:require
     [clojure.string :refer [upper-case]]
     [clojure.test :refer [deftest is testing]]
-    [systems.bread.alpha.core :as bread])
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.templates :as tpl])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -323,16 +324,10 @@
                                                (bread/add-hook req :hook/render handler)))]
                             ;; Dispatching the matched route is run in a separater step.
                             (bread/add-hook app :hook/dispatch dispatcher)))
-          ;; renderer DSL: (add-body-renderer #(str (upper-case %) "!!"))
-          excited-plugin (fn [app]
-                           (bread/add-hook app
-                                           :hook/render
-                                           (fn [response]
-                                             (update response
-                                                     :body
-                                                     #(str (upper-case %) "!!")))))
+          ;; Add a plugin that appends "!!" to the response body.
+          excited-plugin (tpl/renderer->plugin #(str (upper-case %) "!!"))
           handler (bread/app->handler (bread/app {:plugins [router-plugin excited-plugin]}))]
-     ;; Assert that the HTTP response is correct.
+      ;; Assert that the HTTP response is correct.
       (is (= {:status 200
               :body "HELLO, WORLD!!"}
               (handler {:url "/hello"
