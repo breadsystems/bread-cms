@@ -151,9 +151,10 @@
       (is (= :this-one! (bread/hook-> req :my/value))))))
 
 (deftest remove-hook-removes-the-fn-from-request-hooks
-  (let [app {::bread/hooks {:bread/a [{::bread/precedence 1 ::bread/f inc :my/extra :extra!}
-                                      {::bread/precedence 2 ::bread/f dec}
-                                      {::bread/precedence 1 ::bread/f identity}]}}]
+  (let [app (-> (bread/app)
+                (bread/add-hook :bread/a inc {:my/extra :extra!})
+                (bread/add-hook :bread/a dec {:precedence 2})
+                (bread/add-hook :bread/a identity))]
 
     (testing "it removes nothing if hook does not exist"
       (is (= app (bread/remove-hook app :non-existent-hook identity))))
@@ -167,24 +168,22 @@
     (testing "it removes nothing if extra does not match"
       (is (= app (bread/remove-hook app :bread/a inc {:my/extra :bogus}))))
 
-    (testing "it matches on precedence 1 by default"
-      (is (= [{::bread/precedence 2 ::bread/f dec}
-              {::bread/precedence 1 ::bread/f identity}]
-             (bread/hooks-for (bread/remove-hook app :bread/a inc)
-                              :bread/a))))
+    (testing "it matches on options"
+      (let [relevant-keys (juxt ::bread/f ::bread/precedence)
+            a-hooks (fn [app]
+                      (as-> app $
+                          (bread/hooks-for $ :bread/a)
+                          (map #(select-keys % [::bread/f ::bread/precedence]) $)
+                          (map relevant-keys $)))]
+        (is (= [[dec 1] [identity 2]]
+               (a-hooks (bread/remove-hook app :bread/a inc))))
 
-    (testing "it matches on precedence"
-      (is (= [{::bread/precedence 1 ::bread/f inc :my/extra :extra!}
-              {::bread/precedence 1 ::bread/f identity}]
-             (bread/hooks-for (bread/remove-hook app :bread/a dec {:precedence 2})
-                              :bread/a))))
+        (is (= [[inc 1] [identity 1]]
+               (a-hooks (bread/remove-hook app :bread/a dec {:precedence 2}))))
 
-    (testing "it matches on extra"
-      (is (= [{::bread/precedence 2 ::bread/f dec}
-              {::bread/precedence 1 ::bread/f identity}]
-             (bread/hooks-for (bread/remove-hook app :bread/a inc {:precedence 1
-                                                                   :my/extra :extra!})
-                              :bread/a))))))
+        (is (= [[identity 1] [dec 2]]
+                (a-hooks (bread/remove-hook app :bread/a inc {:precedence 1
+                                                              :my/extra :extra!}))))))))
 
 ;; TODO remove-value-hook
 ;; TODO replace-hook
