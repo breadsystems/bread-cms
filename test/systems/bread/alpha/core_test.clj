@@ -3,7 +3,7 @@
     [clojure.string :refer [upper-case]]
     [clojure.test :refer [deftest is testing]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.templates :as tpl])
+    [systems.bread.alpha.template :as tpl])
   (:import (clojure.lang ExceptionInfo)))
 
 

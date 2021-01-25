@@ -1,8 +1,8 @@
-(ns systems.bread.alpha.templates-test
+(ns systems.bread.alpha.template-test
   (:require
    [clojure.test :refer [deftest testing is]]
    [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.templates :as tpl]))
+   [systems.bread.alpha.template :as tpl]))
 
 
 (deftest test-render-layout?

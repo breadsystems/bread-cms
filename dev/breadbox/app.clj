@@ -8,7 +8,7 @@
     [systems.bread.alpha.posts :as posts]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.theme :as theme]
-    [systems.bread.alpha.templates :as tpl]
+    [systems.bread.alpha.template :as tpl]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [ring.middleware.params :refer [wrap-params]]

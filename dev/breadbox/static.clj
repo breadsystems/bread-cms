@@ -6,7 +6,7 @@
    [markdown.core :as md]
    [systems.bread.alpha.core :as bread]
    [systems.bread.alpha.datastore :as d]
-   [systems.bread.alpha.templates :as tpl])
+   [systems.bread.alpha.template :as tpl])
   (:import
    [systems.bread.alpha.datastore BreadStore]))
 

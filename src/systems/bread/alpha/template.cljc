@@ -1,5 +1,4 @@
-;; TODO Rename to template (singular)
-(ns systems.bread.alpha.templates
+(ns systems.bread.alpha.template
   (:require
    [systems.bread.alpha.core :as bread]))
 
