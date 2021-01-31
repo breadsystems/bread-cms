@@ -48,20 +48,6 @@
         path (filter #(pos? (count %)) (str/split (:uri req) #"/"))
         post (posts/path->post req path)]
     (prn 'POST post)
-    {:headers {"Content-Type" "text/html"}
-     :status (if post 200 404)
-     :body [:html
-            [:head
-             [:title "Breadbox"]
-             [:meta {:charset "utf-8"}]
-             (theme/head req)]
-            [:body
-             [:div.bread-app
-              [:h1 (or (:post/title post) "404 Not Found")]
-              (for [field (posts/fields post)]
-                [:section (:field/content field)])
-              [:footer "this the footer"]
-              (theme/footer req)]]]}
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
                      :status (if post 200 404)
@@ -108,7 +94,6 @@
   )
 
 (defn handler [req]
-  ;(prn @app)
   (let [handle (bread/handler @app)]
     (select-keys (handle req) [:status :body :headers])))
 
