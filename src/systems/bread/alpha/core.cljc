@@ -187,31 +187,27 @@
   ([]
    (app {})))
 
-(defn app->handler [app]
-  (fn [req]
-    (-> (merge req app)
-        (hook :hook/bootstrap)
-        (hook :hook/load-plugins)
-        (hook :hook/init)
-        (hook :hook/dispatch)
-        (hook :hook/expand)
-        (apply-effects)
-        (hook :hook/render)
-        (hook :hook/shutdown))))
-
-(defn app-atom [opts]
-  (-> (app opts)
+(defn load-app [app]
+  (-> app
       (hook :hook/bootstrap)
       (hook :hook/load-plugins)
-      (hook :hook/init)
-      (atom)))
+      (hook :hook/init)))
 
 (defn handler [app]
   (fn [req]
     (-> (merge req app)
-        (hook :hook/init)
+        (hook :hook/request)
         (hook :hook/dispatch)
         (hook :hook/expand)
         (apply-effects)
         (hook :hook/render)
-        (hook :hook/shutdown))))
+        (hook :hook/response))))
+
+(defn load-handler [app]
+  (-> app
+      (load-app)
+      (handler)))
+
+(defn app->handler [app]
+  (println "app->handler is deprecated")
+  (load-handler app))
