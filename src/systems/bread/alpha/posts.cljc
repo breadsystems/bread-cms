@@ -8,8 +8,8 @@
    (path->constraints path {}))
   ([path {:keys [child-sym]}]
    (vec (loop [query [] descendant-sym (or child-sym '?e) path path]
-          (let [where [[descendant-sym :post/slug (last path)]]]
-            (if (>= 1 (count path))
+          (let [where [[descendant-sym :post/slug (or (last path) "")]]]
+            (if (<= (count path) 1)
               (concat query where [(list 'not-join
                                          [descendant-sym]
                                          [descendant-sym :post/parent '?parent])])
@@ -23,11 +23,6 @@
 (defn resolve-by-hierarchy [path]
   (vec (concat [:find '?e :where]
                (path->constraints path))))
-
-(comment
-
-  (resolve-by-hierarchy ["a"])
-  (resolve-by-hierarchy ["a" "b"]))
 
 (defn path->post [app path]
   (let [db (store/datastore app)]
