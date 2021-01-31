@@ -66,9 +66,8 @@
 
     (testing "it honors a custom :hook/datastore.req->timepoint callback"
       (let [->timepoint (constantly (java.util.Date.))
-            app (-> {:plugins [(store/config->plugin config)]}
-                    (bread/app)
-                    (bread/add-hook :hook/datastore.req->timepoint ->timepoint))
+            config (assoc config :req->timepoint ->timepoint)
+            app (bread/app {:plugins [(store/config->plugin config)]})
             handler (bread/app->handler app)
             response (handler {})]
         (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))))

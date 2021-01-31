@@ -154,7 +154,13 @@
   (let [app (-> (bread/app)
                 (bread/add-hook :bread/a inc {:my/extra :extra!})
                 (bread/add-hook :bread/a dec {:precedence 2})
-                (bread/add-hook :bread/a identity))]
+                (bread/add-hook :bread/a identity))
+        relevant-keys (juxt ::bread/f ::bread/precedence)
+        a-hooks (fn [app]
+                  (as-> app $
+                      (bread/hooks-for $ :bread/a)
+                      (map #(select-keys % [::bread/f ::bread/precedence]) $)
+                      (map relevant-keys $)))]
 
     (testing "it removes nothing if hook does not exist"
       (is (= app (bread/remove-hook app :non-existent-hook identity))))
@@ -169,21 +175,18 @@
       (is (= app (bread/remove-hook app :bread/a inc {:my/extra :bogus}))))
 
     (testing "it matches on options"
-      (let [relevant-keys (juxt ::bread/f ::bread/precedence)
-            a-hooks (fn [app]
-                      (as-> app $
-                          (bread/hooks-for $ :bread/a)
-                          (map #(select-keys % [::bread/f ::bread/precedence]) $)
-                          (map relevant-keys $)))]
-        (is (= [[dec 1] [identity 2]]
-               (a-hooks (bread/remove-hook app :bread/a inc))))
+      (is (= [[identity 1] [dec 2]]
+             (a-hooks (bread/remove-hook app :bread/a inc))))
 
-        (is (= [[inc 1] [identity 1]]
-               (a-hooks (bread/remove-hook app :bread/a dec {:precedence 2}))))
+      (is (= [[inc 1] [identity 1]]
+             (a-hooks (bread/remove-hook app :bread/a dec {:precedence 2}))))
 
-        (is (= [[identity 1] [dec 2]]
-                (a-hooks (bread/remove-hook app :bread/a inc {:precedence 1
-                                                              :my/extra :extra!}))))))))
+      (is (= [[identity 1] [dec 2]]
+             (a-hooks (bread/remove-hook app :bread/a inc {:my/extra :extra!}))))
+
+      (is (= [[identity 1] [dec 2]]
+             (a-hooks (bread/remove-hook app :bread/a inc {:precedence 1
+                                                           :my/extra :extra!})))))))
 
 ;; TODO remove-value-hook
 ;; TODO replace-hook
@@ -306,8 +309,10 @@
 
   (testing "it returns a function that runs the dispatch and render hooks"
     (let [hello-handler (fn [req]
-                          {:status 200
-                           :body (str "hello, " (:name (:params req)))})
+                          (bread/response
+                            req
+                            {:status 200
+                             :body (str "hello, " (:name (:params req)))}))
           my-routes {"/" (constantly {:status 200 :body "home"})
                      "/hello" hello-handler}
           ;; TODO router DSL: (routes-map->plugin {"/" ,,,})
@@ -320,14 +325,16 @@
                                 ;; TODO dispatcher DSL: (bread.routing/dispatcher)
                                 dispatcher (fn [req]
                                              (let [handler (get my-routes (:url req))]
-                                               (bread/add-hook req :hook/render handler)))]
+                                               (handler req)))]
                             ;; Dispatching the matched route is run in a separater step.
                             (bread/add-hook app :hook/dispatch dispatcher)))
           ;; Add a plugin that appends "!!" to the response body.
-          excited-plugin (tpl/renderer->plugin #(str (upper-case %) "!!"))
-          handler (bread/app->handler (bread/app {:plugins [router-plugin excited-plugin]}))]
+          excited-plugin (tpl/renderer->plugin #(str (upper-case (or % "")) "!!"))
+          app (bread/app {:plugins [router-plugin excited-plugin]})
+          ->response (fn [req]
+                       (select-keys ((bread/app->handler app) req)
+                                    [:status :body]))]
       ;; Assert that the HTTP response is correct.
       (is (= {:status 200
               :body "HELLO, WORLD!!"}
-              (handler {:url "/hello"
-                        :params {:name "world"}}))))))
+             (->response {:url "/hello" :params {:name "world"}}))))))
