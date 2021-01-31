@@ -24,6 +24,10 @@
               :initial
               [{:post/type :post.type/page
                 :post/uuid (UUID/randomUUID)
+                :post/title "Home Page"
+                :post/slug ""}
+               {:post/type :post.type/page
+                :post/uuid (UUID/randomUUID)
                 :post/title "Parent Page"
                 :post/slug "parent-page"}
                {:post/type :post.type/page
@@ -39,31 +43,57 @@
                                 :taxon/name "My Cat"
                                 :taxon/taxonomy :taxon.taxonomy/category}}}]})
 
-(defn thingy [app]
-  (let [slug (:slug (:params app))
-        path (filter #(pos? (count %)) (str/split (:uri app) #"/"))
-        post (posts/path->post app path)]
-    (merge app {:headers {"Content-Type" "text/html"}
-                :status (if post 200 404)
-                :body [:html
-                       [:head
-                        [:title "Breadbox"]
-                        [:meta {:charset "utf-8"}]
-                        (theme/head app)]
-                       [:body
-                        [:div.bread-app
-                         [:h1 (or (:post/title post) "404 Not Found")]
-                         (for [field (posts/fields post)]
-                           [:section (:field/content field)])
-                         [:footer "this the footer"]
-                         (theme/footer app)]]]})))
+(defn thingy [req]
+  (let [slug (:slug (:params req))
+        path (filter #(pos? (count %)) (str/split (:uri req) #"/"))
+        post (posts/path->post req path)]
+    (prn 'POST post)
+    {:headers {"Content-Type" "text/html"}
+     :status (if post 200 404)
+     :body [:html
+            [:head
+             [:title "Breadbox"]
+             [:meta {:charset "utf-8"}]
+             (theme/head req)]
+            [:body
+             [:div.bread-app
+              [:h1 (or (:post/title post) "404 Not Found")]
+              (for [field (posts/fields post)]
+                [:section (:field/content field)])
+              [:footer "this the footer"]
+              (theme/footer req)]]]}
+    (bread/response req
+                    {:headers {"Content-Type" "text/html"}
+                     :status (if post 200 404)
+                     :body [:html
+                            [:head
+                             [:title "Breadbox"]
+                             [:meta {:charset "utf-8"}]
+                             (theme/head req)]
+                            [:body
+                             [:div.bread-app
+                              [:h1 (or (:post/title post) "404 Not Found")]
+                              (for [field (posts/fields post)]
+                                [:section (:field/content field)])
+                              [:footer "this the footer"]
+                              (theme/footer req)]]]})))
 
-(def app (bread/app-atom
-           {:plugins [(store/config->plugin $config)
-                      (fn [app]
-                        (bread/add-hook app :hook/dispatch thingy))
-                      (tpl/renderer->plugin rum/render-static-markup
-                                            {:precedence 2})]}))
+(defstate db
+  :start (store/install! $config)
+  :stop (store/delete-database! $config))
+
+(defonce app (atom nil))
+
+(defstate load-app
+  :start (reset! app
+                 (bread/load-app
+                   (bread/app
+                     {:plugins [(store/config->plugin $config)
+                                (fn [app]
+                                  (bread/add-hook app :hook/dispatch thingy))
+                                (tpl/renderer->plugin rum/render-static-markup
+                                                      {:precedence 2})]})))
+  :stop (reset! app nil))
 
 (defn my-theme [app]
   (-> app
@@ -77,17 +107,24 @@
   (bread/hook-> @app :hook/head nil)
   )
 
-(defstate db
-  :start (store/install! $config)
-  :stop (store/delete-database! $config))
-
 (defn handler [req]
+  ;(prn @app)
   (let [handle (bread/handler @app)]
-    (handle req)))
+    (select-keys (handle req) [:status :body :headers])))
 
 (defonce stop-http (atom nil))
 
 (comment
+  (bread/hooks (deref app))
+  (handler {:uri "/parent-page/child-page"})
+  (handler {:uri "/parent-page"})
+  (handler {:uri "/child-page"})
+  (handler {:uri "/"})
+
+  (defn h [req]
+    (-> (merge @app req) thingy (select-keys [:body :status :headers])))
+  (h {:uri "/parent-page"})
+
   (posts/path->post @app ["parent-page"])
   (posts/path->post @app ["parent-page" "child-page"])
   (posts/path->post @app ["child-page"])
