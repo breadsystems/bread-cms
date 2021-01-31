@@ -161,8 +161,15 @@
                ;; If bread.core threw this exception, don't wrap it
                (throw (if (-> e ex-data ::core?)
                         e
-                        (ex-info (str h " hook threw an exception: " (str (class e) ": " (.getMessage e)))
-                                 {:name h :hook hook :value x :extra-args args :app app ::core? true})))))))
+                        (ex-info (str h " hook threw an exception: "
+                                      (str (class e) ": " (.getMessage e)))
+                                 {:exception e
+                                  :name h
+                                  :hook hook
+                                  :value x
+                                  :extra-args args
+                                  :app app
+                                  ::core? true})))))))
        x)))
   ([app h]
    (hook-> app h nil)))
