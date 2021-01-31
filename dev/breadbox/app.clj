@@ -22,30 +22,30 @@
               :store {:backend :mem
                       :id "breadbox-db"}
               :initial
-              [{:post/type :post.type/page
-                :post/uuid (UUID/randomUUID)
-                :post/title "Home Page"
-                :post/slug ""}
-               {:post/type :post.type/page
-                :post/uuid (UUID/randomUUID)
-                :post/title "Parent Page"
-                :post/slug "parent-page"}
-               {:post/type :post.type/page
-                :post/uuid (UUID/randomUUID)
-                :post/title "Child Page"
-                :post/slug "child-page"
-                :post/parent 40
-                :post/fields #{{:field/content "asdf"
-                                :field/ord 1.0}
-                               {:field/content "qwerty"
-                                :field/ord 1.1}}
-                :post/taxons #{{:taxon/slug "my-cat"
-                                :taxon/name "My Cat"
-                                :taxon/taxonomy :taxon.taxonomy/category}}}]})
+              [#:post{:type :post.type/page
+                      :uuid (UUID/randomUUID)
+                      :title "Home Page"
+                      :slug ""}
+               #:post{:type :post.type/page
+                      :uuid (UUID/randomUUID)
+                      :title "Parent Page"
+                      :slug "parent-page"}
+               #:post{:type :post.type/page
+                      :uuid (UUID/randomUUID)
+                      :title "Child Page"
+                      :slug "child-page"
+                      :parent 41 ;; NOTE: don't do this :P
+                      :fields #{{:field/content "asdf"
+                                 :field/ord 1.0}
+                                {:field/content "qwerty"
+                                 :field/ord 1.1}}
+                      :taxons #{{:taxon/slug "my-cat"
+                                 :taxon/name "My Cat"
+                                 :taxon/taxonomy :taxon.taxonomy/category}}}]})
 
 (defn thingy [req]
   (let [slug (:slug (:params req))
-        path (filter #(pos? (count %)) (str/split (:uri req) #"/"))
+        path (filter #(pos? (count %)) (str/split (or (:uri req) "") #"/"))
         post (posts/path->post req path)]
     (prn 'POST post)
     (bread/response req
@@ -87,10 +87,10 @@
       (theme/add-to-footer [:script "console.log(123)"])))
 
 (comment
-  (swap! app #(bread/add-hook % :hook/init my-theme))
-  ;; TODO this doesn't work yet:
-  (swap! app #(bread/remove-hook % :hook/init my-theme))
-  (bread/hook-> @app :hook/head nil)
+  (swap! app #(bread/add-hook % :hook/request my-theme))
+  (swap! app #(bread/remove-hook % :hook/request my-theme))
+  (bread/hooks-for @app :hook/request)
+  (bread/hook-> @app :hook/head [])
   )
 
 (defn handler [req]
@@ -100,23 +100,13 @@
 (defonce stop-http (atom nil))
 
 (comment
-  (bread/hooks (deref app))
+
   (handler {:uri "/parent-page/child-page"})
   (handler {:uri "/parent-page"})
   (handler {:uri "/child-page"})
   (handler {:uri "/"})
 
-  (defn h [req]
-    (-> (merge @app req) thingy (select-keys [:body :status :headers])))
-  (h {:uri "/parent-page"})
-
-  (posts/path->post @app ["parent-page"])
-  (posts/path->post @app ["parent-page" "child-page"])
-  (posts/path->post @app ["child-page"])
-
   (rum/render-static-markup [:p "hi"])
-  (bread/hook (handler {:url "one"}) :slug)
-  (:body (handler {:url "one"}))
   ;; TODO test this out!
   (static/generate! handler)
 
