@@ -101,8 +101,9 @@
 (defn- append-hook [hooks f options]
   (let [hook (assoc (dissoc options :precedence)
                     ::f f
-                    ::precedence (or (:precedence options 1)))]
-    (sort-by ::precedence (conj hooks hook))))
+                    ::precedence (:precedence options 1))]
+    ;; TODO optimize this
+    (vec (sort-by ::precedence (conj hooks hook)))))
 
 (defn add-hook*
   ([app h f options]
