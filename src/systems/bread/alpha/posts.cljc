@@ -9,7 +9,7 @@
   ([path {:keys [child-sym]}]
    (vec (loop [query [] descendant-sym (or child-sym '?e) path path]
           (let [where [[descendant-sym :post/slug (last path)]]]
-            (if (= 1 (count path))
+            (if (>= 1 (count path))
               (concat query where [(list 'not-join
                                          [descendant-sym]
                                          [descendant-sym :post/parent '?parent])])
@@ -30,9 +30,10 @@
   (resolve-by-hierarchy ["a" "b"]))
 
 (defn path->post [app path]
-  (let [db (store/datastore app)
-        ent (ffirst (store/q db (resolve-by-hierarchy path) []))]
-    (when ent
+  (let [db (store/datastore app)]
+    (some->> (resolve-by-hierarchy path)
+             (store/q db)
+             ffirst
       (store/pull db
                   [:db/id
                    :post/uuid
@@ -55,8 +56,7 @@
                     [:taxon/taxonomy
                      :taxon/uuid
                      :taxon/slug
-                     :taxon/name]}]
-                  ent))))
+                     :taxon/name]}]))))
 
 (defn fields [post]
   (sort-by :field/ord (:post/fields post)))
