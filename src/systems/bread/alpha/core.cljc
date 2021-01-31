@@ -42,6 +42,7 @@
 (declare hook)
 
 (defn response [req raw]
+  {:pre [(s/valid? ::app req)]}
   (merge raw (select-keys req [::config ::hooks ::plugins])))
 
 (defn config

@@ -13,7 +13,9 @@
     (let [raw {:status 200 :headers {} :body [:main]}]
       (is (= #{:status :headers :body
                ::bread/plugins ::bread/hooks ::bread/config}
-             (set (keys (bread/response (bread/app {:url "/"}) raw))))))))
+             (set (keys (bread/response (bread/app {:url "/"}) raw)))))
+      (is (= #{:body ::bread/plugins ::bread/hooks ::bread/config}
+             (set (keys (bread/response (bread/app {:url "/"}) {:body "hello"}))))))))
 
 (deftest test-config
 
