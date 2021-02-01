@@ -4,7 +4,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
-(defn path->constraints
+(defn- path->constraints
   ([path]
    (path->constraints path {}))
   ([path {:keys [child-sym]}]
@@ -21,7 +21,7 @@
                  ancestor-sym
                  (butlast path)))))))))
 
-(defn resolve-by-hierarchy [path]
+(defn- resolve-by-hierarchy [path]
   (vec (concat [:find '?e :where]
                (path->constraints path))))
 
