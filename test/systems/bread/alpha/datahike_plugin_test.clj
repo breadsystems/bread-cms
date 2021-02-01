@@ -76,8 +76,16 @@
     (testing "it honors initial transactions"
       (let [txns->app (fn [txns]
                         (config->handler
-                          (assoc config :datastore/initial-txns txns)))]
-        ;; TODO these are weak assertions - assert that schema actually gets initializes correctly
+                          (assoc config :datastore/initial-txns txns)))
+            ;; TODO load this schema and query attrs
+            schema-attr {:db/ident :thingy/test
+                         :db/doc "this is a test thingy"
+                         :db/valueType :db.type/keyword
+                         :db/cardinality :db.cardinality/one}
+            query '[:find ?doc
+                    :where
+                    [?e :db/doc ?doc]
+                    [?e :db/ident :thingy/test]]]
         (is (= 0 (count (bread/hooks-for (txns->app []) :hook/init))))
         #_
-        (is (= 1 (count (bread/hooks-for (txns->app [{:fake :txn}]) :hook/init))))))))
+        (is (= 1 (count (bread/hooks-for (txns->app [schema-attr]) :hook/init))))))))
