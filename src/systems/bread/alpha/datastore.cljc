@@ -96,9 +96,10 @@
 (defn- initial-transactor [txns]
   (if (seq txns)
     (fn [app]
-      (letfn [(transact [app]
-                (transact (connection app) txns))]
-        (bread/add-hook app :hook/init transact)))
+      (letfn [(do-txns [app]
+                (transact (connection app) txns)
+                app)]
+        (bread/add-hook app :hook/init do-txns)))
     identity))
 
 (defmethod config->plugin :default [config]
