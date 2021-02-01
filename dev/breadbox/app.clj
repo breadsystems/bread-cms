@@ -101,25 +101,26 @@
                                                       {:precedence 2})]})))
   :stop (reset! app nil))
 
-(defn my-theme [app]
+(defn green-theme [app]
   (-> app
       (theme/add-to-head [:style "*{color:green}"])
-      (theme/add-to-footer [:script "console.log(123)"])))
+      ;; TODO unescape strings here somehow?
+      (theme/add-to-footer [:script "console.log(1)"])))
+
+(defn purple-theme [app]
+  (-> app
+      (theme/add-to-head [:style "*{color:purple}"])
+      (theme/add-to-footer [:script "console.log(2)"])))
 
 (comment
   (swap! env assoc :reinstall-db? false)
   (swap! env assoc :reinstall-db? true)
   (deref env)
 
-  (swap! app #(bread/add-hook % :hook/request my-theme))
-  (swap! app #(bread/remove-hook % :hook/request my-theme))
-
-  (swap! app (help/hook-debugger-> :hook/post))
-  (swap! app (help/hook-debugger->
-               :hook/fields
-               (partial map #(select-keys % [:field/content :field/ord]))))
-  (swap! app assoc-in [::bread/hooks :hook/post] [])
-  (swap! app assoc-in [::bread/hooks :hook/fields] [])
+  (swap! app #(bread/add-hook % :hook/request green-theme))
+  (swap! app #(bread/add-hook % :hook/request purple-theme))
+  (swap! app #(bread/remove-hook % :hook/request green-theme))
+  (swap! app #(bread/remove-hook % :hook/request purple-theme))
 
   (bread/hooks-for @app :hook/request)
   (bread/hook-> @app :hook/head [])
@@ -132,22 +133,6 @@
 (defonce stop-http (atom nil))
 
 (comment
-
-  (handler {:uri "/parent-page/child-page"})
-  (handler {:uri "/parent-page"})
-  (handler {:uri "/"})
-  (handler {:uri "/child-page"})
-
-  (store/q (store/datastore @app) '[:find [?e ?o ?c ?t]
-                                    :where
-                                    ;[48 :field/ord ?o]
-                                    [?e :field/ord ?o ?t]
-                                    [?e :field/content ?c ?t]])
-
-  (post/fields @app (post/path->post @app ["parent-page" "child-page"]))
-  (post/fields @app (post/path->post @app ["parent-page"]))
-  (post/fields @app (post/path->post @app [""]))
-  (post/fields @app (post/path->post @app ["child-page"]))
 
   ;; TODO test this out!
   (static/generate! handler)
