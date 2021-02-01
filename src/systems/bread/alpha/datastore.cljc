@@ -72,6 +72,17 @@
         (.parse (java.text.SimpleDateFormat. format) as-of)
         (catch java.text.ParseException _e nil)))))
 
+(defmethod installed? :default [config]
+  (try
+    (let [db (-> config connect! db)
+          migration-query '[:find ?e :where
+                            [?e :migration/key :bread.migration/initial]]]
+      (->> (q db migration-query) seq boolean))
+    (catch clojure.lang.ExceptionInfo e
+      (when (not= (:type (ex-data e)) :backend-does-not-exist)
+        (throw e))
+      false)))
+
 (defn req->datastore
   "Takes a request and returns a datastore instance, optionally configured
    as a temporal-db (via as-of) or with-db (via db-with)"

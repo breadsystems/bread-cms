@@ -198,23 +198,7 @@
 
 (defmethod store/install! :datahike [config]
   (d/create-database config)
-  (let [conn (store/connect! config)
-        initial (:initial config)]
-    (d/transact conn (schema/initial-schema))
-    (when initial
-      (d/transact conn initial))))
-
-(defmethod store/installed? :datahike [config]
-  (try
-    (let [db (-> config store/connect! store/db)]
-      (boolean (seq
-                (store/q db
-                         '[:find ?e :where
-                           [?e :migration/key :bread.migration/initial]]))))
-    (catch clojure.lang.ExceptionInfo e
-      (when (not= (:type (ex-data e)) :backend-does-not-exist)
-        (throw e))
-      false)))
+  (d/transact (store/connect! config) (schema/initial-schema)))
 
 (defmethod store/delete-database! :datahike [config]
   (d/delete-database config))
