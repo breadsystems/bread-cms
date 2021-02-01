@@ -191,7 +191,7 @@
                                                            :my/extra :extra!})))))))
 
 ;; TODO remove-value-hook
-;; TODO replace-hook
+;; TODO remove-all-hooks
 
 (deftest test-hook->
 

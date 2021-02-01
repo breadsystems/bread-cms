@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.posts
   (:require
+    [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -24,34 +25,42 @@
   (vec (concat [:find '?e :where]
                (path->constraints path))))
 
+(defn query [app]
+  ;; TODO get query dynamically from component?
+  (bread/hook-> app :hook/query [:db/id
+                                 :post/uuid
+                                 :post/title
+                                 :post/slug
+                                 :post/type
+                                 :post/status
+                                 {:post/parent
+                                  [:db/id
+                                   :post/uuid
+                                   :post/slug
+                                   :post/title
+                                   :post/type
+                                   :post/status]}
+                                 {:post/fields
+                                  [:db/id
+                                   :db/txInstant
+                                   :field/content
+                                   :field/ord]}
+                                 {:post/taxons
+                                  [:taxon/taxonomy
+                                   :taxon/uuid
+                                   :taxon/slug
+                                   :taxon/name]}]))
+
 (defn path->post [app path]
   (let [db (store/datastore app)]
-    (some->> (resolve-by-hierarchy path)
-             (store/q db)
-             ffirst
-      (store/pull db
-                  [:db/id
-                   :post/uuid
-                   :post/title
-                   :post/slug
-                   :post/type
-                   :post/status
-                   {:post/parent
-                    [:db/id
-                     :post/uuid
-                     :post/slug
-                     :post/title
-                     :post/type
-                     :post/status]}
-                   {:post/fields
-                    [:db/id
-                     :field/content
-                     :field/ord]}
-                   {:post/taxons
-                    [:taxon/taxonomy
-                     :taxon/uuid
-                     :taxon/slug
-                     :taxon/name]}]))))
+    (bread/hook-> app :hook/post (some->> (resolve-by-hierarchy path)
+                                          (store/q db)
+                                          ffirst
+                                          (store/pull db (query app))))))
 
-(defn fields [post]
-  (sort-by :field/ord (:post/fields post)))
+;; TODO setup default field hooks globally to support overrides
+(defn fields [app post]
+  (->> (:post/fields post)
+       (map #(update % :field/content edn/read-string))
+       (sort-by :field/ord)
+       (bread/hook-> app :hook/fields)))
