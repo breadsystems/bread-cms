@@ -1,12 +1,13 @@
 ;; TODO migrate to CLJC
 (ns systems.bread.alpha.datastore.datahike
   (:require
-   [datahike.api :as d]
-   [systems.bread.alpha.schema :as schema]
-   [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.datastore :as store])
+    [datahike.api :as d]
+    [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as store])
   (:import
-   [java.util UUID]))
+    [java.lang IllegalArgumentException]
+    [java.util UUID]))
 
 
 
@@ -182,17 +183,15 @@
 ;; TransactionalDatastoreConnection protocols
 ;;
 
-(defn connect [datahike-config]
+(defmethod store/connect! :datahike [config]
   (try
-    (d/connect datahike-config)
-    (catch java.lang.IllegalArgumentException e
-      (throw (ex-info (str "Exception connecting to datahike: " (.getMessage e))
+    (d/connect config)
+    (catch IllegalArgumentException e
+      (throw (ex-info (str "Exception connecting to datahike: "
+                           (.getMessage e))
                       {:exception e
                        :message   (.getMessage e)
-                       :config    datahike-config})))))
-
-(defmethod store/connect! :datahike [config]
-  (connect config))
+                       :config    config})))))
 
 (defmethod store/create-database! :datahike [config]
   (d/create-database config))
@@ -219,52 +218,3 @@
 
 (defmethod store/delete-database! :datahike [config]
   (d/delete-database config))
-
-(defn req->timepoint
-  "Takes a request and returns a Datahike timepoint"
-  [{:keys [params] :as req}]
-  (let [as-of-param (bread/config req :datastore/as-of-param)
-        as-of (get params as-of-param)
-        format (bread/config req :datastore/as-of-format)]
-    (when as-of
-      (try
-        (.parse (java.text.SimpleDateFormat. format) as-of)
-        (catch java.text.ParseException _e nil)))))
-
-(defn req->datastore
-  "Takes a request and returns a datastore instance, optionally configured
-   as a temporal-db (via as-of) or with-db (via db-with)"
-  [req]
-  (let [conn (bread/config req :datastore/connection)
-        timepoint (bread/hook req :hook/datastore.req->timepoint)]
-    (if timepoint
-      (store/as-of @conn timepoint)
-      @conn)))
-
-(defmethod store/config->plugin :datahike [config]
-  (let [{:datastore/keys [as-of-format
-                          as-of-param
-                          initial-txns
-                          reinstall?]} config
-        ;; Support shorthands for (bread/add-hook :hook/datastore*)
-        ->timepoint (:req->timepoint config req->timepoint)
-        ->datastore (:req->datastore config req->datastore)
-        transact-initial* (fn [app]
-                            (store/transact (store/connection app) initial-txns)
-                            app)
-        transact-initial (fn [app]
-                           (if (seq initial-txns)
-                             (bread/add-hook app :hook/init transact-initial*)
-                             app))]
-    (when reinstall?
-      (store/delete-database! config)
-      (store/install! config))
-    (fn [app]
-      (-> app
-          (bread/set-config :datastore/config config)
-          (bread/set-config :datastore/connection (store/connect! config))
-          (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
-          (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
-          (transact-initial)
-          (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
-          (bread/add-hook :hook/datastore ->datastore)))))

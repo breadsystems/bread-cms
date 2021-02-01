@@ -6,6 +6,17 @@
 (defn plugins->app [plugins]
   (bread/app {:plugins plugins}))
 
-(defn config->datastore [config]
-  (-> [(store/config->plugin config)] plugins->app store/datastore))
+(defn plugins->loaded [plugins]
+  (-> plugins plugins->app bread/load-app))
 
+(defn plugins->handler [plugins]
+  (-> plugins plugins->app bread/load-handler))
+
+(defn datastore-config->app [config]
+  (plugins->app [(store/config->plugin config)]))
+
+(defn datastore-config->loaded [config]
+  (-> config datastore-config->app bread/load-app))
+
+(defn datastore-config->handler [config]
+  (-> config datastore-config->app bread/load-handler))

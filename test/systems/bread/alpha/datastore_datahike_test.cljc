@@ -4,7 +4,6 @@
     [systems.bread.alpha.datastore :as store]
     [clojure.test :refer [deftest is testing use-fixtures]]))
 
-
 ;; Set up a bunch of boilerplate to share between tests.
 (let [config {:datastore/type :datahike
               :store {:backend :mem :id "testdb"}
