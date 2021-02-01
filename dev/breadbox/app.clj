@@ -22,7 +22,7 @@
 (def $config {:datastore/type :datahike
               :store {:backend :mem
                       :id "breadbox-db"}
-              :initial
+              :datastore/initial-txns
               [#:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Home Page"

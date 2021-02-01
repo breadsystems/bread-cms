@@ -7,7 +7,6 @@
 
 
 (let [config {:datastore/type :datahike
-              :datastore/initial-txns []
               :store {:backend :mem
                       :id "plugin-db"}}
       config->handler (fn [conf]
@@ -31,27 +30,29 @@
         (is (= :as-of (bread/config app :datastore/as-of-param)))))
 
     (testing "it honors custom as-of-param"
-      (let [app (handle {})]
-        (is (= :as-of (bread/config app :datastore/as-of-param)))))
+      (let [app ((config->handler
+                   (assoc config :datastore/as-of-param :my/param))
+                 {:uri "/"})]
+        (is (= :my/param (bread/config app :datastore/as-of-param)))))
 
     (testing "it configures db connection"
       (let [app (handle {})]
         (is (instance? clojure.lang.Atom (bread/config app :datastore/connection)))))
 
     (testing ":hook/datastore returns the present snapshot by default"
-      (let [response ((config->handler config) {:url "/"})]
+      (let [response ((config->handler config) {:uri "/"})]
         (is (instance? datahike.db.DB (bread/hook response :hook/datastore)))))
 
     (testing ":hook/datastore.req->timepoint honors as-of param"
       (let [handler (config->handler config)
-            response (handler {:url "/"
+            response (handler {:uri "/"
                                ;; pass a literal date here
                                :params {:as-of "2020-01-01 00:00:00 PDT"}})]
         (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
 
     (testing ":hook/datastore.req->timepoint honors as-of-format config"
-      (let [handler (config->handler (assoc config :as-of-format "yyyy-MM-dd"))
-            response (handler {:url "/"
+      (let [handler (config->handler (assoc config :datastore/as-of-format "yyyy-MM-dd"))
+            response (handler {:uri "/"
                                ;; pass a literal date here
                                :params {:as-of "2020-01-01"}})]
         (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
@@ -60,7 +61,7 @@
 
     (testing ":hook/datastore.req->timepoint gracefully handles bad date strings"
       (let [handler (config->handler config)
-            response (handler {:url "/"
+            response (handler {:uri "/"
                                :params {:as-of "nonsense date string"}})]
         (is (instance? datahike.db.DB (bread/hook response :hook/datastore)))))
 
@@ -70,4 +71,13 @@
             app (bread/app {:plugins [(store/config->plugin config)]})
             handler (bread/app->handler app)
             response (handler {})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))))
+        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
+
+    (testing "it honors initial transactions"
+      (let [txns->app (fn [txns]
+                        (config->handler
+                          (assoc config :datastore/initial-txns txns)))]
+        ;; TODO these are weak assertions - assert that schema actually gets initializes correctly
+        (is (= 0 (count (bread/hooks-for (txns->app []) :hook/init))))
+        #_
+        (is (= 1 (count (bread/hooks-for (txns->app [{:fake :txn}]) :hook/init))))))))

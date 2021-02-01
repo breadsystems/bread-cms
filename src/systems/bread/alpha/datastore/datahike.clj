@@ -242,14 +242,20 @@
       @conn)))
 
 (defmethod store/config->plugin :datahike [config]
-  (let [{:keys [as-of-param as-of-format initial reinstall?]} config
+  (let [{:datastore/keys [as-of-format
+                          as-of-param
+                          initial-txns
+                          reinstall?]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         ->timepoint (:req->timepoint config req->timepoint)
         ->datastore (:req->datastore config req->datastore)
+        transact-initial* (fn [app]
+                            (store/transact (store/connection app) initial-txns)
+                            app)
         transact-initial (fn [app]
-                           (when initial
-                             (store/transact (store/connection app) initial))
-                           app)]
+                           (if (seq initial-txns)
+                             (bread/add-hook app :hook/init transact-initial*)
+                             app))]
     (when reinstall?
       (store/delete-database! config)
       (store/install! config))
@@ -259,6 +265,6 @@
           (bread/set-config :datastore/connection (store/connect! config))
           (bread/set-config :datastore/as-of-param (or as-of-param :as-of))
           (bread/set-config :datastore/as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z"))
-          (bread/add-hook :hook/init transact-initial)
+          (transact-initial)
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
           (bread/add-hook :hook/datastore ->datastore)))))
