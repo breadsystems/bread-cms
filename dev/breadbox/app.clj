@@ -3,6 +3,7 @@
     ;[breadbox.static :as static]
     [clojure.string :as str]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.posts :as posts]
@@ -29,15 +30,22 @@
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Parent Page"
-                      :slug "parent-page"}
+                      :slug "parent-page"
+                      :fields #{{:field/content
+                                 (prn-str [:div
+                                           [:h4 "This is the parent page"]
+                                           [:p "Here is some content."]])}}}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Child Page"
                       :slug "child-page"
                       :parent 41 ;; NOTE: don't do this :P
-                      :fields #{{:field/content "asdf"
+                      :fields #{{:field/content
+                                 (prn-str [:div
+                                            [:p "lorem ipsum dolor sit amet"]
+                                            [:img {:src "https://placehold.it/300x300"}]])
                                  :field/ord 1.0}
-                                {:field/content "qwerty"
+                                {:field/content (prn-str [:p "qwerty"])
                                  :field/ord 1.1}}
                       :taxons #{{:taxon/slug "my-cat"
                                  :taxon/name "My Cat"
@@ -47,7 +55,6 @@
   (let [slug (:slug (:params req))
         path (filter #(pos? (count %)) (str/split (or (:uri req) "") #"/"))
         post (posts/path->post req path)]
-    (prn 'POST post)
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
                      :status (if post 200 404)
@@ -59,14 +66,27 @@
                             [:body
                              [:div.bread-app
                               [:h1 (or (:post/title post) "404 Not Found")]
-                              (for [field (posts/fields post)]
-                                [:section (:field/content field)])
-                              [:footer "this the footer"]
+                              (map (fn [field]
+                                     [:section (:field/content field)])
+                                   (posts/fields req post))
+                              [:footer "this is the footer"]
                               (theme/footer req)]]]})))
 
+;; This needs to install db on init in order for db and load-app to
+;; initialize correctly.
+(defonce env (atom {:reinstall-db? true}))
+
 (defstate db
-  :start (store/install! $config)
-  :stop (store/delete-database! $config))
+  :start (when (:reinstall-db? @env)
+           (store/install! $config))
+  :stop (when (:reinstall-db? @env)
+          (prn 'DELETE-DATABASE!)
+          (store/delete-database! $config)))
+
+(comment
+  (swap! env assoc :reinstall-db? false)
+  (swap! env assoc :reinstall-db? true)
+  (deref env))
 
 (defonce app (atom nil))
 
@@ -87,8 +107,20 @@
       (theme/add-to-footer [:script "console.log(123)"])))
 
 (comment
+  (swap! env assoc :reinstall-db? false)
+  (swap! env assoc :reinstall-db? true)
+  (deref env)
+
   (swap! app #(bread/add-hook % :hook/request my-theme))
   (swap! app #(bread/remove-hook % :hook/request my-theme))
+
+  (swap! app (help/hook-debugger-> :hook/post))
+  (swap! app (help/hook-debugger->
+               :hook/fields
+               (partial map #(select-keys % [:field/content :field/ord]))))
+  (swap! app assoc-in [::bread/hooks :hook/post] [])
+  (swap! app assoc-in [::bread/hooks :hook/fields] [])
+
   (bread/hooks-for @app :hook/request)
   (bread/hook-> @app :hook/head [])
   )
@@ -103,10 +135,20 @@
 
   (handler {:uri "/parent-page/child-page"})
   (handler {:uri "/parent-page"})
-  (handler {:uri "/child-page"})
   (handler {:uri "/"})
+  (handler {:uri "/child-page"})
 
-  (rum/render-static-markup [:p "hi"])
+  (store/q (store/datastore @app) '[:find [?e ?o ?c ?t]
+                                    :where
+                                    ;[48 :field/ord ?o]
+                                    [?e :field/ord ?o ?t]
+                                    [?e :field/content ?c ?t]])
+
+  (posts/fields @app (posts/path->post @app ["parent-page" "child-page"]))
+  (posts/fields @app (posts/path->post @app ["parent-page"]))
+  (posts/fields @app (posts/path->post @app [""]))
+  (posts/fields @app (posts/path->post @app ["child-page"]))
+
   ;; TODO test this out!
   (static/generate! handler)
 
@@ -115,7 +157,7 @@
 
 (defn start! []
   ;; TODO config
-  (let [port (Integer. (or (System/getenv "HTTP_PORT") 8080))]
+  (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running HTTP server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       (wrap-keyword-params $)
