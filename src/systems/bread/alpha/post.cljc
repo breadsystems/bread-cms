@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.posts
+(ns systems.bread.alpha.post
   (:require
     [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
@@ -61,6 +61,6 @@
 ;; TODO setup default field hooks globally to support overrides
 (defn fields [app post]
   (->> (:post/fields post)
-       (map #(update % :field/content edn/read-string))
        (sort-by :field/ord)
+       (map #(update % :field/content edn/read-string))
        (bread/hook-> app :hook/fields)))

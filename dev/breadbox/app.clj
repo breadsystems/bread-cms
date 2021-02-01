@@ -6,7 +6,7 @@
     [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
-    [systems.bread.alpha.posts :as posts]
+    [systems.bread.alpha.post :as post]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.template :as tpl]
@@ -54,7 +54,7 @@
 (defn thingy [req]
   (let [slug (:slug (:params req))
         path (filter #(pos? (count %)) (str/split (or (:uri req) "") #"/"))
-        post (posts/path->post req path)]
+        post (post/path->post req path)]
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
                      :status (if post 200 404)
@@ -68,7 +68,7 @@
                               [:h1 (or (:post/title post) "404 Not Found")]
                               (map (fn [field]
                                      [:section (:field/content field)])
-                                   (posts/fields req post))
+                                   (post/fields req post))
                               [:footer "this is the footer"]
                               (theme/footer req)]]]})))
 
@@ -144,10 +144,10 @@
                                     [?e :field/ord ?o ?t]
                                     [?e :field/content ?c ?t]])
 
-  (posts/fields @app (posts/path->post @app ["parent-page" "child-page"]))
-  (posts/fields @app (posts/path->post @app ["parent-page"]))
-  (posts/fields @app (posts/path->post @app [""]))
-  (posts/fields @app (posts/path->post @app ["child-page"]))
+  (post/fields @app (post/path->post @app ["parent-page" "child-page"]))
+  (post/fields @app (post/path->post @app ["parent-page"]))
+  (post/fields @app (post/path->post @app [""]))
+  (post/fields @app (post/path->post @app ["child-page"]))
 
   ;; TODO test this out!
   (static/generate! handler)
