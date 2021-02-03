@@ -10,8 +10,7 @@
                          nrepl/nrepl               {:mvn/version "0.7.0"}
                          org.clojure/clojurescript {:mvn/version "1.10.764"}
                          ring                      {:mvn/version "1.7.0"}
-                         rum                       {:mvn/version "0.12.3"
-                                                    :exclusions [cljsjs/react cljsjs/react-dom]}}}
+                         rum                       {:mvn/version "0.12.3"}}}
 
            :test
            {:extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
