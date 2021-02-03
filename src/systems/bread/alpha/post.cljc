@@ -51,6 +51,12 @@
                                    :taxon/slug
                                    :taxon/name]}]))
 
+(defn path->id [app path]
+  (let [db (store/datastore app)]
+    (bread/hook-> app :hook/post (some->> (resolve-by-hierarchy path)
+                                          (store/q db)
+                                          ffirst))))
+
 (defn path->post [app path]
   (let [db (store/datastore app)]
     (bread/hook-> app :hook/post (some->> (resolve-by-hierarchy path)
@@ -58,9 +64,22 @@
                                           ffirst
                                           (store/pull db (query app))))))
 
+(defn parse-fields [fields]
+  (map #(update % :field/content edn/read-string) fields))
+
 ;; TODO setup default field hooks globally to support overrides
 (defn fields [app post]
   (->> (:post/fields post)
-       (sort-by :field/ord)
-       (map #(update % :field/content edn/read-string))
        (bread/hook-> app :hook/fields)))
+
+(defn post [app post]
+  (prn 'post/fields (fields app post))
+  (assoc post :post/fields (fields app post)))
+
+(defn- add-post-hook [app]
+  (bread/add-hook app :hook/post post))
+
+(defn add-defaults [app]
+  (-> app
+      (bread/add-hook :hook/fields #(sort-by :field/ord %))
+      (bread/add-hook :hook/fields parse-fields)))

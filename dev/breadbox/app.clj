@@ -3,13 +3,15 @@
     ;[breadbox.static :as static]
     [clojure.string :as str]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as comp :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.post :as post]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.template :as tpl]
+    [systems.bread.alpha.theme :as theme]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [ring.middleware.params :refer [wrap-params]]
@@ -51,10 +53,49 @@
                                  :taxon/name "My Cat"
                                  :taxon/taxonomy :taxon.taxonomy/category}}}]})
 
+(defc page [{:keys [post]}]
+  {:ident :db/id
+   :query [:post/title
+           {:post/fields [:field/content :field/ord]}]}
+  [:<>
+   [:h1 (or (:post/title post) "404 Not Found")]
+   (map (fn [field]
+          [:section (:field/content field)])
+        (:post/fields post))])
+
+(defn ->path [req]
+  (filter #(pos? (count %))
+          (str/split (or (:uri req) "") #"/")))
+
+(defn req->id [req]
+  (post/path->id req (->path req)))
+
+(comment
+  (deref app)
+
+  (def db (store/datastore @app))
+  (require '[datahike.api :as d])
+  ;; this works
+  (d/pull db [:post/uuid :post/slug :post/title] 43)
+  ;; this does not work
+  (d/pull db [:post/slug :post/title] [43 :db/id])
+
+  (route/resolve-entity $req)
+
+  )
+
+
 (defn thingy [req]
   (let [slug (:slug (:params req))
-        path (filter #(pos? (count %)) (str/split (or (:uri req) "") #"/"))
-        post (post/path->post req path)]
+        post (route/entity req)
+        req (-> req
+                (bread/add-value-hook :hook/view-data {:post post})
+                ;; TODO figure out how to do this automatically
+                #_
+                (bread/add-hook :hook/view-data
+                                (fn [data]
+                                  (prn :hook/view-data (keys data))
+                                  (update data :post #(post/post req %)))))]
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
                      :status (if post 200 404)
@@ -65,10 +106,7 @@
                              (theme/head req)]
                             [:body
                              [:div.bread-app
-                              [:h1 (or (:post/title post) "404 Not Found")]
-                              (map (fn [field]
-                                     [:section (:field/content field)])
-                                   (post/fields req post))
+                              (comp/render page req)
                               [:footer "this is the footer"]
                               (theme/footer req)]]]})))
 
@@ -95,8 +133,16 @@
                  (bread/load-app
                    (bread/app
                      {:plugins [(store/config->plugin $config)
+                                post/add-defaults
+
+                                ;; TODO make these dynamic at the routing layer
+                                #(bread/add-hook % :hook/id req->id)
+                                #(bread/add-value-hook % :hook/component page)
+
+                                ;; TODO specify thingy as a layout
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch thingy))
+
                                 (tpl/renderer->plugin rum/render-static-markup
                                                       {:precedence 2})]})))
   :stop (reset! app nil))
@@ -114,14 +160,6 @@
 
 (comment
 
-  (def registry (atom {}))
-
-  (defmacro defc [sym arglist m form]
-    `(do
-       (defn ~sym ~arglist ~form)
-       (swap! registry assoc ~sym ~m)))
-
-  (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
 
   (defc person [{:person/keys [name job]}]
     {:ident :person/id
