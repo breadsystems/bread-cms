@@ -20,7 +20,6 @@
     :db/doc "Unique identifier for the post. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
-    :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
    {:db/ident :post/slug
@@ -143,6 +142,7 @@
    {:db/ident :comment/uuid
     :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
    {:db/ident :comment/post-id
@@ -176,7 +176,6 @@
     :db/doc "Unique identifier. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
-    :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
    {:db/ident :user/email
