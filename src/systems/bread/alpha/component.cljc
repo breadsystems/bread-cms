@@ -15,18 +15,6 @@
 (comment
   (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div])))
 
-(def db {:person/id {1 #:person{:id 1
-                                :name "Coby"
-                                :job "Developer"
-                                :persuasion "commie"}
-                     2 #:person{:id 2
-                                :name "Jenny"
-                                :job "PM"
-                                :persuasion "anti-capitalist"}}})
-(defn q [ident ks]
-  (select-keys (get-in db ident) ks))
-(q [:person/id 1] [:person/name :person/job])
-
 (defn get-query [component params]
   (let [{:keys [query ident]} (@registry component)]
     {:query/schema query
@@ -34,7 +22,3 @@
 
 (defn render [component req]
   (component (bread/hook-> req :hook/view-data)))
-
-(comment
-  $query
-         )
