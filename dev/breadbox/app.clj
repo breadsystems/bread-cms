@@ -63,12 +63,16 @@
           [:section (:field/content field)])
         (:post/fields post))])
 
+;; TODO do this in an actual routing layer
 (defn ->path [req]
   (filter #(pos? (count %))
           (str/split (or (:uri req) "") #"/")))
 
 (defn req->id [req]
-  (post/path->id req (->path req)))
+  (post/path->id req (next (->path req))))
+
+(defn req->lang [req]
+  (keyword (first (->path req))))
 
 (comment
   (deref app)
@@ -135,6 +139,8 @@
                                 ;; TODO make these dynamic at the routing layer
                                 #(bread/add-hook % :hook/id req->id)
                                 #(bread/add-value-hook % :hook/component page)
+
+                                #(bread/add-hook % :hook/lang req->lang)
 
                                 ;; TODO specify thingy as a layout
                                 (fn [app]
