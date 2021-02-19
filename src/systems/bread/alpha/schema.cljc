@@ -138,6 +138,23 @@
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
 
+   ;; Strings, for i18n
+   {:db/ident :i18n/key
+    :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :i18n/lang
+    :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :i18n/string
+    :db/doc "The value of the string itself, specific to a given path/lang combination."
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+
    ;; Comments
    {:db/ident :comment/uuid
     :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
