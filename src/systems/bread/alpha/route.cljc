@@ -14,4 +14,5 @@
   (let [cmp (component req)
         eid (entity-id req)
         {:query/keys [schema ident]} (comp/get-query cmp {:db/id eid})]
-    (store/pull (store/datastore req) schema ident)))
+    (when ident
+      (store/pull (store/datastore req) schema ident))))
