@@ -4,13 +4,14 @@
         io.replikativ/datahike     {:mvn/version "0.3.2"}}
  :aliases {:dev
            {:extra-paths ["dev"]
-            :extra-deps {http-kit                  {:mvn/version "2.3.0"}
-                         markdown-clj              {:mvn/version "1.10.5"}
-                         mount                     {:mvn/version "0.1.16"}
+            :extra-deps {http-kit/http-kit         {:mvn/version "2.3.0"}
+                         markdown-clj/markdown-clj {:mvn/version "1.10.5"}
+                         mount/mount               {:mvn/version "0.1.16"}
                          nrepl/nrepl               {:mvn/version "0.7.0"}
                          org.clojure/clojurescript {:mvn/version "1.10.764"}
-                         ring                      {:mvn/version "1.7.0"}
-                         rum                       {:mvn/version "0.12.3"}}}
+                         ring/ring                 {:mvn/version "1.7.0"}
+                         rum/rum                   {:mvn/version "0.12.3"}
+                         tongue/tongue             {:mvn/version "0.2.10"}}}
 
            :test
            {:extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
