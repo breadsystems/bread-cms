@@ -91,10 +91,8 @@
         req (-> req
                 (bread/add-value-hook :hook/view-data {:post post})
                 ;; TODO figure out how to do this automatically
-                #_
                 (bread/add-hook :hook/view-data
                                 (fn [data]
-                                  (prn :hook/view-data (keys data))
                                   (update data :post #(post/post req %)))))]
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
@@ -133,7 +131,6 @@
                  (bread/load-app
                    (bread/app
                      {:plugins [(store/config->plugin $config)
-                                post/add-defaults
 
                                 ;; TODO make these dynamic at the routing layer
                                 #(bread/add-hook % :hook/id req->id)

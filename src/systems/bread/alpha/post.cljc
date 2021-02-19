@@ -67,19 +67,5 @@
 (defn parse-fields [fields]
   (map #(update % :field/content edn/read-string) fields))
 
-;; TODO setup default field hooks globally to support overrides
-(defn fields [app post]
-  (->> (:post/fields post)
-       (bread/hook-> app :hook/fields)))
-
 (defn post [app post]
-  (prn 'post/fields (fields app post))
-  (assoc post :post/fields (fields app post)))
-
-(defn- add-post-hook [app]
-  (bread/add-hook app :hook/post post))
-
-(defn add-defaults [app]
-  (-> app
-      (bread/add-hook :hook/fields #(sort-by :field/ord %))
-      (bread/add-hook :hook/fields parse-fields)))
+  (update post :post/fields #(->> % (sort-by :field/ord) parse-fields)))
