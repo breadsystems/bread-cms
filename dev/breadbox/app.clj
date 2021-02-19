@@ -41,7 +41,7 @@
                       :uuid (UUID/randomUUID)
                       :title "Child Page"
                       :slug "child-page"
-                      :parent 41 ;; NOTE: don't do this :P
+                      :parent 44 ;; NOTE: don't do this :P
                       :fields #{{:field/content
                                  (prn-str [:div
                                             [:p "lorem ipsum dolor sit amet"]
