@@ -21,4 +21,4 @@
      :query/ident (get params ident)}))
 
 (defn render [component req]
-  (component (bread/hook-> req :hook/view-data)))
+  (component (bread/hook-> req :hook/view-data {} req)))

@@ -25,7 +25,7 @@
 (defn- route-segments [{:keys [uri] :as req}]
   (filter (complement empty?) (str/split (or uri "") #"/")))
 
-(defn req->lang [req]
+(defn- req->lang [req]
   ((supported-langs req) (keyword (first (route-segments req)))))
 
 (defn lang-supported?
@@ -104,6 +104,9 @@
   ;; TODO run a hook instead?
   (-translate k app))
 
+(defn inject-strings [data req]
+  (assoc data :i18n (strings req)))
+
 (defn plugin
   ([]
    (plugin {}))
@@ -112,5 +115,6 @@
          fallback (:i18n/fallback opts :en)]
      (fn [app]
        (-> app
+           (bread/add-hook :hook/view-data inject-strings)
            (bread/set-config :i18n/fallback-lang fallback)
            (bread/add-hook :hook/lang ->lang))))))

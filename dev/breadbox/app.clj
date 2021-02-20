@@ -54,6 +54,12 @@
                                  :taxon/name "My Cat"
                                  :taxon/taxonomy :taxon.taxonomy/category}}}
                #:i18n{:lang :en
+                      :key :i18n/not-found
+                      :string "404 Not Found"}
+               #:i18n{:lang :fr
+                      :key :i18n/not-found
+                      :string "FRENCH 404 Not Found"}
+               #:i18n{:lang :en
                       :key :i18n/child-page.0.lorem-ipsum
                       :string "Lorem ipsum dolor sit amet"}
                #:i18n{:lang :fr
@@ -66,15 +72,16 @@
                       :key :i18n/parent-page.0.content
                       :string "Parent page content IN FRENCH"}]})
 
-(defc page [{:keys [post]}]
+(defc page [{:keys [post i18n]}]
   {:ident :db/id
    :query [:post/title
            {:post/fields [:field/content :field/ord]}]}
-  [:<>
-   [:h1 (or (:post/title post) "404 Not Found")]
-   (map (fn [field]
-          [:section (:field/content field)])
-        (:post/fields post))])
+  (let [{:i18n/keys [not-found]} i18n]
+    [:<>
+     [:h1 (or (:post/title post) not-found)]
+     (map (fn [field]
+            [:section (:field/content field)])
+          (:post/fields post))]))
 
 ;; TODO do this in an actual routing layer
 (defn ->path [req]
@@ -115,11 +122,10 @@
   (let [slug (:slug (:params req))
         post (route/entity req)
         req (-> req
-                (bread/add-value-hook :hook/view-data {:post post})
-                ;; TODO figure out how to do this automatically
+                ;; TODO do this automatically from the post ns
                 (bread/add-hook :hook/view-data
-                                (fn [data]
-                                  (update data :post #(post/post req %)))))]
+                                (fn [data _]
+                                  (assoc data :post (post/post req post)))))]
     (bread/response req
                     {:headers {"Content-Type" "text/html"}
                      :status (if post 200 404)
