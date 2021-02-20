@@ -7,6 +7,7 @@
     [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
@@ -35,8 +36,8 @@
                       :slug "parent-page"
                       :fields #{{:field/content
                                  (prn-str [:div
-                                           [:h4 "This is the parent page"]
-                                           [:p "Here is some content."]])}}}
+                                           [:h4 :i18n/parent-page.0.h4]
+                                           [:p :i18n/parent-page.0.content]])}}}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Child Page"
@@ -44,14 +45,26 @@
                       :parent 44 ;; NOTE: don't do this :P
                       :fields #{{:field/content
                                  (prn-str [:div
-                                            [:p "lorem ipsum dolor sit amet"]
+                                            [:p :i18n/child-page.0.lorem-ipsum]
                                             [:img {:src "https://placehold.it/300x300"}]])
                                  :field/ord 1.0}
-                                {:field/content (prn-str [:p "qwerty"])
+                                {:field/content (prn-str [:p :i18n/child-page.1.qwerty])
                                  :field/ord 1.1}}
                       :taxons #{{:taxon/slug "my-cat"
                                  :taxon/name "My Cat"
-                                 :taxon/taxonomy :taxon.taxonomy/category}}}]})
+                                 :taxon/taxonomy :taxon.taxonomy/category}}}
+               #:i18n{:lang :en
+                      :key :i18n/child-page.0.lorem-ipsum
+                      :string "Lorem ipsum dolor sit amet"}
+               #:i18n{:lang :fr
+                      :key :i18n/child-page.0.lorem-ipsum
+                      :string "FRENCH Lorem ipsum"}
+               #:i18n{:lang :en
+                      :key :i18n/parent-page.0.content
+                      :string "Parent page content"}
+               #:i18n{:lang :fr
+                      :key :i18n/parent-page.0.content
+                      :string "Parent page content IN FRENCH"}]})
 
 (defc page [{:keys [post]}]
   {:ident :db/id
@@ -69,10 +82,9 @@
           (str/split (or (:uri req) "") #"/")))
 
 (defn req->id [req]
-  (post/path->id req (next (->path req))))
-
-(defn req->lang [req]
-  (keyword (first (->path req))))
+  (post/path->id req (if (i18n/lang-route? req)
+                       (next (->path req))
+                       (->path req))))
 
 (comment
   (deref app)
@@ -135,12 +147,11 @@
                  (bread/load-app
                    (bread/app
                      {:plugins [(store/config->plugin $config)
+                                (i18n/plugin)
 
                                 ;; TODO make these dynamic at the routing layer
                                 #(bread/add-hook % :hook/id req->id)
                                 #(bread/add-value-hook % :hook/component page)
-
-                                #(bread/add-hook % :hook/lang req->lang)
 
                                 ;; TODO specify thingy as a layout
                                 (fn [app]

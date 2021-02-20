@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]))
 
 (defn- path->constraints
@@ -52,10 +53,11 @@
                                    :taxon/name]}]))
 
 (defn path->id [app path]
-  (let [db (store/datastore app)]
-    (bread/hook-> app :hook/post (some->> (resolve-by-hierarchy path)
-                                          (store/q db)
-                                          ffirst))))
+  (let [db (store/datastore app)
+        p (some->> (resolve-by-hierarchy path)
+                   (store/q db)
+                   ffirst)]
+    (bread/hook-> app :hook/post p)))
 
 (defn path->post [app path]
   (let [db (store/datastore app)]
@@ -68,4 +70,6 @@
   (map #(update % :field/content edn/read-string) fields))
 
 (defn post [app post]
-  (update post :post/fields #(->> % (sort-by :field/ord) parse-fields)))
+  (i18n/t
+    app
+    (update post :post/fields #(->> % (sort-by :field/ord) parse-fields))))
