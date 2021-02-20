@@ -98,6 +98,16 @@
 
   (route/resolve-entity $req)
 
+  (i18n/translate @app :i18n/not-found)
+  (i18n/strings-for @app :en)
+  (i18n/strings-for @app :fr)
+  (i18n/strings (assoc @app :uri "/en"))
+  (let [req (-> @app
+                (assoc :uri "/fr")
+                (bread/add-hook :hook/strings-for #(assoc % :i18n/x "l'X"))
+                (bread/add-hook :hook/strings #(assoc % :i18n/current "Oui")))]
+    (i18n/strings req))
+
   )
 
 

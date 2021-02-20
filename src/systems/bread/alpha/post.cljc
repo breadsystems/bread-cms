@@ -70,6 +70,6 @@
   (map #(update % :field/content edn/read-string) fields))
 
 (defn post [app post]
-  (i18n/t
+  (i18n/translate
     app
     (update post :post/fields #(->> % (sort-by :field/ord) parse-fields))))

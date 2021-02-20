@@ -57,30 +57,52 @@
     k))
 
 (defprotocol Translatable
-  (-t [x app]))
+  (-translate [x app]))
 
 (extend-protocol Translatable
   java.lang.Object
-  (-t [s _] s)
+  (-translate [s _] s)
 
   clojure.lang.PersistentArrayMap
-  (-t [m app]
-    (into {} (doall (map (juxt key (comp #(-t % app) val)) m))))
+  (-translate [m app]
+    (into {} (doall (map (juxt key (comp #(-translate % app) val)) m))))
 
   clojure.lang.LazySeq
-  (-t [sq app]
-    (map #(-t % app) sq))
+  (-translate [sq app]
+    (map #(-translate % app) sq))
 
   clojure.lang.PersistentVector
-  (-t [v app]
-    (vec (map #(-t % app) v)))
+  (-translate [v app]
+    (vec (map #(-translate % app) v)))
 
   clojure.lang.Keyword
-  (-t [k app]
+  (-translate [k app]
     (t* app k)))
 
-(defn t [app k]
-  (-t k app))
+(defn strings-for
+  "Load the strings from the database for the given language."
+  [req lang]
+  (->> (store/q (store/datastore req)
+                (conj '[:find ?key ?str
+                        :where
+                        [?e :i18n/key ?key]
+                        [?e :i18n/string ?str]]
+                      ['?e :i18n/lang lang]))
+       (into {})
+       (bread/hook-> req :hook/strings-for)))
+
+(defn strings
+  "Load the strings from the database for the current language, i.e.
+  (lang req)."
+  [req]
+  (bread/hook-> req :hook/strings (strings-for req (lang req))))
+
+(defn translate
+  "Translate an arbitrary object recursively, expanding i18n/* keywords into
+  their respective translated strings in the current language."
+  [app k]
+  ;; TODO run a hook instead?
+  (-translate k app))
 
 (defn plugin
   ([]

@@ -154,6 +154,7 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
+   ;; TODO add a `preload?` boolean field?
 
    ;; Comments
    {:db/ident :comment/uuid
