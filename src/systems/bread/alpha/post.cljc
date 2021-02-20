@@ -53,18 +53,17 @@
                                    :taxon/name]}]))
 
 (defn path->id [app path]
-  (let [db (store/datastore app)
-        p (some->> (resolve-by-hierarchy path)
-                   (store/q db)
-                   ffirst)]
-    (bread/hook-> app :hook/post p)))
+  (let [db (store/datastore app)]
+    (some->> (resolve-by-hierarchy path)
+             (store/q db)
+             ffirst)))
 
 (defn path->post [app path]
   (let [db (store/datastore app)]
-    (bread/hook-> app :hook/post (some->> (resolve-by-hierarchy path)
-                                          (store/q db)
-                                          ffirst
-                                          (store/pull db (query app))))))
+    (some->> (resolve-by-hierarchy path)
+             (store/q db)
+             ffirst
+             (store/pull db (query app)))))
 
 (defn parse-fields [fields]
   (map #(update % :field/content edn/read-string) fields))
