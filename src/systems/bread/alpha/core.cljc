@@ -114,8 +114,22 @@
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
 
-(defmacro add-hook [app h f & [options]]
-  `(add-hook* ~app ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
+(defmacro add-hook [app' h f & [options]]
+  `(add-hook* ~app' ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
+
+(defmacro with-hooks [app' & forms]
+  (assert (every? list? forms)
+          "Every form passed to with-forms must be a list!")
+  (let [forms (map #(cons 'add-hook %) forms)]
+    `(-> ~app' ~@forms)))
+
+(comment
+  (macroexpand '(add-hook {} :my/hook inc))
+  (macroexpand '(add-hook {} :my/hook inc {:precedence 2}))
+
+  (with-hooks {} :x) ;; AssertionError
+  (with-hooks {} (:x identity))
+  (macroexpand-1 '(with-hooks app (:x X) (:y Y))))
 
 (defn add-effect
   ([app f options]
