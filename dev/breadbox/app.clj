@@ -190,52 +190,13 @@
 
 (comment
 
-
-  (defc person [{:person/keys [name job]}]
-    {:ident :person/id
-     :query [:person/name :person/job]}
-    [:div [:h2 name] [:span job]])
-
-  (@registry person)
-
-  (def db {:person/id {1 #:person{:id 1
-                                  :name "Coby"
-                                  :job "Developer"
-                                  :persuasion "commie"}
-                       2 #:person{:id 2
-                                  :name "Jenny"
-                                  :job "PM"
-                                  :persuasion "anti-capitalist"}}})
-  (defn q [ident ks]
-    (select-keys (get-in db ident) ks))
-  (q [:person/id 1] [:person/name :person/job])
-
-  (defn get-query [reg component params]
-    (let [{:keys [query ident]} (@reg component)]
-      {:query/keys query
-       :query/ident [ident (get params ident)]}))
-
-  (defn render [reg component params]
-    (let [{:query/keys [ident keys]} (get-query reg component params)
-          data (q ident keys)]
-      (component data)))
-
-  (get-query registry person {:person/id 1})
-  (render registry person {:person/id 1})
-
-
-  (swap! env assoc :reinstall-db? false)
-  (swap! env assoc :reinstall-db? true)
-  (deref env)
-
   (swap! app #(bread/add-hook % :hook/request green-theme))
   (swap! app #(bread/add-hook % :hook/request purple-theme))
   (swap! app #(bread/remove-hook % :hook/request green-theme))
   (swap! app #(bread/remove-hook % :hook/request purple-theme))
 
   (bread/hooks-for @app :hook/request)
-  (bread/hook-> @app :hook/head [])
-  )
+  (bread/hook-> @app :hook/head []))
 
 (defn handler [req]
   (let [handle (bread/handler @app)]
