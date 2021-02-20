@@ -64,13 +64,19 @@
                       :string "Lorem ipsum dolor sit amet"}
                #:i18n{:lang :fr
                       :key :i18n/child-page.0.lorem-ipsum
-                      :string "FRENCH Lorem ipsum"}
+                      :string "L'orem ipsen"}
+               #:i18n{:lang :en
+                      :key :i18n/child-page.1.qwerty
+                      :string "QWERTY"}
+               #:i18n{:lang :fr
+                      :key :i18n/child-page.1.qwerty
+                      :string "Le qwertie"}
                #:i18n{:lang :en
                       :key :i18n/parent-page.0.content
                       :string "Parent page content"}
                #:i18n{:lang :fr
                       :key :i18n/parent-page.0.content
-                      :string "Parent page content IN FRENCH"}]})
+                      :string "Le contenu de la page parent"}]})
 
 (defc page [{:keys [post i18n]}]
   {:ident :db/id
