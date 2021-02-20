@@ -28,6 +28,22 @@
   (when (fn? *hook-profiler*)
     (*hook-profiler* {:hook h :f f :args (cons x args)})))
 
+(defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
+  (let [transform-app (or transform-app (constantly '$APP))
+        map-args (or map-args (fn [args]
+                                (map #(if (s/valid? ::app %)
+                                        (transform-app %)
+                                        %)
+                                     args)))
+        on-hook  (or on-hook (fn [{:keys [hook f args]}]
+                                   (prn hook f (map-args args))))]
+    (fn [hook-invocation]
+      (when (contains? hooks (:hook hook-invocation))
+        (on-hook hook-invocation)))))
+
+(defn bind-profiler! [profiler]
+  (alter-var-root (var *hook-profiler*) (constantly profiler)))
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
@@ -120,7 +136,7 @@
 (defmacro with-hooks [app' & forms]
   (assert (every? list? forms)
           "Every form passed to with-forms must be a list!")
-  (let [forms (map #(cons 'add-hook %) forms)]
+  (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
 (comment
