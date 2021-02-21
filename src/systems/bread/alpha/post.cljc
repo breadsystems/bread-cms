@@ -71,16 +71,13 @@
 (defn sort-fields [fields]
   (sort-by :field/ord fields))
 
-(defn init [post]
+(defn init [_app post]
   (update post :post/fields #(->> % sort-fields parse-fields)))
 
 (defn post [app post]
-  ;; TODO bread/hook->> ??
-  (i18n/translate
-    app
-    (bread/hook-> app :hook/post post)))
+  (bread/hook->> app :hook/post post))
 
 (defn plugin []
   (fn [app]
     (-> app
-        (bread/add-hook :hook/post init))))
+        (bread/add-hook :hook/post init {:precedence 0}))))

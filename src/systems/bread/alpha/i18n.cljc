@@ -114,7 +114,7 @@
    (let [->lang (:i18n/req->lang opts req->lang)
          fallback (:i18n/fallback opts :en)]
      (fn [app]
-       (-> app
-           (bread/add-hook :hook/view-data inject-strings)
-           (bread/set-config :i18n/fallback-lang fallback)
-           (bread/add-hook :hook/lang ->lang))))))
+       (bread/with-hooks (bread/set-config app :i18n/fallback-lang fallback)
+         (:hook/post translate)
+         (:hook/view-data inject-strings)
+         (:hook/lang ->lang))))))
