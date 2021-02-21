@@ -170,6 +170,7 @@
                    (bread/app
                      {:plugins [(store/config->plugin $config)
                                 (i18n/plugin)
+                                (post/plugin)
 
                                 ;; TODO make these dynamic at the routing layer
                                 #(bread/add-hook % :hook/id req->id)

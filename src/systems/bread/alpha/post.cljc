@@ -68,7 +68,19 @@
 (defn parse-fields [fields]
   (map #(update % :field/content edn/read-string) fields))
 
+(defn sort-fields [fields]
+  (sort-by :field/ord fields))
+
+(defn init [post]
+  (update post :post/fields #(->> % sort-fields parse-fields)))
+
 (defn post [app post]
+  ;; TODO bread/hook->> ??
   (i18n/translate
     app
-    (update post :post/fields #(->> % (sort-by :field/ord) parse-fields))))
+    (bread/hook-> app :hook/post post)))
+
+(defn plugin []
+  (fn [app]
+    (-> app
+        (bread/add-hook :hook/post init))))
