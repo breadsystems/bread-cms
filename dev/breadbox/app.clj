@@ -214,9 +214,7 @@
 (comment
 
   (bread/bind-profiler! (bread/profiler-for
-                          {:hooks #{:hook/post
-                                    :hook/lang
-                                    :hook/view-data}}))
+                          {:hooks #{:hook/post}}))
 
   (bread/bind-profiler! nil)
 

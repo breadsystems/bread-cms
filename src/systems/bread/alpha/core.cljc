@@ -133,7 +133,7 @@
 (defmacro add-hook [app' h f & [options]]
   `(add-hook* ~app' ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
 
-(defmacro with-hooks [app' & forms]
+(defmacro add-hooks-> [app' & forms]
   (assert (every? list? forms)
           "Every form passed to with-forms must be a list!")
   (let [forms (map #(cons `add-hook %) forms)]
@@ -143,9 +143,9 @@
   (macroexpand '(add-hook {} :my/hook inc))
   (macroexpand '(add-hook {} :my/hook inc {:precedence 2}))
 
-  (with-hooks {} :x) ;; AssertionError
-  (with-hooks {} (:x identity))
-  (macroexpand-1 '(with-hooks app (:x X) (:y Y))))
+  (add-hooks-> {} :x) ;; AssertionError
+  (add-hooks-> {} (:x identity))
+  (macroexpand-1 '(add-hooks-> app (:x X) (:y Y))))
 
 (defn add-effect
   ([app f options]
@@ -189,8 +189,7 @@
              (apply f app x args)
              (catch java.lang.Throwable e
                ;; If bread.core threw this exception, don't wrap it
-               (throw (if (-> e ex-data ::core?)
-                        e
+               (throw (if (-> e ex-data ::core?) e
                         (ex-info (str h " hook threw an exception: "
                                       (str (class e) ": " (.getMessage e)))
                                  {:exception e

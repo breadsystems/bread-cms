@@ -230,7 +230,7 @@
                       (let [i18n (bread/hook-> app :hook/i18n)]
                         (get i18n k k)))
           translate-plugin (fn [app]
-                             (bread/with-hooks app
+                             (bread/add-hooks-> app
                                (:hook/i18n (constantly I18N))
                                (:hook/content translate {:precedence 2})))
 
