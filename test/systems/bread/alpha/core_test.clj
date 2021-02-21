@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.core-test
   (:require
     [clojure.string :refer [upper-case]]
-    [clojure.test :refer [deftest is testing]]
+    [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.template :as tpl])
   (:import (clojure.lang ExceptionInfo)))
@@ -163,39 +163,34 @@
   (let [app (-> (bread/app)
                 (bread/add-hook :bread/a inc {:my/extra :extra!})
                 (bread/add-hook :bread/a dec {:precedence 2})
-                (bread/add-hook :bread/a identity))
-        relevant-keys (juxt ::bread/f ::bread/precedence)
-        a-hooks (fn [app]
-                  (as-> app $
-                      (bread/hooks-for $ :bread/a)
-                      (map #(select-keys % [::bread/f ::bread/precedence]) $)
-                      (map relevant-keys $)))]
+                (bread/add-hook :bread/a identity))]
 
-    (testing "it removes nothing if hook does not exist"
-      (is (= app (bread/remove-hook app :non-existent-hook identity))))
+    (are [expected actual] (= expected actual)
+         app (bread/remove-hook app :non-existent-hook identity)
+         app (bread/remove-hook app :bread/a concat)
+         app (bread/remove-hook app :bread/a identity {:precedence 5})
+         app (bread/remove-hook app :bread/a inc {:my/extra :bogus}))
 
-    (testing "it removes nothing if fn does not match"
-      (is (= app (bread/remove-hook app :bread/a concat))))
+    (are [exp res]
+         (= exp (as-> res $
+                  (bread/hooks-for $ :bread/a)
+                  (map #(select-keys % [::bread/f ::bread/precedence]) $)
+                  (map (juxt ::bread/f ::bread/precedence) $)))
 
-    (testing "it removes nothing if precedence does not match"
-      (is (= app (bread/remove-hook app :bread/a identity {:precedence 5}))))
+      [[identity 1] [dec 2]]
+      (bread/remove-hook app :bread/a inc)
 
-    (testing "it removes nothing if extra does not match"
-      (is (= app (bread/remove-hook app :bread/a inc {:my/extra :bogus}))))
+      [[identity 1] [dec 2]]
+      (bread/remove-hook app :bread/a inc)
 
-    (testing "it matches on options"
-      (is (= [[identity 1] [dec 2]]
-             (a-hooks (bread/remove-hook app :bread/a inc))))
+      [[inc 1] [identity 1]]
+      (bread/remove-hook app :bread/a dec {:precedence 2})
 
-      (is (= [[inc 1] [identity 1]]
-             (a-hooks (bread/remove-hook app :bread/a dec {:precedence 2}))))
+      [[identity 1] [dec 2]]
+      (bread/remove-hook app :bread/a inc {:my/extra :extra!})
 
-      (is (= [[identity 1] [dec 2]]
-             (a-hooks (bread/remove-hook app :bread/a inc {:my/extra :extra!}))))
-
-      (is (= [[identity 1] [dec 2]]
-             (a-hooks (bread/remove-hook app :bread/a inc {:precedence 1
-                                                           :my/extra :extra!})))))))
+      [[identity 1] [dec 2]]
+      (bread/remove-hook app :bread/a inc {:precedence 1 :my/extra :extra!}))))
 
 ;; TODO remove-hooks-for
 
