@@ -130,7 +130,7 @@
 
 (defn add-hook*
   ([app h f options]
-   {:pre [(ifn? f)]}
+   {:pre [(s/valid? ::app app) (ifn? f)]}
    (update-in app [::hooks h] append-hook f options))
 
   ([app h f]

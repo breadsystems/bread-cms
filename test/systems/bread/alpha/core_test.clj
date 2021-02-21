@@ -57,7 +57,7 @@
                      (bread/add-hook app :plugin.a/inc inc))
           plugin-b (fn [app]
                      (bread/add-hook app :plugin.b/dec dec {:precedence 2}))
-          app (bread/load-plugins {::bread/plugins [plugin-a plugin-b]})]
+          app (bread/load-app (bread/app {:plugins [plugin-a plugin-b]}))]
       (is (= [{::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}]
              (bread/hooks-for app :plugin.a/inc)))
       (is (= [{::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
@@ -96,14 +96,8 @@
 
 (deftest test-add-hook
 
-  (testing "it operates on the app inside request"
-    (let [req (-> {:url "/" :bread/app {}}
-                  (bread/add-hook :my/hook inc))]
-      (is (= [{::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}]
-             (bread/hooks-for req :my/hook)))))
-
   (testing "it honors precedence"
-    (let [req (-> {:url "/" :bread/app {}}
+    (let [req (-> (bread/app)
                   (bread/add-hook :my/hook inc {:precedence 1})
                   (bread/add-hook :my/hook dec {:precedence 2})
                   (bread/add-hook :my/hook identity {:precedence 0}))]
@@ -113,8 +107,7 @@
              (bread/hooks-for req :my/hook)))))
 
   (testing "it honors options"
-    (let [req (-> {:url "/"}
-                  (bread/add-hook :my/hook inc {:my/extra 123}))]
+    (let [req (bread/add-hook (bread/app) :my/hook inc {:my/extra 123})]
       (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123 ::bread/added-in *ns*}]
              (bread/hooks-for req :my/hook))))))
 
@@ -259,7 +252,8 @@
 (deftest test-hook
 
   (testing "it runs the hook repeatedly on the request"
-    (let [req (-> {:my/num 3 :my/extra-value nil}
+    ;; This isn't idiomatic, just a simplified example.
+    (let [req (-> (merge (bread/app) {:my/num 3 :my/extra-value nil})
                   (bread/add-hook :my/calculation #(update % :my/num inc) {:precedence 0})
                   (bread/add-hook :my/calculation #(update % :my/num * 2) {:precedence 1})
                   (bread/add-hook :my/calculation #(update % :my/num dec) {:precedence 2})
@@ -274,7 +268,7 @@
     (let [;; This should throw:
           ;; java.lang.ClassCastException: class clojure.lang.PersistentArrayMap
           ;; cannot be cast to class java.lang.Number
-          req (-> {} (bread/add-hook :my/hook inc))]
+          req (bread/add-hook (bread/app) :my/hook inc)]
       (is (thrown-with-msg?
             ExceptionInfo
             #":my/hook hook threw an exception: "
