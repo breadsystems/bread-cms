@@ -164,20 +164,16 @@
   (add-effects-> {} identity)
   (macroexpand-1 '(add-effects-> app X (Y {:precedence 1}))))
 
-(defn- remove-hook* [hooks hook-fn options]
-  ;; TODO refactor this
-  (loop [idx 0 hooks hooks]
-    (if (hook-matches? (get hooks idx) hook-fn options)
-      (let [[head tail] (split-at idx hooks)]
-        (concat head (next tail)))
-      (if (>= idx (count hooks))
-        hooks
-        (recur (inc idx) hooks)))))
-
 (defn remove-hook
+  "Removes a hook callback for h, matching on hook-fn and any options provided.
+  Returns the modified app instance. If no matching hook is found, returns app
+  unmodified."
   ([app h hook-fn options]
-   (if (hooks-for app h)
-     (update-in app [::hooks h] remove-hook* hook-fn options)
+   (if-let [hooks (hooks-for app h)]
+     (assoc-in app [::hooks h]
+               (vec (filter (complement
+                              #(hook-matches? % hook-fn options))
+                            hooks)))
      app))
 
   ([app h hook-fn]
@@ -199,8 +195,7 @@
   {:arglists '([app h x])}
   [app h x]
   (if-let [hooks (hooks-for app h)]
-    (assoc-in app [::hooks h] (vec (filter #(not= (:value %) x)
-                                           hooks)))
+    (assoc-in app [::hooks h] (vec (filter #(not= (:value %) x) hooks)))
     app))
 
 (defmacro ^:private try-hook [app hook h f x args apply-hook]
@@ -231,13 +226,12 @@
   second argument to the next callback. Returns x if no callbacks for h are
   present."
   ([app h x & args]
-   (let [hooks (get-in app [::hooks h])]
-     (if (seq hooks)
-       (loop [x x [{::keys [f] :as hook} & fs] hooks]
-         (if (seq fs)
-           (recur (try-hook app hook h f x args (apply f app x args)) fs)
-           (try-hook app hook h f x args (apply f app x args))))
-       x)))
+   (if-let [hooks (get-in app [::hooks h])]
+     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+       (if (seq fs)
+         (recur (try-hook app hook h f x args (apply f app x args)) fs)
+         (try-hook app hook h f x args (apply f app x args))))
+     x))
   ([app h]
    (hook->> app h nil)))
 
@@ -247,13 +241,12 @@
   argument to the next callback. Returns x if no callbacks for h are present."
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
-   (let [hooks (get-in app [::hooks h])]
-     (if (seq hooks)
-       (loop [x x [{::keys [f] :as hook} & fs] hooks]
-         (if (seq fs)
-           (recur (try-hook app hook h f x args (apply f x args)) fs)
-           (try-hook app hook h f x args (apply f x args))))
-       x)))
+   (if-let [hooks (get-in app [::hooks h])]
+     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+       (if (seq fs)
+         (recur (try-hook app hook h f x args (apply f x args)) fs)
+         (try-hook app hook h f x args (apply f x args))))
+     x))
   ([app h]
    (hook-> app h nil)))
 
