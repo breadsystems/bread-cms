@@ -57,31 +57,37 @@
 
 (declare hook)
 
-(defn response [req raw]
+(defn response
+  "Returns a response with the current app (req) merged into raw map,
+  preserving any hooks/config added to req."
+  [req raw]
   {:pre [(s/valid? ::app req)]}
   (merge raw (select-keys req [::config ::hooks ::plugins])))
 
 (defn config
+  "Returns app's config value for k. Returns the (optionally) provided default
+  if k is not found in app's config map. If k is not found and not default is
+  provided, returns nil."
   ([app k default]
    (get-in app [::config k] default))
   ([app k]
    (get-in app [::config k])))
 
-(defn set-config [app k v & extra]
+(defn set-config
+  "Sets app's config value for k to v, and so on for any subsequent key/value
+  pairs. Works like assoc."
+  [app k v & extra]
   (if (odd? (count extra))
     (throw (ex-info (str "set-config expects an even number of extra args, "
                          (count extra) " extra args passed.")
                     {:extra-args extra}))
     (update app ::config #(apply assoc % k v extra))))
 
-(defn load-plugins [app]
-  (let [plugins (::plugins app)
-        run-plugin (fn [app plugin]
-                     (plugin app))]
-    (reduce run-plugin app plugins)))
-
-(defn- apply-effects [app]
-  (or (hook app :hook/effects) app))
+(defn load-plugins
+  "Runs all plugin functions currently in app, in the order they were specified
+  in :plugins when the app was created."
+  [app]
+  (reduce #(%2 %1) app (::plugins app)))
 
 
 
@@ -95,7 +101,9 @@
 ;; The main API for working with hooks.
 ;;
 
-(defn hooks-for [app h]
+(defn hooks-for
+  "Returns all hooks for h."
+  [app h]
   (get-in app [::hooks h]))
 
 (defn- hook-matches? [hook f opts]
@@ -256,6 +264,9 @@
   chain of arbitrary functions. Returns app if no callbacks for h are present."
   [app h & args]
   (apply hook-> app h app args))
+
+(defn- apply-effects [app]
+  (or (hook app :hook/effects) app))
 
 (defn app
   "Creates a new Bread app. Optionally accepts an options map. A single option
