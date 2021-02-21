@@ -72,7 +72,7 @@
   (sort-by :field/ord fields))
 
 (defn init [_app post]
-  (update post :post/fields #(->> % sort-fields parse-fields)))
+  (update post :post/fields #(-> % sort-fields parse-fields)))
 
 (defn post [app post]
   (bread/hook->> app :hook/post post))

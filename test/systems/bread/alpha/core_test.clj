@@ -217,6 +217,13 @@
           ;; *second* arg (since app is the first) through a chain of hook
           ;; callbacks.
           ;;
+          ;; You might need to do this if multiple functions are transforming
+          ;; a single value, such as a post, while using other arbitrary data
+          ;; to inform their work. This is how the post and i18n namespaces
+          ;; interact, for example: both thread the post map through their
+          ;; respective functions, but translate needs extra information (in
+          ;; this case, translation strings from the db) to operate.
+          ;;
           ;; Let's setup two plugins and their respective hook callbacks:
           ;; one to add a callback that returns some simplistic post content...
           get-content (fn [app m]
