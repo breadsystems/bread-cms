@@ -212,6 +212,13 @@
 
 (comment
 
+  (bread/bind-profiler! (bread/profiler-for
+                          {:hooks #{:hook/post
+                                    :hook/lang
+                                    :hook/view-data}}))
+
+  (bread/bind-profiler! nil)
+
   ;; TODO test this out!
   (static/generate! handler)
 
