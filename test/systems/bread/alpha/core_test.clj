@@ -205,7 +205,6 @@
 
   (testing "it works like hook-> but threads app as first arg"
 
-
     (let [;; hook->> is useful for functions where you need to:
           ;;
           ;; 1. take an app instance as the first argument, AND

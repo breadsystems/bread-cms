@@ -12,7 +12,7 @@
 
 (def ^{:dynamic true
        :doc
-       "Dynamic var for debugging. If this var bound to a function f,
+       "Dynamic var for debugging. If this var is bound to a function f,
         causes (hook-> h ...) to call:
 
        (f {:hook h    ;; the hook being called
@@ -177,63 +177,71 @@
   ([app h hook-fn]
    (remove-hook app h hook-fn {})))
 
+(defmacro ^:private try-hook [app hook h f x args apply-hook]
+  `(try
+     (profile-hook! ~h ~f ~x ~args)
+     ~apply-hook
+     (catch java.lang.Throwable e#
+       ;; If bread.core threw this exception, don't wrap it
+       (throw (if (-> e# ex-data ::core?) e#
+                (ex-info (str ~h " hook threw an exception: "
+                              (str (class e#) ": " (.getMessage e#)))
+                              {:exception e#
+                               :name ~h
+                               :hook ~hook
+                               :value ~x
+                               :extra-args ~args
+                               :app ~app
+                               ;; Indicate to the caller that this exception
+                               ;; wraps one from somewhere else.
+                               ::core? true}))))))
+
+(comment
+  (macroexpand '(try-hook (prn hello) (apply h app x args))))
+
 (defn hook->>
+  "Threads app, x, and any (optional) subsequent args, in that order, through
+  all callbacks for h. The result of applying each callback is passed as the
+  second argument to the next callback. Returns x if no callbacks for h are
+  present."
   ([app h x & args]
    (let [hooks (get-in app [::hooks h])]
      (if (seq hooks)
        (loop [x x [{::keys [f] :as hook} & fs] hooks]
          (if (seq fs)
-           (recur (do (profile-hook! h f x args) (apply f app x args)) fs)
-           (try
-             (profile-hook! h f x args)
-             (apply f app x args)
-             (catch java.lang.Throwable e
-               ;; If bread.core threw this exception, don't wrap it
-               (throw (if (-> e ex-data ::core?) e
-                        (ex-info (str h " hook threw an exception: "
-                                      (str (class e) ": " (.getMessage e)))
-                                 {:exception e
-                                  :name h
-                                  :hook hook
-                                  :value x
-                                  :extra-args args
-                                  :app app
-                                  ::core? true})))))))
+           (recur (try-hook app hook h f x args (apply f app x args)) fs)
+           (try-hook app hook h f x args (apply f app x args))))
        x)))
   ([app h]
    (hook->> app h nil)))
 
 (defn hook->
+  "Threads x and any (optional) subsequent args, in that order, through all
+  callbacks for h. The result of applying each callback is passed as the first
+  argument to the next callback. Returns x if no callbacks for h are present."
+  {:arglists '([app h] [app h x & args])}
   ([app h x & args]
    (let [hooks (get-in app [::hooks h])]
      (if (seq hooks)
        (loop [x x [{::keys [f] :as hook} & fs] hooks]
          (if (seq fs)
-           (recur (do (profile-hook! h f x args) (apply f x args)) fs)
-           (try
-             (profile-hook! h f x args)
-             (apply f x args)
-             (catch java.lang.Throwable e
-               ;; If bread.core threw this exception, don't wrap it
-               (throw (if (-> e ex-data ::core?)
-                        e
-                        (ex-info (str h " hook threw an exception: "
-                                      (str (class e) ": " (.getMessage e)))
-                                 {:exception e
-                                  :name h
-                                  :hook hook
-                                  :value x
-                                  :extra-args args
-                                  :app app
-                                  ::core? true})))))))
+           (recur (try-hook app hook h f x args (apply f x args)) fs)
+           (try-hook app hook h f x args (apply f x args))))
        x)))
   ([app h]
    (hook-> app h nil)))
 
-(defn hook [app h & args]
+(defn hook
+  "Threads app and any (optional) subsequent args, in that order, through all
+  callbacks for h. Intended for modifying app/request/response maps with a
+  chain of arbitrary functions. Returns app if no callbacks for h are present."
+  [app h & args]
   (apply hook-> app h app args))
 
 (defn app
+  "Creates a new Bread app. Optionally accepts an options map. A single option
+  is supported, :plugins, a sequence of plugins to load."
+  {:arglist '([] [opts])}
   ([{:keys [plugins]}]
    (-> {::plugins (or plugins [])
         ::hooks   {}
@@ -242,23 +250,30 @@
   ([]
    (app {})))
 
-(defn load-app [app]
+(defn load-app
+  "Loads the given app by calling bootstrap, load-plugins, and init hooks."
+  [app]
   (-> app
       (hook :hook/bootstrap)
       (hook :hook/load-plugins)
       (hook :hook/init)))
 
-(defn handler [app]
+(defn handler
+  "Returns a handler function that takes a Ring request and threads it
+  through the Bread request/response lifecycle."
+  [app]
   (fn [req]
     (-> (merge req app)
         (hook :hook/request)
         (hook :hook/dispatch)
-        (hook :hook/expand)
+        (hook :hook/expand) ;; TODO do we need this?
         (apply-effects)
         (hook :hook/render)
         (hook :hook/response))))
 
-(defn load-handler [app]
+(defn load-handler
+  "Loads the given app, returning a Ring handler that wraps the loaded app."
+  [app]
   (-> app
       (load-app)
       (handler)))
