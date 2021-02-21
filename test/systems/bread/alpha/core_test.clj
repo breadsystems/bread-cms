@@ -121,11 +121,11 @@
 (deftest test-add-effect
 
   (testing "it adds to the :hook/effects hook inside app"
-    (let [app (-> (bread/app)
-                  (bread/add-effect inc)
-                  (bread/add-effect dec {:precedence 2})
-                  (bread/add-effect identity {:precedence 1.5
-                                              :my/extra 123}))]
+    (let [app (bread/add-effects-> (bread/app)
+                inc
+                (dec {:precedence 2})
+                (identity {:precedence 1.5
+                           :my/extra 123}))]
       (is (bread/hook-for? app :hook/effects inc))
       (is (bread/hook-for? app :hook/effects dec))
       (is (bread/hook-for? app :hook/effects dec {:precedence 2}))

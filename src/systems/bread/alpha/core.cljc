@@ -136,19 +136,32 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
+(defn add-effect
+  ([app f options]
+   (add-hook app :hook/effects f options))
+  ([app f]
+   (add-hook app :hook/effects f {})))
+
+(defmacro add-effects-> [app' & forms]
+  (assert (every? #(or (list? %) (symbol? %)) forms)
+          "Every form passed to with-forms must be a list or symbol!")
+  (let [forms (map (fn [form]
+                     (let [form (if (list? form) form (list form))]
+                       (cons `add-effect form)))
+                   forms)]
+    `(-> ~app' ~@forms)))
+
 (comment
   (macroexpand '(add-hook {} :my/hook inc))
   (macroexpand '(add-hook {} :my/hook inc {:precedence 2}))
 
   (add-hooks-> {} :x) ;; AssertionError
   (add-hooks-> {} (:x identity))
-  (macroexpand-1 '(add-hooks-> app (:x X) (:y Y))))
+  (macroexpand-1 '(add-hooks-> app (:x X) (:y Y)))
 
-(defn add-effect
-  ([app f options]
-   (add-hook app :hook/effects f options))
-  ([app f]
-   (add-hook app :hook/effects f {})))
+  (add-effects-> {} nil) ;; AssertionError
+  (add-effects-> {} identity)
+  (macroexpand-1 '(add-effects-> app X (Y {:precedence 1}))))
 
 (defn add-value-hook
   ([app h x options]
