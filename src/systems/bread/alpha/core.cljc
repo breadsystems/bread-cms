@@ -177,12 +177,38 @@
   ([app h hook-fn]
    (remove-hook app h hook-fn {})))
 
+(defn hook->>
+  ([app h x & args]
+   (let [hooks (get-in app [::hooks h])]
+     (if (seq hooks)
+       (loop [x x [{::keys [f] :as hook} & fs] hooks]
+         (if (seq fs)
+           (recur (do (profile-hook! h f x args) (apply f app x args)) fs)
+           (try
+             (profile-hook! h f x args)
+             (apply f app x args)
+             (catch java.lang.Throwable e
+               ;; If bread.core threw this exception, don't wrap it
+               (throw (if (-> e ex-data ::core?)
+                        e
+                        (ex-info (str h " hook threw an exception: "
+                                      (str (class e) ": " (.getMessage e)))
+                                 {:exception e
+                                  :name h
+                                  :hook hook
+                                  :value x
+                                  :extra-args args
+                                  :app app
+                                  ::core? true})))))))
+       x)))
+  ([app h]
+   (hook->> app h nil)))
+
 (defn hook->
   ([app h x & args]
    (let [hooks (get-in app [::hooks h])]
      (if (seq hooks)
-       (loop [x x
-              [{::keys [f] :as hook} & fs] hooks]
+       (loop [x x [{::keys [f] :as hook} & fs] hooks]
          (if (seq fs)
            (recur (do (profile-hook! h f x args) (apply f x args)) fs)
            (try

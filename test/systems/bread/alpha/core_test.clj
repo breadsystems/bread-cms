@@ -201,6 +201,54 @@
                                          {::bread/f dec}]}}]
       (is (= 7 (bread/hook-> req :my/value 3))))))
 
+(deftest test-hook->>
+
+  (testing "it works like hook-> but threads app as first arg"
+
+
+    (let [;; hook->> is useful for functions where you need to:
+          ;;
+          ;; 1. take an app instance as the first argument, AND
+          ;; 2. return something other than the app
+          ;;
+          ;; This is useful for maintaining the convention of taking app as the
+          ;; first arg while preserving a chained transformation of an
+          ;; arbitrary value. In other words, threading the value of the
+          ;; *second* arg (since app is the first) through a chain of hook
+          ;; callbacks.
+          ;;
+          ;; Let's setup two plugins and their respective hook callbacks:
+          ;; one to add a callback that returns some simplistic post content...
+          get-content (fn [app m]
+                        (:the-content m))
+          content-plugin (fn [app]
+                           (bread/add-hook app :hook/content get-content))
+
+          ;; ...and one to add a translator callback.
+          I18N {:i18n/content-key "THE ACTUAL CONTENT WE WANT"}
+          translate (fn [app k]
+                      (let [i18n (bread/hook-> app :hook/i18n)]
+                        (get i18n k k)))
+          translate-plugin (fn [app]
+                             (bread/with-hooks app
+                               (:hook/i18n (constantly I18N))
+                               (:hook/content translate {:precedence 2})))
+
+          ;; Now all that's left to do is set up the app.
+          app (bread/load-app
+                (bread/app {:plugins [translate-plugin content-plugin]}))]
+
+      ;; Wrong.
+      ;; Passing app as the first arg to hook-> results in any intermediate
+      ;; values getting thrown away, because hook->, like ->, only cares about
+      ;; the first arg.
+      (is (= {:the-content :i18n/content-key}
+             (bread/hook-> app :hook/content app {:the-content :i18n/content-key})))
+
+      ;; Correct!
+      (is (= "THE ACTUAL CONTENT WE WANT"
+             (bread/hook->> app :hook/content {:the-content :i18n/content-key}))))))
+
 (deftest test-hook
 
   (testing "it runs the hook repeatedly on the request"
