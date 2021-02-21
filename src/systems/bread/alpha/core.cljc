@@ -129,29 +129,42 @@
     (vec (sort-by ::precedence (conj hooks hook)))))
 
 (defn add-hook*
+  "Adds f as a callback for the hook h. Accepts an optional options map.
+  If :precedence is specified in options it is used to sort callbacks added
+  for h."
+  {:arglists '([app h f] [app h f options])}
   ([app h f options]
-   {:pre [(s/valid? ::app app) (ifn? f)]}
+   {:pre [(s/valid? ::app app) (keyword? h) (ifn? f) (map? options)]}
    (update-in app [::hooks h] append-hook f options))
-
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
 
-(defmacro add-hook [app' h f & [options]]
+(defmacro add-hook
+  "Calls add-hook* while also capturing the namespace from which the hook was
+  added, in ::systems.bread.alpha.core/added-in within the options map"
+  [app' h f & [options]]
   `(add-hook* ~app' ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
 
-(defmacro add-hooks-> [app' & forms]
+(defmacro add-hooks->
+  "Threads app through forms after prepending `add-hook to each."
+  {:arglists '([app' & forms])}
+  [app' & forms]
   (assert (every? list? forms)
           "Every form passed to with-forms must be a list!")
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
 (defn add-effect
+  "Adds the (presumably effectful) function f as a callback to the special
+  :hook/effects hook. Accepts an optional options map."
   ([app f options]
    (add-hook app :hook/effects f options))
   ([app f]
    (add-hook app :hook/effects f {})))
 
-(defmacro add-effects-> [app' & forms]
+(defmacro add-effects->
+  "Threads app through forms after prepending `add-effect to each."
+  [app' & forms]
   (assert (every? #(or (list? %) (symbol? %)) forms)
           "Every form passed to with-forms must be a list or symbol!")
   (let [forms (map (fn [form]
