@@ -95,9 +95,6 @@
 ;; The main API for working with hooks.
 ;;
 
-(defn hooks [app]
-  (get app ::hooks))
-
 (defn hooks-for [app h]
   (get-in app [::hooks h]))
 

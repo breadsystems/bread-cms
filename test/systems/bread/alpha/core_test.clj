@@ -63,18 +63,6 @@
       (is (= [{::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
              (bread/hooks-for app :plugin.b/dec))))))
 
-(deftest test-hooks
-
-  (testing "it returns data about all added hooks"
-    (let [my-fn (fn [])
-          app {::bread/hooks {:bread/x [{::bread/precedence 2 ::bread/f dec}
-                                        {::bread/precedence 1 ::bread/f my-fn}
-                                        {::bread/precedence 0 ::bread/f inc}]}}]
-      (is (= {:bread/x [{::bread/precedence 2 ::bread/f dec}
-                        {::bread/precedence 1 ::bread/f my-fn}
-                        {::bread/precedence 0 ::bread/f inc}]}
-             (bread/hooks app))))))
-
 (deftest test-hooks-for
 
   (testing "it returns data for a specific hook"
@@ -133,15 +121,22 @@
 (deftest test-add-effect
 
   (testing "it adds to the :hook/effects hook inside app"
-    (let [req (-> {}
+    (let [app (-> (bread/app)
                   (bread/add-effect inc)
                   (bread/add-effect dec {:precedence 2})
                   (bread/add-effect identity {:precedence 1.5
                                               :my/extra 123}))]
-      (is (= {:hook/effects [{::bread/precedence 1   ::bread/f inc ::bread/added-in *ns*}
-                             {::bread/precedence 1.5 ::bread/f identity :my/extra 123 ::bread/added-in *ns*}
-                             {::bread/precedence 2   ::bread/f dec ::bread/added-in *ns*}]}
-             (bread/hooks req))))))
+      (is (bread/hook-for? app :hook/effects inc))
+      (is (bread/hook-for? app :hook/effects dec))
+      (is (bread/hook-for? app :hook/effects dec {:precedence 2}))
+      (is (bread/hook-for? app :hook/effects identity))
+      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5}))
+      (is (bread/hook-for? app :hook/effects identity {:my/extra 123}))
+      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5
+                                                       :my/extra 123}))
+      (is (false? (bread/hook-for? app :hook/effects not=)))
+      (is (false? (bread/hook-for? app :hook/effects dec {:precedence 3})))
+      (is (false? (bread/hook-for? app :hook/effects identity {:x :y}))))))
 
 (deftest test-add-value-hook
 
