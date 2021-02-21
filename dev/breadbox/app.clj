@@ -80,6 +80,8 @@
 
 (defc page [{:keys [post i18n]}]
   {:ident :db/id
+   ;; TODO could this work...?
+   :effects {:x (do-something!)}
    :query [:post/title
            {:post/fields [:field/content :field/ord]}]}
   (let [{:i18n/keys [not-found]} i18n]
