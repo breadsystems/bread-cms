@@ -106,6 +106,7 @@
      (= match-options intersection))))
 
 (defn hook-for?
+  "Returns a boolean indicating whether or not f is hooked as a callback for h."
   ([app h f]
    (hook-for? app h f {}))
   ([app h f options]
@@ -163,13 +164,8 @@
   (add-effects-> {} identity)
   (macroexpand-1 '(add-effects-> app X (Y {:precedence 1}))))
 
-(defn add-value-hook
-  ([app h x options]
-   (add-hook app h (constantly x) options))
-  ([app h x]
-   (add-hook app h (constantly x))))
-
 (defn- remove-hook* [hooks hook-fn options]
+  ;; TODO refactor this
   (loop [idx 0 hooks hooks]
     (if (hook-matches? (get hooks idx) hook-fn options)
       (let [[head tail] (split-at idx hooks)]
@@ -180,12 +176,32 @@
 
 (defn remove-hook
   ([app h hook-fn options]
-   (if (get-in app [::hooks h])
+   (if (hooks-for app h)
      (update-in app [::hooks h] remove-hook* hook-fn options)
      app))
 
   ([app h hook-fn]
    (remove-hook app h hook-fn {})))
+
+(defn add-value-hook
+  "Adds a hook callback for h that always returns x. Useful for aggressively
+  overriding any previously set hooks or for setting an initial value in a
+  chain of callbacks for h. Can be removed with (remove-value-hook app h x)."
+  {:arglists '([app h x] [app h x options])}
+  ([app h x options]
+   (add-hook app h (constantly x) (assoc options :value x)))
+  ([app h x]
+   (add-value-hook app h x {})))
+
+(defn remove-value-hook
+  "Removes a previously added value hook (one added via add-value-hook).
+  Matches on value of x ONLY, not on any extra args, such as precedent."
+  {:arglists '([app h x])}
+  [app h x]
+  (if-let [hooks (hooks-for app h)]
+    (assoc-in app [::hooks h] (vec (filter #(not= (:value %) x)
+                                           hooks)))
+    app))
 
 (defmacro ^:private try-hook [app hook h f x args apply-hook]
   `(try

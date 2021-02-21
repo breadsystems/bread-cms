@@ -141,10 +141,22 @@
 (deftest test-add-value-hook
 
   (testing "add-value-hook wraps passed value in (constantly ,,,)"
-    (let [req (-> {}
-                  (bread/add-value-hook :my/value :NOPE {:precedence 0})
-                  (bread/add-value-hook :my/value :this-one! {:precedence 2})
-                  (bread/add-value-hook :my/value :TRY-AGAIN))]
+    (let [req (-> (bread/app)
+                  (bread/add-value-hook :my/value :NOPE)
+                  (bread/add-value-hook :my/value :TRY-AGAIN)
+                  (bread/add-value-hook :my/value :this-one!))]
+      ;; :this-one! wins because it has the highest precedence.
+      (is (= :this-one! (bread/hook-> req :my/value))))))
+
+(deftest test-remove-value-hook
+
+  (testing "add-value-hook wraps passed value in (constantly ,,,)"
+    (let [req (-> (bread/app)
+                  (bread/add-value-hook :my/value :REMOVED )
+                  (bread/add-value-hook :my/value :this-one!)
+                  (bread/remove-value-hook :my/value :REMOVED))]
+      ;; Whereas :REMOVED would have won because of its higher precedence, its
+      ;; removal means that :this-one! wins (with a default precedence of 1)
       (is (= :this-one! (bread/hook-> req :my/value))))))
 
 (deftest remove-hook-removes-the-fn-from-request-hooks
@@ -185,8 +197,7 @@
              (a-hooks (bread/remove-hook app :bread/a inc {:precedence 1
                                                            :my/extra :extra!})))))))
 
-;; TODO remove-value-hook
-;; TODO remove-all-hooks
+;; TODO remove-hooks-for
 
 (deftest test-hook->
 
