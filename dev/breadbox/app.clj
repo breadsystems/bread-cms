@@ -255,12 +255,18 @@
   (bread/hook-> @app :hook/head []))
 
 (defn handler [req]
+  (def $req req)
   (let [handle (bread/handler @app)]
     (select-keys (handle req) [:status :body :headers])))
 
 (defonce stop-http (atom nil))
 
 (comment
+
+  $req
+
+  (get (:headers $req) "host")
+  (handler (assoc $req :uri "/"))
 
   (bread/bind-profiler! (bread/profiler-for
                           {:hooks #{:hook/post}}))
