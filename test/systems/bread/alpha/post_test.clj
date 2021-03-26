@@ -12,7 +12,9 @@
               :store {:backend :mem
                       :id "posts-db"}
               :datastore/initial-txns
-              [#:post{:title "Home Page" :slug ""}
+              [#:post{:slug ""
+                      :fields #{#:field{:content "Home Page"
+                                        :key :title}}}
                #:post{:title "Parent Page" :slug "parent-page"}]}
       ->loaded #(h/datastore-config->loaded %)]
 
@@ -28,7 +30,8 @@
     (testing "it queries for pages"
       (is (nil? (post/path->post (->loaded config) ["xyz"])))
       (is (= "Home Page"
-             (:post/title (post/path->post (->loaded config) []))))
+             ;; TODO add some sugar around post title.
+             (:field/content (first (:post/fields (post/path->post (->loaded config) []))))))
       (is (= "Parent Page"
              (:post/title (post/path->post (->loaded config) ["parent-page"])))))
 

@@ -43,9 +43,8 @@
                                    :post/status]}
                                  {:post/fields
                                   [:db/id
-                                   :db/txInstant
-                                   :field/content
-                                   :field/ord]}
+                                   :field/key
+                                   :field/content]}
                                  {:post/taxons
                                   [:taxon/taxonomy
                                    :taxon/uuid
@@ -60,6 +59,7 @@
 
 (defn path->post [app path]
   (let [db (store/datastore app)]
+    ;; TODO refactor this to get a resolver from route and run query directly.
     (some->> (resolve-by-hierarchy path)
              (store/q db)
              ffirst
@@ -68,11 +68,17 @@
 (defn parse-fields [fields]
   (map #(update % :field/content edn/read-string) fields))
 
-(defn sort-fields [fields]
-  (sort-by :field/ord fields))
+(defn- index-by [f coll]
+  (into {} (map (fn [x] [(f x) x]) coll)))
 
-(defn init [_app post]
-  (update post :post/fields #(-> % sort-fields parse-fields)))
+(defn init [app post]
+  (update post :post/fields #(->> %
+                                  parse-fields
+                                  ;; TODO can we do this at the query level?
+                                  (filter (fn [field]
+                                            (= (i18n/lang app)
+                                               (:field/lang field))))
+                                  (index-by :field/key))))
 
 (defn post [app post]
   (bread/hook->> app :hook/post post))

@@ -34,7 +34,8 @@
                       :uuid (UUID/randomUUID)
                       :title "Parent Page"
                       :slug "parent-page"
-                      :fields #{{:field/content
+                      :fields #{{:field/key :hello
+                                 :field/content
                                  (prn-str [:div
                                            [:h4 :i18n/parent-page.0.h4]
                                            [:p :i18n/parent-page.0.content]])}}}
@@ -42,14 +43,24 @@
                       :uuid (UUID/randomUUID)
                       :title "Child Page"
                       :slug "child-page"
-                      :parent 44 ;; NOTE: don't do this :P
-                      :fields #{{:field/content
-                                 (prn-str [:div
-                                            [:p :i18n/child-page.0.lorem-ipsum]
-                                            [:img {:src "https://placehold.it/300x300"}]])
-                                 :field/ord 1.0}
-                                {:field/content (prn-str [:p :i18n/child-page.1.qwerty])
-                                 :field/ord 1.1}}
+                      :parent 45 ;; NOTE: don't do this :P
+                      :fields #{{:field/key :simple
+                                 :field/lang :en
+                                 :field/content
+                                 (prn-str {:hello "Hello"
+                                           :body "Lorem ipsum dolor sit amet"
+                                           :goodbye "Bye!"
+                                           :img-url "https://placehold.it/300x300"})}
+                                {:field/key :simple
+                                 :field/lang :fr
+                                 :field/content
+                                 (prn-str {:hello "Bonjour"
+                                           :body "Lorem ipsum en francais"
+                                           :goodbye "Salut"
+                                           :img-url "https://placehold.it/300x300"})}
+                                {:field/key :flex-content
+                                 :field/lang :en
+                                 :field/content (prn-str {:todo "TODO"})}}
                       :taxons #{{:taxon/slug "my-cat"
                                  :taxon/name "My Cat"
                                  :taxon/taxonomy :taxon.taxonomy/category}}}
@@ -81,15 +92,20 @@
 (defc page [{:keys [post i18n]}]
   {:ident :db/id
    ;; TODO could this work...?
-   :effects {:x (do-something!)}
+   ;:effects {:x (do-something!)}
    :query [:post/title
-           {:post/fields [:field/content :field/ord]}]}
-  (let [{:i18n/keys [not-found]} i18n]
+           {:post/fields [:db/id :field/lang :field/key :field/content]}]}
+  (prn post)
+  (let [{:i18n/keys [not-found]} i18n
+        {:keys [simple flex-content]} (:post/fields post)
+        simple (:field/content simple)
+        flex-content (:field/content flex-content)]
     [:<>
      [:h1 (or (:post/title post) not-found)]
-     (map (fn [field]
-            [:section (:field/content field)])
-          (:post/fields post))]))
+     [:main
+      [:h2 (:hello simple)]
+      [:p (:body simple)]
+      [:p.goodbye (:goodbye simple)]]]))
 
 ;; TODO do this in an actual routing layer
 (defn ->path [req]
@@ -107,9 +123,40 @@
   (def db (store/datastore @app))
   (require '[datahike.api :as d])
   ;; this works
-  (d/pull db [:post/uuid :post/slug :post/title] 43)
+  (d/pull db [:post/uuid :post/slug :post/title] 47)
   ;; this does not work
-  (d/pull db [:post/slug :post/title] [43 :db/id])
+  (d/pull db [:post/slug :post/title] [47 :db/id])
+
+  (d/q '[:find (pull ?p [:post/slug
+                         :post/title
+                         {:post/fields
+                          [:field/key
+                           :field/lang
+                           :field/content]}])
+         :in $ ?slug ?lang
+         :where
+         [?p :post/slug ?slug]
+         [?p :post/fields ?field]
+         [?field :field/lang ?lang]]
+       db "child-page" :en)
+
+  (def $res
+    (d/q '[:find ?slug ?title
+         (pull ?field [:field/key
+                       :field/content])
+         :in $ ?slug ?lang
+         :where
+         [?p :post/slug ?slug]
+         [?p :post/title ?title]
+         [?p :post/fields ?field]
+         [?field :field/lang ?lang]]
+       db "child-page" :en))
+
+  (reduce (fn [post [slug title field]]
+            (-> post
+                (assoc :post/slug slug :post/title title)
+                (assoc-in [:post/fields (:field/key field)] field)))
+          {} $res)
 
   (route/resolve-entity $req)
 

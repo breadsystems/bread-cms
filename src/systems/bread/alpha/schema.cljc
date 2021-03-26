@@ -34,6 +34,7 @@
     :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
+   ;; TODO i18n - can we remove this and support title with :post/fields alone?
    {:db/ident :post/title
     :db/doc "The title of the post"
     :db/valueType :db.type/string
@@ -76,14 +77,19 @@
     :migration/key :bread.migration/initial}
 
    ;; Post fields
-   {:db/ident :field/ord
-    :db/doc "Ordinal number for this field"
-    :db/valueType :db.type/double
+   {:db/ident :field/key
+    :db/doc "Unique-per-post keyword for this field"
+    :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
    {:db/ident :field/content
     :db/doc "Field content as an EDN string"
     :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :field/lang
+    :db/doc "Language this field is written in"
+    :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
 
@@ -154,7 +160,6 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO add a `preload?` boolean field?
 
    ;; Comments
    {:db/ident :comment/uuid
