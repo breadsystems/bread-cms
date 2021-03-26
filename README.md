@@ -179,9 +179,10 @@ This simplistic resolver tells Bread to query for a single post with the slug `"
 In a more custom routing scheme, you might declare a matching route dispatched by slug underneath an umbrella parent route, i.e. in the form `/parent/:slug`:
 
 ```clj
-(bread/route "/article/:slug" {:route/resolver {:resolver/params :slug
-                                                :post/type :post.type/article
-                                                :post/parent false}})
+(bread/route "/article/:slug"
+             {:route/resolver {:resolver/params :slug
+                               :post/type :post.type/article
+                               :post/parent false}})
 ```
 
 Bread will recognize the fact that we are no longer looking for a parent page whose slug is `"parent"`, but are instead looking for posts of a certain type, in this case `:post.type/article`, with no parent article (hence the `false`).
@@ -199,10 +200,11 @@ Importantly, **this will still merge in the default post query params**, resulti
 Note that in addition to the slug, post type, and (lack of) parentage, which we asked for specifically, Bread also assumed we wanted to query only for a single, published post. If you disagree with this opinion, it's easy enough to say so, and Bread will happily oblige:
 
 ```clj
-(bread/route "/article/:slug" {:route/resolver {:resolver/defaults false ;; <-- this is new
-                                                :resolver/params :slug
-                                                :post/type :post.type/article
-                                                :post/parent false}})
+(bread/route "/article/:slug"
+             {:route/resolver {:resolver/defaults false ;; <-- this is new
+                               :resolver/params :slug
+                               :post/type :post.type/article
+                               :post/parent false}})
 ```
 
 #### Custom resolvers via functions
@@ -213,6 +215,7 @@ Bread also has an API for defining your own resolvers that operate on arbitrary 
 (bread/route "/article/:slug"
              {:route/resolver (fn [req]
                                 {:resolver/defaults false
+                                 ;; Get the slug from the request.
                                  :post/slug (:slug (:params req))
                                  :post/type :post.type/article
                                  :post/parent false})})
