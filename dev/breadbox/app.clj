@@ -47,10 +47,16 @@
                                            [:p :i18n/parent-page.0.content]])}}}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
-                      :title "Child Page"
+                      :title "Child Page OLD TITLE"
                       :slug "child-page"
                       :parent 45 ;; NOTE: don't do this :P
-                      :fields #{{:field/key :simple
+                      :fields #{{:field/key :title
+                                 :field/lang :en
+                                 :field/content (prn-str "Child Page")}
+                                {:field/key :title
+                                 :field/lang :fr
+                                 :field/content (prn-str "La Page Enfant")}
+                                {:field/key :simple
                                  :field/lang :en
                                  :field/content
                                  (prn-str {:hello "Hello"
@@ -123,79 +129,32 @@
 (defn dispatch [req]
   (bread/response
     req
-    (let [resolver (route/resolver req)
-          match (route/match req)]
+    (let [post (post/init req (store/q (store/datastore req)
+                                       (resolver/query req)))
+          {:keys [title simple]} (:post/fields post)]
       {:headers {"content-type" "text/html"}
        :status 200
        :body [:html
-              [:pre "RESOLVER: " (route/resolver req)]
-              [:pre
-               "query: "
-               (prn-str (resolver/query req))]
-              [:p "IT WORKS!"]]})))
-
-;; TODO do this in an actual routing layer
-(defn ->path [req]
-  (filter #(pos? (count %))
-          (str/split (or (:uri req) "") #"/")))
-
-(defn req->id [req]
-  (post/path->id req (if (i18n/lang-route? req)
-                       (next (->path req))
-                       (->path req))))
+              [:head
+               [:title "Breadbox"]
+               [:meta {:charset "utf-8"}]
+               (theme/head req)]
+              [:body
+               [:main
+                 [:h2 title]
+                 [:div.simple
+                  [:p (:hello simple)]
+                  [:div.body (:body simple)]
+                  [:p (:goodbye simple)]]]
+               [:pre
+                "post: "
+                (prn-str post)]]]})))
 
 (comment
   (deref app)
 
   (def db (store/datastore @app))
   (require '[datahike.api :as d])
-  ;; this works
-  (d/pull db [:post/uuid :post/slug :post/title] 47)
-  ;; this does not work
-  (d/pull db [:post/slug :post/title] [47 :db/id])
-
-  (expand-query
-    {:uri "/en/parent-page/child-page"}
-    {:resolver/params :post/slug
-     :resolver/internationalize? true ;; default - check for /:lang base route
-     :resolver/type :post ;; default - this is a post query
-     :resolver/ancestry? true ;; default
-     :post/type :post.type/page ;; default
-     })
-  ;; should result in something like...
-  (d/q {:query
-        '{:find [?slug (pull ?field [:field/key :field/content])]
-          :in [$ ?lang ?slug ?parent-slug]
-          :where [;; from :resolver/params
-                  [?p :post/slug ?slug]
-                  ;; from :resolver/ancestry + route
-                  [?p :post/parent ?parent]
-                  [?parent :post/slug ?parent-slug]
-                  (not-join [?parent]
-                            [?parent :post/parent ?nothing])
-                  ;; from :resolver/type
-                  [?p :post/fields ?field]
-                  ;; from route/lang when :resolver/internationize?
-                  [?field :field/lang ?lang]]}
-        :args [db :en "child-page" "parent-page"]})
-
-  (def $res
-    (d/q '[:find ?slug ?title
-         (pull ?field [:field/key
-                       :field/content])
-         :in $ ?slug ?lang
-         :where
-         [?p :post/slug ?slug]
-         [?p :post/title ?title]
-         [?p :post/fields ?field]
-         [?field :field/lang ?lang]]
-       db "child-page" :en))
-
-  (reduce (fn [post [slug title field]]
-            (-> post
-                (assoc :post/slug slug :post/title title)
-                (assoc-in [:post/fields (:field/key field)] field)))
-          {} $res)
 
   (route/resolve-entity $req)
 
@@ -259,13 +218,13 @@
                                 (i18n/plugin)
                                 (post/plugin)
 
-                                ;; TODO make these dynamic at the routing layer
-                                #(bread/add-hook % :hook/id req->id)
-                                #(bread/add-value-hook % :hook/component page)
-
                                 ;; TODO put this in a reitit plugin
                                 (fn [app]
                                   (bread/add-hooks-> app
+                                    (:hook/route-params
+                                      (fn [_ match]
+                                        (:path-params match)))
+                                    #_
                                     (:hook/resolver
                                       (fn [req _]
                                         (let [match (route/match req)]
@@ -315,7 +274,6 @@
   (bread/hook-> @app :hook/head []))
 
 (defn handler [req]
-  (def $req req)
   (let [handle (bread/handler @app)]
     (select-keys (handle req) [:status :body :headers])))
 
@@ -323,9 +281,24 @@
 
 (comment
 
-  $req
+  (def $req (merge {:uri "/en/parent-page/child-page"} @app))
+
+  (route/match $req)
+  (route/resolver $req)
+  (route/params $req (route/match $req))
+  (resolver/ancestralize {} $req (route/match $req) (route/resolver $req))
+  (resolver/ancestry $req (route/match $req) (route/resolver $req))
+
+  (-> $req
+    (route/params (route/match $req))
+    (get (:resolver/attr (route/resolver $req)))
+    (clojure.string/split #"/"))
+
+  (resolver/query $req)
+  (store/q (store/datastore $req) (resolver/query $req))
 
   (get (:headers $req) "host")
+  (bread/handler $app)
   (handler (assoc $req :uri "/"))
 
   (bread/bind-profiler! (bread/profiler-for
