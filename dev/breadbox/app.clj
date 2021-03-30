@@ -9,12 +9,14 @@
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
+    [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
+    [reitit.core :as reitit]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]
@@ -107,6 +109,27 @@
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]]]))
 
+
+(def $router
+  (reitit/router
+    ["/:lang"
+     ["" {:bread/resolver :home}]
+     ["/*slugs"]]))
+
+(defn dispatch [req]
+  (bread/response
+    req
+    (let [resolver (route/resolver req)
+          match (route/match req)]
+      {:headers {"content-type" "text/html"}
+       :status 200
+       :body [:html
+              [:pre "RESOLVER: " (route/resolver req)]
+              [:pre
+               "query: "
+               (prn-str (resolver/query req))]
+              [:p "IT WORKS!"]]})))
+
 ;; TODO do this in an actual routing layer
 (defn ->path [req]
   (filter #(pos? (count %))
@@ -127,18 +150,30 @@
   ;; this does not work
   (d/pull db [:post/slug :post/title] [47 :db/id])
 
-  (d/q '[:find (pull ?p [:post/slug
-                         :post/title
-                         {:post/fields
-                          [:field/key
-                           :field/lang
-                           :field/content]}])
-         :in $ ?slug ?lang
-         :where
-         [?p :post/slug ?slug]
-         [?p :post/fields ?field]
-         [?field :field/lang ?lang]]
-       db "child-page" :en)
+  (expand-query
+    {:uri "/en/parent-page/child-page"}
+    {:resolver/params :post/slug
+     :resolver/internationalize? true ;; default - check for /:lang base route
+     :resolver/type :post ;; default - this is a post query
+     :resolver/ancestry? true ;; default
+     :post/type :post.type/page ;; default
+     })
+  ;; should result in something like...
+  (d/q {:query
+        '{:find [?slug (pull ?field [:field/key :field/content])]
+          :in [$ ?lang ?slug ?parent-slug]
+          :where [;; from :resolver/params
+                  [?p :post/slug ?slug]
+                  ;; from :resolver/ancestry + route
+                  [?p :post/parent ?parent]
+                  [?parent :post/slug ?parent-slug]
+                  (not-join [?parent]
+                            [?parent :post/parent ?nothing])
+                  ;; from :resolver/type
+                  [?p :post/fields ?field]
+                  ;; from route/lang when :resolver/internationize?
+                  [?field :field/lang ?lang]]}
+        :args [db :en "child-page" "parent-page"]})
 
   (def $res
     (d/q '[:find ?slug ?title
@@ -172,12 +207,11 @@
 
   )
 
-
 (defn thingy [req]
   (let [slug (:slug (:params req))
         post (route/entity req)
         req (-> req
-                ;; TODO do this automatically from the post ns
+                ;; TODO do this automatically from the resolver/expander
                 (bread/add-hook :hook/view-data
                                 (fn [data _]
                                   (assoc data :post (post/post req post)))))]
@@ -225,7 +259,29 @@
                                 #(bread/add-hook % :hook/id req->id)
                                 #(bread/add-value-hook % :hook/component page)
 
+                                ;; TODO put this in a reitit plugin
+                                (fn [app]
+                                  (bread/add-hooks-> app
+                                    (:hook/resolver
+                                      (fn [req _]
+                                        (let [match (route/match req)]
+                                          (:bread/resolver
+                                            (:data match)
+                                            {:resolver/attr :slugs
+                                             :resolver/internationalize? true ;; default - check for /:lang base route
+                                             :resolver/type :post ;; default - this is a post query
+                                             :resolver/ancestry? true ;; default
+                                             :post/type :post.type/page ;; default
+                                             }))))
+                                    (:hook/match-route
+                                      (fn [req _]
+                                        (reitit/match-by-path $router (:uri req))))))
+
+                                (fn [app]
+                                  (bread/add-hook app :hook/dispatch dispatch))
+
                                 ;; TODO specify thingy as a layout
+                                #_
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch thingy))
 

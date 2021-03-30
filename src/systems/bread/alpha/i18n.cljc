@@ -8,7 +8,7 @@
 (defn lang
   "High-level fn for getting the language for the current request."
   [req]
-  (or (bread/hook req :hook/lang) (bread/config req :i18n/fallback-lang)))
+  (or (bread/hook->> req :hook/lang) (bread/config req :i18n/fallback-lang)))
 
 (defn key?
   "Checks whether the given keyword is an i18n key for a translatable string."
@@ -25,7 +25,7 @@
 (defn- route-segments [{:keys [uri] :as req}]
   (filter (complement empty?) (str/split (or uri "") #"/")))
 
-(defn- req->lang [req]
+(defn- req->lang [req _]
   ((supported-langs req) (keyword (first (route-segments req)))))
 
 (defn lang-supported?
