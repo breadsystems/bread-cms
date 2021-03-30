@@ -50,6 +50,7 @@
                       :uuid (UUID/randomUUID)
                       :title "Child Page OLD TITLE"
                       :slug "child-page"
+                      ;; TODO fix this hard-coded eid somehow...
                       :parent 45 ;; NOTE: don't do this :P
                       :fields #{{:field/key :title
                                  :field/lang :en
@@ -63,14 +64,14 @@
                                  (prn-str {:hello "Hello"
                                            :body "Lorem ipsum dolor sit amet"
                                            :goodbye "Bye!"
-                                           :img-url "https://placehold.it/300x300"})}
+                                           :img-url "https://via.placeholder.com/300"})}
                                 {:field/key :simple
                                  :field/lang :fr
                                  :field/content
                                  (prn-str {:hello "Bonjour"
                                            :body "Lorem ipsum en francais"
                                            :goodbye "Salut"
-                                           :img-url "https://placehold.it/300x300"})}
+                                           :img-url "https://via.placeholder.com/300"})}
                                 {:field/key :flex-content
                                  :field/lang :en
                                  :field/content (prn-str {:todo "TODO"})}}
@@ -145,7 +146,9 @@
                  [:h2 title]
                  [:div.simple
                   [:p (:hello simple)]
-                  [:div.body (:body simple)]
+                  [:div.body
+                   (:body simple)
+                   [:img {:src (:img-url simple)}]]
                   [:p (:goodbye simple)]]]
                [:pre
                 "post: "
