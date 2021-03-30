@@ -24,7 +24,7 @@ Liberate your content.
         (bread/app->handler)))
 
 (handler {:uri "/"})
-;; => [:h1 "Breadsters!"]
+;; => [:h1 "Hello, Breadsters!"]
 ```
 
 ### A more detailed example
