@@ -2,6 +2,7 @@
   (:require
     ;[breadbox.static :as static]
     [clojure.string :as str]
+    [flow-storm.api :as flow]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as comp :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
@@ -23,6 +24,9 @@
     [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]])
   (:import
     [java.util UUID]))
+
+(defstate debugger
+  :start (flow/connect))
 
 (def $config {:datastore/type :datahike
               :store {:backend :mem
