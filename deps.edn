@@ -13,6 +13,11 @@
                          rum/rum                   {:mvn/version "0.12.3"}
                          tongue/tongue             {:mvn/version "0.2.10"}}}
 
+           ;; TODO "turnkey" CMS alias with opinionated plugin config
+           :cms
+           {:extra-paths ["cms"]
+            ,,,}
+
            :test
            {:extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
             :main-opts ["-m" "kaocha.runner"]}
