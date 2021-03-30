@@ -25,6 +25,7 @@
                         (f)
                         (store/delete-database! config)))
 
+  #_
   (deftest test-path->post
 
     (testing "it queries for pages"

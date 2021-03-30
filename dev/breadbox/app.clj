@@ -9,6 +9,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.plugin.reitit :as rp]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
@@ -217,28 +218,7 @@
                      {:plugins [(store/config->plugin $config)
                                 (i18n/plugin)
                                 (post/plugin)
-
-                                ;; TODO put this in a reitit plugin
-                                (fn [app]
-                                  (bread/add-hooks-> app
-                                    (:hook/route-params
-                                      (fn [_ match]
-                                        (:path-params match)))
-                                    #_
-                                    (:hook/resolver
-                                      (fn [req _]
-                                        (let [match (route/match req)]
-                                          (:bread/resolver
-                                            (:data match)
-                                            {:resolver/attr :slugs
-                                             :resolver/internationalize? true ;; default - check for /:lang base route
-                                             :resolver/type :post ;; default - this is a post query
-                                             :resolver/ancestry? true ;; default
-                                             :post/type :post.type/page ;; default
-                                             }))))
-                                    (:hook/match-route
-                                      (fn [req _]
-                                        (reitit/match-by-path $router (:uri req))))))
+                                (rp/plugin {:router $router})
 
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch dispatch))
