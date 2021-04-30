@@ -6,7 +6,26 @@
 <p>— Pyotr Kropotkin</p>
 </blockquote>
 
-Liberate your content.
+Liberate your content!
+
+## Goals
+
+Bread aims to be three things:
+
+1. A lightweight core library for constructing a totally custom CMS
+2. A small set of plugins that compose to create a CMS with sensible defaults
+3. A binary (jar and native) that ships with the basic Bread CMS install
+
+Bread's high-level feature set:
+
+* Next-level user experience for editing content. *Design-aware editing. No separate backend UI.*
+* Collaborative editing
+* Offline first
+* Fully static rendering at write time
+* First-class support for translation/internationalization
+* An extensible default schema supporting many "open-world" content patterns
+* Co-located component queries for more advanced data models
+* Completely hackable through an extremely simple plugin API
 
 ## Basic Usage
 
