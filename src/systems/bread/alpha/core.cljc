@@ -308,10 +308,10 @@
   (fn [req]
     (-> (merge req app)
         (hook :hook/request)
-        (hook :hook/dispatch)
-        (hook :hook/expand) ;; TODO do we need this?
-        (apply-effects)
-        (hook :hook/render)
+        (hook :hook/dispatch) ;; -> ::route
+        (hook :hook/expand)   ;; -> ::data (?)
+        (apply-effects)       ;; -> ::results
+        (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 
 (defn load-handler
