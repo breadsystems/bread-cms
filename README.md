@@ -148,7 +148,7 @@ Bread's high-level feature set:
      [:h3 "Nov 27"]
      [:div.excerpt "Lorem ipsum dolor sit amet."]]
     [:article.blog-card
-     [:h1 "Another post in November]
+     [:h1 "Another post in November"]
      [:h3 "Nov 26"]
      [:div.excerpt "Impedit deleniti mollit tempor fuga ea anim quos."]]
     [:article.blog-card
