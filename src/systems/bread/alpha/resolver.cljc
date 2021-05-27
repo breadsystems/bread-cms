@@ -7,12 +7,14 @@
     [systems.bread.alpha.datastore :as store]))
 
 
-(defmulti expand-query (fn [req _]
-                         (:resolver/type (route/resolver req))))
+(defmulti expand-query
+  (fn [req _]
+    (:resolver/type (route/resolver req))))
 
 (defn query [req]
   (let [query {:query {:find []
                        :in ['$]
                        :where []}
-               :args [(store/datastore req)]}]
-    (bread/hook->> req :hook/query (expand-query req query))))
+               :args [(store/datastore req)]}
+        expanded (expand-query req query)]
+    (bread/hook->> req :hook/query expanded)))
