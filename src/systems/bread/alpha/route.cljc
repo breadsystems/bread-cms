@@ -11,13 +11,19 @@
   (bread/hook->> req :hook/route-params match))
 
 (defn resolver [req]
-  ;; TODO make default resolver behavior a little more dynamic
-  (bread/hook->> req :hook/resolver (merge {:resolver/attr :slugs
-                                            :resolver/internationalize? true
-                                            :resolver/type :post
-                                            :resolver/ancestry? true
-                                            :post/type :post.type/page}
-                                           (bread/hook->> req :hook/match->resolver (match req)))))
+  (let [default {:resolver/attr :slugs
+                 :resolver/internationalize? true
+                 :resolver/type :post
+                 :resolver/ancestry? true
+                 :post/type :post.type/page}
+        declared (bread/hook->> req :hook/match->resolver (match req))
+        {:resolver/keys [defaults?]} declared
+        declared (if (= :default declared) default declared)
+        ;; defaults? can only be turned off *explicitly* with false
+        resolver' (if (not (false? defaults?))
+                    (merge default declared)
+                    declared)]
+    (bread/hook->> req :hook/resolver resolver')))
 
 (defn component [req]
   (bread/hook-> req :hook/component))
@@ -31,3 +37,10 @@
         {:query/keys [schema ident]} (comp/get-query cmp {:db/id eid})]
     (when ident
       (store/pull (store/datastore req) schema ident))))
+
+(defn sitemap [app]
+  [{}])
+
+(comment
+
+  (sitemap {}))
