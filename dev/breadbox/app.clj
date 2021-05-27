@@ -1,3 +1,5 @@
+;; Sandbox for playing around with experimental Bread features
+;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
     ;[breadbox.static :as static]
@@ -125,8 +127,11 @@
 (def $router
   (reitit/router
     ["/:lang"
-     ["" {:bread/resolver :home}]
-     ["/*slugs"]]))
+     ["" {:bread/resolver :home
+          :name :home}]
+     ["/*slugs" {:bread/resolver {:resolver/type :post
+                                  :resolver/ancestry? true
+                                  :resolver/internationalize? true}}]]))
 
 (defn dispatch [req]
   (bread/response
@@ -159,8 +164,6 @@
 
   (def db (store/datastore @app))
   (require '[datahike.api :as d])
-
-  (route/resolve-entity $req)
 
   (i18n/translate @app :i18n/not-found)
   (i18n/strings-for @app :en)
@@ -269,8 +272,6 @@
   (route/match $req)
   (route/resolver $req)
   (route/params $req (route/match $req))
-  (resolver/ancestralize {} $req (route/match $req) (route/resolver $req))
-  (resolver/ancestry $req (route/match $req) (route/resolver $req))
 
   (-> $req
     (route/params (route/match $req))
@@ -280,12 +281,46 @@
   (resolver/query $req)
   (store/q (store/datastore $req) (resolver/query $req))
 
+  (defn post->uri [{:post/keys [slug parent]}]
+    (str/join (filter
+                (complement nil?)
+                ["" "en" slug (:post/slug parent)])
+              "/"))
+
+  (post->uri #:post{:slug "slug"
+                    :parent #:post{:slug "parent"}})
+
+  (-> (reitit/compiled-routes $router)
+      second second :bread/query)
+  (reitit/route-names $router)
+
+  (mapv (fn [[id post]]
+          (let [{:post/keys [slug]} post
+                route (reitit/match-by-path $router (str "/en/" slug))
+                {:keys [path data]} route]
+            {:route/match route
+             :route/uri (str "/en/" slug)
+             :post/data post
+             :post/ident [:db/id id]
+             :route/data data}))
+        ;; TODO grab each route vector from the router/table?
+        ;; TODO infer the query from the route data
+        (store/q db '{:find #_[?e ?slug]
+                      [?e (pull ?e [:post/slug
+                                    :post/title
+                                    {:post/parent [:post/slug]}])]
+                      :where [[?e :post/type :post.type/page]
+                              [?e :post/slug ?slug]
+                              [?e :post/title ?title]]}))
+  ;; All pages
+
+
   (get (:headers $req) "host")
   (bread/handler $app)
   (handler (assoc $req :uri "/"))
 
   (bread/bind-profiler! (bread/profiler-for
-                          {:hooks #{:hook/post}}))
+                          {:hooks #{:hook/dispatch}}))
 
   (bread/bind-profiler! nil)
 
