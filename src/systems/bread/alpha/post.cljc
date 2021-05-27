@@ -129,9 +129,13 @@
       ;; away from our immediate child page.
       (update :args #(vec (concat % (reverse path)))))))
 
+;; TODO qualify resolver type e.g. :resolver.type/post ?
+;; TODO write tests for this!
 (defmethod resolver/expand-query :post [req initial]
   (let [resolver (route/resolver req)
         match (route/match req)
+        ;; TODO defaults for attr, internationalize?, ancestry?
+        ;; TODO don't think we need `type` here?
         {:resolver/keys [attr internationalize? type ancestry?]} resolver
         field-attrs (bread/hook->> req :hook/field-attrs
                                    [:field/key :field/content])]
