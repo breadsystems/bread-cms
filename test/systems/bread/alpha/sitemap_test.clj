@@ -46,8 +46,8 @@
 (deftest test-derive-ident->sitemap-node
   (is (true? true)))
 
-(deftest test-stale-sitemap-nodes
-  ;; stale-sitemap-nodes takes an app, a sitemap, and a seq of transactions
+(deftest test-stale
+  ;; stale takes an app, a sitemap, and a seq of transactions
   ;; (write operations) and returns a set of sitemap nodes (maps) to be
   ;; recompiled.
   (let [sitemap [{:node/uri "/listing"
@@ -72,7 +72,7 @@
                {:node/uri "/post/two"
                 :node/attrs #{:post/slug :post/title :post/fields}
                 :node/ident [:db/id 456]}}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 456
                  :post/title "New Title"}]))))
@@ -87,7 +87,7 @@
                {:node/uri "/post/two"
                 :node/attrs #{:post/slug :post/title :post/fields}
                 :node/ident [:db/id 456]}}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 456
                  :post/title "New Title"}
@@ -96,7 +96,7 @@
 
     (testing "with a single non-matching transaction"
       (is (= #{}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 543
                  :entity/name "Some non-public entity"}]))))
@@ -108,7 +108,7 @@
                {:node/uri "/post/two"
                 :node/attrs #{:post/slug :post/title :post/fields}
                 :node/ident [:db/id 456]}}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 456
                  :post/title "New Title"}
@@ -122,7 +122,7 @@
                {:node/uri "/post/two"
                 :node/attrs #{:post/slug :post/title :post/fields}
                 :node/ident [:db/id 456]}}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 456
                  :post/fields "Affects detail page only..."}
@@ -131,7 +131,7 @@
 
     (testing "with transactions matching by ident but not by attributes"
       (is (= #{}
-             (sitemap/stale-sitemap-nodes
+             (sitemap/stale
                app sitemap
                [{:db/id 456
                  :post/whatever "This is whatever"}

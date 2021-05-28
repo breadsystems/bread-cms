@@ -17,7 +17,10 @@
 (defn- attrs-match? [attrs tx]
   (some (set attrs) (keys tx)))
 
-(defn stale-sitemap-nodes [app sitemap txns]
+(defn stale
+  "Takes an app, a compiled sitemap, and a seq of transactions, and returns
+  the set of \"stale\" sitemap nodes, i.e. those affected by txns."
+  [app sitemap txns]
   ;; TODO abstract over different kinds of idents (not just [:db/id ...])
   (reduce
     (fn [nodes tx]
@@ -25,6 +28,8 @@
             ;; TODO can we do this in constant time wrt. (count nodes)?
             matching (filter
                        (fn [node]
+                         ;; If node is already among the set of stale nodes,
+                         ;; there's no need to perform any other checks.
                          (or (nodes node)
                              (and (ident-matches? (:node/ident node) ident)
                                   (attrs-match? (:node/attrs node) tx))))
