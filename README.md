@@ -31,22 +31,66 @@ Bread's high-level feature set:
 
 ```clojure
 (ns my-project
-    (:require [systems.bread.alpha.core :as bread]))
+  (:require [systems.bread.alpha.core :as bread]))
 
 (defn hello [_]
-    [:h1 "Hello, Breadsters!"])
+  [:h1 "Hello, Breadsters!"])
 
 (def handler
-    (-> (bread/app)
-        (bread/post-type :page
-                         {:browse hello})
-        (bread/app->handler)))
+  (-> (bread/app)
+      (bread/post-type :page
+                       {:browse hello})
+      (bread/load-handler)))
 
 (handler {:uri "/"})
 ;; => [:h1 "Hello, Breadsters!"]
 ```
 
+### A simple blog engine
+
+```clojure
+(ns my.simple.blog
+	(:require
+   [systems.bread.alpha.blog]
+   [systems.bread.alpha.core :as bread]
+   [systems.bread.alpha.plugin.reitit :as br]))
+
+(def handler
+  (-> {:plugins [(br/plugin
+                   {:routes
+                    [["/" {:bread/resolver :resolver.type/articles
+                           ;; equivalent to:
+                           ;; {:bread/resolver
+                           ;;  {:resolver/type :resolver.type/post
+                           ;;   :resolver/cardinality :resolver.cardinality/many
+                           ;;   :post/type :post.type/article}}
+                           }]
+                     ["/about" {:bread/resolver :resolver.type/page
+                                :post/slug "about"}]
+                     ["/article/:slug" {:bread/resolver :resolver.type/article
+                                        ;; equivalent to:
+                                        ;; {:bread/resolver
+                                        ;;  {:resolver/type :resolver.type/post
+                                        ;;   :resolver/cardinality :resolver.cardinality/one
+                                        ;;   :post/type :post.type/article
+                                        ;;   :resolver/attr->param {:post/slug :slug}}}
+                                        }]
+                     ["/tag/:slug" {:bread/resolver :resolver.type/tag
+                                    ;; equivalent to:
+                                    ;; {:bread/resolver
+                                    ;;  {:resolver/type :resolver.type/post
+                                    ;;   :resolver/taxonomy :taxon.taxonomy/tag
+                                    ;;   :resolver/cardinality :resolver.cardinality/many
+                                    ;;   :post/type :post.type/article
+                                    ;;   :resolver/attr->param {:taxon/slug :slug}}}
+                                    ]]})]}
+    (bread/app)
+    (bread/load-handler))
+```
+
 ### A more detailed example
+
+**TODO** redefine in terms of **resolvers and stacks**.
 
 ```clojure
 ;; namespace where your blog post type is defined
@@ -56,17 +100,17 @@ Bread's high-level feature set:
     (:import [java.text SimpleDateFormat]))
 
 (defn main-layout [{:keys [title headline content]}]
-    [:html
-     [:head
-      [:meta {:charset "utf-8"}]
-      [:title (or title "My Cool Blog")]]
-     [:body
-      [:header
-       [:h1 (or headline title "My Cool Blog")]]
-      [:main
-       content]
-      [:footer
-       [:div "Main footer content"]]]])
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:title (or title "My Cool Blog")]]
+   [:body
+    [:header
+     [:h1 (or headline title "My Cool Blog")]]
+    [:main
+     content]
+    [:footer
+     [:div "Main footer content"]]]])
 
 ;; Normal actions use main-layout. These are your standard
 ;; Read, Edit, Add, and Delete, AKA BREAD operations, minus the B for Browse.
@@ -78,49 +122,49 @@ Bread's high-level feature set:
 (def fmt (SimpleDateFormat. "MMMM d"))
 
 (defn blog-card [{:post/keys [title excerpt published]}]
-    [:article.blog-card
-     [:h1 title]
-     [:h2 (.format fmt published)]
-     [:div.excerpt excerpt]])
+  [:article.blog-card
+   [:h1 title]
+   [:h2 (.format fmt published)]
+   [:div.excerpt excerpt]])
 
 (defn finder-layout [{:keys [posts-content params]}]
-    (main-layout
-        {:title "Blog search"
-         :headline (str "Posted in " (h/month-and-year (:month params))))
-         :content
-         [:<>
-          [:div.blog-cards
-           posts-content]
-          [:section.pagination
-           ;; (h/prev-month "2020-11") => "2020-10"
-           [:a {:href (finders/filter-url {:month (h/prev-month (:month param))})}
-            "Previous month"]
-           ;; (h/next-month "2020-11") => "2020-12"
-           [:a {:href (finders/filter-url {:month (h/next-month (:month param))})}
-            "Next month"]]]}))
+  (main-layout
+    {:title "Blog search"
+     :headline (str "Posted in " (h/month-and-year (:month params))))
+     :content
+     [:<>
+      [:div.blog-cards
+       posts-content]
+      [:section.pagination
+       ;; (h/prev-month "2020-11") => "2020-10"
+       [:a {:href (finders/filter-url {:month (h/prev-month (:month param))})}
+        "Previous month"]
+       ;; (h/next-month "2020-11") => "2020-12"
+       [:a {:href (finders/filter-url {:month (h/next-month (:month param))})}
+        "Next month"]]]}))
 
 (def find (finders/finder
-              {:query
-               ;; Add custom logic for querying posts published in
-               ;; the given month. See:
-               ;; https://grishaev.me/en/datomic-query/
-               {:month
-                (fn [query month]
-                    (-> query
-                        (update :in conj '?start)
-                        (update :in conj '?end)
-                        (update :args conj (h/start-of-month month))
-                        (update :args conj (h/end-of-month month))
-                        (update :where conj
-                                '[(> :post/published ?start)
-                                  (< :post/published ?end)])))}
-               :render-post blog-card
-               :layout finder-layout}))
+            {:query
+             ;; Add custom logic for querying posts published in
+             ;; the given month. See:
+             ;; https://grishaev.me/en/datomic-query/
+             {:month
+              (fn [query month]
+                  (-> query
+                      (update :in conj '?start)
+                      (update :in conj '?end)
+                      (update :args conj (h/start-of-month month))
+                      (update :args conj (h/end-of-month month))
+                      (update :where conj
+                              '[(> :post/published ?start)
+                                (< :post/published ?end)])))}
+             :render-post blog-card
+             :layout finder-layout}))
 
 ;; top-level namespace for your app
 (ns my-project
-    (:require [my.project.blog :as blog]
-              [systems.bread.alpha.core :as bread]))
+  (:require [my.project.blog :as blog]
+            [systems.bread.alpha.core :as bread]))
 
 (def handler (-> (bread/app)
                  (bread/post-type :blog-post
@@ -129,7 +173,7 @@ Bread's high-level feature set:
                                    :edit   blog/edit
                                    :add    blog/add
                                    :delete blog/delete})
-                 (bread/app->handler)))
+                 (bread/load-handler)))
 
 (handler {:uri "/posts"
           :query-string "month=2020-11"})
@@ -190,7 +234,7 @@ The default post resolver uses post slugs and parent/child post hierarchies as i
 #### Custom resolvers via maps
 
 ```clj
-(bread/route "/my-route" {:route/resolver {:post/slug "my-page"}})
+(bread/route "/my-route" {:bread/resolver {:post/slug "my-page"}})
 ```
 
 This simplistic resolver tells Bread to query for a single post with the slug `"my-page"`. It is attached to the custom app route `/my-route`. In effect, this route tells Bread to serve the content for the specific page `my-page` at said route. This can be useful if you know your Information Architecture (IA) ahead of time and you want to save some content entry grunt work.
