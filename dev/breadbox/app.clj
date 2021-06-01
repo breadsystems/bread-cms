@@ -2,7 +2,6 @@
 ;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
-    ;[breadbox.static :as static]
     [clojure.string :as str]
     [flow-storm.api :as flow]
     [systems.bread.alpha.core :as bread]
@@ -11,11 +10,12 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.plugin.reitit :as rp]
+    [systems.bread.alpha.plugin.reitit :as br]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.static-frontend :as static]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [mount.core :as mount :refer [defstate]]
@@ -28,6 +28,7 @@
   (:import
     [java.util UUID]))
 
+#_
 (defstate debugger
   :start (flow/connect))
 
@@ -134,7 +135,7 @@
                                   :resolver/internationalize? true}}]]))
 
 (defn dispatch [req]
-  (bread/response
+  (merge
     req
     (let [post (post/init req (store/q (store/datastore req)
                                        (resolver/query req)))
@@ -217,6 +218,7 @@
 
 (defonce app (atom nil))
 
+;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
                  (bread/load-app
@@ -224,7 +226,7 @@
                      {:plugins [(store/config->plugin $config)
                                 (i18n/plugin)
                                 (post/plugin)
-                                (rp/plugin {:router $router})
+                                (br/plugin {:router $router})
 
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch dispatch))
@@ -235,7 +237,8 @@
                                   (bread/add-hook app :hook/dispatch thingy))
 
                                 (tpl/renderer->plugin rum/render-static-markup
-                                                      {:precedence 2})]})))
+                                                      {:precedence 2})
+                                (static/plugin)]})))
   :stop (reset! app nil))
 
 (defn green-theme [app]
@@ -266,6 +269,11 @@
 (defonce stop-http (atom nil))
 
 (comment
+
+  (do
+    (spit "resources/public/en/parent-page/index.html" "REWRITE")
+    (handler (merge @app {:uri "/en/parent-page"}))
+    (slurp "resources/public/en/parent-page/index.html"))
 
   (def $req (merge {:uri "/en/parent-page/child-page"} @app))
 
