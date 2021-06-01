@@ -15,7 +15,7 @@
            :else     (= pv iv)))))
 
 (defn- attrs-match? [attrs tx]
-  (some (set attrs) (keys tx)))
+  (some attrs (keys tx)))
 
 (defn stale
   "Takes an app, a compiled sitemap, and a seq of transactions, and returns
