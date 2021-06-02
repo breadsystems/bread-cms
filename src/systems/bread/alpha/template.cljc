@@ -61,64 +61,6 @@
                         (layout (layout-context {:content body} res))))
     res))
 
-
-(defn dangerous
-  "React compat function for getting a {:dangerouslySetInnerHTML {:__html x}} object"
-  [s]
-  {:dangerouslySetInnerHTML {:__html s}})
-
-(defn response->plugin
-  "Given a response map, returns a plugin that adds a :hook/dispatch hook which in
-   turn returns the given response."
-  [res]
-  (fn [app]
-    (bread/add-hook app :hook/dispatch (fn [req]
-                                        (merge req res)))))
-
-(defn renderer->template
-  "Given a renderer function r, returns a template function that takes a ring
-   response (map) and calls (update response :body r)"
-  [render-fn]
-  ;; TODO accept view data
-  (fn [response]
-    (update response :body render-fn)))
-
-(defn renderer->plugin
-  "Given a renderer function r, returns a plugin that adds r as a :hook/render
-   callback. Example: (renderer->plugin rum/render-static-markup)"
-  ([render-fn]
-   (fn [app]
-     (bread/add-hook app :hook/render (renderer->template render-fn))))
-  ([render-fn options]
-   (fn [app]
-     (bread/add-hook app :hook/render (renderer->template render-fn) options))))
-
-(defn layout-context-plugin
-  "Given a function f, returns a plugin that adds a :hook/layout-context hook
-   calling (f context req), where context is a map like {:content <body content>}:
-   f should return an enriched context map with all the data the layout fn is
-   expecting."
-  [f]
-  (fn [req]
-    (bread/add-hook req :hook/layout-context f)))
-
-(defn layout-predicate->plugin
-  "Given a predicate, i.e. one returned from (layout-predicate), returns a plugin that
-   adds a :hook/render-layout? hook using that predicate."
-  [pred]
-  (fn [app]
-    (bread/add-hook app :hook/render-layout? pred)))
-
-(defn layout->plugin
-  "Given a fn layout, returns a plugin that adds a render hook for calling
-   (with-layout req layout). Especially useful for template schemes that
-   share a single layout."
-  [layout]
-  (fn [app]
-    (bread/add-hook app :hook/render (fn [res]
-                                       (let [res (with-layout res layout)]
-                                         res)))))
-
 (comment
 
   ((layout-predicate (constantly false)) {})
