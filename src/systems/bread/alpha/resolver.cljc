@@ -7,14 +7,35 @@
     [systems.bread.alpha.datastore :as store]))
 
 
-(defmulti expand-query
-  (fn [req _]
-    (:resolver/type (route/resolver req))))
+(defn empty-query []
+  {:query {:find [] :in ['$] :where []}
+   :args [::bread/store]})
 
-(defn query [req]
-  (let [query {:query {:find []
-                       :in ['$]
-                       :where []}
-               :args [(store/datastore req)]}
-        expanded (expand-query req query)]
-    (bread/hook->> req :hook/query expanded)))
+(defmulti resolve-query :resolver/type)
+
+(defmethod resolve-query :resolver.type/post [resolver]
+  {:post (empty-query)})
+
+(defmulti replace-arg (fn [_ arg]
+                        arg))
+
+(defmethod replace-arg ::bread/store [req _]
+  (store/datastore req))
+
+(defn- replace-args [req args]
+  (map (partial replace-arg req) args))
+
+(defn- replace-query-args [req queries]
+  (into {} (map (fn [[k query]]
+                  [k (update query :args #(replace-args req %))])
+                queries)))
+
+(defn resolver [req]
+  (bread/hook-> req :hook/resolver (::bread/resolver req)))
+
+(defn resolve-queries [req]
+  (as-> req $
+    (resolver $)
+    (resolve-query $)
+    (replace-query-args req $)
+    (assoc req ::bread/queries $)))
