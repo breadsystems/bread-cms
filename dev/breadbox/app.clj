@@ -132,9 +132,12 @@
           :name :home}]
      ["/*slugs" {:bread/resolver {:resolver/type :post
                                   :resolver/ancestry? true
-                                  :resolver/internationalize? true}}]]))
+                                  :resolver/internationalize? true}
+                 :bread/component post}]]))
 
 (defn dispatch [req]
+  {:body "TODO"}
+  #_
   (merge
     req
     (let [post (post/init req (store/q (store/datastore req)
@@ -178,28 +181,6 @@
 
   )
 
-(defn thingy [req]
-  (let [slug (:slug (:params req))
-        post (route/entity req)
-        req (-> req
-                ;; TODO do this automatically from the resolver/expander
-                (bread/add-hook :hook/view-data
-                                (fn [data _]
-                                  (assoc data :post (post/post req post)))))]
-    (bread/response req
-                    {:headers {"Content-Type" "text/html"}
-                     :status (if post 200 404)
-                     :body [:html
-                            [:head
-                             [:title "Breadbox"]
-                             [:meta {:charset "utf-8"}]
-                             (theme/head req)]
-                            [:body
-                             [:div.bread-app
-                              (comp/render page req)
-                              [:footer "this is the footer"]
-                              (theme/footer req)]]]})))
-
 ;; This needs to install db on init in order for db and load-app to
 ;; initialize correctly.
 (defonce env (atom {:reinstall-db? true}))
@@ -230,11 +211,6 @@
 
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch dispatch))
-
-                                ;; TODO specify thingy as a layout
-                                #_
-                                (fn [app]
-                                  (bread/add-hook app :hook/dispatch thingy))
 
                                 (tpl/renderer->plugin rum/render-static-markup
                                                       {:precedence 2})
