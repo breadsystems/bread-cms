@@ -15,10 +15,8 @@
 (comment
   (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div])))
 
-(defn get-query [component params]
-  (let [{:keys [query ident]} (@registry component)]
-    {:query/schema query
-     :query/ident (get params ident)}))
+(defn get-query [component]
+  (:query (get @registry component)))
 
 (defn render [component req]
   (component (bread/hook-> req :hook/view-data {} req)))

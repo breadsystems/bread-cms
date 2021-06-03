@@ -1,9 +1,14 @@
 (ns systems.bread.alpha.resolver-test
   (:require
     [clojure.test :refer [deftest are testing]]
+    [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.test-helpers :refer [datastore->loaded]]))
+
+(defc my-component [{:keys [post]}]
+  {:query [:post/title]}
+  [:h1 (:post/title post)])
 
 (deftest test-resolve-query
   (let [;; Datastore shows up directly in our args, so we need to mock it
@@ -18,11 +23,11 @@
                                       resolver/resolve-queries
                                       ::bread/queries))
 
-        ;; 
-        {:post {:query {:find []
-                        :in ['$]
-                        :where []}
-                :args [datastore]}}
-        {:resolver/type :resolver.type/post}
+        {:post '{:query {:find [(pull ?e [:post/title])]
+                         :in [$]
+                         :where []}
+                 :args [{:store :FAKE}]}}
+        {:resolver/type :resolver.type/post
+         :resolver/component my-component}
 
         )))

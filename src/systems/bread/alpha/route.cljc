@@ -25,19 +25,6 @@
                     declared)]
     (bread/hook->> req :hook/resolver resolver')))
 
-(defn component [req]
-  (bread/hook-> req :hook/component))
-
-(defn entity-id [req]
-  (bread/hook req :hook/id))
-
-(defn entity [req]
-  (let [cmp (component req)
-        eid (entity-id req)
-        {:query/keys [schema ident]} (comp/get-query cmp {:db/id eid})]
-    (when ident
-      (store/pull (store/datastore req) schema ident))))
-
 (defn sitemap [app]
   [{}])
 

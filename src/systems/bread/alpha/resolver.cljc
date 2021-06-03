@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.resolver
   (:require
     [clojure.string :as string]
+    [systems.bread.alpha.component :as comp :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]
@@ -14,7 +15,10 @@
 (defmulti resolve-query :resolver/type)
 
 (defmethod resolve-query :resolver.type/post [resolver]
-  {:post (empty-query)})
+  (let [query (empty-query)
+        pull-schema (comp/get-query (:resolver/component resolver))
+        pull (list 'pull '?e pull-schema)]
+    {:post (update-in query [:query :find] conj pull)}))
 
 (defmulti replace-arg (fn [_ arg]
                         arg))
