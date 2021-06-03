@@ -12,13 +12,25 @@
   {:query {:find [] :in ['$] :where []}
    :args [::bread/store]})
 
+(defn pull
+  "Get the (pull ...) form for the given resolver."
+  [resolver]
+  (let [schema (comp/get-query (:resolver/component resolver))]
+    (list 'pull '?e schema)))
+
+(defn pull-query
+  "Get a basic query with a (pull ...) form in the :find clause"
+  [resolver]
+  (update-in (empty-query)
+             [:query :find]
+             conj
+             (pull resolver)))
+
 (defmulti resolve-query :resolver/type)
 
-(defmethod resolve-query :resolver.type/post [resolver]
-  (let [query (empty-query)
-        pull-schema (comp/get-query (:resolver/component resolver))
-        pull (list 'pull '?e pull-schema)]
-    {:post (update-in query [:query :find] conj pull)}))
+(defmethod resolve-query :resolver.type/page [resolver]
+  (let [query (pull-query resolver)])
+    {:post (pull-query resolver)})
 
 (defmulti replace-arg (fn [_ arg]
                         arg))
@@ -38,8 +50,8 @@
   (bread/hook-> req :hook/resolver (::bread/resolver req)))
 
 (defn resolve-queries [req]
-  (as-> req $
-    (resolver $)
-    (resolve-query $)
-    (replace-query-args req $)
-    (assoc req ::bread/queries $)))
+  (->> req
+       resolver
+       resolve-query
+       (replace-query-args req)
+       (assoc req ::bread/queries)))

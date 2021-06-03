@@ -27,7 +27,7 @@
                          :in [$]
                          :where []}
                  :args [{:store :FAKE}]}}
-        {:resolver/type :resolver.type/post
+        {:resolver/type :resolver.type/page
          :resolver/component my-component}
 
         )))
