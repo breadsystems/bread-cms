@@ -26,14 +26,31 @@
              conj
              (pull resolver)))
 
+;; TODO provide a slightly higher-level query helper API with simple maps
+(defn where [query constraints]
+  (reduce
+    (fn [query [sym k v]]
+      (-> query
+        (update-in [:query :where] conj ['?e k sym])
+        (update-in [:query :in] conj sym)
+        (update-in [:args] conj v)))
+    query
+    constraints))
+
 (defmulti resolve-query :resolver/type)
 
 (defmethod resolve-query :resolver.type/page [resolver]
-  (let [query (pull-query resolver)])
-    {:post (pull-query resolver)})
+  (let [{{params :path-params} :route/match} resolver
+        query (where (pull-query resolver)
+                     [['?type :post/type :post.type/page]
+                      ['?status :post/status :post.status/published]
+                      ['?slug :post/slug (:slugs params)]])]
+    {:post query}))
 
 (defmulti replace-arg (fn [_ arg]
                         arg))
+
+(defmethod replace-arg :default [_ x] x)
 
 (defmethod replace-arg ::bread/store [req _]
   (store/datastore req))
