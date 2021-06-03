@@ -15,9 +15,12 @@
 (defn datastore-config->app [config]
   (plugins->app [(store/config->plugin config)]))
 
+(defn datastore->plugin [store]
+  (fn [app]
+    (bread/add-value-hook app :hook/datastore store)))
+
 (defn datastore->loaded [store]
-  (plugins->loaded [(fn [app]
-                      (bread/add-value-hook app :hook/datastore store))]))
+  (plugins->loaded [(datastore->plugin store)]))
 
 (defn datastore-config->loaded [config]
   (-> config datastore-config->app bread/load-app))

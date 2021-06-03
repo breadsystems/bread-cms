@@ -4,7 +4,8 @@
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.resolver :as resolver]
-    [systems.bread.alpha.test-helpers :refer [datastore->loaded]]))
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded
+                                              datastore->plugin]]))
 
 (defc my-component [{:keys [post]}]
   {:query [:post/title]}
@@ -12,9 +13,10 @@
 
 (deftest test-resolve-query
   (let [;; Datastore shows up directly in our args, so we need to mock it
-        datastore {:store :FAKE}
+        datastore {:FAKE :STORE}
+        mock-datastore-plugin (datastore->plugin datastore)
         ->app (fn [resolver]
-                (let [app (datastore->loaded datastore)]
+                (let [app (plugins->loaded [mock-datastore-plugin])]
                   (assoc app ::bread/resolver resolver)))]
 
       (are
@@ -26,7 +28,7 @@
         {:post '{:query {:find [(pull ?e [:post/title])]
                          :in [$]
                          :where []}
-                 :args [{:store :FAKE}]}}
+                 :args [{:FAKE :STORE}]}}
         {:resolver/type :resolver.type/page
          :resolver/component my-component}
 
