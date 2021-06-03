@@ -3,7 +3,8 @@
     [clojure.string :refer [upper-case]]
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.template :as tpl])
+    [systems.bread.alpha.template :as tpl]
+    [systems.bread.alpha.test-helpers :refer [plugins->handler]])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -316,6 +317,7 @@
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
 
+  ;; TODO test effects in isolation
   (testing "it returns a function that applies side-effects"
     (let [;; Test side-effects
           state (atom {:num 3 :extra :stuff})
@@ -325,8 +327,7 @@
                              (bread/add-effect app (fn [app]
                                                      (swap! state update :num * 3)
                                                      (bread/add-value-hook app :ran? true))))
-          app (assoc (bread/app {:plugins [init-plugin effectful-plugin]}) :yo :YO.)
-          handler (bread/app->handler app)
+          handler (plugins->handler [init-plugin effectful-plugin])
           ;; Run the app, with side-effects
           result (handler {:url "/hello" :params {:name "world"}})]
       (is (true? (bread/hook result :ran?)))
@@ -334,58 +335,11 @@
       ;; Assert that the expected side-effects took place
       (is (= 9 (:num @state)))))
 
-  (testing "it supports loading from a datastore"
-    (let [datastore {"about" {:type :page :content "All about that bass"}
-                     "contact" {:type :page :content "I don't want no scrub"}}
-          datastore-plugin (fn [app]
-                             (bread/set-config app :datastore datastore))
-          dispatcher (fn [req]
-                       (let [slug (:slug (:params req))
-                             store (bread/config req :datastore)
-                             content (:content (store slug))]
-                         {:status 200 :body content}))
-          router-plugin (fn [app]
-                          (bread/add-hook app :hook/dispatch dispatcher))
-          handler (bread/app->handler (bread/app {:plugins [datastore-plugin
-                                                            router-plugin]}))]
-      (is (= {:status 200 :body "All about that bass"}
-             (handler {:params {:slug "about"}})))))
-
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
           renderer-plugin (fn [app]
                             (bread/add-hook app :hook/render (constantly res)))
-          handler (bread/app->handler (bread/app {:plugins [renderer-plugin]}))]
+          handler (plugins->handler [renderer-plugin])]
       (is (= res (handler {})))))
 
-  (testing "it returns a function that runs the dispatch and render hooks"
-    (let [hello-handler (fn [req]
-                          (bread/response
-                            req
-                            {:status 200
-                             :body (str "hello, " (:name (:params req)))}))
-          my-routes {"/" (constantly {:status 200 :body "home"})
-                     "/hello" hello-handler}
-          ;; TODO router DSL: (routes-map->plugin {"/" ,,,})
-          ;; This simplistic routing plugin closes around the my-routes map and uses it to
-          ;; dispatch the current request. In a more realistic situation, a routing plugin
-          ;; typically lets you define your own routes via :hook/routes.
-          router-plugin (fn [app]
-                          (let [;; A dispatcher is a function that calls the handler we get from
-                                ;; the router.
-                                ;; TODO dispatcher DSL: (bread.routing/dispatcher)
-                                dispatcher (fn [req]
-                                             (let [handler (get my-routes (:url req))]
-                                               (handler req)))]
-                            ;; Dispatching the matched route is run in a separater step.
-                            (bread/add-hook app :hook/dispatch dispatcher)))
-          ;; Add a plugin that appends "!!" to the response body.
-          excited-plugin (tpl/renderer->plugin #(str (upper-case (or % "")) "!!"))
-          app (bread/app {:plugins [router-plugin excited-plugin]})
-          ->response (fn [req]
-                       (select-keys ((bread/app->handler app) req)
-                                    [:status :body]))]
-      ;; Assert that the HTTP response is correct.
-      (is (= {:status 200
-              :body "HELLO, WORLD!!"}
-             (->response {:url "/hello" :params {:name "world"}}))))))
+  )

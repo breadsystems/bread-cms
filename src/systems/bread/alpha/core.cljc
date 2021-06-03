@@ -288,7 +288,8 @@
   ([{:keys [plugins]}]
    (-> {::plugins (or plugins [])
         ::hooks   {}
-        ::config  {}}
+        ::config  {}
+        ::data    {}}
        (add-hook :hook/load-plugins load-plugins)))
   ([]
    (app {})))
@@ -308,8 +309,9 @@
   (fn [req]
     (-> (merge req app)
         (hook :hook/request)
-        (hook :hook/dispatch) ;; -> ::route
-        (hook :hook/expand)   ;; -> ::data (?)
+        (hook :hook/route)    ;; -> ::route
+        (hook :hook/resolve)  ;; -> ::queries
+        (hook :hook/expand)   ;; -> ::data, ::effects
         (apply-effects)       ;; -> ::results
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))

@@ -131,7 +131,8 @@
 
 ;; TODO qualify resolver type e.g. :resolver.type/post ?
 ;; TODO write tests for this!
-(defmethod resolver/expand-query :post [req initial]
+#_
+(defmethod resolver/resolve-query :post [req initial]
   (let [resolver (route/resolver req)
         match (route/match req)
         ;; TODO defaults for attr, internationalize?, ancestry?
