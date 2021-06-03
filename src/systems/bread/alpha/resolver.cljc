@@ -39,14 +39,6 @@
 
 (defmulti resolve-query :resolver/type)
 
-(defmethod resolve-query :resolver.type/page [resolver]
-  (let [{{params :path-params} :route/match} resolver
-        query (where (pull-query resolver)
-                     [['?type :post/type :post.type/page]
-                      ['?status :post/status :post.status/published]
-                      ['?slug :post/slug (:slugs params)]])]
-    {:post query}))
-
 (defmulti replace-arg (fn [_ arg]
                         arg))
 

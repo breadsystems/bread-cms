@@ -130,10 +130,121 @@
     ["/:lang"
      ["" {:bread/resolver :home
           :name :home}]
-     ["/*slugs" {:bread/resolver {:resolver/type :post
+     ["/*slugs" {:bread/resolver {:resolver/type :test
                                   :resolver/ancestry? true
                                   :resolver/internationalize? true}
-                 :bread/component post}]]))
+                 :bread/component page}]]))
+
+(comment
+
+  ;; TODO qualify resolver type e.g. :resolver.type/post ?
+  ;; TODO write tests for this!
+  (defmethod resolver/resolve-query :test [resolver]
+    (let [;resolver (route/resolver req)
+          match (:route/match resolver)
+          ;; TODO defaults for attr, internationalize?, ancestry?
+          ;; TODO don't think we need `type` here?
+          {:resolver/keys [attr internationalize? type ancestry?]} resolver
+          field-attrs [:field/key :field/content]]
+      (cond-> (resolver/empty-query)
+
+        true
+        (->
+          (update-in [:query :find] conj
+                     (list 'pull '?field field-attrs))
+          (update-in [:query :where] conj '[?e :post/type ?type])
+          (update-in [:query :in] conj '?type)
+          (update :args conj (:post/type resolver :post.type/page)))
+
+        internationalize?
+        (->
+          (update-in [:query :in] conj '?lang)
+          (update-in [:query :where] conj '[?field :field/lang ?lang])
+          (update :args conj :en))
+
+      )))
+
+  (def $onetwo (merge @app {:uri "/en/one/two"
+                            ::bread/resolver {:resolver/type :test
+                                              :resolver/ancestry? true
+                                              :resolver/internationalize? true}}))
+  (route/params $onetwo (route/match $onetwo))
+
+  (resolver/resolver $onetwo)
+  (resolver/resolve-query (resolver/resolver $onetwo))
+
+  (store/q (store/datastore $onetwo)
+           (resolver/resolve-query (resolver/resolver $onetwo)))
+
+  (store/q
+    (store/datastore $onetwo)
+    {:query
+     {:find ['(pull ?e
+                    [:db/id :post/title
+                     {:post/fields [:db/id :field/key :field/lang :field/content]}])],
+      :in '[$ ?type ?lang],
+      :where '[[?e :post/type ?type] [?field :field/lang ?lang]]},
+     :args [(store/datastore $onetwo) :post.type/page :en]})
+
+  (require '[datahike.api :as d])
+
+  (d/q
+    '{:find [(pull ?e [:db/id
+                       :post/title
+                       :post/slug
+                       {:post/parent [:db/id :post/title :post/slug]}])]
+      :in [$ ?type ?slug ?slug_1]
+      ;; TODO i18n
+      :where [[?e :post/type ?type]
+              [?e :post/slug ?slug]
+              ;; NOTE: ?parent_* symbols are where our
+              ;; gensym override comes into play.
+              [?e :post/parent ?parent_0]
+              [?parent_0 :post/slug ?slug_1]
+              (not-join
+                [?parent_0]
+                [?parent_0 :post/parent ?root-ancestor])]}
+    (store/datastore $onetwo)
+    :post.type/page
+    "child-page"
+    "parent-page")
+
+  (d/q
+    '{:find [(pull ?e [:post/title [:post/status :default :default]])]
+      :in [$ ?type ?slug]
+      ;; TODO i18n
+      :where [[?e :post/type ?type]
+              [?e :post/slug ?slug]]}
+    (store/datastore $onetwo)
+    :post.type/page
+    "child-page")
+
+  (d/q
+    '{:find [(pull ?e
+                   [* {:post/fields [:db/id :field/key :field/content]}])]
+      :in [$ ?type ?lang ?slug]
+      :where [[?e :post/type ?type]
+              [?e :post/fields ?field]
+              [?field :field/lang ?lang]
+              [?e :post/slug ?slug]]}
+    (store/datastore $onetwo)
+    :post.type/page :en "child-page")
+
+  (d/q
+    '{:find [(pull ?e
+                   [* {:post/fields [:db/id :field/key :field/content]}])]
+      :in [$ ?type ?lang ?slug ?parent_slug]
+      :where [[?e :post/type ?type]
+              [?e :post/fields ?field]
+              [?field :field/lang ?lang]
+              [?e :post/slug ?slug]
+              [?e :post/parent ?parent]
+              [?parent :post/slug ?parent_slug]
+              (not-join [?parent] [?parent :post/parent ?root])]}
+    (store/datastore $onetwo)
+    :post.type/page :en "child-page" "parent-page")
+
+  )
 
 (defn dispatch [req]
   {:body "TODO"}
@@ -212,6 +323,7 @@
                                 (fn [app]
                                   (bread/add-hook app :hook/dispatch dispatch))
 
+                                #_
                                 (tpl/renderer->plugin rum/render-static-markup
                                                       {:precedence 2})
                                 (static/plugin)]})))
