@@ -1,7 +1,7 @@
 {:paths ["src"]
  :deps {org.clojure/tools.logging  {:mvn/version "1.1.0"}
         org.clojure/clojure        {:mvn/version "1.10.0"}
-        io.replikativ/datahike     {:mvn/version "0.3.2"}}
+        io.replikativ/datahike     {:mvn/version "0.3.6"}}
  :aliases {:dev
            {:extra-paths ["dev"]
             :extra-deps {jpmonettas/flow-storm     {:mvn/version "0.5.0"}
