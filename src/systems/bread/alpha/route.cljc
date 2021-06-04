@@ -11,7 +11,7 @@
   (bread/hook->> req :hook/route-params match))
 
 (defn resolver [req]
-  (let [default {:resolver/internationalize? true
+  (let [default {:resolver/i18n? true
                  :resolver/type :resolver.type/page
                  :resolver/ancestry? true
                  :post/type :post.type/page}

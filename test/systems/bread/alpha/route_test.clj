@@ -31,7 +31,7 @@
                  :hard-coded-params {:lang "en"
                                      :slug "no-defaults"}}
                 "/overridden"
-                {:bread/resolver {:resolver/internationalize? false
+                {:bread/resolver {:resolver/i18n? false
                                   :resolver/ancestry? false}}
                  :hard-coded-params {:lang nil
                                      :slug "overridden"}}
@@ -56,7 +56,7 @@
                                 ::bread/resolver))
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? true
+          :resolver/i18n? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params nil
@@ -64,7 +64,7 @@
          "/nil"
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? true
+          :resolver/i18n? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params {:lang "en"}
@@ -73,7 +73,7 @@
          "/en/home"
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? true
+          :resolver/i18n? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params {:lang "en" :slug "keyword"}
@@ -82,7 +82,7 @@
          "/en/keyword"
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? true
+          :resolver/i18n? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params {:lang "en"
@@ -93,7 +93,7 @@
          "/en/empty-resolver-map"
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? true
+          :resolver/i18n? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params {:lang "en"
@@ -104,11 +104,11 @@
          "/en/default"
 
          {:resolver/type :resolver.type/page
-          :resolver/internationalize? false
+          :resolver/i18n? false
           :resolver/ancestry? false
           :post/type :post.type/page
           :route/params nil
-          :route/match {:bread/resolver {:resolver/internationalize? false
+          :route/match {:bread/resolver {:resolver/i18n? false
                                          :resolver/ancestry? false}}}
          "/overridden"
 
