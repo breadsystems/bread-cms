@@ -1,69 +1,129 @@
 (ns systems.bread.alpha.route-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+    [clojure.test :refer [deftest are is testing]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(deftest test-route-resolver-matching
+(deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
+        routes {"/en"
+                {:bread/resolver {:resolver/type :home}
+                 :hard-coded-params {:lang "en"}}
+                "/en/home"
+                {:bread/resolver :resolver.type/home
+                 :hard-coded-params {:lang "en"}}
+                "/en/keyword"
+                {:bread/resolver :resolver.type/post
+                 :hard-coded-params {:lang "en"
+                                     :slug "keyword"}}
+                "/en/default"
+                {:bread/resolver :default
+                 :hard-coded-params {:lang "en"
+                                     :slug "default"}}
+                "/en/empty-resolver-map"
+                {:bread/resolver {}
+                 :hard-coded-params {:lang "en"
+                                     :slug "empty-resolver-map"}}
+                "/en/no-defaults"
+                {:bread/resolver {:resolver/type :whatevs
+                                  :resolver/defaults? false}
+                 :hard-coded-params {:lang "en"
+                                     :slug "no-defaults"}}
+                "/overridden"
+                {:bread/resolver {:resolver/internationalize? false
+                                  :resolver/ancestry? false}}
+                 :hard-coded-params {:lang nil
+                                     :slug "overridden"}}
         route->match (fn [req _]
-                       (get {"/en" {:resolver/type :home}
-                             "/en/default" :default
-                             "/en/empty-resolver-map" {}
-                             "/en/no-defaults" {:resolver/type :whatevs
-                                                :resolver/defaults? false}
-                             "/overridden" {:resolver/internationalize? false
-                                            :resolver/ancestry? false}}
-                            (:uri req)))
+                       (get routes (:uri req)))
         simplistic-route-plugin (fn [app]
-                                  (bread/add-hooks-> app
+                                  (bread/add-hooks->
+                                    app
                                     (:hook/match-route route->match)
-                                    (:hook/match->resolver (fn [_ match]
-                                                             match))))
+                                    (:hook/match->resolver
+                                      (fn [_ match]
+                                        (:bread/resolver match)))
+                                    (:hook/route-params
+                                      (fn [_ match]
+                                        (:hard-coded-params match)))))
         app (plugins->loaded [simplistic-route-plugin])]
 
-    (testing "default resolver - implicit from nil"
-      (is (= {:resolver/attr :slugs
-              :resolver/type :post
-              :resolver/internationalize? true
-              :resolver/ancestry? true
-              :post/type :post.type/page}
-               ;; No explicit entry for /nil, so here we expect the
-               ;; hard-coded default map.
-             (route/resolver (merge app {:uri "/nil"})))))
+    (are [resolver uri] (= resolver
+                           (->> {:uri uri}
+                                (merge app)
+                                route/dispatch
+                                ::bread/resolver))
 
-    (testing "default resolver - implicit from {}"
-      (is (= {:resolver/attr :slugs
-              :resolver/type :post
-              :resolver/internationalize? true
-              :resolver/ancestry? true
-              :post/type :post.type/page}
-               ;; No explicit entry for /default, so here we expect the
-               ;; hard-coded default map.
-             (route/resolver (merge app {:uri "/en/empty-resolver-map"})))))
+         {:resolver/type :post
+          :resolver/internationalize? true
+          :resolver/ancestry? true
+          :post/type :post.type/page
+          :route/params nil
+          :route/match nil}
+         "/nil"
 
-    (testing "default resolver - explicit"
-      (is (= {:resolver/attr :slugs
-              :resolver/type :post
-              :resolver/internationalize? true
-              :resolver/ancestry? true
-              :post/type :post.type/page}
-              ;; Here, (resolver ...) picks up on the the explicit :default.
-             (route/resolver (merge app {:uri "/en/default"})))))
+         {:resolver/type :resolver.type/post
+          :resolver/internationalize? true
+          :resolver/ancestry? true
+          :post/type :post.type/page
+          :route/params {:lang "en"}
+          :route/match {:bread/resolver :resolver.type/home
+                        :hard-coded-params {:lang "en"}}}
+         "/en/home"
 
-    (testing "default resolver with overrides"
-      (is (= {:resolver/attr :slugs
-              :resolver/type :post
-              :resolver/internationalize? false
-              :resolver/ancestry? false
-              :post/type :post.type/page}
-             (route/resolver (merge app {:uri "/overridden"})))))
+         {:resolver/type :resolver.type/post
+          :resolver/internationalize? true
+          :resolver/ancestry? true
+          :post/type :post.type/page
+          :route/params {:lang "en" :slug "keyword"}
+          :route/match {:bread/resolver :resolver.type/post
+                        :hard-coded-params {:lang "en" :slug "keyword"}}}
+         "/en/keyword"
 
-    (testing "with defaults disabled"
-      (is (= {:resolver/type :whatevs
-              :resolver/defaults? false}
-             (route/resolver (merge app {:uri "/en/no-defaults"})))))
+         {:resolver/type :post
+          :resolver/internationalize? true
+          :resolver/ancestry? true
+          :post/type :post.type/page
+          :route/params {:lang "en"
+                         :slug "empty-resolver-map"}
+          :route/match {:bread/resolver {}
+                        :hard-coded-params {:lang "en"
+                                            :slug "empty-resolver-map"}}}
+         "/en/empty-resolver-map"
+
+         {:resolver/type :post
+          :resolver/internationalize? true
+          :resolver/ancestry? true
+          :post/type :post.type/page
+          :route/params {:lang "en"
+                         :slug "default"}
+          :route/match {:bread/resolver :default
+                        :hard-coded-params {:lang "en"
+                                            :slug "default"}}}
+         "/en/default"
+
+         {:resolver/type :post
+          :resolver/internationalize? false
+          :resolver/ancestry? false
+          :post/type :post.type/page
+          :route/params nil
+          :route/match {:bread/resolver {:resolver/internationalize? false
+                                         :resolver/ancestry? false}}}
+         "/overridden"
+
+         {:resolver/type :whatevs
+          :resolver/defaults? false
+          :route/params {:lang "en"
+                         :slug "no-defaults"}
+          :route/match {:bread/resolver {:resolver/type :whatevs
+                                         :resolver/defaults? false}
+                        :hard-coded-params {:lang "en"
+                                            :slug "no-defaults"}}}
+         "/en/no-defaults"
+
+        ;;
+        )
 
     (testing "with a custom resolver hook"
       (let [opinionated-resolver-plugin

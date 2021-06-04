@@ -38,7 +38,7 @@
                                     resolver/resolve-queries
                                     ::bread/queries))))
 
-        ;; {:uri "/en/one"}
+        ;; {:uri "/en"}
         {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug]
                          ;; TODO i18n
