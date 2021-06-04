@@ -494,6 +494,15 @@
      :en
      "")
 
+  (d/q
+    '{:find [(pull ?field [:db/id :field/lang :field/key :field/content])]
+      :in [$ ?e ?lang]
+      :where [[?e :post/fields ?field]
+              [?field :field/lang ?lang]]}
+    (store/datastore $req)
+    44
+    :en)
+
   (-> $req
     (route/params (route/match $req))
     (get (:resolver/attr (route/resolver $req)))
