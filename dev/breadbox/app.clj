@@ -2,6 +2,7 @@
 ;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
+    [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
     [systems.bread.alpha.core :as bread]
@@ -112,7 +113,6 @@
    ;:effects {:x (do-something!)}
    :query [:post/title
            {:post/fields [:db/id :field/lang :field/key :field/content]}]}
-  (prn post)
   (let [{:i18n/keys [not-found]} i18n
         {:keys [simple flex-content]} (:post/fields post)
         simple (:field/content simple)
@@ -246,13 +246,10 @@
 
   )
 
-(defn dispatch [req]
-  {:body "TODO"}
-  #_
+(defn RENDER [{::bread/keys [data] :as req}]
   (merge
     req
-    (let [post (post/init req (store/q (store/datastore req)
-                                       (resolver/query req)))
+    (let [post (:post data)
           {:keys [title simple]} (:post/fields post)]
       {:headers {"content-type" "text/html"}
        :status 200
@@ -264,6 +261,7 @@
               [:body
                [:main
                  [:h2 title]
+                 [:h3 "Simple field contents"]
                  [:div.simple
                   [:p (:hello simple)]
                   [:div.body
@@ -310,6 +308,40 @@
 
 (defonce app (atom nil))
 
+(def QUERY
+  '{:find [(pull ?e [:db/id
+                     :post/title
+                     :post/slug
+                     {:post/parent [:db/id :post/title :post/slug]}])
+                     ;[:post/fields (pull ?fields [:db/id])]
+           (pull ?fields [:db/id :field/key :field/content])]
+    :in [$ ?type ?slug ?slug_1 ?lang]
+    ;; TODO i18n
+    :where [[?e :post/type ?type]
+            [?e :post/fields ?fields]
+            [?fields :field/lang ?lang]
+            [?e :post/slug ?slug]
+            ;; NOTE: ?parent_* symbols are where our
+            ;; gensym override comes into play.
+            [?e :post/parent ?parent_0]
+            [?parent_0 :post/slug ?slug_1]
+            (not-join
+              [?parent_0]
+              [?parent_0 :post/parent ?root-ancestor])]}
+  )
+
+(defn expand-queries [app]
+  (let [store (store/datastore app)
+        data (into {} (map (fn [[k query]]
+                             (let [expand (apply comp (::bread/expand query))]
+                               [k (expand (store/q store query))]))
+                           (::bread/queries app)))]
+    (prn 'data data)
+    (assoc app ::bread/data data)))
+
+(comment
+  (handler (merge @app {:uri "/"})))
+
 ;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
@@ -321,11 +353,28 @@
                                 (br/plugin {:router $router})
 
                                 (fn [app]
-                                  (bread/add-hook app :hook/dispatch dispatch))
+                                  (bread/add-hooks->
+                                    app
+                                    (:hook/resolve
+                                      (fn [app]
+                                        (assoc app ::bread/queries
+                                               {:post {:query QUERY
+                                                       ::bread/expand [post/expand-post]
+                                                       :args [(store/datastore app)
+                                                              :post.type/page
+                                                              "child-page"
+                                                              "parent-page"
+                                                              :en]}})))
+                                    (:hook/expand (fn [app]
+                                                    (expand-queries app)))))
 
-                                #_
+                                ;; TODO work backwards from render
+                                (fn [app]
+                                  (bread/add-hook app :hook/render RENDER))
+
                                 (tpl/renderer->plugin rum/render-static-markup
                                                       {:precedence 2})
+
                                 (static/plugin)]})))
   :stop (reset! app nil))
 
@@ -354,8 +403,6 @@
   (let [handle (bread/handler @app)]
     (select-keys (handle req) [:status :body :headers])))
 
-(defonce stop-http (atom nil))
-
 (comment
 
   (do
@@ -368,6 +415,7 @@
   (route/match $req)
   (route/resolver $req)
   (route/params $req (route/match $req))
+  (resolver/resolve-queries $req)
 
   (-> $req
     (route/params (route/match $req))
@@ -425,6 +473,8 @@
 
   ;;
   )
+
+(defonce stop-http (atom nil))
 
 (defn start! []
   ;; TODO config

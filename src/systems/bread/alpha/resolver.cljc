@@ -10,7 +10,8 @@
 
 (defn empty-query []
   {:query {:find [] :in ['$] :where []}
-   :args [::bread/store]})
+   :args [::bread/store]
+   ::bread/expand []})
 
 (defn pull
   "Get the (pull ...) form for the given resolver."

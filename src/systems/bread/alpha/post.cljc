@@ -64,11 +64,21 @@
       ;; away from our immediate child page.
       (update :args #(vec (concat % (reverse ancestry)))))))
 
+(defn expand-post [result]
+  (let [post (ffirst result)
+        fields (reduce
+                 (fn [fields {:field/keys [key content]}]
+                   (assoc fields key (edn/read-string content)))
+                 {}
+                 (map second result))]
+    (assoc post :post/fields fields)))
+
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
   (let [{{params :path-params} :route/match
-         :resolver/keys [ancestral?]} resolver
-        ;; ancestral? must be an explicitly disabled with false.
+         :resolver/keys [ancestral? expand?]} resolver
+        ;; ancestral? and expand? must be an explicitly disabled with false.
         ancestral? (not (false? ancestral?))
+        expand? (not (false? expand?))
         ;; TODO lang -> i18n
         {:keys [slugs]} params
         ancestry (string/split slugs #"/")
@@ -85,7 +95,10 @@
                 (where [['?slug :post/slug slug]])
 
                 ancestral?
-                (ancestralize ancestry))]
+                (ancestralize ancestry)
+
+                expand?
+                (update ::bread/expand conj expand-post))]
     {:post query}))
 
 (defn field-content [app field]

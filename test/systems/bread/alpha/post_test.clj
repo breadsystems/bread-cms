@@ -39,7 +39,7 @@
                                     ::bread/queries))))
 
         ;; {:uri "/en/one"}
-        {:post '{:query {:find [(pull ?e [:post/title :custom/key])]
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug]
                          ;; TODO i18n
                          :where [[?e :post/type ?type]
@@ -51,13 +51,35 @@
                  :args [{:FAKE :STORE}
                         :post.type/page
                         :post.status/published
-                        "simple"]}}
+                        "simple"]
+                 ::bread/expand [post/expand-post]}}
         {:resolver/type :resolver.type/page
          :resolver/component my-component
          :route/match {:path-params {:slugs "simple" :lang "en"}}}
 
+        ;; {:uri "/en/one"}
+        ;; expand? disabled
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
+                         :in [$ ?type ?status ?slug]
+                         ;; TODO i18n
+                         :where [[?e :post/type ?type]
+                                 [?e :post/status ?status]
+                                 [?e :post/slug ?slug]
+                                 (not-join
+                                   [?e]
+                                   [?e :post/parent ?root-ancestor])]}
+                 :args [{:FAKE :STORE}
+                        :post.type/page
+                        :post.status/published
+                        "simple"]
+                 ::bread/expand []}}
+        {:resolver/type :resolver.type/page
+         :resolver/component my-component
+         :resolver/expand? false
+         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+
         ;; {:uri "/en/one/two"}
-        {:post '{:query {:find [(pull ?e [:post/title :custom/key])]
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug ?slug_1]
                          ;; TODO i18n
                          :where [[?e :post/type ?type]
@@ -74,13 +96,14 @@
                         :post.type/page
                         :post.status/published
                         "two"
-                        "one"]}}
+                        "one"]
+                 ::bread/expand [post/expand-post]}}
         {:resolver/type :resolver.type/page
          :resolver/component my-component
          :route/match {:path-params {:slugs "one/two" :lang "en"}}}
 
         ;; {:uri "/en/one/two/three"}
-        {:post '{:query {:find [(pull ?e [:post/title :custom/key])]
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug ?slug_1 ?slug_3]
                          ;; TODO i18n
                          :where [[?e :post/type ?type]
@@ -100,14 +123,15 @@
                         :post.status/published
                         "three"
                         "two"
-                        "one"]}}
+                        "one"]
+                 ::bread/expand [post/expand-post]}}
         {:resolver/type :resolver.type/page
          :resolver/component my-component
          :route/match {:path-params {:slugs "one/two/three" :lang "en"}}}
 
         ;; {:uri "/en/one/two"}
         ;; ancestry? disabled
-        {:post '{:query {:find [(pull ?e [:post/title :custom/key])]
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug]
                          ;; TODO i18n
                          :where [[?e :post/type ?type]
@@ -118,7 +142,8 @@
                         :post.status/published
                         ;; NOTE: the "one" part of the route just gets
                         ;; discarded.
-                        "two"]}}
+                        "two"]
+                 ::bread/expand [post/expand-post]}}
         {:resolver/type :resolver.type/page
          :resolver/ancestral? false
          :resolver/component my-component
