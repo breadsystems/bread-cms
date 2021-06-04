@@ -39,12 +39,18 @@
               [#:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Home Page"
-                      :slug ""}
+                      :slug ""
+                      :fields #{{:field/key :hello
+                                 :field/lang :en
+                                 :field/content (prn-str "Hello!")}}
+                      :status :post.status/published}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Parent Page"
                       :slug "parent-page"
+                      :status :post.status/published
                       :fields #{{:field/key :hello
+                                 :field/lang :en
                                  :field/content
                                  (prn-str [:div
                                            [:h4 :i18n/parent-page.0.h4]
@@ -53,6 +59,7 @@
                       :uuid (UUID/randomUUID)
                       :title "Child Page OLD TITLE"
                       :slug "child-page"
+                      :status :post.status/published
                       ;; TODO fix this hard-coded eid somehow...
                       :parent 45 ;; NOTE: don't do this :P
                       :fields #{{:field/key :title
@@ -249,7 +256,7 @@
   (merge
     req
     (let [post (:post data)
-          {:keys [title simple]} (:post/fields post)]
+          {:keys [title simple hello]} (:post/fields post)]
       {:headers {"content-type" "text/html"}
        :status 200
        :body [:html
@@ -260,6 +267,7 @@
               [:body
                [:main
                  [:h2 title]
+                 [:p "Hello: " hello]
                  [:h3 "Simple field contents"]
                  [:div.simple
                   [:p (:hello simple)]
@@ -297,7 +305,7 @@
   :start (when (:reinstall-db? @env)
            (store/install! $config))
   :stop (when (:reinstall-db? @env)
-          (prn 'DELETE-DATABASE!)
+          (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
           (store/delete-database! $config)))
 
 (comment
@@ -307,21 +315,17 @@
 
 (defonce app (atom nil))
 
-(def QUERY
+(def CHILD
   '{:find [(pull ?e [:db/id
                      :post/title
                      :post/slug
                      {:post/parent [:db/id :post/title :post/slug]}])
-                     ;[:post/fields (pull ?fields [:db/id])]
            (pull ?fields [:db/id :field/key :field/content])]
     :in [$ ?type ?slug ?slug_1 ?lang]
-    ;; TODO i18n
     :where [[?e :post/type ?type]
             [?e :post/fields ?fields]
             [?fields :field/lang ?lang]
             [?e :post/slug ?slug]
-            ;; NOTE: ?parent_* symbols are where our
-            ;; gensym override comes into play.
             [?e :post/parent ?parent_0]
             [?parent_0 :post/slug ?slug_1]
             (not-join
@@ -329,11 +333,30 @@
               [?parent_0 :post/parent ?root-ancestor])]}
   )
 
+(def HOME
+  '{:find [(pull ?e [:db/id
+                     :post/title
+                     :post/slug
+                     {:post/parent [:db/id :post/title :post/slug]}])
+           (pull ?fields [:db/id :field/key :field/content])]
+    :in [$ ?type ?slug ?lang]
+    :where [[?e :post/type ?type]
+            [?e :post/fields ?fields]
+            [?fields :field/lang ?lang]
+            [?e :post/slug ?slug]
+            (not-join
+              [?e]
+              [?e :post/parent ?root-ancestor])]}
+  )
+
 (defn expand-queries [app]
   (let [store (store/datastore app)
         data (into {} (map (fn [[k query]]
-                             (let [expander (apply comp (::bread/expand query))]
-                               [k (expander (store/q store query))]))
+                             (let [expander (apply comp (::bread/expand query))
+                                   result (store/q store query)]
+                               (prn 'query query)
+                               (prn 'result result)
+                               [k (expander result)]))
                            (::bread/queries app)))]
     (prn 'data data)
     (assoc app ::bread/data data)))
@@ -353,15 +376,25 @@
                                   (bread/add-hooks->
                                     app
                                     (:hook/dispatch route/dispatch)
+                                    #_
                                     (:hook/resolve
                                       (fn [app]
                                         (assoc app ::bread/queries
-                                               {:post {:query QUERY
+                                               {:post {:query CHILD
                                                        ::bread/expand [post/expand-post]
                                                        :args [(store/datastore app)
                                                               :post.type/page
                                                               "child-page"
                                                               "parent-page"
+                                                              :en]}})))
+                                    (:hook/resolve
+                                      (fn [app]
+                                        (assoc app ::bread/queries
+                                               {:post {:query HOME
+                                                       ::bread/expand [post/expand-post]
+                                                       :args [(store/datastore app)
+                                                              :post.type/page
+                                                              ""
                                                               :en]}})))
                                     (:hook/expand (fn [app]
                                                     (expand-queries app)))))
@@ -415,6 +448,51 @@
   (::bread/resolver (route/dispatch $req))
   (def $disp (route/dispatch $req))
   (::bread/queries (resolver/resolve-queries (route/dispatch $req)))
+  (-> $req
+      route/dispatch
+      resolver/resolve-queries
+      expand-queries
+      ::bread/data)
+
+  (store/q
+    (store/datastore $req)
+    {:query '{:find [?attr ?v]
+              ;:in [$ ?type ?status ?slug]
+              :where [[44 ?attr ?v]]}
+     :args [(store/datastore $req)]}
+    )
+
+  (store/q
+    (store/datastore $req)
+    {:query '{:find [(pull ?e [:post/title :post/slug :post/status])]
+              :in [$ ?type ?status ?slug]
+              :where [[?e :post/type ?type]
+                      #_
+                      [?e :post/status ?status]
+                      #_
+                      [?e :post/slug ?slug]
+                      (not-join [?e] [?e :post/parent ?root-ancestor])]}
+     :args [(store/datastore $req) :post.type/page ]}
+    )
+
+  (require '[datahike.api :as d])
+
+  ;; TODO is there a way to do a LEFT JOIN, i.e. filter fields by lang IFF
+  ;; they exist, otherwise just ignore the join completely...?
+  (d/q
+    '{:find [(pull ?e [:db/id :post/title :post/slug
+                       {:post/parent
+                        [:db/id :post/title :post/slug]}])
+             (pull ?fields [:db/id :field/lang])]
+      :in [$ ?type ?lang ?slug]
+      :where [[?e :post/type ?type]
+              [?e :post/slug ?slug]
+              [?e :post/fields ?fields]
+              [?fields :field/lang ?lang]]}
+     (store/datastore $req)
+     :post.type/page
+     :en
+     "")
 
   (-> $req
     (route/params (route/match $req))
