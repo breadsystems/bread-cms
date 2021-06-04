@@ -56,12 +56,9 @@
                   [k (update query :args #(replace-args req %))])
                 queries)))
 
-(defn resolver [req]
-  (bread/hook-> req :hook/resolver (::bread/resolver req)))
-
 (defn resolve-queries [req]
   (->> req
-       resolver
+       ::bread/resolver
        resolve-query
        (replace-query-args req)
        (assoc req ::bread/queries)))
