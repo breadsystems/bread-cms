@@ -53,7 +53,7 @@
   (map (partial replace-arg req) args))
 
 (defn- replace-query-args [req queries]
-  (into {} (map (fn [[k query]]
+  (into [] (map (fn [[k query]]
                   [k (update query :args #(replace-args req %))])
                 queries)))
 

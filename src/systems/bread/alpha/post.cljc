@@ -99,7 +99,7 @@
 
                 expand?
                 (update ::bread/expand conj expand-post))]
-    {:post query}))
+    [[:post query]]))
 
 (defn field-content [app field]
   (bread/hook->> app :hook/field-content field))
