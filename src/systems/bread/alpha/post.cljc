@@ -75,14 +75,13 @@
 
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
   (let [{{params :path-params} :route/match
-         :resolver/keys [ancestral? expand?]} resolver
+        :resolver/keys [ancestral? expand?]} resolver
         ;; ancestral? and expand? must be an explicitly disabled with false.
         ancestral? (not (false? ancestral?))
         expand? (not (false? expand?))
         ;; TODO lang -> i18n
-        {:keys [slugs]} params
+        slugs (:slugs params "")
         ancestry (string/split slugs #"/")
-        slug (last ancestry)
         query (cond->
                 (pull-query resolver)
 
@@ -92,7 +91,7 @@
                    ['?status :post/status :post.status/published]])
 
                 (not ancestral?)
-                (where [['?slug :post/slug slug]])
+                (where [['?slug :post/slug (last ancestry)]])
 
                 ancestral?
                 (ancestralize ancestry)

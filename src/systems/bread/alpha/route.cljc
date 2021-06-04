@@ -12,19 +12,21 @@
 
 (defn resolver [req]
   (let [default {:resolver/internationalize? true
-                 :resolver/type :post
+                 :resolver/type :resolver.type/page
                  :resolver/ancestry? true
                  :post/type :post.type/page}
         match (match req)
         declared (bread/hook->> req :hook/match->resolver match)
         {:resolver/keys [defaults?]} declared
-        post-resolvers #{:resolver.type/post :resolver.type/home}
+        keyword->type {:resolver.type/home :resolver.type/page
+                       :resolver.type/page :resolver.type/page}
         declared (cond
                    (= :default declared)
                    default
-                   (post-resolvers declared)
-                   {:resolver/type :resolver.type/post}
-                   ;; TODO handle other keywords...
+                   (keyword->type declared)
+                   {:resolver/type (keyword->type declared)}
+                   (keyword? declared)
+                   {:resolver/type declared}
                    :else
                    declared)
         ;; defaults? can only be turned off *explicitly* with false

@@ -29,7 +29,6 @@
   (:import
     [java.util UUID]))
 
-#_
 (defstate debugger
   :start (flow/connect))
 
@@ -128,9 +127,9 @@
 (def $router
   (reitit/router
     ["/:lang"
-     ["" {:bread/resolver :home
+     ["" {:bread/resolver :resolver.type/home
           :name :home}]
-     ["/*slugs" {:bread/resolver {:resolver/type :test
+     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page
                                   :resolver/ancestry? true
                                   :resolver/internationalize? true}
                  :bread/component page}]]))
@@ -333,14 +332,11 @@
 (defn expand-queries [app]
   (let [store (store/datastore app)
         data (into {} (map (fn [[k query]]
-                             (let [expand (apply comp (::bread/expand query))]
-                               [k (expand (store/q store query))]))
+                             (let [expander (apply comp (::bread/expand query))]
+                               [k (expander (store/q store query))]))
                            (::bread/queries app)))]
     (prn 'data data)
     (assoc app ::bread/data data)))
-
-(comment
-  (handler (merge @app {:uri "/"})))
 
 ;; TODO reload app automatically when src changes
 (defstate load-app
@@ -352,9 +348,11 @@
                                 (post/plugin)
                                 (br/plugin {:router $router})
 
+                                ;; TODO DEFAULT PLUGINS
                                 (fn [app]
                                   (bread/add-hooks->
                                     app
+                                    (:hook/dispatch route/dispatch)
                                     (:hook/resolve
                                       (fn [app]
                                         (assoc app ::bread/queries
@@ -410,12 +408,13 @@
     (handler (merge @app {:uri "/en/parent-page"}))
     (slurp "resources/public/en/parent-page/index.html"))
 
-  (def $req (merge {:uri "/en/parent-page/child-page"} @app))
+  (def $req (merge {:uri "/en"} @app))
 
   (route/match $req)
-  (route/resolver $req)
   (route/params $req (route/match $req))
-  (resolver/resolve-queries $req)
+  (::bread/resolver (route/dispatch $req))
+  (def $disp (route/dispatch $req))
+  (::bread/queries (resolver/resolve-queries (route/dispatch $req)))
 
   (-> $req
     (route/params (route/match $req))
@@ -464,7 +463,10 @@
   (handler (assoc $req :uri "/"))
 
   (bread/bind-profiler! (bread/profiler-for
-                          {:hooks #{:hook/dispatch}}))
+                          {:hooks #{:hook/dispatch
+                                    :hook/match-route
+                                    :hook/route-params
+                                    :hook/match->resolver}}))
 
   (bread/bind-profiler! nil)
 

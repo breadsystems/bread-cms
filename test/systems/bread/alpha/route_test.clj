@@ -14,7 +14,7 @@
                 {:bread/resolver :resolver.type/home
                  :hard-coded-params {:lang "en"}}
                 "/en/keyword"
-                {:bread/resolver :resolver.type/post
+                {:bread/resolver :resolver.type/page
                  :hard-coded-params {:lang "en"
                                      :slug "keyword"}}
                 "/en/default"
@@ -55,7 +55,7 @@
                                 route/dispatch
                                 ::bread/resolver))
 
-         {:resolver/type :post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? true
           :resolver/ancestry? true
           :post/type :post.type/page
@@ -63,7 +63,7 @@
           :route/match nil}
          "/nil"
 
-         {:resolver/type :resolver.type/post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? true
           :resolver/ancestry? true
           :post/type :post.type/page
@@ -72,16 +72,16 @@
                         :hard-coded-params {:lang "en"}}}
          "/en/home"
 
-         {:resolver/type :resolver.type/post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? true
           :resolver/ancestry? true
           :post/type :post.type/page
           :route/params {:lang "en" :slug "keyword"}
-          :route/match {:bread/resolver :resolver.type/post
+          :route/match {:bread/resolver :resolver.type/page
                         :hard-coded-params {:lang "en" :slug "keyword"}}}
          "/en/keyword"
 
-         {:resolver/type :post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? true
           :resolver/ancestry? true
           :post/type :post.type/page
@@ -92,7 +92,7 @@
                                             :slug "empty-resolver-map"}}}
          "/en/empty-resolver-map"
 
-         {:resolver/type :post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? true
           :resolver/ancestry? true
           :post/type :post.type/page
@@ -103,7 +103,7 @@
                                             :slug "default"}}}
          "/en/default"
 
-         {:resolver/type :post
+         {:resolver/type :resolver.type/page
           :resolver/internationalize? false
           :resolver/ancestry? false
           :post/type :post.type/page

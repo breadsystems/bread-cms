@@ -38,7 +38,7 @@
                                     resolver/resolve-queries
                                     ::bread/queries))))
 
-        ;; {:uri "/en"}
+        ;; {:uri "/en/simple"}
         {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
                          :in [$ ?type ?status ?slug]
                          ;; TODO i18n
@@ -148,5 +148,24 @@
          :resolver/ancestral? false
          :resolver/component my-component
          :route/match {:path-params {:slugs "one/two" :lang "en"}}}
+
+        ;; {:uri "/en"}
+        ;; home page - no `slugs`
+        {:post {:query '{:find [(pull ?e [:post/title :custom/key])]
+                         :in [$ ?type ?status ?slug]
+                         ;; TODO i18n
+                         :where [[?e :post/type ?type]
+                                 [?e :post/status ?status]
+                                 [?e :post/slug ?slug]]}
+                 :args [{:FAKE :STORE}
+                        :post.type/page
+                        :post.status/published
+                        ;; Empty slug!
+                        ""]
+                 ::bread/expand [post/expand-post]}}
+        {:resolver/type :resolver.type/page
+         :resolver/ancestral? false
+         :resolver/component my-component
+         :route/match {:path-params {:lang "en"}}}
 
         )))
