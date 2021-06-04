@@ -40,6 +40,7 @@
 
 (defmulti resolve-query :resolver/type)
 
+;; TODO refactor how queries are invoked so we don't need this
 (defmulti replace-arg (fn [_ arg]
                         arg))
 

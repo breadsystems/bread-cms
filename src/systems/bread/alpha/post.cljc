@@ -83,6 +83,7 @@
         slugs (:slugs params "")
         ancestry (string/split slugs #"/")
         query (cond->
+                ;; TODO pass this in?
                 (pull-query resolver)
 
                 true
