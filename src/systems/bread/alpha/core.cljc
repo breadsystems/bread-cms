@@ -143,7 +143,14 @@
   "Calls add-hook* while also capturing the namespace from which the hook was
   added, in ::systems.bread.alpha.core/added-in within the options map"
   [app' h f & [options]]
-  `(add-hook* ~app' ~h ~f (merge {:precedence 1} ~options {::added-in *ns*})))
+  (let [{:keys [line column]} (meta &form)]
+    `(add-hook* ~app' ~h ~f
+                (merge {:precedence 1}
+                       ~options
+                       {::from-ns ~*ns*
+                        ::line ~line
+                        ::column ~column
+                        ::file ~*file*}))))
 
 (defmacro add-hooks->
   "Threads app through forms after prepending `add-hook to each."

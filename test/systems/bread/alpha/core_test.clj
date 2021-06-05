@@ -7,6 +7,12 @@
     [systems.bread.alpha.test-helpers :refer [plugins->handler]])
   (:import (clojure.lang ExceptionInfo)))
 
+(defn distill-hooks
+  "Helper for inspecting a subset of each hook in a chain (vector) of hooks"
+  ([hooks]
+   (distill-hooks [::bread/precedence ::bread/f] hooks))
+  ([ks hooks]
+   (map #(select-keys % ks) hooks)))
 
 (deftest test-response
 
@@ -59,10 +65,12 @@
           plugin-b (fn [app]
                      (bread/add-hook app :plugin.b/dec dec {:precedence 2}))
           app (bread/load-app (bread/app {:plugins [plugin-a plugin-b]}))]
-      (is (= [{::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}]
-             (bread/hooks-for app :plugin.a/inc)))
-      (is (= [{::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
-             (bread/hooks-for app :plugin.b/dec))))))
+      (is (= [{::bread/precedence 1 ::bread/f inc}]
+             (distill-hooks
+               (bread/hooks-for app :plugin.a/inc))))
+      (is (= [{::bread/precedence 2 ::bread/f dec}]
+             (distill-hooks
+               (bread/hooks-for app :plugin.b/dec)))))))
 
 (deftest test-hooks-for
 
@@ -102,15 +110,33 @@
                   (bread/add-hook :my/hook inc {:precedence 1})
                   (bread/add-hook :my/hook dec {:precedence 2})
                   (bread/add-hook :my/hook identity {:precedence 0}))]
-      (is (= [{::bread/precedence 0 ::bread/f identity ::bread/added-in *ns*}
-              {::bread/precedence 1 ::bread/f inc ::bread/added-in *ns*}
-              {::bread/precedence 2 ::bread/f dec ::bread/added-in *ns*}]
-             (bread/hooks-for req :my/hook)))))
+      (is (= [{::bread/precedence 0 ::bread/f identity}
+              {::bread/precedence 1 ::bread/f inc}
+              {::bread/precedence 2 ::bread/f dec}]
+             (distill-hooks
+               (bread/hooks-for req :my/hook))))))
 
   (testing "it honors options"
     (let [req (bread/add-hook (bread/app) :my/hook inc {:my/extra 123})]
-      (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123 ::bread/added-in *ns*}]
-             (bread/hooks-for req :my/hook))))))
+      (is (= [{::bread/precedence 1 ::bread/f inc :my/extra 123}]
+             (distill-hooks
+               [::bread/precedence ::bread/f :my/extra]
+               (bread/hooks-for req :my/hook))))))
+
+  (testing "it adds metadata about the context in which it was added"
+    (let [req (bread/add-hook (bread/app) :my/hook identity)]
+      (is (= [#{::bread/precedence
+                ::bread/f
+                ::bread/from-ns
+                ::bread/file
+                ::bread/line
+                ::bread/column}]
+             (map (comp set keys) (bread/hooks-for req :my/hook))))
+      (is (= [{::bread/from-ns (the-ns 'systems.bread.alpha.core-test)
+               ::bread/file "systems/bread/alpha/core_test.clj"}]
+             (distill-hooks
+               [::bread/from-ns ::bread/file]
+               (bread/hooks-for req :my/hook)))))))
 
 (deftest test-add-effect
 
@@ -168,7 +194,7 @@
     (are [exp res]
          (= exp (as-> res $
                   (bread/hooks-for $ :bread/a)
-                  (map #(select-keys % [::bread/f ::bread/precedence]) $)
+                  (distill-hooks $)
                   (map (juxt ::bread/f ::bread/precedence) $)))
 
       [[identity 1] [dec 2]]
@@ -296,8 +322,9 @@
 
   (testing "it enriches the request with the app data itself"
     (let [app (bread/app)]
-      (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins ::bread/added-in *ns*}]
-             (bread/hooks-for app :hook/load-plugins))))))
+      (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins}]
+             (distill-hooks
+               (bread/hooks-for app :hook/load-plugins)))))))
 
 (deftest test-load-handler
 
@@ -306,8 +333,9 @@
           app (bread/app {:plugins [my-plugin]})
           handler (bread/load-handler app)
           response (handler {:url "/"})]
-      (is (= [{::bread/precedence 1 ::bread/f identity ::bread/added-in *ns*}]
-             (bread/hooks-for response :hook/effects)))))
+      (is (= [{::bread/precedence 1 ::bread/f identity}]
+             (distill-hooks
+               (bread/hooks-for response :hook/effects))))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
