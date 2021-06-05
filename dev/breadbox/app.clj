@@ -317,13 +317,7 @@
   (swap! app #(bread/remove-hook % :hook/request purple-theme))
 
   (bread/hooks-for @app :hook/request)
-  (bread/hook-> @app :hook/head []))
-
-(defn handler [req]
-  (let [handle (bread/handler @app)]
-    (select-keys (handle req) [:status :body :headers])))
-
-(comment
+  (bread/hook-> @app :hook/head [])
 
   (do
     (spit "resources/public/en/parent-page/index.html" "REWRITE")
@@ -348,8 +342,7 @@
     {:query '{:find [?attr ?v]
               ;:in [$ ?type ?status ?slug]
               :where [[44 ?attr ?v]]}
-     :args [(store/datastore $req)]}
-    )
+     :args [(store/datastore $req)]})
 
   (store/q
     (store/datastore $req)
@@ -361,8 +354,7 @@
                       #_
                       [?e :post/slug ?slug]
                       (not-join [?e] [?e :post/parent ?root-ancestor])]}
-     :args [(store/datastore $req) :post.type/page ]}
-    )
+     :args [(store/datastore $req) :post.type/page ]})
 
   (require '[datahike.api :as d])
 
@@ -426,6 +418,8 @@
 
   ;;
   )
+
+(def handler (bread/handler @app))
 
 (defonce stop-http (atom nil))
 
