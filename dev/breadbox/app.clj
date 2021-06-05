@@ -19,6 +19,7 @@
     [systems.bread.alpha.static-frontend :as static]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
+    [systems.bread.alpha.tools.debugger :as debug]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -409,24 +410,45 @@
                           {:hooks #{:hook/dispatch
                                     :hook/match-route
                                     :hook/route-params
-                                    :hook/match->resolver}}))
+                                    :hook/match->resolver}
+                           :on-hook (fn [{:keys [hook]}]
+                                      (prn "THERE WAS A CALL TO" hook))}))
 
   (bread/bind-profiler! nil)
 
   ;; TODO test this out!
   (static/generate! handler)
 
+  (handler (merge @app {:uri "/"}))
+
+  (::bread/plugins $res)
+  ;; which hooks got added where?
+  (into {} (map (fn [[k h]]
+                  [k (help/distill-hooks [::bread/file
+                                          ::bread/line
+                                          ::bread/column
+                                          ::bread/from-ns] h)])
+                (::bread/hooks $res)))
+  (distinct (map (comp (juxt ::bread/file ::bread/added-in) first second) (::bread/hooks $res)))
+  (distinct (map (comp ::bread/added-in first second) (::bread/hooks $res)))
+  (:body $res)
+
+  (macroexpand '(bread/add-hook @app :my/hook identity))
+
   ;;
   )
 
-(def handler (bread/handler @app))
+(defn handler [req]
+  (def $req req)
+  (def $res ((bread/handler @app) req))
+  $res)
 
 (defonce stop-http (atom nil))
 
 (defn start! []
   ;; TODO config
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
-    (println (str "Running HTTP server at localhost:" port))
+    (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       (wrap-keyword-params $)
       (wrap-params $)
@@ -435,7 +457,7 @@
   nil))
 
 (defn stop! []
-  (println "Stopping HTTP server")
+  (println "Stopping Breadbox server")
   (when (fn? @stop-http)
     (@stop-http))
   (reset! stop-http nil))
@@ -443,6 +465,10 @@
 (defstate http-server
   :start (start!)
   :stop  (stop!))
+
+(defstate debug-server
+  :start (debug/start! {})
+  :stop  (debug/stop!))
 
 (defn restart! []
   (mount/stop)
