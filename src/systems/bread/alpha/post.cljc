@@ -62,13 +62,13 @@
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
   (let [{:resolver/keys [ancestral? expand? pull]
          params :route/params} resolver
+
         ;; ancestral? and expand? must be an explicitly disabled with false.
         ancestral? (not (false? ancestral?))
         expand? (not (false? expand?))
-        ;; TODO lang -> i18n
-        slugs (:slugs params "")
-        ancestry (string/split slugs #"/")
+        ancestry (string/split (:slugs params "") #"/")
         find-expr [(list 'pull '?e pull)]
+
         post-query
         (cond->
           (assoc-in (resolver/empty-query) [:query :find] find-expr)
@@ -85,6 +85,7 @@
 
           expand?
           (update ::bread/expand conj expand-post))
+
         ;; Find any appearances of :post/fields in the query. If it appears as
         ;; a map key, use the corresponding value as our pull expr. If it's a
         ;; a keyword, query for a sensible default. Always include :db/id in
