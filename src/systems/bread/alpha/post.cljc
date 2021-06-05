@@ -54,6 +54,11 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
+(defn- map-with-keys [ks m]
+  (when
+    (and (map? m) (some ks (keys m)))
+    m))
+
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
   (let [{:resolver/keys [ancestral? expand? pull]
          params :route/params} resolver
@@ -87,12 +92,10 @@
         fields-query
         (when-let [fields-binding
                    (first (keep
-                     (some-fn
-                       #{:post/fields}
-                       (fn [m]
-                         (when
-                           (and (map? m) (some #{:post/fields} (keys m)))
-                           m))) pull))]
+                            (some-fn
+                              #{:post/fields}
+                              (partial map-with-keys #{:post/fields}))
+                            pull))]
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
             (-> (resolver/empty-query)
