@@ -299,12 +299,12 @@
       (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins ::bread/added-in *ns*}]
              (bread/hooks-for app :hook/load-plugins))))))
 
-(deftest test-app->handler
+(deftest test-load-handler
 
   (testing "it returns a function that loads plugins"
     (let [my-plugin #(bread/add-effect % identity)
           app (bread/app {:plugins [my-plugin]})
-          handler (bread/app->handler app)
+          handler (bread/load-handler app)
           response (handler {:url "/"})]
       (is (= [{::bread/precedence 1 ::bread/f identity ::bread/added-in *ns*}]
              (bread/hooks-for response :hook/effects)))))
@@ -313,7 +313,7 @@
     ;; config DSL: (configurator :my/config :it's-configured!)
     (let [configurator-plugin (fn [app]
                                 (bread/set-config app :my/config :it's-configured!))
-          handler (bread/app->handler (bread/app {:plugins [configurator-plugin]}))]
+          handler (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
 

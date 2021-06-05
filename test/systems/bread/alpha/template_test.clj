@@ -12,7 +12,7 @@
                       (bread/add-hook :hook/render-layout?
                                       (fn [req]
                                         (= "text/html" (get-in req [:headers "accept"]))))
-                      (bread/app->handler))]
+                      (bread/load-handler))]
       (is (true? (tpl/render-layout? (handler {:headers {"accept" "text/html"}}))))
       ;; This is a request for JSON. Omit layout.
       (is (false? (tpl/render-layout? (handler {:headers {"accept" "application/json"}})))))))

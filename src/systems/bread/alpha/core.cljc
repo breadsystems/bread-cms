@@ -322,7 +322,3 @@
   (-> app
       (load-app)
       (handler)))
-
-(defn app->handler [app]
-  (println "app->handler is deprecated")
-  (load-handler app))
