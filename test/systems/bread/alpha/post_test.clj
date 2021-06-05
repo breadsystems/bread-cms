@@ -52,7 +52,7 @@
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :custom/key]
-         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+         :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/simple"}
         ;; :post/fields i18n
@@ -81,7 +81,7 @@
           {:post/id [:post :db/id]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :post/fields]
-         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+         :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/simple"}
         ;; :post/fields i18n w/ map
@@ -112,7 +112,7 @@
           {:post/id [:post :db/id]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
-         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+         :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/one"}
         ;; expand? disabled
@@ -133,7 +133,7 @@
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :custom/key]
          :resolver/expand? false
-         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+         :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/one/two"}
         [[:post {:query '{:find [(pull ?e [:post/title :custom/key])]
@@ -157,7 +157,7 @@
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :custom/key]
-         :route/match {:path-params {:slugs "one/two" :lang "en"}}}
+         :route/params {:slugs "one/two" :lang "en"}}
 
         ;; {:uri "/en/one/two/three"}
         [[:post {:query '{:find [(pull ?e [:post/title :custom/key])]
@@ -184,7 +184,7 @@
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :custom/key]
-         :route/match {:path-params {:slugs "one/two/three" :lang "en"}}}
+         :route/params {:slugs "one/two/three" :lang "en"}}
 
         ;; {:uri "/en/one/two"}
         ;; ancestry? disabled
@@ -204,7 +204,7 @@
         {:resolver/type :resolver.type/page
          :resolver/ancestral? false
          :resolver/pull [:post/title :custom/key]
-         :route/match {:path-params {:slugs "one/two" :lang "en"}}}
+         :route/params {:slugs "one/two" :lang "en"}}
 
         ;; {:uri "/en"}
         ;; home page - no `slugs`
@@ -223,6 +223,6 @@
         {:resolver/type :resolver.type/page
          :resolver/ancestral? false
          :resolver/pull [:post/title :custom/key]
-         :route/match {:path-params {:lang "en"}}}
+         :route/params {:lang "en"}}
 
         )))

@@ -55,8 +55,8 @@
     (assoc post :post/fields fields)))
 
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
-  (let [{{params :path-params} :route/match
-        :resolver/keys [ancestral? expand? pull]} resolver
+  (let [{:resolver/keys [ancestral? expand? pull]
+         params :route/params} resolver
         ;; ancestral? and expand? must be an explicitly disabled with false.
         ancestral? (not (false? ancestral?))
         expand? (not (false? expand?))
