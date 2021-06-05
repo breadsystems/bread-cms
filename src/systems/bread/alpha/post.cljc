@@ -8,25 +8,6 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn parse-fields [fields]
-  (map #(update % :field/content edn/read-string) fields))
-
-(defn- index-by [f coll]
-  (into {} (map (fn [x] [(f x) x]) coll)))
-
-#_
-(defn init [app post]
-  (update post :post/fields #(->> %
-                                  parse-fields
-                                  ;; TODO can we do this at the query level?
-                                  (filter (fn [field]
-                                            (= (i18n/lang app)
-                                               (:field/lang field))))
-                                  (index-by :field/key))))
-
-(defn post [app post]
-  (bread/hook->> app :hook/post post))
-
 (defn- path->constraints
   ([path]
    (path->constraints path {}))
