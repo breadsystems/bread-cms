@@ -75,31 +75,45 @@
 
 (defmethod resolver/resolve-query :resolver.type/page [resolver]
   (let [{{params :path-params} :route/match
-        :resolver/keys [ancestral? expand?]} resolver
+        :resolver/keys [ancestral? expand? pull]} resolver
         ;; ancestral? and expand? must be an explicitly disabled with false.
         ancestral? (not (false? ancestral?))
         expand? (not (false? expand?))
         ;; TODO lang -> i18n
         slugs (:slugs params "")
         ancestry (string/split slugs #"/")
-        query (cond->
-                ;; TODO pass this in?
-                (pull-query resolver)
+        find-expr [(list 'pull '?e pull)]
+        post-query
+        (cond->
+          (assoc-in (resolver/empty-query) [:query :find] find-expr)
 
-                true
-                (where
-                  [['?type :post/type :post.type/page]
-                   ['?status :post/status :post.status/published]])
+          true
+          (where [['?type :post/type :post.type/page]
+                  ['?status :post/status :post.status/published]])
 
-                (not ancestral?)
-                (where [['?slug :post/slug (last ancestry)]])
+          (not ancestral?)
+          (where [['?slug :post/slug (last ancestry)]])
 
-                ancestral?
-                (ancestralize ancestry)
+          ancestral?
+          (ancestralize ancestry)
 
-                expand?
-                (update ::bread/expand conj expand-post))]
-    [[:post query]]))
+          expand?
+          (update ::bread/expand conj expand-post))
+        fields-query
+        (when (some #{:post/fields} pull)
+          (-> (resolver/empty-query)
+              (assoc-in [:query :find]
+                        ;; TODO honor nested :post/fields pulls
+                        ['(pull ?e [:field/key :field/content])])
+              (where [['?p :post/fields '?e :post/id]
+                      ['?lang :field/lang (keyword (:lang params))]])
+              (assoc ::bread/expand [])
+              ))
+        ]
+    (if fields-query
+      [[:post post-query]
+       [:post/fields fields-query {:post/id [:post :db/id]}]]
+      [[:post post-query]])))
 
 (defn field-content [app field]
   (bread/hook->> app :hook/field-content field))

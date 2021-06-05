@@ -27,14 +27,23 @@
              conj
              (pull resolver)))
 
+(defn- apply-where
+  ([query sym k v]
+   (-> query
+       (update-in [:query :where] conj ['?e k sym])
+       (update-in [:query :in] conj sym)
+       (update-in [:args] conj v)))
+  ([query sym k input-sym v]
+   (-> query
+       (update-in [:query :where] conj [sym k input-sym])
+       (update-in [:query :in] conj sym)
+       (update-in [:args] conj v))))
+
 ;; TODO provide a slightly higher-level query helper API with simple maps
 (defn where [query constraints]
   (reduce
-    (fn [query [sym k v]]
-      (-> query
-        (update-in [:query :where] conj ['?e k sym])
-        (update-in [:query :in] conj sym)
-        (update-in [:args] conj v)))
+    (fn [query params]
+      (apply apply-where query params))
     query
     constraints))
 
@@ -53,8 +62,8 @@
   (map (partial replace-arg req) args))
 
 (defn- replace-query-args [req queries]
-  (into [] (map (fn [[k query]]
-                  [k (update query :args #(replace-args req %))])
+  (into [] (map (fn [[k query f]]
+                  (filter some? [k (update query :args #(replace-args req %)) f]))
                 queries)))
 
 (defn resolve-queries [req]

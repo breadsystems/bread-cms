@@ -7,10 +7,6 @@
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.test-helpers :as h]))
 
-(defc my-component [{:keys [post]}]
-  {:query [:post/title :custom/key]}
-  [:h1 (:post/title post)])
-
 (deftest test-resolve-post-queries
   (let [;; Datastore shows up directly in our args, so we need to mock it
         datastore {:FAKE :STORE}
@@ -39,22 +35,52 @@
                                     ::bread/queries))))
 
         ;; {:uri "/en/simple"}
+        ;; no i18n
         [[:post {:query '{:find [(pull ?e [:post/title :custom/key])]
-                         :in [$ ?type ?status ?slug]
-                         ;; TODO i18n
-                         :where [[?e :post/type ?type]
-                                 [?e :post/status ?status]
-                                 [?e :post/slug ?slug]
-                                 (not-join
-                                   [?e]
-                                   [?e :post/parent ?root-ancestor])]}
+                          :in [$ ?type ?status ?slug]
+                          ;; TODO i18n
+                          :where [[?e :post/type ?type]
+                                  [?e :post/status ?status]
+                                  [?e :post/slug ?slug]
+                                  (not-join
+                                    [?e]
+                                    [?e :post/parent ?root-ancestor])]}
                  :args [{:FAKE :STORE}
-                        :post.type/page
-                        :post.status/published
-                        "simple"]
+                         :post.type/page
+                         :post.status/published
+                         "simple"]
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
+         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+
+        ;; {:uri "/en/simple"}
+        ;; :post/fields i18n
+        [[:post {:query '{:find [(pull ?e [:post/title :post/fields])]
+                          :in [$ ?type ?status ?slug]
+                          ;; TODO i18n
+                          :where [[?e :post/type ?type]
+                                  [?e :post/status ?status]
+                                  [?e :post/slug ?slug]
+                                  (not-join
+                                    [?e]
+                                    [?e :post/parent ?root-ancestor])]}
+                 :args [{:FAKE :STORE}
+                         :post.type/page
+                         :post.status/published
+                         "simple"]
+                 ::bread/expand [post/expand-post]}]
+         [:post/fields {:query '{:find [(pull ?e [:field/key :field/content])]
+                                 :in [$ ?p ?lang]
+                                 :where [[?p :post/fields ?e]
+                                         [?e :field/lang ?lang]]}
+                        :args [{:FAKE :STORE}
+                               :post/id
+                               :en]
+                        ::bread/expand []}
+          {:post/id [:post :db/id]}]]
+        {:resolver/type :resolver.type/page
+         :resolver/pull [:post/title :post/fields]
          :route/match {:path-params {:slugs "simple" :lang "en"}}}
 
         ;; {:uri "/en/one"}
@@ -74,7 +100,7 @@
                         "simple"]
                  ::bread/expand []}]]
         {:resolver/type :resolver.type/page
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
          :resolver/expand? false
          :route/match {:path-params {:slugs "simple" :lang "en"}}}
 
@@ -99,7 +125,7 @@
                         "one"]
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
          :route/match {:path-params {:slugs "one/two" :lang "en"}}}
 
         ;; {:uri "/en/one/two/three"}
@@ -126,7 +152,7 @@
                         "one"]
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
          :route/match {:path-params {:slugs "one/two/three" :lang "en"}}}
 
         ;; {:uri "/en/one/two"}
@@ -146,7 +172,7 @@
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
          :resolver/ancestral? false
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
          :route/match {:path-params {:slugs "one/two" :lang "en"}}}
 
         ;; {:uri "/en"}
@@ -165,7 +191,7 @@
                  ::bread/expand [post/expand-post]}]]
         {:resolver/type :resolver.type/page
          :resolver/ancestral? false
-         :resolver/component my-component
+         :resolver/pull [:post/title :custom/key]
          :route/match {:path-params {:lang "en"}}}
 
         )))
