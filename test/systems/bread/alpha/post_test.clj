@@ -70,7 +70,7 @@
                          :post.status/published
                          "simple"]
                  ::bread/expand [post/expand-post]}]
-         [:post/fields {:query '{:find [(pull ?e [:field/key :field/content])]
+         [:post/fields {:query '{:find [(pull ?e [:db/id :field/key :field/content])]
                                  :in [$ ?p ?lang]
                                  :where [[?p :post/fields ?e]
                                          [?e :field/lang ?lang]]}
@@ -81,6 +81,37 @@
           {:post/id [:post :db/id]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :post/fields]
+         :route/match {:path-params {:slugs "simple" :lang "en"}}}
+
+        ;; {:uri "/en/simple"}
+        ;; :post/fields i18n w/ map
+        [[:post {:query '{:find [(pull ?e [:post/title {:post/fields
+                                                        [:field/key
+                                                         :field/lang]}])]
+                          :in [$ ?type ?status ?slug]
+                          ;; TODO i18n
+                          :where [[?e :post/type ?type]
+                                  [?e :post/status ?status]
+                                  [?e :post/slug ?slug]
+                                  (not-join
+                                    [?e]
+                                    [?e :post/parent ?root-ancestor])]}
+                 :args [{:FAKE :STORE}
+                         :post.type/page
+                         :post.status/published
+                         "simple"]
+                 ::bread/expand [post/expand-post]}]
+         [:post/fields {:query '{:find [(pull ?e [:db/id :field/key :field/lang])]
+                                 :in [$ ?p ?lang]
+                                 :where [[?p :post/fields ?e]
+                                         [?e :field/lang ?lang]]}
+                        :args [{:FAKE :STORE}
+                               :post/id
+                               :en]
+                        ::bread/expand []}
+          {:post/id [:post :db/id]}]]
+        {:resolver/type :resolver.type/page
+         :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
          :route/match {:path-params {:slugs "simple" :lang "en"}}}
 
         ;; {:uri "/en/one"}

@@ -99,17 +99,27 @@
 
           expand?
           (update ::bread/expand conj expand-post))
+        ;; Find any appearances of :post/fields in the query. If it appears as
+        ;; a map key, use the corresponding value as our pull expr. If it's a
+        ;; a keyword, query for a sensible default. Always include :db/id in
+        ;; the queried attrs.
         fields-query
-        (when (some #{:post/fields} pull)
-          (-> (resolver/empty-query)
-              (assoc-in [:query :find]
-                        ;; TODO honor nested :post/fields pulls
-                        ['(pull ?e [:field/key :field/content])])
-              (where [['?p :post/fields '?e :post/id]
-                      ['?lang :field/lang (keyword (:lang params))]])
-              (assoc ::bread/expand [])
-              ))
-        ]
+        (when-let [fields-binding
+                   (first (keep
+                     (some-fn
+                       #{:post/fields}
+                       (fn [m]
+                         (when
+                           (and (map? m) (some #{:post/fields} (keys m)))
+                           m))) pull))]
+          (let [field-keys (or (:post/fields fields-binding)
+                               [:field/key :field/content])]
+            (-> (resolver/empty-query)
+                (assoc-in [:query :find]
+                          [(list 'pull '?e (cons :db/id field-keys))])
+                (where [['?p :post/fields '?e :post/id]
+                        ['?lang :field/lang (keyword (:lang params))]])
+                (assoc ::bread/expand []))))]
     (if fields-query
       [[:post post-query]
        [:post/fields fields-query {:post/id [:post :db/id]}]]
