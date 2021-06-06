@@ -35,7 +35,7 @@
 (defmethod on-event :default [e]
   (js/console.log "Unknown event type:" (:event/type e)))
 
-(defn- update-req [state {:keys [uuid] :as e}]
+(defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state
       (assoc-in  [:request/uuid uuid :request/uuid] uuid)
       (update-in [:request/uuid uuid :request/hooks] conjv e)))

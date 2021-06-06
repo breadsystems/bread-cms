@@ -24,9 +24,9 @@
        before each invocation of each hook."}
   *hook-profiler*)
 
-(defn- profile-hook! [h f x args detail {:keys [uuid]}]
+(defn- profile-hook! [h f x args detail app]
   (when (fn? *hook-profiler*)
-    (*hook-profiler* {:hook h :f f :args (cons x args) :detail detail :uuid uuid})))
+    (*hook-profiler* {:hook h :f f :args (cons x args) :detail detail :app app})))
 
 (defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
   (let [transform-app (or transform-app (constantly '$APP))
@@ -316,7 +316,7 @@
         (hook :hook/dispatch) ;; -> ::resolver
         (hook :hook/resolve)  ;; -> ::queries
         (hook :hook/expand)   ;; -> ::data, ::effects
-        (apply-effects)       ;; -> ::results
+        (apply-effects)       ;; -> more ::data
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 

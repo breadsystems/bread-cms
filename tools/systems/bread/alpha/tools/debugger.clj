@@ -13,7 +13,7 @@
     [ring.middleware.reload :refer [wrap-reload]]
     [rum.core :as rum])
   (:import
-    [java.util UUID]))
+    [java.util Date UUID]))
 
 (defn uuid []
   (UUID/randomUUID))
@@ -74,18 +74,19 @@
                                (http/send! ws-chan data)))
     (go-loop []
              ;; TODO do this in a more dynamic way?
-             (let [{:keys [hook f args detail uuid] :as inv} (<! <hooks)
+             (let [{:keys [hook f args detail app] :as inv} (<! <hooks)
                    {::bread/keys [from-ns file line column]} detail
+                   ;; TODO datafy/serialize Events generically
                    event {:event/type :bread/hook
-                          :uuid (str uuid)
+                          :request/uuid (str (:request/uuid app))
+                          :app (prn-str app)
                           :hook hook
                           :args (map prn-str args)
                           :f (str f)
                           :line line
                           :column column}]
                (swap! hooks!? conj event)
-               (http/send! ws-chan
-                           (prn-str event))
+               (http/send! ws-chan (prn-str event))
                (recur)))))
 
 (comment
@@ -131,4 +132,8 @@
 
 (defn plugin []
   (fn [app]
-    (bread/add-hook app :hook/request #(assoc % :uuid (uuid)))))
+    (bread/add-hooks->
+      app
+      (:hook/request #(assoc % :request/uuid (uuid)))
+      (:hook/request #(assoc % :request/timestamp (Date.)))
+      (:hook/response #(assoc % :response/timestamp (Date.))))))
