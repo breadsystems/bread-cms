@@ -1,30 +1,44 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
     [clojure.edn :as edn]
+    [clojure.pprint :refer [pprint]]
     [rum.core :as rum]))
 
 ;(defonce !ws (atom nil))
 
-(defonce db (atom {:counter 0}))
+(defonce db (atom {:request/uuid {}}))
 
-(def counter-state (rum/cursor-in db [:counter]))
+(def requests (rum/cursor-in db [:request/uuid]))
 
-(rum/defc counter < rum/reactive []
-  [:<>
-   [:div [:button {:on-click #(swap! db update :counter inc)}
-          "Increment!"]]
-   [:p "count: " (rum/react counter-state)]])
+(rum/defc ui < rum/reactive []
+  (let [reqs (rum/react requests)]
+    [:<>
+     (if (seq reqs)
+       [:ul
+        (map (fn [[uuid req]]
+               [:li {:key uuid}
+                [:label {:for uuid} uuid]
+                [:div {:id uuid}
+                 [:details
+                  [:summary "Raw request..."]
+                  [:pre (with-out-str (pprint req))]]]])
+             reqs)]
+       [:p "No requests yet!"])]))
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
   (js/console.log "start!")
-  (rum/mount (counter) (js/document.getElementById "app")))
+  (rum/mount (ui) (js/document.getElementById "app")))
+
+(defn conjv [v x]
+  (conj (or v []) x))
 
 (defmulti on-event :event/type)
 (defmethod on-event :default [e]
   (js/console.log "Unknown event type:" (:event/type e)))
 (defmethod on-event :bread/hook [e]
-  (prn (select-keys e [:hook :f :uuid])))
+  (let [{:keys [uuid]} e]
+    (swap! db update-in [:request/uuid uuid :request/hooks] conjv e)))
 
 (defn on-message [message]
   (let [event (edn/read-string (.-data message))]

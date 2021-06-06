@@ -81,7 +81,7 @@
                    event {:event/type :bread/hook
                           :uuid (str uuid)
                           :hook hook
-                          :args (map str args)
+                          :args (map prn-str args)
                           :f (str f)
                           :line line
                           :column column}]
