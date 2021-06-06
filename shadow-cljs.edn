@@ -1,0 +1,12 @@
+;; shadow-cljs configuration
+{:deps true
+ :dev-http
+ {1315 "resources/debugger"}
+
+ :builds
+ {:debugger
+  {:target :browser
+   :output-dir "resources/debugger/js"
+   :asset-path "/js"
+   :modules {:main ; becomes debugger/js/main.js
+             {:init-fn systems.bread.alpha.tools.debugger/init}}}}}
