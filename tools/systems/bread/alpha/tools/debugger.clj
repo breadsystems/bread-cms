@@ -23,7 +23,7 @@
 (defonce !ws-port (atom 1314))
 (defonce !shadow-cljs-port (atom 9630))
 
-(def <hooks (chan))
+(defonce <hooks (chan))
 
 (comment
   (put! <hooks "456"))

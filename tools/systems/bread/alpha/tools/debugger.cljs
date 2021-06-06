@@ -3,7 +3,10 @@
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
     [rum.core :as rum]
-    [systems.bread.alpha.tools.impl :as impl :refer [db]]))
+    [systems.bread.alpha.tools.impl :as impl :refer [publish! subscribe-db]]))
+
+(let [[db' _] (subscribe-db)]
+  (def db db'))
 
 (def requests (rum/cursor-in db [:request/uuid]))
 
@@ -14,7 +17,7 @@
        [:ul
         (map (fn [[uuid req]]
                [:li {:key uuid}
-                [:label {:for uuid} uuid]
+                [:label {:for uuid} (if (empty? uuid) "[No UUID]" uuid)]
                 [:div {:id uuid}
                  [:details
                   [:summary "Raw request..."]
@@ -29,7 +32,7 @@
 
 (defn on-message [message]
   (let [event (edn/read-string (.-data message))]
-    (impl/on-event event)))
+    (publish! event)))
 
 ;; init is called ONCE when the page loads
 ;; this is called in the index.html and must be exported
