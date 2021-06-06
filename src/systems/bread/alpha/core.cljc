@@ -24,9 +24,9 @@
        before each invocation of each hook."}
   *hook-profiler*)
 
-(defn- profile-hook! [h f x args]
+(defn- profile-hook! [h f x args detail {:keys [uuid]}]
   (when (fn? *hook-profiler*)
-    (*hook-profiler* {:hook h :f f :args (cons x args)})))
+    (*hook-profiler* {:hook h :f f :args (cons x args) :detail detail :uuid uuid})))
 
 (defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
   (let [transform-app (or transform-app (constantly '$APP))
@@ -228,7 +228,7 @@
 
 (defmacro ^:private try-hook [app hook h f x args apply-hook]
   `(try
-     (profile-hook! ~h ~f ~x ~args)
+     (profile-hook! ~h ~f ~x ~args ~hook ~app)
      ~apply-hook
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
@@ -244,9 +244,6 @@
                                ;; Indicate to the caller that this exception
                                ;; wraps one from somewhere else.
                                ::core? true}))))))
-
-(comment
-  (macroexpand '(try-hook (prn hello) (apply h app x args))))
 
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through

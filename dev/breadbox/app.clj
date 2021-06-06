@@ -256,7 +256,8 @@
   :start (reset! app
                  (bread/load-app
                    (bread/app
-                     {:plugins [(store/config->plugin $config)
+                     {:plugins [(debug/plugin)
+                                (store/config->plugin $config)
                                 (i18n/plugin)
                                 (post/plugin)
                                 (br/plugin {:router $router})
@@ -469,6 +470,10 @@
 (defstate debug-server
   :start (debug/start! {})
   :stop  (debug/stop!))
+
+(defstate debug-profiler
+  :start (debug/profile!)
+  :stop  (bread/bind-profiler! nil))
 
 (defn restart! []
   (mount/stop)
