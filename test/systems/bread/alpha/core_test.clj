@@ -3,16 +3,10 @@
     [clojure.string :refer [upper-case]]
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.dev-helpers :refer [distill-hooks]]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.test-helpers :refer [plugins->handler]])
   (:import (clojure.lang ExceptionInfo)))
-
-(defn distill-hooks
-  "Helper for inspecting a subset of each hook in a chain (vector) of hooks"
-  ([hooks]
-   (distill-hooks [::bread/precedence ::bread/f] hooks))
-  ([ks hooks]
-   (map #(select-keys % ks) hooks)))
 
 (deftest test-response
 
