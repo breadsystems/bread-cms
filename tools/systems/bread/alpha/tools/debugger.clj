@@ -65,8 +65,6 @@
         {:not-found (constantly {:status 404
                                  :body "404 Not Found"})}))))
 
-(defonce hooks!? (atom []))
-
 (defn ws-handler [req]
   (http/with-channel req ws-chan
     (println "Debug WebSocket connection created.")
