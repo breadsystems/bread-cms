@@ -35,9 +35,13 @@
 (defmethod on-event :default [e]
   (js/console.log "Unknown event type:" (:event/type e)))
 
-(defmethod on-event :bread/hook [e]
-  (let [{:keys [uuid]} e]
-    (swap! db update-in [:request/uuid uuid :request/hooks] conjv e)))
+(defn- update-req [state {:keys [uuid] :as e}]
+  (-> state
+      (assoc-in  [:request/uuid uuid :request/uuid] uuid)
+      (update-in [:request/uuid uuid :request/hooks] conjv e)))
+
+(defmethod on-event :bread/hook [hook-event]
+  (swap! db update-req hook-event))
 
 (defn subscribe-db
   "Returns at instance of the db (atom) and an unsubscribe callback. Note:
