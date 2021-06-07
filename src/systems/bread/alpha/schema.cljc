@@ -188,6 +188,7 @@
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
+   ;; TODO :comment/status (pending, approved, spam...)
    {:db/ident :comment/replies
     :db/doc "Zero or more replies (comment entity IDs) to this comment. Order by :comment/created-at to build a comment thread."
     :db/valueType :db.type/ref
