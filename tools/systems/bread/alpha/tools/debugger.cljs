@@ -3,7 +3,9 @@
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
     [rum.core :as rum]
-    [systems.bread.alpha.tools.impl :as impl :refer [publish! subscribe-db]]))
+    [systems.bread.alpha.tools.impl :as impl :refer [publish!
+                                                     subscribe-db
+                                                     on-event]]))
 
 (let [[db' _] (subscribe-db)]
   (def db db'))
@@ -40,7 +42,11 @@
 (defn init []
   ;; TODO get WS host/port dynamically
   (let [ws (js/WebSocket. "ws://localhost:1314")]
-    (set! (.-onmessage ws) on-message))
+    (.addEventListener ws "open"
+                       (fn [_]
+                         (.send ws (prn-str {:event/type :send-initial}))))
+    (.addEventListener ws "message" on-message))
+  ;; TODO why is this broken?
   (start))
 
 ;; this is called before any code is reloaded

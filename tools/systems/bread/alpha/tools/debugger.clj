@@ -11,9 +11,18 @@
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]
-    [rum.core :as rum])
+    [systems.bread.alpha.tools.impl :as impl :refer [publish!
+                                                     subscribe-db
+                                                     on-event]])
   (:import
     [java.util Date UUID]))
+
+(declare db)
+
+(defn subscribe! []
+  (let [[db' unsub!] (subscribe-db)]
+    (def db db')
+    unsub!))
 
 (defn uuid []
   (UUID/randomUUID))
@@ -65,15 +74,21 @@
         {:not-found (constantly {:status 404
                                  :body "404 Not Found"})}))))
 
+(defmethod on-event :send-initial [{:keys [channel]}]
+  (http/send! channel (prn-str {:event/type :init
+                                :state {:request/uuid {"123-asdf" {}
+                                                       "456-qwerty" {}}}})))
+
 (defn ws-handler [req]
   (http/with-channel req ws-chan
-    (println "Debug WebSocket connection created.")
+    (println "Debug WebSocket connection created...")
     (http/on-close ws-chan (fn [status]
                              (println "channel closed:" status)))
-    (http/on-receive ws-chan (fn [data]
-                               (http/send! ws-chan data)))
+    (http/on-receive ws-chan (fn [message]
+                               (let [msg (edn/read-string message)]
+                                 (on-event (assoc msg :channel ws-chan)))))
+    ;; TODO subscribe!
     (go-loop []
-             ;; TODO do this in a more dynamic way?
              (let [{:keys [hook f args detail app] :as inv} (<! <hooks)
                    {::bread/keys [from-ns file line column]} detail
                    ;; TODO datafy/serialize Events generically
@@ -85,14 +100,8 @@
                           :f (str f)
                           :line line
                           :column column}]
-               (swap! hooks!? conj event)
                (http/send! ws-chan (prn-str event))
                (recur)))))
-
-(comment
-  (reset! hooks!? [])
-  (-> @hooks!? last prn-str edn/read-string)
-  (map :detail @hooks!?))
 
 (defn start! [{:keys [port websocket-port shadow-cljs-port]}]
   (let [port (Integer. (or port 1313))

@@ -475,6 +475,13 @@
   :start (debug/profile!)
   :stop  (bread/bind-profiler! nil))
 
+(defonce unsub (atom nil))
+
+(defstate debug-subscription
+  :start (reset! unsub (debug/subscribe!))
+  :stop  (when-let [unsub @unsub]
+           (@unsub)))
+
 (defn restart! []
   (mount/stop)
   (mount/start))

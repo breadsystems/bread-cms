@@ -4,10 +4,10 @@
     [clojure.core.async :as async :refer [<! chan go-loop mult put! tap untap]]
     [systems.bread.alpha.tools.impl.util :refer [conjv]]))
 
-(defonce db (atom {:request/uuid {}}))
+(defonce db (atom {}))
 
 ;; PUBLISH to events>
-(defonce ^:private events> (chan 1))
+(defonce ^:private events> (chan))
 ;; SUBSCRIBE to <events
 (defonce ^:private <events (mult events>))
 
@@ -33,7 +33,14 @@
 (defmulti on-event :event/type)
 
 (defmethod on-event :default [e]
-  (js/console.log "Unknown event type:" (:event/type e)))
+  (println "Unknown event type:" (:event/type e))
+  (prn e))
+
+(defmethod on-event :init [{:keys [state]}]
+  (swap! db merge {:request/uuid {}} state))
+
+(defmethod on-event :bread/request [{:request/keys [uuid] :as req-event}]
+  (swap! db assoc-in [:request/uuid uuid] (dissoc req-event :event/type)))
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state
