@@ -140,6 +140,9 @@
   (fn [app]
     (bread/add-hooks->
       app
-      (:hook/request #(assoc % :request/uuid (uuid)))
-      (:hook/request #(assoc % :request/timestamp (Date.)))
-      (:hook/response #(assoc % :response/timestamp (Date.))))))
+      (:hook/request
+        #(assoc % :request/uuid (uuid) :request/timestamp (Date.))
+        {:precedence 0})
+      (:hook/response
+        #(assoc % :response/timestamp (Date.))
+        {:precedence 100}))))
