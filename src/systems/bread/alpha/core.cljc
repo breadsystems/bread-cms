@@ -166,6 +166,7 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
+#_
 (defn add-effect
   "Adds the (presumably effectful) function f as a callback to the special
   :hook/effects hook. Accepts an optional options map."
@@ -287,6 +288,7 @@
   [app h & args]
   (apply hook-> app h app args))
 
+#_
 (defn- apply-effects [app]
   (or (hook app :hook/effects) app))
 
@@ -320,8 +322,8 @@
         (hook :hook/request)
         (hook :hook/dispatch) ;; -> ::resolver
         (hook :hook/resolve)  ;; -> ::queries
-        (hook :hook/expand)   ;; -> ::data, ::effects
-        (apply-effects)       ;; -> more ::data
+        (hook :hook/expand)   ;; -> ::data
+        #_(apply-effects)       ;; -> more ::data
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 

@@ -132,6 +132,7 @@
                [::bread/from-ns ::bread/file]
                (bread/hooks-for req :my/hook)))))))
 
+#_
 (deftest test-add-effect
 
   (testing "it adds to the :hook/effects hook inside app"
@@ -322,6 +323,7 @@
 
 (deftest test-load-handler
 
+  #_
   (testing "it returns a function that loads plugins"
     (let [my-plugin #(bread/add-effect % identity)
           app (bread/app {:plugins [my-plugin]})
@@ -340,6 +342,7 @@
              (bread/config (handler {:url "/"}) :my/config)))))
 
   ;; TODO test effects in isolation
+  #_
   (testing "it returns a function that applies side-effects"
     (let [;; Test side-effects
           state (atom {:num 3 :extra :stuff})
