@@ -7,7 +7,7 @@
 (defonce db (atom {}))
 
 ;; PUBLISH to events>
-(defonce ^:private events> (chan))
+(defonce ^:private events> (chan 1))
 ;; SUBSCRIBE to <events
 (defonce ^:private <events (mult events>))
 
@@ -24,7 +24,6 @@
     (tap <events listener)
     (go-loop []
              (let [e (<! listener)]
-               (prn 'calling (list f e))
                (f e)
                (recur)))
     (fn []
