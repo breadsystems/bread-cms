@@ -111,6 +111,7 @@
     :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
+   ;; TODO i18n for taxon name and description -> :taxon/fields
    {:db/ident :taxon/name
     :db/doc "The human-readable name of the taxon"
     :db/valueType :db.type/string
