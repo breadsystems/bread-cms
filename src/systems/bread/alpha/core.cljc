@@ -8,7 +8,12 @@
 (s/def ::hooks map?)
 (s/def ::plugins vector?)
 
-(s/def ::app (s/keys :req [::config ::hooks ::plugins]))
+(s/def ::resolver map?)
+(s/def ::queries vector?)
+(s/def ::data map?)
+
+(s/def ::app (s/keys :req [::config ::hooks ::plugins]
+                     :opt [::resolver ::queries ::data]))
 
 (def ^{:dynamic true
        :doc
