@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
+    [clojure.string :as string]
     [rum.core :as rum]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
@@ -21,6 +22,9 @@
   (deref requests)
   (deref loading?)
   (deref req))
+
+(defn- join-some [sep coll]
+  (string/join sep (filter seq (map str coll))))
 
 (rum/defc ui < rum/reactive []
   (let [reqs (rum/react requests)
@@ -49,8 +53,11 @@
          [:div
           [:h3 "Hooks"]
           [:ul
-           (map-indexed (fn [idx {:keys [hook args f line column]}]
-                          [:li {:key idx} (name hook)])
+           (map-indexed (fn [idx {:keys [hook args f file line column]}]
+                          [:li {:key idx}
+                           [:strong (name hook)]
+                           [:code
+                            (join-some ":" [file line column])]])
                         hooks)]
           [:details
            [:summary "Raw request..."]

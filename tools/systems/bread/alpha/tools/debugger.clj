@@ -66,7 +66,8 @@
                                  :body "404 Not Found"})}))))
 
 (comment
-  (deref db))
+  (deref db)
+  (publish! {:event/type :init}))
 
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
@@ -92,6 +93,7 @@
                           :hook hook
                           :args (map prn-str args)
                           :f (str f)
+                          :file file
                           :line line
                           :column column}]
                (publish! event)
