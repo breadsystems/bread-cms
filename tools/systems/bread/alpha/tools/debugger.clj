@@ -32,7 +32,7 @@
 (defonce !ws-port (atom 1314))
 (defonce !shadow-cljs-port (atom 9630))
 
-(defonce <hooks (chan))
+(defonce <hooks (chan 1))
 
 (defn profile! []
   (bread/bind-profiler!

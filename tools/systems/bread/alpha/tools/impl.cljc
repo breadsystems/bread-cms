@@ -7,9 +7,9 @@
 (defonce db (atom {}))
 
 ;; PUBLISH to events>
-(defonce ^:private events> (chan 1))
+(def ^:private events> (chan 1))
 ;; SUBSCRIBE to <events
-(defonce ^:private <events (mult events>))
+(def ^:private <events (mult events>))
 
 (defn publish!
   "Publishes e, broadcasting all subscribers (attached via subscribe!)"
@@ -20,7 +20,7 @@
   "Subscribes (taps) to a mult of the <events channel, attaching f as a handler.
   Returns an unsubscribe callback that closes around the mult (calls untap)."
   [f]
-  (let [listener (chan)]
+  (let [listener (chan 1)]
     (tap <events listener)
     (go-loop []
              (let [e (<! listener)]
@@ -36,7 +36,7 @@
   (prn e))
 
 (defmethod on-event :init [{:keys [state]}]
-  (swap! db merge {:request/uuid {}} state))
+  (swap! db merge {:request/uuid (sorted-map)} state))
 
 (defmethod on-event :bread/request [{:request/keys [uuid] :as req-event}]
   (swap! db assoc-in [:request/uuid uuid] (dissoc req-event :event/type)))
