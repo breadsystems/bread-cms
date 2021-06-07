@@ -34,19 +34,10 @@
 
 (defonce <hooks (chan))
 
-(comment
-  (put! <hooks "456"))
-
 (defn profile! []
   (bread/bind-profiler!
     (fn [hook-invocation]
       (go (>! <hooks hook-invocation)))))
-
-(defn debugger-ui [req]
-  {:status 200
-   :headers {"Content-Security-Policy"
-             (str "connect-src 'self' ws://localhost:" @!ws-port ";")}
-   :body "hello!?"})
 
 (defn wrap-csp-header [handler]
   (fn [req]
@@ -74,10 +65,12 @@
         {:not-found (constantly {:status 404
                                  :body "404 Not Found"})}))))
 
-(defmethod on-event :send-initial [{:keys [channel]}]
+(comment
+  (deref db))
+
+(defmethod on-event :frontend/init [{:keys [channel]}]
   (http/send! channel (prn-str {:event/type :init
-                                :state {:request/uuid {"123-asdf" {}
-                                                       "456-qwerty" {}}}})))
+                                :state @db})))
 
 (defn ws-handler [req]
   (http/with-channel req ws-chan
@@ -100,6 +93,7 @@
                           :f (str f)
                           :line line
                           :column column}]
+               (publish! event)
                (http/send! ws-chan (prn-str event))
                (recur)))))
 

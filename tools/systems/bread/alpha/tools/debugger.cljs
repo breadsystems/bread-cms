@@ -44,11 +44,13 @@
   (let [ws (js/WebSocket. "ws://localhost:1314")]
     (.addEventListener ws "open"
                        (fn [_]
-                         (.send ws (prn-str {:event/type :send-initial}))))
+                         (.send ws (prn-str {:event/type :frontend/init}))))
     (.addEventListener ws "message" on-message))
-  ;; TODO why is this broken?
   (start))
 
 ;; this is called before any code is reloaded
 (defn ^:dev/before-load stop []
   (js/console.log "Reloading..."))
+
+(comment
+  (deref db))
