@@ -153,6 +153,22 @@
       (is (false? (bread/hook-for? app :hook/effects dec {:precedence 3})))
       (is (false? (bread/hook-for? app :hook/effects identity {:x :y}))))))
 
+(deftest test-add-effect
+
+  (testing "it adds the given Effect to ::effects"
+    (are [effects app] (= effects (::bread/effects app))
+
+         [identity] (-> (bread/app)
+                        (bread/add-effect identity))
+
+         [inc] (-> (bread/app)
+                   (bread/add-effect inc))
+
+         [inc dec identity] (-> (bread/app)
+                                (bread/add-effect inc)
+                                (bread/add-effect dec)
+                                (bread/add-effect identity)))))
+
 (deftest test-add-value-hook
 
   (testing "add-value-hook wraps passed value in (constantly ,,,)"

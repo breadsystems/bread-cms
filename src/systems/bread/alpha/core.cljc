@@ -175,6 +175,11 @@
   ([app f]
    (add-hook app :hook/effects f {})))
 
+(defn add-effect
+  "Adds e as an Effect to be run during the apply-effects lifecycle phase."
+  [req e]
+  (update req ::effects (comp vec conj) e))
+
 (defmacro add-effects->
   "Threads app through forms after prepending `add-effect to each."
   [app' & forms]
