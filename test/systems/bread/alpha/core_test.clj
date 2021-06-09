@@ -171,7 +171,7 @@
 
 (deftest test-apply-effects-lifecycle-phase
 
-  (testing "it applies effects until none are left to apply"
+  (testing "it applies Effects until none are left to apply"
     (letfn [(count-to-three [{::bread/keys [data]}]
               (if (> 7 (:counter data))
                 {::bread/data (update data :counter inc)
@@ -185,21 +185,30 @@
             (is (= 7 (-> (handler {:uri "/"})
                          (get-in [::bread/data :counter])))))))
 
-  (testing "it ignores effects that are not functions"
-    (let [;; Once an invalid (non-fn) Effect is returned, the whole fx chain
+  (testing "it ignores Effects that are not functions"
+    (let [;; Once an invalid Effect is returned, the whole fx chain
           ;; short-circuits and no subsequent Effects are run.
           never-run #(throw (Exception. "shouldn't get here."))
           ;; This effect will be applied (i.e. its returned ::data will
           ;; be honored) but the invalid Effect(s) it adds will not.
           effect (constantly {::bread/data {:counter 1}
-                              ::bread/effects ["not a fn" never-run]})
+                              ::bread/effects ["not an Effect" never-run]})
           handler (-> (bread/app)
                       (bread/add-effect effect)
                       (assoc ::bread/data {:counter 0})
                       (bread/handler))]
       (is (= 1 (-> (handler {:uri "/"})
                    (get-in [::bread/data :counter]))))))
-  )
+
+  (testing "it accepts vectors as Effects"
+    (let [sum (fn [{::bread/keys [data]} & nums]
+                {::bread/data (assoc data :sum (reduce + nums))})
+          handler (-> (bread/app)
+                      (bread/add-effect [sum 3 2 1])
+                      (assoc ::bread/data {:sum 0})
+                      (bread/handler))]
+      (is (= 6 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :sum])))))))
 
 (deftest test-add-value-hook
 

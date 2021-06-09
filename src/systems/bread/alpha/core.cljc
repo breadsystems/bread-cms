@@ -166,17 +166,39 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
+(defprotocol Effect
+  "Protocol for encapsulating side-effects"
+  (effect!
+    [this req]))
+
+(extend-protocol Effect
+  clojure.lang.Fn
+  (effect!
+    ([f req]
+     (f req)))
+
+  clojure.lang.PersistentVector
+  (effect!
+    ([v req]
+     (let [[f & args] v]
+       (apply f req args)))))
+
 (defn add-effect
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."
   [req e]
   (update req ::effects (comp vec conj) e))
 
+(defn effect?
+  "Whether x implements (satisfies) the Effect protocol"
+  [x]
+  (satisfies? Effect x))
+
 (defn- apply-effects [req]
   (loop [{data ::data [effect & effects] ::effects :as req} req]
-    (if-not (fn? effect)
+    (if-not (effect? effect)
       req
       (let [;; DO THE THING!
-            {new-data ::data new-effects ::effects} (effect req)
+            {new-data ::data new-effects ::effects} (effect! effect req)
             data (or new-data data)
             effects (or new-effects effects)
             req (assoc req ::data data ::effects effects)]
