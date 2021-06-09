@@ -200,7 +200,7 @@
       (is (= 1 (-> (handler {:uri "/"})
                    (get-in [::bread/data :counter]))))))
 
-  (testing "it accepts vectors as Effects"
+  (testing "vectors are valid Effects"
     (let [sum (fn [{::bread/keys [data]} & nums]
                 {::bread/data (assoc data :sum (reduce + nums))})
           handler (-> (bread/app)
@@ -208,7 +208,18 @@
                       (assoc ::bread/data {:sum 0})
                       (bread/handler))]
       (is (= 6 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :sum])))))))
+                   (get-in [::bread/data :sum]))))))
+
+  (testing "futures are valid Effects"
+    (let [external (atom 0)
+          future-effect (future
+                          {::bread/data {:num (swap! external inc)}})
+          handler (-> (bread/app)
+                      (bread/add-effect future-effect)
+                      (assoc ::bread/data {:num 0})
+                      (bread/handler))]
+      (is (= 1 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :num])))))))
 
 (deftest test-add-value-hook
 

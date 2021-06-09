@@ -181,7 +181,12 @@
   (effect!
     ([v req]
      (let [[f & args] v]
-       (apply f req args)))))
+       (apply f req args))))
+
+  java.util.concurrent.Future
+  (effect!
+    ([fut _]
+     (deref fut))))
 
 (defn add-effect
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."
