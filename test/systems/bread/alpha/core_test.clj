@@ -198,7 +198,11 @@
                       (assoc ::bread/data {:num 0})
                       (bread/handler))]
       (is (= 1 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :num])))))))
+                   (get-in [::bread/data :num]))))))
+
+  ;; TODO add-tx convenience fn (for running db tx directly)
+  ;; TODO add-transform convenience fn (for effects that will chain more effects)
+  )
 
 (deftest test-add-value-hook
 
