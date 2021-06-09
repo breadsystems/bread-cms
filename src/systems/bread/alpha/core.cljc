@@ -172,39 +172,17 @@
   (update req ::effects (comp vec conj) e))
 
 (defn- apply-effects [req]
-  (loop [req req
-         i 0]
-    (let [{::keys [data effects]} req
-          [effect & effects] effects]
-      (if-not (fn? effect)
+  (loop [{data ::data [effect & effects] ::effects :as req} req]
+    (if-not (fn? effect)
+      req
+      (let [;; DO THE THING!
+            {new-data ::data new-effects ::effects} (effect req)
+            data (or new-data data)
+            effects (or new-effects effects)
+            req (assoc req ::data data ::effects effects)]
+        (if-not (seq effects)
           req
-          (let [;; DO THE THING!
-                {new-data ::data new-effects ::effects} (effect req)
-                req (assoc req
-                           ::data (or new-data data)
-                           ::effects (or new-effects effects))]
-            (prn i data (format "%b -> %d more fx" effect (count effects)))
-            (prn new-data (format "%d new fx" (count new-effects)))
-            (if-not (seq (::effects req))
-              (do (prn 'LIMIT) req)
-              (do (prn 'recur)
-                  (recur req (inc i)))))))
-    #_
-    (if (seq es)
-      (let [[e & es] es
-            f (juxt ::data ::effects)]
-        (prn e)
-        (prn es)
-        (-> req e f prn)
-        (-> req e e f prn)
-        (-> req e e e f prn)
-        (-> req e e e e f prn)
-        (-> req e e e e e f prn)
-        (recur es))
-      req)))
-
-(comment
-  )
+          (recur req))))))
 
 (defmacro add-effects->
   "Threads app through forms after prepending `add-effect to each."
