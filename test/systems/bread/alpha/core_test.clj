@@ -132,42 +132,21 @@
                [::bread/from-ns ::bread/file]
                (bread/hooks-for req :my/hook)))))))
 
-#_
-(deftest test-add-effect
-
-  (testing "it adds to the :hook/effects hook inside app"
-    (let [app (bread/add-effects-> (bread/app)
-                inc
-                (dec {:precedence 2})
-                (identity {:precedence 1.5
-                           :my/extra 123}))]
-      (is (bread/hook-for? app :hook/effects inc))
-      (is (bread/hook-for? app :hook/effects dec))
-      (is (bread/hook-for? app :hook/effects dec {:precedence 2}))
-      (is (bread/hook-for? app :hook/effects identity))
-      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5}))
-      (is (bread/hook-for? app :hook/effects identity {:my/extra 123}))
-      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5
-                                                       :my/extra 123}))
-      (is (false? (bread/hook-for? app :hook/effects not=)))
-      (is (false? (bread/hook-for? app :hook/effects dec {:precedence 3})))
-      (is (false? (bread/hook-for? app :hook/effects identity {:x :y}))))))
-
 (deftest test-add-effect
 
   (testing "it adds the given Effect to ::effects"
     (are [effects app] (= effects (::bread/effects app))
 
-         [identity] (-> (bread/app)
-                        (bread/add-effect identity))
+         [prn] (-> (bread/app)
+                        (bread/add-effect prn))
 
          [inc] (-> (bread/app)
                    (bread/add-effect inc))
 
-         [inc dec identity] (-> (bread/app)
-                                (bread/add-effect inc)
-                                (bread/add-effect dec)
-                                (bread/add-effect identity)))))
+         [inc dec prn-str] (-> (bread/app)
+                               (bread/add-effect inc)
+                               (bread/add-effect dec)
+                               (bread/add-effect prn-str)))))
 
 (deftest test-apply-effects-lifecycle-phase
 
@@ -391,15 +370,14 @@
 
 (deftest test-load-handler
 
-  #_
   (testing "it returns a function that loads plugins"
-    (let [my-plugin #(bread/add-effect % identity)
+    (let [my-plugin #(bread/add-hook % :hook/my.hook identity)
           app (bread/app {:plugins [my-plugin]})
           handler (bread/load-handler app)
           response (handler {:url "/"})]
       (is (= [{::bread/precedence 1 ::bread/f identity}]
              (distill-hooks
-               (bread/hooks-for response :hook/effects))))))
+               (bread/hooks-for response :hook/my.hook))))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
@@ -408,25 +386,6 @@
           handler (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
-
-  ;; TODO test effects in isolation
-  #_
-  (testing "it returns a function that applies side-effects"
-    (let [;; Test side-effects
-          state (atom {:num 3 :extra :stuff})
-          init-plugin (fn [app]
-                        (bread/add-value-hook app :initial/data :should-be-persisted))
-          effectful-plugin (fn [app]
-                             (bread/add-effect app (fn [app]
-                                                     (swap! state update :num * 3)
-                                                     (bread/add-value-hook app :ran? true))))
-          handler (plugins->handler [init-plugin effectful-plugin])
-          ;; Run the app, with side-effects
-          result (handler {:url "/hello" :params {:name "world"}})]
-      (is (true? (bread/hook result :ran?)))
-      (is (= :should-be-persisted (bread/hook result :initial/data)))
-      ;; Assert that the expected side-effects took place
-      (is (= 9 (:num @state)))))
 
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
