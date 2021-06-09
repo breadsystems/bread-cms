@@ -169,6 +169,38 @@
                                 (bread/add-effect dec)
                                 (bread/add-effect identity)))))
 
+(deftest test-apply-effects-lifecycle-phase
+
+  (testing "it applies effects until none are left to apply"
+    (letfn [(count-to-three [{::bread/keys [data]}]
+              (if (> 7 (:counter data))
+                {::bread/data (update data :counter inc)
+                 ::bread/effects [count-to-three]}
+                {::bread/data data
+                 ::bread/effects []}))]
+          (let [handler (-> (bread/app)
+                            (bread/add-effect count-to-three)
+                            (assoc ::bread/data {:counter 0})
+                            (bread/handler))]
+            (is (= 7 (-> (handler {:uri "/"})
+                         (get-in [::bread/data :counter])))))))
+
+  (testing "it ignores effects that are not functions"
+    (let [;; Once an invalid (non-fn) Effect is returned, the whole fx chain
+          ;; short-circuits and no subsequent Effects are run.
+          never-run #(throw (Exception. "shouldn't get here."))
+          ;; This effect will be applied (i.e. its returned ::data will
+          ;; be honored) but the invalid Effect(s) it adds will not.
+          effect (constantly {::bread/data {:counter 1}
+                              ::bread/effects ["not a fn" never-run]})
+          handler (-> (bread/app)
+                      (bread/add-effect effect)
+                      (assoc ::bread/data {:counter 0})
+                      (bread/handler))]
+      (is (= 1 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :counter]))))))
+  )
+
 (deftest test-add-value-hook
 
   (testing "add-value-hook wraps passed value in (constantly ,,,)"

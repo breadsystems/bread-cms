@@ -166,19 +166,45 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
-#_
-(defn add-effect
-  "Adds the (presumably effectful) function f as a callback to the special
-  :hook/effects hook. Accepts an optional options map."
-  ([app f options]
-   (add-hook app :hook/effects f options))
-  ([app f]
-   (add-hook app :hook/effects f {})))
-
 (defn add-effect
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."
   [req e]
   (update req ::effects (comp vec conj) e))
+
+(defn- apply-effects [req]
+  (loop [req req
+         i 0]
+    (let [{::keys [data effects]} req
+          [effect & effects] effects]
+      (if-not (fn? effect)
+          req
+          (let [;; DO THE THING!
+                {new-data ::data new-effects ::effects} (effect req)
+                req (assoc req
+                           ::data (or new-data data)
+                           ::effects (or new-effects effects))]
+            (prn i data (format "%b -> %d more fx" effect (count effects)))
+            (prn new-data (format "%d new fx" (count new-effects)))
+            (if-not (seq (::effects req))
+              (do (prn 'LIMIT) req)
+              (do (prn 'recur)
+                  (recur req (inc i)))))))
+    #_
+    (if (seq es)
+      (let [[e & es] es
+            f (juxt ::data ::effects)]
+        (prn e)
+        (prn es)
+        (-> req e f prn)
+        (-> req e e f prn)
+        (-> req e e e f prn)
+        (-> req e e e e f prn)
+        (-> req e e e e e f prn)
+        (recur es))
+      req)))
+
+(comment
+  )
 
 (defmacro add-effects->
   "Threads app through forms after prepending `add-effect to each."
@@ -293,10 +319,6 @@
   [app h & args]
   (apply hook-> app h app args))
 
-#_
-(defn- apply-effects [app]
-  (or (hook app :hook/effects) app))
-
 (defn app
   "Creates a new Bread app. Optionally accepts an options map. A single option
   is supported, :plugins, a sequence of plugins to load."
@@ -328,7 +350,7 @@
         (hook :hook/dispatch) ;; -> ::resolver
         (hook :hook/resolve)  ;; -> ::queries
         (hook :hook/expand)   ;; -> ::data
-        #_(apply-effects)       ;; -> more ::data
+        (apply-effects)       ;; -> more ::data, ::effects
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 
