@@ -12,6 +12,7 @@
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
+                                                     subscribe!
                                                      subscribe-db
                                                      on-event]])
   (:import
@@ -66,8 +67,13 @@
                                  :body "404 Not Found"})}))))
 
 (comment
-  (deref db)
-  (publish! {:event/type :init}))
+  ;; RESET THE DEBUGGER DB
+  (publish! {:event/type :init})
+
+  (-> @db :request/uuid keys)
+  (map (juxt :request/uuid :request/timestamp) (-> @db :request/uuid vals))
+  (keys (map key (-> @db :request/uuid)))
+  )
 
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
@@ -82,7 +88,9 @@
     (http/on-receive ws-chan (fn [message]
                                (let [msg (edn/read-string message)]
                                  (on-event (assoc msg :channel ws-chan)))))
-    ;; TODO subscribe!
+    ;; Broadcast over our WebSocket whenever there's an event!
+    (subscribe! (fn [event]
+                  (http/send! ws-chan (prn-str event))))
     (go-loop []
              (let [{:keys [hook f args detail app] :as inv} (<! <hooks)
                    {::bread/keys [from-ns file line column]} detail
@@ -97,7 +105,6 @@
                           :line line
                           :column column}]
                (publish! event)
-               (http/send! ws-chan (prn-str event))
                (recur)))))
 
 (defn start! [{:keys [port websocket-port shadow-cljs-port]}]
