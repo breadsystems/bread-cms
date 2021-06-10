@@ -19,7 +19,7 @@
 
 (declare db)
 
-(defn subscribe! []
+(defn subscribe-debugger []
   (let [[db' unsub!] (subscribe-db)]
     (def db db')
     unsub!))

@@ -244,10 +244,12 @@
         data (into {} (map (fn [[k query]]
                              (let [expander (apply comp (::bread/expand query))
                                    result (store/q store query)]
+                               #_#_
                                (prn 'query query)
                                (prn 'result result)
                                [k (expander result)]))
                            (::bread/queries app)))]
+    #_
     (prn 'data data)
     (assoc app ::bread/data data)))
 
@@ -478,9 +480,12 @@
 (defonce unsub (atom nil))
 
 (defstate debug-subscription
-  :start (reset! unsub (debug/subscribe!))
-  :stop  (when-let [unsub @unsub]
-           (@unsub)))
+  :start (do
+           (println "Debugger is listening for events...")
+           (reset! unsub (debug/subscribe-debugger)))
+  :stop  (when-let [unsub! @unsub]
+           (println "Debugger unsubscribed from event stream.")
+           (unsub!)))
 
 (defn restart! []
   (mount/stop)
