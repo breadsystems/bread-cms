@@ -30,6 +30,7 @@
   (:import
     [java.util UUID]))
 
+;; TODO optionally start this via config
 (defstate debugger
   :start (flow/connect))
 
