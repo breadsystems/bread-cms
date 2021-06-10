@@ -30,38 +30,39 @@
   (let [reqs (rum/react requests)
         loading? (rum/react loading?)]
     [:main
-     [:div.flex
+     [:div.with-sidebar
       [:div
-       (cond
-         (seq reqs)
-         [:ul
-          (map (fn [[uuid req]]
-                 [:li {:key uuid}
-                  [:label {:on-click #(publish! {:event/type :ui/select-req
-                                                 :request/uuid uuid})}
-                   (if (empty? uuid) "[No UUID]" uuid)]])
-               reqs)]
-         loading?
-         [:p "Loading..."]
-         :else
-         [:p "No requests yet!"])]
-      (let [{:request/keys [hooks uuid uri] :as req}
-            (uuid->req (rum/react req-uuid))]
-        [:div
-         [:h2 uuid]
-         [:h3 uri]
-         [:div
-          [:h3 "Hooks"]
+       [:div
+        (cond
+          (seq reqs)
           [:ul
-           (map-indexed (fn [idx {:keys [hook args f file line column]}]
-                          [:li {:key idx}
-                           [:strong (name hook)]
-                           [:code
-                            (join-some ":" [file line column])]])
-                        hooks)]
-          [:details
-           [:summary "Raw request..."]
-           [:pre (with-out-str (pprint req))]]]])]
+           (map (fn [[uuid req]]
+                  [:li {:key uuid}
+                   [:label {:on-click #(publish! {:event/type :ui/select-req
+                                                  :request/uuid uuid})}
+                    (if (empty? uuid) "[No UUID]" uuid)]])
+                reqs)]
+          loading?
+          [:p "Loading..."]
+          :else
+          [:p "No requests yet!"])]
+       (let [{:request/keys [hooks uuid uri] :as req}
+             (uuid->req (rum/react req-uuid))]
+         [:div
+          [:h2 uuid]
+          [:h3 uri]
+          [:div
+           [:h3 "Hooks"]
+           [:ul
+            (map-indexed (fn [idx {:keys [hook args f file line column]}]
+                           [:li {:key idx}
+                            [:strong (name hook)]
+                            [:code
+                             (join-some ":" [file line column])]])
+                         hooks)]
+           [:details
+            [:summary "Raw request..."]
+            [:pre (with-out-str (pprint req))]]]])]]
      #_
      [:pre (with-out-str (pprint @db))]]))
 
