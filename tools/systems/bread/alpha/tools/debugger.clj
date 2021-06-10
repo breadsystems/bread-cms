@@ -148,7 +148,16 @@
     (bread/add-hooks->
       app
       (:hook/request
-        #(assoc % :request/uuid (uuid) :request/timestamp (Date.))
+        (fn [req]
+          (let [rid (uuid)
+                req (assoc req
+                           :request/uuid rid
+                           :request/timestamp (Date.))
+                ;; TODO nippy or some other serializer, so we can avoid this
+                req (dissoc req ::bread/plugins)]
+            (publish! {:event/type :bread/request
+                       :event/request req})
+            req))
         {:precedence 0})
       (:hook/response
         #(assoc % :response/timestamp (Date.))
