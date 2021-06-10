@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
     [clojure.edn :as edn]
-    [clojure.core.async :as async :refer [<! >! chan go go-loop mult put! tap]]
     [clojure.walk :as walk]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
@@ -33,12 +32,24 @@
 (defonce !ws-port (atom 1314))
 (defonce !shadow-cljs-port (atom 9630))
 
-(def ^:private <hooks (chan 1))
+(defn- hook->event [invocation]
+  (let [{:keys [hook f args detail app]} invocation
+        {::bread/keys [from-ns file line column]} detail]
+        ;; TODO datafy/serialize Events generically
+    {:event/type :bread/hook
+     :request/uuid (str (:request/uuid app))
+     :app (prn-str app)
+     :hook hook
+     :args (map prn-str args)
+     :f (str f)
+     :file file
+     :line line
+     :column column}))
 
 (defn profile! []
   (bread/bind-profiler!
-    (fn [hook-invocation]
-      (go (>! <hooks hook-invocation)))))
+    (fn [invocation]
+      (publish! (hook->event invocation)))))
 
 (defn wrap-csp-header [handler]
   (fn [req]
@@ -90,22 +101,7 @@
                                  (on-event (assoc msg :channel ws-chan)))))
     ;; Broadcast over our WebSocket whenever there's an event!
     (subscribe! (fn [event]
-                  (http/send! ws-chan (prn-str event))))
-    (go-loop []
-             (let [{:keys [hook f args detail app] :as inv} (<! <hooks)
-                   {::bread/keys [from-ns file line column]} detail
-                   ;; TODO datafy/serialize Events generically
-                   event {:event/type :bread/hook
-                          :request/uuid (str (:request/uuid app))
-                          :app (prn-str app)
-                          :hook hook
-                          :args (map prn-str args)
-                          :f (str f)
-                          :file file
-                          :line line
-                          :column column}]
-               (publish! event)
-               (recur)))))
+                  (http/send! ws-chan (prn-str event))))))
 
 (defn start! [{:keys [port websocket-port shadow-cljs-port]}]
   (let [port (Integer. (or port 1313))
