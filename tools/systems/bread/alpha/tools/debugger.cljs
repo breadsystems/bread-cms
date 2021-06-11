@@ -14,6 +14,7 @@
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))
 (def print-db? (rum/cursor-in db [:ui/print-db?]))
+(def websocket (rum/cursor-in db [:ui/websocket]))
 
 (def req-uuids (rum/cursor-in db [:request/uuids]))
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
@@ -45,7 +46,7 @@
       "Close"]
      [:h2 [:code (req->url req)]]
      [:h3 uuid]
-     [:div.req-timestamp (date-fmt-ms (:request/timestamp req))]
+     [:div.info (date-fmt-ms (:request/timestamp req))]
      [:div
       [:h3 "Hooks"]
       [:ul
@@ -64,8 +65,12 @@
   (let [reqs (map uuid->req (rum/react req-uuids))
         loading? (rum/react loading?)
         current-uuid (rum/react req-uuid)
-        print? (rum/react print-db?)]
+        print? (rum/react print-db?)
+        ws (rum/react websocket)]
     [:main
+     (if (and (not loading?) (false? ws))
+       [:p.error "WebSocket connection lost!"]
+       [:p.info "connected to " ws])
      [:div.with-sidebar
       [:div
        [:div
@@ -104,7 +109,8 @@
               :request/uuids []
               :ui/selected-requests (sorted-set)
               :ui/loading? false
-              :ui/selected-req nil}))
+              :ui/selected-req nil
+              :ui/websocket "ws://localhost:1314"}))
 
 (defmethod on-event :ui/select-req [{:request/keys [uuid]}]
   (swap! db assoc :ui/selected-req uuid))
@@ -114,6 +120,9 @@
 
 (defmethod on-event :ui/done! [_]
   (swap! db assoc :ui/loading? false))
+
+(defmethod on-event :ui/websocket-closed! [_]
+  (swap! db assoc :ui/websocket false))
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
@@ -134,7 +143,8 @@
                          (.send ws (prn-str {:event/type :ui/init}))))
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close"
-                       #(js/console.error
-                          "WebSocket connection closed!")))
+                       #(do
+                          (publish! {:event/type :ui/websocket-closed!})
+                          (js/console.error "WebSocket connection closed!"))))
   (on-event {:event/type :ui/loading!})
   (start))

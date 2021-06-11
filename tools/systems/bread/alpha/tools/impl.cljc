@@ -53,17 +53,10 @@
 (comment
   (deref db)
   (def on-event nil)
-  (do
-    (publish! {:event/type :init})
-    (publish! {:event/type :bread/request
-               :event/request {:uri "/"
-                               :request/uuid "123-asdf"}})
-    (publish! {:event/type :bread/request
-               :event/request {:uri "/"
-                               :request/uuid "456-qwerty"}})
-    (publish! {:event/type :bread/request
-               :event/request {:uri "/"
-                               :request/uuid "789-foobar"}})))
+  (publish! {:event/type :init})
+
+  ;;
+  )
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state

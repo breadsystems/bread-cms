@@ -2,6 +2,7 @@
   --sidebar-gutter: 2em;
   --padding-small: 0.3em;
   --text-lighter: #666;
+  --text-red: red;
 }
 
 body {
@@ -58,6 +59,9 @@ li:nth-child(odd) {
   margin-top: 0.7em;
 }
 
-.req-timestamp {
+.info {
   color: var(--text-lighter);
+}
+.error {
+  color: var(--text-red);
 }
