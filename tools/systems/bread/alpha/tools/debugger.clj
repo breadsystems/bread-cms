@@ -49,7 +49,10 @@
 (defn profile! []
   (bread/bind-profiler!
     (fn [invocation]
-      (publish! (hook->event invocation)))))
+      (let [{:request/keys [uuid] :as event} (hook->event invocation)]
+        (when uuid
+          ;; If there's no uuid, we can't correlate it to a request.
+          (publish! event))))))
 
 (defn wrap-csp-header [handler]
   (fn [req]
