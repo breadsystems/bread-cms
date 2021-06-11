@@ -8,5 +8,6 @@
   {:target :browser
    :output-dir "resources/debugger/js"
    :asset-path "/js"
+   :devtools {:watch-dir "resources/debugger"}
    :modules {:main ; becomes debugger/js/main.js
              {:init-fn systems.bread.alpha.tools.debugger/init}}}}}
