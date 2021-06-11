@@ -21,7 +21,7 @@
 (comment
   (deref requests)
   (deref loading?)
-  (deref req))
+  )
 
 (defn- join-some [sep coll]
   (string/join sep (filter seq (map str coll))))
@@ -40,7 +40,7 @@
                   [:li {:key uuid}
                    [:label {:on-click #(publish! {:event/type :ui/select-req
                                                   :request/uuid uuid})}
-                    (if (empty? uuid) "[No UUID]" uuid)]])
+                    (str uuid)]])
                 reqs)]
           loading?
           [:p "Loading..."]

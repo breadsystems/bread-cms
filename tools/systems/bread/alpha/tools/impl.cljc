@@ -55,6 +55,3 @@
   internally in a private var."
   []
   [db (subscribe! on-event)])
-
-(comment
-  (slurp "http://localhost:1312"))

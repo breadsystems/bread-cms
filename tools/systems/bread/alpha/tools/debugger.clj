@@ -34,9 +34,11 @@
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
-        req (assoc req :request/id (subs uuid 0 8))
+        req (assoc req :request/uuid uuid :request/id (subs uuid 0 8))
         ;; TODO better serialization to avoid this
-        req (dissoc req ::bread/hooks ::bread/plugins ::bread/config)
+        req (-> req
+                (dissoc
+                  ::bread/hooks ::bread/plugins ::bread/config :async-channel))
         event {:event/type :bread/request
                :event/request req}]
     (publish! event)))
@@ -167,3 +169,6 @@
       (:hook/response
         #(assoc % :response/timestamp (Date.))
         {:precedence Double/POSITIVE_INFINITY}))))
+
+(comment
+  (slurp "http://localhost:1312"))
