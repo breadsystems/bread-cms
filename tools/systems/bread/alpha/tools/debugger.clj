@@ -91,7 +91,8 @@
 
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
-                        {:event/type :init})))
+                        {:event/type :init
+                         :ui/state @db})))
 
 (defn ws-handler [req]
   (http/with-channel req ws-chan

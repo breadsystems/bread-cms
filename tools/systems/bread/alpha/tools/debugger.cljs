@@ -104,13 +104,14 @@
         [:h3 "Debug DB"]
         [:pre (with-out-str (pprint (rum/react db)))]])]))
 
-(defmethod on-event :init [_]
-  (reset! db {:request/uuid {}
-              :request/uuids []
-              :ui/selected-requests (sorted-set)
-              :ui/loading? false
-              :ui/selected-req nil
-              :ui/websocket "ws://localhost:1314"}))
+(defmethod on-event :init [{:ui/keys [state]}]
+  (reset! db (merge {:request/uuid {}
+                     :request/uuids []
+                     :ui/selected-req nil
+                     :ui/selected-reqs (sorted-set)
+                     :ui/loading? false
+                     :ui/websocket "ws://localhost:1314"}
+                    state)))
 
 (defmethod on-event :ui/select-req [{:request/keys [uuid]}]
   (swap! db assoc :ui/selected-req uuid))
