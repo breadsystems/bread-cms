@@ -162,9 +162,38 @@
         #(assoc % :response/timestamp (Date.))
         {:precedence Double/POSITIVE_INFINITY}))))
 
+(defn- req-info [req]
+  (select-keys
+    req
+    [:request/id
+     :request/uuid
+     :request/timestamp
+     :remote-addr
+     :headers
+     :server-port
+     :content-length
+     :params
+     :form-params
+     :query-params
+     :content-type
+     :character-encoding
+     :uri
+     :server-name
+     :query-string
+     :scheme
+     :request-method]))
+
+(defn- uuid->info [uuid]
+  (-> @db (get-in [:request/uuid uuid]) req-info))
+
+(defn- uuids []
+  (keys (:request/uuid @db)))
+
 (comment
   ;; RESET THE DEBUGGER DB
   (publish! {:event/type :init})
-  (-> @db :request/uuid keys)
+  (uuids)
+  (def $rid (-> @db :request/uuid keys second))
+  (uuid->info $rid)
 
   (slurp "http://localhost:1312"))
