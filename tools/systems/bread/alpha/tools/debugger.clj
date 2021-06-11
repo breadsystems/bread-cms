@@ -91,8 +91,7 @@
 
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
-                        {:event/type :init
-                         :state @db})))
+                        {:event/type :init})))
 
 (defn ws-handler [req]
   (http/with-channel req ws-chan
@@ -187,7 +186,7 @@
   (-> @db (get-in [:request/uuid uuid]) req-info))
 
 (defn- uuids []
-  (keys (:request/uuid @db)))
+  (:request/uuids @db))
 
 (comment
   ;; RESET THE DEBUGGER DB

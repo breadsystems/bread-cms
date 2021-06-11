@@ -35,13 +35,11 @@
   (println "Unknown event type:" (:event/type e))
   (prn e))
 
-(defmethod on-event :init [{:keys [state]}]
-  (let [new-db (merge {:request/uuid {}
-                       :request/uuids []
-                       :request/selected (sorted-set)}
-                      state)]
-    (prn 'reset-db new-db)
-    (reset! db new-db)))
+(defmethod on-event :init [_]
+  (reset! db {:request/uuid {}
+              ;; WHY DON'T THESE GET CLEARED OUT!!!!!
+              :request/uuids []
+              :request/selected (sorted-set)}))
 
 (defmethod on-event :bread/request [{req :event/request}]
   (swap! db
@@ -55,8 +53,9 @@
 
 (comment
   (deref db)
+  (def on-event nil)
   (do
-    (publish! {:event/type :init :state {:ui/print-db? true}})
+    (publish! {:event/type :init})
     (publish! {:event/type :bread/request
                :event/request {:uri "/"
                                :request/uuid "123-asdf"}})
