@@ -193,7 +193,7 @@
   ;; RESET THE DEBUGGER DB
   (publish! {:event/type :init})
   (uuids)
-  (def $rid (-> @db :request/uuid keys second))
+  (def $rid (first (uuids)))
   (uuid->info $rid)
 
   (slurp "http://localhost:1312"))
