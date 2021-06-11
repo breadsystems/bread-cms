@@ -36,6 +36,8 @@
   (prn e))
 
 (defmethod on-event :init [{:keys [state]}]
+  ;; TODO requests should be a vector of UUIDs
+  ;; TODO selected requests as a sorted-set (of request indices)
   (reset! db (merge {:request/uuid (sorted-map)} state)))
 
 (defmethod on-event :bread/request [{req :event/request}]

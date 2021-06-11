@@ -62,16 +62,20 @@
         (cond
           (seq reqs)
           [:ul
-           (map (fn [[uuid {req :request/initial}]]
-                  [:li {:key uuid}
-                   [:label.request-label
-                    ;; TODO decouple publish! from UI events...
-                    {:on-click #(publish! {:event/type :ui/select-req
-                                           :request/uuid uuid})}
-                    [:div [:code (:uri req)]]
-                    [:div (:request/id req)]
-                    [:div (some-> (:request/timestamp req) date-fmt)]]])
-                reqs)]
+           (map-indexed (fn [idx [uuid {req :request/initial}]]
+                          [:li.req-item {:key uuid}
+                           [:div
+                            [:input {:type :checkbox
+                                     :checked true
+                                     :on-change #(prn 'click! idx)}]]
+                           [:label.req-label
+                            ;; TODO decouple publish! from UI events...
+                            {:on-click #(publish! {:event/type :ui/select-req
+                                                   :request/uuid uuid})}
+                            [:div [:code (:uri req)]]
+                            [:div (:request/id req)]
+                            [:div (some-> (:request/timestamp req) date-fmt)]]])
+                        reqs)]
           loading?
           [:p "Loading..."]
           :else
