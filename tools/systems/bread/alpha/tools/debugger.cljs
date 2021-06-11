@@ -6,7 +6,7 @@
     [rum.core :as rum]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
-                                                     on-event]] ))
+                                                     on-event]]))
 
 (let [[db' _] (subscribe-db)]
   (def db db'))
