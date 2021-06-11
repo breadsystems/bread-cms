@@ -104,7 +104,6 @@
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
-  (js/console.log "Starting debug session...")
   (rum/mount (ui) (js/document.getElementById "app")))
 
 (defn on-message [message]
@@ -123,7 +122,3 @@
     (.addEventListener ws "message" on-message))
   (on-event {:event/type :ui/loading!})
   (start))
-
-;; this is called before any code is reloaded
-(defn ^:dev/before-load stop []
-  (js/console.log "Reloading..."))
