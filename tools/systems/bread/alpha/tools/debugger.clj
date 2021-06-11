@@ -155,7 +155,7 @@
             (publish! {:event/type :bread/request
                        :event/request req})
             req))
-        {:precedence 0})
+        {:precedence Double/NEGATIVE_INFINITY})
       (:hook/response
         #(assoc % :response/timestamp (Date.))
-        {:precedence 100}))))
+        {:precedence Double/POSITIVE_INFINITY}))))
