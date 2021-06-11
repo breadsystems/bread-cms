@@ -18,8 +18,11 @@
 
 (def req-uuids (rum/cursor-in db [:request/uuids]))
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
+(def selected (rum/cursor-in db [:ui/selected-reqs]))
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
+(defn- idx->req [idx]
+  (get @requests (get @req-uuids idx)))
 
 (defn- toggle-print-db! []
   (swap! db update :ui/print-db? not))
@@ -30,11 +33,10 @@
   (uuid->req (first @req-uuids))
 
   (deref req-uuids)
+  (deref selected)
   (deref loading?)
-  (select-keys
-    (uuid->req (deref req-uuid))
-    [:request/uuid :request/id :request/timestamp :uri :headers :params])
-  (:request/timestamp (:request/initial (uuid->req (deref req-uuid))))
+
+  ;;
   )
 
 (rum/defc request-details < rum/reactive []
@@ -63,6 +65,7 @@
 
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react req-uuids))
+        selected (rum/react selected)
         loading? (rum/react loading?)
         current-uuid (rum/react req-uuid)
         print? (rum/react print-db?)
@@ -82,11 +85,13 @@
                           [:li.req-item {:key uuid}
                            [:div
                             [:input {:type :checkbox
-                                     :checked true
-                                     :on-change #(prn 'click! idx)}]]
+                                     :checked (contains? selected idx)
+                                     :on-change #(publish!
+                                                   {:event/type :ui/select-req
+                                                    :uuids/index idx})}]]
                            [:label.req-label
                             ;; TODO decouple publish! from UI events...?
-                            {:on-click #(publish! {:event/type :ui/select-req
+                            {:on-click #(publish! {:event/type :ui/view-req
                                                    :request/uuid uuid})}
                             [:div [:code (:uri req)]]
                             [:div (:request/id req)]
@@ -95,10 +100,14 @@
           loading?
           [:p "Loading..."]
           :else
-          [:p "No requests yet!"])]
+          [:p "No requests yet!"])
+        [:div
+         [:button {:on-click #(publish! {:event/type :replay!})
+                   :disabled (not (seq selected))}
+          "Replay selected"]]]
        (if current-uuid
          (request-details)
-         [:p "Click a request ID to view details"])]]
+         [:p "Click a request to view details"])]]
      (when print?
        [:div
         [:h3 "Debug DB"]
@@ -113,7 +122,7 @@
                      :ui/websocket "ws://localhost:1314"}
                     state)))
 
-(defmethod on-event :ui/select-req [{:request/keys [uuid]}]
+(defmethod on-event :ui/view-req [{:request/keys [uuid]}]
   (swap! db assoc :ui/selected-req uuid))
 
 (defmethod on-event :ui/loading! [_]
@@ -124,6 +133,18 @@
 
 (defmethod on-event :ui/websocket-closed! [_]
   (swap! db assoc :ui/websocket false))
+
+(defmethod on-event :ui/select-req [{:uuids/keys [index]}]
+  (swap! db update :ui/selected-reqs
+         (fn [selected]
+           (if (selected index)
+             (disj selected index)
+             (conj selected index)))))
+
+(defmethod on-event :replay! []
+  (doseq [idx @selected]
+    (let [{req :request/initial} (idx->req idx)]
+      (prn 'replay! idx (:uri req)))))
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
