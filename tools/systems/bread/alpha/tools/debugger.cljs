@@ -13,13 +13,22 @@
 
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))
+(def print-db? (rum/cursor-in db [:ui/print-db?]))
 
+(def req-uuids (rum/cursor-in db [:request/uuids]))
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 
+(defn- toggle-print-db! []
+  (swap! db update :ui/print-db? not))
+
 (comment
-  (keys (deref requests))
+  (toggle-print-db!)
+
+  (uuid->req (first @req-uuids))
+
+  (deref req-uuids)
   (deref loading?)
   (select-keys
     (uuid->req (deref req-uuid))
@@ -52,9 +61,10 @@
       [:pre (with-out-str (pprint req))]]]))
 
 (rum/defc ui < rum/reactive []
-  (let [reqs (rum/react requests)
+  (let [reqs (map uuid->req (rum/react req-uuids))
         loading? (rum/react loading?)
-        current-uuid (rum/react req-uuid)]
+        current-uuid (rum/react req-uuid)
+        print? (rum/react print-db?)]
     [:main
      [:div.with-sidebar
       [:div
@@ -62,14 +72,15 @@
         (cond
           (seq reqs)
           [:ul
-           (map-indexed (fn [idx [uuid {req :request/initial}]]
+           (map-indexed (fn [idx {uuid :request/uuid
+                                  req :request/initial}]
                           [:li.req-item {:key uuid}
                            [:div
                             [:input {:type :checkbox
                                      :checked true
                                      :on-change #(prn 'click! idx)}]]
                            [:label.req-label
-                            ;; TODO decouple publish! from UI events...
+                            ;; TODO decouple publish! from UI events...?
                             {:on-click #(publish! {:event/type :ui/select-req
                                                    :request/uuid uuid})}
                             [:div [:code (:uri req)]]
@@ -83,8 +94,10 @@
        (if current-uuid
          (request-details)
          [:p "Click a request ID to view details"])]]
-     #_
-     [:pre (with-out-str (pprint @db))]]))
+     (when print?
+       [:div
+        [:h3 "Debug DB"]
+        [:pre (with-out-str (pprint (rum/react db)))]])]))
 
 (defmethod on-event :init [{:keys [state]}]
   (swap! db merge

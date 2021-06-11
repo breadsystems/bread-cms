@@ -36,12 +36,36 @@
   (prn e))
 
 (defmethod on-event :init [{:keys [state]}]
-  ;; TODO requests should be a vector of UUIDs
-  ;; TODO selected requests as a sorted-set (of request indices)
-  (reset! db (merge {:request/uuid (sorted-map)} state)))
+  (let [new-db (merge {:request/uuid {}
+                       :request/uuids []
+                       :request/selected (sorted-set)}
+                      state)]
+    (prn 'reset-db new-db)
+    (reset! db new-db)))
 
 (defmethod on-event :bread/request [{req :event/request}]
-  (swap! db assoc-in [:request/uuid (:request/uuid req) :request/initial] req))
+  (swap! db
+         (fn [state]
+           (-> state
+               (assoc-in
+                 [:request/uuid (:request/uuid req)]
+                 {:request/uuid (:request/uuid req)
+                  :request/initial req})
+               (update :request/uuids conjv (:request/uuid req))))))
+
+(comment
+  (deref db)
+  (do
+    (publish! {:event/type :init :state {:ui/print-db? true}})
+    (publish! {:event/type :bread/request
+               :event/request {:uri "/"
+                               :request/uuid "123-asdf"}})
+    (publish! {:event/type :bread/request
+               :event/request {:uri "/"
+                               :request/uuid "456-qwerty"}})
+    (publish! {:event/type :bread/request
+               :event/request {:uri "/"
+                               :request/uuid "789-foobar"}})))
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state
