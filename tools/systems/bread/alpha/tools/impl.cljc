@@ -38,8 +38,8 @@
 (defmethod on-event :init [{:keys [state]}]
   (swap! db merge {:request/uuid (sorted-map)} state))
 
-(defmethod on-event :bread/request [{:request/keys [uuid] :as req-event}]
-  (swap! db assoc-in [:request/uuid uuid] (dissoc req-event :event/type)))
+(defmethod on-event :bread/request [{req :event/request}]
+  (swap! db assoc-in [:request/uuid (:request/uuid req)] req))
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state

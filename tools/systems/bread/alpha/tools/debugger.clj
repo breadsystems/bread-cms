@@ -32,6 +32,15 @@
 (defonce !ws-port (atom 1314))
 (defonce !shadow-cljs-port (atom 9630))
 
+(defn- publish-request! [req]
+  (let [uuid (str (:request/uuid req))
+        req (assoc req :request/id (subs uuid 0 8))
+        ;; TODO better serialization to avoid this
+        req (dissoc req ::bread/hooks ::bread/plugins ::bread/config)
+        event {:event/type :bread/request
+               :event/request req}]
+    (publish! event)))
+
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]
     (let [{:keys [hook f args detail app]} invocation
@@ -152,8 +161,7 @@
                            :request/timestamp (Date.))
                 ;; TODO nippy or some other serializer, so we can avoid this
                 req (dissoc req ::bread/plugins)]
-            (publish! {:event/type :bread/request
-                       :event/request req})
+            (publish-request! req)
             req))
         {:precedence Double/NEGATIVE_INFINITY})
       (:hook/response
