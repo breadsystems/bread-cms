@@ -2,11 +2,11 @@
   (:require
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
-    [clojure.string :as string]
     [rum.core :as rum]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
-                                                     on-event]]))
+                                                     on-event]]
+    [systems.bread.alpha.tools.util :refer [ago date-fmt date-fmt-ms join-some req->url]]))
 
 (let [[db' _] (subscribe-db)]
   (def db db'))
@@ -19,16 +19,42 @@
   (get-in @db [:request/uuid uuid]))
 
 (comment
-  (deref requests)
+  (keys (deref requests))
   (deref loading?)
+  (select-keys
+    (uuid->req (deref req-uuid))
+    [:request/uuid :request/id :request/timestamp :uri :headers :params])
+  (:request/timestamp (:request/initial (uuid->req (deref req-uuid))))
   )
 
-(defn- join-some [sep coll]
-  (string/join sep (filter seq (map str coll))))
+(rum/defc request-details < rum/reactive []
+  (let [{uuid :request/uuid req :request/initial :as req-data}
+        (uuid->req (rum/react req-uuid))]
+    [:div.rows
+     ;; TODO use Citrus here?
+     [:button {:on-click #(swap! db assoc :ui/selected-req nil)}
+      "Close"]
+     [:h2 [:code (req->url req)]]
+     [:h3 uuid]
+     [:div.req-timestamp (date-fmt-ms (:request/timestamp req))]
+     [:div
+      [:h3 "Hooks"]
+      [:ul
+       (map-indexed (fn [idx {:keys [hook args f file line column]}]
+                      [:li {:key idx}
+                       [:strong (name hook)]
+                       " "
+                       [:code
+                        (join-some ":" [file line column])]])
+                    (:request/hooks req-data))]]
+     [:details
+      [:summary "Raw request EDN..."]
+      [:pre (with-out-str (pprint req))]]]))
 
 (rum/defc ui < rum/reactive []
   (let [reqs (rum/react requests)
-        loading? (rum/react loading?)]
+        loading? (rum/react loading?)
+        current-uuid (rum/react req-uuid)]
     [:main
      [:div.with-sidebar
       [:div
@@ -36,33 +62,23 @@
         (cond
           (seq reqs)
           [:ul
-           (map (fn [[uuid req]]
+           (map (fn [[uuid {req :request/initial}]]
                   [:li {:key uuid}
-                   [:label {:on-click #(publish! {:event/type :ui/select-req
-                                                  :request/uuid uuid})}
-                    (str uuid)]])
+                   [:label.request-label
+                    ;; TODO decouple publish! from UI events...
+                    {:on-click #(publish! {:event/type :ui/select-req
+                                           :request/uuid uuid})}
+                    [:div [:code (:uri req)]]
+                    [:div (:request/id req)]
+                    [:div (some-> (:request/timestamp req) date-fmt)]]])
                 reqs)]
           loading?
           [:p "Loading..."]
           :else
           [:p "No requests yet!"])]
-       (let [{:request/keys [hooks uuid uri] :as req}
-             (uuid->req (rum/react req-uuid))]
-         [:div
-          [:h2 uuid]
-          [:h3 uri]
-          [:div
-           [:h3 "Hooks"]
-           [:ul
-            (map-indexed (fn [idx {:keys [hook args f file line column]}]
-                           [:li {:key idx}
-                            [:strong (name hook)]
-                            [:code
-                             (join-some ":" [file line column])]])
-                         hooks)]
-           [:details
-            [:summary "Raw request..."]
-            [:pre (with-out-str (pprint req))]]]])]]
+       (if current-uuid
+         (request-details)
+         [:p "Click a request ID to view details"])]]
      #_
      [:pre (with-out-str (pprint @db))]]))
 

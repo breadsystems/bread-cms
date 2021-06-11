@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
     [clojure.edn :as edn]
-    [clojure.walk :as walk]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [systems.bread.alpha.core :as bread]
@@ -34,7 +33,8 @@
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
-        req (assoc req :request/uuid uuid :request/id (subs uuid 0 8))
+        req (->
+              (assoc req :request/uuid uuid :request/id (subs uuid 0 8)))
         ;; TODO better serialization to avoid this
         req (-> req
                 (dissoc
@@ -88,15 +88,6 @@
       (ring/create-default-handler
         {:not-found (constantly {:status 404
                                  :body "404 Not Found"})}))))
-
-(comment
-  ;; RESET THE DEBUGGER DB
-  (publish! {:event/type :init})
-
-  (-> @db :request/uuid keys)
-  (map (juxt :request/uuid :request/timestamp) (-> @db :request/uuid vals))
-  (keys (map key (-> @db :request/uuid)))
-  )
 
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
@@ -159,6 +150,7 @@
         (fn [req]
           (let [rid (uuid)
                 req (assoc req
+                           :profiler/profiled? true
                            :request/uuid rid
                            :request/timestamp (Date.))
                 ;; TODO nippy or some other serializer, so we can avoid this
@@ -171,4 +163,8 @@
         {:precedence Double/POSITIVE_INFINITY}))))
 
 (comment
+  ;; RESET THE DEBUGGER DB
+  (publish! {:event/type :init})
+  (-> @db :request/uuid keys)
+
   (slurp "http://localhost:1312"))

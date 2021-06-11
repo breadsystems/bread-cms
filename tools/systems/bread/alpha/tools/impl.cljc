@@ -36,10 +36,10 @@
   (prn e))
 
 (defmethod on-event :init [{:keys [state]}]
-  (swap! db merge {:request/uuid (sorted-map)} state))
+  (reset! db (merge {:request/uuid (sorted-map)} state)))
 
 (defmethod on-event :bread/request [{req :event/request}]
-  (swap! db assoc-in [:request/uuid (:request/uuid req)] req))
+  (swap! db assoc-in [:request/uuid (:request/uuid req) :request/initial] req))
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state
