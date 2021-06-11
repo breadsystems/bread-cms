@@ -35,11 +35,10 @@
   (println "Unknown event type:" (:event/type e))
   (prn e))
 
+;; NOTE: This gets overridden in CLJS!!!
 (defmethod on-event :init [_]
   (reset! db {:request/uuid {}
-              ;; WHY DON'T THESE GET CLEARED OUT!!!!!
-              :request/uuids []
-              :request/selected (sorted-set)}))
+              :request/uuids []}))
 
 (defmethod on-event :bread/request [{req :event/request}]
   (swap! db

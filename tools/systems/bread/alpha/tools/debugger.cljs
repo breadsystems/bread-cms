@@ -99,12 +99,12 @@
         [:h3 "Debug DB"]
         [:pre (with-out-str (pprint (rum/react db)))]])]))
 
-(defmethod on-event :init [{:keys [state]}]
-  (swap! db merge
-         {:request/uuid {}
-          :ui/loading? false
-          :ui/selected-req nil}
-         state))
+(defmethod on-event :init [_]
+  (reset! db {:request/uuid {}
+              :request/uuids []
+              :ui/selected-requests (sorted-set)
+              :ui/loading? false
+              :ui/selected-req nil}))
 
 (defmethod on-event :ui/select-req [{:request/keys [uuid]}]
   (swap! db assoc :ui/selected-req uuid))
@@ -132,6 +132,9 @@
     (.addEventListener ws "open"
                        (fn [_]
                          (.send ws (prn-str {:event/type :ui/init}))))
-    (.addEventListener ws "message" on-message))
+    (.addEventListener ws "message" on-message)
+    (.addEventListener ws "close"
+                       #(js/console.error
+                          "WebSocket connection closed!")))
   (on-event {:event/type :ui/loading!})
   (start))
