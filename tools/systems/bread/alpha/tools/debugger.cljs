@@ -11,6 +11,12 @@
 (let [[db' _] (subscribe-db)]
   (def db db'))
 
+(defonce !ws (atom nil))
+
+(defn send! [event]
+  (when-let [ws @!ws]
+    (.send ws (prn-str event))))
+
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))
 (def print-db? (rum/cursor-in db [:ui/print-db?]))
@@ -26,6 +32,11 @@
 
 (defn- toggle-print-db! []
   (swap! db update :ui/print-db? not))
+
+(defn clear-requests! []
+  (when (js/confirm "Clear all request data? This cannot be undone.")
+    (publish! {:event/type :clear-requests})
+    (send! {:event/type :clear-requests})))
 
 (comment
   (toggle-print-db!)
@@ -76,7 +87,7 @@
        [:p.info "connected to " ws])
      [:div.with-sidebar
       [:div
-       [:div
+       [:div.rows
         (cond
           (seq reqs)
           [:ul
@@ -98,16 +109,23 @@
                             [:div (some-> (:request/timestamp req) date-fmt)]]])
                         reqs)]
           loading?
-          [:p "Loading..."]
-          :else
-          [:p "No requests yet!"])
-        [:div
-         [:button {:on-click #(publish! {:event/type :replay!})
-                   :disabled (not (seq selected))}
-          "Replay selected"]]]
-       (if current-uuid
+          [:p "Loading..."])
+        [:div.rows
+         [:div
+          [:button {:on-click #(publish! {:event/type :replay!})
+                    :disabled (not (seq selected))}
+           "Replay selected"]]
+         [:div
+          [:button {:on-click #(clear-requests!)
+                    :disabled (not (seq reqs))}
+           "Clear requests"]]]]
+       (cond
+         current-uuid
          (request-details)
-         [:p "Click a request to view details"])]]
+         (seq reqs)
+         [:p "Click a request to view details"]
+         :else
+         [:p.info "No requests yet."])]]
      (when print?
        [:div
         [:h3 "Debug DB"]
@@ -160,6 +178,7 @@
 (defn init []
   ;; TODO get WS host/port dynamically
   (let [ws (js/WebSocket. "ws://localhost:1314")]
+    (reset! !ws ws)
     (.addEventListener ws "open"
                        (fn [_]
                          (.send ws (prn-str {:event/type :ui/init}))))
