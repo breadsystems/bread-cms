@@ -44,7 +44,8 @@
   (swap! db assoc
          :request/uuid {}
          :request/uuids []
-         :ui/selected-reqs (sorted-set)))
+         :ui/selected-reqs (sorted-set)
+         :ui/selected-req nil))
 
 (defmethod on-event :bread/request [{req :event/request}]
   (swap! db
