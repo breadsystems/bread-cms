@@ -33,26 +33,24 @@
 (defonce !shadow-cljs-port (atom 9630))
 
 (defn- hook->event [invocation]
-  (let [{:keys [hook f args detail app]} invocation
-        {::bread/keys [from-ns file line column]} detail]
-        ;; TODO datafy/serialize Events generically
-    {:event/type :bread/hook
-     :request/uuid (str (:request/uuid app))
-     :app (prn-str app)
-     :hook hook
-     :args (map prn-str args)
-     :f (str f)
-     :file file
-     :line line
-     :column column}))
+  (when-let [rid (get-in invocation [:app :request/uuid])]
+    (let [{:keys [hook f args detail app]} invocation
+          {::bread/keys [from-ns file line column]} detail]
+      {:event/type :bread/hook
+       :request/uuid (str rid)
+       :app (prn-str app)
+       :hook hook
+       :args (map prn-str args)
+       :f (str f)
+       :file file
+       :line line
+       :column column})))
 
 (defn profile! []
   (bread/bind-profiler!
     (fn [invocation]
-      (let [{:request/keys [uuid] :as event} (hook->event invocation)]
-        (when uuid
-          ;; If there's no uuid, we can't correlate it to a request.
-          (publish! event))))))
+      (when-let [event (hook->event invocation)]
+        (publish! event)))))
 
 (defn wrap-csp-header [handler]
   (fn [req]
