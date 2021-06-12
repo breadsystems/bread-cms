@@ -71,6 +71,23 @@
      [:h3 uuid]
      [:div.info (date-fmt-ms (:request/timestamp req))]
      [:div
+      [:button {:on-click #(replay-request! req)} "Replay this request"]]
+     (when-let [replayed (:profiler/replay-uuid req)]
+       [:div
+        "Replay of "
+        [:button.replay-uuid
+         {:on-click #(swap! db assoc :ui/selected-req replayed)}
+         replayed]])
+     (when-let [replays (seq (:request/replays req-data))]
+       [:<>
+        [:h3 "Replays"]
+        (map (fn [uuid]
+               [:button.replay-uuid
+                {:key uuid
+                 :on-click #(swap! db assoc :ui/selected-req uuid)}
+                uuid])
+             replays)])
+     [:div
       [:h3 "Hooks"]
       [:ul
        (map-indexed (fn [idx {:keys [hook args f file line column]}]

@@ -47,6 +47,12 @@
          :ui/selected-reqs (sorted-set)
          :ui/selected-req nil))
 
+(defn- record-replay [state {replayed :profiler/replay-uuid
+                             uuid :request/uuid}]
+  (if replayed
+    (update-in state [:request/uuid replayed :request/replays] conjv uuid)
+    state))
+
 (defmethod on-event :bread/request [{req :event/request}]
   (swap! db
          (fn [state]
@@ -54,8 +60,10 @@
                (assoc-in
                  [:request/uuid (:request/uuid req)]
                  {:request/uuid (:request/uuid req)
-                  :request/initial req})
-               (update :request/uuids conjv (:request/uuid req))))))
+                  :request/initial req
+                  :request/replays []})
+               (update :request/uuids conjv (:request/uuid req))
+               (record-replay req)))))
 
 (comment
   (deref db)
