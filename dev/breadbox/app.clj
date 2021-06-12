@@ -472,23 +472,12 @@
   :start (start!)
   :stop  (stop!))
 
-(defstate debug-server
-  :start (debug/start! {:replay-handler handler})
-  :stop  (debug/stop!))
+(defonce stop-debugger! (atom nil))
 
-(defstate debug-profiler
-  :start (debug/profile!)
-  :stop  (bread/bind-profiler! nil))
-
-(defonce unsub (atom nil))
-
-(defstate debug-subscription
-  :start (do
-           (println "Debugger is listening for events...")
-           (reset! unsub (debug/subscribe-debugger)))
-  :stop  (when-let [unsub! @unsub]
-           (println "Debugger unsubscribed from event stream.")
-           (unsub!)))
+(defstate debugger
+  :start (reset! stop-debugger! (debug/start! {:replay-handler handler}))
+  :stop  (when-let [stop! @stop-debugger!]
+           (stop!)))
 
 (defn restart! []
   (mount/stop)

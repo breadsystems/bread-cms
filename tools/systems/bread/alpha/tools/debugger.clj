@@ -18,10 +18,14 @@
 
 (declare db)
 
+(defn- subscribe-debugger []
+  (let [[db' unsub!] (subscribe-db)]
+    (def db db')
+    unsub!))
+
 (defn uuid []
   (UUID/randomUUID))
 
-(defonce stop-debugger (atom nil))
 (defonce !port (atom 1313))
 (defonce !shadow-cljs-port (atom 9630))
 (defonce !replay-handler (atom nil))
@@ -63,23 +67,17 @@
        :line line
        :column column})))
 
-(defn profile! []
-  (bread/bind-profiler!
-    (fn [invocation]
-      (when-let [event (hook->event invocation)]
-        (publish! event)))))
-
-(defn wrap-csp-header [handler]
+(defn- wrap-csp-header [handler]
   (fn [req]
     (update
       (handler req) :headers merge
       {"Content-Security-Policy"
        (format
          "connect-src 'self' ws://localhost:%s ws://localhost:%s;"
-         @!ws-port
+         @!port
          @!shadow-cljs-port)})))
 
-(defn ws-handler [req]
+(defn- ws-handler [req]
   (http/with-channel req ws-chan
     (println "Debug WebSocket connection created...")
     (http/on-close ws-chan (fn [status]
@@ -91,7 +89,7 @@
     (subscribe! (fn [event]
                   (http/send! ws-chan (prn-str event))))))
 
-(def handler
+(def ^:private handler
   (ring/ring-handler
     (ring/router
       [["/ping" (constantly {:status 200 :body "pong"})]
@@ -108,8 +106,8 @@
 (defmethod on-event :ui/init [{:keys [channel]}]
   (http/send! channel (prn-str
                         {:event/type :init
-                         :ui/state
-                         (assoc @db :ui/websocket (websocket-host))})))
+                         :ui/state (assoc @db
+                                          :ui/websocket (websocket-host))})))
 
 (defmethod on-event :request/replay [{req :event/request}]
   (when-let [handler @!replay-handler]
@@ -118,14 +116,20 @@
       (throw (ex-info "replay-handler is not a function"
                       {:replay-handler handler})))))
 
-(defn start! [{:keys [port shadow-cljs-port replay-handler]}]
+(defn start!
+  "Starts a debug web server on the specified port and attaches the profiler.
+  Returns a shutdown function that stops the server and detaches the profiler."
+  [{:keys [port shadow-cljs-port replay-handler]}]
   (reset! !replay-handler replay-handler)
+
   ;; TODO automatically find open ports
   ;; https://github.com/thheller/shadow-cljs/blob/ba0a02aec050c6bc8db1932916009400f99d3cce/src/main/shadow/cljs/devtools/server.clj#L176
   (let [port (Integer. (or port 1313))
-        shadow-cljs-port (Integer. (or shadow-cljs-port 9630))]
+        shadow-cljs-port (Integer. (or shadow-cljs-port 9630))
+        stop-debugger (atom nil)
+        unsub (subscribe-debugger)]
 
-    (println (str "Running DEBUG server at localhost:" port))
+    (println (str "Running debug server at localhost:" port))
     (as-> #'handler $
       (wrap-reload $)
       (wrap-keyword-params $)
@@ -135,24 +139,19 @@
 
     (reset! !port port)
     (reset! !shadow-cljs-port shadow-cljs-port)
-    nil))
 
-(defn stop! []
-  (println "Stopping DEBUG & Websocket server")
-  (when (fn? @stop-debugger)
-    (@stop-debugger))
-  (reset! stop-debugger nil))
+    (println "Binding debug profiler...")
+    (bread/bind-profiler!
+      (fn [invocation]
+        (when-let [event (hook->event invocation)]
+          (publish! event))))
 
-(defn subscribe-debugger []
-  (let [[db' unsub!] (subscribe-db)]
-    (def db db')
-    unsub!))
-
-(defn restart! [opts]
-  (stop!)
-  (start! (merge {:port 1313
-                  :shadow-cljs-port 9630}
-                 opts)))
+    (fn []
+      (println "Stopping debug server.")
+      (@stop-debugger)
+      (println "Unbinding profiler.")
+      (bread/bind-profiler! nil)
+      (unsub))))
 
 (defn plugin []
   (fn [app]
