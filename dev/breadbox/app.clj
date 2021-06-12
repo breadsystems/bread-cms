@@ -483,7 +483,12 @@
   (mount/stop)
   (mount/start))
 
+(defn restart-cms! []
+  (mount/stop-except #'debugger)
+  (mount/start))
+
 (comment
   (mount/start)
   (mount/stop)
+  (restart-cms!)
   (restart!))
