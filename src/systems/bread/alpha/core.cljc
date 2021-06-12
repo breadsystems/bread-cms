@@ -250,6 +250,42 @@
                                ;; wraps one from somewhere else.
                                ::core? true}))))))
 
+(defmacro ^:private try-hook* [app hook h f args]
+  `(try
+     (profile-hook! ~h ~f ~args ~hook ~app)
+     (apply ~f ~args)
+     (catch java.lang.Throwable e#
+       ;; If bread.core threw this exception, don't wrap it
+       (throw (if (-> e# ex-data ::core?) e#
+                (ex-info (str ~h " hook threw an exception: "
+                              (str (class e#) ": " (.getMessage e#)))
+                              {:exception e#
+                               :name ~h
+                               :hook ~hook
+                               :args ~args
+                               :app ~app
+                               ;; Indicate to the caller that this exception
+                               ;; wraps one from somewhere else.
+                               ::core? true}))))))
+
+(comment
+  (macroexpand '(try-hook
+                  (bread/app)
+                  {::precedence 1 ::f identity}
+                  :hook/test
+                  identity
+                  "some value"
+                  ["other" "args"]
+                  (apply identity '$APP "some value" ["other args"])))
+
+  (macroexpand '(try-hook*
+                  (bread/app)
+                  {::precedence 1 ::f identity}
+                  :hook/test
+                  identity
+                  ['$APP "some value" "other" "args"]))
+  )
+
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through
   all callbacks for h. The result of applying each callback is passed as the
