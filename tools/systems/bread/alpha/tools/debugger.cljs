@@ -6,7 +6,12 @@
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
                                                      on-event]]
-    [systems.bread.alpha.tools.util :refer [ago date-fmt date-fmt-ms join-some req->url]]))
+    [systems.bread.alpha.tools.util :refer [ago
+                                            date-fmt
+                                            date-fmt-ms
+                                            join-some
+                                            req->url
+                                            shorten-uuid]]))
 
 (let [[db' _] (subscribe-db)]
   (def db db'))
@@ -68,25 +73,32 @@
      [:button {:on-click #(swap! db assoc :ui/selected-req nil)}
       "Close"]
      [:h2 [:code (req->url req)]]
-     [:h3 uuid]
      [:div.info (date-fmt-ms (:request/timestamp req))]
+     [:div.with-sidebar
+      [:div
+       [:div "UUID"]
+       [:div [:code.uuid uuid]]]]
+     (when-let [replayed (:profiler/replay-uuid req)]
+       [:div.with-sidebar
+        [:div
+         [:div "Replay of:"]
+         [:div
+          [:button.replay-uuid
+           {:on-click #(swap! db assoc :ui/selected-req replayed)}
+           (shorten-uuid replayed)]]]])
+     (when-let [replays (seq (:request/replays req-data))]
+       [:div.with-sidebar
+        [:div
+         [:div "Replays of this request:"]
+         [:div
+          (map (fn [uuid]
+                 [:button.replay-uuid.replay-btn
+                  {:key uuid
+                   :on-click #(swap! db assoc :ui/selected-req uuid)}
+                  (shorten-uuid uuid)])
+               replays)]]])
      [:div
       [:button {:on-click #(replay-request! req)} "Replay this request"]]
-     (when-let [replayed (:profiler/replay-uuid req)]
-       [:div
-        "Replay of "
-        [:button.replay-uuid
-         {:on-click #(swap! db assoc :ui/selected-req replayed)}
-         replayed]])
-     (when-let [replays (seq (:request/replays req-data))]
-       [:div.rows.tight
-        [:h3 "Replays"]
-        (map (fn [uuid]
-               [:div {:key uuid}
-                [:button.replay-uuid
-                 {:on-click #(swap! db assoc :ui/selected-req uuid)}
-                 uuid]])
-             replays)])
      [:div
       [:h3 "Hooks"]
       [:ul

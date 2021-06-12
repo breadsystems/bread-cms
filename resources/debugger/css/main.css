@@ -83,3 +83,10 @@ button {
 .error {
   color: var(--text-red);
 }
+
+* + .replay-uuid {
+  margin-inline-start: var(--padding-large);
+}
+.uuid {
+  font-weight: 700;
+}

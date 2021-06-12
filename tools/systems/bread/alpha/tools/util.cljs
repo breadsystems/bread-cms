@@ -16,3 +16,6 @@
 
 (defn join-some [sep coll]
   (string/join sep (filter seq (map str coll))))
+
+(defn shorten-uuid [longer]
+  (subs longer 0 8))
