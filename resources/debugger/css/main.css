@@ -49,6 +49,7 @@ button {
 
 .with-sidebar {
   overflow: hidden;
+  --sidebar-width: 25ch;
 }
 .with-sidebar > * {
   display: flex;
@@ -57,6 +58,7 @@ button {
 }
 .with-sidebar > * > * {
   margin: calc(var(--sidebar-gutter) / 2);
+  flex-basis: var(--sidebar-width);
   flex-grow: 1;
 }
 .with-sidebar > * > :last-child {
