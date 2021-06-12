@@ -68,11 +68,14 @@
 (rum/defc request-details < rum/reactive []
   (let [{uuid :request/uuid req :request/initial :as req-data}
         (uuid->req (rum/react req-uuid))]
-    [:div.rows
-     ;; TODO use Citrus here?
-     [:button {:on-click #(swap! db assoc :ui/selected-req nil)}
-      "Close"]
-     [:h2 [:code (req->url req)]]
+    [:article.rows
+     [:header.with-sidebar
+      [:div
+       [:div
+        [:h2.emphasized (req->url req)]]
+       [:div
+        [:button.close-btn {:on-click #(swap! db assoc :ui/selected-req nil)}
+         "Close"]]]]
      [:div.info (date-fmt-ms (:request/timestamp req))]
      [:div.with-sidebar
       [:div
