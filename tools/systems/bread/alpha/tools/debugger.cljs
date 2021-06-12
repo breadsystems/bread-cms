@@ -164,7 +164,8 @@
     (let [{req :request/initial} (idx->req idx)]
       (prn 'replay! idx (:uri req)))))
 
-;; start is called by init and after code reloading finishes
+;; TODO figure out why replay is send!ing once more each time code
+;; is reloaded...
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
 
