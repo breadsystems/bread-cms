@@ -79,13 +79,13 @@
          {:on-click #(swap! db assoc :ui/selected-req replayed)}
          replayed]])
      (when-let [replays (seq (:request/replays req-data))]
-       [:<>
+       [:div.rows.tight
         [:h3 "Replays"]
         (map (fn [uuid]
-               [:button.replay-uuid
-                {:key uuid
-                 :on-click #(swap! db assoc :ui/selected-req uuid)}
-                uuid])
+               [:div {:key uuid}
+                [:button.replay-uuid
+                 {:on-click #(swap! db assoc :ui/selected-req uuid)}
+                 uuid]])
              replays)])
      [:div
       [:h3 "Hooks"]
