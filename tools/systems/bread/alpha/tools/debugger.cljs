@@ -68,7 +68,10 @@
   )
 
 (rum/defc request-details < rum/reactive []
-  (let [{uuid :request/uuid req :request/initial :as req-data}
+  (let [{uuid :request/uuid
+         req :request/initial
+         res :request/response
+         :as req-data}
         (uuid->req (rum/react req-uuid))
         viewing-hooks? (rum/react viewing-hooks?)]
     [:article.rows
@@ -109,7 +112,7 @@
      [:p.info
       [:span (str (count (:request/hooks req-data)) " hooks")]
       [:button.lowkey {:on-click #(swap! db update :ui/viewing-hooks? not)}
-       (if viewing-hooks? "Show" "Hide")]]
+       (if viewing-hooks? "Hide" "Show")]]
      (when viewing-hooks?
        [:ul
         (map-indexed (fn [idx {:keys [hook args f file line column]}]
@@ -121,7 +124,10 @@
                      (:request/hooks req-data))])
      [:details
       [:summary "Raw request EDN..."]
-      [:pre (with-out-str (pprint req))]]]))
+      [:pre (with-out-str (pprint req))]]
+     [:details
+      [:summary "Raw response EDN..."]
+      [:pre (with-out-str (pprint res))]]]))
 
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react req-uuids))

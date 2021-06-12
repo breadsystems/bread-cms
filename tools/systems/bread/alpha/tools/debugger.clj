@@ -44,6 +44,14 @@
                :event/request req}]
     (publish! event)))
 
+(defn- publish-response! [res]
+  (let [event {:event/type :bread/response
+               :event/response (dissoc res
+                                       ::bread/hooks ::bread/plugins
+                                       ::bread/config :async-channel
+                                       ::bread/queries)}]
+    (publish! event)))
+
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]
     (let [{:keys [hook f args detail app]} invocation
@@ -161,14 +169,15 @@
                 req (assoc req
                            :profiler/profiled? true
                            :request/uuid rid
-                           :request/timestamp (Date.))
-                ;; TODO nippy or some other serializer, so we can avoid this
-                req (dissoc req ::bread/plugins)]
+                           :request/timestamp (Date.))]
             (publish-request! req)
             req))
         {:precedence Double/NEGATIVE_INFINITY})
       (:hook/response
-        #(assoc % :response/timestamp (Date.))
+        (fn [res]
+          (let [res (assoc res :response/timestamp (Date.))]
+            (publish-response! res)
+            res))
         {:precedence Double/POSITIVE_INFINITY}))))
 
 (defn- req-info [req]

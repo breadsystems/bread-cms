@@ -65,6 +65,12 @@
                (update :request/uuids conjv (:request/uuid req))
                (record-replay req)))))
 
+(defmethod on-event :bread/response [{res :event/response}]
+  (let [uuid (str (:request/uuid res))]
+   (swap! db
+         (fn [state]
+           (assoc-in state [:request/uuid uuid :request/response] res)))))
+
 (comment
   (deref db)
   (def on-event nil)
