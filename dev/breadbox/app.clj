@@ -444,7 +444,9 @@
 
 (defn handler [req]
   (def $req req)
-  (def $res ((bread/handler @app) req))
+  (def $res (assoc-in
+              ((bread/handler @app) req)
+              [:headers "Access-Control-Allow-Origin"] "*"))
   $res)
 
 (defonce stop-http (atom nil))
@@ -471,7 +473,7 @@
   :stop  (stop!))
 
 (defstate debug-server
-  :start (debug/start! {})
+  :start (debug/start! {:replay-handler handler})
   :stop  (debug/stop!))
 
 (defstate debug-profiler

@@ -11,8 +11,8 @@
   (let [rtf (js/Intl.RelativeTimeFormat. "en" #js {:numeric "auto"})]
     (.format rtf -3 "day")))
 
-(defn req->url [{:keys [headers uri]}]
-  (str (or (headers :host) (headers "host")) uri))
+(defn req->url [{:keys [headers scheme uri]}]
+  (str (name (or scheme :http)) "://" (or (headers :host) (headers "host")) uri))
 
 (defn join-some [sep coll]
   (string/join sep (filter seq (map str coll))))

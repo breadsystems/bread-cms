@@ -38,6 +38,14 @@
     (publish! {:event/type :clear-requests})
     (send! {:event/type :clear-requests})))
 
+(defn replay-request! [req]
+  (let [req (-> req
+                (assoc :profiler/replay? true
+                       :profiler/replay-uuid (:request/uuid req))
+                (dissoc :request/timestamp :request/uuid))]
+    (send! {:event/type :request/replay
+            :event/request req})))
+
 (comment
   (toggle-print-db!)
 
@@ -46,6 +54,8 @@
   (deref req-uuids)
   (deref selected)
   (deref loading?)
+
+  (publish! {:event/type :replay-selected!})
 
   ;;
   )
@@ -112,7 +122,7 @@
           [:p "Loading..."])
         [:div.rows
          [:div
-          [:button {:on-click #(publish! {:event/type :replay!})
+          [:button {:on-click #(publish! {:event/type :replay-selected!})
                     :disabled (not (seq selected))}
            "Replay selected"]]
          [:div
@@ -159,10 +169,10 @@
              (disj selected index)
              (conj selected index)))))
 
-(defmethod on-event :replay! []
+(defmethod on-event :replay-selected! []
   (doseq [idx @selected]
     (let [{req :request/initial} (idx->req idx)]
-      (prn 'replay! idx (:uri req)))))
+      (replay-request! req))))
 
 ;; TODO figure out why replay is send!ing once more each time code
 ;; is reloaded...

@@ -30,6 +30,7 @@
 (defonce stop-ws-server (atom nil))
 (defonce !ws-port (atom 1314))
 (defonce !shadow-cljs-port (atom 9630))
+(defonce !replay-handler (atom nil))
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
@@ -94,6 +95,13 @@
                         {:event/type :init
                          :ui/state @db})))
 
+(defmethod on-event :request/replay [{req :event/request}]
+  (when-let [handler @!replay-handler]
+    (if (fn? handler)
+      (handler req)
+      (throw (ex-info "replay-handler is not a function"
+                      {:replay-handler handler})))))
+
 (defn ws-handler [req]
   (http/with-channel req ws-chan
     (println "Debug WebSocket connection created...")
@@ -106,7 +114,8 @@
     (subscribe! (fn [event]
                   (http/send! ws-chan (prn-str event))))))
 
-(defn start! [{:keys [port websocket-port shadow-cljs-port]}]
+(defn start! [{:keys [port websocket-port shadow-cljs-port replay-handler]}]
+  (reset! !replay-handler replay-handler)
   (let [port (Integer. (or port 1313))
         ws-port (Integer. (or websocket-port 1314))
         shadow-cljs-port (Integer. (or shadow-cljs-port 9630))]
