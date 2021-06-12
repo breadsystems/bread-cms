@@ -98,7 +98,7 @@
      (when-let [replays (seq (:request/replays req-data))]
        [:div.with-sidebar
         [:div
-         [:div "Replays of this request:"]
+         [:div "Replays:"]
          [:div
           (map (fn [uuid]
                  [:button.replay-uuid.replay-btn
@@ -122,12 +122,13 @@
                         [:code
                          (join-some ":" [file line column])]])
                      (:request/hooks req-data))])
-     [:details
-      [:summary "Raw request EDN..."]
-      [:pre (with-out-str (pprint req))]]
-     [:details
-      [:summary "Raw response EDN..."]
-      [:pre (with-out-str (pprint res))]]]))
+     [:h3 "Response"]
+     [:div.response
+      (:body res)]
+     [:h3 "Raw request"]
+     [:pre (with-out-str (pprint req))]
+     [:h3 "Raw response"]
+     [:pre (with-out-str (pprint res))]]))
 
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react req-uuids))

@@ -46,6 +46,10 @@ li:nth-child(odd) {
   display: flex;
 }
 
+pre {
+  overflow: scroll;
+}
+
 button {
   padding: var(--padding-small) var(--padding-large);
   border-radius: 5px;
