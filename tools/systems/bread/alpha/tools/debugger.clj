@@ -18,19 +18,16 @@
 
 (declare db)
 
-(defn subscribe-debugger []
-  (let [[db' unsub!] (subscribe-db)]
-    (def db db')
-    unsub!))
-
 (defn uuid []
   (UUID/randomUUID))
 
 (defonce stop-debugger (atom nil))
-(defonce stop-ws-server (atom nil))
-(defonce !ws-port (atom 1314))
+(defonce !port (atom 1313))
 (defonce !shadow-cljs-port (atom 9630))
 (defonce !replay-handler (atom nil))
+
+(defn- websocket-host []
+  (str "ws://localhost:" @!port))
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
@@ -82,34 +79,6 @@
          @!ws-port
          @!shadow-cljs-port)})))
 
-(def handler
-  (ring/ring-handler
-    (ring/router
-      [["/ping" (constantly {:status 200 :body "pong"})]
-       ["/ws-host" (fn [_]
-                     {:status 200 :body (format "ws://localhost:%s"
-                                                @!ws-port)})]])
-
-    (ring/routes
-      (wrap-csp-header
-        (ring/create-resource-handler {:path "/"
-                                       :root "debugger"}))
-      (ring/create-default-handler
-        {:not-found (constantly {:status 404
-                                 :body "404 Not Found"})}))))
-
-(defmethod on-event :ui/init [{:keys [channel]}]
-  (http/send! channel (prn-str
-                        {:event/type :init
-                         :ui/state @db})))
-
-(defmethod on-event :request/replay [{req :event/request}]
-  (when-let [handler @!replay-handler]
-    (if (fn? handler)
-      (handler req)
-      (throw (ex-info "replay-handler is not a function"
-                      {:replay-handler handler})))))
-
 (defn ws-handler [req]
   (http/with-channel req ws-chan
     (println "Debug WebSocket connection created...")
@@ -122,11 +91,40 @@
     (subscribe! (fn [event]
                   (http/send! ws-chan (prn-str event))))))
 
-(defn start! [{:keys [port websocket-port shadow-cljs-port replay-handler]}]
+(def handler
+  (ring/ring-handler
+    (ring/router
+      [["/ping" (constantly {:status 200 :body "pong"})]
+       ["/ws" ws-handler]])
+
+    (ring/routes
+      (wrap-csp-header
+        (ring/create-resource-handler {:path "/"
+                                       :root "debugger"}))
+      (ring/create-default-handler
+        {:not-found (constantly {:status 404
+                                 :body "404 Not Found"})}))))
+
+(defmethod on-event :ui/init [{:keys [channel]}]
+  (http/send! channel (prn-str
+                        {:event/type :init
+                         :ui/state
+                         (assoc @db :ui/websocket (websocket-host))})))
+
+(defmethod on-event :request/replay [{req :event/request}]
+  (when-let [handler @!replay-handler]
+    (if (fn? handler)
+      (handler req)
+      (throw (ex-info "replay-handler is not a function"
+                      {:replay-handler handler})))))
+
+(defn start! [{:keys [port shadow-cljs-port replay-handler]}]
   (reset! !replay-handler replay-handler)
+  ;; TODO automatically find open ports
+  ;; https://github.com/thheller/shadow-cljs/blob/ba0a02aec050c6bc8db1932916009400f99d3cce/src/main/shadow/cljs/devtools/server.clj#L176
   (let [port (Integer. (or port 1313))
-        ws-port (Integer. (or websocket-port 1314))
         shadow-cljs-port (Integer. (or shadow-cljs-port 9630))]
+
     (println (str "Running DEBUG server at localhost:" port))
     (as-> #'handler $
       (wrap-reload $)
@@ -134,28 +132,25 @@
       (wrap-params $)
       (http/run-server $ {:port port})
       (reset! stop-debugger $))
-    (println (str "Running Websocket server at localhost:" ws-port))
-    (reset! !ws-port ws-port)
-    (as-> #'ws-handler $
-      (wrap-reload $)
-      (http/run-server $ {:port ws-port})
-      (reset! stop-ws-server $))
+
+    (reset! !port port)
     (reset! !shadow-cljs-port shadow-cljs-port)
-  nil))
+    nil))
 
 (defn stop! []
   (println "Stopping DEBUG & Websocket server")
   (when (fn? @stop-debugger)
     (@stop-debugger))
-  (when (fn? @stop-ws-server)
-    (@stop-ws-server))
-  (reset! stop-debugger nil)
-  (reset! stop-ws-server nil))
+  (reset! stop-debugger nil))
+
+(defn subscribe-debugger []
+  (let [[db' unsub!] (subscribe-db)]
+    (def db db')
+    unsub!))
 
 (defn restart! [opts]
   (stop!)
   (start! (merge {:port 1313
-                  :websocket-port 1314
                   :shadow-cljs-port 9630}
                  opts)))
 
@@ -180,38 +175,8 @@
             res))
         {:precedence Double/POSITIVE_INFINITY}))))
 
-(defn- req-info [req]
-  (select-keys
-    req
-    [:request/id
-     :request/uuid
-     :request/timestamp
-     :remote-addr
-     :headers
-     :server-port
-     :content-length
-     :params
-     :form-params
-     :query-params
-     :content-type
-     :character-encoding
-     :uri
-     :server-name
-     :query-string
-     :scheme
-     :request-method]))
-
-(defn- uuid->info [uuid]
-  (-> @db (get-in [:request/uuid uuid]) req-info))
-
-(defn- uuids []
-  (:request/uuids @db))
-
 (comment
   ;; RESET THE DEBUGGER DB
   (publish! {:event/type :init})
-  (uuids)
-  (def $rid (first (uuids)))
-  (uuid->info $rid)
 
   (slurp "http://localhost:1312"))

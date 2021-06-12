@@ -192,8 +192,7 @@
                      :request/uuids []
                      :ui/selected-req nil
                      :ui/selected-reqs (sorted-set)
-                     :ui/loading? false
-                     :ui/websocket "ws://localhost:1314"}
+                     :ui/loading? false}
                     state)))
 
 (defmethod on-event :ui/view-req [{:request/keys [uuid]}]
@@ -234,7 +233,7 @@
 ;; so it is available even in :advanced release builds
 (defn init []
   ;; TODO get WS host/port dynamically
-  (let [ws (js/WebSocket. "ws://localhost:1314")]
+  (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
     (reset! !ws ws)
     (.addEventListener ws "open"
                        (fn [_]
