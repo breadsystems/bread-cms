@@ -30,6 +30,8 @@
 (def req-uuids (rum/cursor-in db [:request/uuids]))
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
 (def selected (rum/cursor-in db [:ui/selected-reqs]))
+(def viewing-hooks? (rum/cursor-in db [:ui/viewing-hooks?]))
+
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 (defn- idx->req [idx]
@@ -67,7 +69,8 @@
 
 (rum/defc request-details < rum/reactive []
   (let [{uuid :request/uuid req :request/initial :as req-data}
-        (uuid->req (rum/react req-uuid))]
+        (uuid->req (rum/react req-uuid))
+        viewing-hooks? (rum/react viewing-hooks?)]
     [:article.rows
      [:header.with-sidebar
       [:div
@@ -102,16 +105,20 @@
                replays)]]])
      [:div
       [:button {:on-click #(replay-request! req)} "Replay this request"]]
-     [:div
-      [:h3 "Hooks"]
-      [:ul
-       (map-indexed (fn [idx {:keys [hook args f file line column]}]
-                      [:li {:key idx}
-                       [:strong (name hook)]
-                       " "
-                       [:code
-                        (join-some ":" [file line column])]])
-                    (:request/hooks req-data))]]
+     [:h3 "Request hooks"]
+     [:p.info
+      [:span (str (count (:request/hooks req-data)) " hooks")]
+      [:button.lowkey {:on-click #(swap! db update :ui/viewing-hooks? not)}
+       (if viewing-hooks? "Show" "Hide")]]
+     (when viewing-hooks?
+       [:ul
+        (map-indexed (fn [idx {:keys [hook args f file line column]}]
+                       [:li {:key idx}
+                        [:strong (name hook)]
+                        " "
+                        [:code
+                         (join-some ":" [file line column])]])
+                     (:request/hooks req-data))])
      [:details
       [:summary "Raw request EDN..."]
       [:pre (with-out-str (pprint req))]]]))

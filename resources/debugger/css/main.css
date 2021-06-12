@@ -51,8 +51,15 @@ button {
   border-radius: 5px;
   border: 3px solid var(--muted-purple);
   background: var(--light-blue);
+  font-weight: 700;
 
   cursor: pointer;
+}
+button.lowkey {
+  background: transparent;
+}
+* + button {
+  margin-inline-start: var(--padding-large);
 }
 
 .with-sidebar {
