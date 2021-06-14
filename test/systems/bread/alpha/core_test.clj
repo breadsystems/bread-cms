@@ -151,14 +151,14 @@
 (deftest test-apply-effects-lifecycle-phase
 
   (testing "it applies Effects until none are left to apply"
-    (letfn [(count-to-three [{::bread/keys [data]}]
+    (letfn [(count-to-seven [{::bread/keys [data]}]
               (if (> 7 (:counter data))
                 {::bread/data (update data :counter inc)
-                 ::bread/effects [count-to-three]}
+                 ::bread/effects [count-to-seven]}
                 {::bread/data data
                  ::bread/effects []}))]
           (let [handler (-> (bread/app)
-                            (bread/add-effect count-to-three)
+                            (bread/add-effect count-to-seven)
                             (assoc ::bread/data {:counter 0})
                             (bread/handler))]
             (is (= 7 (-> (handler {:uri "/"})
