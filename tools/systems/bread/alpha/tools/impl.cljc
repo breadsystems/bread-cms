@@ -35,11 +35,49 @@
   (println "Unknown event type:" (:event/type e))
   (prn e))
 
-(defmethod on-event :init [{:keys [state]}]
-  (swap! db merge {:request/uuid (sorted-map)} state))
+;; NOTE: This gets overridden in CLJS!!!
+(defmethod on-event :init [_]
+  (reset! db {:request/uuid {}
+              :request/uuids []}))
 
-(defmethod on-event :bread/request [{:request/keys [uuid] :as req-event}]
-  (swap! db assoc-in [:request/uuid uuid] (dissoc req-event :event/type)))
+(defmethod on-event :clear-requests [_]
+  (swap! db assoc
+         :request/uuid {}
+         :request/uuids []
+         :ui/selected-reqs (sorted-set)
+         :ui/selected-req nil))
+
+(defn- record-replay [state {replayed :profiler/replay-uuid
+                             uuid :request/uuid}]
+  (if replayed
+    (update-in state [:request/uuid replayed :request/replays] conjv uuid)
+    state))
+
+(defmethod on-event :bread/request [{req :event/request}]
+  (swap! db
+         (fn [state]
+           (-> state
+               (assoc-in
+                 [:request/uuid (:request/uuid req)]
+                 {:request/uuid (:request/uuid req)
+                  :request/initial req
+                  :request/replays []})
+               (update :request/uuids conjv (:request/uuid req))
+               (record-replay req)))))
+
+(defmethod on-event :bread/response [{res :event/response}]
+  (let [uuid (str (:request/uuid res))]
+   (swap! db
+         (fn [state]
+           (assoc-in state [:request/uuid uuid :request/response] res)))))
+
+(comment
+  (deref db)
+  (def on-event nil)
+  (publish! {:event/type :init})
+
+  ;;
+  )
 
 (defn- update-req [state {:request/keys [uuid] :as e}]
   (-> state
@@ -55,6 +93,3 @@
   internally in a private var."
   []
   [db (subscribe! on-event)])
-
-(comment
-  (slurp "http://localhost:1312"))

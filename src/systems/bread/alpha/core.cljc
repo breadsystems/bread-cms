@@ -29,9 +29,9 @@
        before each invocation of each hook."}
   *hook-profiler*)
 
-(defn- profile-hook! [h f x args detail app]
+(defn- profile-hook! [h f args detail app]
   (when (fn? *hook-profiler*)
-    (*hook-profiler* {:hook h :f f :args (cons x args) :detail detail :app app})))
+    (*hook-profiler* {:hook h :f f :args args :detail detail :app app})))
 
 (defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
   (let [transform-app (or transform-app (constantly '$APP))
@@ -268,10 +268,10 @@
     (assoc-in app [::hooks h] (vec (filter #(not= (:value %) x) hooks)))
     app))
 
-(defmacro ^:private try-hook [app hook h f x args apply-hook]
+(defmacro ^:private try-hook [app hook h f args]
   `(try
-     (profile-hook! ~h ~f ~x ~args ~hook ~app)
-     ~apply-hook
+     (profile-hook! ~h ~f ~args ~hook ~app)
+     (apply ~f ~args)
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#
@@ -280,12 +280,20 @@
                               {:exception e#
                                :name ~h
                                :hook ~hook
-                               :value ~x
-                               :extra-args ~args
+                               :args ~args
                                :app ~app
                                ;; Indicate to the caller that this exception
                                ;; wraps one from somewhere else.
                                ::core? true}))))))
+
+(comment
+  (macroexpand '(try-hook
+                  (bread/app)
+                  {::precedence 1 ::f identity}
+                  :hook/test
+                  identity
+                  ['$APP "some value" "other" "args"]))
+  )
 
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through
@@ -294,10 +302,10 @@
   present."
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+     (loop [[{::keys [f] :as hook} & fs] hooks x x]
        (if (seq fs)
-         (recur (try-hook app hook h f x args (apply f app x args)) fs)
-         (try-hook app hook h f x args (apply f app x args))))
+         (recur fs (try-hook app hook h f (concat [app x] args)))
+         (try-hook app hook h f (concat [app x] args))))
      x))
   ([app h]
    (hook->> app h nil)))
@@ -309,10 +317,10 @@
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+     (loop [[{::keys [f] :as hook} & fs] hooks x x]
        (if (seq fs)
-         (recur (try-hook app hook h f x args (apply f x args)) fs)
-         (try-hook app hook h f x args (apply f x args))))
+         (recur fs (try-hook app hook h f (cons x args)))
+         (try-hook app hook h f (cons x args))))
      x))
   ([app h]
    (hook-> app h nil)))

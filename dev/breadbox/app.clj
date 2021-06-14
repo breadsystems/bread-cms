@@ -30,6 +30,7 @@
   (:import
     [java.util UUID]))
 
+;; TODO optionally start this via config
 (defstate debugger
   :start (flow/connect))
 
@@ -244,10 +245,12 @@
         data (into {} (map (fn [[k query]]
                              (let [expander (apply comp (::bread/expand query))
                                    result (store/q store query)]
+                               #_#_
                                (prn 'query query)
                                (prn 'result result)
                                [k (expander result)]))
                            (::bread/queries app)))]
+    #_
     (prn 'data data)
     (assoc app ::bread/data data)))
 
@@ -454,7 +457,9 @@
 
 (defn handler [req]
   (def $req req)
-  (def $res ((bread/handler @app) req))
+  (def $res (assoc-in
+              ((bread/handler @app) req)
+              [:headers "Access-Control-Allow-Origin"] "*"))
   $res)
 
 (defonce stop-http (atom nil))
@@ -480,26 +485,23 @@
   :start (start!)
   :stop  (stop!))
 
-(defstate debug-server
-  :start (debug/start! {})
-  :stop  (debug/stop!))
+(defonce stop-debugger! (atom nil))
 
-(defstate debug-profiler
-  :start (debug/profile!)
-  :stop  (bread/bind-profiler! nil))
-
-(defonce unsub (atom nil))
-
-(defstate debug-subscription
-  :start (reset! unsub (debug/subscribe!))
-  :stop  (when-let [unsub @unsub]
-           (@unsub)))
+(defstate debugger
+  :start (reset! stop-debugger! (debug/start! {:replay-handler handler}))
+  :stop  (when-let [stop! @stop-debugger!]
+           (stop!)))
 
 (defn restart! []
   (mount/stop)
   (mount/start))
 
+(defn restart-cms! []
+  (mount/stop-except #'debugger)
+  (mount/start))
+
 (comment
   (mount/start)
   (mount/stop)
+  (restart-cms!)
   (restart!))
