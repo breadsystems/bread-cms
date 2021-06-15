@@ -38,7 +38,8 @@
 ;; NOTE: This gets overridden in CLJS!!!
 (defmethod on-event :init [_]
   (reset! db {:request/uuid {}
-              :request/uuids []}))
+              :request/uuids []
+              :ui/preferences {:replay-as-of? true}}))
 
 (defmethod on-event :clear-requests [_]
   (swap! db assoc

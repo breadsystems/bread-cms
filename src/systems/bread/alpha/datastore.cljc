@@ -72,6 +72,8 @@
         (.parse (java.text.SimpleDateFormat. format) as-of)
         (catch java.text.ParseException _e nil)))))
 
+;; TODO req->db-tx
+
 (defmethod installed? :default [config]
   (try
     (let [db (-> config connect! db)

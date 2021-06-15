@@ -1,9 +1,11 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
+    [clojure.datafy :as datafy]
     [clojure.edn :as edn]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as store]
     [reitit.core :as reitit]
     [reitit.ring :as ring]
     [ring.middleware.params :refer [wrap-params]]
@@ -163,9 +165,14 @@
       (:hook/request
         (fn [req]
           (let [rid (UUID/randomUUID)
+                as-of-param (bread/config req :datastore/as-of-param)
+                db (store/datastore req)
                 req (assoc req
                            :profiler/profiled? true
+                           :profiler/as-of-param as-of-param
                            :request/uuid rid
+                           ;; TODO abstract this in datastore
+                           :request/db-tx (:max-tx db)
                            :request/timestamp (Date.))]
             (publish-request! req)
             req))

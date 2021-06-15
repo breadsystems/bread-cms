@@ -32,6 +32,8 @@
 (def selected (rum/cursor-in db [:ui/selected-reqs]))
 (def viewing-hooks? (rum/cursor-in db [:ui/viewing-hooks?]))
 
+(def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
+
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 (defn- idx->req [idx]
@@ -45,13 +47,34 @@
     (publish! {:event/type :clear-requests})
     (send! {:event/type :clear-requests})))
 
+(defn- replay-as-of [{:profiler/keys [as-of-param]
+                      :request/keys [db-tx]
+                      :as req}]
+  (-> req
+      (assoc-in [:params as-of-param] (str db-tx))
+      (assoc :profiler/as-of-param as-of-param)))
+
+(defn req->replay [req]
+  (cond-> req
+    ;; Always add replay indicators first.
+    true
+    (assoc :profiler/replay? true
+           :profiler/replay-uuid (:request/uuid req))
+
+    @replay-as-of?
+    (replay-as-of)
+
+    ;; Remove data we always want to overwrite for each request, mostly
+    ;; to avoid confusion.
+    true
+    (dissoc :request/timestamp :request/uuid)))
+
 (defn replay-request! [req]
-  (let [req (-> req
-                (assoc :profiler/replay? true
-                       :profiler/replay-uuid (:request/uuid req))
-                (dissoc :request/timestamp :request/uuid))]
-    (send! {:event/type :request/replay
-            :event/request req})))
+  (send! {:event/type :request/replay
+          :event/request (req->replay req)}))
+
+(defn prefer! [pref-key pref]
+  (swap! db assoc-in [:ui/preferences pref-key] pref))
 
 (comment
   (toggle-print-db!)
@@ -61,6 +84,8 @@
   (deref req-uuids)
   (deref selected)
   (deref loading?)
+
+  (deref replay-as-of?)
 
   (publish! {:event/type :replay-selected!})
 
@@ -136,7 +161,8 @@
         loading? (rum/react loading?)
         current-uuid (rum/react req-uuid)
         print? (rum/react print-db?)
-        ws (rum/react websocket)]
+        ws (rum/react websocket)
+        as-of? (rum/react replay-as-of?)]
     [:main
      (if (and (not loading?) (false? ws))
        [:p.error "WebSocket connection lost!"]
@@ -174,7 +200,14 @@
          [:div
           [:button {:on-click #(clear-requests!)
                     :disabled (not (seq reqs))}
-           "Clear requests"]]]]
+           "Clear requests"]]
+         [:div
+          [:input {:type :checkbox
+                   :id "pref-replay-as-of"
+                   :checked (boolean as-of?)
+                   :value 1
+                   :on-change #(prefer! :replay-as-of? (not as-of?))}]
+          [:label {:for "pref-replay-as-of"} "Replay as of?"]]]]
        (cond
          current-uuid
          (request-details)
