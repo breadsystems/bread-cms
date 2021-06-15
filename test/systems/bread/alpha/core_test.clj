@@ -195,7 +195,6 @@
                           {::bread/data {:num (swap! external inc)}})
           handler (-> (bread/app)
                       (bread/add-effect future-effect)
-                      (assoc ::bread/data {:num 0})
                       (bread/handler))]
       (is (= 1 (-> (handler {:uri "/"})
                    (get-in [::bread/data :num]))))))
