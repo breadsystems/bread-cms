@@ -217,7 +217,16 @@
 
       {:num 0 :extra "stuff"}
       (fn [{::bread/keys [data]}]
-        (assoc data :extra "stuff"))))
+        (assoc data :extra "stuff"))
+
+      ;; Transforms can themselves be arbitrary Effects, such as vectors...
+      {:num 3}
+      [#(assoc (::bread/data %1) :num %2) 3]
+
+      ;; ...or futures.
+      {:future "value"}
+      (future {:future "value"})
+      ))
 
   ;; TODO add-tx convenience fn (for running db tx directly)
   )

@@ -199,7 +199,7 @@
   only affect ::data and cannot add new Effects."
   [req f]
   (let [e (fn [req]
-            {::data (f req)})]
+            {::data (effect! f req)})]
     (add-effect req e)))
 
 (defn effect?
