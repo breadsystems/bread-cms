@@ -37,7 +37,11 @@
         ;; TODO better serialization to avoid this
         req (-> req
                 (dissoc
-                  ::bread/hooks ::bread/plugins ::bread/config :async-channel))
+                  ::bread/effects
+                  ::bread/hooks
+                  ::bread/plugins
+                  ::bread/config
+                  :async-channel))
         event {:event/type :bread/request
                :event/request req}]
     (publish! event)))
@@ -56,9 +60,11 @@
           {::bread/keys [from-ns file line column]} detail]
       {:event/type :bread/hook
        :request/uuid (str rid)
-       :app (prn-str app)
+       #_#_
+       :app (datafy/datafy app)
        :hook hook
-       :args (map prn-str args)
+       #_#_
+       :args (map datafy/datafy args)
        :f (str f)
        :file file
        :line line
