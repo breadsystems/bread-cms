@@ -203,6 +203,12 @@
     (if-not (effect? effect)
       req
       (let [;; DO THE THING!
+            ;; NOTE: it's important that we do this after we check effect?
+            ;; but before we merge the old req with the value(s) returned
+            ;; from effect!. Because of the possibility of new Effects being
+            ;; returned and replacing or appending to old ones, applying
+            ;; Effects is not a simple reduction over the original ::effects
+            ;; vector.
             {new-data ::data new-effects ::effects} (effect! effect req)
             data (or new-data data)
             effects (or new-effects effects)
