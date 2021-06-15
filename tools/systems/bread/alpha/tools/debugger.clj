@@ -23,9 +23,6 @@
     (def db db')
     unsub!))
 
-(defn uuid []
-  (UUID/randomUUID))
-
 (defonce !port (atom 1313))
 (defonce !shadow-cljs-port (atom 9630))
 (defonce !replay-handler (atom nil))
@@ -129,6 +126,9 @@
         stop-debugger (atom nil)
         unsub (subscribe-debugger)]
 
+    (reset! !port port)
+    (reset! !shadow-cljs-port shadow-cljs-port)
+
     (println (str "Running debug server at localhost:" port))
     (as-> #'handler $
       (wrap-reload $)
@@ -136,9 +136,6 @@
       (wrap-params $)
       (http/run-server $ {:port port})
       (reset! stop-debugger $))
-
-    (reset! !port port)
-    (reset! !shadow-cljs-port shadow-cljs-port)
 
     (println "Binding debug profiler...")
     (bread/bind-profiler!
@@ -159,7 +156,7 @@
       app
       (:hook/request
         (fn [req]
-          (let [rid (uuid)
+          (let [rid (UUID/randomUUID)
                 req (assoc req
                            :profiler/profiled? true
                            :request/uuid rid

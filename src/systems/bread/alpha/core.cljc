@@ -29,9 +29,9 @@
        before each invocation of each hook."}
   *hook-profiler*)
 
-(defn- profile-hook! [h f x args detail app]
+(defn- profile-hook! [h f args detail app]
   (when (fn? *hook-profiler*)
-    (*hook-profiler* {:hook h :f f :args (cons x args) :detail detail :app app})))
+    (*hook-profiler* {:hook h :f f :args args :detail detail :app app})))
 
 (defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
   (let [transform-app (or transform-app (constantly '$APP))
@@ -166,13 +166,50 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
+(defprotocol Effect
+  "Protocol for encapsulating side-effects"
+  (effect!
+    [this req]))
+
+(extend-protocol Effect
+  clojure.lang.Fn
+  (effect!
+    ([f req]
+     (f req)))
+
+  clojure.lang.PersistentVector
+  (effect!
+    ([v req]
+     (let [[f & args] v]
+       (apply f req args))))
+
+  java.util.concurrent.Future
+  (effect!
+    ([fut _]
+     (deref fut))))
+
 (defn add-effect
-  "Adds the (presumably effectful) function f as a callback to the special
-  :hook/effects hook. Accepts an optional options map."
-  ([app f options]
-   (add-hook app :hook/effects f options))
-  ([app f]
-   (add-hook app :hook/effects f {})))
+  "Adds e as an Effect to be run during the apply-effects lifecycle phase."
+  [req e]
+  (update req ::effects (comp vec conj) e))
+
+(defn effect?
+  "Whether x implements (satisfies) the Effect protocol"
+  [x]
+  (satisfies? Effect x))
+
+(defn- apply-effects [req]
+  (loop [{data ::data [effect & effects] ::effects :as req} req]
+    (if-not (effect? effect)
+      req
+      (let [;; DO THE THING!
+            {new-data ::data new-effects ::effects} (effect! effect req)
+            data (or new-data data)
+            effects (or new-effects effects)
+            req (assoc req ::data data ::effects effects)]
+        (if-not (seq effects)
+          req
+          (recur req))))))
 
 (defmacro add-effects->
   "Threads app through forms after prepending `add-effect to each."
@@ -231,10 +268,10 @@
     (assoc-in app [::hooks h] (vec (filter #(not= (:value %) x) hooks)))
     app))
 
-(defmacro ^:private try-hook [app hook h f x args apply-hook]
+(defmacro ^:private try-hook [app hook h f args]
   `(try
-     (profile-hook! ~h ~f ~x ~args ~hook ~app)
-     ~apply-hook
+     (profile-hook! ~h ~f ~args ~hook ~app)
+     (apply ~f ~args)
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#
@@ -243,12 +280,20 @@
                               {:exception e#
                                :name ~h
                                :hook ~hook
-                               :value ~x
-                               :extra-args ~args
+                               :args ~args
                                :app ~app
                                ;; Indicate to the caller that this exception
                                ;; wraps one from somewhere else.
                                ::core? true}))))))
+
+(comment
+  (macroexpand '(try-hook
+                  (bread/app)
+                  {::precedence 1 ::f identity}
+                  :hook/test
+                  identity
+                  ['$APP "some value" "other" "args"]))
+  )
 
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through
@@ -257,10 +302,10 @@
   present."
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+     (loop [[{::keys [f] :as hook} & fs] hooks x x]
        (if (seq fs)
-         (recur (try-hook app hook h f x args (apply f app x args)) fs)
-         (try-hook app hook h f x args (apply f app x args))))
+         (recur fs (try-hook app hook h f (concat [app x] args)))
+         (try-hook app hook h f (concat [app x] args))))
      x))
   ([app h]
    (hook->> app h nil)))
@@ -272,10 +317,10 @@
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+     (loop [[{::keys [f] :as hook} & fs] hooks x x]
        (if (seq fs)
-         (recur (try-hook app hook h f x args (apply f x args)) fs)
-         (try-hook app hook h f x args (apply f x args))))
+         (recur fs (try-hook app hook h f (cons x args)))
+         (try-hook app hook h f (cons x args))))
      x))
   ([app h]
    (hook-> app h nil)))
@@ -286,9 +331,6 @@
   chain of arbitrary functions. Returns app if no callbacks for h are present."
   [app h & args]
   (apply hook-> app h app args))
-
-(defn- apply-effects [app]
-  (or (hook app :hook/effects) app))
 
 (defn app
   "Creates a new Bread app. Optionally accepts an options map. A single option
@@ -320,8 +362,8 @@
         (hook :hook/request)
         (hook :hook/dispatch) ;; -> ::resolver
         (hook :hook/resolve)  ;; -> ::queries
-        (hook :hook/expand)   ;; -> ::data, ::effects
-        (apply-effects)       ;; -> more ::data
+        (hook :hook/expand)   ;; -> ::data
+        (apply-effects)       ;; -> more ::data, ::effects
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 

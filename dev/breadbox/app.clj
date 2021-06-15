@@ -254,6 +254,13 @@
     (prn 'data data)
     (assoc app ::bread/data data)))
 
+(defstate counter
+  :start (atom 0))
+
+(comment
+  ;; This should increment with every request
+  (deref counter))
+
 ;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
@@ -264,6 +271,12 @@
                                 (i18n/plugin)
                                 (post/plugin)
                                 (br/plugin {:router $router})
+
+                                ;; Increment counter on every request
+                                (fn [app]
+                                  (bread/add-effect app (fn [_]
+                                                          (swap! counter inc)
+                                                          nil)))
 
                                 ;; TODO DEFAULT PLUGINS
                                 (fn [app]
@@ -483,7 +496,12 @@
   (mount/stop)
   (mount/start))
 
+(defn restart-cms! []
+  (mount/stop-except #'debugger)
+  (mount/start))
+
 (comment
   (mount/start)
   (mount/stop)
+  (restart-cms!)
   (restart!))

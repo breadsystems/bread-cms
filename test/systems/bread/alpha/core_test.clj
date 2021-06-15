@@ -134,23 +134,75 @@
 
 (deftest test-add-effect
 
-  (testing "it adds to the :hook/effects hook inside app"
-    (let [app (bread/add-effects-> (bread/app)
-                inc
-                (dec {:precedence 2})
-                (identity {:precedence 1.5
-                           :my/extra 123}))]
-      (is (bread/hook-for? app :hook/effects inc))
-      (is (bread/hook-for? app :hook/effects dec))
-      (is (bread/hook-for? app :hook/effects dec {:precedence 2}))
-      (is (bread/hook-for? app :hook/effects identity))
-      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5}))
-      (is (bread/hook-for? app :hook/effects identity {:my/extra 123}))
-      (is (bread/hook-for? app :hook/effects identity {:precedence 1.5
-                                                       :my/extra 123}))
-      (is (false? (bread/hook-for? app :hook/effects not=)))
-      (is (false? (bread/hook-for? app :hook/effects dec {:precedence 3})))
-      (is (false? (bread/hook-for? app :hook/effects identity {:x :y}))))))
+  (testing "it adds the given Effect to ::effects"
+    (are [effects app] (= effects (::bread/effects app))
+
+      [prn] (-> (bread/app)
+                     (bread/add-effect prn))
+
+      [inc] (-> (bread/app)
+                (bread/add-effect inc))
+
+      [inc dec prn-str] (-> (bread/app)
+                            (bread/add-effect inc)
+                            (bread/add-effect dec)
+                            (bread/add-effect prn-str)))))
+
+(deftest test-apply-effects-lifecycle-phase
+
+  (testing "it applies Effects until none are left to apply"
+    (letfn [(count-to-seven [{::bread/keys [data]}]
+              (if (> 7 (:counter data))
+                {::bread/data (update data :counter inc)
+                 ::bread/effects [count-to-seven]}
+                {::bread/data data
+                 ::bread/effects []}))]
+          (let [handler (-> (bread/app)
+                            (bread/add-effect count-to-seven)
+                            (assoc ::bread/data {:counter 0})
+                            (bread/handler))]
+            (is (= 7 (-> (handler {:uri "/"})
+                         (get-in [::bread/data :counter])))))))
+
+  (testing "it ignores Effects that are not functions"
+    (let [;; Once an invalid Effect is returned, the whole fx chain
+          ;; short-circuits and no subsequent Effects are run.
+          never-run #(throw (Exception. "shouldn't get here."))
+          ;; This effect will be applied (i.e. its returned ::data will
+          ;; be honored) but the invalid Effect(s) it adds will not.
+          effect (constantly {::bread/data {:counter 1}
+                              ::bread/effects ["not an Effect" never-run]})
+          handler (-> (bread/app)
+                      (bread/add-effect effect)
+                      (assoc ::bread/data {:counter 0})
+                      (bread/handler))]
+      (is (= 1 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :counter]))))))
+
+  (testing "vectors are valid Effects"
+    (let [sum (fn [{::bread/keys [data]} & nums]
+                {::bread/data (assoc data :sum (reduce + nums))})
+          handler (-> (bread/app)
+                      (bread/add-effect [sum 3 2 1])
+                      (assoc ::bread/data {:sum 0})
+                      (bread/handler))]
+      (is (= 6 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :sum]))))))
+
+  (testing "futures are valid Effects"
+    (let [external (atom 0)
+          future-effect (future
+                          {::bread/data {:num (swap! external inc)}})
+          handler (-> (bread/app)
+                      (bread/add-effect future-effect)
+                      (assoc ::bread/data {:num 0})
+                      (bread/handler))]
+      (is (= 1 (-> (handler {:uri "/"})
+                   (get-in [::bread/data :num]))))))
+
+  ;; TODO add-tx convenience fn (for running db tx directly)
+  ;; TODO add-transform convenience fn (for effects that will chain more effects)
+  )
 
 (deftest test-add-value-hook
 
@@ -323,13 +375,13 @@
 (deftest test-load-handler
 
   (testing "it returns a function that loads plugins"
-    (let [my-plugin #(bread/add-effect % identity)
+    (let [my-plugin #(bread/add-hook % :hook/my.hook identity)
           app (bread/app {:plugins [my-plugin]})
           handler (bread/load-handler app)
           response (handler {:url "/"})]
       (is (= [{::bread/precedence 1 ::bread/f identity}]
              (distill-hooks
-               (bread/hooks-for response :hook/effects))))))
+               (bread/hooks-for response :hook/my.hook))))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
@@ -338,24 +390,6 @@
           handler (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
-
-  ;; TODO test effects in isolation
-  (testing "it returns a function that applies side-effects"
-    (let [;; Test side-effects
-          state (atom {:num 3 :extra :stuff})
-          init-plugin (fn [app]
-                        (bread/add-value-hook app :initial/data :should-be-persisted))
-          effectful-plugin (fn [app]
-                             (bread/add-effect app (fn [app]
-                                                     (swap! state update :num * 3)
-                                                     (bread/add-value-hook app :ran? true))))
-          handler (plugins->handler [init-plugin effectful-plugin])
-          ;; Run the app, with side-effects
-          result (handler {:url "/hello" :params {:name "world"}})]
-      (is (true? (bread/hook result :ran?)))
-      (is (= :should-be-persisted (bread/hook result :initial/data)))
-      ;; Assert that the expected side-effects took place
-      (is (= 9 (:num @state)))))
 
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
