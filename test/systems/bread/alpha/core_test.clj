@@ -200,8 +200,26 @@
       (is (= 1 (-> (handler {:uri "/"})
                    (get-in [::bread/data :num]))))))
 
+  (testing "add-transform only affects ::data"
+    (are [data transform] (= data (let [handler #(-> (bread/app)
+                                                     (bread/add-transform %)
+                                                     (assoc ::bread/data {:num 0})
+                                                     (bread/handler))]
+                                    (-> ((handler transform) {:uri "/"})
+                                        ::bread/data)))
+
+      {:new :data}
+      (constantly {:new :data})
+
+      {:num 1}
+      (fn [{::bread/keys [data]}]
+        (update data :num inc))
+
+      {:num 0 :extra "stuff"}
+      (fn [{::bread/keys [data]}]
+        (assoc data :extra "stuff"))))
+
   ;; TODO add-tx convenience fn (for running db tx directly)
-  ;; TODO add-transform convenience fn (for effects that will chain more effects)
   )
 
 (deftest test-add-value-hook

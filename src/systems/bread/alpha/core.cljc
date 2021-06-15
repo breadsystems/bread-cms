@@ -193,6 +193,15 @@
   [req e]
   (update req ::effects (comp vec conj) e))
 
+(defn add-transform
+  "Add as an Effect a function that wraps f, setting the transformed request's
+  ::data to the value returned from f. Any Effect added via add-transform can
+  only affect ::data and cannot add new Effects."
+  [req f]
+  (let [e (fn [req]
+            {::data (f req)})]
+    (add-effect req e)))
+
 (defn effect?
   "Whether x implements (satisfies) the Effect protocol"
   [x]
