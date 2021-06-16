@@ -12,6 +12,7 @@
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit :as br]
+    [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
@@ -25,8 +26,7 @@
     [reitit.core :as reitit]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-    [ring.middleware.reload :refer [wrap-reload]]
-    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]])
+    [ring.middleware.reload :refer [wrap-reload]])
   (:import
     [java.util UUID]))
 
@@ -310,8 +310,7 @@
                                 (fn [app]
                                   (bread/add-hook app :hook/render RENDER))
 
-                                (tpl/renderer->plugin rum/render-static-markup
-                                                      {:precedence 2})
+                                (rum/plugin)
 
                                 (static/plugin)]})))
   :stop (reset! app nil))
