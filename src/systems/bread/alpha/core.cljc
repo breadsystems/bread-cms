@@ -207,6 +207,26 @@
   [x]
   (satisfies? Effect x))
 
+(defn- do-effect [effect req]
+  (letfn [(maybe-wrap-exception [ex]
+            (if (instance? clojure.lang.ExceptionInfo ex)
+              ex
+              (ex-info (.getMessage ex) {:exception ex})))
+          (handle-exception [ex]
+            (let [em (meta effect)]
+              (cond
+                (not (:effect/catch? em)) (throw ex)
+                ;; TODO retries?
+                (:effect/key em) {::data {(:effect/key em)
+                                          (maybe-wrap-exception ex)}}
+                :else {})))]
+    (try
+      (effect! effect req)
+      (catch java.lang.Throwable ex
+        (handle-exception ex)))))
+
+(instance? clojure.lang.ExceptionInfo (ex-info "hi" {}))
+
 (defn- apply-effects [req]
   (loop [{data ::data [effect & effects] ::effects :as req} req]
     (if-not (effect? effect)
@@ -218,7 +238,7 @@
             ;; returned and replacing or appending to old ones, applying
             ;; Effects is not a simple reduction over the original ::effects
             ;; vector.
-            {new-data ::data new-effects ::effects} (effect! effect req)
+            {new-data ::data new-effects ::effects} (do-effect effect req)
             data (or new-data data)
             effects (or new-effects effects)
             req (assoc req ::data data ::effects effects)]

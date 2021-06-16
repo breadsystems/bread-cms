@@ -199,6 +199,54 @@
       (is (= 1 (-> (handler {:uri "/"})
                    (get-in [::bread/data :num]))))))
 
+  (testing "it returns any errors thrown as ExceptionInfo instances based on metadata"
+    (let [handler (fn [effect]
+                    (-> (bread/app)
+                        (bread/add-effect effect)
+                        (bread/handler)))]
+
+      (are [data effect] (let [handle (handler effect)
+                               result-data (-> (handle {:uri "/"})
+                                               ::bread/data)]
+                           (reduce
+                             (fn [acc [k ex]]
+                               (let [result-ex (get result-data k)
+                                     rd (ex-data result-ex)
+                                     xd (ex-data ex)]
+                                 (and acc
+                                      (= (.getMessage result-ex)
+                                         (.getMessage ex))
+                                      (or
+                                        ;; either ex-data is exactly the same,
+                                        ;; or it's the same class & message.
+                                        (= rd xd)
+                                        (and
+                                          (= (.getMessage (:exception rd))
+                                             (.getMessage (:exception xd)))
+                                          (= (class (:exception rd))
+                                             (class (:exception xd))))))))
+                             true
+                             data))
+
+           {:info (ex-info "something happened" {:oh :no})}
+           (with-meta
+             (fn [_] (throw (ex-info "something happened" {:oh :no})))
+             {:effect/key :info
+              :effect/catch? true})
+
+           {:wrapped (ex-info "this gets wrapped"
+                              {:exception (Exception. "this gets wrapped")})}
+           (with-meta
+             (fn [_] (throw (Exception. "this gets wrapped")))
+             {:effect/key :wrapped
+              :effect/catch? true})
+
+           ;; no key
+           {}
+           (with-meta
+             (fn [_] (throw (ex-info "hi" {})))
+             {:effect/catch? true}))))
+
   (testing "add-transform only affects ::data"
     (are [data transform] (= data (let [handler #(-> (bread/app)
                                                      (bread/add-transform %)
