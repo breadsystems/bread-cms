@@ -247,6 +247,22 @@
              (fn [_] (throw (ex-info "hi" {})))
              {:effect/catch? true}))))
 
+  (testing "it retries per metadata Effects that error out"
+    (let [handler (fn [effect]
+                    (-> (bread/app)
+                        (bread/add-effect effect)
+                        (bread/handler)))
+          attempts (atom 0)
+          flaky-effect (fn [_]
+                         (swap! attempts inc)
+                         (when (> 5 @attempts)
+                           (throw (ex-info "retry!" {}))))]
+      (is (= 5 (do
+                 ((handler (with-meta flaky-effect {:effect/retries 5
+                                                    :effect/catch? true}))
+                  {:uri "/"})
+                 @attempts)))))
+
   (testing "add-transform only affects ::data"
     (are [data transform] (= data (let [handler #(-> (bread/app)
                                                      (bread/add-transform %)

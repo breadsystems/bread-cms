@@ -212,11 +212,15 @@
             (if (instance? clojure.lang.ExceptionInfo ex)
               ex
               (ex-info (.getMessage ex) {:exception ex})))
+          (retry []
+            (do-effect
+              (vary-meta effect update :effect/retries dec)
+              req))
           (handle-exception [ex]
             (let [em (meta effect)]
               (cond
                 (not (:effect/catch? em)) (throw ex)
-                ;; TODO retries?
+                (:effect/retries em) (retry)
                 (:effect/key em) {::data {(:effect/key em)
                                           (maybe-wrap-exception ex)}}
                 :else {})))]
