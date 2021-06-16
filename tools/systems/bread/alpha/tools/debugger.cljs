@@ -150,6 +150,9 @@
      [:h3 "Response"]
      [:div.response
       (:body res)]
+     [:h3 "Response (pre-render)"]
+     [:div.response
+      (with-out-str (pprint (:response/pre-render req-data)))]
      [:h3 "Raw request"]
      [:pre (with-out-str (pprint req))]
      [:h3 "Raw response"]

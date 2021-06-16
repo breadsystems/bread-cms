@@ -62,6 +62,8 @@
           {::bread/keys [from-ns file line column]} detail]
       {:event/type :bread/hook
        :request/uuid (str rid)
+       ;; TODO real serialization so we can stop cheating here
+       :BODY (:body (first args))
        #_#_
        :app (datafy/datafy app)
        :hook hook
@@ -117,7 +119,6 @@
 (defn- replay-as-of [{:profiler/keys [as-of-param]
                       :request/keys [as-of]
                       :as req}]
-  (prn as-of-param as-of)
   (-> req
       (assoc-in [:params as-of-param] (str as-of))
       (assoc :profiler/as-of-param as-of-param)))

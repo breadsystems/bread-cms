@@ -160,6 +160,7 @@
                  [:h2 title]
                  [:p "Hello: " hello]
                  [:h3 "Simple field contents"]
+                 [:p "here's some new content right here"]
                  [:div.simple
                   [:p (:hello simple)]
                   [:div.body
