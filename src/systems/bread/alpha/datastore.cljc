@@ -10,6 +10,8 @@
 (defmulti delete-database! :datastore/type)
 (defmulti connection :datastore/type)
 (defmulti config->plugin :datastore/type)
+(defmulti max-tx (fn [app]
+                   (:datastore/type (bread/config app :datastore/config))))
 
 (defmethod connection :default [app]
   (bread/config app :datastore/connection))

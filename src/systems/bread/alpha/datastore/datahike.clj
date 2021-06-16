@@ -202,3 +202,6 @@
 
 (defmethod store/delete-database! :datahike [config]
   (d/delete-database config))
+
+(defmethod store/max-tx :datahike [req]
+  (:max-tx (store/datastore req)))
