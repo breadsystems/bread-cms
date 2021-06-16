@@ -166,13 +166,12 @@
         (fn [req]
           (let [rid (UUID/randomUUID)
                 as-of-param (bread/config req :datastore/as-of-param)
-                db (store/datastore req)
                 req (assoc req
                            :profiler/profiled? true
                            :profiler/as-of-param as-of-param
                            :request/uuid rid
                            ;; TODO abstract this in datastore
-                           :request/db-tx (:max-tx db)
+                           :request/db-tx (store/max-tx req)
                            :request/timestamp (Date.))]
             (publish-request! req)
             req))
