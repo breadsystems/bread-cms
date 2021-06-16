@@ -1,8 +1,10 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [editscript.core :as ed]
     [rum.core :as rum]
+    [systems.bread.alpha.tools.debugger.diff :as diff]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
                                                      on-event]]
@@ -36,7 +38,7 @@
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
 (def selected (rum/cursor-in db [:ui/selected-reqs]))
 (def viewing-hooks? (rum/cursor-in db [:ui/viewing-hooks?]))
-(def diff (rum/cursor-in db [:ui/diff]))
+(def diff-uuids (rum/cursor-in db [:ui/diff]))
 
 (def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
 
@@ -184,23 +186,64 @@
      [:h3 "Raw response"]
      [:pre (pp res)]]))
 
+(rum/defc diff-line [n line]
+  (let [attrs {:key n :data-line (inc n)}]
+    (if (string? line)
+      [:pre.str attrs line]
+      (let [[op line] line]
+        (condp = op
+          :- [:pre.del attrs line]
+          :+ [:pre.add attrs line]
+          :gap [:pre (assoc attrs :style {:margin-top "1em"}) line])))))
+
+(def a'
+  [:html
+   [:head [:title "The Page Title"]]
+   [:p "this got deleted"]
+   [:main
+    [:p "Libero esse excepteur enim facilis odio."]
+    [:p "Occaecat eiusmod libero omnis qui omnis laborum."]
+    [:p "Omnis molestias eligendi quis veniam similique deserunt."]]])
+(def b'
+  [:html
+   [:head [:title "The Page Title"]]
+   [:main
+    [:p "Libero esse excepteur enim facilis odio."]
+    [:p "Proident tempore voluptate libero lorem tempore soluta."]
+    [:p "Omnis molestias eligendi quis veniam similique deserunt."]]
+   [:div
+    [:p "Nulla optio et exercitation similique."]]])
+
 (rum/defc diff-ui < rum/reactive []
-  (let [[a b] (rum/react diff)
-        script (uuids->editscript [a b])]
+  (let [[a b] (rum/react diff-uuids)
+        to-body [:response/pre-render]
+        [ra rb script] (diff/diff-struct-lines
+                         (get-in (uuid->req a) to-body)
+                         (get-in (uuid->req b) to-body))
+        #_#_
+        [ra rb script] (diff/diff-struct-lines a' b')
+        ]
     [:article.rows
      [:header.rows
       [:h2 "Diff: " [:code (shorten-uuid a)] " → " [:code (shorten-uuid b)]]
       [:div
        [:button {:on-click #(swap! db assoc :ui/diff nil)}
         "Back to " (shorten-uuid a)]]]
-     [:div
-      [:p "script: " (prn-str script)]]]))
+     #_
+     (map-indexed (fn [idx [path op value]]
+            [:pre {:key idx} (str path) " " (name op) " " (pp value)])
+          (ed/get-edits script))
+     [:div.diff
+      [:div.response.diff-source
+       (map-indexed (fn [idx line] (diff-line idx line)) ra)]
+      [:div.response.diff-target
+       (map-indexed (fn [idx line] (diff-line idx line)) rb)]]]))
 
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react req-uuids))
         selected (rum/react selected)
         loading? (rum/react loading?)
-        diff (rum/react diff)
+        diff (rum/react diff-uuids)
         current-uuid (rum/react req-uuid)
         print? (rum/react print-db?)
         ws (rum/react websocket)

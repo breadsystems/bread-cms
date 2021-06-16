@@ -4,7 +4,10 @@
   --padding-large: 0.7em;
 
   --text-lighter: #666;
-  --text-red: red;
+  --text-red: darkred;
+  --text-green: #0d680d;
+  --light-pink: #ffb6c182;
+  --light-green: #90ee907a;
   --muted-purple: #8000807a;
   --light-blue: #e2f3f8;
 }
@@ -50,22 +53,23 @@ pre {
   overflow: scroll;
 }
 
-button {
+select, button {
   padding: var(--padding-small) var(--padding-large);
   border-radius: 5px;
   border: 3px solid var(--muted-purple);
   background: var(--light-blue);
   font-weight: 700;
-
+}
+button {
   cursor: pointer;
 }
-button:disabled {
+button:disabled, select:disabled {
   cursor: not-allowed;
 }
-button.lowkey {
+button.lowkey, select.lowkey {
   background: transparent;
 }
-* + button {
+* + button, * + select {
   margin-inline-start: var(--padding-large);
 }
 
@@ -91,6 +95,41 @@ button.lowkey {
 
 .flex {
   display: flex;
+  flex-wrap: wrap;
+}
+.flex > * + * {
+  margin-inline-start: var(--padding-large);
+}
+.diff {
+  display: flex;
+}
+.diff > * {
+  width: 50%;
+  margin: 0;
+  padding: 0;
+}
+.diff pre {
+  margin: 0;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+}
+.diff pre:before {
+  content: attr(data-line);
+  display: inline-block;
+  text-align: end;
+  padding-inline-end: 1ch;
+  width: 4ch;
+}
+.diff pre.del {
+  color: var(--text-red);
+  background: var(--light-pink);
+  font-weight: bold;
+}
+.diff pre.add {
+  color: var(--text-green);
+  background: var(--light-green);
+  font-weight: bold;
 }
 
 .rows > * {
