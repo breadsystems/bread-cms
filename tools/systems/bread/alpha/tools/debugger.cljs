@@ -147,7 +147,7 @@
                         [:code
                          (join-some ":" [file line column])]])
                      (:request/hooks req-data))])
-     [:h3 "Response"]
+     [:h3 "Response (HTML)"]
      [:div.response
       (:body res)]
      [:h3 "Response (pre-render)"]
