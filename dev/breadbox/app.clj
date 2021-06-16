@@ -153,14 +153,13 @@
        :body [:html
               [:head
                [:title "Breadbox"]
-               [:meta {:charset "utf-8"}]
-               (theme/head req)]
+               [:meta {:charset "utf-8"}]]
               [:body
                [:main
                  [:h2 title]
                  [:p "Hello: " hello]
                  [:h3 "Simple field contents"]
-                 [:p "here's some new content right here"]
+                 [:p (rand-int 1000)]
                  [:div.simple
                   [:p (:hello simple)]
                   [:div.body
@@ -328,6 +327,12 @@
       (theme/add-to-footer [:script "console.log(2)"])))
 
 (comment
+
+  (require '[editscript.core :as ed])
+
+  (ed/diff [:html [:head [:title "hi"]] [:main [:p "hi"]]]
+           [:html [:head [:title "hello"]] [:main [:p "hi"]
+                                            [:div "new div"]]])
 
   (swap! app #(bread/add-hook % :hook/request green-theme))
   (swap! app #(bread/add-hook % :hook/request purple-theme))

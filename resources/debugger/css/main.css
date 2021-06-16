@@ -89,6 +89,10 @@ button.lowkey {
   min-width: calc(75% - var(--sidebar-gutter));
 }
 
+.flex {
+  display: flex;
+}
+
 .rows > * {
   margin: 0;
 }

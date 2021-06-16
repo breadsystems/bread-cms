@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
+    [editscript.core :as ed]
     [rum.core :as rum]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
                                                      subscribe-db
@@ -35,13 +36,27 @@
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
 (def selected (rum/cursor-in db [:ui/selected-reqs]))
 (def viewing-hooks? (rum/cursor-in db [:ui/viewing-hooks?]))
+(def diff (rum/cursor-in db [:ui/diff]))
 
 (def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
 
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
+
 (defn- idx->req [idx]
   (get @requests (get @req-uuids idx)))
+
+(defn- uuids->editscript [[a b]]
+  (when (and a b)
+    (let [to-body [:response/pre-render] ;; TODO parameterize this
+          ra (get-in (uuid->req a) to-body)
+          rb (get-in (uuid->req b) to-body)]
+      (ed/diff ra rb))))
+
+(defn- diff-uuid-options [uuid]
+  (map (fn [req-uuid]
+         [req-uuid (shorten-uuid req-uuid)])
+       (filter #(not= uuid %) @req-uuids)))
 
 (defn- toggle-print-db! []
   (swap! db update :ui/print-db? not))
@@ -98,6 +113,7 @@
          res :request/response
          :as req-data}
         (uuid->req (rum/react req-uuid))
+        diff-opts (diff-uuid-options uuid)
         viewing-hooks? (rum/react viewing-hooks?)]
     [:article.rows
      [:header.with-sidebar
@@ -131,8 +147,18 @@
                    :on-click #(swap! db assoc :ui/selected-req uuid)}
                   (shorten-uuid uuid)])
                replays)]]])
-     [:div
-      [:button {:on-click #(replay-request! req)} "Replay this request"]]
+     [:div.flex
+      [:div
+       [:button {:on-click #(replay-request! req)} "Replay this request"]]
+      [:div
+       [:select
+        {:on-change (fn [e]
+                      (let [target (.. e -target -value)]
+                        (swap! db assoc :ui/diff [uuid target])))}
+        [:option "Diff against..."]
+        (map (fn [[value label]]
+               [:option {:key value :value value} label])
+             diff-opts)]]]
      [:h3 "Request hooks"]
      [:p.info
       [:span (str (count (:request/hooks req-data)) " hooks")]
@@ -158,10 +184,23 @@
      [:h3 "Raw response"]
      [:pre (with-out-str (pprint res))]]))
 
+(rum/defc diff-ui < rum/reactive []
+  (let [[a b] (rum/react diff)
+        script (uuids->editscript [a b])]
+    [:article.rows
+     [:header.rows
+      [:h2 "Diff: " [:code (shorten-uuid a)] " → " [:code (shorten-uuid b)]]
+      [:div
+       [:button {:on-click #(swap! db assoc :ui/diff nil)}
+        "Back to " (shorten-uuid a)]]]
+     [:div
+      [:p "script: " (prn-str script)]]]))
+
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react req-uuids))
         selected (rum/react selected)
         loading? (rum/react loading?)
+        diff (rum/react diff)
         current-uuid (rum/react req-uuid)
         print? (rum/react print-db?)
         ws (rum/react websocket)
@@ -212,6 +251,8 @@
                    :on-change #(prefer! :replay-as-of? (not as-of?))}]
           [:label {:for "pref-replay-as-of"} "Replay with " [:code "as-of"]]]]]
        (cond
+         diff
+         (diff-ui)
          current-uuid
          (request-details)
          (seq reqs)
@@ -226,6 +267,7 @@
 (defmethod on-event :init [{:ui/keys [state]}]
   (reset! db (merge {:request/uuid {}
                      :request/uuids []
+                     :ui/diff nil
                      :ui/selected-req nil
                      :ui/selected-reqs (sorted-set)
                      :ui/loading? false}
