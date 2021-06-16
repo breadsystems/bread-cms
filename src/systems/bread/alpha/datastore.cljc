@@ -61,18 +61,31 @@
 (defn set-datastore [app store]
   (bread/add-value-hook app :hook/datastore store))
 
-(defn req->timepoint
-  "Takes a request and returns a Datahike timepoint"
+(defn db-datetime
+  "Returns the as-of database instant (DateTime) for the given request,
+  based on its params."
   [{:keys [params] :as req}]
   (let [as-of-param (bread/config req :datastore/as-of-param)
         as-of (get params as-of-param)
-        format (bread/config req :datastore/as-of-format)]
+        fmt (bread/config req :datastore/as-of-format)]
     (when as-of
       (try
-        (.parse (java.text.SimpleDateFormat. format) as-of)
+        (.parse (java.text.SimpleDateFormat. fmt) as-of)
         (catch java.text.ParseException _e nil)))))
 
-;; TODO req->db-tx
+(defn db-tx
+  "Returns the as-of database transaction (integer) for the given request,
+  based on its params."
+  [{:keys [params] :as req}]
+  (let [as-of-param (bread/config req :datastore/as-of-param)
+        as-of (get params as-of-param)]
+    (when as-of (try
+                  (Integer. as-of)
+                  (catch java.lang.NumberFormatException e
+                    nil)))))
+
+(defn timepoint [req]
+  (bread/hook req :hook/datastore.req->timepoint))
 
 (defmethod installed? :default [config]
   (try
@@ -85,12 +98,12 @@
         (throw e))
       false)))
 
-(defn req->datastore
+(defn- req->datastore
   "Takes a request and returns a datastore instance, optionally configured
    as a temporal-db (via as-of) or with-db (via db-with)"
   [req]
   (let [conn (bread/config req :datastore/connection)
-        timepoint (bread/hook req :hook/datastore.req->timepoint)]
+        timepoint (timepoint req)]
     (if timepoint
       (as-of @conn timepoint)
       @conn)))
@@ -109,8 +122,7 @@
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         as-of-param (or as-of-param :as-of)
         as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z")
-        ->timepoint (:datastore/req->timepoint config req->timepoint)
-        ->datastore (:datastore/req->datastore config req->datastore)
+        ->timepoint (:datastore/req->timepoint config db-tx)
         transact-initial (initial-transactor initial-txns)]
     (fn [app]
       (-> app
@@ -120,4 +132,4 @@
           (bread/set-config :datastore/as-of-format as-of-format)
           (transact-initial)
           (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
-          (bread/add-hook :hook/datastore ->datastore)))))
+          (bread/add-hook :hook/datastore req->datastore)))))

@@ -41,41 +41,48 @@
       (let [app (->loaded config)]
         (is (instance? datahike.db.DB (bread/hook app :hook/datastore)))))
 
-    (testing ":hook/datastore.req->timepoint honors as-of param"
+    (testing "db-tx honors as-of-param"
       (let [handler (->handler config)
+            response (handler {:uri "/" :params {:as-of "54321"}})]
+        (is (instance? datahike.db.AsOfDB (store/datastore response)))))
+
+    (testing "db-tx gracefully handles non-numeric strings"
+      (let [handler (->handler config)
+            response (handler {:uri "/" :params {:as-of "garbage"}})]
+        (is (instance? datahike.db.DB (store/datastore response)))))
+
+    (testing "db-datetime honors as-of param"
+      (let [handler (->handler
+                      (assoc config
+                             :datastore/req->timepoint store/db-datetime))
             response (handler {:uri "/"
                                ;; pass a literal date here
                                :params {:as-of "2020-01-01 00:00:00 PDT"}})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
+        (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
-    (testing ":hook/datastore.req->timepoint honors as-of-format config"
+    (testing "db-datetime honors as-of-format config"
       (let [handler (->handler
-                      (assoc config :datastore/as-of-format "yyyy-MM-dd"))
+                      (assoc config
+                             :datastore/as-of-format "yyyy-MM-dd"
+                             :datastore/req->timepoint store/db-datetime))
             response (handler {:uri "/"
                                ;; pass a literal date here
                                :params {:as-of "2020-01-01"}})]
-        (is (instance? datahike.db.AsOfDB (bread/hook response :hook/datastore)))))
+        (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
-    (testing ":hook/datastore honors as-of-tx"
-      ;; TODO
-      )
-
-    (testing ":hook/datastore.req->timepoint gracefully handles bad date strings"
-      (let [handler (->handler config)
+    (testing "db-datetime gracefully handles bad date strings"
+      (let [handler (->handler
+                      (assoc config
+                             :datastore/req->timepoint store/db-datetime))
             response (handler {:uri "/"
                                :params {:as-of "nonsense date string"}})]
-        (is (instance? datahike.db.DB (bread/hook response :hook/datastore)))))
+        (is (instance? datahike.db.DB (store/datastore response)))))
 
     (testing "it honors a custom :hook/datastore.req->timepoint callback"
       (let [->timepoint (constantly (java.util.Date.))
             config (assoc config :datastore/req->timepoint ->timepoint)
             app (h/plugins->loaded [(store/config->plugin config)])]
-        (is (instance? datahike.db.AsOfDB (bread/hook app :hook/datastore)))))
-
-    (testing "it honors a custom :hook/datastore.req->datastore callback"
-      (let [->datastore (constantly {:fake :db})
-            app (->loaded (assoc config :datastore/req->datastore ->datastore))]
-        (is (= {:fake :db} (bread/hook app :hook/datastore)))))
+        (is (instance? datahike.db.AsOfDB (store/datastore app)))))
 
     (testing "it honors initial transactions"
       (let [txns->app #(->handler (assoc config :datastore/initial-txns %))
