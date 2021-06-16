@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
     [clojure.edn :as edn]
-    [clojure.pprint :refer [pprint]]
     [editscript.core :as ed]
     [rum.core :as rum]
     [systems.bread.alpha.tools.impl :as impl :refer [publish!
@@ -11,6 +10,7 @@
                                             date-fmt
                                             date-fmt-ms
                                             join-some
+                                            pp
                                             req->url
                                             shorten-uuid]]))
 
@@ -178,11 +178,11 @@
       (:body res)]
      [:h3 "Response (pre-render)"]
      [:div.response
-      (with-out-str (pprint (:response/pre-render req-data)))]
+      (pp (:response/pre-render req-data))]
      [:h3 "Raw request"]
-     [:pre (with-out-str (pprint req))]
+     [:pre (pp req)]
      [:h3 "Raw response"]
-     [:pre (with-out-str (pprint res))]]))
+     [:pre (pp res)]]))
 
 (rum/defc diff-ui < rum/reactive []
   (let [[a b] (rum/react diff)
@@ -251,18 +251,14 @@
                    :on-change #(prefer! :replay-as-of? (not as-of?))}]
           [:label {:for "pref-replay-as-of"} "Replay with " [:code "as-of"]]]]]
        (cond
-         diff
-         (diff-ui)
-         current-uuid
-         (request-details)
-         (seq reqs)
-         [:p "Click a request to view details"]
-         :else
-         [:p.info "No requests yet."])]]
+         diff (diff-ui)
+         current-uuid (request-details)
+         (seq reqs) [:p "Click a request to view details"]
+         :else [:p.info "No requests yet."])]]
      (when print?
        [:div
         [:h3 "Debug DB"]
-        [:pre (with-out-str (pprint (rum/react db)))]])]))
+        [:pre (pp (rum/react db))]])]))
 
 (defmethod on-event :init [{:ui/keys [state]}]
   (reset! db (merge {:request/uuid {}

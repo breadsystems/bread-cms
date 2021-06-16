@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.tools.util
   (:require
+    [clojure.pprint :refer [pprint]]
     [clojure.string :as string]
     ["date-fns" :refer [formatISO9075]]))
 
@@ -24,3 +25,6 @@
 
 (defn shorten-uuid [longer]
   (subs longer 0 8))
+
+(defn pp [x]
+  (with-out-str (pprint x)))
