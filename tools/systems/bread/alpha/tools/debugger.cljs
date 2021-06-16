@@ -207,7 +207,7 @@
                    :checked (boolean as-of?)
                    :value 1
                    :on-change #(prefer! :replay-as-of? (not as-of?))}]
-          [:label {:for "pref-replay-as-of"} "Replay as of?"]]]]
+          [:label {:for "pref-replay-as-of"} "Replay with " [:code "as-of"]]]]]
        (cond
          current-uuid
          (request-details)
