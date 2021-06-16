@@ -263,6 +263,31 @@
                   {:uri "/"})
                  @attempts)))))
 
+  (testing "it retries with the given backoff algorithm"
+    (let [handler (fn [effect]
+                    (-> (bread/app)
+                        (bread/add-effect effect)
+                        (bread/handler)))
+          attempts (atom [])
+          backoff (fn [{:effect/keys [retries]}]
+                    ;; record the fact that backoff has been called with
+                    ;; the given :effect/retries value
+                    (swap! attempts conj retries)
+                    ;; NOTE: returning nil means don't sleep.
+                    nil)
+          flaky-effect (fn [_]
+                         (when (> 5 (count @attempts))
+                           (throw (ex-info "retry!" {}))))]
+      ;; Assert that backoff was called consecutively with an :effect/retries
+      ;; value of 5, 4, 3, 2, 1
+      (is (= [5 4 3 2 1]
+             (do
+               ((handler (with-meta flaky-effect {:effect/retries 5
+                                                  :effect/backoff backoff
+                                                  :effect/catch? true}))
+                {:uri "/"})
+               @attempts)))))
+
   (testing "add-transform only affects ::data"
     (are [data transform] (= data (let [handler #(-> (bread/app)
                                                      (bread/add-transform %)

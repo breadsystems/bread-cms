@@ -213,6 +213,11 @@
               ex
               (ex-info (.getMessage ex) {:exception ex})))
           (retry []
+            (let [em (meta effect)
+                  backoff (:effect/backoff em)
+                  sleep-ms (when (fn? backoff) (backoff em))]
+              (when sleep-ms
+                (Thread/sleep sleep-ms)))
             (do-effect
               (vary-meta effect update :effect/retries dec)
               req))
