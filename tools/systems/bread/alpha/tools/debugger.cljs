@@ -52,30 +52,26 @@
     (send! {:event/type :clear-requests})))
 
 (defn- replay-as-of [{:profiler/keys [as-of-param]
-                      :request/keys [db-tx]
+                      :request/keys [as-of]
                       :as req}]
   (-> req
-      (assoc-in [:params as-of-param] (str db-tx))
+      ;; TODO formatting for dates
+      (assoc-in [:params as-of-param] (str as-of))
       (assoc :profiler/as-of-param as-of-param)))
 
 (defn req->replay [req]
-  (cond-> req
+  (-> req
     ;; Always add replay indicators first.
-    true
     (assoc :profiler/replay? true
            :profiler/replay-uuid (:request/uuid req))
-
-    @replay-as-of?
-    (replay-as-of)
-
-    ;; Remove data we always want to overwrite for each request, mostly
+    ;; Remove data we always want to overwrite for each request,
     ;; to avoid confusion.
-    true
     (dissoc :request/timestamp :request/uuid)))
 
 (defn replay-request! [req]
   (send! {:event/type :request/replay
-          :event/request (req->replay req)}))
+          :event/request (req->replay req)
+          :replay/as-of? @replay-as-of?}))
 
 (defn prefer! [pref-key pref]
   (swap! db assoc-in [:ui/preferences pref-key] pref))

@@ -501,9 +501,6 @@
   (mount/start))
 
 (comment
-  (bread/config $res :datastore/as-of-param)
-  (store/req->timepoint (assoc-in $res [:params :as-of] "2021-06-15T20:57:30.947-00:00"))
-
   (mount/start)
   (mount/stop)
   (restart-cms!)

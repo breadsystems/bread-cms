@@ -114,10 +114,21 @@
                          :ui/state (assoc @db
                                           :ui/websocket (websocket-host))})))
 
-(defmethod on-event :request/replay [{req :event/request}]
+(defn- replay-as-of [{:profiler/keys [as-of-param]
+                      :request/keys [as-of]
+                      :as req}]
+  (prn as-of-param as-of)
+  (-> req
+      (assoc-in [:params as-of-param] (str as-of))
+      (assoc :profiler/as-of-param as-of-param)))
+
+(defmethod on-event :request/replay [{req :event/request :as e}]
   (when-let [handler @!replay-handler]
     (if (fn? handler)
-      (handler req)
+      (let [req (cond-> req
+                   (:replay/as-of? e)
+                   (replay-as-of))]
+        (handler req))
       (throw (ex-info "replay-handler is not a function"
                       {:replay-handler handler})))))
 
@@ -166,12 +177,15 @@
         (fn [req]
           (let [rid (UUID/randomUUID)
                 as-of-param (bread/config req :datastore/as-of-param)
+                ;; The request either has a timepoint set by virtue of having
+                ;; an `as-of` param, OR its db is a vanilla DB instance from
+                ;; which we can grab a max-tx.
+                as-of (or (store/timepoint req) (store/max-tx req))
                 req (assoc req
                            :profiler/profiled? true
                            :profiler/as-of-param as-of-param
                            :request/uuid rid
-                           ;; TODO abstract this in datastore
-                           :request/db-tx (store/max-tx req)
+                           :request/as-of as-of
                            :request/timestamp (Date.))]
             (publish-request! req)
             req))
