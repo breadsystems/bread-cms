@@ -13,8 +13,12 @@
                                             req->url
                                             shorten-uuid]]))
 
-(let [[db' _] (subscribe-db)]
-  (def db db'))
+(declare db)
+
+;; Initialize the and subscribe to updates exactly once.
+(when-not db
+  (let [[db' _] (subscribe-db)]
+    (def db db')))
 
 (defonce !ws (atom nil))
 
