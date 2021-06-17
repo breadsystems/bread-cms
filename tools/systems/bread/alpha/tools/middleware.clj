@@ -22,8 +22,10 @@
               (ex-data error))]
         [:p "No additional info about this error. :("])
       [:h2 "Stack trace"]
-      [:p "(" [:strong "TODO:"] " print just the stack trace)"]
-      [:pre (str error)]]]]])
+      [:ul
+       (map (fn [elem]
+              [:li [:code (str elem)]])
+            (.getStackTrace error))]]]]])
 
 (defn wrap-exceptions
   ([handler]
