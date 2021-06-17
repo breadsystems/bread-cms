@@ -91,7 +91,8 @@ button.lowkey, select.lowkey {
   flex-basis: var(--sidebar-width);
   flex-grow: 1;
 }
-.with-sidebar > * > :last-child {
+.with-sidebar:not(.reverse) > * > :last-child,
+.with-sidebar.reverse > * > :first-child {
   flex-basis: 0;
   flex-grow: 9999;
   min-width: calc(75% - var(--sidebar-gutter));

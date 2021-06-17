@@ -122,7 +122,7 @@
         viewing-raw-request? (rum/react viewing-raw-request?)
         viewing-raw-response? (rum/react viewing-raw-response?)]
     [:article.rows
-     [:header.with-sidebar
+     [:header.with-sidebar.reverse
       [:div
        [:div
         [:h2.emphasized (req->url req)]]
