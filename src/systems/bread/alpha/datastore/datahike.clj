@@ -1,7 +1,9 @@
 ;; TODO migrate to CLJC
 (ns systems.bread.alpha.datastore.datahike
   (:require
+    [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
+    [datahike.db :as db]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store])
@@ -169,6 +171,22 @@
   (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
+
+(extend-type datahike.db.AsOfDB
+  Datafiable
+  (datafy [db]
+    {:type 'datahike.db.AsOfDB
+     ;; TODO maybe get this upstream?
+     :max-tx (db/-max-tx db)
+     :max-eid (db/-max-eid db)}))
+
+(extend-type datahike.db.DB
+  Datafiable
+  (datafy [db]
+    {:type 'datahike.db.DB
+     ;; TODO maybe get this upstream?
+     :max-tx (:max-tx db)
+     :max-eid (:max-eid db)}))
 
 
 

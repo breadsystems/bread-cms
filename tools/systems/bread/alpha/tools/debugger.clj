@@ -49,7 +49,7 @@
   (let [uuid (str (:request/uuid req))
         req-data (as-> req $
                    (assoc $ :request/uuid uuid :request/id (subs uuid 0 8))
-                   (walk/postwalk datafy $))
+                   (walk/prewalk datafy $))
         event {:event/type :bread/request
                :event/request req-data}]
     (publish! event)))
@@ -59,20 +59,6 @@
         event {:event/type :bread/response
                :event/response res-data}]
     (publish! event)))
-
-(defn incremental [x]
-  (try
-    (walk/postwalk
-      (fn [node]
-        (try
-          (-> node datafy prn-str edn/read-string)
-          (catch java.lang.Throwable e
-            (throw (ex-info (.getMessage e) {:node node})))))
-      x)
-    (catch clojure.lang.ExceptionInfo e
-      (prn (.getMessage e))
-      (let [{:keys [node]} (ex-data e)]
-        [(type node) node]))))
 
 (extend-protocol Datafiable
   clojure.lang.Fn
@@ -86,7 +72,7 @@
   clojure.lang.Atom
   (datafy [a]
     {:type 'clojure.lang.Atom
-     :value (walk/postwalk datafy @a)})
+     :value (walk/prewalk datafy @a)})
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (datafy [ch]
