@@ -27,7 +27,7 @@
             :extra-deps {juji/editscript {:mvn/version "0.5.7"}
                          rum/rum         {:mvn/version "0.12.6"}}}
 
-           :debugger
+           :flowstorm
            {:extra-deps {jpmonettas/flow-storm-debugger {:mvn/version "0.6.0"}}
             :main-opts ["-m" "flow-storm-debugger.main"]}
 
