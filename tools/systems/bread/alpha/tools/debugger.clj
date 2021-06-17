@@ -188,13 +188,13 @@
                            :request/uuid rid
                            :request/as-of as-of
                            :request/timestamp (Date.))]
-            (future (publish-request! req))
+            (publish-request! req)
             req))
         {:precedence Double/NEGATIVE_INFINITY})
       (:hook/response
         (fn [res]
           (let [res (assoc res :response/timestamp (Date.))]
-            (future (publish-response! res))
+            (publish-response! res)
             res))
         {:precedence Double/POSITIVE_INFINITY}))))
 
@@ -225,9 +225,8 @@
     (println "Binding debug profiler...")
     (bread/bind-profiler!
       (fn [invocation]
-        (future
-          (when-let [event (hook->event invocation)]
-            (publish! event)))))
+        (when-let [event (hook->event invocation)]
+          (publish! event))))
 
     (fn []
       (println "Stopping debug server.")
