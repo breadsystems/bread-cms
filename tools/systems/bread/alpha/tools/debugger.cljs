@@ -38,6 +38,8 @@
 (def req-uuid (rum/cursor-in db [:ui/selected-req]))
 (def selected (rum/cursor-in db [:ui/selected-reqs]))
 (def viewing-hooks? (rum/cursor-in db [:ui/viewing-hooks?]))
+(def viewing-raw-request? (rum/cursor-in db [:ui/viewing-raw-request?]))
+(def viewing-raw-response? (rum/cursor-in db [:ui/viewing-raw-response?]))
 (def diff-uuids (rum/cursor-in db [:ui/diff]))
 
 (def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
@@ -116,7 +118,9 @@
          :as req-data}
         (uuid->req (rum/react req-uuid))
         diff-opts (diff-uuid-options uuid)
-        viewing-hooks? (rum/react viewing-hooks?)]
+        viewing-hooks? (rum/react viewing-hooks?)
+        viewing-raw-request? (rum/react viewing-raw-request?)
+        viewing-raw-response? (rum/react viewing-raw-response?)]
     [:article.rows
      [:header.with-sidebar
       [:div
@@ -182,9 +186,17 @@
      [:div.response
       (pp (:response/pre-render req-data))]
      [:h3 "Raw request"]
-     [:pre (pp req)]
+     [:div
+      [:button.lowkey {:on-click #(swap! db update :ui/viewing-raw-request? not)}
+       (if viewing-raw-request? "Hide" "Show")]]
+     (when viewing-raw-request?
+       [:pre (pp req)])
      [:h3 "Raw response"]
-     [:pre (pp res)]]))
+     [:div
+      [:button.lowkey {:on-click #(swap! db update :ui/viewing-raw-response? not)}
+       (if viewing-raw-response? "Hide" "Show")]]
+     (when viewing-raw-response?
+       [:pre (pp req)])]))
 
 (rum/defc diff-line [n line]
   (let [attrs {:key n :data-line (inc n)}]
