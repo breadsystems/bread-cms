@@ -3,6 +3,7 @@
 (ns breadbox.app
   (:require
     [clojure.core.protocols :refer [Datafiable]]
+    [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
@@ -422,34 +423,10 @@
   (resolver/query $req)
   (store/q (store/datastore $req) (resolver/query $req))
 
-  (defn post->uri [{:post/keys [slug parent]}]
-    (str/join (filter
-                (complement nil?)
-                ["" "en" slug (:post/slug parent)])
-              "/"))
-
-  (post->uri #:post{:slug "slug"
-                    :parent #:post{:slug "parent"}})
-
-  (-> (reitit/compiled-routes $router)
-      second second :bread/query)
-  (reitit/route-names $router)
-
-  (bread/bind-profiler! (bread/profiler-for
-                          {:hooks #{:hook/dispatch
-                                    :hook/match-route
-                                    :hook/route-params
-                                    :hook/match->resolver}
-                           :on-hook (fn [{:keys [hook]}]
-                                      (prn "THERE WAS A CALL TO" hook))}))
-
-  (bread/bind-profiler! nil)
-
-  ;; TODO test this out!
-  (static/generate! handler)
+  (handler (assoc @app :uri "/en" :params {:as-of "536870914"}))
 
   (store/datastore $res)
-  (store/as-of (store/datastore $res) 536870914)
+  (datafy (store/as-of (store/datastore $res) 536870914))
 
   ;;
   )
