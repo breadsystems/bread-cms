@@ -202,7 +202,7 @@
       [:button.lowkey {:on-click #(swap! db update :ui/viewing-raw-response? not)}
        (if viewing-raw-response? "Hide" "Show")]]
      (when viewing-raw-response?
-       [:pre (pp req)])]))
+       [:pre (pp res)])]))
 
 (rum/defc diff-line [n line]
   (let [attrs {:key n :data-line (inc n)}]
