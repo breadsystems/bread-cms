@@ -260,7 +260,9 @@
           [:ul
            (map-indexed (fn [idx {uuid :request/uuid
                                   req :request/initial}]
-                          [:li.req-item {:key uuid}
+                          [:li.req-item {:key uuid
+                                         :class (when (= uuid current-uuid)
+                                                  "current")}
                            [:div
                             [:input {:type :checkbox
                                      :checked (contains? selected idx)

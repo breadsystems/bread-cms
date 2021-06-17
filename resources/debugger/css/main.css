@@ -47,6 +47,10 @@ li:nth-child(odd) {
 }
 .req-item {
   display: flex;
+  border: 3px solid transparent;
+}
+.req-item.current {
+  border-color: var(--muted-purple);
 }
 
 pre {
