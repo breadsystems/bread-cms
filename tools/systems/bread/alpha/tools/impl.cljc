@@ -88,7 +88,8 @@
       (update-in [:request/uuid uuid :request/hooks] conjv e)))
 
 (defmethod on-event [:bread/hook :hook/render] [{:request/keys [uuid] :as e}]
-  (swap! db assoc-in [:request/uuid uuid :response/pre-render] (:BODY e)))
+  (swap! db assoc-in [:request/uuid uuid :response/pre-render]
+         (some-> e :args first :body)))
 
 (defmethod on-event :bread/hook [{:keys [hook] :as e}]
   (on-event (merge e {:event/type [:bread/hook hook]}))

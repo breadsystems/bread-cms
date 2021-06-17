@@ -126,17 +126,14 @@
           {::bread/keys [from-ns file line column]} detail]
       {:event/type :bread/hook
        :request/uuid (str rid)
-       ;; TODO real serialization so we can stop cheating here
-       :BODY (:body (first args))
-       #_#_
-       :app (walk/postwalk datafy app)
+       :app (walk/prewalk datafy app)
        :hook hook
-       #_#_
-       :args (walk/postwalk datafy args)
+       :args (walk/prewalk datafy args)
        :f (str f)
        :file file
        :line line
        :column column})))
+
 (defn- wrap-csp-header [handler]
   (fn [req]
     (update
