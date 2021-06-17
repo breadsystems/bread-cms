@@ -205,3 +205,27 @@
 
 (defmethod store/max-tx :datahike [req]
   (:max-tx (store/datastore req)))
+
+(defn datastore
+  "Takes a request and returns a datastore instance, optionally configured
+   as a temporal-db (via as-of) or with-db (via db-with)"
+  [req]
+  (let [conn (bread/config req :datastore/connection)
+        timepoint (store/timepoint req)]
+    (if timepoint
+      (with-meta
+        (store/as-of (store/db conn) timepoint)
+        {`datafy (fn [_]
+                   {:type 'datahike.db.AsOfDB
+                    :max-tx (:max-tx @conn)
+                    :max-eid (:max-eid @conn)})})
+      (with-meta
+        (store/db conn)
+        {`datafy (fn [db]
+                   {:type 'datahike.db.DB
+                    :max-tx (:max-tx db)
+                    :max-eid (:max-eid db)})}))))
+
+(defmethod store/plugin :datahike [config]
+  (let [config (merge {:datastore/req->datastore datastore} config)]
+    (store/plugin* config)))

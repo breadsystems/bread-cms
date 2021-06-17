@@ -16,7 +16,7 @@
                #:i18n{:key :i18n/two :string "Two" :lang :en}
                #:i18n{:key :i18n/one :string "Uno" :lang :es}
                #:i18n{:key :i18n/two :string "Dos" :lang :es}]}
-      app #(h/plugins->loaded [(store/config->plugin config)
+      app #(h/plugins->loaded [(store/plugin config)
                                (i18n/plugin)])]
 
   (use-fixtures :each (fn [f]

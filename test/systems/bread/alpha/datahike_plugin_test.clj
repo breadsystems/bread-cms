@@ -81,7 +81,7 @@
     (testing "it honors a custom :hook/datastore.req->timepoint callback"
       (let [->timepoint (constantly (java.util.Date.))
             config (assoc config :datastore/req->timepoint ->timepoint)
-            app (h/plugins->loaded [(store/config->plugin config)])]
+            app (h/plugins->loaded [(store/plugin config)])]
         (is (instance? datahike.db.AsOfDB (store/datastore app)))))
 
     (testing "it honors initial transactions"
