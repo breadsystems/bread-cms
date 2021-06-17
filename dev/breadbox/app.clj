@@ -311,6 +311,19 @@
                                                               :post.type/page
                                                               ""
                                                               :en]}})))
+                                    (:hook/expand
+                                      (fn [app]
+                                        (store/add-txs
+                                          app
+                                          (let [uuid (UUID/randomUUID)]
+                                            [{:post/slug (str "post-" uuid)
+                                              :post/uuid uuid
+                                              :post/fields
+                                              [{:field/lang :en
+                                                :field/key :my/field
+                                                :field/content
+                                                (str
+                                                  "content for post " uuid)}]}]))))
                                     (:hook/expand (fn [app]
                                                     (expand-queries app)))))
 
