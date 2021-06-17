@@ -59,7 +59,10 @@
     (publish! event)))
 
 (defn- publish-response! [res]
-  (let [res-data (walk/prewalk datafy res)
+  (let [res-data (as-> res $
+                   (assoc $
+                          :response/datastore (store/datastore res))
+                   (walk/prewalk datafy $))
         event {:event/type :bread/response
                :event/response res-data}]
     (publish! event)))
