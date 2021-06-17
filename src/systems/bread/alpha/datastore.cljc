@@ -107,8 +107,8 @@
   (let [conn (bread/config req :datastore/connection)
         timepoint (timepoint req)]
     (if timepoint
-      (as-of @conn timepoint)
-      @conn)))
+      (as-of (db conn) timepoint)
+      (db conn))))
 
 (defn- initial-transactor [txns]
   (if (seq txns)
