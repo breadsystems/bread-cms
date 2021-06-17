@@ -13,7 +13,7 @@
   (-> plugins plugins->app bread/load-handler))
 
 (defn datastore-config->app [config]
-  (plugins->app [(store/config->plugin config)]))
+  (plugins->app [(store/plugin config)]))
 
 (defn datastore->plugin [store]
   (fn [app]

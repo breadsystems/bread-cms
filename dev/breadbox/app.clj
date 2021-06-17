@@ -2,6 +2,8 @@
 ;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
+    [clojure.core.protocols :refer [Datafiable]]
+    [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
@@ -12,6 +14,7 @@
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit :as br]
+    [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
@@ -20,15 +23,20 @@
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debugger :as debug]
+    [systems.bread.alpha.tools.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-    [ring.middleware.reload :refer [wrap-reload]]
-    [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]])
+    [ring.middleware.reload :refer [wrap-reload]])
   (:import
     [java.util UUID]))
+
+(extend-protocol Datafiable
+  org.httpkit.server.AsyncChannel
+  (datafy [ch]
+    (str "org.httpkit.server.AsyncChannel[" ch "]")))
 
 ;; TODO optionally start this via config
 (defstate debugger
@@ -153,13 +161,13 @@
        :body [:html
               [:head
                [:title "Breadbox"]
-               [:meta {:charset "utf-8"}]
-               (theme/head req)]
+               [:meta {:charset "utf-8"}]]
               [:body
                [:main
                  [:h2 title]
                  [:p "Hello: " hello]
                  [:h3 "Simple field contents"]
+                 [:p (rand-int 1000)]
                  [:div.simple
                   [:p (:hello simple)]
                   [:div.body
@@ -267,7 +275,7 @@
                  (bread/load-app
                    (bread/app
                      {:plugins [(debug/plugin)
-                                (store/config->plugin $config)
+                                (store/plugin $config)
                                 (i18n/plugin)
                                 (post/plugin)
                                 (br/plugin {:router $router})
@@ -310,8 +318,7 @@
                                 (fn [app]
                                   (bread/add-hook app :hook/render RENDER))
 
-                                (tpl/renderer->plugin rum/render-static-markup
-                                                      {:precedence 2})
+                                (rum/plugin)
 
                                 (static/plugin)]})))
   :stop (reset! app nil))
@@ -328,6 +335,12 @@
       (theme/add-to-footer [:script "console.log(2)"])))
 
 (comment
+
+  (require '[editscript.core :as ed])
+
+  (ed/diff [:html [:head [:title "hi"]] [:main [:p "hi"]]]
+           [:html [:head [:title "hello"]] [:main [:p "hi"]
+                                            [:div "new div"]]])
 
   (swap! app #(bread/add-hook % :hook/request green-theme))
   (swap! app #(bread/add-hook % :hook/request purple-theme))
@@ -410,56 +423,17 @@
   (resolver/query $req)
   (store/q (store/datastore $req) (resolver/query $req))
 
-  (defn post->uri [{:post/keys [slug parent]}]
-    (str/join (filter
-                (complement nil?)
-                ["" "en" slug (:post/slug parent)])
-              "/"))
+  (handler (assoc @app :uri "/en" :params {:as-of "536870914"}))
 
-  (post->uri #:post{:slug "slug"
-                    :parent #:post{:slug "parent"}})
-
-  (-> (reitit/compiled-routes $router)
-      second second :bread/query)
-  (reitit/route-names $router)
-
-  (bread/bind-profiler! (bread/profiler-for
-                          {:hooks #{:hook/dispatch
-                                    :hook/match-route
-                                    :hook/route-params
-                                    :hook/match->resolver}
-                           :on-hook (fn [{:keys [hook]}]
-                                      (prn "THERE WAS A CALL TO" hook))}))
-
-  (bread/bind-profiler! nil)
-
-  ;; TODO test this out!
-  (static/generate! handler)
-
-  (handler (merge @app {:uri "/"}))
-
-  (::bread/plugins $res)
-  ;; which hooks got added where?
-  (into {} (map (fn [[k h]]
-                  [k (help/distill-hooks [::bread/file
-                                          ::bread/line
-                                          ::bread/column
-                                          ::bread/from-ns] h)])
-                (::bread/hooks $res)))
-  (distinct (map (comp (juxt ::bread/file ::bread/added-in) first second) (::bread/hooks $res)))
-  (distinct (map (comp ::bread/added-in first second) (::bread/hooks $res)))
-  (:body $res)
-
-  (macroexpand '(bread/add-hook @app :my/hook identity))
+  (store/datastore $res)
+  (datafy (store/as-of (store/datastore $res) 536870914))
 
   ;;
   )
 
 (defn handler [req]
   (def $req req)
-  (def $res (assoc-in
-              ((bread/handler @app) req)
-              [:headers "Access-Control-Allow-Origin"] "*"))
+  (def $res ((bread/handler @app) req))
   $res)
 
 (defonce stop-http (atom nil))
@@ -469,6 +443,7 @@
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
+      (mid/wrap-exceptions $)
       (wrap-keyword-params $)
       (wrap-params $)
       (http/run-server $ {:port port})

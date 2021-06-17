@@ -1,7 +1,9 @@
 ;; TODO migrate to CLJC
 (ns systems.bread.alpha.datastore.datahike
   (:require
+    [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
+    [datahike.db :as db]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store])
@@ -170,6 +172,22 @@
   (transact [conn tx]
     (d/transact conn tx)))
 
+(extend-type datahike.db.AsOfDB
+  Datafiable
+  (datafy [db]
+    {:type 'datahike.db.AsOfDB
+     ;; TODO maybe get this upstream?
+     :max-tx (db/-max-tx db)
+     :max-eid (db/-max-eid db)}))
+
+(extend-type datahike.db.DB
+  Datafiable
+  (datafy [db]
+    {:type 'datahike.db.DB
+     ;; TODO maybe get this upstream?
+     :max-tx (:max-tx db)
+     :max-eid (:max-eid db)}))
+
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -205,3 +223,27 @@
 
 (defmethod store/max-tx :datahike [req]
   (:max-tx (store/datastore req)))
+
+(defn datastore
+  "Takes a request and returns a datastore instance, optionally configured
+   as a temporal-db (via as-of) or with-db (via db-with)"
+  [req]
+  (let [conn (bread/config req :datastore/connection)
+        timepoint (store/timepoint req)]
+    (if timepoint
+      (with-meta
+        (store/as-of (store/db conn) timepoint)
+        {`datafy (fn [_]
+                   {:type 'datahike.db.AsOfDB
+                    :max-tx (:max-tx @conn)
+                    :max-eid (:max-eid @conn)})})
+      (with-meta
+        (store/db conn)
+        {`datafy (fn [db]
+                   {:type 'datahike.db.DB
+                    :max-tx (:max-tx db)
+                    :max-eid (:max-eid db)})}))))
+
+(defmethod store/plugin :datahike [config]
+  (let [config (merge {:datastore/req->datastore datastore} config)]
+    (store/plugin* config)))

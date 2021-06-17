@@ -1,6 +1,9 @@
 ;; TODO extract channel/websocket stuff into a lib and dogfood it!
 (ns systems.bread.alpha.tools.impl
   (:require
+    [clojure.datafy :refer [datafy]]
+    [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [clojure.core.async :as async :refer [<! chan go-loop mult put! tap untap]]
     [systems.bread.alpha.tools.impl.util :refer [conjv]]))
 
@@ -32,8 +35,7 @@
 (defmulti on-event :event/type)
 
 (defmethod on-event :default [e]
-  (println "Unknown event type:" (:event/type e))
-  (prn e))
+  nil)
 
 ;; NOTE: This gets overridden in CLJS!!!
 (defmethod on-event :init [_]
@@ -68,9 +70,9 @@
 
 (defmethod on-event :bread/response [{res :event/response}]
   (let [uuid (str (:request/uuid res))]
-   (swap! db
-         (fn [state]
-           (assoc-in state [:request/uuid uuid :request/response] res)))))
+    (swap! db
+           (fn [state]
+             (assoc-in state [:request/uuid uuid :request/response] res)))))
 
 (comment
   (deref db)
@@ -85,8 +87,13 @@
       (assoc-in  [:request/uuid uuid :request/uuid] uuid)
       (update-in [:request/uuid uuid :request/hooks] conjv e)))
 
-(defmethod on-event :bread/hook [hook-event]
-  (swap! db update-req hook-event))
+(defmethod on-event [:bread/hook :hook/render] [{:request/keys [uuid] :as e}]
+  (swap! db assoc-in [:request/uuid uuid :response/pre-render]
+         (some-> e :args first :body)))
+
+(defmethod on-event :bread/hook [{:keys [hook] :as e}]
+  (on-event (merge e {:event/type [:bread/hook hook]}))
+  (swap! db update-req e))
 
 (defn subscribe-db
   "Returns at instance of the db (atom) and an unsubscribe callback. Note:

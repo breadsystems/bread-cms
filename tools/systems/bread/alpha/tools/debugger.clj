@@ -1,7 +1,9 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
-    [clojure.datafy :as datafy]
+    [clojure.datafy :refer [datafy]]
+    [clojure.core.protocols :as proto :refer [Datafiable]]
     [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [systems.bread.alpha.core :as bread]
@@ -11,17 +13,28 @@
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]
-    [systems.bread.alpha.tools.impl :as impl :refer [publish!
-                                                     subscribe!
-                                                     subscribe-db
-                                                     on-event]])
+    [systems.bread.alpha.tools.impl :as impl])
   (:import
     [java.util Date UUID]))
+
+(def
+  ^{:doc
+    "Debug event handler. Used internally to log requests, hooks, responses,
+    etc. to the Bread debugger. Implement this multimethod to extend the
+    debugger with your own custom events. Expects a map with an :event/type
+    key, dispatching off the value of this key."}
+  on-event impl/on-event)
+
+(def
+  ^{:doc
+    "Publish an event to the Bread debugger. Handled by the on-event
+    multimethod. Expects a map with an :event/type key."}
+  publish! impl/publish!)
 
 (declare db)
 
 (defn- subscribe-debugger []
-  (let [[db' unsub!] (subscribe-db)]
+  (let [[db' unsub!] (impl/subscribe-db)]
     (def db db')
     unsub!))
 
@@ -34,27 +47,55 @@
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
-        req (->
-              (assoc req :request/uuid uuid :request/id (subs uuid 0 8)))
-        ;; TODO better serialization to avoid this
-        req (-> req
-                (dissoc
-                  ::bread/effects
-                  ::bread/hooks
-                  ::bread/plugins
-                  ::bread/config
-                  :async-channel))
+        req-data (as-> req $
+                   (assoc $
+                          :request/uuid uuid
+                          :request/id (subs uuid 0 8)
+                          ;; TODO support extending these fields via metadata
+                          :request/datastore (store/datastore req))
+                   (walk/prewalk datafy $))
         event {:event/type :bread/request
-               :event/request req}]
+               :event/request req-data}]
     (publish! event)))
 
 (defn- publish-response! [res]
-  (let [event {:event/type :bread/response
-               :event/response (dissoc res
-                                       ::bread/hooks ::bread/plugins
-                                       ::bread/config :async-channel
-                                       ::bread/queries)}]
+  (let [res-data (as-> res $
+                   (assoc $
+                          :response/datastore (store/datastore res))
+                   (walk/prewalk datafy $))
+        event {:event/type :bread/response
+               :event/response res-data}]
     (publish! event)))
+
+(extend-protocol Datafiable
+  clojure.lang.Fn
+  (datafy [f]
+    (str "fn[" f "]"))
+
+  java.lang.Class
+  (datafy [c]
+    (str c))
+
+  clojure.lang.Atom
+  (datafy [a]
+    {:type 'clojure.lang.Atom
+     :value (walk/prewalk datafy @a)})
+
+  clojure.core.async.impl.channels.ManyToManyChannel
+  (datafy [ch]
+    (str ch))
+
+  datahike.db.DB
+  (datafy [db]
+    (select-keys db [:max-tx :max-eid]))
+
+  clojure.lang.Symbol
+  (datafy [sym]
+    (name sym))
+
+  clojure.lang.Namespace
+  (datafy [ns*]
+    (name (ns-name ns*))))
 
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]
@@ -62,11 +103,9 @@
           {::bread/keys [from-ns file line column]} detail]
       {:event/type :bread/hook
        :request/uuid (str rid)
-       #_#_
-       :app (datafy/datafy app)
+       :app (walk/prewalk datafy app)
        :hook hook
-       #_#_
-       :args (map datafy/datafy args)
+       :args (walk/prewalk datafy args)
        :f (str f)
        :file file
        :line line
@@ -91,8 +130,8 @@
                                (let [msg (edn/read-string message)]
                                  (on-event (assoc msg :channel ws-chan)))))
     ;; Broadcast over our WebSocket whenever there's an event!
-    (subscribe! (fn [event]
-                  (http/send! ws-chan (prn-str event))))))
+    (impl/subscribe! (fn [event]
+                       (http/send! ws-chan (prn-str event))))))
 
 (def ^:private handler
   (ring/ring-handler
@@ -117,7 +156,6 @@
 (defn- replay-as-of [{:profiler/keys [as-of-param]
                       :request/keys [as-of]
                       :as req}]
-  (prn as-of-param as-of)
   (-> req
       (assoc-in [:params as-of-param] (str as-of))
       (assoc :profiler/as-of-param as-of-param)))
@@ -131,6 +169,34 @@
         (handler req))
       (throw (ex-info "replay-handler is not a function"
                       {:replay-handler handler})))))
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hooks->
+      app
+      (:hook/request
+        (fn [req]
+          (let [rid (UUID/randomUUID)
+                as-of-param (bread/config req :datastore/as-of-param)
+                ;; The request either has a timepoint set by virtue of having
+                ;; an `as-of` param, OR its db is a vanilla DB instance from
+                ;; which we can grab a max-tx.
+                as-of (or (store/timepoint req) (store/max-tx req))
+                req (assoc req
+                           :profiler/profiled? true
+                           :profiler/as-of-param as-of-param
+                           :request/uuid rid
+                           :request/as-of as-of
+                           :request/timestamp (Date.))]
+            (future (publish-request! req))
+            req))
+        {:precedence Double/NEGATIVE_INFINITY})
+      (:hook/response
+        (fn [res]
+          (let [res (assoc res :response/timestamp (Date.))]
+            (future (publish-response! res))
+            res))
+        {:precedence Double/POSITIVE_INFINITY}))))
 
 (defn start!
   "Starts a debug web server on the specified port and attaches the profiler.
@@ -159,8 +225,9 @@
     (println "Binding debug profiler...")
     (bread/bind-profiler!
       (fn [invocation]
-        (when-let [event (hook->event invocation)]
-          (publish! event))))
+        (future
+          (when-let [event (hook->event invocation)]
+            (publish! event)))))
 
     (fn []
       (println "Stopping debug server.")
@@ -168,34 +235,6 @@
       (println "Unbinding profiler.")
       (bread/bind-profiler! nil)
       (unsub))))
-
-(defn plugin []
-  (fn [app]
-    (bread/add-hooks->
-      app
-      (:hook/request
-        (fn [req]
-          (let [rid (UUID/randomUUID)
-                as-of-param (bread/config req :datastore/as-of-param)
-                ;; The request either has a timepoint set by virtue of having
-                ;; an `as-of` param, OR its db is a vanilla DB instance from
-                ;; which we can grab a max-tx.
-                as-of (or (store/timepoint req) (store/max-tx req))
-                req (assoc req
-                           :profiler/profiled? true
-                           :profiler/as-of-param as-of-param
-                           :request/uuid rid
-                           :request/as-of as-of
-                           :request/timestamp (Date.))]
-            (publish-request! req)
-            req))
-        {:precedence Double/NEGATIVE_INFINITY})
-      (:hook/response
-        (fn [res]
-          (let [res (assoc res :response/timestamp (Date.))]
-            (publish-response! res)
-            res))
-        {:precedence Double/POSITIVE_INFINITY}))))
 
 (comment
   ;; RESET THE DEBUGGER DB

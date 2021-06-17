@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.datastore
   (:require
+    [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]))
 
@@ -9,7 +10,7 @@
 (defmulti installed? :datastore/type)
 (defmulti delete-database! :datastore/type)
 (defmulti connection :datastore/type)
-(defmulti config->plugin :datastore/type)
+(defmulti plugin :datastore/type)
 (defmulti max-tx (fn [app]
                    (:datastore/type (bread/config app :datastore/config))))
 
@@ -100,16 +101,6 @@
         (throw e))
       false)))
 
-(defn- req->datastore
-  "Takes a request and returns a datastore instance, optionally configured
-   as a temporal-db (via as-of) or with-db (via db-with)"
-  [req]
-  (let [conn (bread/config req :datastore/connection)
-        timepoint (timepoint req)]
-    (if timepoint
-      (as-of @conn timepoint)
-      @conn)))
-
 (defn- initial-transactor [txns]
   (if (seq txns)
     (fn [app]
@@ -119,8 +110,15 @@
         (bread/add-hook app :hook/init do-txns)))
     identity))
 
-(defmethod config->plugin :default [config]
-  (let [{:datastore/keys [as-of-format as-of-param initial-txns]} config
+(defn plugin*
+  "Helper for instantiating a datastore. Do not call this fn directly from
+  application code; recommended for use from plugins only. Use store/plugin
+  instead."
+  [config]
+  (let [{:datastore/keys [as-of-format
+                          as-of-param
+                          req->datastore
+                          initial-txns]} config
         ;; Support shorthands for (bread/add-hook :hook/datastore*)
         as-of-param (or as-of-param :as-of)
         as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z")
