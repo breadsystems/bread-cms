@@ -22,6 +22,7 @@
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debugger :as debug]
+    [systems.bread.alpha.tools.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -455,9 +456,7 @@
 
 (defn handler [req]
   (def $req req)
-  (def $res (assoc-in
-              ((bread/handler @app) req)
-              [:headers "Access-Control-Allow-Origin"] "*"))
+  (def $res ((bread/handler @app) req))
   $res)
 
 (defonce stop-http (atom nil))
@@ -467,6 +466,7 @@
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
+      (mid/wrap-exceptions $)
       (wrap-keyword-params $)
       (wrap-params $)
       (http/run-server $ {:port port})
