@@ -1,6 +1,9 @@
 ;; TODO extract channel/websocket stuff into a lib and dogfood it!
 (ns systems.bread.alpha.tools.impl
   (:require
+    [clojure.datafy :refer [datafy]]
+    [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [clojure.core.async :as async :refer [<! chan go-loop mult put! tap untap]]
     [systems.bread.alpha.tools.impl.util :refer [conjv]]))
 

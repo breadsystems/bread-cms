@@ -1,11 +1,14 @@
 (ns systems.bread.alpha.tools.debugger
   (:require
-    [clojure.datafy :as datafy]
+    [clojure.datafy :refer [datafy]]
+    [clojure.core.protocols :as proto :refer [Datafiable]]
     [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.tools.protocols :refer [serialize]]
     [reitit.core :as reitit]
     [reitit.ring :as ring]
     [ring.middleware.params :refer [wrap-params]]
@@ -34,27 +37,83 @@
 
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
-        req (->
-              (assoc req :request/uuid uuid :request/id (subs uuid 0 8)))
-        ;; TODO better serialization to avoid this
-        req (-> req
-                (dissoc
-                  ::bread/effects
-                  ::bread/hooks
-                  ::bread/plugins
-                  ::bread/config
-                  :async-channel))
+        req-data (as-> req $
+                   (assoc $ :request/uuid uuid :request/id (subs uuid 0 8))
+                   (walk/postwalk datafy $))
         event {:event/type :bread/request
-               :event/request req}]
+               :event/request req-data}]
     (publish! event)))
 
 (defn- publish-response! [res]
-  (let [event {:event/type :bread/response
-               :event/response (dissoc res
-                                       ::bread/hooks ::bread/plugins
-                                       ::bread/config :async-channel
-                                       ::bread/queries)}]
+  (let [res-data (walk/postwalk datafy res)
+        event {:event/type :bread/response
+               :event/response res-data}]
     (publish! event)))
+
+(defn incremental [x]
+  (try
+    (walk/postwalk
+      (fn [node]
+        (try
+          (-> node datafy prn-str edn/read-string)
+          (catch java.lang.Throwable e
+            (throw (ex-info (.getMessage e) {:node node})))))
+      x)
+    (catch clojure.lang.ExceptionInfo e
+      (prn (.getMessage e))
+      (let [{:keys [node]} (ex-data e)]
+        [(type node) node]))))
+
+(extend-protocol Datafiable
+  clojure.lang.Fn
+  (datafy [f]
+    (str "fn[" f "]"))
+
+  java.lang.Class
+  (datafy [c]
+    (str c))
+
+  clojure.lang.Atom
+  (datafy [a]
+    {:type 'clojure.lang.Atom
+     :value (walk/postwalk datafy @a)})
+
+  org.httpkit.server.AsyncChannel
+  (datafy [ch]
+    {:type 'org.httpkit.server.AsyncChannel
+     :value (str ch)})
+
+  clojure.core.async.impl.channels.ManyToManyChannel
+  (datafy [ch]
+    (str ch))
+
+  datahike.db.DB
+  (datafy [db]
+    (select-keys db [:max-tx :max-eid]))
+
+  clojure.lang.Symbol
+  (datafy [sym]
+    (name sym))
+
+  clojure.lang.Namespace
+  (datafy [ns*]
+    (name (ns-name ns*)))
+
+  )
+
+(comment
+  (defn uuids []
+    (:request/uuids @db))
+  (defn req* [i]
+    (get (:request/uuid @db) (get (uuids) i)))
+  (def $req (req* 0))
+  (:request/initial $req)
+  (def $hook (first (:request/hooks $req)))
+
+  (incremental @db)
+  (second (incremental $hook))
+  )
+
 
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]
@@ -65,15 +124,14 @@
        ;; TODO real serialization so we can stop cheating here
        :BODY (:body (first args))
        #_#_
-       :app (datafy/datafy app)
+       :app (walk/postwalk datafy app)
        :hook hook
        #_#_
-       :args (map datafy/datafy args)
+       :args (walk/postwalk datafy args)
        :f (str f)
        :file file
        :line line
        :column column})))
-
 (defn- wrap-csp-header [handler]
   (fn [req]
     (update

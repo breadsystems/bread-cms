@@ -342,7 +342,12 @@
   (rum/mount (ui) (js/document.getElementById "app")))
 
 (defn on-message [message]
-  (let [event (edn/read-string (.-data message))]
+  (when-let [event (try
+                     (edn/read-string (.-data message))
+                     (catch js/Error ^js/Error err
+                       (prn err)
+                       (prn (.-data message))
+                       nil))]
     (publish! event)))
 
 ;; init is called ONCE when the page loads
@@ -359,6 +364,10 @@
     (.addEventListener ws "close"
                        #(do
                           (publish! {:event/type :ui/websocket-closed!})
+                          (js/setTimeout
+                            (fn []
+                              (set! js/window.location js/window.location))
+                            1000)
                           (js/console.error "WebSocket connection closed!"))))
   (on-event {:event/type :ui/loading!})
   (start))

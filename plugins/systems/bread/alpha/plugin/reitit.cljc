@@ -1,10 +1,18 @@
 (ns systems.bread.alpha.plugin.reitit
   (:require
+    [clojure.core.protocols :refer [Datafiable datafy]]
     [reitit.core :as reitit]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.resolver :as resolver]
-    [systems.bread.alpha.route :as route]))
+    [systems.bread.alpha.route :as route])
+  (:import
+    [reitit.core Match]))
+
+(extend-type Match
+  Datafiable
+  (datafy [match]
+    (into {} match)))
 
 (defn plugin [{:keys [router]}]
   (fn [app]
