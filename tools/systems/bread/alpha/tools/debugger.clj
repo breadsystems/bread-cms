@@ -55,7 +55,7 @@
     (publish! event)))
 
 (defn- publish-response! [res]
-  (let [res-data (walk/postwalk datafy res)
+  (let [res-data (walk/prewalk datafy res)
         event {:event/type :bread/response
                :event/response res-data}]
     (publish! event)))
