@@ -19,11 +19,17 @@
 
 (def
   ^{:doc
-    "Debug event dispatch. Used to log requests, hooks, responses, etc. to
-    the Bread debugger. Implement this multimethod to extend the debugger with
-    your own custom events. Expects a map with an :event/type key, dispatching
-    off the value of this key."}
+    "Debug event handler. Used internally to log requests, hooks, responses,
+    etc. to the Bread debugger. Implement this multimethod to extend the
+    debugger with your own custom events. Expects a map with an :event/type
+    key, dispatching off the value of this key."}
   on-event impl/on-event)
+
+(def
+  ^{:doc
+    "Publish an event to the Bread debugger. Handled by the on-event
+    multimethod. Expects a map with an :event/type key."}
+  publish! impl/publish!)
 
 (declare db)
 
@@ -46,7 +52,7 @@
                    (walk/postwalk datafy $))
         event {:event/type :bread/request
                :event/request req-data}]
-    (impl/publish! event)))
+    (publish! event)))
 
 (defn- publish-response! [res]
   (let [res-data (walk/postwalk datafy res)
