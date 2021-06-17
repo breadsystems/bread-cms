@@ -101,6 +101,12 @@
         (throw e))
       false)))
 
+(defn add-txs [req txs]
+  (bread/add-effect req (fn [app]
+                          (transact
+                            (connection app)
+                            {:tx-data txs}))))
+
 (defn- initial-transactor [txns]
   (if (seq txns)
     (fn [app]
