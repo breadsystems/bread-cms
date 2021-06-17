@@ -25,6 +25,9 @@
 
 (defonce !ws (atom nil))
 
+(defn- websocket-url []
+  (str "ws://" js/location.host "/ws"))
+
 (defn send! [event]
   (when-let [ws @!ws]
     (.send ws (prn-str event))))
@@ -41,6 +44,7 @@
 (def viewing-raw-request? (rum/cursor-in db [:ui/viewing-raw-request?]))
 (def viewing-raw-response? (rum/cursor-in db [:ui/viewing-raw-response?]))
 (def diff-uuids (rum/cursor-in db [:ui/diff]))
+(def diff-type (rum/cursor-in db [:ui/diff-type]))
 
 (def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
 
@@ -50,12 +54,14 @@
 (defn- idx->req [idx]
   (get @requests (get @req-uuids idx)))
 
-(defn- uuids->editscript [[a b]]
+(defn- diff-entities [[a b] diff-type]
   (when (and a b)
-    (let [to-body [:response/pre-render] ;; TODO parameterize this
-          ra (get-in (uuid->req a) to-body)
-          rb (get-in (uuid->req b) to-body)]
-      (ed/diff ra rb))))
+    (condp = diff-type
+      :response-pre-render
+      [(get-in (uuid->req a) [:response/pre-render])
+       (get-in (uuid->req b) [:response/pre-render])]
+      :db
+      [{} {}])))
 
 (defn- diff-uuid-options [uuid]
   (map (fn [req-uuid]
@@ -227,20 +233,26 @@
     [:p "Nulla optio et exercitation similique."]]])
 
 (rum/defc diff-ui < rum/reactive []
-  (let [[a b] (rum/react diff-uuids)
-        to-body [:response/pre-render]
-        [ra rb script] (diff/diff-struct-lines
-                         (get-in (uuid->req a) to-body)
-                         (get-in (uuid->req b) to-body))
+  (let [diff-type (rum/react diff-type)
+        [ua ub] (rum/react diff-uuids)
+        [source target] (diff-entities [ua ub] diff-type)
+        [ra rb script] (diff/diff-struct-lines source target)
         #_#_
         [ra rb script] (diff/diff-struct-lines a' b')
         ]
     [:article.rows
      [:header.rows
-      [:h2 "Diff: " [:code (shorten-uuid a)] " → " [:code (shorten-uuid b)]]
-      [:div
+      [:h2 "Diff: " [:code (shorten-uuid ua)] " → " [:code (shorten-uuid ub)]]
+      [:div.flex
        [:button {:on-click #(swap! db assoc :ui/diff nil)}
-        "Back to " (shorten-uuid a)]]]
+        "← Back to " (shorten-uuid ua)]
+       [:select
+        {:default-value diff-type
+         :on-change #(swap! db assoc :ui/diff-type
+                            (keyword (.. % -target -value)))}
+        [:option {:value :response-pre-render} "Response (pre-render)"]
+        [:option {:value :db} "Database"]
+        ]]]
      #_
      (map-indexed (fn [idx [path op value]]
             [:pre {:key idx} (str path) " " (name op) " " (pp value)])
@@ -320,7 +332,9 @@
 (defmethod on-event :init [{:ui/keys [state]}]
   (reset! db (merge {:request/uuid {}
                      :request/uuids []
+                     :ui/websocket (websocket-url)
                      :ui/diff nil
+                     :ui/diff-type :response-pre-render
                      :ui/selected-req nil
                      :ui/selected-reqs (sorted-set)
                      :ui/loading? false}
@@ -369,7 +383,7 @@
 ;; so it is available even in :advanced release builds
 (defn init []
   ;; TODO get WS host/port dynamically
-  (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
+  (let [ws (js/WebSocket. (websocket-url))]
     (reset! !ws ws)
     (.addEventListener ws "open"
                        (fn [_]

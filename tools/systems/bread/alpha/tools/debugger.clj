@@ -48,7 +48,11 @@
 (defn- publish-request! [req]
   (let [uuid (str (:request/uuid req))
         req-data (as-> req $
-                   (assoc $ :request/uuid uuid :request/id (subs uuid 0 8))
+                   (assoc $
+                          :request/uuid uuid
+                          :request/id (subs uuid 0 8)
+                          ;; TODO support extending these fields via metadata
+                          :request/datastore (store/datastore req))
                    (walk/prewalk datafy $))
         event {:event/type :bread/request
                :event/request req-data}]
