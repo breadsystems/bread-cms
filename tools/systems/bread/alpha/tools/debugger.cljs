@@ -134,7 +134,9 @@
        [:div
         [:h2.emphasized (req->url req)]]
        [:div
-        [:button.close-btn {:on-click #(swap! db assoc :ui/selected-req nil)}
+        [:button.close-btn {:on-click #(swap! db assoc
+                                              :ui/selected-req nil
+                                              :ui/diff nil)}
          "Close"]]]]
      [:div.info (date-fmt-ms (:request/timestamp req))]
      [:div.with-sidebar
@@ -342,7 +344,7 @@
                     state)))
 
 (defmethod on-event :ui/view-req [{:request/keys [uuid]}]
-  (swap! db assoc :ui/selected-req uuid))
+  (swap! db assoc :ui/selected-req uuid :ui/diff nil))
 
 (defmethod on-event :ui/loading! [_]
   (swap! db assoc :ui/loading? true))

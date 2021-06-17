@@ -47,6 +47,7 @@
   (swap! db assoc
          :request/uuid {}
          :request/uuids []
+         :ui/diff nil
          :ui/selected-reqs (sorted-set)
          :ui/selected-req nil))
 
