@@ -78,11 +78,6 @@
     {:type 'clojure.lang.Atom
      :value (walk/postwalk datafy @a)})
 
-  org.httpkit.server.AsyncChannel
-  (datafy [ch]
-    {:type 'org.httpkit.server.AsyncChannel
-     :value (str ch)})
-
   clojure.core.async.impl.channels.ManyToManyChannel
   (datafy [ch]
     (str ch))

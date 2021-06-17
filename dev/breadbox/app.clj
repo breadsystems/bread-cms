@@ -2,6 +2,7 @@
 ;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
+    [clojure.core.protocols :refer [Datafiable]]
     [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
@@ -29,6 +30,11 @@
     [ring.middleware.reload :refer [wrap-reload]])
   (:import
     [java.util UUID]))
+
+(extend-protocol Datafiable
+  org.httpkit.server.AsyncChannel
+  (datafy [ch]
+    (str "org.httpkit.server.AsyncChannel[" ch "]")))
 
 ;; TODO optionally start this via config
 (defstate debugger
