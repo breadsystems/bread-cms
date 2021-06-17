@@ -273,7 +273,7 @@
                  (bread/load-app
                    (bread/app
                      {:plugins [(debug/plugin)
-                                (store/config->plugin $config)
+                                (store/plugin $config)
                                 (i18n/plugin)
                                 (post/plugin)
                                 (br/plugin {:router $router})
@@ -447,21 +447,8 @@
   ;; TODO test this out!
   (static/generate! handler)
 
-  (handler (merge @app {:uri "/"}))
-
-  (::bread/plugins $res)
-  ;; which hooks got added where?
-  (into {} (map (fn [[k h]]
-                  [k (help/distill-hooks [::bread/file
-                                          ::bread/line
-                                          ::bread/column
-                                          ::bread/from-ns] h)])
-                (::bread/hooks $res)))
-  (distinct (map (comp (juxt ::bread/file ::bread/added-in) first second) (::bread/hooks $res)))
-  (distinct (map (comp ::bread/added-in first second) (::bread/hooks $res)))
-  (:body $res)
-
-  (macroexpand '(bread/add-hook @app :my/hook identity))
+  (store/datastore $res)
+  (store/as-of (store/datastore $res) 536870914)
 
   ;;
   )
