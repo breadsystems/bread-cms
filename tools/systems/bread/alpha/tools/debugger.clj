@@ -8,23 +8,27 @@
     [org.httpkit.server :as http]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.tools.protocols :refer [serialize]]
     [reitit.core :as reitit]
     [reitit.ring :as ring]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]
-    [systems.bread.alpha.tools.impl :as impl :refer [publish!
-                                                     subscribe!
-                                                     subscribe-db
-                                                     on-event]])
+    [systems.bread.alpha.tools.impl :as impl])
   (:import
     [java.util Date UUID]))
+
+(def
+  ^{:doc
+    "Debug event dispatch. Used to log requests, hooks, responses, etc. to
+    the Bread debugger. Implement this multimethod to extend the debugger with
+    your own custom events. Expects a map with an :event/type key, dispatching
+    off the value of this key."}
+  on-event impl/on-event)
 
 (declare db)
 
 (defn- subscribe-debugger []
-  (let [[db' unsub!] (subscribe-db)]
+  (let [[db' unsub!] (impl/subscribe-db)]
     (def db db')
     unsub!))
 
@@ -42,7 +46,7 @@
                    (walk/postwalk datafy $))
         event {:event/type :bread/request
                :event/request req-data}]
-    (publish! event)))
+    (impl/publish! event)))
 
 (defn- publish-response! [res]
   (let [res-data (walk/postwalk datafy res)
@@ -146,8 +150,8 @@
                                (let [msg (edn/read-string message)]
                                  (on-event (assoc msg :channel ws-chan)))))
     ;; Broadcast over our WebSocket whenever there's an event!
-    (subscribe! (fn [event]
-                  (http/send! ws-chan (prn-str event))))))
+    (impl/subscribe! (fn [event]
+                       (http/send! ws-chan (prn-str event))))))
 
 (def ^:private handler
   (ring/ring-handler
@@ -186,6 +190,34 @@
       (throw (ex-info "replay-handler is not a function"
                       {:replay-handler handler})))))
 
+(defn plugin []
+  (fn [app]
+    (bread/add-hooks->
+      app
+      (:hook/request
+        (fn [req]
+          (let [rid (UUID/randomUUID)
+                as-of-param (bread/config req :datastore/as-of-param)
+                ;; The request either has a timepoint set by virtue of having
+                ;; an `as-of` param, OR its db is a vanilla DB instance from
+                ;; which we can grab a max-tx.
+                as-of (or (store/timepoint req) (store/max-tx req))
+                req (assoc req
+                           :profiler/profiled? true
+                           :profiler/as-of-param as-of-param
+                           :request/uuid rid
+                           :request/as-of as-of
+                           :request/timestamp (Date.))]
+            (publish-request! req)
+            req))
+        {:precedence Double/NEGATIVE_INFINITY})
+      (:hook/response
+        (fn [res]
+          (let [res (assoc res :response/timestamp (Date.))]
+            (publish-response! res)
+            res))
+        {:precedence Double/POSITIVE_INFINITY}))))
+
 (defn start!
   "Starts a debug web server on the specified port and attaches the profiler.
   Returns a shutdown function that stops the server and detaches the profiler."
@@ -222,34 +254,6 @@
       (println "Unbinding profiler.")
       (bread/bind-profiler! nil)
       (unsub))))
-
-(defn plugin []
-  (fn [app]
-    (bread/add-hooks->
-      app
-      (:hook/request
-        (fn [req]
-          (let [rid (UUID/randomUUID)
-                as-of-param (bread/config req :datastore/as-of-param)
-                ;; The request either has a timepoint set by virtue of having
-                ;; an `as-of` param, OR its db is a vanilla DB instance from
-                ;; which we can grab a max-tx.
-                as-of (or (store/timepoint req) (store/max-tx req))
-                req (assoc req
-                           :profiler/profiled? true
-                           :profiler/as-of-param as-of-param
-                           :request/uuid rid
-                           :request/as-of as-of
-                           :request/timestamp (Date.))]
-            (publish-request! req)
-            req))
-        {:precedence Double/NEGATIVE_INFINITY})
-      (:hook/response
-        (fn [res]
-          (let [res (assoc res :response/timestamp (Date.))]
-            (publish-response! res)
-            res))
-        {:precedence Double/POSITIVE_INFINITY}))))
 
 (comment
   ;; RESET THE DEBUGGER DB
