@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.datastore
   (:require
+    [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]))
 
@@ -107,8 +108,18 @@
   (let [conn (bread/config req :datastore/connection)
         timepoint (timepoint req)]
     (if timepoint
-      (as-of (db conn) timepoint)
-      (db conn))))
+      (with-meta
+        (as-of (db conn) timepoint)
+        {`datafy (fn [_]
+                   {:type 'datahike.db.AsOfDB
+                    :max-tx (:max-tx @conn)
+                    :max-eid (:max-eid @conn)})})
+      (with-meta
+        (db conn)
+        {`datafy (fn [db]
+                   {:type 'datahike.db.DB
+                    :max-tx (:max-tx db)
+                    :max-eid (:max-eid db)})}))))
 
 (defn- initial-transactor [txns]
   (if (seq txns)
