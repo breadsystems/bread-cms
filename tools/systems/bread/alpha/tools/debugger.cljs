@@ -60,8 +60,9 @@
       :response-pre-render
       [(get-in (uuid->req a) [:response/pre-render])
        (get-in (uuid->req b) [:response/pre-render])]
-      :db
-      [{} {}])))
+      :database
+      [(get-in (uuid->req a) [:request/response :response/datastore])
+       (get-in (uuid->req b) [:request/response :response/datastore])])))
 
 (defn- diff-uuid-options [uuid]
   (map (fn [req-uuid]
@@ -251,7 +252,7 @@
          :on-change #(swap! db assoc :ui/diff-type
                             (keyword (.. % -target -value)))}
         [:option {:value :response-pre-render} "Response (pre-render)"]
-        [:option {:value :db} "Database"]
+        [:option {:value :database} "Database"]
         ]]]
      #_
      (map-indexed (fn [idx [path op value]]
