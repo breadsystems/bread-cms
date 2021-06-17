@@ -92,20 +92,6 @@
 
   )
 
-(comment
-  (defn uuids []
-    (:request/uuids @db))
-  (defn req* [i]
-    (get (:request/uuid @db) (get (uuids) i)))
-  (def $req (req* 0))
-  (:request/initial $req)
-  (def $hook (first (:request/hooks $req)))
-
-  (incremental @db)
-  (second (incremental $hook))
-  )
-
-
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]
     (let [{:keys [hook f args detail app]} invocation
@@ -197,13 +183,13 @@
                            :request/uuid rid
                            :request/as-of as-of
                            :request/timestamp (Date.))]
-            (publish-request! req)
+            (future (publish-request! req))
             req))
         {:precedence Double/NEGATIVE_INFINITY})
       (:hook/response
         (fn [res]
           (let [res (assoc res :response/timestamp (Date.))]
-            (publish-response! res)
+            (future (publish-response! res))
             res))
         {:precedence Double/POSITIVE_INFINITY}))))
 
@@ -234,8 +220,9 @@
     (println "Binding debug profiler...")
     (bread/bind-profiler!
       (fn [invocation]
-        (when-let [event (hook->event invocation)]
-          (publish! event))))
+        (future
+          (when-let [event (hook->event invocation)]
+            (publish! event)))))
 
     (fn []
       (println "Stopping debug server.")
