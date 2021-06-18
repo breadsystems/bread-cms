@@ -51,6 +51,9 @@
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 
+(defn- uuid->max-tx [uuid]
+  (-> uuid uuid->req (get-in [:request/response :response/datastore :max-tx])))
+
 (defn- idx->req [idx]
   (get @requests (get @req-uuids idx)))
 
@@ -237,8 +240,14 @@
 
 (rum/defc diff-ui < rum/reactive []
   (let [current-uuid (rum/react req-uuid)
+        ;; What kind of diff is the user viewing?
         diff-type (rum/react diff-type)
+        ;; Get each UUID in the diff.
         [ua ub] (rum/react diff-uuids)
+        ;; Get the timestamp for each response being diffed.
+        ;; We use this info to detect if a diff is oriented
+        ;; reverse-chronologically, and, if so, to indicate that to the user.
+        [ta tb] (mapv uuid->max-tx [ua ub])
         [source target] (diff-entities [ua ub] diff-type)
         [ra rb script] (diff/diff-struct-lines source target)
         #_#_
@@ -257,7 +266,11 @@
          :on-change #(swap! db assoc :ui/diff-type
                             (keyword (.. % -target -value)))}
         [:option {:value :response-pre-render} "Response (pre-render)"]
-        [:option {:value :database} "Database"]]]]
+        [:option {:value :database} "Database"]]]
+      (when (> ta tb)
+        [:p.info
+         "This diff is in reverse-chronological order."
+         " The data on the left is OLDER than the data on the right."])]
      #_
      (map-indexed (fn [idx [path op value]]
             [:pre {:key idx} (str path) " " (name op) " " (pp value)])
