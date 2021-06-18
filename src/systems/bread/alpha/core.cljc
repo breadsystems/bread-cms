@@ -234,8 +234,6 @@
       (catch java.lang.Throwable ex
         (handle-exception ex)))))
 
-(instance? clojure.lang.ExceptionInfo (ex-info "hi" {}))
-
 (defn- apply-effects [req]
   (loop [{data ::data [effect & effects] ::effects :as req} req]
     (if-not (effect? effect)
