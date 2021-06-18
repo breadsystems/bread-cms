@@ -18,5 +18,5 @@
   (testing "it gives a friendly error message if you pass a bad :datastore/type"
     (is (thrown-with-msg?
           ExceptionInfo
-          #"Unknown :datastore/type `:oops`! Did you forget to load a plugin?"
+          #"Unknown :datastore/type `:oops`! Did you forget to load a plugin\?"
           (d/connect! {:datastore/type :oops})))))
