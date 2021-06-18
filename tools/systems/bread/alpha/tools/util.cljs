@@ -12,6 +12,7 @@
   (when dt
     (str (formatISO9075 dt) "." (.getMilliseconds dt))))
 
+;; TODO use this, I guess :shrug:
 (defn ago [dt]
   (let [rtf (js/Intl.RelativeTimeFormat. "en" #js {:numeric "auto"})]
     (.format rtf -3 "day")))
@@ -27,7 +28,8 @@
   (string/join sep (filter seq (map str coll))))
 
 (defn shorten-uuid [longer]
-  (subs longer 0 8))
+  (when longer
+    (subs longer 0 8)))
 
 (defn pp [x]
   (with-out-str (pprint x)))
