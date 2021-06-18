@@ -236,7 +236,8 @@
     [:p "Nulla optio et exercitation similique."]]])
 
 (rum/defc diff-ui < rum/reactive []
-  (let [diff-type (rum/react diff-type)
+  (let [current-uuid (rum/react req-uuid)
+        diff-type (rum/react diff-type)
         [ua ub] (rum/react diff-uuids)
         [source target] (diff-entities [ua ub] diff-type)
         [ra rb script] (diff/diff-struct-lines source target)
@@ -248,14 +249,15 @@
       [:h2 "Diff: " [:code (shorten-uuid ua)] " → " [:code (shorten-uuid ub)]]
       [:div.flex
        [:button {:on-click #(swap! db assoc :ui/diff nil)}
-        "← Back to " (shorten-uuid ua)]
+        "← Back to " (shorten-uuid current-uuid)]
+       [:button {:on-click #(swap! db update :ui/diff reverse)}
+        "↺ Reverse diff"]
        [:select
         {:default-value diff-type
          :on-change #(swap! db assoc :ui/diff-type
                             (keyword (.. % -target -value)))}
         [:option {:value :response-pre-render} "Response (pre-render)"]
-        [:option {:value :database} "Database"]
-        ]]]
+        [:option {:value :database} "Database"]]]]
      #_
      (map-indexed (fn [idx [path op value]]
             [:pre {:key idx} (str path) " " (name op) " " (pp value)])
