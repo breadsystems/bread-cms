@@ -36,7 +36,16 @@
 (extend-protocol Datafiable
   org.httpkit.server.AsyncChannel
   (datafy [ch]
-    (str "org.httpkit.server.AsyncChannel[" ch "]")))
+    (str "org.httpkit.server.AsyncChannel[" ch "]"))
+
+  #_#_
+  datahike.db.DB
+  (datafy [db]
+    (let [data (select-keys db [:max-tx :max-eid])
+          slugs (store/q db '{:find [?slug]
+                              :where [[?e :post/slug ?slug]]})]
+      (assoc data :slugs slugs)))
+  )
 
 ;; TODO optionally start this via config
 (defstate debugger
