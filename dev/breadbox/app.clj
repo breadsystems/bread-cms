@@ -42,10 +42,9 @@
   datahike.db.DB
   (datafy [db]
     (let [data (select-keys db [:max-tx :max-eid])
-          slugs (store/q db '{:find [?slug]
-                              :where [[?e :post/slug ?slug]]})]
-      (assoc data :slugs slugs)))
-  )
+          posts (store/q db '{:find [?slug ?t]
+                              :where [[?e :post/slug ?slug ?t]]})]
+      (assoc data :slugs (sort-by second posts)))))
 
 ;; TODO optionally start this via config
 (defstate debugger
