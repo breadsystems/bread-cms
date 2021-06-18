@@ -270,7 +270,7 @@
       (when (> ta tb)
         [:p.info
          "This diff is in reverse-chronological order."
-         " The data on the left is OLDER than the data on the right."])]
+         " The data on the left is older than the data on the right."])]
      #_
      (map-indexed (fn [idx [path op value]]
             [:pre {:key idx} (str path) " " (name op) " " (pp value)])
