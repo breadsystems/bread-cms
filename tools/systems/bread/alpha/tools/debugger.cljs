@@ -262,11 +262,11 @@
        [:button {:on-click #(swap! db update :ui/diff reverse)}
         "↺ Reverse diff"]
        [:select
-        {:default-value diff-type
+        {:value (name diff-type)
          :on-change #(swap! db assoc :ui/diff-type
                             (keyword (.. % -target -value)))}
-        [:option {:value :response-pre-render} "Response (pre-render)"]
-        [:option {:value :database} "Database"]]]
+        [:option {:value "response-pre-render"} "Response (pre-render)"]
+        [:option {:value "database"} "Database"]]]
       (when (> ta tb)
         [:p.info
          "This diff is in reverse-chronological order."
