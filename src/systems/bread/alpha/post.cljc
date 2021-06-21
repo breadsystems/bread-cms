@@ -109,20 +109,3 @@
       [[:post post-query]
        [:post/fields fields-query {:post/id [:post :db/id]}]]
       [[:post post-query]])))
-
-(comment
-  (def $db {123 "X FIELD"
-            234 "Y FIELD"})
-  ;; this is kinda like query expansion...
-  (reduce (fn [m [k v legend]]
-            (let [parent (keyword (namespace k))
-                  v (if legend
-                      (into v (map (fn [[vk vp]]
-                                     [vk (get $db (get-in m vp))])
-                                   legend))
-                      v)]
-              (if ((set (keys m)) parent)
-                (update m parent merge v)
-                (merge m {k v}))))
-          {}
-          [[:x {:id 123 :x/a 'A :x/b 'B}] [:x/y {:id 456 :y/a 'AA} {:y/z [:x :id]}]]))

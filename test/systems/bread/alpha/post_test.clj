@@ -9,10 +9,10 @@
                                               plugins->loaded]]))
 
 (deftest test-resolve-post-queries
-  (let [;; Datastore shows up directly in our args, so we need to mock it
-        datastore {:FAKE :STORE}
-        mock-datastore-plugin (datastore->plugin datastore)
-        app (plugins->loaded [mock-datastore-plugin])
+  (let [;; Datastore shows up directly in our args, so we need to mock it.
+        ;; We're only checking for its presence in the Queryable, so it doesn't
+        ;; need to be a realistic or usable value.
+        app (plugins->loaded [(datastore->plugin ::MOCK_STORE)])
         ->app (fn [resolver]
                 (assoc app ::bread/resolver resolver))]
 
@@ -32,7 +32,19 @@
 
         ;; {:uri "/en/simple"}
         ;; no i18n
-        [[:post {:query '{:find [(pull ?e [:post/title :custom/key])]
+        [[:post
+          ::MOCK_STORE
+          '{:find [(pull ?e [:post/title :custom/key])]
+            :in [$ ?type ?status ?slug]
+            :where [[?e :post/type ?type]
+                    [?e :post/status ?status]
+                    [?e :post/slug ?slug]
+                    (not-join [?e] [?e :post/parent ?root-ancestor])]}
+          :post.type/page
+          :post.status/published
+          "simple"
+          #_
+          {:query '{:find [(pull ?e [:post/title :custom/key])]
                           :in [$ ?type ?status ?slug]
                           ;; TODO i18n
                           :where [[?e :post/type ?type]
@@ -45,11 +57,20 @@
                          :post.type/page
                          :post.status/published
                          "simple"]
-                 ::bread/expand [post/expand-post]}]]
+                 ::bread/expand [post/expand-post]}
+          ]]
         {:resolver/type :resolver.type/page
+         ;; pull and key come from component
          :resolver/pull [:post/title :custom/key]
+         :resolver/key :post
          :route/params {:slugs "simple" :lang "en"}}
 
+        #_#_
+        #_#_
+        #_#_
+        #_#_
+        #_#_
+        #_#_
         ;; {:uri "/en/simple"}
         ;; :post/fields i18n
         [[:post {:query '{:find [(pull ?e [:post/title :post/fields])]
@@ -108,27 +129,6 @@
           {:post/id [:post :db/id]}]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
-         :route/params {:slugs "simple" :lang "en"}}
-
-        ;; {:uri "/en/one"}
-        ;; expand? disabled
-        [[:post {:query '{:find [(pull ?e [:post/title :custom/key])]
-                         :in [$ ?type ?status ?slug]
-                         ;; TODO i18n
-                         :where [[?e :post/type ?type]
-                                 [?e :post/status ?status]
-                                 [?e :post/slug ?slug]
-                                 (not-join
-                                   [?e]
-                                   [?e :post/parent ?root-ancestor])]}
-                 :args [{:FAKE :STORE}
-                        :post.type/page
-                        :post.status/published
-                        "simple"]
-                 ::bread/expand []}]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
-         :resolver/expand? false
          :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/one/two"}

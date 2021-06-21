@@ -70,5 +70,4 @@
   (->> req
        ::bread/resolver
        resolve-query
-       (replace-query-args req)
        (assoc req ::bread/queries)))
