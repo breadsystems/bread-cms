@@ -24,4 +24,8 @@
     [[:my/nums (fn [_ & nums] (vec nums)) 1 2 3 4]
      [:my/sum #(reduce + (:my/nums %))]]
 
+    {:my/meta-expanded "whoa, meta"}
+    [[:my/meta-expanded (with-meta {} {`bread/query
+                                       (constantly "whoa, meta")})]]
+
        ))

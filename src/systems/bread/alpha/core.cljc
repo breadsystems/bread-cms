@@ -166,6 +166,17 @@
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
 
+(defprotocol Queryable
+  "Protocol for generically expanding queries into data during the
+  query expansion lifecycle phase"
+  :extend-via-metadata true
+  (query [this data args]))
+
+(extend-protocol Queryable
+  clojure.lang.Fn
+  (query [f data args]
+    (apply f data args)))
+
 (defprotocol Effect
   "Protocol for encapsulating side-effects"
   (effect!
