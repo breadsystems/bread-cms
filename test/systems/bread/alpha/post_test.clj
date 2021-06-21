@@ -5,20 +5,16 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.resolver :as resolver]
-    [systems.bread.alpha.test-helpers :as h]))
+    [systems.bread.alpha.test-helpers :refer [datastore->plugin
+                                              plugins->loaded]]))
 
 (deftest test-resolve-post-queries
   (let [;; Datastore shows up directly in our args, so we need to mock it
         datastore {:FAKE :STORE}
-        mock-datastore-plugin (h/datastore->plugin datastore)
-        router-plugin (fn [app]
-                        (bread/add-hook app :hook/route-params
-                          (fn [_ match]
-                            (:path-params match))))
+        mock-datastore-plugin (datastore->plugin datastore)
+        app (plugins->loaded [mock-datastore-plugin])
         ->app (fn [resolver]
-                (let [app (h/plugins->loaded [mock-datastore-plugin
-                                              router-plugin])]
-                  (assoc app ::bread/resolver resolver)))]
+                (assoc app ::bread/resolver resolver))]
 
       (are
         [query resolver] (= query
