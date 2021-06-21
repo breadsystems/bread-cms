@@ -15,6 +15,9 @@
 (comment
   (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div])))
 
+(defn get-key [component]
+  (:key (get @registry component)))
+
 (defn get-query [component]
   (:query (get @registry component)))
 

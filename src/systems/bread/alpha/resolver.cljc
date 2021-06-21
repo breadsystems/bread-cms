@@ -13,6 +13,11 @@
    :args [::bread/store]
    ::bread/expand []})
 
+(defn query-key [resolver]
+  "Get from the component layer the key at which to store the resolved query
+  within the ::bread/queries map"
+  (comp/get-key (:resolver/component resolver)))
+
 (defn pull
   "Get the (pull ...) form for the given resolver."
   [resolver]
