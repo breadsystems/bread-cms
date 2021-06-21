@@ -126,22 +126,3 @@
                 (merge m {k v}))))
           {}
           [[:x {:id 123 :x/a 'A :x/b 'B}] [:x/y {:id 456 :y/a 'AA} {:y/z [:x :id]}]]))
-
-(defn field-content [app field]
-  (bread/hook->> app :hook/field-content field))
-
-(defn parse-edn-field [app field]
-  (edn/read-string (:field/content field)))
-
-(defn init [app post-data]
-  (let [[[slug]] post-data]
-    (assoc (reduce (fn [post [slug field]]
-                     (assoc-in post [:post/fields (:field/key field)]
-                               (field-content app field)))
-                   {} post-data)
-           :post/slug slug)))
-
-(defn plugin []
-  (fn [app]
-    (-> app
-        (bread/add-hook :hook/field-content parse-edn-field))))

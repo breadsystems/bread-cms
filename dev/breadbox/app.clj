@@ -285,7 +285,7 @@
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
                                 (i18n/plugin)
-                                (post/plugin)
+                                #_(post/plugin)
                                 (br/plugin {:router $router})
 
                                 ;; Increment counter on every request
