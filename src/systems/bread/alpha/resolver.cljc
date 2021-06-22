@@ -7,11 +7,15 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-
 (defn empty-query []
-  {:query {:find [] :in ['$] :where []}
-   :args [::bread/store]
-   ::bread/expand []})
+  [{:find []
+    :in ['$]
+    :where []}])
+
+(defn query-key [resolver]
+  "Get from the component layer the key at which to store the resolved query
+  within the ::bread/queries map"
+  (comp/get-key (:resolver/component resolver)))
 
 (defn pull
   "Get the (pull ...) form for the given resolver."
@@ -19,25 +23,25 @@
   (let [schema (comp/get-query (:resolver/component resolver))]
     (list 'pull '?e schema)))
 
+(defn- apply-where
+  ([query sym k v]
+   (-> query
+       (update-in [0 :where] conj ['?e k sym])
+       (update-in [0 :in] conj sym)
+       (conj v)))
+  ([query sym k input-sym v]
+   (-> query
+       (update-in [0 :where] conj [sym k input-sym])
+       (update-in [0 :in] conj sym)
+       (conj v))))
+
 (defn pull-query
   "Get a basic query with a (pull ...) form in the :find clause"
   [resolver]
   (update-in (empty-query)
-             [:query :find]
+             [0 :find]
              conj
-             (pull resolver)))
-
-(defn- apply-where
-  ([query sym k v]
-   (-> query
-       (update-in [:query :where] conj ['?e k sym])
-       (update-in [:query :in] conj sym)
-       (update-in [:args] conj v)))
-  ([query sym k input-sym v]
-   (-> query
-       (update-in [:query :where] conj [sym k input-sym])
-       (update-in [:query :in] conj sym)
-       (update-in [:args] conj v))))
+             (list 'pull '?e (:resolver/pull resolver))))
 
 ;; TODO provide a slightly higher-level query helper API with simple maps
 (defn where [query constraints]
@@ -47,28 +51,10 @@
     query
     constraints))
 
-(defmulti resolve-query :resolver/type)
-
-;; TODO refactor how queries are invoked so we don't need this
-(defmulti replace-arg (fn [_ arg]
-                        arg))
-
-(defmethod replace-arg :default [_ x] x)
-
-(defmethod replace-arg ::bread/store [req _]
-  (store/datastore req))
-
-(defn- replace-args [req args]
-  (map (partial replace-arg req) args))
-
-(defn- replace-query-args [req queries]
-  (into [] (map (fn [[k query f]]
-                  (filter some? [k (update query :args #(replace-args req %)) f]))
-                queries)))
+(defmulti resolve-query (fn [req]
+                          (get-in req [::bread/resolver :resolver/type])))
 
 (defn resolve-queries [req]
   (->> req
-       ::bread/resolver
        resolve-query
-       (replace-query-args req)
        (assoc req ::bread/queries)))

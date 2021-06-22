@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.test-helpers
   (:require
+    [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -27,3 +28,14 @@
 
 (defn datastore-config->handler [config]
   (-> config datastore-config->app bread/load-handler))
+
+(defmacro use-datastore [freq config]
+  `(t/use-fixtures ~freq (fn [f#]
+                           (store/delete-database! ~config)
+                           (store/install! ~config)
+                           (store/connect! ~config)
+                           (f#)
+                           (store/delete-database! ~config))))
+
+(comment
+  (macroexpand '(use-datastore :each {:my :config})))

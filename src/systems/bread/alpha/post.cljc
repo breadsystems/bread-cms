@@ -39,11 +39,11 @@
 (defn- ancestralize [query ancestry]
   (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
     (-> query
-      (update-in [:query :in ] #(vec (concat % in)))
-      (update-in [:query :where] #(vec (concat % where)))
+      (update-in [0 :in] #(vec (concat % in)))
+      (update-in [0 :where] #(vec (concat % where)))
       ;; Need to reverse path here because joins go "up" the ancestry tree,
       ;; away from our immediate child page.
-      (update :args #(vec (concat % (reverse ancestry)))))))
+      (concat (reverse ancestry)))))
 
 (defn expand-post [result]
   (let [post (ffirst result)
@@ -59,32 +59,19 @@
     (and (map? m) (some ks (keys m)))
     m))
 
-(defmethod resolver/resolve-query :resolver.type/page [resolver]
-  (let [{:resolver/keys [ancestral? expand? pull]
-         params :route/params} resolver
+(defmethod resolver/resolve-query :resolver.type/page
+  [{::bread/keys [resolver] :as req}]
+  (let [{k :resolver/key params :route/params
+         :resolver/keys [ancestral? pull]} resolver
+        db (store/datastore req)
 
-        ;; ancestral? and expand? must be an explicitly disabled with false.
-        ancestral? (not (false? ancestral?))
-        expand? (not (false? expand?))
-        ancestry (string/split (:slugs params "") #"/")
-        find-expr [(list 'pull '?e pull)]
-
-        post-query
-        (cond->
-          (assoc-in (resolver/empty-query) [:query :find] find-expr)
-
-          true
-          (where [['?type :post/type :post.type/page]
-                  ['?status :post/status :post.status/published]])
-
-          (not ancestral?)
-          (where [['?slug :post/slug (last ancestry)]])
-
-          ancestral?
-          (ancestralize ancestry)
-
-          expand?
-          (update ::bread/expand conj expand-post))
+        page-query
+        (-> (pull-query resolver)
+            ;; TODO handle this in pull-query?
+            (update-in [0 :find] conj '.) ;; Query for a single post.
+            (where [['?type :post/type :post.type/page]
+                    ['?status :post/status :post.status/published]])
+            (ancestralize (string/split (:slugs params "") #"/")))
 
         ;; Find any appearances of :post/fields in the query. If it appears as
         ;; a map key, use the corresponding value as our pull expr. If it's a
@@ -96,52 +83,17 @@
                             (some-fn
                               #{:post/fields}
                               (partial map-with-keys #{:post/fields}))
-                            pull))]
+                            (:resolver/pull resolver)))]
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
             (-> (resolver/empty-query)
-                (assoc-in [:query :find]
+                (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e :post/id]
                         ['?lang :field/lang (keyword (:lang params))]])
-                (assoc ::bread/expand []))))]
+                (conj {:post/id [k :db/id]}))))]
+
     (if fields-query
-      [[:post post-query]
-       [:post/fields fields-query {:post/id [:post :db/id]}]]
-      [[:post post-query]])))
-
-(comment
-  (def $db {123 "X FIELD"
-            234 "Y FIELD"})
-  ;; this is kinda like query expansion...
-  (reduce (fn [m [k v legend]]
-            (let [parent (keyword (namespace k))
-                  v (if legend
-                      (into v (map (fn [[vk vp]]
-                                     [vk (get $db (get-in m vp))])
-                                   legend))
-                      v)]
-              (if ((set (keys m)) parent)
-                (update m parent merge v)
-                (merge m {k v}))))
-          {}
-          [[:x {:id 123 :x/a 'A :x/b 'B}] [:x/y {:id 456 :y/a 'AA} {:y/z [:x :id]}]]))
-
-(defn field-content [app field]
-  (bread/hook->> app :hook/field-content field))
-
-(defn parse-edn-field [app field]
-  (edn/read-string (:field/content field)))
-
-(defn init [app post-data]
-  (let [[[slug]] post-data]
-    (assoc (reduce (fn [post [slug field]]
-                     (assoc-in post [:post/fields (:field/key field)]
-                               (field-content app field)))
-                   {} post-data)
-           :post/slug slug)))
-
-(defn plugin []
-  (fn [app]
-    (-> app
-        (bread/add-hook :hook/field-content parse-edn-field))))
+      [(apply conj [k db] page-query)
+       (apply conj [:post/fields db] fields-query)]
+      [(apply conj [k db] page-query)])))

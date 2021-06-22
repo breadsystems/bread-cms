@@ -95,7 +95,7 @@
 
   clojure.lang.Namespace
   (datafy [ns*]
-    (name (ns-name ns*))))
+    (ns-name ns*)))
 
 (defn- hook->event [invocation]
   (when-let [rid (get-in invocation [:app :request/uuid])]

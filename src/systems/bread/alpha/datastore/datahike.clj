@@ -188,6 +188,18 @@
      :max-tx (:max-tx db)
      :max-eid (:max-eid db)}))
 
+(extend-type datahike.db.DB
+  bread/Queryable
+  (query [db data [qry & args]]
+    (let [args (if (map? (last args))
+                 (map (fn [arg]
+                        (if-let [path (get (last args) arg)]
+                          (get-in data path)
+                          arg))
+                      (butlast args))
+                 args)]
+      (apply d/q qry db args))))
+
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
