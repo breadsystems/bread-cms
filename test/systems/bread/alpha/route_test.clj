@@ -55,6 +55,9 @@
                                     (:hook/match->resolver
                                       (fn [_ match]
                                         (:bread/resolver match)))
+                                    (:hook/match->component
+                                      (fn [_ match]
+                                        (:bread/component match)))
                                     (:hook/route-params
                                       (fn [_ match]
                                         (:hard-coded-params match)))))
@@ -74,6 +77,7 @@
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
+          :resolver/component nil
           :post/type :post.type/page
           :route/params nil
           :route/match nil}
@@ -81,6 +85,7 @@
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
+          :resolver/component 'home
           :post/type :post.type/page
           :route/params {:lang "en"}
           :route/match {:bread/resolver :resolver.type/home
@@ -91,6 +96,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :post/type :post.type/page
+          :resolver/component 'page
           :route/params {:lang "en" :slug "keyword"}
           :route/match {:bread/resolver :resolver.type/page
                         :bread/component 'page
@@ -100,6 +106,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :post/type :post.type/page
+          :resolver/component 'page
           :route/params {:lang "en"
                          :slug "empty-resolver-map"}
           :route/match {:bread/resolver {}
@@ -110,6 +117,7 @@
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
+          :resolver/component 'page
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "default"}
@@ -121,6 +129,7 @@
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? false
+          :resolver/component 'page
           :post/type :post.type/page
           :route/params {:lang nil :slug "overridden"}
           :route/match {:bread/resolver {:resolver/i18n? false}
@@ -130,6 +139,7 @@
 
          {:resolver/type :whatevs
           :resolver/defaults? false
+          :resolver/component 'page
           :route/params {:lang "en"
                          :slug "no-defaults"}
           :route/match {:bread/resolver {:resolver/type :whatevs
@@ -141,6 +151,7 @@
 
          {:resolver/type :whatevs
           :resolver/i18n? true
+          :resolver/component nil
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "no-component"}

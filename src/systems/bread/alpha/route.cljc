@@ -16,6 +16,7 @@
                  :post/type :post.type/page}
         match (match req)
         declared (bread/hook->> req :hook/match->resolver match)
+        component (bread/hook->> req :hook/match->component match)
         {:resolver/keys [defaults?]} declared
         keyword->type {:resolver.type/home :resolver.type/page
                        :resolver.type/page :resolver.type/page}
@@ -33,7 +34,8 @@
                            (merge default declared)
                            declared)
                          :route/match match
-                         :route/params (params req match))]
+                         :route/params (params req match)
+                         :resolver/component component)]
     (bread/hook->> req :hook/resolver resolver')))
 
 (defn dispatch [req]
