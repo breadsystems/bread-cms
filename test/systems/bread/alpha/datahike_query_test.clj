@@ -87,11 +87,11 @@
          "parent-post"]]
 
        ;; with explicit input args (for i18n)
-       {:post {:post/slug "parent-post"}
-        :post/fields [[{:field/key :thingy
-                        :field/content "thing"}]
-                      [{:field/key :stuff
-                       :field/content "hello"}]]}
+       {:post {:post/slug "parent-post"
+               :post/fields [[{:field/key :thingy
+                               :field/content "thing"}]
+                             [{:field/key :stuff
+                              :field/content "hello"}]]}}
        [[:post db '{:find [(pull ?e [:post/slug]) .]
                     :in [$ ?slug]
                     :where [[?e :post/slug ?slug]]} "parent-post"]
@@ -103,11 +103,11 @@
          :en]]
 
        ;; deriving input args from previous data (for i18n)
-       {:post {:db/id 100 :post/slug "parent-post"}
-        :post/fields [[{:field/key :thingy
-                        :field/content "thing"}]
-                      [{:field/key :stuff
-                       :field/content "hello"}]]}
+       {:post {:db/id 100 :post/slug "parent-post"
+               :post/fields [[{:field/key :thingy
+                               :field/content "thing"}]
+                             [{:field/key :stuff
+                               :field/content "hello"}]]}}
        [[:post db '{:find [(pull ?e [:db/id :post/slug]) .]
                     :in [$ ?slug]
                     :where [[?e :post/slug ?slug]]} "parent-post"]

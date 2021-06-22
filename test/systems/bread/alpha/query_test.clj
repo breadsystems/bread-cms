@@ -33,4 +33,30 @@
     [[:my/meta-expanded (with-meta {} {`bread/query
                                        (constantly "whoa, meta")})]]
 
-       ))
+    ;; Keys can be paths (sequences), which are automatically merged into
+    ;; the existing ::data tree.
+    {:compacted {:compacted/fields [:nested :values]
+                 :some :value}}
+    [[:compacted (constantly {:some :value})]
+     [[:compacted :compacted/fields] (constantly [:nested :values])]]
+
+    ;; Qualified keywords are treated as paths IFF the existing ::data tree
+    ;; has an associable structure at (keyword (namespace qualified-keyword)).
+    {:compacted {:compacted/fields [:nested :values]
+                 :some :value}}
+    [[:compacted (constantly {:some :value})]
+     [:compacted/fields (constantly [:nested :values])]]
+
+    ;; Qualified keywords are treated as regular keywords if the thing at
+    ;; (keyword (namespace qualified-keyword)) within ::data is not
+    ;; associative.
+    {:stuff {:some :value}
+     :compacted/fields [:nested :values]}
+    [[:stuff (constantly {:some :value})]
+     [:compacted/fields (constantly [:nested :values])]]
+
+    ;; Ditto above.
+    {:compacted "a string"
+     :compacted/fields [:nested :values]}
+    [[:compacted (constantly "a string")]
+     [:compacted/fields (constantly [:nested :values])]]))
