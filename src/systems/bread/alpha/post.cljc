@@ -3,6 +3,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.resolver :as resolver :refer [where pull-query]]
     [systems.bread.alpha.route :as route]
@@ -59,6 +60,9 @@
     (and (map? m) (some ks (keys m)))
     m))
 
+(defn compact-fields [{:keys [post]}]
+  (update post :post/fields field/compact))
+
 (defmethod resolver/resolve-query :resolver.type/page
   [{::bread/keys [resolver] :as req}]
   (let [{k :resolver/key params :route/params
@@ -95,5 +99,6 @@
 
     (if fields-query
       [(apply conj [k db] page-query)
-       (apply conj [:post/fields db] fields-query)]
+       (apply conj [:post/fields db] fields-query)
+       [k compact-fields]]
       [(apply conj [k db] page-query)])))

@@ -121,7 +121,8 @@
                     [?e :field/lang ?lang]]}
           :post/id
           :en
-          {:post/id [:post :db/id]}]]
+          {:post/id [:post :db/id]}]
+         [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :post/fields]
          :resolver/key :post
@@ -152,7 +153,8 @@
                     [?e :field/lang ?lang]]}
           :post/id
           :en
-          {:post/id [:post :db/id]}]]
+          {:post/id [:post :db/id]}]
+         [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
          :resolver/key :post

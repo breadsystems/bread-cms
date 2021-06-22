@@ -178,18 +178,10 @@
           fields)
   )
 
-(defn compact-fields [fields]
-  (reduce (fn [fields row]
-            (let [field (first row)]
-              (assoc fields
-                     (:field/key field)
-                     (edn/read-string (:field/content field)))))
-          {} fields))
-
 (defn RENDER [{::bread/keys [data] :as req}]
   (merge
     req
-    (let [post (update (:post data) :post/fields compact-fields)
+    (let [post (:post data)
           {:keys [title simple]} (:post/fields post)]
       {:headers {"content-type" "text/html"}
        :status 200
@@ -360,7 +352,8 @@
                                                       [?e :field/lang ?lang]]}
                                             :post/id
                                             :en
-                                            {:post/id [:post :db/id]}]])))
+                                            {:post/id [:post :db/id]}]
+                                           [:post post/compact-fields]])))
                                     #_
                                     (:hook/expand
                                       (fn [app]
