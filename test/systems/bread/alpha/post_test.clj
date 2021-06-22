@@ -135,7 +135,6 @@
                                           [:field/key
                                            :field/lang]}]) .]
             :in [$ ?type ?status ?slug]
-            ;; TODO i18n
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug]
@@ -165,7 +164,6 @@
           ::MOCK_STORE
           '{:find [(pull ?e [:post/title :custom/key]) .]
             :in [$ ?type ?status ?slug]
-            ;; TODO i18n
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug]
