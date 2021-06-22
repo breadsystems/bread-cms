@@ -92,6 +92,7 @@
                 (where [['?p :post/fields '?e :post/id]
                         ['?lang :field/lang (keyword (:lang params))]])
                 (conj {:post/id [k :db/id]}))))]
+
     (if fields-query
       [(apply conj [k db] page-query)
        (apply conj [:post/fields db] fields-query)]
