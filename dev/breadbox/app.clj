@@ -16,6 +16,7 @@
     [systems.bread.alpha.plugin.reitit :as br]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.post :as post]
+    [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
@@ -58,21 +59,22 @@
                       :uuid (UUID/randomUUID)
                       :title "Home Page"
                       :slug ""
-                      :fields #{{:field/key :hello
+                      :fields #{{:field/key :title
                                  :field/lang :en
-                                 :field/content (prn-str "Hello!")}}
+                                 :field/content (prn-str "Home Page Title")}
+                                {:field/key :simple
+                                 :field/lang :en
+                                 :field/content (prn-str {:hello "Hi!"
+                                                          :img-url "https://via.placeholder.com/300"})}
+                                }
                       :status :post.status/published}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Parent Page"
                       :slug "parent-page"
                       :status :post.status/published
-                      :fields #{{:field/key :hello
-                                 :field/lang :en
-                                 :field/content
-                                 (prn-str [:div
-                                           [:h4 :i18n/parent-page.0.h4]
-                                           [:p :i18n/parent-page.0.content]])}}}
+                      :fields #{;; TODO
+                                }}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
                       :title "Child Page OLD TITLE"
@@ -159,11 +161,36 @@
                                   :resolver/internationalize? true}
                  :bread/component page}]]))
 
+(comment
+  (def fields
+    [[{:db/id 45
+       :field/key :simple
+       :field/content "{:hello \"Hi!\", :img-url \"https://via.placeholder.com/300\"}\n"}]
+     [{:db/id 46
+       :field/key :title
+       :field/content "\"Home Page Title\"\n"}]])
+
+  (map first fields)
+  (reduce (fn [fields row]
+            (let [field (first row)]
+             (assoc fields (:field/key field) (edn/read-string (:field/content field)))))
+          {}
+          fields)
+  )
+
+(defn compact-fields [fields]
+  (reduce (fn [fields row]
+            (let [field (first row)]
+              (assoc fields
+                     (:field/key field)
+                     (edn/read-string (:field/content field)))))
+          {} fields))
+
 (defn RENDER [{::bread/keys [data] :as req}]
   (merge
     req
-    (let [post (:post data)
-          {:keys [title simple hello]} (:post/fields post)]
+    (let [post (update (:post data) :post/fields compact-fields)
+          {:keys [title simple]} (:post/fields post)]
       {:headers {"content-type" "text/html"}
        :status 200
        :body [:html
@@ -173,11 +200,10 @@
               [:body
                [:main
                  [:h2 title]
-                 [:p "Hello: " hello]
                  [:h3 "Simple field contents"]
                  [:p (rand-int 1000)]
                  [:div.simple
-                  [:p (:hello simple)]
+                  [:p "Hello field = " (:hello simple)]
                   [:div.body
                    (:body simple)
                    [:img {:src (:img-url simple)}]]
@@ -256,6 +282,7 @@
               [?e :post/parent ?root-ancestor])]}
   )
 
+#_
 (defn expand-queries [app]
   (let [store (store/datastore app)
         data (into {} (map (fn [[k query]]
@@ -285,6 +312,7 @@
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
                                 (i18n/plugin)
+                                (query/plugin)
                                 #_(post/plugin)
                                 (br/plugin {:router $router})
 
@@ -312,13 +340,28 @@
                                                               :en]}})))
                                     (:hook/resolve
                                       (fn [app]
-                                        (assoc app ::bread/queries
-                                               {:post {:query HOME
-                                                       ::bread/expand [post/expand-post]
-                                                       :args [(store/datastore app)
-                                                              :post.type/page
-                                                              ""
-                                                              :en]}})))
+                                        (assoc
+                                          app
+                                          ::bread/queries
+                                          [[:post
+                                            (store/datastore app)
+                                            '{:find [(pull ?e [:db/id
+                                                               :post/slug]) .]
+                                              :in [$ ?slug]
+                                              :where [[?e :post/slug ?slug]]}
+                                            ""]
+                                           [:post/fields
+                                            (store/datastore app)
+                                            '{:find [(pull ?e [:db/id
+                                                               :field/key
+                                                               :field/content])]
+                                              :in [$ ?p ?lang]
+                                              :where [[?p :post/fields ?e]
+                                                      [?e :field/lang ?lang]]}
+                                            :post/id
+                                            :en
+                                            {:post/id [:post :db/id]}]])))
+                                    #_
                                     (:hook/expand
                                       (fn [app]
                                         (store/add-txs
@@ -331,9 +374,7 @@
                                                 :field/key :my/field
                                                 :field/content
                                                 (str
-                                                  "content for post " uuid)}]}]))))
-                                    (:hook/expand (fn [app]
-                                                    (expand-queries app)))))
+                                                  "content for post " uuid)}]}]))))))
 
                                 ;; TODO work backwards from render
                                 (fn [app]
@@ -356,6 +397,8 @@
       (theme/add-to-footer [:script "console.log(2)"])))
 
 (comment
+
+  (slurp "http://localhost:1312/en")
 
   (require '[editscript.core :as ed])
 
