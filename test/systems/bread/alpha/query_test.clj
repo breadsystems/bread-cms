@@ -24,6 +24,11 @@
     [[:my/nums (fn [_ & nums] (vec nums)) 1 2 3 4]
      [:my/sum #(reduce + (:my/nums %))]]
 
+    ;; Results of previous queries can be overwritten by subsequent queries.
+    {:my/nums 10}
+    [[:my/nums (constantly [1 2 3 4])]
+     [:my/nums #(reduce + (:my/nums %))]]
+
     {:my/meta-expanded "whoa, meta"}
     [[:my/meta-expanded (with-meta {} {`bread/query
                                        (constantly "whoa, meta")})]]
