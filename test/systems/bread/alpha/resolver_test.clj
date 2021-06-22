@@ -21,10 +21,11 @@
     :basic {:resolver/component with-basic-pull}
     :multi {:resolver/component with-multi-pull}))
 
+#_ ;; TODO this belongs at a different level of abstraction.
 (deftest test-pull-query
   (are [clause resolver] (= clause (-> resolver
                                        resolver/pull-query
-                                       (get-in [:query :find])))
+                                       (get-in [0 :find])))
 
        ['(pull ?e [:post/title :post/slug])]
        {:resolver/component with-basic-pull}
