@@ -67,6 +67,8 @@
 
         page-query
         (-> (pull-query resolver)
+            ;; TODO handle this in pull-query?
+            (update-in [0 :find] conj '.) ;; Query for a single post.
             (where [['?type :post/type :post.type/page]
                     ['?status :post/status :post.status/published]])
             (ancestralize (string/split (:slugs params "") #"/")))
