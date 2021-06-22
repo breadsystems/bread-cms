@@ -3,9 +3,10 @@
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.test-helpers :refer [datastore-config->loaded]]))
+    [systems.bread.alpha.test-helpers :refer [datastore-config->loaded
+                                              use-datastore]]))
 
-(let [config {:datastore/type :datahike
+(def config {:datastore/type :datahike
               :store {:backend :mem
                       :id "plugin-db"}
               ;; Printing the whole schema slows down results on error/failure,
@@ -25,62 +26,57 @@
                 :db/cardinality :db.cardinality/one}
                {:db/ident :field/content
                 :db/valueType :db.type/string
-                :db/cardinality :db.cardinality/one}]}]
+                :db/cardinality :db.cardinality/one}]})
 
-  (use-fixtures :each (fn [f]
-                        (store/delete-database! config)
-                        (store/create-database! config)
-                        (store/connect! config)
-                        (f)
-                        (store/delete-database! config)))
+(use-datastore :each config)
 
-  (deftest test-add-txs
+(deftest test-add-txs
 
-    (testing "it runs zero or more transactions on the database"
-      (are [page args]
-        (= page (let [[slug txs] args
-                      app (-> (datastore-config->loaded config)
-                              (store/add-txs txs))
-                      handler (bread/handler app)
-                      query
-                      '{:find
-                        [(pull ?e [:db/id
-                                   :post/slug
-                                   {:post/fields
-                                    [:field/key :field/content]}])]
-                        :in [$ ?slug]
-                        :where [[?e :post/slug ?slug]]}]
-                  (-> (store/datastore (handler {:uri "/"}))
-                      (store/q query slug)
-                      ffirst)))
+  (testing "it runs zero or more transactions on the database"
+    (are [page args]
+      (= page (let [[slug txs] args
+                    app (-> (datastore-config->loaded config)
+                            (store/add-txs txs))
+                    handler (bread/handler app)
+                    query
+                    '{:find
+                      [(pull ?e [:db/id
+                                 :post/slug
+                                 {:post/fields
+                                  [:field/key :field/content]}])]
+                      :in [$ ?slug]
+                      :where [[?e :post/slug ?slug]]}]
+                (-> (store/datastore (handler {:uri "/"}))
+                    (store/q query slug)
+                    ffirst)))
 
-        ;; Without fields.
-        {:db/id 1000
-         :post/slug "hello"}
-        ["hello"
-         [{:db/id 1000
-           :post/slug "hello"
-           :post/fields []}]]
+      ;; Without fields.
+      {:db/id 1000
+       :post/slug "hello"}
+      ["hello"
+       [{:db/id 1000
+         :post/slug "hello"
+         :post/fields []}]]
 
-        ;; With two fields in a single tx.
-        {:db/id 2000
+      ;; With two fields in a single tx.
+      {:db/id 2000
+       :post/slug "goodbye"
+       :post/fields [{:field/key :one :field/content "ONE!"}
+                     {:field/key :two :field/content "TWO!"}]}
+      ["goodbye"
+       [{:db/id 2000
          :post/slug "goodbye"
          :post/fields [{:field/key :one :field/content "ONE!"}
-                       {:field/key :two :field/content "TWO!"}]}
-        ["goodbye"
-         [{:db/id 2000
-           :post/slug "goodbye"
-           :post/fields [{:field/key :one :field/content "ONE!"}
-                         {:field/key :two :field/content "TWO!"}]}]]
+                       {:field/key :two :field/content "TWO!"}]}]]
 
-        ;; With fields and slug in separate txs.
+      ;; With fields and slug in separate txs.
+      {:db/id 3000
+       :post/slug "separate"
+       :post/fields [{:field/key :one :field/content "ONE!"}
+                     {:field/key :two :field/content "TWO!"}]}
+      ["separate"
+       [{:db/id 3000
+         :post/slug "separate"}
         {:db/id 3000
-         :post/slug "separate"
          :post/fields [{:field/key :one :field/content "ONE!"}
-                       {:field/key :two :field/content "TWO!"}]}
-        ["separate"
-         [{:db/id 3000
-           :post/slug "separate"}
-          {:db/id 3000
-           :post/fields [{:field/key :one :field/content "ONE!"}
-                         {:field/key :two :field/content "TWO!"}]}]]))))
+                       {:field/key :two :field/content "TWO!"}]}]])))

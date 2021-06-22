@@ -15,12 +15,7 @@
       handle (fn [req]
                ((->handler config) req))]
 
-  (use-fixtures :each (fn [f]
-                        (store/delete-database! config)
-                        (store/install! config)
-                        (store/connect! config)
-                        (f)
-                        (store/delete-database! config)))
+  (h/use-datastore :each config)
 
   (deftest test-datahike-plugin
 
