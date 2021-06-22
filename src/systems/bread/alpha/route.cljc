@@ -13,7 +13,6 @@
 (defn resolver [req]
   (let [default {:resolver/i18n? true
                  :resolver/type :resolver.type/page
-                 :resolver/ancestry? true
                  :post/type :post.type/page}
         match (match req)
         declared (bread/hook->> req :hook/match->resolver match)
