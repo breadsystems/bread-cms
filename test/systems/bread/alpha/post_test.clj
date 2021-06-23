@@ -34,7 +34,7 @@
         ;; i18n'd by default
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title :custom/key]) .]
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
@@ -52,7 +52,7 @@
         ;; {:uri "/en/one/two"}
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title :custom/key]) .]
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug ?slug_1]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
@@ -76,7 +76,7 @@
         ;; {:uri "/en/one/two/three"}
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title :custom/key]) .]
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug ?slug_1 ?slug_3]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
@@ -104,7 +104,7 @@
         ;; :post/fields i18n
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title :post/fields]) .]
+          '{:find [(pull ?e [:db/id :post/title :post/fields]) .]
             :in [$ ?type ?status ?slug]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
@@ -132,9 +132,9 @@
         ;; :post/fields i18n w/ nested pull clause
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title {:post/fields
-                                          [:field/key
-                                           :field/lang]}]) .]
+          '{:find [(pull ?e [:db/id :post/title {:post/fields
+                                                 [:field/key
+                                                  :field/lang]}]) .]
             :in [$ ?type ?status ?slug]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
@@ -164,7 +164,7 @@
         ;; home page - no `slugs`
         [[:post
           ::MOCK_STORE
-          '{:find [(pull ?e [:post/title :custom/key]) .]
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]

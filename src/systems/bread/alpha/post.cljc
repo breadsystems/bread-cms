@@ -87,7 +87,7 @@
                             (some-fn
                               #{:post/fields}
                               (partial map-with-keys #{:post/fields}))
-                            (:resolver/pull resolver)))]
+                            pull))]
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
             (-> (resolver/empty-query)

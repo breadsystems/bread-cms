@@ -37,11 +37,14 @@
 
 (defn pull-query
   "Get a basic query with a (pull ...) form in the :find clause"
-  [resolver]
-  (update-in (empty-query)
-             [0 :find]
-             conj
-             (list 'pull '?e (:resolver/pull resolver))))
+  [{:resolver/keys [pull]}]
+  (let [pulling-eid? (some #{:db/id} pull)
+        pull-expr (if pulling-eid? pull (cons :db/id pull))]
+    (update-in
+      (empty-query)
+      [0 :find]
+      conj
+      (list 'pull '?e pull-expr))))
 
 ;; TODO provide a slightly higher-level query helper API with simple maps
 (defn where [query constraints]

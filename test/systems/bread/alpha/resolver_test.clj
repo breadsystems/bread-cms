@@ -21,19 +21,14 @@
     :basic {:resolver/component with-basic-pull}
     :multi {:resolver/component with-multi-pull}))
 
-#_ ;; TODO this belongs at a different level of abstraction.
 (deftest test-pull-query
   (are [clause resolver] (= clause (-> resolver
                                        resolver/pull-query
                                        (get-in [0 :find])))
 
-       ['(pull ?e [:post/title :post/slug])]
-       {:resolver/component with-basic-pull}
+       ['(pull ?e [:db/id :post/title :post/slug])]
+       {:resolver/pull [:post/title :post/slug]}
 
-       #_#_
-       ['(pull ?e [:post/title :post/slug])
-        '(pull ?fields [:field/key :field/content])]
-       {:resolver/component with-multi-pull}
        ))
 
 (comment
