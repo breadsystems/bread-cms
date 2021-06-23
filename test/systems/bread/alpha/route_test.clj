@@ -64,8 +64,8 @@
         ;; Mock the component registry with key/pull values.
         ;; These values are not valid for the default schema but are meant to
         ;; be illustrative.
-        registry {'home {:key :home :pull [:db/id :home/slug]}
-                  'page {:key :page :pull [:db/id :page/slug]}}
+        registry (atom {'home {:key :home :query [:db/id :home/slug]}
+                        'page {:key :page :query [:db/id :page/slug]}})
         app (plugins->loaded [simplistic-route-plugin])]
 
     (are [resolver uri] (= resolver
@@ -78,6 +78,8 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component nil
+          :resolver/key nil
+          :resolver/pull nil
           :post/type :post.type/page
           :route/params nil
           :route/match nil}
@@ -86,6 +88,8 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component 'home
+          :resolver/key :home
+          :resolver/pull [:db/id :home/slug]
           :post/type :post.type/page
           :route/params {:lang "en"}
           :route/match {:bread/resolver :resolver.type/home
@@ -97,6 +101,8 @@
           :resolver/i18n? true
           :post/type :post.type/page
           :resolver/component 'page
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en" :slug "keyword"}
           :route/match {:bread/resolver :resolver.type/page
                         :bread/component 'page
@@ -107,6 +113,8 @@
           :resolver/i18n? true
           :post/type :post.type/page
           :resolver/component 'page
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "empty-resolver-map"}
           :route/match {:bread/resolver {}
@@ -118,6 +126,8 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component 'page
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "default"}
@@ -130,6 +140,8 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? false
           :resolver/component 'page
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
           :route/params {:lang nil :slug "overridden"}
           :route/match {:bread/resolver {:resolver/i18n? false}
@@ -140,6 +152,8 @@
          {:resolver/type :whatevs
           :resolver/defaults? false
           :resolver/component 'page
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "no-defaults"}
           :route/match {:bread/resolver {:resolver/type :whatevs
@@ -152,6 +166,8 @@
          {:resolver/type :whatevs
           :resolver/i18n? true
           :resolver/component nil
+          :resolver/key nil
+          :resolver/pull nil
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "no-component"}

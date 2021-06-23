@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.route
   (:require
-    [systems.bread.alpha.component :as comp]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -35,7 +35,9 @@
                            declared)
                          :route/match match
                          :route/params (params req match)
-                         :resolver/component component)]
+                         :resolver/component component
+                         :resolver/key (component/get-key component)
+                         :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
 (defn dispatch [req]
