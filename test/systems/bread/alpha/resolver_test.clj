@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.resolver-test
   (:require
-    [clojure.test :refer [deftest are]]
+    [clojure.test :as t :refer [deftest are]]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.resolver :as resolver]))
 
@@ -35,3 +35,6 @@
         '(pull ?fields [:field/key :field/content])]
        {:resolver/component with-multi-pull}
        ))
+
+(comment
+  (t/run-tests))

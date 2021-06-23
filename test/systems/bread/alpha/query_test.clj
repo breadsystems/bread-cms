@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.query-test
   (:require
-    [clojure.test :refer [are deftest is]]
+    [clojure.test :as t :refer [are deftest is]]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
@@ -60,3 +60,6 @@
      :compacted/fields [:nested :values]}
     [[:compacted (constantly "a string")]
      [:compacted/fields (constantly [:nested :values])]]))
+
+(comment
+  (run-tests))

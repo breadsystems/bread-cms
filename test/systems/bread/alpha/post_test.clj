@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.post-test
   (:require
-    [clojure.test :refer [deftest are]]
+    [clojure.test :as t :refer [deftest are]]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.post :as post]
@@ -180,3 +180,6 @@
          :route/params {:lang "en"}}
 
         )))
+
+(comment
+  (t/run-tests))
