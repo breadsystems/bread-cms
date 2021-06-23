@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.post-test
   (:require
-    [clojure.test :as t :refer [deftest are]]
+    [clojure.test :refer [deftest are]]
+    [kaocha.repl :as k]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.post :as post]
@@ -17,28 +18,21 @@
                 (assoc app ::bread/resolver resolver))]
 
       (are
-        [query resolver] (= query
-                            (let [counter (atom 0)]
-                              (with-redefs
-                                [gensym (fn [prefix]
-                                          (let [sym
-                                                (symbol (str prefix @counter))]
-                                            (swap! counter inc)
-                                            sym))]
-                                (-> resolver
-                                    ->app
-                                    resolver/resolve-queries
-                                    ::bread/queries))))
+        [query resolver]
+        (= query (-> resolver
+                     ->app
+                     resolver/resolve-queries
+                     ::bread/queries))
 
         ;; {:uri "/en/simple"}
         ;; i18n'd by default
         [[:post
           ::MOCK_STORE
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
-            :in [$ ?type ?status ?slug]
+            :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
+                    [?e :post/slug ?slug_0]
                     (not-join [?e] [?e :post/parent ?root-ancestor])]}
           :post.type/page
           :post.status/published
@@ -53,17 +47,15 @@
         [[:post
           ::MOCK_STORE
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
-            :in [$ ?type ?status ?slug ?slug_1]
+            :in [$ ?type ?status ?slug_0 ?slug_1]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
-                    ;; NOTE: ?parent_* symbols are where our
-                    ;; gensym override comes into play.
-                    [?e :post/parent ?parent_0]
-                    [?parent_0 :post/slug ?slug_1]
+                    [?e :post/slug ?slug_0]
+                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/slug ?slug_1]
                     (not-join
-                      [?parent_0]
-                      [?parent_0 :post/parent ?root-ancestor])]}
+                      [?parent_1]
+                      [?parent_1 :post/parent ?root-ancestor])]}
           :post.type/page
           :post.status/published
           "two"
@@ -77,16 +69,14 @@
         [[:post
           ::MOCK_STORE
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
-            :in [$ ?type ?status ?slug ?slug_1 ?slug_3]
+            :in [$ ?type ?status ?slug_0 ?slug_1 ?slug_2]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
-                    ;; NOTE: ?parent_* symbols are where our
-                    ;; gensym override comes into play.
-                    [?e :post/parent ?parent_0]
-                    [?parent_0 :post/slug ?slug_1]
-                    [?parent_0 :post/parent ?parent_2]
-                    [?parent_2 :post/slug ?slug_3]
+                    [?e :post/slug ?slug_0]
+                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/slug ?slug_1]
+                    [?parent_1 :post/parent ?parent_2]
+                    [?parent_2 :post/slug ?slug_2]
                     (not-join
                       [?parent_2]
                       [?parent_2 :post/parent ?root-ancestor])]}
@@ -105,10 +95,10 @@
         [[:post
           ::MOCK_STORE
           '{:find [(pull ?e [:db/id :post/title :post/fields]) .]
-            :in [$ ?type ?status ?slug]
+            :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
+                    [?e :post/slug ?slug_0]
                     (not-join [?e] [?e :post/parent ?root-ancestor])]}
           :post.type/page
           :post.status/published
@@ -135,10 +125,10 @@
           '{:find [(pull ?e [:db/id :post/title {:post/fields
                                                  [:field/key
                                                   :field/lang]}]) .]
-            :in [$ ?type ?status ?slug]
+            :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
+                    [?e :post/slug ?slug_0]
                     (not-join
                       [?e]
                       [?e :post/parent ?root-ancestor])]}
@@ -165,10 +155,10 @@
         [[:post
           ::MOCK_STORE
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
-            :in [$ ?type ?status ?slug]
+            :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
-                    [?e :post/slug ?slug]
+                    [?e :post/slug ?slug_0]
                     (not-join [?e] [?e :post/parent ?root-ancestor])]}
           :post.type/page
           :post.status/published
@@ -182,4 +172,4 @@
         )))
 
 (comment
-  (t/run-tests))
+  (k/run))

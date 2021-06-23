@@ -9,14 +9,38 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
+(defn- syms
+  ([prefix]
+   (syms prefix 0))
+  ([prefix start]
+   (for [n (range)] (symbol (str prefix (+ start n))))))
+
+(comment
+  (for [n (range 10)] (symbol (str "?slug_" n)))
+
+  (loop [[slug & slugs] (take 15 (syms "?slug_"))]
+    (prn slug)
+    (when (seq slugs)
+      (recur slugs)))
+
+  (loop [[slug & slugs] (take 15 (syms "?slug_" 1))]
+    (prn slug)
+    (when (seq slugs)
+      (recur slugs)))
+  )
+
 (defn- path->constraints
   ([path]
    (path->constraints path {}))
-  ([path {:keys [child-sym slug-sym]}]
+  ([path {:keys [child-sym]}]
    (vec (loop [query []
-               descendant-sym (or child-sym '?e)
                [inputs path] [[] path]
-               slug-sym slug-sym]
+               descendant-sym (or child-sym '?e)
+               ;; Start the parent count at 1 so that
+               ;; [?parent_x :post/slug ?slug_x] numbers line up.
+               ;; This makes queries easier to read and debug.
+               [parent-sym & parent-syms] (syms "?parent_" 1)
+               [slug-sym & slug-syms] (syms "?slug_")]
           (let [inputs (conj inputs slug-sym)
                 where [[descendant-sym :post/slug slug-sym]]]
             (if (<= (count path) 1)
@@ -26,16 +50,18 @@
                                'not-join
                                [descendant-sym]
                                [descendant-sym :post/parent '?root-ancestor])]))]
-              (let [ancestor-sym (gensym "?parent_")
-                    ancestry [descendant-sym :post/parent ancestor-sym]]
-                (recur
-                 (concat query where [ancestry])
-                 ancestor-sym
-                 [inputs (butlast path)]
-                 (gensym "?slug_")))))))))
+              (recur
+                (concat query where [[descendant-sym :post/parent parent-sym]])
+                [inputs (butlast path)]
+                parent-sym ;; the new descendant-sym
+                parent-syms
+                slug-syms)))))))
 
 (comment
-  (path->constraints ["parent" "child"] {:slug-sym '?slug}))
+  (path->constraints ["grandparent" "parent" "child"])
+  (path->constraints ["parent" "child"])
+  (path->constraints ["parent" "child"] )
+  )
 
 (defn- ancestralize [query ancestry]
   (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
