@@ -82,7 +82,7 @@
                            :in [$ ?p ?lang]
                            :where [[?p :post/fields ?e]
                                    [?e :field/lang ?lang]]}
-         ^:data-path [:post :db/id]
+         [::bread/data :post :db/id]
          :en]]
 
        {:post {:post/slug "parent-post"
@@ -138,7 +138,7 @@
                            :in [$ ?p ?lang]
                            :where [[?p :post/fields ?e]
                                    [?e :field/lang ?lang]]}
-         ^:data-path [:post :db/id]
+         [::bread/data :post :db/id]
          :en]])))
 
 (comment

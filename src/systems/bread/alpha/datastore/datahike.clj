@@ -189,17 +189,17 @@
      :max-eid (:max-eid db)}))
 
 (defn- eval-arg [data arg]
-  (if (:data-path (meta arg))
-    (get-in data arg)
+  (if (and (vector? arg) (= ::bread/data (first arg)))
+    (get-in data (next arg))
     arg))
 
 (comment
   ;; pass-thru
   (= "x" (eval-arg {:a {:b :AB}} "x"))
-  ;; looks like a path, but no meta
+  ;; vector, but not a path
   (= [:a :b] (eval-arg {:a {:b :AB}} [:a :b]))
   ;; path w/ correct meta flag
-  (= :AB (eval-arg {:a {:b :AB}} ^:data-path [:a :b]))
+  (= :AB (eval-arg {:a {:b :AB}} [::bread/data :a :b]))
 
   ;;
   )
