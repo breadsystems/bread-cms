@@ -109,9 +109,8 @@
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
-          :post/id
-          :en
-          {:post/id [:post :db/id]}]
+          [:post :db/id]
+          :en]
          [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :post/fields]
@@ -141,9 +140,8 @@
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
-          :post/id
-          :en
-          {:post/id [:post :db/id]}]
+          [:post :db/id]
+          :en]
          [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]

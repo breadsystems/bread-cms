@@ -119,12 +119,12 @@
             (-> (resolver/empty-query)
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e :post/id]
-                        ['?lang :field/lang (keyword (:lang params))]])
-                (conj {:post/id [k :db/id]}))))]
+                (where [['?p :post/fields '?e ^:data-path [k :db/id]]
+                        ['?lang :field/lang (keyword (:lang params))]]))))]
 
     (if fields-query
       [(apply conj [k db] page-query)
        (apply conj [:post/fields db] fields-query)
+       ;; TODO remove this - leave that up to components
        [k compact-fields]]
       [(apply conj [k db] page-query)])))
