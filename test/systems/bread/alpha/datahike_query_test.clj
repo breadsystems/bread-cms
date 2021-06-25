@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.datahike-query-test
   (:require
     [clojure.test :refer [are deftest is]]
+    [kaocha.repl :as k]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
@@ -62,6 +63,28 @@
                                     (bread/hook :hook/expand)
                                     ::bread/data))
 
+       ;; Querying for a non-existent post
+       {:post nil}
+       [[:post db '{:find [(pull ?e [:post/slug {:post/fields
+                                                 [:field/key :field/lang]}]) .]
+                    :in [$ ?slug]
+                    :where [[?e :post/slug ?slug]]}
+         "non-existent-slug"]]
+
+       ;; Querying for a non-existent post and its fields
+       {:post nil :post/fields nil}
+       [[:post db '{:find [(pull ?e [:post/slug {:post/fields
+                                                 [:field/key :field/lang]}]) .]
+                    :in [$ ?slug]
+                    :where [[?e :post/slug ?slug]]}
+         "non-existent-slug"]
+        [:post/fields db '{:find [(pull ?e [:field/key :field/content])]
+                           :in [$ ?p ?lang]
+                           :where [[?p :post/fields ?e]
+                                   [?e :field/lang ?lang]]}
+         ^:data-path [:post :db/id]
+         :en]]
+
        {:post {:post/slug "parent-post"
                :post/fields [{:field/key :stuff :field/lang :en}
                              {:field/key :thingy :field/lang :en}
@@ -115,6 +138,8 @@
                            :in [$ ?p ?lang]
                            :where [[?p :post/fields ?e]
                                    [?e :field/lang ?lang]]}
-         :post/id
-         :en
-         {:post/id [:post :db/id]}]])))
+         ^:data-path [:post :db/id]
+         :en]])))
+
+(comment
+  (k/run))

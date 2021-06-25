@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.route-test
   (:require
-    [clojure.test :refer [deftest are is testing]]
+    [clojure.test :as t :refer [deftest are is testing]]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
@@ -191,3 +191,7 @@
                (route/resolver (merge app {:uri "/whatever"}))))))
 
     ))
+
+(comment
+  (t/run-all-tests #"systems\.bread\.*")
+  (t/run-tests))

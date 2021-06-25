@@ -32,4 +32,5 @@
        ))
 
 (comment
+  (t/run-all-tests #"systems\.bread\.*")
   (t/run-tests))

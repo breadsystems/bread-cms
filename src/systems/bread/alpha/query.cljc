@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.query
   (:require
+    [clojure.spec.alpha :as s]
     [systems.bread.alpha.core :as bread]))
 
 (defn- keyword-namespace [x]
@@ -21,6 +22,8 @@
   (reduce expand-query {} queries))
 
 (defn expand [app]
+  {:pre [(s/valid? ::bread/app app)]
+   :post [(s/valid? ::bread/app %)]}
   (assoc app ::bread/data (expand-queries (::bread/queries app))))
 
 (defn plugin []

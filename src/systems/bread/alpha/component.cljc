@@ -21,5 +21,14 @@
 (defn get-query [component]
   (:query (get @*registry* component)))
 
-(defn render [component req]
-  (component (bread/hook-> req :hook/view-data {} req)))
+(defn render [{::bread/keys [data resolver]}]
+  (prn data resolver)
+  (let [c (:resolver/component resolver)]
+    ;; TODO pull this out to a separate fn/hook
+    {:status 200
+     :body (c data)
+     :headers {}}))
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hook app :hook/render render)))

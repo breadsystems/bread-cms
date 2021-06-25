@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.resolver
   (:require
+    [clojure.spec.alpha :as s]
     [clojure.string :as string]
     [systems.bread.alpha.component :as comp :refer [defc]]
     [systems.bread.alpha.core :as bread]
@@ -58,6 +59,13 @@
                           (get-in req [::bread/resolver :resolver/type])))
 
 (defn resolve-queries [req]
+  {:pre [(s/valid? ::bread/app req)
+         (s/valid? ::bread/resolver (::bread/resolver req))]
+   :post [(s/valid? ::bread/queries (::bread/queries %))]}
   (->> req
        resolve-query
        (assoc req ::bread/queries)))
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hook app :hook/resolve resolve-queries)))

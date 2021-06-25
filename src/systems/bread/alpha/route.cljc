@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.route
   (:require
+    [clojure.spec.alpha :as s]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
@@ -41,6 +42,8 @@
     (bread/hook->> req :hook/resolver resolver')))
 
 (defn dispatch [req]
+  {:pre [(s/valid? ::bread/app req)]
+   :post [(s/valid? ::bread/app %)]}
   (assoc req ::bread/resolver (resolver req)))
 
 (defn sitemap [app]

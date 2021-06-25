@@ -7,8 +7,9 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
+    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :as comp :refer [defc]]
+    [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
@@ -19,7 +20,6 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.static-frontend :as static]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
@@ -81,7 +81,7 @@
                       :slug "child-page"
                       :status :post.status/published
                       ;; TODO fix this hard-coded eid somehow...
-                      :parent 45 ;; NOTE: don't do this :P
+                      :parent 47 ;; NOTE: don't do this :P
                       :fields #{{:field/key :title
                                  :field/lang :en
                                  :field/content (prn-str "Child Page")}
@@ -133,32 +133,36 @@
                       :key :i18n/parent-page.0.content
                       :string "Le contenu de la page parent"}]})
 
+(defc home [{:keys [post]}]
+  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+   :key :post}
+  ;; TODO maybe just always compact fields explicitly?
+  (let [{:keys [title simple]} (:post/fields post)]
+    [:h1 title]
+    [:p (:hello simple)]))
+
 (defc page [{:keys [post i18n]}]
-  {:ident :db/id
-   ;; TODO could this work...?
-   ;:effects {:x (do-something!)}
-   :query [:post/title
-           {:post/fields [:db/id :field/lang :field/key :field/content]}]}
+  {:query [:post/title
+           {:post/fields [:field/key :field/content]}]
+   :key :post}
   (let [{:i18n/keys [not-found]} i18n
-        {:keys [simple flex-content]} (:post/fields post)
-        simple (:field/content simple)
-        flex-content (:field/content flex-content)]
+        {:keys [simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 (or (:post/title post) not-found)]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
-      [:p.goodbye (:goodbye simple)]]]))
+      [:p.goodbye (:goodbye simple)]
+      [:p.flex flex-content]]]))
 
 
 (def $router
   (reitit/router
     ["/:lang"
-     ["" {:bread/resolver :resolver.type/home
+     ["" {:bread/resolver {:resolver/type :resolver.type/page}
+          :bread/component home
           :name :home}]
-     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page
-                                  :resolver/ancestry? true
-                                  :resolver/internationalize? true}
+     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]))
 
 (comment
@@ -178,31 +182,31 @@
           fields)
   )
 
-(defn RENDER [{::bread/keys [data] :as req}]
-  (merge
-    req
-    (let [post (:post data)
-          {:keys [title simple]} (:post/fields post)]
-      {:headers {"content-type" "text/html"}
-       :status 200
-       :body [:html
-              [:head
-               [:title "Breadbox"]
-               [:meta {:charset "utf-8"}]]
-              [:body
-               [:main
-                 [:h2 title]
-                 [:h3 "Simple field contents"]
-                 [:p (rand-int 1000)]
-                 [:div.simple
-                  [:p "Hello field = " (:hello simple)]
-                  [:div.body
-                   (:body simple)
-                   [:img {:src (:img-url simple)}]]
-                  [:p (:goodbye simple)]]]
-               [:pre
-                "post: "
-                (prn-str post)]]]})))
+(defn RENDER [data]
+  (prn 'RENDER)
+  (let [post (:post data)
+        {:keys [title simple]} (:post/fields post)]
+    {:headers {"content-type" "text/html"}
+     :status 200
+     :body [:html
+            [:head
+             [:title "Breadbox"]
+             [:meta {:charset "utf-8"}]]
+            [:body
+             [:main
+               [:h2 title]
+               [:h3 "Simple field contents"]
+               ;; RANDOM INT
+               [:p (rand-int 1000)]
+               [:div.simple
+                [:p "Hello field = " (:hello simple)]
+                [:div.body
+                 (:body simple)
+                 [:img {:src (:img-url simple)}]]
+                [:p (:goodbye simple)]]]
+             [:pre
+              "post: "
+              (prn-str post)]]]}))
 
 (comment
   (deref app)
@@ -274,21 +278,6 @@
               [?e :post/parent ?root-ancestor])]}
   )
 
-#_
-(defn expand-queries [app]
-  (let [store (store/datastore app)
-        data (into {} (map (fn [[k query]]
-                             (let [expander (apply comp (::bread/expand query))
-                                   result (store/q store query)]
-                               #_#_
-                               (prn 'query query)
-                               (prn 'result result)
-                               [k (expander result)]))
-                           (::bread/queries app)))]
-    #_
-    (prn 'data data)
-    (assoc app ::bread/data data)))
-
 (defstate counter
   :start (atom 0))
 
@@ -303,10 +292,11 @@
                    (bread/app
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
-                                (i18n/plugin)
-                                (query/plugin)
-                                #_(post/plugin)
+                                #_(i18n/plugin)
                                 (br/plugin {:router $router})
+                                (resolver/plugin)
+                                (query/plugin)
+                                (component/plugin)
 
                                 ;; Increment counter on every request
                                 (fn [app]
@@ -330,6 +320,7 @@
                                                               "child-page"
                                                               "parent-page"
                                                               :en]}})))
+                                    #_
                                     (:hook/resolve
                                       (fn [app]
                                         (assoc
@@ -370,8 +361,11 @@
                                                   "content for post " uuid)}]}]))))))
 
                                 ;; TODO work backwards from render
+                                #_
                                 (fn [app]
-                                  (bread/add-hook app :hook/render RENDER))
+                                  (bread/add-hook app :hook/render
+                                                  (fn [{data ::bread/data}]
+                                                    (RENDER data))))
 
                                 (rum/plugin)
 
@@ -533,6 +527,7 @@
   (mount/start))
 
 (comment
+  (k/run :unit)
   (mount/start)
   (mount/stop)
   (restart-cms!)
