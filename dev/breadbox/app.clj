@@ -293,79 +293,11 @@
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
                                 #_(i18n/plugin)
+                                (route/plugin)
                                 (br/plugin {:router $router})
                                 (resolver/plugin)
                                 (query/plugin)
                                 (component/plugin)
-
-                                ;; Increment counter on every request
-                                (fn [app]
-                                  (bread/add-effect app (fn [_]
-                                                          (swap! counter inc)
-                                                          nil)))
-
-                                ;; TODO DEFAULT PLUGINS
-                                (fn [app]
-                                  (bread/add-hooks->
-                                    app
-                                    (:hook/dispatch route/dispatch)
-                                    #_
-                                    (:hook/resolve
-                                      (fn [app]
-                                        (assoc app ::bread/queries
-                                               {:post {:query CHILD
-                                                       ::bread/expand [post/expand-post]
-                                                       :args [(store/datastore app)
-                                                              :post.type/page
-                                                              "child-page"
-                                                              "parent-page"
-                                                              :en]}})))
-                                    #_
-                                    (:hook/resolve
-                                      (fn [app]
-                                        (assoc
-                                          app
-                                          ::bread/queries
-                                          [[:post
-                                            (store/datastore app)
-                                            '{:find [(pull ?e [:db/id
-                                                               :post/slug]) .]
-                                              :in [$ ?slug]
-                                              :where [[?e :post/slug ?slug]]}
-                                            ""]
-                                           [:post/fields
-                                            (store/datastore app)
-                                            '{:find [(pull ?e [:db/id
-                                                               :field/key
-                                                               :field/content])]
-                                              :in [$ ?p ?lang]
-                                              :where [[?p :post/fields ?e]
-                                                      [?e :field/lang ?lang]]}
-                                            :post/id
-                                            :en
-                                            {:post/id [:post :db/id]}]
-                                           [:post post/compact-fields]])))
-                                    #_
-                                    (:hook/expand
-                                      (fn [app]
-                                        (store/add-txs
-                                          app
-                                          (let [uuid (UUID/randomUUID)]
-                                            [{:post/slug (str "post-" uuid)
-                                              :post/uuid uuid
-                                              :post/fields
-                                              [{:field/lang :en
-                                                :field/key :my/field
-                                                :field/content
-                                                (str
-                                                  "content for post " uuid)}]}]))))))
-
-                                ;; TODO work backwards from render
-                                #_
-                                (fn [app]
-                                  (bread/add-hook app :hook/render
-                                                  (fn [{data ::bread/data}]
-                                                    (RENDER data))))
 
                                 (rum/plugin)
 

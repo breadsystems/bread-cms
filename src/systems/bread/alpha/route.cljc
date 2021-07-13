@@ -49,6 +49,10 @@
 (defn sitemap [app]
   [{}])
 
+(defn plugin []
+  (fn [app]
+    (bread/hook app :hook/dispatch dispatch)))
+
 (comment
 
   (sitemap {}))
