@@ -11,9 +11,11 @@
 
 (deftest test-resolve-post-queries
   (let [;; Datastore shows up directly in our args, so we need to mock it.
-        ;; We're only checking for its presence in the Queryable, so it doesn't
-        ;; need to be a realistic or usable value.
-        app (plugins->loaded [(datastore->plugin ::MOCK_STORE)])
+        ;; We're only checking for its presence in the ::queries spec, so
+        ;; while it doesn't need to be a realistic or usable value, it DOES
+        ;; need to be a valid Queryable.
+        db (reify bread/Queryable (bread/query [_ _ _]))
+        app (plugins->loaded [(datastore->plugin db)])
         ->app (fn [resolver]
                 (assoc app ::bread/resolver resolver))]
 
@@ -27,7 +29,7 @@
         ;; {:uri "/en/simple"}
         ;; i18n'd by default
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
@@ -45,7 +47,7 @@
 
         ;; {:uri "/en/one/two"}
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug_0 ?slug_1]
             :where [[?e :post/type ?type]
@@ -67,7 +69,7 @@
 
         ;; {:uri "/en/one/two/three"}
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug_0 ?slug_1 ?slug_2]
             :where [[?e :post/type ?type]
@@ -93,7 +95,7 @@
         ;; {:uri "/en/simple"}
         ;; :post/fields i18n
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title :post/fields]) .]
             :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
@@ -104,7 +106,7 @@
           :post.status/published
           "simple"]
          [:post/fields
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :field/key :field/content])]
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
@@ -120,7 +122,7 @@
         ;; {:uri "/en/simple"}
         ;; :post/fields i18n w/ nested pull clause
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title {:post/fields
                                                  [:field/key
                                                   :field/lang]}]) .]
@@ -135,7 +137,7 @@
           :post.status/published
           "simple"]
          [:post/fields
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :field/key :field/lang])]
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
@@ -151,7 +153,7 @@
         ;; {:uri "/en"}
         ;; home page - no `slugs`
         [[:post
-          ::MOCK_STORE
+          db
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
             :in [$ ?type ?status ?slug_0]
             :where [[?e :post/type ?type]
