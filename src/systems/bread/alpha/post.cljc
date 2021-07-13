@@ -119,7 +119,7 @@
             (-> (resolver/empty-query)
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e [k :db/id]]
+                (where [['?p :post/fields '?e [::bread/data k :db/id]]
                         ['?lang :field/lang (keyword (:lang params))]]))))]
 
     (if fields-query

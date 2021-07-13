@@ -111,7 +111,7 @@
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
-          [:post :db/id]
+          [::bread/data :post :db/id]
           :en]
          [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
@@ -142,7 +142,7 @@
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
-          [:post :db/id]
+          [::bread/data :post :db/id]
           :en]
          [:post post/compact-fields]]
         {:resolver/type :resolver.type/page
