@@ -42,14 +42,20 @@
               :datastore/initial-txns
               [#:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
-                      :title "Home Page"
                       :slug ""
                       :fields #{{:field/key :title
                                  :field/lang :en
-                                 :field/content (prn-str "Home Page Title")}
+                                 :field/content (prn-str "The Title")}
+                                {:field/key :title
+                                 :field/lang :fr
+                                 :field/content (prn-str "Le Titre")}
                                 {:field/key :simple
                                  :field/lang :en
                                  :field/content (prn-str {:hello "Hi!"
+                                                          :img-url "https://via.placeholder.com/300"})}
+                                {:field/key :simple
+                                 :field/lang :fr
+                                 :field/content (prn-str {:hello "Allo!"
                                                           :img-url "https://via.placeholder.com/300"})}
                                 }
                       :status :post.status/published}
@@ -98,33 +104,16 @@
                       :string "404 Not Found"}
                #:i18n{:lang :fr
                       :key :i18n/not-found
-                      :string "FRENCH 404 Not Found"}
-               #:i18n{:lang :en
-                      :key :i18n/child-page.0.lorem-ipsum
-                      :string "Lorem ipsum dolor sit amet"}
-               #:i18n{:lang :fr
-                      :key :i18n/child-page.0.lorem-ipsum
-                      :string "L'orem ipsen"}
-               #:i18n{:lang :en
-                      :key :i18n/child-page.1.qwerty
-                      :string "QWERTY"}
-               #:i18n{:lang :fr
-                      :key :i18n/child-page.1.qwerty
-                      :string "Le qwertie"}
-               #:i18n{:lang :en
-                      :key :i18n/parent-page.0.content
-                      :string "Parent page content"}
-               #:i18n{:lang :fr
-                      :key :i18n/parent-page.0.content
-                      :string "Le contenu de la page parent"}]})
+                      :string "FRENCH 404 Not Found"}]})
 
 (defc home [{:keys [post]}]
   {:query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
   ;; TODO maybe just always compact fields explicitly?
   (let [{:keys [title simple]} (:post/fields post)]
-    [:h1 title]
-    [:p (:hello simple)]))
+    [:main
+     [:h1 title]
+     [:p (:hello simple)]]))
 
 (defc page [{:keys [post i18n]}]
   {:query [:post/title
@@ -144,9 +133,8 @@
 (def $router
   (reitit/router
     ["/:lang"
-     ["" {:bread/resolver {:resolver/type :resolver.type/page}
-          :bread/component home
-          :name :home}]
+     ["/" {:bread/resolver {:resolver/type :resolver.type/page}
+           :bread/component home}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]))
 
