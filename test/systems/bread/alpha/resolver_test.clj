@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.resolver-test
   (:require
     [clojure.test :as t :refer [deftest are]]
+    [kaocha.repl :as k]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.resolver :as resolver]))
 
@@ -32,5 +33,4 @@
        ))
 
 (comment
-  (t/run-all-tests #"systems\.bread\.*")
-  (t/run-tests))
+  (k/run))
