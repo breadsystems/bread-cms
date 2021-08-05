@@ -22,7 +22,6 @@
   (:query (get @*registry* component)))
 
 (defn render [{::bread/keys [data resolver]}]
-  (prn data resolver)
   (let [c (:resolver/component resolver)]
     ;; TODO pull this out to a separate fn/hook
     {:status 200

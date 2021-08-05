@@ -51,7 +51,7 @@
 
 (defn plugin []
   (fn [app]
-    (bread/hook app :hook/dispatch dispatch)))
+    (bread/add-hook app :hook/dispatch dispatch)))
 
 (comment
 
