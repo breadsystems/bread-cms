@@ -39,3 +39,19 @@
 
 (comment
   (macroexpand '(use-datastore :each {:my :config})))
+
+(defn map->route-plugin [routes-map]
+  (fn [app]
+    (bread/add-hooks->
+      app
+      (:hook/match-route (fn [req _]
+                           (get routes-map (:uri req))))
+      (:hook/match->resolver
+        (fn [_ match]
+          (:bread/resolver match)))
+      (:hook/match->component
+        (fn [_ match]
+          (:bread/component match)))
+      (:hook/route-params
+        (fn [_ match]
+          (:route/params match))))))
