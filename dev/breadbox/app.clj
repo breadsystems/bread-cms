@@ -34,22 +34,7 @@
   (:import
     [java.util UUID]))
 
-(extend-protocol Datafiable
-  org.httpkit.server.AsyncChannel
-  (datafy [ch]
-    (str "org.httpkit.server.AsyncChannel[" ch "]"))
-
-  #_#_
-  datahike.db.DB
-  (datafy [db]
-    (let [data (select-keys db [:max-tx :max-eid])
-          posts (store/q db '{:find [?slug ?t]
-                              :where [[?e :post/slug ?slug ?t]]})]
-      (assoc data :slugs (sort-by second posts)))))
-
-;; TODO optionally start this via config
-(defstate debugger
-  :start (flow/connect))
+(defonce app (atom nil))
 
 (def $config {:datastore/type :datahike
               :store {:backend :mem
@@ -166,49 +151,6 @@
                  :bread/component page}]]))
 
 (comment
-  (def fields
-    [[{:db/id 45
-       :field/key :simple
-       :field/content "{:hello \"Hi!\", :img-url \"https://via.placeholder.com/300\"}\n"}]
-     [{:db/id 46
-       :field/key :title
-       :field/content "\"Home Page Title\"\n"}]])
-
-  (map first fields)
-  (reduce (fn [fields row]
-            (let [field (first row)]
-             (assoc fields (:field/key field) (edn/read-string (:field/content field)))))
-          {}
-          fields)
-  )
-
-(defn RENDER [data]
-  (prn 'RENDER)
-  (let [post (:post data)
-        {:keys [title simple]} (:post/fields post)]
-    {:headers {"content-type" "text/html"}
-     :status 200
-     :body [:html
-            [:head
-             [:title "Breadbox"]
-             [:meta {:charset "utf-8"}]]
-            [:body
-             [:main
-               [:h2 title]
-               [:h3 "Simple field contents"]
-               ;; RANDOM INT
-               [:p (rand-int 1000)]
-               [:div.simple
-                [:p "Hello field = " (:hello simple)]
-                [:div.body
-                 (:body simple)
-                 [:img {:src (:img-url simple)}]]
-                [:p (:goodbye simple)]]]
-             [:pre
-              "post: "
-              (prn-str post)]]]}))
-
-(comment
   (deref app)
 
   (def db (store/datastore @app))
@@ -242,49 +184,6 @@
   (swap! env assoc :reinstall-db? true)
   (deref env))
 
-(defonce app (atom nil))
-
-(def CHILD
-  '{:find [(pull ?e [:db/id
-                     :post/title
-                     :post/slug
-                     {:post/parent [:db/id :post/title :post/slug]}])
-           (pull ?fields [:db/id :field/key :field/content])]
-    :in [$ ?type ?slug ?slug_1 ?lang]
-    :where [[?e :post/type ?type]
-            [?e :post/fields ?fields]
-            [?fields :field/lang ?lang]
-            [?e :post/slug ?slug]
-            [?e :post/parent ?parent_0]
-            [?parent_0 :post/slug ?slug_1]
-            (not-join
-              [?parent_0]
-              [?parent_0 :post/parent ?root-ancestor])]}
-  )
-
-(def HOME
-  '{:find [(pull ?e [:db/id
-                     :post/title
-                     :post/slug
-                     {:post/parent [:db/id :post/title :post/slug]}])
-           (pull ?fields [:db/id :field/key :field/content])]
-    :in [$ ?type ?slug ?lang]
-    :where [[?e :post/type ?type]
-            [?e :post/fields ?fields]
-            [?fields :field/lang ?lang]
-            [?e :post/slug ?slug]
-            (not-join
-              [?e]
-              [?e :post/parent ?root-ancestor])]}
-  )
-
-(defstate counter
-  :start (atom 0))
-
-(comment
-  ;; This should increment with every request
-  (deref counter))
-
 ;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
@@ -304,16 +203,7 @@
                                 (static/plugin)]})))
   :stop (reset! app nil))
 
-(defn green-theme [app]
-  (-> app
-      (theme/add-to-head [:style "*{color:green}"])
-      ;; TODO unescape strings here somehow?
-      (theme/add-to-footer [:script "console.log(1)"])))
-
-(defn purple-theme [app]
-  (-> app
-      (theme/add-to-head [:style "*{color:purple}"])
-      (theme/add-to-footer [:script "console.log(2)"])))
+;; TODO themes
 
 (comment
 
@@ -414,10 +304,7 @@
   ;;
   )
 
-(defn handler [req]
-  (def $req req)
-  (def $res ((bread/handler @app) req))
-  $res)
+(def handler (bread/handler @app))
 
 (defonce stop-http (atom nil))
 
@@ -449,6 +336,23 @@
   :start (reset! stop-debugger! (debug/start! {:replay-handler handler}))
   :stop  (when-let [stop! @stop-debugger!]
            (stop!)))
+
+(extend-protocol Datafiable
+  org.httpkit.server.AsyncChannel
+  (datafy [ch]
+    (str "org.httpkit.server.AsyncChannel[" ch "]"))
+
+  #_#_
+  datahike.db.DB
+  (datafy [db]
+    (let [data (select-keys db [:max-tx :max-eid])
+          posts (store/q db '{:find [?slug ?t]
+                              :where [[?e :post/slug ?slug ?t]]})]
+      (assoc data :slugs (sort-by second posts)))))
+
+;; TODO optionally start this via config
+(defstate flow
+  :start (flow/connect))
 
 (defn restart! []
   (mount/stop)
