@@ -188,6 +188,19 @@
 
                                 (rum/plugin)
 
+                                ;; TODO Allow resolvers to handle 404s somehow
+                                (fn [app]
+                                  (bread/add-hook
+                                    app
+                                    :hook/render
+                                    (fn [res]
+                                      (assoc res
+                                             :headers {"content-type"
+                                                       "text/html"}))))
+
+                                ;; TODO layouts
+                                ;; TODO themes
+
                                 (static/plugin)]})))
   :stop (reset! app nil))
 
