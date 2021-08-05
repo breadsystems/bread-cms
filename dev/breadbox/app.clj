@@ -57,20 +57,14 @@
               :datastore/initial-txns
               [#:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
+                      :title "Home Page"
                       :slug ""
                       :fields #{{:field/key :title
                                  :field/lang :en
-                                 :field/content (prn-str "The Title")}
-                                {:field/key :title
-                                 :field/lang :fr
-                                 :field/content (prn-str "Le Titre")}
+                                 :field/content (prn-str "Home Page Title")}
                                 {:field/key :simple
                                  :field/lang :en
                                  :field/content (prn-str {:hello "Hi!"
-                                                          :img-url "https://via.placeholder.com/300"})}
-                                {:field/key :simple
-                                 :field/lang :fr
-                                 :field/content (prn-str {:hello "Allo!"
                                                           :img-url "https://via.placeholder.com/300"})}
                                 }
                       :status :post.status/published}
@@ -144,18 +138,17 @@
    :key :post}
   ;; TODO maybe just always compact fields explicitly?
   (let [{:keys [title simple]} (:post/fields post)]
-    [:main
-     [:h1.title title]
-     [:p (:hello simple)]]))
+    [:h1 title]
+    [:p (:hello simple)]))
 
 (defc page [{:keys [post i18n]}]
   {:query [:post/title
            {:post/fields [:field/key :field/content]}]
    :key :post}
   (let [{:i18n/keys [not-found]} i18n
-        {:keys [title simple flex-content]} (:post/fields post)]
+        {:keys [simple flex-content]} (:post/fields post)]
     [:<>
-     [:h1 (or title not-found)]
+     [:h1 (or (:post/title post) not-found)]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
@@ -166,8 +159,9 @@
 (def $router
   (reitit/router
     ["/:lang"
-     ["/" {:bread/resolver {:resolver/type :resolver.type/page}
-           :bread/component home}]
+     ["" {:bread/resolver {:resolver/type :resolver.type/page}
+          :bread/component home
+          :name :home}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]))
 
@@ -291,11 +285,6 @@
   ;; This should increment with every request
   (deref counter))
 
-(defn render-response [res]
-  (prn res)
-  (assoc res
-         :headers {"Content-Type" "text/html"}))
-
 ;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
@@ -311,8 +300,6 @@
                                 (component/plugin)
 
                                 (rum/plugin)
-                                (fn [app]
-                                  (bread/add-hook app :hook/render render-response))
 
                                 (static/plugin)]})))
   :stop (reset! app nil))
@@ -427,12 +414,10 @@
   ;;
   )
 
-(def handler (bread/handler @app))
-
-(comment
-  (def $res (handler {:uri "/en/"}))
-  $res
-  (:headers $res))
+(defn handler [req]
+  (def $req req)
+  (def $res ((bread/handler @app) req))
+  $res)
 
 (defonce stop-http (atom nil))
 
