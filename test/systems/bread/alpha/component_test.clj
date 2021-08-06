@@ -13,7 +13,7 @@
   {}
   [:div "404 Not Found"])
 
-(k/run (deftest ^:kaocha/focus test-render
+(deftest test-render
   (are
     [expected app]
     (= expected (:body (component/render app)))
@@ -29,7 +29,11 @@
                    :not-found? true}
      ::bread/resolver {:resolver/component paragraph
                        :resolver/not-found-component not-found-page}}
-    )))
+    ))
+
+(deftest test-not-found
+  (binding [component/*registry* (atom {:not-found 'not-found-component})]
+    (is (= 'not-found-component (component/not-found)))))
 
 (comment
   (k/run))

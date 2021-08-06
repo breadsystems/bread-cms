@@ -65,6 +65,13 @@
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]]))
 
+(defc ^:not-found not-found [_]
+  {}
+  [:div "404 Not Found"])
+
+(comment
+  (component/not-found))
+
 
 (def $router
   (reitit/router

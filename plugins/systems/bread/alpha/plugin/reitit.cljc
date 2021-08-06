@@ -26,6 +26,9 @@
       (:hook/match->component
         (fn [_ match]
           (:bread/component (:data match))))
+      (:hook/match->not-found-component
+        (fn [_ match]
+          (:bread/not-found-component (:data match))))
       (:hook/route-params
         (fn [_ match]
           (:path-params match))))))
