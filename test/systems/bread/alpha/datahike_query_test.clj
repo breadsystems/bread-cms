@@ -63,8 +63,7 @@
       (= data (-> app
                   (assoc ::bread/queries queries
                          ::bread/resolver {:resolver/type :resolver.type/page
-                                           :resolver/not-found?
-                                           #(nil? (:post %))})
+                                           :resolver/key :post})
                   (bread/hook :hook/expand)
                   ::bread/data))
 

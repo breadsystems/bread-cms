@@ -22,10 +22,8 @@
   (reduce expand-query {} queries))
 
 (defn- expand-not-found [resolver data]
-  (let [not-found-fn (:resolver/not-found? resolver)]
-    (if (ifn? not-found-fn)
-      (assoc data :not-found? (not-found-fn data))
-      data)))
+  (let [k (:resolver/key resolver)]
+    (assoc data :not-found? (nil? (get data k)))))
 
 (defn expand [{::bread/keys [resolver] :as app}]
   {:pre [(s/valid? ::bread/app app)]
