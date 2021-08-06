@@ -22,7 +22,9 @@
   (:query (get @*registry* component)))
 
 (defn render [{::bread/keys [data resolver] :as res}]
-  (let [component (:resolver/component resolver)]
+  (let [component (if (:not-found? data)
+                    (:resolver/not-found-component resolver)
+                    (:resolver/component resolver))]
     (assoc res :body (component data))))
 
 (defn plugin []
