@@ -21,12 +21,9 @@
 (defn get-query [component]
   (:query (get @*registry* component)))
 
-(defn render [{::bread/keys [data resolver]}]
-  (let [c (:resolver/component resolver)]
-    ;; TODO pull this out to a separate fn/hook
-    {:status 200
-     :body (c data)
-     :headers {}}))
+(defn render [{::bread/keys [data resolver] :as res}]
+  (let [component (:resolver/component resolver)]
+    (assoc res :body (component data))))
 
 (defn plugin []
   (fn [app]

@@ -53,12 +53,10 @@
 (defc page [{:keys [post i18n]}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
-  (let [_ (prn post)
-        post (post/compact-fields post)
+  (let [post (post/compact-fields post)
         ;; i18n queries
         {:i18n/keys [not-found]} i18n
         {:keys [title simple flex-content]} (:post/fields post)]
-    (prn post)
     [:<>
      [:h1 (or title not-found)]
      [:main
