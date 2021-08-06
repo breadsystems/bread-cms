@@ -61,18 +61,21 @@
                       :status :post.status/published}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
-                      :title "Parent Page"
                       :slug "parent-page"
                       :status :post.status/published
-                      :fields #{;; TODO
+                      :fields #{{:field/key :title
+                                 :field/lang :en
+                                 :field/content (prn-str "Parent Page")}
+                                {:field/key :title
+                                 :field/lang :fr
+                                 :field/content (prn-str "La Page Parent")}
                                 }}
                #:post{:type :post.type/page
                       :uuid (UUID/randomUUID)
-                      :title "Child Page OLD TITLE"
                       :slug "child-page"
                       :status :post.status/published
                       ;; TODO fix this hard-coded eid somehow...
-                      :parent 47 ;; NOTE: don't do this :P
+                      :parent 49 ;; NOTE: don't do this :P
                       :fields #{{:field/key :title
                                  :field/lang :en
                                  :field/content (prn-str "Child Page")}
@@ -106,23 +109,26 @@
                       :key :i18n/not-found
                       :string "FRENCH 404 Not Found"}]})
 
-(defc home [{:keys [post]}]
+(defc home [{:keys [post] :as x}]
   {:query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
-  ;; TODO maybe just always compact fields explicitly?
-  (let [{:keys [title simple]} (:post/fields post)]
+  (let [post (post/compact-fields post)
+        {:keys [title simple]} (:post/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
 (defc page [{:keys [post i18n]}]
-  {:query [:post/title
-           {:post/fields [:field/key :field/content]}]
+  {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
-  (let [{:i18n/keys [not-found]} i18n
-        {:keys [simple flex-content]} (:post/fields post)]
+  (let [_ (prn post)
+        post (post/compact-fields post)
+        ;; i18n queries
+        {:i18n/keys [not-found]} i18n
+        {:keys [title simple flex-content]} (:post/fields post)]
+    (prn post)
     [:<>
-     [:h1 (or (:post/title post) not-found)]
+     [:h1 (or title not-found)]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
@@ -241,6 +247,13 @@
       resolver/resolve-queries
       expand-queries
       ::bread/data)
+
+  (store/q
+    (store/datastore $req)
+    {:query '{:find [?e ?slug]
+              ;:in [$ ?type ?status ?slug]
+              :where [[?e :post/slug ?slug]]}
+     :args [(store/datastore $req)]})
 
   (store/q
     (store/datastore $req)

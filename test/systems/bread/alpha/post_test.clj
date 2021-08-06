@@ -112,8 +112,7 @@
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
           [::bread/data :post :db/id]
-          :en]
-         [:post post/compact-fields]]
+          :en]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title :post/fields]
          :resolver/key :post
@@ -143,8 +142,7 @@
             :where [[?p :post/fields ?e]
                     [?e :field/lang ?lang]]}
           [::bread/data :post :db/id]
-          :en]
-         [:post post/compact-fields]]
+          :en]]
         {:resolver/type :resolver.type/page
          :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
          :resolver/key :post

@@ -86,7 +86,7 @@
     (and (map? m) (some ks (keys m)))
     m))
 
-(defn compact-fields [{:keys [post]}]
+(defn compact-fields [post]
   (update post :post/fields field/compact))
 
 (defmethod resolver/resolve-query :resolver.type/page
@@ -124,7 +124,5 @@
 
     (if fields-query
       [(apply conj [k db] page-query)
-       (apply conj [:post/fields db] fields-query)
-       ;; TODO remove this - leave that up to components
-       [k compact-fields]]
+       (apply conj [:post/fields db] fields-query)]
       [(apply conj [k db] page-query)])))
