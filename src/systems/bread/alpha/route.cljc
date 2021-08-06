@@ -18,6 +18,8 @@
         match (match req)
         declared (bread/hook->> req :hook/match->resolver match)
         component (bread/hook->> req :hook/match->component match)
+        not-found-component
+        (bread/hook->> req :hook/match->not-found-component match)
         {:resolver/keys [defaults?]} declared
         keyword->type {:resolver.type/home :resolver.type/page
                        :resolver.type/page :resolver.type/page}
@@ -37,6 +39,8 @@
                          :route/match match
                          :route/params (params req match)
                          :resolver/component component
+                         :resolver/not-found-component
+                         (or not-found-component (component/not-found))
                          :resolver/key (component/get-key component)
                          :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))

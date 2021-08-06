@@ -52,6 +52,9 @@
       (:hook/match->component
         (fn [_ match]
           (:bread/component match)))
+      (:hook/match->not-found-component
+        (fn [_ match]
+          (:bread/not-found-component match)))
       (:hook/route-params
         (fn [_ match]
           (:route/params match))))))

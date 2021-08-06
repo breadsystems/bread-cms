@@ -43,13 +43,17 @@
                 {:bread/resolver {:resolver/type :whatevs}
                  :route/params {:lang "en"
                                 :slug "no-component"}}
+                "/en/not-found"
+                {:bread/resolver {:resolver/type :whatevs}
+                 :bread/component 'page
+                 :bread/not-found-component 'not-found
+                 :route/params {:lang "en"
+                                :slug "not-found"}}
                 "/overridden"
                 {:bread/resolver {:resolver/i18n? false}
                  :bread/component 'page
                  :route/params {:lang nil
                                 :slug "overridden"}}}
-        route->match (fn [req _]
-                       (get routes (:uri req)))
         ;; Mock the component registry with key/pull values.
         ;; These values are not valid for the default schema but are meant to
         ;; be illustrative.
@@ -67,6 +71,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component nil
+          :resolver/not-found-component nil
           :resolver/key nil
           :resolver/pull nil
           :post/type :post.type/page
@@ -77,6 +82,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component 'home
+          :resolver/not-found-component nil
           :resolver/key :home
           :resolver/pull [:db/id :home/slug]
           :post/type :post.type/page
@@ -90,6 +96,7 @@
           :resolver/i18n? true
           :post/type :post.type/page
           :resolver/component 'page
+          :resolver/not-found-component nil
           :resolver/key :page
           :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en" :slug "keyword"}
@@ -102,6 +109,7 @@
           :resolver/i18n? true
           :post/type :post.type/page
           :resolver/component 'page
+          :resolver/not-found-component nil
           :resolver/key :page
           :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
@@ -115,6 +123,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
           :resolver/component 'page
+          :resolver/not-found-component nil
           :resolver/key :page
           :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
@@ -129,6 +138,7 @@
          {:resolver/type :resolver.type/page
           :resolver/i18n? false
           :resolver/component 'page
+          :resolver/not-found-component nil
           :resolver/key :page
           :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
@@ -141,6 +151,7 @@
          {:resolver/type :whatevs
           :resolver/defaults? false
           :resolver/component 'page
+          :resolver/not-found-component nil
           :resolver/key :page
           :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
@@ -154,7 +165,24 @@
 
          {:resolver/type :whatevs
           :resolver/i18n? true
+          :resolver/component 'page
+          :resolver/not-found-component 'not-found
+          :resolver/key :page
+          :post/type :post.type/page
+          :resolver/pull [:db/id :page/slug]
+          :route/params {:lang "en"
+                         :slug "not-found"}
+          :route/match {:bread/resolver {:resolver/type :whatevs}
+                        :bread/component 'page
+                        :bread/not-found-component 'not-found
+                        :route/params {:lang "en"
+                                       :slug "not-found"}}}
+         "/en/not-found"
+
+         {:resolver/type :whatevs
+          :resolver/i18n? true
           :resolver/component nil
+          :resolver/not-found-component nil
           :resolver/key nil
           :resolver/pull nil
           :post/type :post.type/page
