@@ -2,6 +2,9 @@
   (:import
     [java.util UUID]))
 
+(def parent-uuid
+  #uuid "cd255e79-93c3-447c-ad94-045758de9b31")
+
 (def initial-content
   [#:post{:type :post.type/page
                     :uuid (UUID/randomUUID)
@@ -23,7 +26,7 @@
                               }
                     :status :post.status/published}
              #:post{:type :post.type/page
-                    :uuid (UUID/randomUUID)
+                    :uuid parent-uuid
                     :slug "parent-page"
                     :status :post.status/published
                     :fields #{{:field/key :title
@@ -37,8 +40,7 @@
                     :uuid (UUID/randomUUID)
                     :slug "child-page"
                     :status :post.status/published
-                    ;; TODO fix this hard-coded eid somehow...
-                    :parent 49 ;; NOTE: don't do this :P
+                    :parent [:post/uuid parent-uuid]
                     :fields #{{:field/key :title
                                :field/lang :en
                                :field/content (prn-str "Child Page")}
