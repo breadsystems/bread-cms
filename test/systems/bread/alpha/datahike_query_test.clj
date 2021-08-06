@@ -58,13 +58,18 @@
 
   (let [app (plugins->loaded [(store/plugin config) (query/plugin)])
         db (store/datastore app)]
-    (are [data queries] (= data (-> app
-                                    (assoc ::bread/queries queries)
-                                    (bread/hook :hook/expand)
-                                    ::bread/data))
+    (are
+      [data queries]
+      (= data (-> app
+                  (assoc ::bread/queries queries
+                         ::bread/resolver {:resolver/type :resolver.type/page
+                                           :resolver/not-found?
+                                           #(nil? (:post %))})
+                  (bread/hook :hook/expand)
+                  ::bread/data))
 
        ;; Querying for a non-existent post
-       {:post nil}
+       {:post nil :not-found? true}
        [[:post db '{:find [(pull ?e [:post/slug {:post/fields
                                                  [:field/key :field/lang]}]) .]
                     :in [$ ?slug]
@@ -72,7 +77,7 @@
          "non-existent-slug"]]
 
        ;; Querying for a non-existent post and its fields
-       {:post nil :post/fields nil}
+       {:post nil :post/fields nil :not-found? true}
        [[:post db '{:find [(pull ?e [:post/slug {:post/fields
                                                  [:field/key :field/lang]}]) .]
                     :in [$ ?slug]
@@ -90,7 +95,8 @@
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}
-                             ]}}
+                             ]}
+        :not-found? false}
        [[:post db '{:find [(pull ?e [:post/slug {:post/fields
                                                  [:field/key :field/lang]}]) .]
                     :in [$]
@@ -101,7 +107,8 @@
                :post/fields [{:field/key :stuff :field/lang :en}
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
-                             {:field/key :thingy :field/lang :fr}]}}
+                             {:field/key :thingy :field/lang :fr}]}
+        :not-found? false}
        [[:post db '{:find [(pull ?e [:post/slug {:post/fields
                                                  [:field/key
                                                   :field/lang]}]) .]
@@ -114,7 +121,8 @@
                :post/fields [[{:field/key :thingy
                                :field/content "thing"}]
                              [{:field/key :stuff
-                              :field/content "hello"}]]}}
+                              :field/content "hello"}]]}
+        :not-found? false}
        [[:post db '{:find [(pull ?e [:post/slug]) .]
                     :in [$ ?slug]
                     :where [[?e :post/slug ?slug]]} "parent-post"]
@@ -130,7 +138,8 @@
                :post/fields [[{:field/key :thingy
                                :field/content "thing"}]
                              [{:field/key :stuff
-                               :field/content "hello"}]]}}
+                               :field/content "hello"}]]}
+        :not-found? false}
        [[:post db '{:find [(pull ?e [:db/id :post/slug]) .]
                     :in [$ ?slug]
                     :where [[?e :post/slug ?slug]]} "parent-post"]
