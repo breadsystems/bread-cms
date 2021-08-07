@@ -129,9 +129,13 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(k/run (deftest test-app-lifecycle
+(component/defc not-found [_]
+  {}
+  [:main "404 Not Found"])
 
-  (testing "it renders a basic Ring response"
+(deftest test-app-lifecycle
+
+  (testing "it renders a localized Ring response"
     (let [routes {"/en"
                   {:bread/resolver {:resolver/type :resolver.type/page}
                    :bread/component home
@@ -160,6 +164,18 @@
                    :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "parent-page/child-page"}}
+                  "/en/404"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :bread/not-found-component not-found
+                   :route/params {:lang "en"
+                                  :slugs "not-found"}}
+                  "/fr/404"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :bread/not-found-component not-found
+                   :route/params {:lang "fr"
+                                  :slugs "not-found"}}
                   }
           app (bread/app {:plugins [(store/plugin config)
                                     (route/plugin)
@@ -208,7 +224,17 @@
           [:p "Bonjour d'enfant"]]}
         (handler {:uri "/fr/parent-page/child-page"})
 
-        )))))
+        {:body
+         [:main "404 Not Found"]}
+        (handler {:uri "/en/404"})
+
+        ;; TODO i18n strings
+        #_#_
+        {:body
+         [:main "404 Pas Trouvé"]}
+        (handler {:uri "/fr/404"})
+
+        ))))
 
 (comment
   (k/run))

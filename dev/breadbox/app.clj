@@ -131,7 +131,8 @@
 
                                 (rum/plugin)
 
-                                ;; TODO Allow resolvers to handle 404s somehow
+                                ;; TODO make this a default plugin
+                                ;; that honors :not-found?
                                 (fn [app]
                                   (bread/add-hook
                                     app
