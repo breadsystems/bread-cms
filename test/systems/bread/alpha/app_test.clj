@@ -16,6 +16,8 @@
   (:import
     [java.util UUID]))
 
+(def parent-uuid (UUID/randomUUID))
+
 (def config {:datastore/type :datahike
              :store {:backend :mem
                      :id "breadbox-db"}
@@ -33,7 +35,6 @@
                :db/valueType :db.type/ref
                :db/index true
                :db/cardinality :db.cardinality/many}
-              #_
               {:db/ident :post/status
                :db/valueType :db.type/keyword
                :db/cardinality :db.cardinality/one}
@@ -58,7 +59,7 @@
                      :fields #{{:field/key :title
                                 :field/lang :en
                                 :field/content (prn-str "Home Page")}
-                               {:field/key :simple
+                               {:field/key :title
                                 :field/lang :fr
                                 :field/content (prn-str "Page D'Accueil")}
                                {:field/key :simple
@@ -69,18 +70,30 @@
                                 :field/content (prn-str {:hello "Allo!"})}}
                      :status :post.status/published}
               #:post{:type :post.type/page
-                     :uuid (UUID/randomUUID)
+                     :uuid parent-uuid
                      :title "Parent Page"
                      :slug "parent-page"
                      :status :post.status/published
-                     :fields #{}}
+                     :fields #{{:field/key :title
+                                :field/lang :en
+                                :field/content (prn-str "Parent Page")}
+                               {:field/key :title
+                                :field/lang :fr
+                                :field/content (prn-str "La Page Parent")}
+                               {:field/key :simple
+                                :field/lang :en
+                                :field/content
+                                (prn-str {:hello "Hello from parent"})}
+                               {:field/key :simple
+                                :field/lang :fr
+                                :field/content
+                                (prn-str {:hello "Bonjour de parent"})}
+                               }}
               #:post{:type :post.type/page
                      :uuid (UUID/randomUUID)
-                     :title "Child Page OLD TITLE"
                      :slug "child-page"
                      :status :post.status/published
-                     ;; TODO fix this hard-coded eid somehow...
-                     :parent 47 ;; NOTE: don't do this :P
+                     :parent [:post/uuid parent-uuid]
                      :fields #{{:field/key :title
                                 :field/lang :en
                                 :field/content (prn-str "Child Page")}
@@ -90,20 +103,12 @@
                                {:field/key :simple
                                 :field/lang :en
                                 :field/content
-                                (prn-str {:hello "Hello"
-                                          :body "Lorem ipsum dolor sit amet"
-                                          :goodbye "Bye!"
-                                          :img-url "https://via.placeholder.com/300"})}
+                                (prn-str {:hello "Hello from child"})}
                                {:field/key :simple
                                 :field/lang :fr
                                 :field/content
-                                (prn-str {:hello "Bonjour"
-                                          :body "Lorem ipsum en francais"
-                                          :goodbye "Salut"
-                                          :img-url "https://via.placeholder.com/300"})}
-                               {:field/key :flex-content
-                                :field/lang :en
-                                :field/content (prn-str {:todo "TODO"})}}}
+                                (prn-str {:hello "Bonjour d'enfant"})}
+                               }}
               ]})
 
 (use-datastore :each config)
@@ -117,13 +122,46 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
+(component/defc page [{:keys [post]}]
+  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+   :key :post}
+  (let [post (post/compact-fields post)
+        {:keys [title simple]} (:post/fields post)]
+    [:main.interior-page
+     [:h1 title]
+     [:p (:hello simple)]]))
+
 (k/run (deftest test-app-lifecycle
 
-  (testing "it does a thing"
+  (testing "it renders a basic Ring response"
     (let [routes {"/en"
                   {:bread/resolver {:resolver/type :resolver.type/page}
                    :bread/component home
                    :route/params {:lang "en"}}
+                  "/fr"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component home
+                   :route/params {:lang "fr"}}
+                  "/en/parent-page"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :route/params {:lang "en"
+                                  :slugs "parent-page"}}
+                  "/en/parent-page/child-page"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :route/params {:lang "en"
+                                  :slugs "parent-page/child-page"}}
+                  "/fr/parent-page"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :route/params {:lang "fr"
+                                  :slugs "parent-page"}}
+                  "/fr/parent-page/child-page"
+                  {:bread/resolver {:resolver/type :resolver.type/page}
+                   :bread/component page
+                   :route/params {:lang "fr"
+                                  :slugs "parent-page/child-page"}}
                   }
           app (bread/app {:plugins [(store/plugin config)
                                     (route/plugin)
@@ -132,10 +170,47 @@
                                     (component/plugin)
                                     (map->route-plugin routes)]})
           handler (bread/load-handler app)]
-      (is (= {:body [:main
-                     [:h1 "Home Page"]
-                     [:p "Hi!"]]}
-             (select-keys (handler {:uri "/en"}) [:body])))))))
+      (are
+        [expected res]
+        (= expected (select-keys res [:body]))
+
+        {:body
+         [:main
+          [:h1 "Home Page"]
+          [:p "Hi!"]]}
+        (handler {:uri "/en"})
+
+        {:body
+         [:main
+          [:h1 "Page D'Accueil"]
+          [:p "Allo!"]]}
+        (handler {:uri "/fr"})
+
+        {:body
+         [:main.interior-page
+          [:h1 "Parent Page"]
+          [:p "Hello from parent"]]}
+        (handler {:uri "/en/parent-page"})
+
+        {:body
+         [:main.interior-page
+          [:h1 "La Page Parent"]
+          [:p "Bonjour de parent"]]}
+        (handler {:uri "/fr/parent-page"})
+
+        {:body
+         [:main.interior-page
+          [:h1 "Child Page"]
+          [:p "Hello from child"]]}
+        (handler {:uri "/en/parent-page/child-page"})
+
+        {:body
+         [:main.interior-page
+          [:h1 "La Page Enfant"]
+          [:p "Bonjour d'enfant"]]}
+        (handler {:uri "/fr/parent-page/child-page"})
+
+        )))))
 
 (comment
   (k/run))
