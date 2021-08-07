@@ -68,8 +68,15 @@
                                :taxon/name "My Cat"
                                :taxon/taxonomy :taxon.taxonomy/category}}}
              #:i18n{:lang :en
-                    :key :i18n/not-found
+                    :key :not-found
                     :string "404 Not Found"}
              #:i18n{:lang :fr
-                    :key :i18n/not-found
-                    :string "FRENCH 404 Not Found"}])
+                    :key :not-found
+                    :string "404 Pas Trouvé"}
+             #:i18n{:lang :fr
+                    :key :breadbox
+                    :string "Boite à pain"}
+             #:i18n{:lang :en
+                    :key :breadbox
+                    :string "Breadbox"}
+             ])

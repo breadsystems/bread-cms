@@ -69,10 +69,6 @@
   {}
   [:div "404 Not Found"])
 
-(comment
-  (component/not-found))
-
-
 (def $router
   (reitit/router
     ["/:lang"
@@ -152,38 +148,16 @@
 
 (comment
 
-  (slurp "http://localhost:1312/en")
-
-  (require '[editscript.core :as ed])
-
-  (ed/diff [:html [:head [:title "hi"]] [:main [:p "hi"]]]
-           [:html [:head [:title "hello"]] [:main [:p "hi"]
-                                            [:div "new div"]]])
-
-  (swap! app #(bread/add-hook % :hook/request green-theme))
-  (swap! app #(bread/add-hook % :hook/request purple-theme))
-  (swap! app #(bread/remove-hook % :hook/request green-theme))
-  (swap! app #(bread/remove-hook % :hook/request purple-theme))
-
-  (bread/hooks-for @app :hook/request)
-  (bread/hook-> @app :hook/head [])
-
   (do
     (spit "resources/public/en/parent-page/index.html" "REWRITE")
     (handler (merge @app {:uri "/en/parent-page"}))
     (slurp "resources/public/en/parent-page/index.html"))
 
   (def $req (merge {:uri "/en/"} @app))
-
-  (route/match $req)
   (route/params $req (route/match $req))
-  (::bread/resolver (route/dispatch $req))
-  (::bread/queries (resolver/resolve-queries (route/dispatch $req)))
-  (-> $req
-      route/dispatch
-      resolver/resolve-queries
-      query/expand
-      ::bread/data)
+  (-> $req route/dispatch ::bread/resolver)
+  (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
+  (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
 
   (store/q
     (store/datastore $req)
@@ -204,21 +178,6 @@
     '{:find [?k]
       :in [$]
       :where [[?e :i18n/key ?k]]})
-
-  (require '[datahike.api :as d])
-
-  (-> $req
-    (route/params (route/match $req))
-    (get (:resolver/attr (route/resolver $req)))
-    (clojure.string/split #"/"))
-
-  (resolver/query $req)
-  (store/q (store/datastore $req) (resolver/query $req))
-
-  (handler (assoc @app :uri "/en" :params {:as-of "536870914"}))
-
-  (store/datastore $res)
-  (datafy (store/as-of (store/datastore $res) 536870914))
 
   ;;
   )
