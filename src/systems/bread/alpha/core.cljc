@@ -4,16 +4,94 @@
     [clojure.set :refer [rename-keys]]))
 
 
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;         PROTOCOLS          ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Generic abstractions over queries and effects.
+;;
+
+(defprotocol Queryable
+  "Protocol for generically expanding queries into data during the
+  query expansion lifecycle phase"
+  :extend-via-metadata true
+  (query [this data args]))
+
+(defn queryable?
+  "Whether x is an instance Queryable"
+  [x]
+  (satisfies? Queryable x))
+
+(extend-protocol Queryable
+  clojure.lang.Fn
+  (query [f data args]
+    (apply f data args)))
+
+(defprotocol Effect
+  "Protocol for encapsulating side-effects"
+  (effect!
+    [this req]))
+
+(extend-protocol Effect
+  clojure.lang.Fn
+  (effect!
+    ([f req]
+     (f req)))
+
+  clojure.lang.PersistentVector
+  (effect!
+    ([v req]
+     (let [[f & args] v]
+       (apply f req args))))
+
+  java.util.concurrent.Future
+  (effect!
+    ([fut _]
+     (deref fut))))
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;           SPECS            ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Specs for comprehensively representing application state.
+;;
+
 (s/def ::config map?)
 (s/def ::hooks map?)
 (s/def ::plugins vector?)
 
-(s/def ::resolver map?)
-(s/def ::queries vector?)
+(s/def ::query-kv (s/cat :key some?
+                         :queryable queryable?
+                         :args (s/* any?)))
+(s/def ::queries (s/coll-of ::query-kv))
+
+(s/def ::resolver (s/keys :req [:resolver/type]))
 (s/def ::data map?)
 
 (s/def ::app (s/keys :req [::config ::hooks ::plugins]
                      :opt [::resolver ::queries ::data]))
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                            ;;
+  ;;         PROFILING          ;;
+ ;;                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+;; Tooling for profiling hooks.
+;; TODO refactor this in terms of tap>, add-tap
+;;
 
 (def ^{:dynamic true
        :doc
@@ -165,39 +243,6 @@
           "Every form passed to with-forms must be a list!")
   (let [forms (map #(cons `add-hook %) forms)]
     `(-> ~app' ~@forms)))
-
-(defprotocol Queryable
-  "Protocol for generically expanding queries into data during the
-  query expansion lifecycle phase"
-  :extend-via-metadata true
-  (query [this data args]))
-
-(extend-protocol Queryable
-  clojure.lang.Fn
-  (query [f data args]
-    (apply f data args)))
-
-(defprotocol Effect
-  "Protocol for encapsulating side-effects"
-  (effect!
-    [this req]))
-
-(extend-protocol Effect
-  clojure.lang.Fn
-  (effect!
-    ([f req]
-     (f req)))
-
-  clojure.lang.PersistentVector
-  (effect!
-    ([v req]
-     (let [[f & args] v]
-       (apply f req args))))
-
-  java.util.concurrent.Future
-  (effect!
-    ([fut _]
-     (deref fut))))
 
 (defn add-effect
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."

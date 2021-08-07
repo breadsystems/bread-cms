@@ -1,6 +1,33 @@
 (ns systems.bread.alpha.tools.middleware
   (:require
-    [rum.core :as rum]))
+    [clojure.spec.alpha :as s]
+    [rum.core :as rum]
+    [systems.bread.alpha.core :as bread]))
+
+(defmulti error-field (fn [k _] k))
+
+(defmethod error-field :default [_ field]
+  [:pre (str field)])
+
+(defmethod error-field :hook [_ {::bread/keys [file line column from-ns] :as hook}]
+  [:<>
+   "Added in: "
+   [:strong from-ns]
+   [:code (format " %s:%s:%s" file line column)]])
+
+(defmethod error-field :args [_ args]
+  [:ol
+   (map (fn [x]
+          [:li [:code (if (s/valid? ::bread/app x) '$APP x)]]) args)])
+
+(defmethod error-field :exception [_ ex]
+  ;(def $ex ex)
+  [:pre ex])
+
+(comment
+  $ex
+  (.getCause $ex)
+  )
 
 (defn- error-page [{:keys [error]}]
   [:html
@@ -15,13 +42,20 @@
       [:h2 "Error info"]
       (if (seq (ex-data error))
         [:table
-         (map (fn [[k v]]
+         (map (fn [[k field]]
                 [:tr
                  [:td (name k)]
-                 [:td [:pre (str v)]]])
+                 [:td (error-field k field)]])
               (ex-data error))]
         [:p "No additional info about this error. :("])
-      [:h2 "Stack trace"]
+
+      [:h2 "Original stack trace"]
+      [:ul
+       (map (fn [elem]
+              [:li [:code (str elem)]])
+            (some-> error ex-data :exception .getStackTrace))]
+
+      [:h2 "Core stack trace"]
       [:ul
        (map (fn [elem]
               [:li [:code (str elem)]])

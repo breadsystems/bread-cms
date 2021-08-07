@@ -1,63 +1,79 @@
 (ns systems.bread.alpha.route-test
   (:require
     [clojure.test :refer [deftest are is testing]]
+    [kaocha.repl :as k]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded
+                                              map->route-plugin]]))
 
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
         routes {"/en"
                 {:bread/resolver {:resolver/type :home}
-                 :hard-coded-params {:lang "en"}}
+                 :bread/component 'home
+                 :route/params {:lang "en"}}
                 "/en/home"
                 {:bread/resolver :resolver.type/home
-                 :hard-coded-params {:lang "en"}}
+                 :bread/component 'home
+                 :route/params {:lang "en"}}
                 "/en/keyword"
                 {:bread/resolver :resolver.type/page
-                 :hard-coded-params {:lang "en"
+                 :bread/component 'page
+                 :route/params {:lang "en"
                                      :slug "keyword"}}
                 "/en/default"
                 {:bread/resolver :default
-                 :hard-coded-params {:lang "en"
-                                     :slug "default"}}
+                 :bread/component 'page
+                 :route/params {:lang "en"
+                                :slug "default"}}
                 "/en/empty-resolver-map"
                 {:bread/resolver {}
-                 :hard-coded-params {:lang "en"
-                                     :slug "empty-resolver-map"}}
+                 :bread/component 'page
+                 :route/params {:lang "en"
+                                :slug "empty-resolver-map"}}
                 "/en/no-defaults"
                 {:bread/resolver {:resolver/type :whatevs
                                   :resolver/defaults? false}
-                 :hard-coded-params {:lang "en"
-                                     :slug "no-defaults"}}
+                 :bread/component 'page
+                 :route/params {:lang "en"
+                                :slug "no-defaults"}}
+                "/en/no-component"
+                {:bread/resolver {:resolver/type :whatevs}
+                 :route/params {:lang "en"
+                                :slug "no-component"}}
+                "/en/not-found"
+                {:bread/resolver {:resolver/type :whatevs}
+                 :bread/component 'page
+                 :bread/not-found-component 'not-found
+                 :route/params {:lang "en"
+                                :slug "not-found"}}
                 "/overridden"
-                {:bread/resolver {:resolver/i18n? false
-                                  :resolver/ancestry? false}}
-                 :hard-coded-params {:lang nil
-                                     :slug "overridden"}}
-        route->match (fn [req _]
-                       (get routes (:uri req)))
-        simplistic-route-plugin (fn [app]
-                                  (bread/add-hooks->
-                                    app
-                                    (:hook/match-route route->match)
-                                    (:hook/match->resolver
-                                      (fn [_ match]
-                                        (:bread/resolver match)))
-                                    (:hook/route-params
-                                      (fn [_ match]
-                                        (:hard-coded-params match)))))
-        app (plugins->loaded [simplistic-route-plugin])]
+                {:bread/resolver {:resolver/i18n? false}
+                 :bread/component 'page
+                 :route/params {:lang nil
+                                :slug "overridden"}}}
+        ;; Mock the component registry with key/pull values.
+        ;; These values are not valid for the default schema but are meant to
+        ;; be illustrative.
+        registry (atom {'home {:key :home :query [:db/id :home/slug]}
+                        'page {:key :page :query [:db/id :page/slug]}})
+        app (plugins->loaded [(map->route-plugin routes)])]
 
     (are [resolver uri] (= resolver
-                           (->> {:uri uri}
-                                (merge app)
-                                route/dispatch
-                                ::bread/resolver))
+                           (binding [component/*registry* registry]
+                             (->> {:uri uri}
+                                  (merge app)
+                                  route/dispatch
+                                  ::bread/resolver)))
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
-          :resolver/ancestry? true
+          :resolver/component nil
+          :resolver/not-found-component nil
+          :resolver/key nil
+          :resolver/pull nil
           :post/type :post.type/page
           :route/params nil
           :route/match nil}
@@ -65,62 +81,117 @@
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
-          :resolver/ancestry? true
+          :resolver/component 'home
+          :resolver/not-found-component nil
+          :resolver/key :home
+          :resolver/pull [:db/id :home/slug]
           :post/type :post.type/page
           :route/params {:lang "en"}
           :route/match {:bread/resolver :resolver.type/home
-                        :hard-coded-params {:lang "en"}}}
+                        :bread/component 'home
+                        :route/params {:lang "en"}}}
          "/en/home"
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
-          :resolver/ancestry? true
           :post/type :post.type/page
+          :resolver/component 'page
+          :resolver/not-found-component nil
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en" :slug "keyword"}
           :route/match {:bread/resolver :resolver.type/page
-                        :hard-coded-params {:lang "en" :slug "keyword"}}}
+                        :bread/component 'page
+                        :route/params {:lang "en" :slug "keyword"}}}
          "/en/keyword"
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
-          :resolver/ancestry? true
           :post/type :post.type/page
+          :resolver/component 'page
+          :resolver/not-found-component nil
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "empty-resolver-map"}
           :route/match {:bread/resolver {}
-                        :hard-coded-params {:lang "en"
-                                            :slug "empty-resolver-map"}}}
+                        :bread/component 'page
+                        :route/params {:lang "en"
+                                       :slug "empty-resolver-map"}}}
          "/en/empty-resolver-map"
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
-          :resolver/ancestry? true
+          :resolver/component 'page
+          :resolver/not-found-component nil
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "default"}
           :route/match {:bread/resolver :default
-                        :hard-coded-params {:lang "en"
-                                            :slug "default"}}}
+                        :bread/component 'page
+                        :route/params {:lang "en"
+                                       :slug "default"}}}
          "/en/default"
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? false
-          :resolver/ancestry? false
+          :resolver/component 'page
+          :resolver/not-found-component nil
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :post/type :post.type/page
-          :route/params nil
-          :route/match {:bread/resolver {:resolver/i18n? false
-                                         :resolver/ancestry? false}}}
+          :route/params {:lang nil :slug "overridden"}
+          :route/match {:bread/resolver {:resolver/i18n? false}
+                        :route/params {:lang nil :slug "overridden"}
+                        :bread/component 'page}}
          "/overridden"
 
          {:resolver/type :whatevs
           :resolver/defaults? false
+          :resolver/component 'page
+          :resolver/not-found-component nil
+          :resolver/key :page
+          :resolver/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "no-defaults"}
           :route/match {:bread/resolver {:resolver/type :whatevs
                                          :resolver/defaults? false}
-                        :hard-coded-params {:lang "en"
-                                            :slug "no-defaults"}}}
+                        :bread/component 'page
+                        :route/params {:lang "en"
+                                       :slug "no-defaults"}}}
          "/en/no-defaults"
+
+         {:resolver/type :whatevs
+          :resolver/i18n? true
+          :resolver/component 'page
+          :resolver/not-found-component 'not-found
+          :resolver/key :page
+          :post/type :post.type/page
+          :resolver/pull [:db/id :page/slug]
+          :route/params {:lang "en"
+                         :slug "not-found"}
+          :route/match {:bread/resolver {:resolver/type :whatevs}
+                        :bread/component 'page
+                        :bread/not-found-component 'not-found
+                        :route/params {:lang "en"
+                                       :slug "not-found"}}}
+         "/en/not-found"
+
+         {:resolver/type :whatevs
+          :resolver/i18n? true
+          :resolver/component nil
+          :resolver/not-found-component nil
+          :resolver/key nil
+          :resolver/pull nil
+          :post/type :post.type/page
+          :route/params {:lang "en"
+                         :slug "no-component"}
+          :route/match {:bread/resolver {:resolver/type :whatevs}
+                        :route/params {:lang "en"
+                                       :slug "no-component"}}}
+         "/en/no-component"
 
         ;;
         )
@@ -131,9 +202,12 @@
               (bread/add-hook
                 app :hook/resolver
                 (constantly {:resolver/stuff :totally-different})))
-            app (plugins->loaded [simplistic-route-plugin
+            app (plugins->loaded [(map->route-plugin routes)
                                   opinionated-resolver-plugin])]
         (is (= {:resolver/stuff :totally-different}
                (route/resolver (merge app {:uri "/whatever"}))))))
 
     ))
+
+(comment
+  (k/run))

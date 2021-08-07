@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.query
   (:require
+    [clojure.spec.alpha :as s]
     [systems.bread.alpha.core :as bread]))
 
 (defn- keyword-namespace [x]
@@ -20,8 +21,17 @@
 (defn- expand-queries [queries]
   (reduce expand-query {} queries))
 
-(defn expand [app]
-  (assoc app ::bread/data (expand-queries (::bread/queries app))))
+(defn- expand-not-found [resolver data]
+  (let [k (:resolver/key resolver)]
+    (assoc data :not-found? (nil? (get data k)))))
+
+(defn expand [{::bread/keys [resolver] :as app}]
+  {:pre [(s/valid? ::bread/app app)]
+   :post [(s/valid? ::bread/app %)]}
+  (->> (::bread/queries app)
+       expand-queries
+       (expand-not-found resolver)
+       (assoc app ::bread/data)))
 
 (defn plugin []
   (fn [app]

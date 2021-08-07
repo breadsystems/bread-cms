@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.route
   (:require
-    [systems.bread.alpha.component :as comp]
+    [clojure.spec.alpha :as s]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -13,10 +14,12 @@
 (defn resolver [req]
   (let [default {:resolver/i18n? true
                  :resolver/type :resolver.type/page
-                 :resolver/ancestry? true
                  :post/type :post.type/page}
         match (match req)
         declared (bread/hook->> req :hook/match->resolver match)
+        component (bread/hook->> req :hook/match->component match)
+        not-found-component
+        (bread/hook->> req :hook/match->not-found-component match)
         {:resolver/keys [defaults?]} declared
         keyword->type {:resolver.type/home :resolver.type/page
                        :resolver.type/page :resolver.type/page}
@@ -34,14 +37,25 @@
                            (merge default declared)
                            declared)
                          :route/match match
-                         :route/params (params req match))]
+                         :route/params (params req match)
+                         :resolver/component component
+                         :resolver/not-found-component
+                         (or not-found-component (component/not-found))
+                         :resolver/key (component/get-key component)
+                         :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
 (defn dispatch [req]
+  {:pre [(s/valid? ::bread/app req)]
+   :post [(s/valid? ::bread/app %)]}
   (assoc req ::bread/resolver (resolver req)))
 
 (defn sitemap [app]
   [{}])
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hook app :hook/dispatch dispatch)))
 
 (comment
 

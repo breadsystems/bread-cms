@@ -3,19 +3,44 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.resolver :as resolver :refer [where pull-query]]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
+(defn- syms
+  ([prefix]
+   (syms prefix 0))
+  ([prefix start]
+   (for [n (range)] (symbol (str prefix (+ start n))))))
+
+(comment
+  (for [n (range 10)] (symbol (str "?slug_" n)))
+
+  (loop [[slug & slugs] (take 15 (syms "?slug_"))]
+    (prn slug)
+    (when (seq slugs)
+      (recur slugs)))
+
+  (loop [[slug & slugs] (take 15 (syms "?slug_" 1))]
+    (prn slug)
+    (when (seq slugs)
+      (recur slugs)))
+  )
+
 (defn- path->constraints
   ([path]
    (path->constraints path {}))
-  ([path {:keys [child-sym slug-sym]}]
+  ([path {:keys [child-sym]}]
    (vec (loop [query []
-               descendant-sym (or child-sym '?e)
                [inputs path] [[] path]
-               slug-sym slug-sym]
+               descendant-sym (or child-sym '?e)
+               ;; Start the parent count at 1 so that
+               ;; [?parent_x :post/slug ?slug_x] numbers line up.
+               ;; This makes queries easier to read and debug.
+               [parent-sym & parent-syms] (syms "?parent_" 1)
+               [slug-sym & slug-syms] (syms "?slug_")]
           (let [inputs (conj inputs slug-sym)
                 where [[descendant-sym :post/slug slug-sym]]]
             (if (<= (count path) 1)
@@ -25,16 +50,18 @@
                                'not-join
                                [descendant-sym]
                                [descendant-sym :post/parent '?root-ancestor])]))]
-              (let [ancestor-sym (gensym "?parent_")
-                    ancestry [descendant-sym :post/parent ancestor-sym]]
-                (recur
-                 (concat query where [ancestry])
-                 ancestor-sym
-                 [inputs (butlast path)]
-                 (gensym "?slug_")))))))))
+              (recur
+                (concat query where [[descendant-sym :post/parent parent-sym]])
+                [inputs (butlast path)]
+                parent-sym ;; the new descendant-sym
+                parent-syms
+                slug-syms)))))))
 
 (comment
-  (path->constraints ["parent" "child"] {:slug-sym '?slug}))
+  (path->constraints ["grandparent" "parent" "child"])
+  (path->constraints ["parent" "child"])
+  (path->constraints ["parent" "child"] )
+  )
 
 (defn- ancestralize [query ancestry]
   (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
@@ -58,6 +85,9 @@
   (when
     (and (map? m) (some ks (keys m)))
     m))
+
+(defn compact-fields [post]
+  (update post :post/fields field/compact))
 
 (defmethod resolver/resolve-query :resolver.type/page
   [{::bread/keys [resolver] :as req}]
@@ -83,15 +113,14 @@
                             (some-fn
                               #{:post/fields}
                               (partial map-with-keys #{:post/fields}))
-                            (:resolver/pull resolver)))]
+                            pull))]
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
             (-> (resolver/empty-query)
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e :post/id]
-                        ['?lang :field/lang (keyword (:lang params))]])
-                (conj {:post/id [k :db/id]}))))]
+                (where [['?p :post/fields '?e [::bread/data k :db/id]]
+                        ['?lang :field/lang (keyword (:lang params))]]))))]
 
     (if fields-query
       [(apply conj [k db] page-query)

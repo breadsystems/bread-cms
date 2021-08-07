@@ -188,23 +188,34 @@
      :max-tx (:max-tx db)
      :max-eid (:max-eid db)}))
 
+(defn- eval-arg [data arg]
+  (if (and (vector? arg) (= ::bread/data (first arg)))
+    (get-in data (next arg))
+    arg))
+
+(comment
+  ;; pass-thru
+  (= "x" (eval-arg {:a {:b :AB}} "x"))
+  ;; vector, but not a path
+  (= [:a :b] (eval-arg {:a {:b :AB}} [:a :b]))
+  ;; path w/ correct meta flag
+  (= :AB (eval-arg {:a {:b :AB}} [::bread/data :a :b]))
+
+  ;;
+  )
+
 (extend-type datahike.db.DB
   bread/Queryable
   (query [db data [qry & args]]
-    (let [args (if (map? (last args))
-                 (map (fn [arg]
-                        (if-let [path (get (last args) arg)]
-                          (get-in data path)
-                          arg))
-                      (butlast args))
-                 args)]
-      (apply d/q qry db args))))
+    (let [args (map (partial eval-arg data) args)]
+      (when (every? some? args)
+        (apply d/q qry db args)))))
 
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                           ;;
-  ;;   Utility & Plugin fns    ;;
+  ;;   UTILITY & PLUGIN FNS    ;;
  ;;                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

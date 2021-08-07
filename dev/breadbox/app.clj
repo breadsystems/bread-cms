@@ -2,13 +2,15 @@
 ;; ...which is to say, all of them.
 (ns breadbox.app
   (:require
+    [breadbox.data :as data]
     [clojure.core.protocols :refer [Datafiable]]
     [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
     [clojure.string :as str]
     [flow-storm.api :as flow]
+    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :as comp :refer [defc]]
+    [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
@@ -19,7 +21,6 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.static-frontend :as static]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
@@ -30,187 +31,55 @@
     [reitit.core :as reitit]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-    [ring.middleware.reload :refer [wrap-reload]])
-  (:import
-    [java.util UUID]))
+    [ring.middleware.reload :refer [wrap-reload]]))
 
-(extend-protocol Datafiable
-  org.httpkit.server.AsyncChannel
-  (datafy [ch]
-    (str "org.httpkit.server.AsyncChannel[" ch "]"))
-
-  #_#_
-  datahike.db.DB
-  (datafy [db]
-    (let [data (select-keys db [:max-tx :max-eid])
-          posts (store/q db '{:find [?slug ?t]
-                              :where [[?e :post/slug ?slug ?t]]})]
-      (assoc data :slugs (sort-by second posts)))))
-
-;; TODO optionally start this via config
-(defstate debugger
-  :start (flow/connect))
+(defonce app (atom nil))
 
 (def $config {:datastore/type :datahike
               :store {:backend :mem
                       :id "breadbox-db"}
               :datastore/initial-txns
-              [#:post{:type :post.type/page
-                      :uuid (UUID/randomUUID)
-                      :title "Home Page"
-                      :slug ""
-                      :fields #{{:field/key :title
-                                 :field/lang :en
-                                 :field/content (prn-str "Home Page Title")}
-                                {:field/key :simple
-                                 :field/lang :en
-                                 :field/content (prn-str {:hello "Hi!"
-                                                          :img-url "https://via.placeholder.com/300"})}
-                                }
-                      :status :post.status/published}
-               #:post{:type :post.type/page
-                      :uuid (UUID/randomUUID)
-                      :title "Parent Page"
-                      :slug "parent-page"
-                      :status :post.status/published
-                      :fields #{;; TODO
-                                }}
-               #:post{:type :post.type/page
-                      :uuid (UUID/randomUUID)
-                      :title "Child Page OLD TITLE"
-                      :slug "child-page"
-                      :status :post.status/published
-                      ;; TODO fix this hard-coded eid somehow...
-                      :parent 45 ;; NOTE: don't do this :P
-                      :fields #{{:field/key :title
-                                 :field/lang :en
-                                 :field/content (prn-str "Child Page")}
-                                {:field/key :title
-                                 :field/lang :fr
-                                 :field/content (prn-str "La Page Enfant")}
-                                {:field/key :simple
-                                 :field/lang :en
-                                 :field/content
-                                 (prn-str {:hello "Hello"
-                                           :body "Lorem ipsum dolor sit amet"
-                                           :goodbye "Bye!"
-                                           :img-url "https://via.placeholder.com/300"})}
-                                {:field/key :simple
-                                 :field/lang :fr
-                                 :field/content
-                                 (prn-str {:hello "Bonjour"
-                                           :body "Lorem ipsum en francais"
-                                           :goodbye "Salut"
-                                           :img-url "https://via.placeholder.com/300"})}
-                                {:field/key :flex-content
-                                 :field/lang :en
-                                 :field/content (prn-str {:todo "TODO"})}}
-                      :taxons #{{:taxon/slug "my-cat"
-                                 :taxon/name "My Cat"
-                                 :taxon/taxonomy :taxon.taxonomy/category}}}
-               #:i18n{:lang :en
-                      :key :i18n/not-found
-                      :string "404 Not Found"}
-               #:i18n{:lang :fr
-                      :key :i18n/not-found
-                      :string "FRENCH 404 Not Found"}
-               #:i18n{:lang :en
-                      :key :i18n/child-page.0.lorem-ipsum
-                      :string "Lorem ipsum dolor sit amet"}
-               #:i18n{:lang :fr
-                      :key :i18n/child-page.0.lorem-ipsum
-                      :string "L'orem ipsen"}
-               #:i18n{:lang :en
-                      :key :i18n/child-page.1.qwerty
-                      :string "QWERTY"}
-               #:i18n{:lang :fr
-                      :key :i18n/child-page.1.qwerty
-                      :string "Le qwertie"}
-               #:i18n{:lang :en
-                      :key :i18n/parent-page.0.content
-                      :string "Parent page content"}
-               #:i18n{:lang :fr
-                      :key :i18n/parent-page.0.content
-                      :string "Le contenu de la page parent"}]})
+              data/initial-content})
+
+(defc home [{:keys [post] :as x}]
+  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+   :key :post}
+  (let [post (post/compact-fields post)
+        {:keys [title simple]} (:post/fields post)]
+    [:main
+     [:h1 title]
+     [:p (:hello simple)]]))
 
 (defc page [{:keys [post i18n]}]
-  {:ident :db/id
-   ;; TODO could this work...?
-   ;:effects {:x (do-something!)}
-   :query [:post/title
-           {:post/fields [:db/id :field/lang :field/key :field/content]}]}
-  (let [{:i18n/keys [not-found]} i18n
-        {:keys [simple flex-content]} (:post/fields post)
-        simple (:field/content simple)
-        flex-content (:field/content flex-content)]
+  {:query [{:post/fields [:field/key :field/content]}]
+   :key :post}
+  (let [post (post/compact-fields post)
+        ;; i18n queries
+        {:i18n/keys [not-found]} i18n
+        {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
-     [:h1 (or (:post/title post) not-found)]
+     [:h1 (or title not-found)]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
-      [:p.goodbye (:goodbye simple)]]]))
+      [:p.goodbye (:goodbye simple)]
+      [:p.flex flex-content]]]))
+
+(defc ^:not-found not-found [_]
+  {}
+  [:div "404 Not Found"])
+
+(comment
+  (component/not-found))
 
 
 (def $router
   (reitit/router
     ["/:lang"
-     ["" {:bread/resolver :resolver.type/home
-          :name :home}]
-     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page
-                                  :resolver/ancestry? true
-                                  :resolver/internationalize? true}
+     ["/" {:bread/resolver {:resolver/type :resolver.type/page}
+           :bread/component home}]
+     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]))
-
-(comment
-  (def fields
-    [[{:db/id 45
-       :field/key :simple
-       :field/content "{:hello \"Hi!\", :img-url \"https://via.placeholder.com/300\"}\n"}]
-     [{:db/id 46
-       :field/key :title
-       :field/content "\"Home Page Title\"\n"}]])
-
-  (map first fields)
-  (reduce (fn [fields row]
-            (let [field (first row)]
-             (assoc fields (:field/key field) (edn/read-string (:field/content field)))))
-          {}
-          fields)
-  )
-
-(defn compact-fields [fields]
-  (reduce (fn [fields row]
-            (let [field (first row)]
-              (assoc fields
-                     (:field/key field)
-                     (edn/read-string (:field/content field)))))
-          {} fields))
-
-(defn RENDER [{::bread/keys [data] :as req}]
-  (merge
-    req
-    (let [post (update (:post data) :post/fields compact-fields)
-          {:keys [title simple]} (:post/fields post)]
-      {:headers {"content-type" "text/html"}
-       :status 200
-       :body [:html
-              [:head
-               [:title "Breadbox"]
-               [:meta {:charset "utf-8"}]]
-              [:body
-               [:main
-                 [:h2 title]
-                 [:h3 "Simple field contents"]
-                 [:p (rand-int 1000)]
-                 [:div.simple
-                  [:p "Hello field = " (:hello simple)]
-                  [:div.body
-                   (:body simple)
-                   [:img {:src (:img-url simple)}]]
-                  [:p (:goodbye simple)]]]
-               [:pre
-                "post: "
-                (prn-str post)]]]})))
 
 (comment
   (deref app)
@@ -246,64 +115,6 @@
   (swap! env assoc :reinstall-db? true)
   (deref env))
 
-(defonce app (atom nil))
-
-(def CHILD
-  '{:find [(pull ?e [:db/id
-                     :post/title
-                     :post/slug
-                     {:post/parent [:db/id :post/title :post/slug]}])
-           (pull ?fields [:db/id :field/key :field/content])]
-    :in [$ ?type ?slug ?slug_1 ?lang]
-    :where [[?e :post/type ?type]
-            [?e :post/fields ?fields]
-            [?fields :field/lang ?lang]
-            [?e :post/slug ?slug]
-            [?e :post/parent ?parent_0]
-            [?parent_0 :post/slug ?slug_1]
-            (not-join
-              [?parent_0]
-              [?parent_0 :post/parent ?root-ancestor])]}
-  )
-
-(def HOME
-  '{:find [(pull ?e [:db/id
-                     :post/title
-                     :post/slug
-                     {:post/parent [:db/id :post/title :post/slug]}])
-           (pull ?fields [:db/id :field/key :field/content])]
-    :in [$ ?type ?slug ?lang]
-    :where [[?e :post/type ?type]
-            [?e :post/fields ?fields]
-            [?fields :field/lang ?lang]
-            [?e :post/slug ?slug]
-            (not-join
-              [?e]
-              [?e :post/parent ?root-ancestor])]}
-  )
-
-#_
-(defn expand-queries [app]
-  (let [store (store/datastore app)
-        data (into {} (map (fn [[k query]]
-                             (let [expander (apply comp (::bread/expand query))
-                                   result (store/q store query)]
-                               #_#_
-                               (prn 'query query)
-                               (prn 'result result)
-                               [k (expander result)]))
-                           (::bread/queries app)))]
-    #_
-    (prn 'data data)
-    (assoc app ::bread/data data)))
-
-(defstate counter
-  :start (atom 0))
-
-(comment
-  ;; This should increment with every request
-  (deref counter))
-
 ;; TODO reload app automatically when src changes
 (defstate load-app
   :start (reset! app
@@ -311,90 +122,32 @@
                    (bread/app
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
-                                (i18n/plugin)
-                                (query/plugin)
-                                #_(post/plugin)
+                                #_(i18n/plugin)
+                                (route/plugin)
                                 (br/plugin {:router $router})
-
-                                ;; Increment counter on every request
-                                (fn [app]
-                                  (bread/add-effect app (fn [_]
-                                                          (swap! counter inc)
-                                                          nil)))
-
-                                ;; TODO DEFAULT PLUGINS
-                                (fn [app]
-                                  (bread/add-hooks->
-                                    app
-                                    (:hook/dispatch route/dispatch)
-                                    #_
-                                    (:hook/resolve
-                                      (fn [app]
-                                        (assoc app ::bread/queries
-                                               {:post {:query CHILD
-                                                       ::bread/expand [post/expand-post]
-                                                       :args [(store/datastore app)
-                                                              :post.type/page
-                                                              "child-page"
-                                                              "parent-page"
-                                                              :en]}})))
-                                    (:hook/resolve
-                                      (fn [app]
-                                        (assoc
-                                          app
-                                          ::bread/queries
-                                          [[:post
-                                            (store/datastore app)
-                                            '{:find [(pull ?e [:db/id
-                                                               :post/slug]) .]
-                                              :in [$ ?slug]
-                                              :where [[?e :post/slug ?slug]]}
-                                            ""]
-                                           [:post/fields
-                                            (store/datastore app)
-                                            '{:find [(pull ?e [:db/id
-                                                               :field/key
-                                                               :field/content])]
-                                              :in [$ ?p ?lang]
-                                              :where [[?p :post/fields ?e]
-                                                      [?e :field/lang ?lang]]}
-                                            :post/id
-                                            :en
-                                            {:post/id [:post :db/id]}]])))
-                                    #_
-                                    (:hook/expand
-                                      (fn [app]
-                                        (store/add-txs
-                                          app
-                                          (let [uuid (UUID/randomUUID)]
-                                            [{:post/slug (str "post-" uuid)
-                                              :post/uuid uuid
-                                              :post/fields
-                                              [{:field/lang :en
-                                                :field/key :my/field
-                                                :field/content
-                                                (str
-                                                  "content for post " uuid)}]}]))))))
-
-                                ;; TODO work backwards from render
-                                (fn [app]
-                                  (bread/add-hook app :hook/render RENDER))
+                                (resolver/plugin)
+                                (query/plugin)
+                                (component/plugin)
 
                                 (rum/plugin)
+
+                                ;; TODO Allow resolvers to handle 404s somehow
+                                (fn [app]
+                                  (bread/add-hook
+                                    app
+                                    :hook/render
+                                    (fn [res]
+                                      (assoc res
+                                             :headers {"content-type"
+                                                       "text/html"}))))
+
+                                ;; TODO layouts
+                                ;; TODO themes
 
                                 (static/plugin)]})))
   :stop (reset! app nil))
 
-(defn green-theme [app]
-  (-> app
-      (theme/add-to-head [:style "*{color:green}"])
-      ;; TODO unescape strings here somehow?
-      (theme/add-to-footer [:script "console.log(1)"])))
-
-(defn purple-theme [app]
-  (-> app
-      (theme/add-to-head [:style "*{color:purple}"])
-      (theme/add-to-footer [:script "console.log(2)"])))
+;; TODO themes
 
 (comment
 
@@ -431,6 +184,13 @@
       resolver/resolve-queries
       expand-queries
       ::bread/data)
+
+  (store/q
+    (store/datastore $req)
+    {:query '{:find [?e ?slug]
+              ;:in [$ ?type ?status ?slug]
+              :where [[?e :post/slug ?slug]]}
+     :args [(store/datastore $req)]})
 
   (store/q
     (store/datastore $req)
@@ -495,10 +255,7 @@
   ;;
   )
 
-(defn handler [req]
-  (def $req req)
-  (def $res ((bread/handler @app) req))
-  $res)
+(def handler (bread/handler @app))
 
 (defonce stop-http (atom nil))
 
@@ -531,6 +288,23 @@
   :stop  (when-let [stop! @stop-debugger!]
            (stop!)))
 
+(extend-protocol Datafiable
+  org.httpkit.server.AsyncChannel
+  (datafy [ch]
+    (str "org.httpkit.server.AsyncChannel[" ch "]"))
+
+  #_#_
+  datahike.db.DB
+  (datafy [db]
+    (let [data (select-keys db [:max-tx :max-eid])
+          posts (store/q db '{:find [?slug ?t]
+                              :where [[?e :post/slug ?slug ?t]]})]
+      (assoc data :slugs (sort-by second posts)))))
+
+;; TODO optionally start this via config
+(defstate flow
+  :start (flow/connect))
+
 (defn restart! []
   (mount/stop)
   (mount/start))
@@ -540,6 +314,7 @@
   (mount/start))
 
 (comment
+  (k/run :unit)
   (mount/start)
   (mount/stop)
   (restart-cms!)

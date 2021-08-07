@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.resolver
   (:require
+    [clojure.spec.alpha :as s]
     [clojure.string :as string]
     [systems.bread.alpha.component :as comp :refer [defc]]
     [systems.bread.alpha.core :as bread]
@@ -37,11 +38,14 @@
 
 (defn pull-query
   "Get a basic query with a (pull ...) form in the :find clause"
-  [resolver]
-  (update-in (empty-query)
-             [0 :find]
-             conj
-             (list 'pull '?e (:resolver/pull resolver))))
+  [{:resolver/keys [pull]}]
+  (let [pulling-eid? (some #{:db/id} pull)
+        pull-expr (if pulling-eid? pull (cons :db/id pull))]
+    (update-in
+      (empty-query)
+      [0 :find]
+      conj
+      (list 'pull '?e pull-expr))))
 
 ;; TODO provide a slightly higher-level query helper API with simple maps
 (defn where [query constraints]
@@ -55,6 +59,11 @@
                           (get-in req [::bread/resolver :resolver/type])))
 
 (defn resolve-queries [req]
-  (->> req
-       resolve-query
-       (assoc req ::bread/queries)))
+  {:pre [(s/valid? ::bread/app req)
+         (s/valid? ::bread/resolver (::bread/resolver req))]
+   :post [(s/valid? ::bread/queries (::bread/queries %))]}
+  (assoc req ::bread/queries (resolve-query req)))
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hook app :hook/resolve resolve-queries)))
