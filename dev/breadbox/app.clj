@@ -78,15 +78,23 @@
                  :bread/component page}]]))
 
 (comment
-  (deref app)
-
-  (def db (store/datastore @app))
-  (require '[datahike.api :as d])
-
-  (i18n/translate @app :i18n/not-found)
+  (i18n/t @app :not-found)
   (i18n/strings-for @app :en)
   (i18n/strings-for @app :fr)
+  (empty? (i18n/strings-for @app :es))
   (i18n/strings (assoc @app :uri "/en"))
+  (i18n/strings (assoc @app :uri "/fr"))
+  (i18n/strings (assoc @app :uri "/es"))
+
+  (i18n/supported-langs @app)
+  (i18n/lang-supported? @app :en)
+  (i18n/lang-supported? @app :fr)
+  (i18n/lang-supported? @app :es)
+
+  (i18n/lang (assoc @app :uri "/en/asdf"))
+  (i18n/lang (assoc @app :uri "/fr/asdf"))
+  (i18n/lang (assoc @app :uri "/es/asdf")) ;; defaults to :en
+
   (let [req (-> @app
                 (assoc :uri "/fr")
                 (bread/add-hook :hook/strings-for #(assoc % :i18n/x "l'X"))

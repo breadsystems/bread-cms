@@ -19,8 +19,12 @@
   "Checks all supported languages in the database. Returns supported langs
    as a set of keywords."
   [app]
-  ;; TODO query db for these
-  #{:en :fr})
+  (set (map first
+            (let [db (store/datastore app)]
+              (prn 'db db)
+              (store/q db
+                     '{:find [?lang] :in [$]
+                       :where [[?e :i18n/lang ?lang]]})))))
 
 (defn- route-segments [{:keys [uri] :as req}]
   (filter (complement empty?) (str/split (or uri "") #"/")))
