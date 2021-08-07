@@ -54,7 +54,6 @@
               ;; init post content
               #:post{:type :post.type/page
                      :uuid (UUID/randomUUID)
-                     :title "Home Page"
                      :slug ""
                      :fields #{{:field/key :title
                                 :field/lang :en
@@ -71,7 +70,6 @@
                      :status :post.status/published}
               #:post{:type :post.type/page
                      :uuid parent-uuid
-                     :title "Parent Page"
                      :slug "parent-page"
                      :status :post.status/published
                      :fields #{{:field/key :title

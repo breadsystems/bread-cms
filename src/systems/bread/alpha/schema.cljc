@@ -34,12 +34,6 @@
     :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO i18n - can we remove this and support title with :post/fields alone?
-   {:db/ident :post/title
-    :db/doc "The title of the post"
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
    {:db/ident :post/fields
     :db/doc "Zero or more content fields"
     :db/valueType :db.type/ref
