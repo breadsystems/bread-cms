@@ -122,7 +122,7 @@
                    (bread/app
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
-                                #_(i18n/plugin)
+                                (i18n/plugin)
                                 (route/plugin)
                                 (br/plugin {:router $router})
                                 (resolver/plugin)
@@ -173,17 +173,16 @@
     (handler (merge @app {:uri "/en/parent-page"}))
     (slurp "resources/public/en/parent-page/index.html"))
 
-  (def $req (merge {:uri "/en"} @app))
+  (def $req (merge {:uri "/en/"} @app))
 
   (route/match $req)
   (route/params $req (route/match $req))
   (::bread/resolver (route/dispatch $req))
-  (def $disp (route/dispatch $req))
   (::bread/queries (resolver/resolve-queries (route/dispatch $req)))
   (-> $req
       route/dispatch
       resolver/resolve-queries
-      expand-queries
+      query/expand
       ::bread/data)
 
   (store/q
@@ -202,43 +201,11 @@
 
   (store/q
     (store/datastore $req)
-    {:query '{:find [(pull ?e [:post/title :post/slug :post/status])]
-              :in [$ ?type ?status ?slug]
-              :where [[?e :post/type ?type]
-                      #_
-                      [?e :post/status ?status]
-                      #_
-                      [?e :post/slug ?slug]
-                      (not-join [?e] [?e :post/parent ?root-ancestor])]}
-     :args [(store/datastore $req) :post.type/page ]})
+    '{:find [?k]
+      :in [$]
+      :where [[?e :i18n/key ?k]]})
 
   (require '[datahike.api :as d])
-
-  ;; TODO is there a way to do a LEFT JOIN, i.e. filter fields by lang IFF
-  ;; they exist, otherwise just ignore the join completely...?
-  (d/q
-    '{:find [(pull ?e [:db/id :post/title :post/slug
-                       {:post/parent
-                        [:db/id :post/title :post/slug]}])
-             (pull ?fields [:db/id :field/lang])]
-      :in [$ ?type ?lang ?slug]
-      :where [[?e :post/type ?type]
-              [?e :post/slug ?slug]
-              [?e :post/fields ?fields]
-              [?fields :field/lang ?lang]]}
-     (store/datastore $req)
-     :post.type/page
-     :en
-     "")
-
-  (d/q
-    '{:find [(pull ?field [:db/id :field/lang :field/key :field/content])]
-      :in [$ ?e ?lang]
-      :where [[?e :post/fields ?field]
-              [?field :field/lang ?lang]]}
-    (store/datastore $req)
-    44
-    :en)
 
   (-> $req
     (route/params (route/match $req))

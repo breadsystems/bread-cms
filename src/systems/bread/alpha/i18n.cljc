@@ -42,7 +42,7 @@
   (boolean (re-matches #"[a-z]{2}(-[a-z]{2})?"
                        (str/lower-case (first (route-segments req))))))
 
-(defn t*
+(defn t
   "Query the database for the translatable string represented by keyword k.
   Returns the original keyword k if it is not recognized as a translatable key."
   [app k]
@@ -55,29 +55,6 @@
                            ['?e :i18n/key k]))]
       (ffirst (store/q (store/datastore app) query)))
     k))
-
-(defprotocol Translatable
-  (-translate [x app]))
-
-(extend-protocol Translatable
-  java.lang.Object
-  (-translate [s _] s)
-
-  clojure.lang.PersistentArrayMap
-  (-translate [m app]
-    (into {} (doall (map (juxt key (comp #(-translate % app) val)) m))))
-
-  clojure.lang.LazySeq
-  (-translate [sq app]
-    (map #(-translate % app) sq))
-
-  clojure.lang.PersistentVector
-  (-translate [v app]
-    (vec (map #(-translate % app) v)))
-
-  clojure.lang.Keyword
-  (-translate [k app]
-    (t* app k)))
 
 (defn strings-for
   "Load the strings from the database for the given language."
@@ -97,15 +74,8 @@
   [req]
   (bread/hook-> req :hook/strings (strings-for req (lang req))))
 
-(defn translate
-  "Translate an arbitrary object recursively, expanding i18n/* keywords into
-  their respective translated strings in the current language."
-  [app k]
-  ;; TODO run a hook instead?
-  (-translate k app))
-
-(defn inject-strings [data req]
-  (assoc data :i18n (strings req)))
+(defn inject-strings [app]
+  (assoc-in app [::bread/data :i18n] (strings app)))
 
 (defn plugin
   ([]
@@ -115,6 +85,5 @@
          fallback (:i18n/fallback opts :en)]
      (fn [app]
        (bread/add-hooks-> (bread/set-config app :i18n/fallback-lang fallback)
-         (:hook/post translate)
-         (:hook/view-data inject-strings)
+         (:hook/expand inject-strings)
          (:hook/lang ->lang))))))
