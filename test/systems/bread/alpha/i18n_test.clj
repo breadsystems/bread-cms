@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.i18n-test
   (:require
-    [clojure.test :refer [deftest is testing use-fixtures]]
+    [clojure.test :refer [are deftest is testing use-fixtures]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
@@ -27,26 +27,40 @@
            (i18n/supported-langs (load-app)))))
 
   (deftest test-lang
-    (is (= :en (i18n/lang ((bread/handler (load-app)) {:uri "/en"}))))
-    (is (= :en (i18n/lang ((bread/handler (load-app)) {:uri "/en/qwerty"}))))
-    (is (= :en (i18n/lang ((bread/handler (load-app)) {:uri "/"}))))
-    (is (= :en (i18n/lang ((bread/handler (load-app)) {:uri "/qwerty"}))))
-    (is (= :es (i18n/lang ((bread/handler (load-app)) {:uri "/es"}))))
-    ;; No :fr in database: defaults to :en
-    (is (= :en (i18n/lang ((bread/handler (load-app)) {:uri "/fr"})))))
+    (are
+      [lang uri]
+      (= lang (i18n/lang ((bread/handler (load-app)) {:uri uri})))
+
+      :en "/" ;; No lang route; Defaults to :en.
+      :en "/qwerty" ;; Ditto.
+      :en "/en"
+      :en "/en/qwerty"
+      :es "/es"
+      :es "/es/qwerty"
+      :en "/fr" ;; Default to :en, since there's no :fr in the database.
+
+      ))
 
   (deftest test-strings-for
-    (is (= {:one "Uno" :two "Dos"} (i18n/strings-for (load-app) :es)))
-    (is (= {:one "One" :two "Two"} (i18n/strings-for (load-app) :en)))
-    (is (= {} (i18n/strings-for (load-app) :fr))))
+    (are
+      [strings lang]
+      (= strings (i18n/strings-for (load-app) lang))
+
+      {:one "Uno" :two "Dos"} :es
+      {:one "One" :two "Two"} :en
+      {} :fr
+      {} :de))
 
   (deftest test-strings
-    (is (= {:one "Uno" :two "Dos"}
-           (i18n/strings ((bread/handler (load-app)) {:uri "/es"}))))
-    (is (= {:one "One" :two "Two"}
-           (i18n/strings ((bread/handler (load-app)) {:uri "/en"}))))
-    )
-  )
+    (are
+      [strings uri]
+      (= strings (i18n/strings ((bread/handler (load-app)) {:uri uri})))
+
+      {:one "Uno" :two "Dos"} "/es"
+      {:one "One" :two "Two"} "/en"
+      ;; These default to :en.
+      {:one "One" :two "Two"} "/fr"
+      {:one "One" :two "Two"} "/de")))
 
 (comment
   (k/run))
