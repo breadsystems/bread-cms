@@ -67,8 +67,13 @@
 
 (defc ^:not-found not-found [{:keys [i18n]}]
   {}
-  [:div "404 Not Found"
-   [:pre (str i18n)]])
+  ;; TODO extract this to a layout
+  [:html {:lang "en"} ;; TODO get this from i18n
+   [:head
+    [:title (:not-found i18n)]
+    [:meta {:charset "utf-8"}]]
+   [:body
+    [:div (:not-found i18n)]]])
 
 (def $router
   (reitit/router
