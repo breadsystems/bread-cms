@@ -78,8 +78,9 @@
   [req]
   (bread/hook-> req :hook/strings (strings-for req (lang req))))
 
-(defn inject-strings [app]
-  (assoc-in app [::bread/data :i18n] (strings app)))
+(defn add-i18n-query [app]
+  (update app ::bread/queries conj [:i18n (fn [_data]
+                                            (strings app))]))
 
 (defn plugin
   ([]
@@ -89,5 +90,5 @@
          fallback (:i18n/fallback opts :en)]
      (fn [app]
        (bread/add-hooks-> (bread/set-config app :i18n/fallback-lang fallback)
-         (:hook/expand inject-strings)
+         (:hook/resolve add-i18n-query)
          (:hook/lang ->lang))))))

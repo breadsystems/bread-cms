@@ -65,9 +65,10 @@
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]]))
 
-(defc ^:not-found not-found [_]
+(defc ^:not-found not-found [{:keys [i18n]}]
   {}
-  [:div "404 Not Found"])
+  [:div "404 Not Found"
+   [:pre (str i18n)]])
 
 (def $router
   (reitit/router

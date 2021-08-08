@@ -5,6 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.query :as query]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               use-datastore]]))
 
@@ -56,6 +57,26 @@
       [strings uri]
       (= strings (i18n/strings ((bread/handler (load-app)) {:uri uri})))
 
+      {:one "Uno" :two "Dos"} "/es"
+      {:one "One" :two "Two"} "/en"
+      ;; These default to :en.
+      {:one "One" :two "Two"} "/fr"
+      {:one "One" :two "Two"} "/de"))
+
+  )
+
+;; i18n/plugin loads I18n strings for the given language automatically.
+(deftest test-add-i18n-query
+  (let [app (plugins->loaded [(store/plugin config)
+                              (i18n/plugin)
+                              (query/plugin)])
+        db (store/datastore app)]
+    (are
+      [strings uri]
+      (= strings (get-in ((bread/handler app) {:uri uri})
+                         [::bread/data :i18n]))
+
+      {:one "Uno" :two "Dos"} "/es"
       {:one "Uno" :two "Dos"} "/es"
       {:one "One" :two "Two"} "/en"
       ;; These default to :en.
