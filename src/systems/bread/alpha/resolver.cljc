@@ -62,7 +62,7 @@
   {:pre [(s/valid? ::bread/app req)
          (s/valid? ::bread/resolver (::bread/resolver req))]
    :post [(s/valid? ::bread/queries (::bread/queries %))]}
-  (assoc req ::bread/queries (resolve-query req)))
+  (update req ::bread/queries concat (resolve-query req)))
 
 (defn plugin []
   (fn [app]
