@@ -78,9 +78,13 @@
   [req]
   (bread/hook-> req :hook/strings (strings-for req (lang req))))
 
-(defn add-i18n-query [app]
-  (update app ::bread/queries conj [:i18n (fn [_data]
-                                            (strings app))]))
+(defn add-i18n-queries [app]
+  ;; TODO query/add
+  (-> app
+      (update ::bread/queries conj [:i18n (fn [_]
+                                            (strings app))])
+      (update ::bread/queries conj [:lang (fn [_]
+                                            (lang app))])))
 
 (defn plugin
   ([]
@@ -90,5 +94,5 @@
          fallback (:i18n/fallback opts :en)]
      (fn [app]
        (bread/add-hooks-> (bread/set-config app :i18n/fallback-lang fallback)
-         (:hook/resolve add-i18n-query)
+         (:hook/resolve add-i18n-queries)
          (:hook/lang ->lang))))))

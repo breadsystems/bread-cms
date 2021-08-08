@@ -69,19 +69,30 @@
 (deftest test-add-i18n-query
   (let [app (plugins->loaded [(store/plugin config)
                               (i18n/plugin)
-                              (query/plugin)])
-        db (store/datastore app)]
+                              (query/plugin)])]
     (are
       [strings uri]
       (= strings (get-in ((bread/handler app) {:uri uri})
                          [::bread/data :i18n]))
 
       {:one "Uno" :two "Dos"} "/es"
-      {:one "Uno" :two "Dos"} "/es"
       {:one "One" :two "Two"} "/en"
+      {:one "One" :two "Two"} "/"
       ;; These default to :en.
       {:one "One" :two "Two"} "/fr"
-      {:one "One" :two "Two"} "/de")))
+      {:one "One" :two "Two"} "/de")
+
+    (are
+      [lang uri]
+      (= lang (get-in ((bread/handler app) {:uri uri})
+                      [::bread/data :lang]))
+
+      :es "/es"
+      :en "/en"
+      :en "/"
+      :en "/fr"
+      :en "/de"
+      )))
 
 (comment
   (k/run))
