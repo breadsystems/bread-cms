@@ -54,24 +54,25 @@
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
-        ;; i18n queries
-        {:i18n/keys [not-found]} i18n
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
-     [:h1 (or title not-found)]
+     [:h1 title]
+     [:pre i18n]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]]))
 
-(defc ^:not-found not-found [_]
+(defc ^:not-found not-found [{:keys [i18n lang]}]
   {}
-  [:div "404 Not Found"])
-
-(comment
-  (component/not-found))
-
+  ;; TODO extract this to a layout
+  [:html {:lang lang}
+   [:head
+    [:title (:not-found i18n)]
+    [:meta {:charset "utf-8"}]]
+   [:body
+    [:div (:not-found i18n)]]])
 
 (def $router
   (reitit/router
@@ -82,19 +83,30 @@
                  :bread/component page}]]))
 
 (comment
-  (deref app)
+  (def $res (handler {:uri "/en/qwerty"}))
+  (route/params @app (route/match $res))
 
-  (def db (store/datastore @app))
-  (require '[datahike.api :as d])
-
-  (i18n/translate @app :i18n/not-found)
+  (i18n/t @app :not-found)
   (i18n/strings-for @app :en)
   (i18n/strings-for @app :fr)
+  (empty? (i18n/strings-for @app :es))
   (i18n/strings (assoc @app :uri "/en"))
+  (i18n/strings (assoc @app :uri "/fr"))
+  (i18n/strings (assoc @app :uri "/es"))
+
+  (i18n/supported-langs @app)
+  (i18n/lang-supported? @app :en)
+  (i18n/lang-supported? @app :fr)
+  (i18n/lang-supported? @app :es)
+
+  (i18n/lang (assoc @app :uri "/en/asdf"))
+  (i18n/lang (assoc @app :uri "/fr/asdf"))
+  (i18n/lang (assoc @app :uri "/es/asdf")) ;; defaults to :en
+
   (let [req (-> @app
                 (assoc :uri "/fr")
-                (bread/add-hook :hook/strings-for #(assoc % :i18n/x "l'X"))
-                (bread/add-hook :hook/strings #(assoc % :i18n/current "Oui")))]
+                (bread/add-hook :hook/strings-for #(assoc % :x "l'X"))
+                (bread/add-hook :hook/strings #(assoc % :yes "Oui")))]
     (i18n/strings req))
 
   )
@@ -122,7 +134,7 @@
                    (bread/app
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
-                                #_(i18n/plugin)
+                                (i18n/plugin)
                                 (route/plugin)
                                 (br/plugin {:router $router})
                                 (resolver/plugin)
@@ -152,39 +164,16 @@
 
 (comment
 
-  (slurp "http://localhost:1312/en")
-
-  (require '[editscript.core :as ed])
-
-  (ed/diff [:html [:head [:title "hi"]] [:main [:p "hi"]]]
-           [:html [:head [:title "hello"]] [:main [:p "hi"]
-                                            [:div "new div"]]])
-
-  (swap! app #(bread/add-hook % :hook/request green-theme))
-  (swap! app #(bread/add-hook % :hook/request purple-theme))
-  (swap! app #(bread/remove-hook % :hook/request green-theme))
-  (swap! app #(bread/remove-hook % :hook/request purple-theme))
-
-  (bread/hooks-for @app :hook/request)
-  (bread/hook-> @app :hook/head [])
-
   (do
     (spit "resources/public/en/parent-page/index.html" "REWRITE")
     (handler (merge @app {:uri "/en/parent-page"}))
     (slurp "resources/public/en/parent-page/index.html"))
 
-  (def $req (merge {:uri "/en"} @app))
-
-  (route/match $req)
+  (def $req (merge {:uri "/en/"} @app))
   (route/params $req (route/match $req))
-  (::bread/resolver (route/dispatch $req))
-  (def $disp (route/dispatch $req))
-  (::bread/queries (resolver/resolve-queries (route/dispatch $req)))
-  (-> $req
-      route/dispatch
-      resolver/resolve-queries
-      expand-queries
-      ::bread/data)
+  (-> $req route/dispatch ::bread/resolver)
+  (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
+  (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
 
   (store/q
     (store/datastore $req)
@@ -202,56 +191,9 @@
 
   (store/q
     (store/datastore $req)
-    {:query '{:find [(pull ?e [:post/title :post/slug :post/status])]
-              :in [$ ?type ?status ?slug]
-              :where [[?e :post/type ?type]
-                      #_
-                      [?e :post/status ?status]
-                      #_
-                      [?e :post/slug ?slug]
-                      (not-join [?e] [?e :post/parent ?root-ancestor])]}
-     :args [(store/datastore $req) :post.type/page ]})
-
-  (require '[datahike.api :as d])
-
-  ;; TODO is there a way to do a LEFT JOIN, i.e. filter fields by lang IFF
-  ;; they exist, otherwise just ignore the join completely...?
-  (d/q
-    '{:find [(pull ?e [:db/id :post/title :post/slug
-                       {:post/parent
-                        [:db/id :post/title :post/slug]}])
-             (pull ?fields [:db/id :field/lang])]
-      :in [$ ?type ?lang ?slug]
-      :where [[?e :post/type ?type]
-              [?e :post/slug ?slug]
-              [?e :post/fields ?fields]
-              [?fields :field/lang ?lang]]}
-     (store/datastore $req)
-     :post.type/page
-     :en
-     "")
-
-  (d/q
-    '{:find [(pull ?field [:db/id :field/lang :field/key :field/content])]
-      :in [$ ?e ?lang]
-      :where [[?e :post/fields ?field]
-              [?field :field/lang ?lang]]}
-    (store/datastore $req)
-    44
-    :en)
-
-  (-> $req
-    (route/params (route/match $req))
-    (get (:resolver/attr (route/resolver $req)))
-    (clojure.string/split #"/"))
-
-  (resolver/query $req)
-  (store/q (store/datastore $req) (resolver/query $req))
-
-  (handler (assoc @app :uri "/en" :params {:as-of "536870914"}))
-
-  (store/datastore $res)
-  (datafy (store/as-of (store/datastore $res) 536870914))
+    '{:find [?k]
+      :in [$]
+      :where [[?e :i18n/key ?k]]})
 
   ;;
   )
@@ -316,7 +258,9 @@
 
 (comment
   (k/run :unit)
+
   (mount/start)
   (mount/stop)
   (restart-cms!)
+
   (restart!))

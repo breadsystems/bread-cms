@@ -6,6 +6,7 @@
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
@@ -33,7 +34,6 @@
                :db/cardinality :db.cardinality/one}
               {:db/ident :post/fields
                :db/valueType :db.type/ref
-               :db/index true
                :db/cardinality :db.cardinality/many}
               {:db/ident :post/status
                :db/valueType :db.type/keyword
@@ -48,7 +48,16 @@
                :db/cardinality :db.cardinality/one}
               {:db/ident :field/content
                :db/valueType :db.type/string
-               :db/index true
+               :db/cardinality :db.cardinality/one}
+
+              {:db/ident :i18n/key
+               :db/valueType :db.type/keyword
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :i18n/lang
+               :db/valueType :db.type/keyword
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :i18n/string
+               :db/valueType :db.type/string
                :db/cardinality :db.cardinality/one}
 
               ;; init post content
@@ -107,6 +116,12 @@
                                 :field/content
                                 (prn-str {:hello "Bonjour d'enfant"})}
                                }}
+              #:i18n{:lang :en
+                     :key :not-found
+                     :string "404 Not Found"}
+              #:i18n{:lang :fr
+                     :key :not-found
+                     :string "404 Pas Trouvé"}
               ]})
 
 (use-datastore :each config)
@@ -129,9 +144,9 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(component/defc not-found [_]
+(component/defc not-found [{:keys [i18n]}]
   {}
-  [:main "404 Not Found"])
+  [:main (:not-found i18n)])
 
 (deftest test-app-lifecycle
 
@@ -181,6 +196,7 @@
                                     (route/plugin)
                                     (resolver/plugin)
                                     (query/plugin)
+                                    (i18n/plugin)
                                     (component/plugin)
                                     (map->route-plugin routes)]})
           handler (bread/load-handler app)]
@@ -228,8 +244,6 @@
          [:main "404 Not Found"]}
         (handler {:uri "/en/404"})
 
-        ;; TODO i18n strings
-        #_#_
         {:body
          [:main "404 Pas Trouvé"]}
         (handler {:uri "/fr/404"})

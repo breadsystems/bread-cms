@@ -3,30 +3,29 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn lang
-  "High-level fn for getting the language for the current request."
-  [req]
-  (or (bread/hook->> req :hook/lang) (bread/config req :i18n/fallback-lang)))
-
-(defn key?
-  "Checks whether the given keyword is an i18n key for a translatable string."
-  [x]
-  (and (keyword? x) (= "i18n" (namespace x))))
-
+;; TODO make this fn pluggable
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
    as a set of keywords."
   [app]
-  ;; TODO query db for these
-  #{:en :fr})
+  (set (map first
+            (let [db (store/datastore app)]
+              (store/q db
+                     '{:find [?lang] :in [$]
+                       :where [[?e :i18n/lang ?lang]]})))))
 
-(defn- route-segments [{:keys [uri] :as req}]
-  (filter (complement empty?) (str/split (or uri "") #"/")))
-
-(defn- req->lang [req _]
-  ((supported-langs req) (keyword (first (route-segments req)))))
+(defn lang
+  "High-level fn for getting the language for the current request."
+  [req]
+  (let [params (route/params req (route/match req))
+        ;; TODO configurable param key
+        supported ((supported-langs req) (keyword (:lang params)))
+        fallback (bread/config req :i18n/fallback-lang)
+        lang (or supported fallback)]
+    (bread/hook->> req :hook/lang lang)))
 
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
@@ -34,15 +33,7 @@
   [app lang]
   (contains? (supported-langs app) lang))
 
-(defn lang-route?
-  "Whether the first segment of the current route looks like a ISO-639
-  language code (two-char code with optional hyphen-and-two-char suffix.
-  Does not guarantee a valid language code or that the language is supported."
-  [req]
-  (boolean (re-matches #"[a-z]{2}(-[a-z]{2})?"
-                       (str/lower-case (first (route-segments req))))))
-
-(defn t*
+(defn t
   "Query the database for the translatable string represented by keyword k.
   Returns the original keyword k if it is not recognized as a translatable key."
   [app k]
@@ -55,29 +46,6 @@
                            ['?e :i18n/key k]))]
       (ffirst (store/q (store/datastore app) query)))
     k))
-
-(defprotocol Translatable
-  (-translate [x app]))
-
-(extend-protocol Translatable
-  java.lang.Object
-  (-translate [s _] s)
-
-  clojure.lang.PersistentArrayMap
-  (-translate [m app]
-    (into {} (doall (map (juxt key (comp #(-translate % app) val)) m))))
-
-  clojure.lang.LazySeq
-  (-translate [sq app]
-    (map #(-translate % app) sq))
-
-  clojure.lang.PersistentVector
-  (-translate [v app]
-    (vec (map #(-translate % app) v)))
-
-  clojure.lang.Keyword
-  (-translate [k app]
-    (t* app k)))
 
 (defn strings-for
   "Load the strings from the database for the given language."
@@ -97,24 +65,19 @@
   [req]
   (bread/hook-> req :hook/strings (strings-for req (lang req))))
 
-(defn translate
-  "Translate an arbitrary object recursively, expanding i18n/* keywords into
-  their respective translated strings in the current language."
-  [app k]
-  ;; TODO run a hook instead?
-  (-translate k app))
-
-(defn inject-strings [data req]
-  (assoc data :i18n (strings req)))
+(defn add-i18n-queries [app]
+  ;; TODO query/add
+  (-> app
+      (update ::bread/queries conj [:i18n (fn [_]
+                                            (strings app))])
+      (update ::bread/queries conj [:lang (fn [_]
+                                            (lang app))])))
 
 (defn plugin
   ([]
    (plugin {}))
   ([opts]
-   (let [->lang (:i18n/req->lang opts req->lang)
-         fallback (:i18n/fallback opts :en)]
+   (let [fallback (:i18n/fallback opts :en)]
      (fn [app]
-       (bread/add-hooks-> (bread/set-config app :i18n/fallback-lang fallback)
-         (:hook/post translate)
-         (:hook/view-data inject-strings)
-         (:hook/lang ->lang))))))
+       (bread/add-hook (bread/set-config app :i18n/fallback-lang fallback)
+         :hook/resolve add-i18n-queries)))))
