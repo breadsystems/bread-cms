@@ -54,21 +54,21 @@
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
-        ;; i18n queries
-        {:i18n/keys [not-found]} i18n
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
-     [:h1 (or title not-found)]
+     [:h1 title]
+     [:pre i18n]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]]))
 
-(defc ^:not-found not-found [{:keys [i18n]}]
+(defc ^:not-found not-found [{:keys [i18n lang]}]
   {}
   ;; TODO extract this to a layout
-  [:html {:lang "en"} ;; TODO get this from i18n
+  (prn i18n lang)
+  [:html {:lang lang}
    [:head
     [:title (:not-found i18n)]
     [:meta {:charset "utf-8"}]]
@@ -84,6 +84,9 @@
                  :bread/component page}]]))
 
 (comment
+  (def $res (handler {:uri "/en/qwerty"}))
+  (route/params @app (route/match $res))
+
   (i18n/t @app :not-found)
   (i18n/strings-for @app :en)
   (i18n/strings-for @app :fr)
@@ -103,8 +106,8 @@
 
   (let [req (-> @app
                 (assoc :uri "/fr")
-                (bread/add-hook :hook/strings-for #(assoc % :i18n/x "l'X"))
-                (bread/add-hook :hook/strings #(assoc % :i18n/current "Oui")))]
+                (bread/add-hook :hook/strings-for #(assoc % :x "l'X"))
+                (bread/add-hook :hook/strings #(assoc % :yes "Oui")))]
     (i18n/strings req))
 
   )
@@ -256,7 +259,9 @@
 
 (comment
   (k/run :unit)
+
   (mount/start)
   (mount/stop)
   (restart-cms!)
+
   (restart!))
