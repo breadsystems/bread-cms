@@ -67,7 +67,6 @@
 (defc ^:not-found not-found [{:keys [i18n lang]}]
   {}
   ;; TODO extract this to a layout
-  (prn i18n lang)
   [:html {:lang lang}
    [:head
     [:title (:not-found i18n)]
