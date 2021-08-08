@@ -74,6 +74,8 @@
    [:body
     [:div (:not-found i18n)]]])
 
+;; NOTE: this is kinda jank because /en and /en/ (for example) are treated
+;; as different.
 (def $router
   (reitit/router
     ["/:lang"
@@ -86,13 +88,16 @@
   (def $res (handler {:uri "/en/qwerty"}))
   (route/params @app (route/match $res))
 
-  (i18n/t @app :not-found)
+  (i18n/t (assoc @app :uri "/en/") :not-found)
+  (i18n/t (assoc @app :uri "/fr/") :not-found)
+  (i18n/t (assoc @app :uri "/es/") :not-found)
+
   (i18n/strings-for @app :en)
   (i18n/strings-for @app :fr)
   (empty? (i18n/strings-for @app :es))
-  (i18n/strings (assoc @app :uri "/en"))
-  (i18n/strings (assoc @app :uri "/fr"))
-  (i18n/strings (assoc @app :uri "/es"))
+  (i18n/strings (assoc @app :uri "/en/"))
+  (i18n/strings (assoc @app :uri "/fr/"))
+  (i18n/strings (assoc @app :uri "/es/"))
 
   (i18n/supported-langs @app)
   (i18n/lang-supported? @app :en)

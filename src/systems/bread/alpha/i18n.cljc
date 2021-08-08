@@ -33,20 +33,6 @@
   [app lang]
   (contains? (supported-langs app) lang))
 
-(defn t
-  "Query the database for the translatable string represented by keyword k.
-  Returns the original keyword k if it is not recognized as a translatable key."
-  [app k]
-  {:pre [(keyword? k)]}
-  (if (= "i18n" (namespace k))
-    (let [query (vec (conj '[:find ?str
-                             :where
-                             [?e :i18n/string ?str]]
-                           ['?e :i18n/lang (lang app)]
-                           ['?e :i18n/key k]))]
-      (ffirst (store/q (store/datastore app) query)))
-    k))
-
 (defn strings-for
   "Load the strings from the database for the given language."
   [req lang]
@@ -64,6 +50,12 @@
   (lang req)."
   [req]
   (bread/hook-> req :hook/strings (strings-for req (lang req))))
+
+(defn t
+  "Query the database for the translatable string represented by keyword k."
+  [app k]
+  {:pre [(keyword? k)]}
+  (k (strings app)))
 
 (defn add-i18n-queries [app]
   ;; TODO query/add
