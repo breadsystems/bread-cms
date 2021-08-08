@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.i18n-test
   (:require
+    [clojure.string :as string]
     [clojure.test :refer [are deftest is testing use-fixtures]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
@@ -20,8 +21,23 @@
 
 (use-datastore :each config)
 
+(defn naive-params [{:keys [uri] :as req} _]
+  (let [[lang & slugs] (filter (complement empty?)
+                             (string/split (or uri "") #"/"))]
+    {:lang lang :slugs slugs}))
+
+(defn naive-string-parsing-route-plugin []
+  (fn [app]
+    (bread/add-hook app :hook/route-params naive-params)))
+
+(comment
+  (string/split "a/b/c" #"/" 2)
+  (def i18n-string-plugin (i18n-string-route-plugin))
+  )
+
 (let [load-app #(plugins->loaded [(store/plugin config)
-                                  (i18n/plugin)])]
+                                  (i18n/plugin)
+                                  (naive-string-parsing-route-plugin)])]
 
   (deftest test-supported-langs
     (is (= #{:en :es}
@@ -69,7 +85,8 @@
 (deftest test-add-i18n-query
   (let [app (plugins->loaded [(store/plugin config)
                               (i18n/plugin)
-                              (query/plugin)])]
+                              (query/plugin)
+                              (naive-string-parsing-route-plugin)])]
     (are
       [strings uri]
       (= strings (get-in ((bread/handler app) {:uri uri})
@@ -97,7 +114,8 @@
 (deftest test-fallback
   (let [load-app #(plugins->loaded [(store/plugin config)
                                     (i18n/plugin {:i18n/fallback %})
-                                    (query/plugin)])]
+                                    (query/plugin)
+                                    (naive-string-parsing-route-plugin)])]
     (are
       [strings fallback-lang]
       (= strings
@@ -113,6 +131,8 @@
       ;; Nothing in the database for the configured fallback lang.
       {} :fr
       {} :de)))
+
+(deftest ^:kaocha/skip test-lang-param-config)
 
 (comment
   (k/run))

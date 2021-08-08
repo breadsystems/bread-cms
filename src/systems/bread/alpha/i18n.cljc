@@ -3,48 +3,35 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn lang
-  "High-level fn for getting the language for the current request."
-  [req]
-  (or (bread/hook->> req :hook/lang) (bread/config req :i18n/fallback-lang)))
-
-(defn key?
-  "Checks whether the given keyword is an i18n key for a translatable string."
-  [x]
-  (and (keyword? x) (= "i18n" (namespace x))))
-
+;; TODO make this fn pluggable
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
    as a set of keywords."
   [app]
   (set (map first
             (let [db (store/datastore app)]
-              (prn 'db db)
               (store/q db
                      '{:find [?lang] :in [$]
                        :where [[?e :i18n/lang ?lang]]})))))
 
-(defn- route-segments [{:keys [uri] :as req}]
-  (filter (complement empty?) (str/split (or uri "") #"/")))
-
-(defn- req->lang [req _]
-  ((supported-langs req) (keyword (first (route-segments req)))))
+(defn lang
+  "High-level fn for getting the language for the current request."
+  [req]
+  (let [params (route/params req (route/match req))
+        ;; TODO configurable param key
+        supported ((supported-langs req) (keyword (:lang params)))
+        fallback (bread/config req :i18n/fallback-lang)
+        lang (or supported fallback)]
+    (bread/hook->> req :hook/lang lang)))
 
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
   indicate that all translatable strings have translations for lang."
   [app lang]
   (contains? (supported-langs app) lang))
-
-(defn lang-route?
-  "Whether the first segment of the current route looks like a ISO-639
-  language code (two-char code with optional hyphen-and-two-char suffix.
-  Does not guarantee a valid language code or that the language is supported."
-  [req]
-  (boolean (re-matches #"[a-z]{2}(-[a-z]{2})?"
-                       (str/lower-case (first (route-segments req))))))
 
 (defn t
   "Query the database for the translatable string represented by keyword k.
@@ -90,9 +77,7 @@
   ([]
    (plugin {}))
   ([opts]
-   (let [->lang (:i18n/req->lang opts req->lang)
-         fallback (:i18n/fallback opts :en)]
+   (let [fallback (:i18n/fallback opts :en)]
      (fn [app]
-       (bread/add-hooks-> (bread/set-config app :i18n/fallback-lang fallback)
-         (:hook/resolve add-i18n-queries)
-         (:hook/lang ->lang))))))
+       (bread/add-hook (bread/set-config app :i18n/fallback-lang fallback)
+         :hook/resolve add-i18n-queries)))))
