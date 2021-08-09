@@ -4,7 +4,8 @@
  {1315 "resources/debugger"}
 
  :builds
- {:debug
+ {;; shadow-cljs -A:dev:tools watch debug
+  :debug
   {:target :browser
    :output-dir "resources/debug/js"
    :asset-path "/js"

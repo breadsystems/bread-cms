@@ -3,39 +3,22 @@
     [asami.core :as d]
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
-    [org.httpkit.server :as http]
-    [reitit.ring :as ring]))
+    [clojure.tools.logging :as log]
+    [systems.bread.alpha.tools.debug.server :as srv])
+  (:import
+    [java.util UUID]))
 
 (defprotocol BreadDebugger
   (start [debugger port])
   (replay [debugger req]))
 
-(def ^:private handler
-  (ring/ring-handler
-    (ring/router
-      [["/ping" (constantly {:status 200 :body "pong"})]
-       #_
-       ["/ws" ws-handler]])
-
-    (ring/routes
-      #_
-      (wrap-csp-header
-        (ring/create-resource-handler {:path "/"
-                                       :root "debug"}))
-      ;; TODO remove this in favor or wrapped CSP resource handler
-      (ring/create-resource-handler {:path "/"
-                                     :root "debug"})
-      (ring/create-default-handler
-        {:not-found (constantly {:status 404
-                                 :body "404 Not Found"})}))))
-
 (deftype HttpDebugger [conn replay-handler]
   BreadDebugger
   (start [this port]
-    (let [stop-server
-          (http/run-server handler {:port port})
-          ]
+    (let [stop-server (srv/start {:http-port port})]
+      ;; TODO add-tap
       (fn []
+        ;; TODO remove-tap
         (stop-server))))
   (replay [this req]
     (when (fn? replay-handler)
@@ -46,13 +29,9 @@
     (HttpDebugger. (d/connect db-uri) replay-handler)))
 
 (comment
-  (test-debug-srv)
-  (defn test-debug-srv []
-    (let [stop (start (debugger {}) 1397)
-          html (slurp "http://localhost:1397")]
-      (stop)
-      (prn html)
-      (assert (= "Hello, Bread!"))))
+  (def stop (start (debugger {}) 1316))
+
+  (stop)
 
 
   ;; Navigable sandbox
