@@ -12,7 +12,8 @@
       {"Content-Security-Policy"
        (str
          "connect-src 'self' "
-         (string/join " " (map #(format "ws://localhost:%s" %) ports)))})))
+         (string/join " " (map #(format "ws://localhost:%s" %)
+                               (filter some? ports))))})))
 
 (defn- ws-handler [req]
   (http/with-channel req ws-chan
@@ -28,11 +29,6 @@
     #_
     (impl/subscribe! (fn [event]
                        (http/send! ws-chan (prn-str event))))))
-
-(comment
-  (def h (ring/create-resource-handler {:path "/"
-                                        :root "debug"}))
-  (alength (.getParameterTypes (first (.getDeclaredMethods (class h))))))
 
 (defn handler [{:keys [csp-ports]}]
   (ring/ring-handler
@@ -51,12 +47,11 @@
                       {:status 404
                                  :body "404 Not Found"})}))))
 
-(defn start [{:keys [http-port shadow-port] :as opts}]
+(defn start [{:keys [http-port csp-ports]}]
   (loop [port (or http-port 1316)]
-    (prn 'port= port)
-    (let [handler (handler {:csp-ports [port (or shadow-port 9630)]})
+    (let [ports (concat [port] csp-ports)
+          handler (handler {:csp-ports ports})
           stop-srv (try
-                     ;; TODO accept alternative shadow-cljs port
                      ;; TODO proper logging
                      (printf "Starting debug server on port %d.\n" port)
                      (http/run-server handler {:port port})

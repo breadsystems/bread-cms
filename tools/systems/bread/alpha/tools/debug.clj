@@ -9,13 +9,13 @@
     [java.util UUID]))
 
 (defprotocol BreadDebugger
-  (start [debugger port])
+  (start [debugger opts])
   (replay [debugger req]))
 
 (deftype HttpDebugger [conn replay-handler]
   BreadDebugger
-  (start [this port]
-    (let [stop-server (srv/start {:http-port port})]
+  (start [this opts]
+    (let [stop-server (srv/start opts)]
       ;; TODO add-tap
       (fn []
         ;; TODO remove-tap
@@ -29,7 +29,8 @@
     (HttpDebugger. (d/connect db-uri) replay-handler)))
 
 (comment
-  (def stop (start (debugger {}) 1316))
+  (def stop (start (debugger {}) {:http-port 1316
+                                  :csp-ports [9630]}))
 
   (stop)
 
