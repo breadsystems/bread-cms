@@ -239,4 +239,5 @@
   ;; RESET THE DEBUGGER DB
   (publish! {:event/type :init})
 
-  (slurp "http://localhost:1312"))
+  (slurp "http://localhost:1312/en/")
+  (slurp "http://localhost:1312/fr/"))
