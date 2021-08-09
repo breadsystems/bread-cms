@@ -2,4 +2,4 @@
  :debug-port 1314
  ;; Reinstall dev database on restart.
  :reinstall-db? true
- :connect-flowstorm? true}
+ :connect-flowstorm? false}
