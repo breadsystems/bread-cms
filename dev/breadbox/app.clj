@@ -7,6 +7,7 @@
     [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
     [clojure.string :as str]
+    [config.core :as config]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
@@ -118,19 +119,16 @@
 
 ;; This needs to install db on init in order for db and load-app to
 ;; initialize correctly.
-(defonce env (atom {:reinstall-db? true}))
+(defstate env
+  :start (config/load-env))
 
 (defstate db
-  :start (when (:reinstall-db? @env)
+  :start (when (:reinstall-db? env)
+           (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
            (store/install! $config))
-  :stop (when (:reinstall-db? @env)
-          (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
+  :stop (when (:reinstall-db? env)
+          (prn "DELETING DEV DATABASE.")
           (store/delete-database! $config)))
-
-(comment
-  (swap! env assoc :reinstall-db? false)
-  (swap! env assoc :reinstall-db? true)
-  (deref env))
 
 ;; TODO reload app automatically when src changes
 (defstate load-app

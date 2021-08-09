@@ -1,0 +1,4 @@
+{:dev-port 1312
+ :debug-port 1314
+ ;; Reinstall dev database on restart.
+ :reinstall-db? true}
