@@ -247,9 +247,9 @@
                               :where [[?e :post/slug ?slug ?t]]})]
       (assoc data :slugs (sort-by second posts)))))
 
-;; TODO optionally start this via config
 (defstate flow
-  :start (flow/connect))
+  :start (when (:connect-flowstorm? env)
+           (flow/connect)))
 
 (defn restart! []
   (mount/stop)
