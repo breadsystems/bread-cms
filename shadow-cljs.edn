@@ -4,7 +4,15 @@
  {1315 "resources/debugger"}
 
  :builds
- {:debugger
+ {:debug
+  {:target :browser
+   :output-dir "resources/debug/js"
+   :asset-path "/js"
+   :devtools {:watch-dir "resources/debug"}
+   :modules {:main ; becomes debug/js/main.js
+             {:init-fn systems.bread.alpha.tools.debug/init}}}
+  ;; TODO remove this
+  :debugger
   {:target :browser
    :output-dir "resources/debugger/js"
    :asset-path "/js"
