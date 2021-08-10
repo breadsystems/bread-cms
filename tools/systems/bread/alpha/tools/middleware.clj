@@ -24,42 +24,35 @@
   ;(def $ex ex)
   [:pre ex])
 
-(comment
-  $ex
-  (.getCause $ex)
-  )
-
 (defn- error-page [{:keys [error]}]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:title (.getMessage error) " | Bread CMS"]]
-   [:body
-    [:header
-     [:h1 (.getMessage error)]]
-    [:main
-     [:div
-      [:h2 "Error info"]
-      (if (seq (ex-data error))
-        [:table
-         (map (fn [[k field]]
-                [:tr
-                 [:td (name k)]
-                 [:td (error-field k field)]])
-              (ex-data error))]
-        [:p "No additional info about this error. :("])
+  (let [{:keys [via trace cause]} (Throwable->map error)]
+    [:html
+     [:head
+      [:meta {:charset "utf-8"}]
+      [:title cause " | Bread CMS"]]
+     [:body
+      [:header
+       [:h1 cause]]
+      [:main
+       [:div
+        [:h2 "Error info"]
+        (if (seq (ex-data error))
+          [:table
+           (map (fn [[k field]]
+                  [:tr
+                   [:td (name k)]
+                   [:td (error-field k field)]])
+                (ex-data error))]
+          [:p "No additional info about this error. :("])
 
-      [:h2 "Original stack trace"]
-      [:ul
-       (map (fn [elem]
-              [:li [:code (str elem)]])
-            (some-> error ex-data :exception .getStackTrace))]
+        [:h2 "Core stack trace"]
+        [:ul
+         (map (fn [elem]
+                [:li [:code (str elem)]])
+              trace)]]]]]))
 
-      [:h2 "Core stack trace"]
-      [:ul
-       (map (fn [elem]
-              [:li [:code (str elem)]])
-            (.getStackTrace error))]]]]])
+(comment
+  (Throwable->map $last-err))
 
 (defn wrap-exceptions
   ([handler]
@@ -68,7 +61,8 @@
    (fn [req]
      (try
        (handler req)
-       (catch java.lang.Throwable err
+       (catch Throwable err
+         (def $last-err err)
          {:status 500
           :body (rum/render-static-markup
                   (error-page {:error err}))})))))

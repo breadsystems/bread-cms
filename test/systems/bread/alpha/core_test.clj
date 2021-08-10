@@ -451,20 +451,21 @@
       (is (= :NEW! (:my/extra-value threaded)))))
 
   (testing "it explains exceptions thrown by callbacks"
-    (let [req (bread/add-hook (bread/app) :my/hook conj)]
+    (let [ex (Exception. "something bad")
+          throw-ex (fn [& _] (throw ex))
+          req (bread/add-hook (bread/app) :my/hook throw-ex)]
       (is (thrown-with-msg?
             ExceptionInfo
-            #"Don't know how to create ISeq from: clojure.lang.Keyword"
+            #"something bad"
             (bread/hook req :my/hook :my/value)))
       (is (= {:app req
               :name :my/hook
-              :hook {::bread/f conj
+              :hook {::bread/f throw-ex
                      ::bread/precedence 1
                      ::bread/from-ns (the-ns 'systems.bread.alpha.core-test)}
               :args [req :my/value]
               ::bread/core? true}
              (try
-               ;; Try something silly, like conj'ing onto a Keyword...
                (bread/hook req :my/hook :my/value)
                (catch ExceptionInfo ex
                  ;; Drill down into the contextual data and match against
@@ -474,8 +475,7 @@
                  (update (ex-data ex) :hook
                          #(select-keys % [::bread/f
                                           ::bread/precedence
-                                          ::bread/from-ns]))))
-             ))))
+                                          ::bread/from-ns]))))))))
 
   (testing "it honors the bound profiler"
     (let [my-hook-invocations (atom [])

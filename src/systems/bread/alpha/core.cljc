@@ -373,14 +373,15 @@
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#
-                (ex-info (str (class e#) ": " (.getMessage e#))
+                (ex-info (.getMessage e#)
                          {:name ~h
                           :hook ~hook
                           :args ~args
                           :app ~app
                           ;; Indicate to the caller that this exception
                           ;; wraps one from somewhere else.
-                          ::core? true}))))))
+                          ::core? true}
+                         e#))))))
 
 (comment
   (macroexpand '(try-hook
