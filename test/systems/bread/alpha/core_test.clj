@@ -2,6 +2,7 @@
   (:require
     [clojure.string :refer [upper-case]]
     [clojure.test :refer [are deftest is testing]]
+    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.dev-helpers :refer [distill-hooks]]
     [systems.bread.alpha.template :as tpl]
@@ -500,9 +501,11 @@
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
-    (let [configurator-plugin (fn [app]
-                                (bread/set-config app :my/config :it's-configured!))
-          handler (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
+    (let [configurator-plugin
+          (fn [app]
+            (bread/set-config app :my/config :it's-configured!))
+          handler
+          (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
 
@@ -514,3 +517,6 @@
       (is (= res (handler {})))))
 
   )
+
+(comment
+  (k/run))
