@@ -119,22 +119,19 @@
                (bread/hooks-for req :my/hook))))))
 
   (testing "it adds metadata about the context in which it was added"
-    (let [req (bread/add-hook (bread/app) :my/hook identity)]
+    (let [req (bread/add-hook (bread/app) :my/hook identity)
+          my-hooks (bread/hooks-for req :my/hook)]
       (is (= [#{::bread/precedence
                 ::bread/f
                 ::bread/from-ns
                 ::bread/file
                 ::bread/line
                 ::bread/column}]
-             (map (comp set keys) (bread/hooks-for req :my/hook))))
+             (map (comp set keys) my-hooks)))
       (is (= [{::bread/from-ns (the-ns 'systems.bread.alpha.core-test)}]
-             (distill-hooks
-               [::bread/from-ns]
-               (bread/hooks-for req :my/hook))))
+             (distill-hooks [::bread/from-ns] my-hooks)))
       (is (ends-with?
-            (::bread/file (first (distill-hooks
-                                   [::bread/file]
-                                   (bread/hooks-for req :my/hook))))
+            (::bread/file (first (distill-hooks [::bread/file] my-hooks)))
             "systems/bread/alpha/core_test.clj")))))
 
 (deftest test-add-effect
