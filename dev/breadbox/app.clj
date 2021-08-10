@@ -25,7 +25,8 @@
     [systems.bread.alpha.static-frontend :as static]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
-    [systems.bread.alpha.tools.debugger :as debug]
+    [systems.bread.alpha.tools.debugger :as debug*]
+    [systems.bread.alpha.tools.debug :as debug]
     [systems.bread.alpha.tools.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
@@ -135,7 +136,7 @@
   :start (reset! app
                  (bread/load-app
                    (bread/app
-                     {:plugins [(debug/plugin)
+                     {:plugins [(debug*/plugin)
                                 (store/plugin $config)
                                 (i18n/plugin)
                                 (route/plugin)
@@ -227,10 +228,19 @@
   :start (start!)
   :stop  (stop!))
 
+(defonce stop-debug-server! (atom nil))
+(defstate debug-server
+  :start (reset! stop-debug-server! (debug/start
+                                      (debug/debugger)
+                                      {:http-port 1316
+                                       :csp-ports [9630]}))
+  :stop (when-let [stop! @stop-debug-server!]
+          (stop!)))
+
 (defonce stop-debugger! (atom nil))
 
 (defstate debugger
-  :start (reset! stop-debugger! (debug/start! {:replay-handler handler}))
+  :start (reset! stop-debugger! (debug*/start! {:replay-handler handler}))
   :stop  (when-let [stop! @stop-debugger!]
            (stop!)))
 

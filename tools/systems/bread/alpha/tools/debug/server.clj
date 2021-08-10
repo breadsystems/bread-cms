@@ -15,6 +15,7 @@
          (string/join " " (map #(format "ws://localhost:%s" %)
                                (filter some? ports))))})))
 
+;; TODO pass debugger record here so it can respond to events
 (defn- ws-handler [req]
   (http/with-channel req ws-chan
     (println "Debug WebSocket connection created...")
@@ -41,11 +42,13 @@
         (ring/create-resource-handler {:path "/"
                                        :root "debug"})
         csp-ports)
-      #_
       (ring/create-default-handler
+        ;; TODO why isn't this working?
         {:not-found (fn [_]
+                      (prn 404)
                       {:status 404
-                                 :body "404 Not Found"})}))))
+                       :headers {"content-type" "text/plain"}
+                       :body "404 Not Found"})}))))
 
 (defn start [{:keys [http-port csp-ports]}]
   (loop [port (or http-port 1316)]
@@ -53,7 +56,7 @@
           handler (handler {:csp-ports ports})
           stop-srv (try
                      ;; TODO proper logging
-                     (printf "Starting debug server on port %d.\n" port)
+                     (printf "Starting debug server on port %d\n" port)
                      (http/run-server handler {:port port})
                      (catch java.net.BindException e
                        (printf "%s: %s\n" (.getMessage e) port)))]

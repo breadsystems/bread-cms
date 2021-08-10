@@ -12,7 +12,7 @@
   (start [debugger opts])
   (replay [debugger req]))
 
-(deftype HttpDebugger [conn replay-handler]
+(defrecord HttpDebugger [conn replay-handler]
   BreadDebugger
   (start [this opts]
     (let [stop-server (srv/start opts)]
@@ -24,9 +24,14 @@
     (when (fn? replay-handler)
       (replay-handler req))))
 
-(defn debugger [{:keys [db-uri replay-handler]}]
-  (let [db-uri (or db-uri (format "asami:mem://%s" (str (UUID/randomUUID))))]
-    (HttpDebugger. (d/connect db-uri) replay-handler)))
+(defn debugger
+  ([]
+   (debugger {}))
+  ([{:keys [db-uri replay-handler]}]
+   (let [db-uri (or db-uri (format "asami:mem://%s"
+                                   (str (UUID/randomUUID))))]
+     (printf "Connecting to Asami: %s\n" db-uri)
+     (HttpDebugger. (d/connect db-uri) replay-handler))))
 
 (comment
   (def stop (start (debugger {}) {:http-port 1316
