@@ -371,19 +371,16 @@
      (profile-hook! ~h ~f ~args ~hook ~app)
      (apply ~f ~args)
      (catch java.lang.Throwable e#
-       ;; TODO annotate original ex. with metadata instead of wrapping it.
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#
-                (ex-info (str ~h " hook threw an exception: "
-                              (str (class e#) ": " (.getMessage e#)))
-                              {:exception e#
-                               :name ~h
-                               :hook ~hook
-                               :args ~args
-                               :app ~app
-                               ;; Indicate to the caller that this exception
-                               ;; wraps one from somewhere else.
-                               ::core? true}))))))
+                (ex-info (str (class e#) ": " (.getMessage e#))
+                         {:name ~h
+                          :hook ~hook
+                          :args ~args
+                          :app ~app
+                          ;; Indicate to the caller that this exception
+                          ;; wraps one from somewhere else.
+                          ::core? true}))))))
 
 (comment
   (macroexpand '(try-hook
@@ -392,6 +389,8 @@
                   :hook/test
                   identity
                   ['$APP "some value" "other" "args"]))
+  (.getCause (ex-info "something bad" {} (Exception. "orig")))
+  (Throwable->map (Exception. "bad"))
   )
 
 (defn hook->>

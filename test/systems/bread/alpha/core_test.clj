@@ -454,16 +454,32 @@
       (is (= 7 (:my/num threaded)))
       (is (= :NEW! (:my/extra-value threaded)))))
 
-  ;; TODO annotate original ex. with metadata instead of wrapping it.
   (testing "it explains exceptions thrown by callbacks"
-    (let [;; This should throw:
-          ;; java.lang.ClassCastException: class clojure.lang.PersistentArrayMap
-          ;; cannot be cast to class java.lang.Number
-          req (bread/add-hook (bread/app) :my/hook inc)]
+    (let [req (bread/add-hook (bread/app) :my/hook conj)]
       (is (thrown-with-msg?
             ExceptionInfo
-            #":my/hook hook threw an exception: "
-            (bread/hook req :my/hook)))))
+            #"Don't know how to create ISeq from: clojure.lang.Keyword"
+            (bread/hook req :my/hook :my/value)))
+      (is (= {:app req
+              :name :my/hook
+              :hook {::bread/f conj
+                     ::bread/precedence 1
+                     ::bread/from-ns (the-ns 'systems.bread.alpha.core-test)}
+              :args [req :my/value]
+              ::bread/core? true}
+             (try
+               ;; Try something silly, like conj'ing onto a Keyword...
+               (bread/hook req :my/hook :my/value)
+               (catch ExceptionInfo ex
+                 ;; Drill down into the contextual data and match against
+                 ;; a reasonable subset. Matching against column/line etc.
+                 ;; is too high a maintenance cost, since any change to
+                 ;; core.cljc above try-hook could trigger a failure here.
+                 (update (ex-data ex) :hook
+                         #(select-keys % [::bread/f
+                                          ::bread/precedence
+                                          ::bread/from-ns]))))
+             ))))
 
   (testing "it honors the bound profiler"
     (let [my-hook-invocations (atom [])
