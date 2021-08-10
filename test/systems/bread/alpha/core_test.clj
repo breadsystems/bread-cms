@@ -315,11 +315,7 @@
 
       ;; ...or futures.
       {:future "value"}
-      (future {:future "value"})
-      ))
-
-  ;; TODO add-tx convenience fn (for running db tx directly)
-  )
+      (future {:future "value"}))))
 
 (deftest test-add-value-hook
 
