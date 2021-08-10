@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.core-test
   (:require
-    [clojure.string :refer [upper-case]]
+    [clojure.string :refer [ends-with? upper-case]]
     [clojure.test :refer [are deftest is testing]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
@@ -127,11 +127,15 @@
                 ::bread/line
                 ::bread/column}]
              (map (comp set keys) (bread/hooks-for req :my/hook))))
-      (is (= [{::bread/from-ns (the-ns 'systems.bread.alpha.core-test)
-               ::bread/file "systems/bread/alpha/core_test.clj"}]
+      (is (= [{::bread/from-ns (the-ns 'systems.bread.alpha.core-test)}]
              (distill-hooks
-               [::bread/from-ns ::bread/file]
-               (bread/hooks-for req :my/hook)))))))
+               [::bread/from-ns]
+               (bread/hooks-for req :my/hook))))
+      (is (ends-with?
+            (::bread/file (first (distill-hooks
+                                   [::bread/file]
+                                   (bread/hooks-for req :my/hook))))
+            "systems/bread/alpha/core_test.clj")))))
 
 (deftest test-add-effect
 
@@ -453,6 +457,7 @@
       (is (= 7 (:my/num threaded)))
       (is (= :NEW! (:my/extra-value threaded)))))
 
+  ;; TODO annotate original ex. with metadata instead of wrapping it.
   (testing "it explains exceptions thrown by callbacks"
     (let [;; This should throw:
           ;; java.lang.ClassCastException: class clojure.lang.PersistentArrayMap

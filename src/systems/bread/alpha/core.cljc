@@ -371,6 +371,7 @@
      (profile-hook! ~h ~f ~args ~hook ~app)
      (apply ~f ~args)
      (catch java.lang.Throwable e#
+       ;; TODO annotate original ex. with metadata instead of wrapping it.
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#
                 (ex-info (str ~h " hook threw an exception: "
