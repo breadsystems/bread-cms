@@ -17,8 +17,6 @@
                                             req->url
                                             shorten-uuid]]))
 
-(defonce !ws (atom nil))
-
 (rum/defc ui < rum/reactive []
   [:main "hello, debug!"])
 
@@ -44,7 +42,6 @@
 (defn init []
   (js/console.log "Initializing...")
   (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
-    (reset! !ws ws)
     (.addEventListener ws "open"
                        (fn [_]
                          (.send ws (prn-str {:event/type :ui/init}))))
