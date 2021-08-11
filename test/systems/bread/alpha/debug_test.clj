@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.core-test
+(ns systems.bread.alpha.debug-test
   (:require
     [clojure.test :refer [are deftest is testing use-fixtures]]
     [kaocha.repl :as k]
