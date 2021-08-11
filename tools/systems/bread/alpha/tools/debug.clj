@@ -16,17 +16,44 @@
   ;; TODO Does replay belong here?
   (replay [debugger req]))
 
+(defonce subscribers (atom {}))
+(defn subscribe [query]
+  (swap! subscribers assoc query nil))
+(defn broadcast [conn]
+  (doall (for [[query old] @subscribers]
+    (let [v (d/q (find-pull query) (d/db conn))]
+      (when (not= (hash v) old)
+        (srv/publish! [query v]))
+      (swap! subscribers assoc query (hash v))))))
+(defn unsubscribe [query]
+  (swap! subscribers dissoc query))
+
+(def event-data nil)
+(defmulti event-data (fn [e]
+                       (::bread/profile.type e)))
+
+(defmethod event-data :profile.type/request [{req ::bread/profile}]
+  ;(prn (keys req))
+  {:request/uuid (:request/uuid req)
+   :request/method (:request-method req)
+   :request/uri (:uri req)})
+
+(defmethod event-data :profile.type/response [{res ::bread/profile}]
+  ;(prn (keys res))
+  (select-keys res [:request/uuid #_#_:request-method :uri]))
+
 (defrecord HttpDebugger [conn replay-handler]
   BreadDebugger
   (start [this opts]
     (let [stop-server (srv/start opts)
-          tap (bread/add-profiler (fn [{t ::bread/profile.type :as e}]
-                                    (profile this t)))]
+          tap (bread/add-profiler (fn [e]
+                                    (profile this e)))]
       (fn []
         (remove-tap tap)
         (stop-server))))
   (profile [this e]
-    (srv/publish! e))
+    (d/transact conn {:tx-data [(event-data e)]})
+    (broadcast conn))
   (profile [this e _]
     (profile this e))
   (replay [this req]
@@ -41,6 +68,34 @@
                                    (str (UUID/randomUUID))))]
      (printf "Connecting to Asami: %s\n" db-uri)
      (HttpDebugger. (d/connect db-uri) replay-handler))))
+
+(defn pull [attrs]
+  (let [symbols (mapv (comp symbol #(str "?" %) name) attrs)
+        eid (gensym "?e")
+        where (mapv (fn [[attr sym]]
+                      [eid attr sym])
+                    (partition 2 (interleave attrs symbols)))]
+    [symbols where]))
+(defn find-pull [shape]
+  (let [[find-clause where-clause] (pull shape)]
+    {:find find-clause
+     :where where-clause}))
+
+(comment
+  (find-pull [:request/uuid :request/uri :request/method])
+
+  (def conn (d/connect "asami:mem://debugdb"))
+
+  (def reqs' [:request/uuid :request/uri :request/method])
+  (subscribe reqs')
+  (broadcast conn)
+  (unsubscribe reqs')
+
+  (deref subscribers)
+  (reset! subscribers {})
+
+  (d/q (find-pull reqs')
+       (d/db conn)))
 
 (defn plugin []
   (fn [app]
@@ -120,4 +175,7 @@
   ($requests)
   ($uuid->request u1)
   ($uuid->request u2)
+
+  (slurp "http://localhost:1312/en/")
+  (slurp "http://localhost:1312/fr/")
   )
