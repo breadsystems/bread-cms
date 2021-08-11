@@ -44,7 +44,7 @@
   (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
     (.addEventListener ws "open"
                        (fn [_]
-                         (.send ws (prn-str {:event/type :ui/init}))))
+                         (.send ws (prn-str [:subscribe [:request/uuid :request/uri]]))))
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close"
                        #(do

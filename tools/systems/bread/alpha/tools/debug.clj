@@ -12,21 +12,12 @@
 
 (defprotocol BreadDebugger
   (start [debugger opts])
-  (profile [debugger e] [debugger e opts])
-  ;; TODO Does replay belong here?
-  (replay [debugger req]))
+  (profile [debugger e] [debugger e opts]))
 
-(defonce subscribers (atom {}))
-(defn subscribe [query]
-  (swap! subscribers assoc query nil))
-(defn broadcast [conn]
-  (doall (for [[query old] @subscribers]
-    (let [v (d/q (find-pull query) (d/db conn))]
-      (when (not= (hash v) old)
-        (srv/publish! [query v]))
-      (swap! subscribers assoc query (hash v))))))
-(defn unsubscribe [query]
-  (swap! subscribers dissoc query))
+(defprotocol ObservableDebugger
+  (subscribe [debugger query])
+  (broadcast [debugger])
+  (unsubscribe [debugger query]))
 
 (def event-data nil)
 (defmulti event-data (fn [e]
@@ -42,10 +33,19 @@
   ;(prn (keys res))
   (select-keys res [:request/uuid #_#_:request-method :uri]))
 
-(defrecord HttpDebugger [conn replay-handler]
+(defmulti handle-message (fn [_ [k]] k))
+
+(defmethod handle-message :subscribe [debugger [_ query]]
+  (prn :subscribe query)
+  (subscribe debugger query))
+
+(defrecord HttpDebugger [conn replay-handler subscriptions]
   BreadDebugger
   (start [this opts]
-    (let [stop-server (srv/start opts)
+    (let [stop-server (srv/start (assoc opts
+                                        :ws-on-message
+                                        (fn [msg]
+                                          (handle-message this msg))))
           tap (bread/add-profiler (fn [e]
                                     (profile this e)))]
       (fn []
@@ -53,12 +53,27 @@
         (stop-server))))
   (profile [this e]
     (d/transact conn {:tx-data [(event-data e)]})
-    (broadcast conn))
+    (broadcast this))
   (profile [this e _]
     (profile this e))
+
+  ;; TODO make this a normal event handler
+  #_
   (replay [this req]
     (when (fn? replay-handler)
-      (replay-handler req))))
+      (replay-handler req)))
+
+  ObservableDebugger
+  (subscribe [this query]
+    (swap! subscriptions assoc query nil))
+  (broadcast [this]
+    (doall (for [[query old] @subscriptions]
+             (let [v (d/q (find-pull query) (d/db conn))]
+               (when (not= (hash v) old)
+                 (srv/publish! [query v]))
+               (swap! subscriptions assoc query (hash v))))))
+  (unsubscribe [this query]
+    (swap! subscriptions dissoc query)))
 
 (defn debugger
   ([]
@@ -67,7 +82,7 @@
    (let [db-uri (or db-uri (format "asami:mem://%s"
                                    (str (UUID/randomUUID))))]
      (printf "Connecting to Asami: %s\n" db-uri)
-     (HttpDebugger. (d/connect db-uri) replay-handler))))
+     (HttpDebugger. (d/connect db-uri) replay-handler (atom {})))))
 
 (defn pull [attrs]
   (let [symbols (mapv (comp symbol #(str "?" %) name) attrs)

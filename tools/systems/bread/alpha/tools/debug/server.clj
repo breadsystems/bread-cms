@@ -39,28 +39,29 @@
     (fn []
       (untap <events listener))))
 
-;; TODO pass debugger record here so it can respond to events
-(defn- ws-handler [req]
-  (http/with-channel req ws-chan
-    (println "Debug WebSocket connection created...")
-    (http/on-close ws-chan (fn [status]
-                             (println "channel closed:" status)))
-    (http/on-receive ws-chan (fn [message]
-                               (let [msg (edn/read-string message)]
-                                 (prn 'message msg)
-                                 #_
-                                 (on-event (assoc msg :channel ws-chan)))))
-    (subscribe! (fn [event]
-                       (http/send! ws-chan (prn-str event))))))
+(defn- ws-handler [ws-on-message]
+  (fn [req]
+    (http/with-channel req ws-chan
+      (println "Debug WebSocket connection created...")
+      (http/on-close ws-chan (fn [status]
+                               (println "channel closed:" status)))
+      (http/on-receive ws-chan (fn [message]
+                                 (let [msg (edn/read-string message)]
+                                   (prn ws-on-message)
+                                   (ws-on-message msg)
+                                   #_
+                                   (on-event (assoc msg :channel ws-chan)))))
+      (subscribe! (fn [event]
+                    (http/send! ws-chan (prn-str event)))))))
 
 (comment
   (publish! {:hi 'there}))
 
-(defn handler [{:keys [csp-ports]}]
+(defn handler [{:keys [csp-ports ws-on-message]}]
   (ring/ring-handler
     (ring/router
       [["/ping" (constantly {:status 200 :body "pong"})]
-       ["/ws" ws-handler]])
+       ["/ws" (ws-handler ws-on-message)]])
 
     (ring/routes
       (wrap-csp-header
@@ -75,10 +76,11 @@
                        :headers {"content-type" "text/plain"}
                        :body "404 Not Found"})}))))
 
-(defn start [{:keys [http-port csp-ports]}]
+(defn start [{:keys [http-port csp-ports ws-on-message]}]
   (loop [port (or http-port 1316)]
     (let [ports (concat [port] csp-ports)
-          handler (handler {:csp-ports ports})
+          handler (handler {:csp-ports ports
+                            :ws-on-message ws-on-message})
           stop-srv (try
                      ;; TODO proper logging
                      (printf "Starting debug server on port %d\n" port)
