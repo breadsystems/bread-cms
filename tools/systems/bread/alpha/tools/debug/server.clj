@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.tools.debug.server
   (:require
+    [clojure.core.async :as async :refer [<! chan go-loop mult put! tap untap]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [org.httpkit.server :as http]
@@ -15,6 +16,29 @@
          (string/join " " (map #(format "ws://localhost:%s" %)
                                (filter some? ports))))})))
 
+;; PUBLISH to events>
+(def ^:private events> (chan 1))
+;; SUBSCRIBE to <events
+(def ^:private <events (mult events>))
+
+(defn publish!
+  "Publishes e, broadcasting all subscribers (attached via subscribe!)"
+  [e]
+  (put! events> e))
+
+(defn subscribe!
+  "Subscribes (taps) to a mult of the <events channel, attaching f as a handler.
+  Returns an unsubscribe callback that closes around the mult (calls untap)."
+  [f]
+  (let [listener (chan 1)]
+    (tap <events listener)
+    (go-loop []
+             (let [e (<! listener)]
+               (f e)
+               (recur)))
+    (fn []
+      (untap <events listener))))
+
 ;; TODO pass debugger record here so it can respond to events
 (defn- ws-handler [req]
   (http/with-channel req ws-chan
@@ -27,9 +51,11 @@
                                  #_
                                  (on-event (assoc msg :channel ws-chan)))))
     ;; TODO Broadcast over our WebSocket whenever there's an event!
-    #_
-    (impl/subscribe! (fn [event]
+    (subscribe! (fn [event]
                        (http/send! ws-chan (prn-str event))))))
+
+(comment
+  (publish! {:hi 'there}))
 
 (defn handler [{:keys [csp-ports]}]
   (ring/ring-handler

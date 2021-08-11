@@ -27,14 +27,15 @@
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
 
-#_
 (defn on-message [message]
   (when-let [event (try
                      (edn/read-string (.-data message))
                      (catch js/Error ^js/Error err
-                       (prn err)
+                       (js/console.error err)
                        (prn (.-data message))
                        nil))]
+    (prn 'EVENT event)
+    #_
     (publish! event)))
 
 ;; init is called ONCE when the page loads
@@ -47,9 +48,7 @@
     (.addEventListener ws "open"
                        (fn [_]
                          (.send ws (prn-str {:event/type :ui/init}))))
-    (.addEventListener ws "message" #_on-message
-                       (fn [msg]
-                         (js/console.log "MESSAGE" msg)))
+    (.addEventListener ws "message" on-message)
     (.addEventListener ws "close"
                        #(do
                           #_

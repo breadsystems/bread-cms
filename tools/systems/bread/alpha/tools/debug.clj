@@ -4,22 +4,30 @@
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
     [clojure.tools.logging :as log]
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import
-    [java.util UUID]))
+    [java.util UUID Date]))
 
 (defprotocol BreadDebugger
   (start [debugger opts])
+  (profile [debugger e] [debugger e opts])
   (replay [debugger req]))
 
 (defrecord HttpDebugger [conn replay-handler]
   BreadDebugger
   (start [this opts]
-    (let [stop-server (srv/start opts)]
-      ;; TODO add-tap
+    (let [stop-server (srv/start opts)
+          tap (bread/add-profiler (fn [{t ::bread/profile.type :as e}]
+                                    (profile this t)))]
       (fn []
-        ;; TODO remove-tap
+        (remove-tap tap)
         (stop-server))))
+  (profile [this e]
+    (srv/publish! e))
+  (profile [this e _]
+    (profile this e))
   (replay [this req]
     (when (fn? replay-handler)
       (replay-handler req))))
@@ -32,6 +40,34 @@
                                    (str (UUID/randomUUID))))]
      (printf "Connecting to Asami: %s\n" db-uri)
      (HttpDebugger. (d/connect db-uri) replay-handler))))
+
+(defn plugin []
+  (fn [app]
+    (bread/add-hooks->
+      app
+      (:hook/request
+        (fn [req]
+          (let [rid (UUID/randomUUID)
+                as-of-param (bread/config req :datastore/as-of-param)
+                ;; The request either has a timepoint set by virtue of having
+                ;; an `as-of` param, OR its db is a vanilla DB instance from
+                ;; which we can grab a max-tx.
+                as-of (or (store/timepoint req) (store/max-tx req))
+                req (assoc req
+                           :profiler/profiled? true
+                           :profiler/as-of-param as-of-param
+                           :request/uuid rid
+                           :request/as-of as-of
+                           :request/timestamp (Date.))]
+            (bread/profile> :profile.type/request req)
+            req))
+        {:precedence Double/NEGATIVE_INFINITY})
+      (:hook/response
+        (fn [res]
+          (let [res (assoc res :response/timestamp (Date.))]
+            (bread/profile> :profile.type/response res)
+            res))
+        {:precedence Double/POSITIVE_INFINITY}))))
 
 (comment
   (def stop (start (debugger {}) {:http-port 1316

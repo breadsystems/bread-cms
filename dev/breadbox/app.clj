@@ -136,7 +136,8 @@
   :start (reset! app
                  (bread/load-app
                    (bread/app
-                     {:plugins [(debug*/plugin)
+                     {:plugins [(debug*/plugin) ;; TODO remove
+                                (debug/plugin)
                                 (store/plugin $config)
                                 (i18n/plugin)
                                 (route/plugin)
@@ -249,7 +250,6 @@
   (datafy [ch]
     (str "org.httpkit.server.AsyncChannel[" ch "]"))
 
-  #_#_
   datahike.db.DB
   (datafy [db]
     (let [data (select-keys db [:max-tx :max-eid])

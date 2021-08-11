@@ -85,6 +85,7 @@
   (datafy [ch]
     (str ch))
 
+  #_#_
   datahike.db.DB
   (datafy [db]
     (select-keys db [:max-tx :max-eid]))
