@@ -272,6 +272,10 @@
 (comment
   (k/run :unit)
 
+  bread/*profile-hooks*
+  (alter-var-root #'bread/*profile-hooks* (constantly true))
+  (alter-var-root #'bread/*profile-hooks* (constantly false))
+
   (mount/start)
   (mount/stop)
   (restart-cms!)

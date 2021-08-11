@@ -93,6 +93,33 @@
 ;; TODO refactor this in terms of tap>, add-tap
 ;;
 
+(defonce ^{:dynamic true
+           :doc
+           "Boolean used at compile time to determine whether to tap> each
+           hook invocation. For debugging purposes only; not recommended
+           in production. Default false."}
+  *profile-hooks* false)
+
+(defn add-profiler
+  "Wraps f in a fn that first checks that its sole arg is a valid profiling
+  event, and if so, calls f with its arg. Calls add-tap with the resulting
+  wrapper fn. Returns wrapper for use with remove-tap."
+  [f]
+  (let [wrapper (fn [x]
+                  (if (::profile.type x)
+                    (f x)))]
+    (add-tap wrapper)
+    wrapper))
+
+(defn profile> [t e]
+  (tap> {::profile.type t ::profile e}))
+
+(defn- profile-hook [invocation]
+  (when *profile-hooks*
+    (profile> :profile.type/hook invocation)))
+
+
+;; TODO vvv delete this vvv
 (def ^{:dynamic true
        :doc
        "Dynamic var for debugging. If this var is bound to a function f,
@@ -126,6 +153,7 @@
 
 (defn bind-profiler! [profiler]
   (alter-var-root (var *hook-profiler*) (constantly profiler)))
+;; TODO ^^^ end delete ^^^
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -368,7 +396,9 @@
 
 (defmacro ^:private try-hook [app hook h f args]
   `(try
+     ;; TODO delete legacy call
      (profile-hook! ~h ~f ~args ~hook ~app)
+     (profile-hook {:hook ~h :f ~f :args ~args :detail ~hook :app ~app})
      (apply ~f ~args)
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it

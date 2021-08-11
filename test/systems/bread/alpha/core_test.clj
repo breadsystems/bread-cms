@@ -475,19 +475,7 @@
                  (update (ex-data ex) :hook
                          #(select-keys % [::bread/f
                                           ::bread/precedence
-                                          ::bread/from-ns]))))))))
-
-  (testing "it honors the bound profiler"
-    (let [my-hook-invocations (atom [])
-          app (-> (bread/app {})
-                  (bread/add-hook :my/hook inc {:precedence 2})
-                  (bread/add-value-hook :my/hook 1))
-          record-args! (fn [{:keys [hook args]}]
-                         (swap! my-hook-invocations conj args))
-          result (binding [bread/*hook-profiler* record-args!]
-                   (bread/hook app :my/hook))]
-      (is (= 2 result))
-      (is (= [[app] [1]] @my-hook-invocations)))))
+                                          ::bread/from-ns])))))))))
 
 (deftest test-app
 
