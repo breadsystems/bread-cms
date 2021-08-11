@@ -15,7 +15,7 @@
                         (run)
                         (remove-tap added))))
 
-(k/run (deftest test-profile-hook
+(deftest test-profile-hook
 
   ;; Default behavior.
   (testing "with profiling disabled"
@@ -28,7 +28,7 @@
       (let [app (bread/add-hook (bread/app) :my/hook inc)]
         (bread/hook-> app :my/hook 5)
         (is (= #{:my/hook}
-               @invocations))))))
+               @invocations)))))
 
 (comment
   (k/run))
