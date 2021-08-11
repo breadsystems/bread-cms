@@ -53,7 +53,6 @@
                        #(do
                           #_
                           (publish! {:event/type :ui/websocket-closed!})
-                          #_
                           (js/setTimeout
                             (fn []
                               (set! js/window.location js/window.location))
