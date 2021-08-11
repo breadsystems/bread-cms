@@ -42,7 +42,7 @@
 ;; this is called in the index.html and must be exported
 ;; so it is available even in :advanced release builds
 (defn init []
-  ;; TODO get WS host/port dynamically
+  (js/console.log "Initializing...")
   (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
     (reset! !ws ws)
     (.addEventListener ws "open"
@@ -51,11 +51,10 @@
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close"
                        #(do
-                          #_
-                          (publish! {:event/type :ui/websocket-closed!})
                           (js/setTimeout
                             (fn []
-                              (set! js/window.location js/window.location))
+                              (js/console.log "Attempting to re-initialize...")
+                              (init))
                             1000)
                           (js/console.error "WebSocket connection closed!"))))
   #_

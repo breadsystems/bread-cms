@@ -50,7 +50,6 @@
                                  (prn 'message msg)
                                  #_
                                  (on-event (assoc msg :channel ws-chan)))))
-    ;; TODO Broadcast over our WebSocket whenever there's an event!
     (subscribe! (fn [event]
                        (http/send! ws-chan (prn-str event))))))
 

@@ -13,6 +13,7 @@
 (defprotocol BreadDebugger
   (start [debugger opts])
   (profile [debugger e] [debugger e opts])
+  ;; TODO Does replay belong here?
   (replay [debugger req]))
 
 (defrecord HttpDebugger [conn replay-handler]
