@@ -43,15 +43,18 @@
   (fn [req]
     (http/with-channel req ws-chan
       (println "Debug WebSocket connection created...")
+      ;; TODO create unique client ID here
       (http/on-close ws-chan (fn [status]
                                (println "channel closed:" status)))
       (http/on-receive ws-chan (fn [message]
                                  (let [msg (edn/read-string message)]
                                    (prn ws-on-message)
+                                   ;; TODO send client ID
                                    (ws-on-message msg)
                                    #_
                                    (on-event (assoc msg :channel ws-chan)))))
       (subscribe! (fn [event]
+                    ;; TODO transit
                     (http/send! ws-chan (prn-str event)))))))
 
 (comment

@@ -33,6 +33,7 @@
   ;(prn (keys res))
   (select-keys res [:request/uuid #_#_:request-method :uri]))
 
+;; TODO client ID
 (defmulti handle-message (fn [_ [k]] k))
 
 (defmethod handle-message :subscribe [debugger [_ query]]
@@ -45,6 +46,7 @@
     (let [stop-server (srv/start (assoc opts
                                         :ws-on-message
                                         (fn [msg]
+                                          ;; TODO accept client ID here
                                           (handle-message this msg))))
           tap (bread/add-profiler (fn [e]
                                     (profile this e)))]
@@ -88,6 +90,7 @@
   (let [symbols (mapv (comp symbol #(str "?" %) name) attrs)
         eid (gensym "?e")
         where (mapv (fn [[attr sym]]
+                      ;; [?e... :some/attr ?sym]
                       [eid attr sym])
                     (partition 2 (interleave attrs symbols)))]
     [symbols where]))
