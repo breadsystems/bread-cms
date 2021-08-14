@@ -176,7 +176,7 @@
                                 ;; TODO layouts
                                 ;; TODO themes
 
-                                (static-be/plugin {:root "pages"})
+                                (static-be/plugin)
                                 (static-fe/plugin)]})))
   :stop (reset! app nil))
 
