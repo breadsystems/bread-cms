@@ -67,8 +67,8 @@
    (plugin {}))
   ([{:keys [root ext lang-param slug-param]}]
    (fn [app]
-     (cond-> app
-       root (bread/set-config :static-backend/root root)
-       ext (bread/set-config :static-backend/ext ext)
-       lang-param (bread/set-config :static-backend/lang-param lang-param)
-       slug-param (bread/set-config :static-backend/slug-param slug-param)))))
+     (bread/set-config-cond-> app
+       root :static-backend/root
+       ext :static-backend/ext
+       lang-param :static-backend/lang-param
+       slug-param :static-backend/slug-param))))
