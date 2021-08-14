@@ -23,16 +23,21 @@
   ;;
   )
 
-;; TODO option[s] for metadata
-(defn query-fs [data params {:keys [root ext lang-param slug-param]}]
+(defn query-fs
+  [data params {:keys [root ext lang-param slug-param parse parse-meta?]}]
   (let [sep java.io.File/separator
         path (string/join sep (map params [lang-param slug-param]))
         path (str root sep path ext)
-        {:keys [metadata html]}
-        (some-> path io/resource slurp md/md-to-html-string-with-meta)]
-    (prn path '-> (-> path io/resource slurp))
-    (when html
-      (assoc metadata :html html))))
+        parse (cond
+                (ifn? parse) parse
+                (false? parse-meta?) md/md-to-html-string
+                :else md/md-to-html-string-with-meta)
+        parsed (some-> path io/resource slurp parse)]
+    (if (false? parse-meta?)
+      {:html parsed}
+      (let [{:keys [html metadata]} parsed]
+        (when html
+          (assoc metadata :html html))))))
 
 (defmethod resolver/resolve-query :resolver.type/static
   [{::bread/keys [resolver] :as req}]
