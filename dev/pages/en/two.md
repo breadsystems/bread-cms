@@ -1,4 +1,8 @@
-## TWO!!
+Author: Coby Tamayo
+Date: August 14, 2021
+Title: How I did a thing
+
+# TWO!!
 
 This is a second page.
 
