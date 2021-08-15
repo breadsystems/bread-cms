@@ -14,6 +14,7 @@
   (datafy [match]
     (into {} match)))
 
+;; TODO call these hooks from core, connect here via a protocol.
 (defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
