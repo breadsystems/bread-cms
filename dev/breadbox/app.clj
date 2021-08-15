@@ -244,6 +244,18 @@
   :start (start!)
   :stop  (stop!))
 
+(defonce stop-watch (atom nil))
+
+(defstate watch-static-files
+  :start
+  (do
+    (println "Watching dev/content...")
+    (reset! stop-watch (static-be/watch! #{"dev/content"} handler ".md")))
+  :stop
+  (when (fn? @stop-watch)
+    (println "Stopping file watch...")
+    (@stop-watch)))
+
 (defonce stop-debugger! (atom nil))
 
 (defstate debugger

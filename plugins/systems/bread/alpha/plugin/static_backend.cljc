@@ -6,6 +6,7 @@
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.java.io :as io]
+    [juxt.dirwatch :as watch]
     [markdown.core :as md]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.resolver :as resolver]))
@@ -61,7 +62,50 @@
                              [:root :ext :lang-param :slug-param])]
     [[:post query-fs params opts]]))
 
-;; TODO watch files
+(defn- debounce [f ms]
+  (let [timeout (atom nil)]
+    (fn [& args]
+      (when (future? @timeout)
+        (future-cancel @timeout))
+      (reset! timeout (future
+                        (Thread/sleep ms)
+                        (apply f args))))))
+
+(comment
+  (def $file (io/file "dev/content/en/one.md"))
+  (.getName $file)
+  (.getPath $file)
+  (string/starts-with? (.getPath $file) "dev/content")
+  $dir
+  $file
+  (handler-request $dir $file))
+
+(defn- handler-request [dir file ext]
+  (let [dir-path (.getCanonicalPath dir)
+        file-path (.getCanonicalPath file)]
+    (when (string/starts-with? file-path dir-path)
+      (let [path (subs file-path
+                       (count dir-path)
+                       (- (count file-path) (count ext)))]
+        {:uri path}))))
+
+(defn- watch-handler [f dir ext]
+  (fn [{:keys [action file]}]
+    (when (= :modify action)
+      (when-let [req (handler-request dir file ext)]
+        (f req)))))
+
+(defn watch! [dirs f ext]
+  (println (format "Watching %s for changes..." (string/join ", " dirs)))
+  (let [watchers (doall (for [dir dirs]
+                          (let [dir (io/file dir)]
+                            (watch/watch-dir
+                              (watch-handler f dir ext)
+                              dir))))]
+    (fn []
+      (doall (for [w watchers]
+               (watch/close-watcher w))))))
+
 (defn plugin
   ([]
    (plugin {}))
