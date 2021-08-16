@@ -2,6 +2,7 @@
 ;; rather than from the datastore.
 (ns systems.bread.alpha.plugin.static-backend
   (:require
+    [reitit.core :as reitit] ;; TODO
     [clojure.instant :as instant]
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
@@ -62,109 +63,70 @@
                              [:root :ext :lang-param :slug-param])]
     [[:post query-fs params opts]]))
 
-(defn- debounce [f ms]
-  (let [timeout (atom nil)]
-    (fn [& args]
-      (when (future? @timeout)
-        (future-cancel @timeout))
-      (reset! timeout (future
-                        (Thread/sleep ms)
-                        (apply f args))))))
-
-(comment
-  (def $file (io/file "dev/content/en/one.md"))
-  (.getName $file)
-  (.getPath $file)
-  (string/starts-with? (.getPath $file) "dev/content")
-  $dir
-  $file
-  (handler-request $dir $file))
-
-(defn- handler-request [dir file ext]
-  (let [dir-path (.getCanonicalPath dir)
-        file-path (.getCanonicalPath file)]
-    (when (string/starts-with? file-path dir-path)
-      (let [path (subs file-path
-                       (count dir-path)
-                       (- (count file-path) (count ext)))]
-        {:uri path}))))
-
-(defn- watch-handler [f dir ext]
-  (fn [{:keys [action file]}]
-    (when (= :modify action)
-      (when-let [req (handler-request dir file ext)]
-        (f req)))))
-
-(defn watch! [dirs f ext]
-  (println (format "Watching %s for changes..." (string/join ", " dirs)))
-  (let [watchers (doall (for [dir dirs]
-                          (let [dir (io/file dir)]
-                            (watch/watch-dir
-                              (watch-handler f dir ext)
-                              dir))))]
-    (fn []
-      (doall (for [w watchers]
-               (watch/close-watcher w))))))
-
 (defn request-creator [{:keys [dir ext path->req]}]
   (if (fn? path->req)
     path->req
-    (fn [path _]
+    (fn [path]
       (let [sub-path (subs path (count dir) (- (count path) (count ext)))]
         {:uri sub-path}))))
 
-(defn- watch-handler* [f {:keys [path->req] :as config}]
+(defn- watch-handler [f config]
   (with-meta
     (fn [{:keys [action file]}]
-      (prn action file)
       (when (= :modify action)
-        (prn 'file (.getCanonicalPath file))
-        (when-let [req (path->req (.getCanonicalPath file) config)]
+        (when-let [req ((request-creator config) (.getCanonicalPath file))]
           (f req))))
     {:handler f
      :config config}))
 
-(defn- watch-configs [routes]
-  (filter (fn [[_ data]]
-            (:bread.static/watch data))
-          routes))
-
 (defn- path->uri [path]
-  (let [[lang slug] (string/split path #"/")]
+  (let [[lang slug] (filter (complement empty?) (string/split path #"/"))]
     (str "/" lang "/static/" slug)))
 
 (defn- *bread-routes [rtr] (reitit/compiled-routes rtr))
 (defn- *bread-route-watch-confg [[_ {watch-config :bread/watch-static}]]
-  (merge {:path->req (fn [p config]
-                       (prn p 'changed config)
-                       {:uri (path->uri p)})} watch-config))
+  (when watch-config
+    (merge {:ext (str (:ext watch-config ".md"))
+            :path->req (fn [p]
+                         (let [file (io/file p)
+                               dir (.getCanonicalPath (io/file (:dir watch-config)))
+                               ;; TODO move this default to watch-config fn
+                               ext (or (:ext watch-config) ".md")
+                               creator (request-creator {:dir dir :ext ext})
+                               {md-path :uri} (creator (.getCanonicalPath file))]
+                           {:uri (path->uri md-path)}))}
+           watch-config)))
 
-(defn watch* [handler {:keys [router]}]
-  (reduce concat [] (map
-                      (fn [route]
-                        (let [config (*bread-route-watch-confg route)]
-                          (map (fn [dir]
-                                 (watch-handler* handler
-                                                 (assoc config :dir dir)))
-                               (:dirs config))))
-                      (watch-configs (*bread-routes $router)))))
+(defn- watch-route [handler route]
+  (when-let [config (*bread-route-watch-confg route)]
+    (watch/watch-dir
+      (watch-handler handler config)
+      (io/file (:dir config)))))
+
+(defn watch-routes [handler router]
+  (let [watchers (doall
+                   (filter some? (map (fn [route]
+                                        (watch-route handler route))
+                                      (*bread-routes router))))]
+    (fn []
+      (doall (for [watcher watchers]
+               (watch/close-watcher watcher))))))
 
 (comment
-  (require '[reitit.core :as reitit])
 
   (defn $handler [req]
     (prn 'MOCK req))
   (def $router breadbox.app/$router)
 
-  (def $handlers (watch* $handler {:router $router}))
-  (map meta (watch* $handler {:router $router}))
+  (defonce stop (atom nil))
+
+  (do
+    (when (fn? @stop)
+      (@stop))
+    (reset! stop (watch* $handler $router)))
 
   (.getCanonicalPath (io/file "dev/content"))
   (.getCanonicalPath (io/file "dev/content/en/one.md"))
-
-  $handlers
-  (first $handlers)
-  (def $watcher (watch/watch-dir (first $handlers) (io/file "dev/content")))
 
   ;;
   )

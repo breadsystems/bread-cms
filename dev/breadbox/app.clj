@@ -97,7 +97,7 @@
            :bread/component home}]
      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
                        :bread/component static-page
-                       :bread/watch-static {:dirs #{"dev/content" "dev/pages"}}}]
+                       :bread/watch-static {:dir "dev/content"}}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]
     {:conflicts nil}))
@@ -250,8 +250,7 @@
 (defstate watch-static-files
   :start
   (do
-    (println "Watching dev/content...")
-    (reset! stop-watch (static-be/watch! #{"dev/content"} handler ".md")))
+    (reset! stop-watch (static-be/watch-routes handler $router)))
   :stop
   (when (fn? @stop-watch)
     (println "Stopping file watch...")

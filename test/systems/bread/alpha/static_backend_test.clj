@@ -76,7 +76,7 @@
     [req args]
     (= req (let [[file config] args
                  creator (static/request-creator config)]
-             (creator file config)))
+             (creator file)))
 
     {:uri "/en/one"}
     ["/var/www/content/en/one.md" {:dir "/var/www/content"
