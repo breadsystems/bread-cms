@@ -38,8 +38,9 @@
      (fn [app]
        (bread/add-hook
          app :hook/response
-         (fn [{:keys [body uri] :as res}]
-           (render-static! (str root uri) index-file body)
+         (fn [{:keys [body uri status] :as res}]
+           (when (= 200 status)
+             (render-static! (str root uri) index-file body))
            res))))))
 
 (comment

@@ -172,7 +172,8 @@
                                     (fn [res]
                                       (assoc res
                                              :headers {"content-type"
-                                                       "text/html"}))))
+                                                       "text/html"}
+                                             :status (or (:status res) 200)))))
 
                                 ;; TODO layouts
                                 ;; TODO themes
