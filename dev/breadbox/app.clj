@@ -16,7 +16,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.datastore.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.plugin.reitit :as br]
+    [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.static-backend :as static-be]
     [systems.bread.alpha.post :as post]
@@ -155,8 +155,7 @@
                      {:plugins [(debug/plugin)
                                 (store/plugin $config)
                                 (i18n/plugin)
-                                (route/plugin)
-                                (br/plugin {:router $router})
+                                (route/plugin $router)
                                 (resolver/plugin)
                                 (query/plugin)
                                 (component/plugin)

@@ -148,7 +148,7 @@
   {}
   [:main (:not-found i18n)])
 
-(deftest test-app-lifecycle
+(deftest ^:kaocha/skip test-app-lifecycle
 
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
@@ -192,8 +192,19 @@
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}
                   }
+          router (reify bread/Router
+                   (bread/match [router req]
+                     (get routes (:uri req)))
+                   (bread/params [router match]
+                     (:route/params match))
+                   (bread/resolver [router match]
+                     (:bread/resolver (:data match)))
+                   (bread/component [router match]
+                     (:bread/component (:data match)))
+                   (bread/not-found-component [router match]
+                     (:bread/not-found-component (:data match))))
           app (bread/app {:plugins [(store/plugin config)
-                                    (route/plugin)
+                                    (route/plugin router)
                                     (resolver/plugin)
                                     (query/plugin)
                                     (i18n/plugin)

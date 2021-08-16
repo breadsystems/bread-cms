@@ -33,8 +33,7 @@
 
 (defprotocol Effect
   "Protocol for encapsulating side-effects"
-  (effect!
-    [this req]))
+  (effect! [this req]))
 
 (extend-protocol Effect
   clojure.lang.Fn
@@ -53,6 +52,13 @@
     ([fut _]
      (deref fut))))
 
+(defprotocol Router
+  (routes [this])
+  (match [this req])
+  (params [this match])
+  (resolver [this match])
+  (component [this match])
+  (not-found-component [this match]))
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

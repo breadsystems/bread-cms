@@ -83,7 +83,6 @@
   (let [[lang slug] (filter (complement empty?) (string/split path #"/"))]
     (str "/" lang "/static/" slug)))
 
-(defn- *bread-routes [rtr] (reitit/compiled-routes rtr))
 (defn- *bread-route-watch-confg [[_ {watch-config :bread/watch-static}]]
   (when watch-config
     (merge {:ext (str (:ext watch-config ".md"))
@@ -107,7 +106,7 @@
   (let [watchers (doall
                    (filter some? (map (fn [route]
                                         (watch-route handler route))
-                                      (*bread-routes router))))]
+                                      (bread/routes router))))]
     (fn []
       (doall (for [watcher watchers]
                (watch/close-watcher watcher))))))
