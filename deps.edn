@@ -5,6 +5,7 @@
  :aliases {:dev
            {:extra-paths ["dev"]
             :extra-deps {jpmonettas/flow-storm     {:mvn/version "0.5.0"}
+                         juxt/dirwatch             {:mvn/version "0.2.5"}
                          lambdaisland/kaocha       {:mvn/version "1.0.861"}
                          markdown-clj/markdown-clj {:mvn/version "1.10.5"}
                          org.clojure/clojurescript {:mvn/version "1.10.866"}

@@ -166,6 +166,20 @@
                     {:extra-args extra}))
     (update app ::config #(apply assoc % k v extra))))
 
+(defmacro set-config-cond-> [app' & pairs]
+  (when (odd? (count pairs))
+    (throw (IllegalArgumentException. "odd number of keys/values")))
+  (let [cond-pairs (reduce (fn [conds [pred k]]
+                             (concat conds [pred (list `set-config app' k pred)]))
+                           ()
+                        (partition 2 pairs))]
+    `(cond-> ~app'
+       ~@cond-pairs)))
+
+(comment
+  (macroexpand-1 '(set-config-cond-> app cond1 :config/one 'MISMATCH))
+  (macroexpand-1 '(set-config-cond-> app cond1 :config/one cond2 :config/two)))
+
 (defn load-plugins
   "Runs all plugin functions currently in app, in the order they were specified
   in :plugins when the app was created."

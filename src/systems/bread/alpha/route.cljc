@@ -5,6 +5,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
+;; TODO define a Router protocol
+
 (defn match [req]
   (bread/hook->> req :hook/match-route))
 
@@ -55,6 +57,7 @@
 
 (defn plugin []
   (fn [app]
+    ;; TODO add :hook/match-route etc. here
     (bread/add-hook app :hook/dispatch dispatch)))
 
 (comment

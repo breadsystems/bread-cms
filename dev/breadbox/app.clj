@@ -18,11 +18,12 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit :as br]
     [systems.bread.alpha.plugin.rum :as rum]
+    [systems.bread.alpha.plugin.static-backend :as static-be]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.static-frontend :as static]
+    [systems.bread.alpha.static-frontend :as static-fe]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debugger :as debug]
@@ -65,6 +66,18 @@
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]]))
 
+(defc static-page [{:keys [post lang]}]
+  {:key :post}
+  [:html {:lang lang}
+   [:head
+    [:title (first (:title post))]
+    [:meta {:charset "utf-8"}]]
+   [:body
+    [:main
+     [:div (when (:html post)
+             {:dangerouslySetInnerHTML
+              {:__html (:html post)}})]]]])
+
 (defc ^:not-found not-found [{:keys [i18n lang]}]
   {}
   ;; TODO extract this to a layout
@@ -82,8 +95,12 @@
     ["/:lang"
      ["/" {:bread/resolver {:resolver/type :resolver.type/page}
            :bread/component home}]
+     ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
+                       :bread/component static-page
+                       :bread/watch-static {:dir "dev/content"}}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
-                 :bread/component page}]]))
+                 :bread/component page}]]
+    {:conflicts nil}))
 
 (comment
   (def $res (handler {:uri "/en/qwerty"}))
@@ -155,12 +172,14 @@
                                     (fn [res]
                                       (assoc res
                                              :headers {"content-type"
-                                                       "text/html"}))))
+                                                       "text/html"}
+                                             :status (or (:status res) 200)))))
 
                                 ;; TODO layouts
                                 ;; TODO themes
 
-                                (static/plugin)]})))
+                                (static-be/plugin)
+                                (static-fe/plugin)]})))
   :stop (reset! app nil))
 
 ;; TODO themes
@@ -226,6 +245,17 @@
 (defstate http-server
   :start (start!)
   :stop  (stop!))
+
+(defonce stop-watch (atom nil))
+
+(defstate watch-static-files
+  :start
+  (do
+    (reset! stop-watch (static-be/watch-routes handler $router)))
+  :stop
+  (when (fn? @stop-watch)
+    (println "Stopping file watch...")
+    (@stop-watch)))
 
 (defonce stop-debugger! (atom nil))
 
