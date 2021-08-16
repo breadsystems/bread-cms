@@ -89,15 +89,14 @@
             :path->req (fn [p]
                          (let [file (io/file p)
                                dir (.getCanonicalPath (io/file (:dir watch-config)))
-                               ;; TODO move this default to watch-config fn
-                               ext (or (:ext watch-config) ".md")
+                               ext (:ext watch-config)
                                creator (request-creator {:dir dir :ext ext})
                                {md-path :uri} (creator (.getCanonicalPath file))]
                            {:uri (path->uri md-path)}))}
            watch-config)))
 
 (defn- watch-route [handler route]
-  (when-let [config (*bread-route-watch-confg route)]
+  (when-let [config (bread/watch-config route)]
     (watch/watch-dir
       (watch-handler handler config)
       (io/file (:dir config)))))

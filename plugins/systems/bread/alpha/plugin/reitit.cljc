@@ -17,7 +17,13 @@
 (extend-protocol Router
   reitit.core.Router
   (bread/routes [router]
-    (reitit/compiled-routes router))
+    (map
+      #(with-meta % {`bread/watch-config
+                     (fn [[_ {config :bread/watch-static}]]
+                       (when config
+                         (let [{:keys [ext] :or {ext ".md"}} config]
+                           (assoc config :ext ext))))})
+      (reitit/compiled-routes router)))
   (bread/match [router req]
     (reitit/match-by-path router (:uri req)))
   (bread/params [router match]

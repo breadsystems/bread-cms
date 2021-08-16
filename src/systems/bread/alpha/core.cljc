@@ -53,12 +53,17 @@
      (deref fut))))
 
 (defprotocol Router
+  :extend-via-metadata true
   (routes [this])
   (match [this req])
   (params [this match])
   (resolver [this match])
   (component [this match])
   (not-found-component [this match]))
+
+(defprotocol WatchableRoute
+  :extend-via-metadata true
+  (watch-config [this]))
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
