@@ -4,7 +4,9 @@
     [systems.bread.alpha.core :as bread]))
 
 (defn compact [fields]
-  (into {} (map (fn [row]
-                  (let [{k :field/key content :field/content} (first row)]
-                    (when k [k (edn/read-string content)])))
-                fields)))
+  (if (map? fields)
+    fields
+    (into {} (map (fn [row]
+                    (let [{k :field/key content :field/content} (first row)]
+                      (when k [k (edn/read-string content)])))
+                  fields))))
