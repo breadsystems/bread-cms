@@ -96,7 +96,8 @@
      ["/" {:bread/resolver {:resolver/type :resolver.type/page}
            :bread/component home}]
      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
-                       :bread/component static-page}]
+                       :bread/component static-page
+                       :bread/watch-static {:dirs #{"dev/content" "dev/pages"}}}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]
     {:conflicts nil}))

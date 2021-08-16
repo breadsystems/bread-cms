@@ -106,6 +106,67 @@
       (doall (for [w watchers]
                (watch/close-watcher w))))))
 
+(defn- watch-handler* [f {:keys [path->req] :as config}]
+  (with-meta
+    (fn [{:keys [action file]}]
+      (prn action file)
+      (when (= :modify action)
+        (prn 'file (.getCanonicalPath file))
+        (when-let [req (path->req (.getCanonicalPath file) config)]
+          (f req))))
+    {:handler f
+     :config config}))
+
+(defn- watch-configs [routes]
+  (filter (fn [[_ data]]
+            (:bread.static/watch data))
+          routes))
+
+(defn- path->uri [path]
+  (let [[lang slug] (string/split path #"/")]
+    (str "/" lang "/static/" slug)))
+
+(defn- *bread-routes [rtr] (reitit/compiled-routes rtr))
+(defn- *bread-route-watch-confg [[_ {watch-config :bread/watch-static}]]
+  (merge {:path->req (fn [p config]
+                       (prn p 'changed config)
+                       {:uri (path->uri p)})} watch-config))
+
+(defn watch* [handler {:keys [router]}]
+  (reduce concat [] (map
+                      (fn [route]
+                        (let [config (*bread-route-watch-confg route)]
+                          (map (fn [dir]
+                                 (watch-handler* handler
+                                                 (assoc config :dir dir)))
+                               (:dirs config))))
+                      (watch-configs (*bread-routes router)))))
+
+(comment
+  (require '[reitit.core :as reitit])
+
+  (def $handlers (watch* $handler {:router $router}))
+  (map (juxt type meta) (watch* $handler {:router $router}))
+
+  $handlers
+  (first $handlers)
+  (def $watcher (watch/watch-dir (first $handlers) (io/file "dev/content")))
+
+  $watcher
+
+  (def $path->uri (:path->uri (first (watch* $handler {:router $router}))))
+
+  ($path->uri "en/one")
+  $router
+
+  (def $router breadbox.app/$router)
+
+  (defn $handler [req]
+    (prn 'MOCK req))
+
+  ;;
+  )
+
 (defn plugin
   ([]
    (plugin {}))
