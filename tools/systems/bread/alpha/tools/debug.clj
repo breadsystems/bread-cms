@@ -6,6 +6,7 @@
     [clojure.tools.logging :as log]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.tools.debug.db :as db]
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import
     [java.util UUID Date]))
@@ -40,6 +41,10 @@
   (prn :subscribe query)
   (subscribe debugger query))
 
+(defmethod handle-message :unsubscribe [debugger [_ query]]
+  (prn :unsubscribe query)
+  (unsubscribe debugger query))
+
 (defrecord HttpDebugger [conn replay-handler subscriptions]
   BreadDebugger
   (start [this opts]
@@ -70,7 +75,7 @@
     (swap! subscriptions assoc query nil))
   (broadcast [this]
     (doall (for [[query old] @subscriptions]
-             (let [v (d/q (find-pull query) (d/db conn))]
+             (let [v (db/pull query (d/db conn))]
                (when (not= (hash v) old)
                  (srv/publish! [query v]))
                (swap! subscriptions assoc query (hash v))))))
@@ -86,21 +91,8 @@
      (printf "Connecting to Asami: %s\n" db-uri)
      (HttpDebugger. (d/connect db-uri) replay-handler (atom {})))))
 
-(defn pull [attrs]
-  (let [symbols (mapv (comp symbol #(str "?" %) name) attrs)
-        eid (gensym "?e")
-        where (mapv (fn [[attr sym]]
-                      ;; [?e... :some/attr ?sym]
-                      [eid attr sym])
-                    (partition 2 (interleave attrs symbols)))]
-    [symbols where]))
-(defn find-pull [shape]
-  (let [[find-clause where-clause] (pull shape)]
-    {:find find-clause
-     :where where-clause}))
-
 (comment
-  (find-pull [:request/uuid :request/uri :request/method])
+  (db/find-pull [:request/uuid :request/uri :request/method])
 
   (def conn (d/connect "asami:mem://debugdb"))
 
@@ -112,7 +104,7 @@
   (deref subscribers)
   (reset! subscribers {})
 
-  (d/q (find-pull reqs')
+  (d/q (db/find-pull reqs')
        (d/db conn)))
 
 (defn plugin []
