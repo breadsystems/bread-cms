@@ -140,6 +140,14 @@
 (defstate env
   :start (config/load-env))
 
+(defn reload-env []
+  (mount/stop #'env)
+  (mount/start #'env)
+  env)
+
+(comment
+  (:reinstall-db? (reload-env)))
+
 (defstate db
   :start (when (:reinstall-db? env)
            (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
