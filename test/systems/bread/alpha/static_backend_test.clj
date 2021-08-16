@@ -76,7 +76,7 @@
     [req args]
     (= req (let [[file config] args
                  creator (static/request-creator config)]
-             (creator file)))
+             (static/create-request creator file config)))
 
     {:uri "/en/one"}
     ["/var/www/content/en/one.md" {:dir "/var/www/content"
@@ -87,7 +87,34 @@
                                          :ext ".markdown"}]
 
     {:uri "/override"}
-    ["path.md" {:path->req (constantly {:uri "/override"})}]))
+    ["path.md" {:path->req (constantly {:uri "/override"})}]
+
+    ;; A map with a :uri key is treated as a shorthand for
+    ;; a simple URI formatter.
+    {:uri "/override"}
+    ["/var/www/content/en/one.md" {:dir "/var/www/content"
+                                   :path->req
+                                   {:uri ["override"]}}]
+
+    {:uri "/a/b/c"}
+    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
+                                  :ext ".md"
+                                  :path->req
+                                  {:uri [0 1 2]}}]
+
+    {:uri "/c/b/a"}
+    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
+                                  :ext ".md"
+                                  :path->req
+                                  {:uri [2 1 0]}}]
+
+    ;; A vector v is shorthand for {:uri v}
+    {:uri "/a/b/c"}
+    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
+                                  :ext ".md"
+                                  :path->req
+                                  [0 1 2]}]
+    ))
 
 (comment
   (k/run))

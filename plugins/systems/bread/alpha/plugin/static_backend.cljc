@@ -63,43 +63,73 @@
                              [:root :ext :lang-param :slug-param])]
     [[:post query-fs params opts]]))
 
+(defprotocol ^:private RequestCreator
+  (create-request [this path config]))
+
+(defn- get-path-segment [segments i]
+  (if (integer? i)
+    (get segments i)
+    i))
+
+(defn- extrapolate-uri [v path]
+  (let [segments (vec (filter (complement empty?) (string/split path #"/")))]
+    (str "/" (string/join "/" (map (partial get-path-segment segments) v)))))
+
+(defn abs-path->uri [abs-path dir ext]
+  (subs abs-path (count dir) (- (count abs-path) (count ext))))
+
+(comment
+  (extrapolate-uri ["a"] "whatever")
+  (extrapolate-uri [0 1 2] "/a/b/c")
+  (extrapolate-uri [2 1 0] "/a/b/c")
+  (extrapolate-uri [0 "then" 1 "then" 2] "/a/b/c")
+
+  (abs-path->uri "/var/www/a/b/c.md" "/var/www" ".md")
+  )
+
+(extend-protocol RequestCreator
+  clojure.lang.Fn
+  (create-request [f path config]
+    (f path config))
+
+  clojure.lang.PersistentArrayMap
+  (create-request [m path config]
+    (let [v (:uri m)
+          path (abs-path->uri path (:dir config) (:ext config))]
+      (when-not (vector? v)
+        (throw (IllegalArgumentException.
+                 "(:uri path->req) must be a vector")))
+      (assoc m :uri (extrapolate-uri v path))))
+
+  clojure.lang.PersistentVector
+  (create-request [v path config]
+    (let [path (abs-path->uri path (:dir config) (:ext config))]
+      {:uri (extrapolate-uri v path)})))
+
 (defn request-creator [{:keys [dir ext path->req]}]
-  (if (fn? path->req)
-    path->req
-    (fn [path]
-      (let [sub-path (subs path (count dir) (- (count path) (count ext)))]
-        {:uri sub-path}))))
+  (or path->req
+      (fn [path _]
+        {:uri (abs-path->uri path dir ext)})))
 
 (defn- watch-handler [f config]
   (with-meta
     (fn [{:keys [action file]}]
       (when (= :modify action)
-        (when-let [req ((request-creator config) (.getCanonicalPath file))]
+        (when-let [req (create-request
+                         (request-creator config)
+                         (.getCanonicalPath file)
+                         config)]
           (f req))))
     {:handler f
      :config config}))
 
-(defn- path->uri [path]
-  (let [[lang slug] (filter (complement empty?) (string/split path #"/"))]
-    (str "/" lang "/static/" slug)))
-
-(defn- *bread-route-watch-confg [[_ {watch-config :bread/watch-static}]]
-  (when watch-config
-    (merge {:ext (str (:ext watch-config ".md"))
-            :path->req (fn [p]
-                         (let [file (io/file p)
-                               dir (.getCanonicalPath (io/file (:dir watch-config)))
-                               ext (:ext watch-config)
-                               creator (request-creator {:dir dir :ext ext})
-                               {md-path :uri} (creator (.getCanonicalPath file))]
-                           {:uri (path->uri md-path)}))}
-           watch-config)))
-
 (defn- watch-route [handler route]
   (when-let [config (bread/watch-config route)]
-    (watch/watch-dir
-      (watch-handler handler config)
-      (io/file (:dir config)))))
+    (let [;; We need to get the absolute path of dir to correctly handle
+          ;; absolute Markdown/content file paths later on.
+          dir (io/file (:dir config))
+          config (assoc config :dir (.getCanonicalPath dir))]
+      (watch/watch-dir (watch-handler handler config) dir))))
 
 (defn watch-routes [handler router]
   (let [watchers (doall

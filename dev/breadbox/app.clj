@@ -98,9 +98,7 @@
      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
                        :bread/component static-page
                        :bread/watch-static {:dir "dev/content"
-                                            :path->req (fn [_]
-                                                         ;; TODO
-                                                         {:uri "/en/static/one"})}}]
+                                            :path->req [0 "static" 1]}}]
      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
                  :bread/component page}]]
     {:conflicts nil}))
