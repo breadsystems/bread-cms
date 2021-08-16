@@ -53,9 +53,25 @@
 (defn sitemap [app]
   [{}])
 
-(defn plugin []
+(defn plugin [router]
   (fn [app]
-    (bread/add-hook app :hook/dispatch dispatch)))
+    (bread/add-hooks-> app
+      (:hook/match-route
+        (fn [req _]
+          (bread/match router req)))
+      (:hook/match->resolver
+        (fn [_ match]
+          (bread/resolver router match)))
+      (:hook/match->component
+        (fn [_ match]
+          (bread/component router match)))
+      (:hook/match->not-found-component
+        (fn [_ match]
+          (bread/not-found-component router match)))
+      (:hook/route-params
+        (fn [_ match]
+          (bread/params router match)))
+      (:hook/dispatch dispatch))))
 
 (comment
 
