@@ -87,9 +87,7 @@
     m))
 
 (defn compact-fields [post]
-  (if (map? post)
-    post
-    (update post :post/fields field/compact)))
+  (update post :post/fields field/compact))
 
 (defmethod resolver/resolve-query :resolver.type/page
   [{::bread/keys [resolver] :as req}]
