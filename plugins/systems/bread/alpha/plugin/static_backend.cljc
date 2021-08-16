@@ -106,6 +106,13 @@
       (doall (for [w watchers]
                (watch/close-watcher w))))))
 
+(defn request-creator [{:keys [dir ext path->req]}]
+  (if (fn? path->req)
+    path->req
+    (fn [path _]
+      (let [sub-path (subs path (count dir) (- (count path) (count ext)))]
+        {:uri sub-path}))))
+
 (defn- watch-handler* [f {:keys [path->req] :as config}]
   (with-meta
     (fn [{:keys [action file]}]
@@ -140,29 +147,24 @@
                                  (watch-handler* handler
                                                  (assoc config :dir dir)))
                                (:dirs config))))
-                      (watch-configs (*bread-routes router)))))
+                      (watch-configs (*bread-routes $router)))))
 
 (comment
   (require '[reitit.core :as reitit])
 
+  (defn $handler [req]
+    (prn 'MOCK req))
+  (def $router breadbox.app/$router)
+
   (def $handlers (watch* $handler {:router $router}))
-  (map (juxt type meta) (watch* $handler {:router $router}))
+  (map meta (watch* $handler {:router $router}))
+
+  (.getCanonicalPath (io/file "dev/content"))
+  (.getCanonicalPath (io/file "dev/content/en/one.md"))
 
   $handlers
   (first $handlers)
   (def $watcher (watch/watch-dir (first $handlers) (io/file "dev/content")))
-
-  $watcher
-
-  (def $path->uri (:path->uri (first (watch* $handler {:router $router}))))
-
-  ($path->uri "en/one")
-  $router
-
-  (def $router breadbox.app/$router)
-
-  (defn $handler [req]
-    (prn 'MOCK req))
 
   ;;
   )

@@ -5,7 +5,7 @@
     [markdown.core :as md]
     [systems.bread.alpha.plugin.static-backend :as static]))
 
-(k/run (deftest test-query-fs
+(deftest test-query-fs
   (let [mock-fs
         {"content/en/page.md"  "Markdown doc in English under /content"
          "alt/en/page.md"      "Markdown doc in English under /alt"
@@ -69,7 +69,25 @@
         ;; With custom lang & slug param keys
         {:html "<p>Markdown doc in English under /content</p>"}
         [{:custom-lang "en" :custom-slug "page"}
-         {:lang-param :custom-lang :slug-param :custom-slug}])))))
+         {:lang-param :custom-lang :slug-param :custom-slug}]))))
+
+(deftest test-request-creator
+  (are
+    [req args]
+    (= req (let [[file config] args
+                 creator (static/request-creator config)]
+             (creator file config)))
+
+    {:uri "/en/one"}
+    ["/var/www/content/en/one.md" {:dir "/var/www/content"
+                                   :ext ".md"}]
+
+    {:uri "/en/one"}
+    ["/var/www/content/en/one.markdown" {:dir "/var/www/content"
+                                         :ext ".markdown"}]
+
+    {:uri "/override"}
+    ["path.md" {:path->req (constantly {:uri "/override"})}]))
 
 (comment
   (k/run))
