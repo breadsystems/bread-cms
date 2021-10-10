@@ -77,7 +77,7 @@
     (doall (for [[query old] @subscriptions]
              (let [v (db/pull query (d/db conn))]
                (when (not= (hash v) old)
-                 (srv/publish! [query v]))
+                 (srv/publish! [:subscription query v]))
                (swap! subscriptions assoc query (hash v))))))
   (unsubscribe [this query]
     (swap! subscriptions dissoc query)))

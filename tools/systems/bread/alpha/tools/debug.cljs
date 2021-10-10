@@ -17,13 +17,29 @@
                                             req->url
                                             shorten-uuid]]))
 
-(rum/defc ui < rum/reactive []
-  [:main "hello, debug!"])
+(defonce subscriptions (atom {:name "Coby"}))
 
-;; TODO figure out why replay is send!ing once more each time code
-;; is reloaded...
+(defn sub [query]
+  (get (rum/react subscriptions) query))
+
+(rum/defc ui
+  < rum/reactive
+  []
+  [:main
+   (str "hello, " (:name (rum/react subscriptions)))
+   [:ul
+    (map
+      (fn [{:request/keys [uuid uri]}]
+        [:li {:key (str uuid)} uri])
+      (sub [:request/uuid :request/uri]))]])
+
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
+
+(defmulti on-event first)
+
+(defmethod on-event :subscription [[_ query value]]
+  (swap! subscriptions assoc query value))
 
 (defn on-message [message]
   (when-let [event (try
@@ -32,7 +48,7 @@
                        (js/console.error err)
                        (prn (.-data message))
                        nil))]
-    (prn 'EVENT event)
+    (on-event event)
     #_
     (publish! event)))
 
