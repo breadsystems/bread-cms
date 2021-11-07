@@ -6,7 +6,7 @@
     [clojure.core.protocols :refer [Datafiable]]
     [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
-    [clojure.string :as str]
+    [clojure.string :as string]
     [config.core :as config]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
@@ -59,7 +59,6 @@
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
-     [:pre i18n]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
@@ -126,6 +125,7 @@
   (i18n/lang (assoc @app :uri "/en/asdf"))
   (i18n/lang (assoc @app :uri "/fr/asdf"))
   (i18n/lang (assoc @app :uri "/es/asdf")) ;; defaults to :en
+  (i18n/lang (assoc @app :uri "/")) ;; defaults to :en
 
   (let [req (-> @app
                 (assoc :uri "/fr")
@@ -201,6 +201,7 @@
 
   (def $req (merge {:uri "/en/"} @app))
   (route/params $req (route/match $req))
+  (bread/match $router $req)
   (-> $req route/dispatch ::bread/resolver)
   (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
   (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
@@ -232,6 +233,14 @@
 
 (defonce stop-http (atom nil))
 
+(defn wrap-trailing-slash [handler]
+  (fn [{:keys [uri] :as req}]
+    (if (string/ends-with? uri "/")
+      (handler req)
+      {:headers {"Location" (str uri "/")}
+       :status 302
+       :body ""})))
+
 (defn start! []
   ;; TODO config
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
@@ -240,6 +249,7 @@
       (mid/wrap-exceptions $)
       (wrap-keyword-params $)
       (wrap-params $)
+      (wrap-trailing-slash $)
       (http/run-server $ {:port port})
       (reset! stop-http $))
   nil))
