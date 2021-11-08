@@ -87,19 +87,29 @@
    [:body
     [:div (:not-found i18n)]]])
 
+(defn hello-handler [_]
+  {:body "Hello!"
+   :status 200
+   :headers {"X-Hello" "hi"}})
+
 ;; NOTE: this is kinda jank because /en and /en/ (for example) are treated
 ;; as different.
 (def $router
   (reitit/router
-    ["/:lang"
-     ["/" {:bread/resolver {:resolver/type :resolver.type/page}
-           :bread/component home}]
-     ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
-                       :bread/component static-page
-                       :bread/watch-static {:dir "dev/content"
-                                            :path->req [0 "static" 1]}}]
-     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
-                 :bread/component page}]]
+    [;; TODO i18n plugin for redirecting to lang route based on Accept-Language
+     ["/" (fn [req]
+            (prn 'lang (get-in req [:headers "accept-language"]))
+            {:body "" :status 302 :headers {"Location" "/en/"}})]
+     ["/hello/" hello-handler]
+     ["/:lang"
+      ["/" {:bread/resolver {:resolver/type :resolver.type/page}
+            :bread/component home}]
+      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
+                        :bread/component static-page
+                        :bread/watch-static {:dir "dev/content"
+                                             :path->req [0 "static" 1]}}]
+      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
+                  :bread/component page}]]]
     {:conflicts nil}))
 
 (comment
@@ -207,6 +217,9 @@
   (-> $req route/dispatch ::bread/resolver)
   (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
   (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
+
+  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
+  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
   (store/q
     (store/datastore $req)
