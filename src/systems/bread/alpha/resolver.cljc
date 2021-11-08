@@ -60,9 +60,6 @@
                           (get-in req [::bread/resolver :resolver/type])))
 
 (defn resolve-queries [req]
-  {:pre [(s/valid? ::bread/app req)
-         (s/valid? ::bread/resolver (::bread/resolver req))]
-   :post [(s/valid? ::bread/queries (::bread/queries %))]}
   (update req ::bread/queries concat (resolve-query req)))
 
 (defn plugin []
