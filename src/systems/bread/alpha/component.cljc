@@ -31,10 +31,11 @@
   (get @*registry* :not-found))
 
 (defn render [{::bread/keys [data resolver] :as res}]
-  (let [component (if (:not-found? data)
-                    (:resolver/not-found-component resolver)
-                    (:resolver/component resolver))]
-    (assoc res :body (component data))))
+  (if-let [component (if (:not-found? data)
+                       (:resolver/not-found-component resolver)
+                       (:resolver/component resolver))]
+    (assoc res :body (component data))
+    res))
 
 (defn plugin []
   (fn [app]
