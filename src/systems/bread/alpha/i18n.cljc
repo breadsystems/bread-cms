@@ -36,6 +36,7 @@
 (defn strings-for
   "Load the strings from the database for the given language."
   [req lang]
+  ;; TODO support locales
   (->> (store/q (store/datastore req)
                 (conj '[:find ?key ?str
                         :where

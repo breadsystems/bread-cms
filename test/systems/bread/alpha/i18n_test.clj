@@ -14,6 +14,7 @@
              :store {:backend :mem
                      :id "something-else"}
              :datastore/initial-txns
+             ;; TODO test locales e.g. en-gb
              [#:i18n{:key :one :string "One" :lang :en}
               #:i18n{:key :two :string "Two" :lang :en}
               #:i18n{:key :one :string "Uno" :lang :es}
