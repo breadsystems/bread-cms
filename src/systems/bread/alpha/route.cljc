@@ -45,11 +45,6 @@
                          :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
-(defn dispatch [req]
-  {:pre [(s/valid? ::bread/app req)]
-   :post [(s/valid? ::bread/app %)]}
-  (assoc req ::bread/resolver (resolver req)))
-
 (defn sitemap [app]
   [{}])
 
@@ -71,7 +66,9 @@
       (:hook/route-params
         (fn [_ match]
           (bread/params router match)))
-      (:hook/dispatch dispatch))))
+      (:hook/dispatch
+        (fn [req]
+          (bread/dispatch router req))))))
 
 (comment
 

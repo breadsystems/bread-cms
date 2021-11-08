@@ -24,6 +24,12 @@
                          (let [{:keys [ext] :or {ext ".md"}} config]
                            (assoc config :ext ext))))})
       (reitit/compiled-routes router)))
+  ;; If the matched result is a handler (fn), set it as the resolver directly.
+  ;; This lets users opt in or out of Bread's routing on a per-route basis.
+  (bread/dispatch [router req]
+    (let [resolver (route/resolver req)
+          result (:result (:route/match resolver))]
+      (assoc req ::bread/resolver (if (fn? result) result resolver))))
   (bread/match [router req]
     (reitit/match-by-path router (:uri req)))
   (bread/params [router match]
