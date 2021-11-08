@@ -91,6 +91,21 @@
 (s/def ::app (s/keys :req [::config ::hooks ::plugins]
                      :opt [::resolver ::queries ::data]))
 
+(comment
+  ;; Valid and invalid examples...
+  (and
+    (s/valid? ::queries [])
+    (s/valid? ::queries [[:post (constantly {})]])
+    (not (s/valid? ::queries [[nil]]))
+
+    (s/valid? ::resolver {:resolver/type :example})
+    (s/valid? ::resolver {:resolver/type nil})
+    (not (s/valid? ::resolver {}))
+    (not (s/valid? ::resolver nil))
+
+    ;; TODO more examples
+    ))
+
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -155,7 +170,6 @@
   "Returns a response with the current app (req) merged into raw map,
   preserving any hooks/config added to req."
   [req raw]
-  {:pre [(s/valid? ::app req)]}
   (merge raw (select-keys req [::config ::hooks ::plugins])))
 
 (defn config
