@@ -57,6 +57,7 @@
       (:hook/match->resolver
         (fn [_ match]
           (bread/resolver router match)))
+      ;; TODO pull this out into a separate mechanism
       (:hook/match->component
         (fn [_ match]
           (bread/component router match)))
