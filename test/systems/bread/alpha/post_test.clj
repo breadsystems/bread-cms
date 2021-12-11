@@ -46,6 +46,52 @@
          :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/one/two"}
+        ;; Default key -> :post
+        [[:post
+          db
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
+            :in [$ ?type ?status ?slug_0 ?slug_1]
+            :where [[?e :post/type ?type]
+                    [?e :post/status ?status]
+                    [?e :post/slug ?slug_0]
+                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/slug ?slug_1]
+                    (not-join
+                      [?parent_1]
+                      [?parent_1 :post/parent ?root-ancestor])]}
+          :post.type/page
+          :post.status/published
+          "two"
+          "one"]]
+        {:resolver/type :resolver.type/page
+         :resolver/pull [:post/title :custom/key]
+         ;; default key -> :post
+         :route/params {:slugs "one/two" :lang "en"}}
+
+        ;; {:uri "/en/one/two"}
+        ;; Default key -> :post
+        [[:post
+          db
+          '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
+            :in [$ ?type ?status ?slug_0 ?slug_1]
+            :where [[?e :post/type ?type]
+                    [?e :post/status ?status]
+                    [?e :post/slug ?slug_0]
+                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/slug ?slug_1]
+                    (not-join
+                      [?parent_1]
+                      [?parent_1 :post/parent ?root-ancestor])]}
+          :post.type/page
+          :post.status/published
+          "two"
+          "one"]]
+        {:resolver/type :resolver.type/page
+         :resolver/pull [:post/title :custom/key]
+         :resolver/key nil ;; default -> :post
+         :route/params {:slugs "one/two" :lang "en"}}
+
+        ;; {:uri "/en/one/two"}
         [[:post
           db
           '{:find [(pull ?e [:db/id :post/title :custom/key]) .]
@@ -170,4 +216,5 @@
         )))
 
 (comment
+  (test-resolve-post-queries)
   (k/run))
