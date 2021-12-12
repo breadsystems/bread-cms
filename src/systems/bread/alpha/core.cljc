@@ -210,8 +210,7 @@
   "Runs all plugin functions currently in app, in the order they were specified
   in :plugins when the app was created."
   [app]
-  (reduce #(%2 %1) app (::plugins app)))
-
+  (reduce (fn [app plugin] (plugin app)) app (::plugins app)))
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
