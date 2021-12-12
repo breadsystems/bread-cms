@@ -50,11 +50,11 @@
         (stop-server))))
   ;; Publish the given profiler event to the Websocket connection.
   (profile [this pe]
-    ;; TODO fix log persistence
-    (swap! (:event-log config) conj pe)
-    (srv/publish!
-      [(::bread/profile.type pe)
-       (walk/prewalk datafy (event-data [(::bread/profile.type pe) (::bread/profile pe)]))]))
+    (let [{t ::bread/profile.type e ::bread/profile} pe
+          entry [t (walk/prewalk datafy (event-data [t e]))]]
+      ;; TODO fix log persistence
+      (swap! (:event-log config) conj entry)
+      (srv/publish! entry)))
   (profile [this e _]
     (profile this e))
   (event-log [this]
