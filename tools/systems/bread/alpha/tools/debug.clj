@@ -3,16 +3,18 @@
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
     [clojure.tools.logging :as log]
+    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.tools.debug.db :as db]
+    [systems.bread.alpha.tools.protocols]
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import
     [java.util UUID Date]))
 
 (defprotocol BreadDebugger
   (start [debugger opts])
-  (profile [debugger e] [debugger e opts]))
+  (profile [debugger e] [debugger e opts])
+  (event-log [debugger]))
 
 (def event-data nil)
 (defmulti event-data (fn [e]
@@ -31,7 +33,7 @@
 ;; TODO client ID?
 (defmulti handle-message (fn [_ [k]] k))
 
-(defrecord WebsocketDebugger [_config]
+(defrecord WebsocketDebugger [config]
   BreadDebugger
   (start [this opts]
     (let [stop-server (srv/start
@@ -48,15 +50,29 @@
         (stop-server))))
   ;; Publish the given profiler event to the Websocket connection.
   (profile [this pe]
-    (srv/publish! [(::bread/profile.type pe) (::bread/profile.type pe)]))
+    ;; TODO fix log persistence
+    (swap! (:event-log config) conj pe)
+    (srv/publish!
+      [(::bread/profile.type pe)
+       (walk/prewalk datafy (event-data pe))]))
   (profile [this e _]
-    (profile this e)))
+    (profile this e))
+  (event-log [this]
+    (deref (:event-log config))))
 
 (defn debugger
   ([]
    (debugger {}))
   ([config]
-   (WebsocketDebugger. config)))
+   (let [config (merge {:event-log (atom [])} config)]
+     (WebsocketDebugger. config))))
+
+(comment
+  (let [dbg (debugger)]
+    (profile dbg {::bread/profile.type :something ::bread/profile {}})
+    (event-log (debugger)))
+  (event-log (debugger))
+  (event-log (debugger {:event-log (atom [:stuff])})))
 
 (defn plugin []
   (fn [app]
@@ -87,22 +103,7 @@
         {:precedence Double/POSITIVE_INFINITY}))))
 
 (comment
-  (def stop (start (debugger {}) {:http-port 1316
-                                  :csp-ports [9630]}))
-
-  (stop)
-
-
-  ;; Navigable sandbox
-  (def reqs (with-meta
-              [{:uri "/"}]
-              {`proto/nav (fn [reqs k v]
-                            (assoc v :nav/at k :nav/reqs reqs))}))
-  (def req (first reqs))
-  (nav reqs 0 req)
-
-  ;; Let's get wild...
-  (nav (:nav/reqs (nav reqs 0 req)) 0 req)
+  (srv/publish! [:test (walk/prewalk datafy {:fn (fn [] 'hello)})])
 
   (slurp "http://localhost:1312/en/")
   (slurp "http://localhost:1312/fr/")

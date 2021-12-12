@@ -281,8 +281,7 @@
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
   :start (reset! stop-debug-server! (debug/start
-                                      (debug/debugger
-                                        {:db-uri "asami:mem://debugdb"})
+                                      (debug/debugger)
                                       {:http-port 1316
                                        :csp-ports [9630]}))
   :stop (when-let [stop! @stop-debug-server!]

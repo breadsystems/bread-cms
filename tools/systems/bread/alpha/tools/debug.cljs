@@ -17,11 +17,21 @@
                                             req->url
                                             shorten-uuid]]))
 
+(defonce event-log (atom []))
+
 (rum/defc ui
   < rum/reactive
   []
   [:main
-   "Basic debugger stuff goes here."])
+   [:a {:href (str "data:text/plain;charset=utf-8,"
+                   (js/encodeURIComponent (prn-str (rum/react event-log))))
+        :download "debug-log.edn"}
+    "DOWNLOAD DEBUG EVENT LOG"]
+   (map-indexed
+     (fn [idx e]
+       [:div {:key idx}
+        (prn-str e)])
+     (rum/react event-log))])
 
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
@@ -32,9 +42,10 @@
   (when-let [event (try
                      (edn/read-string (.-data message))
                      (catch js/Error ^js/Error err
-                       (js/console.error err)
+                       (js/console.error (.-message err))
                        (prn (.-data message))
                        nil))]
+    (swap! event-log conj event)
     (on-event event)))
 
 ;; init is called ONCE when the page loads
