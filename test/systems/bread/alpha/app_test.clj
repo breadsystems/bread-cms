@@ -258,5 +258,4 @@
         ))))
 
 (comment
-  (test-app-lifecycle)
   (k/run))
