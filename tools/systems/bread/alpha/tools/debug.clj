@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.tools.debug
   (:require
-    [asami.core :as d]
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
     [clojure.tools.logging :as log]
@@ -14,11 +13,6 @@
 (defprotocol BreadDebugger
   (start [debugger opts])
   (profile [debugger e] [debugger e opts]))
-
-(defprotocol ObservableDebugger
-  (subscribe [debugger query])
-  (broadcast [debugger])
-  (unsubscribe [debugger query]))
 
 (def event-data nil)
 (defmulti event-data (fn [e]
@@ -34,78 +28,35 @@
   ;(prn (keys res))
   (select-keys res [:request/uuid #_#_:request-method :uri]))
 
-;; TODO client ID
+;; TODO client ID?
 (defmulti handle-message (fn [_ [k]] k))
 
-(defmethod handle-message :subscribe [debugger [_ query]]
-  (prn :subscribe query)
-  (subscribe debugger query))
-
-(defmethod handle-message :unsubscribe [debugger [_ query]]
-  (prn :unsubscribe query)
-  (unsubscribe debugger query))
-
-(defrecord HttpDebugger [conn replay-handler subscriptions]
+(defrecord WebsocketDebugger [_config]
   BreadDebugger
   (start [this opts]
-    (let [stop-server (srv/start (assoc opts
-                                        :ws-on-message
-                                        (fn [msg]
-                                          ;; TODO accept client ID here
-                                          (handle-message this msg))))
-          tap (bread/add-profiler (fn [e]
-                                    (profile this e)))]
+    (let [stop-server (srv/start
+                        (assoc opts
+                               :ws-on-message
+                               (fn [msg]
+                                 ;; TODO accept client ID here?
+                                 (handle-message this msg))))
+          tap (bread/add-profiler
+                (fn [profile-event]
+                  (profile this profile-event)))]
       (fn []
         (remove-tap tap)
         (stop-server))))
-  (profile [this e]
-    (d/transact conn {:tx-data [(event-data e)]})
-    (broadcast this))
+  ;; Publish the given profiler event to the Websocket connection.
+  (profile [this pe]
+    (srv/publish! [(::bread/profile.type pe) (::bread/profile.type pe)]))
   (profile [this e _]
-    (profile this e))
-
-  ;; TODO make this a normal event handler
-  #_
-  (replay [this req]
-    (when (fn? replay-handler)
-      (replay-handler req)))
-
-  ObservableDebugger
-  (subscribe [this query]
-    (swap! subscriptions assoc query nil))
-  (broadcast [this]
-    (doall (for [[query old] @subscriptions]
-             (let [v (db/pull query (d/db conn))]
-               (when (not= (hash v) old)
-                 (srv/publish! [:subscription query v]))
-               (swap! subscriptions assoc query (hash v))))))
-  (unsubscribe [this query]
-    (swap! subscriptions dissoc query)))
+    (profile this e)))
 
 (defn debugger
   ([]
    (debugger {}))
-  ([{:keys [db-uri replay-handler]}]
-   (let [db-uri (or db-uri (format "asami:mem://%s"
-                                   (str (UUID/randomUUID))))]
-     (printf "Connecting to Asami: %s\n" db-uri)
-     (HttpDebugger. (d/connect db-uri) replay-handler (atom {})))))
-
-(comment
-  (db/find-pull [:request/uuid :request/uri :request/method])
-
-  (def conn (d/connect "asami:mem://debugdb"))
-
-  (def reqs' [:request/uuid :request/uri :request/method])
-  (subscribe reqs')
-  (broadcast conn)
-  (unsubscribe reqs')
-
-  (deref subscribers)
-  (reset! subscribers {})
-
-  (d/q (db/find-pull reqs')
-       (d/db conn)))
+  ([config]
+   (WebsocketDebugger. config)))
 
 (defn plugin []
   (fn [app]
@@ -152,39 +103,6 @@
 
   ;; Let's get wild...
   (nav (:nav/reqs (nav reqs 0 req)) 0 req)
-
-
-  (import '[java.util UUID])
-
-  (def db-uri (format "asami:mem://%s" (str (UUID/randomUUID))))
-  (def conn (d/connect db-uri))
-
-  (def u1 (UUID/randomUUID))
-  (def u2 (UUID/randomUUID))
-  (def res (d/transact conn {:tx-data [{:request/uuid u1
-                                        :request/uri "/"}
-                                       {:request/uuid u2
-                                        :request/uri "/en"}]}))
-  (deref res)
-
-  (def db (d/db conn))
-
-  (defn $requests []
-    (d/q '{:find [?uuid ?uri]
-           :where [[?e :request/uri ?uri]
-                   [?e :request/uuid ?uuid]]}
-         db))
-
-  (defn $uuid->request [uuid]
-    (d/q '{:find [?uuid ?uri]
-           :in [$ ?uuid]
-           :where [[?e :request/uri ?uri]
-                   [?e :request/uuid ?uuid]]}
-         db uuid))
-
-  ($requests)
-  ($uuid->request u1)
-  ($uuid->request u2)
 
   (slurp "http://localhost:1312/en/")
   (slurp "http://localhost:1312/fr/")

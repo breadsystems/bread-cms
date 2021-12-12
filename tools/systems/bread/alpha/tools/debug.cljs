@@ -17,29 +17,16 @@
                                             req->url
                                             shorten-uuid]]))
 
-(defonce subscriptions (atom {:name "Coby"}))
-
-(defn sub [query]
-  (get (rum/react subscriptions) query))
-
 (rum/defc ui
   < rum/reactive
   []
   [:main
-   (str "hello, " (:name (rum/react subscriptions)))
-   [:ul
-    (map
-      (fn [{:request/keys [uuid uri]}]
-        [:li {:key (str uuid)} uri])
-      (sub [:request/uuid :request/uri]))]])
+   "Basic debugger stuff goes here."])
 
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
 
 (defmulti on-event first)
-
-(defmethod on-event :subscription [[_ query value]]
-  (swap! subscriptions assoc query value))
 
 (defn on-message [message]
   (when-let [event (try
@@ -48,16 +35,16 @@
                        (js/console.error err)
                        (prn (.-data message))
                        nil))]
-    (on-event event)
-    #_
-    (publish! event)))
+    (on-event event)))
 
 ;; init is called ONCE when the page loads
 ;; this is called in the index.html and must be exported
 ;; so it is available even in :advanced release builds
 (defn init []
-  (js/console.log "Initializing...")
+  (js/console.log "Initializing debugger...")
   (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
+    ;; TODO do we need an open listener?
+    #_
     (.addEventListener ws "open"
                        (fn [_]
                          (.send ws (prn-str [:subscribe [:request/uuid :request/uri]]))))
@@ -70,6 +57,4 @@
                               (init))
                             1000)
                           (js/console.error "WebSocket connection closed!"))))
-  #_
-  (on-event {:event/type :ui/loading!})
   (start))
