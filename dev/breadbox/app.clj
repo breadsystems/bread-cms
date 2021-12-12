@@ -10,6 +10,7 @@
     [config.core :as config]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
+    [systems.bread.alpha.cms :as cms]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
@@ -171,35 +172,32 @@
   :start (reset! app
                  (bread/load-app
                    (bread/app
-                     {:plugins [(debug/plugin)
-                                (store/plugin $config)
-                                (i18n/plugin)
-                                (route/plugin $router)
-                                (resolver/plugin)
-                                (query/plugin)
-                                (component/plugin)
+                     {:plugins
+                      (cms/defaults
+                        {:datastore $config
+                         :router $router}
+                        (debug/plugin)
+                        (rum/plugin)
 
-                                (rum/plugin)
+                        ;; TODO make this a default plugin
+                        (fn [app]
+                          (bread/add-hook
+                            app
+                            :hook/render
+                            (fn [{::bread/keys [data] :as res}]
+                              (let [status (if (:not-found? data)
+                                             404
+                                             (or (:status res) 200))]
+                                (assoc res
+                                       :headers {"content-type"
+                                                 "text/html"}
+                                       :status status)))))
 
-                                ;; TODO make this a default plugin
-                                (fn [app]
-                                  (bread/add-hook
-                                    app
-                                    :hook/render
-                                    (fn [{::bread/keys [data] :as res}]
-                                      (let [status (if (:not-found? data)
-                                                     404
-                                                     (or (:status res) 200))]
-                                        (assoc res
-                                               :headers {"content-type"
-                                                         "text/html"}
-                                               :status status)))))
+                        ;; TODO layouts
+                        ;; TODO themes
 
-                                ;; TODO layouts
-                                ;; TODO themes
-
-                                (static-be/plugin)
-                                (static-fe/plugin)]})))
+                        (static-be/plugin)
+                        (static-fe/plugin))})))
   :stop (reset! app nil))
 
 ;; TODO themes
