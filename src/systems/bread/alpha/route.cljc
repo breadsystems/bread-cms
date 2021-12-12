@@ -28,8 +28,10 @@
         declared (cond
                    (= :default declared)
                    default
+                   ;; Support keyword shorthands.
                    (keyword->type declared)
                    {:resolver/type (keyword->type declared)}
+                   ;; Support resolvers declared as arbitrary keywords.
                    (keyword? declared)
                    {:resolver/type declared}
                    :else

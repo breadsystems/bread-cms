@@ -42,6 +42,20 @@
   (macroexpand '(use-datastore :each {:my :config})))
 
 (defn map->route-plugin [routes]
+  "Takes a map m like:
+
+  {\"/first/route\"
+   {:bread/resolver :resolver.type/first
+    :bread/component 'first-component
+    :route/params ...}
+   \"/second/route\"
+   {:bread/resolver :resolver.type/second
+    :bread/component 'second-component
+    :route/params ...}}
+
+  and returns a plugin that does a simple (get m (:uri req))
+  to get the matched route. Reifies a Router instance internally
+  to pass to route/plugin."
   (route/plugin
     (reify bread/Router
       (bread/match [_ req]
@@ -51,8 +65,8 @@
       (bread/resolver [_ match]
         (:bread/resolver match))
       (bread/component [_ match]
-        (:resolver/component (:bread/resolver match)))
+        (:bread/component match))
       (bread/not-found-component [_ match]
-        (:resolver/not-found-component (:bread/resolver match)))
+        (:bread/not-found-component match))
       (bread/dispatch [router req]
         (assoc req ::bread/resolver (route/resolver req))))))

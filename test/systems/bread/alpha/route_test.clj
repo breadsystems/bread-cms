@@ -10,11 +10,7 @@
 
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
-        routes {"/en"
-                {:bread/resolver {:resolver/type :home}
-                 :bread/component 'home
-                 :route/params {:lang "en"}}
-                "/en/home"
+        routes {"/en/home"
                 {:bread/resolver :resolver.type/home
                  :bread/component 'home
                  :route/params {:lang "en"}}
@@ -22,7 +18,7 @@
                 {:bread/resolver :resolver.type/page
                  :bread/component 'page
                  :route/params {:lang "en"
-                                     :slug "keyword"}}
+                                :slug "keyword"}}
                 "/en/default"
                 {:bread/resolver :default
                  :bread/component 'page
