@@ -12,8 +12,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.test-helpers :refer [use-datastore
-                                              map->route-plugin]])
+    [systems.bread.alpha.test-helpers :refer [use-datastore]])
   (:import
     [java.util UUID]))
 
@@ -127,7 +126,7 @@
 (use-datastore :each config)
 
 (component/defc home [{:keys [post]}]
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
@@ -136,7 +135,7 @@
      [:p (:hello simple)]]))
 
 (component/defc page [{:keys [post]}]
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
@@ -144,72 +143,73 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(component/defc not-found [{:keys [i18n]}]
+(component/defc ^:not-found not-found [{:keys [i18n]}]
   {}
   [:main (:not-found i18n)])
 
-(deftest ^:kaocha/skip test-app-lifecycle
+(deftest test-app-lifecycle
 
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component home
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component home}
                    :route/params {:lang "en"}}
                   "/fr"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component home
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component home}
                    :route/params {:lang "fr"}}
                   "/en/parent-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page"}}
                   "/en/parent-page/child-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :bread/not-found-component not-found
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
-                  {:bread/resolver {:resolver/type :resolver.type/page}
-                   :bread/component page
+                  {:bread/resolver {:resolver/type :resolver.type/page
+                                    :resolver/component page}
                    :bread/not-found-component not-found
                    :route/params {:lang "fr"
-                                  :slugs "not-found"}}
-                  }
+                                  :slugs "not-found"}}}
           router (reify bread/Router
                    (bread/match [router req]
                      (get routes (:uri req)))
                    (bread/params [router match]
                      (:route/params match))
                    (bread/resolver [router match]
-                     (:bread/resolver (:data match)))
-                   (bread/component [router match]
-                     (:bread/component (:data match)))
+                     (:bread/resolver match))
+                   (bread/component [_ match]
+                     (:resolver/component (:bread/resolver match)))
                    (bread/not-found-component [router match]
-                     (:bread/not-found-component (:data match))))
+                     (:resolver/not-found-component (:bread/resolver match)))
+                   (bread/dispatch [router req]
+                     (assoc req ::bread/resolver (route/resolver req))))
+          ;; TODO call (cms/defaults ...)
           app (bread/app {:plugins [(store/plugin config)
                                     (route/plugin router)
                                     (resolver/plugin)
                                     (query/plugin)
                                     (i18n/plugin)
-                                    (component/plugin)
-                                    (map->route-plugin routes)]})
+                                    (component/plugin)]})
           handler (bread/load-handler app)]
       (are
         [expected res]
@@ -262,4 +262,5 @@
         ))))
 
 (comment
+  (test-app-lifecycle)
   (k/run))
