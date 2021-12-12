@@ -171,33 +171,32 @@
 (defstate load-app
   :start (reset! app
                  (bread/load-app
-                   (bread/app
-                     {:plugins
-                      (cms/defaults
-                        {:datastore $config
-                         :router $router}
-                        (debug/plugin)
-                        (rum/plugin)
+                   (cms/default-app
+                     {:datastore $config
+                      :router $router
+                      :plugins
+                      [(debug/plugin)
+                       (rum/plugin)
 
-                        ;; TODO make this a default plugin
-                        (fn [app]
-                          (bread/add-hook
-                            app
-                            :hook/render
-                            (fn [{::bread/keys [data] :as res}]
-                              (let [status (if (:not-found? data)
-                                             404
-                                             (or (:status res) 200))]
-                                (assoc res
-                                       :headers {"content-type"
-                                                 "text/html"}
-                                       :status status)))))
+                       ;; TODO make this a default plugin
+                       (fn [app]
+                         (bread/add-hook
+                           app
+                           :hook/render
+                           (fn [{::bread/keys [data] :as res}]
+                             (let [status (if (:not-found? data)
+                                            404
+                                            (or (:status res) 200))]
+                               (assoc res
+                                      :headers {"content-type"
+                                                "text/html"}
+                                      :status status)))))
 
-                        ;; TODO layouts
-                        ;; TODO themes
+                       ;; TODO layouts
+                       ;; TODO themes
 
-                        (static-be/plugin)
-                        (static-fe/plugin))})))
+                       (static-be/plugin)
+                       (static-fe/plugin)]})))
   :stop (reset! app nil))
 
 ;; TODO themes

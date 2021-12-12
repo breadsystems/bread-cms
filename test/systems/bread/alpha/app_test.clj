@@ -204,8 +204,8 @@
                      (:resolver/not-found-component (:bread/resolver match)))
                    (bread/dispatch [router req]
                      (assoc req ::bread/resolver (route/resolver req))))
-          app (bread/app {:plugins (cms/defaults {:datastore config
-                                                  :router router})})
+          app (cms/default-app {:datastore config
+                                :router router})
           handler (bread/load-handler app)]
       (are
         [expected res]
