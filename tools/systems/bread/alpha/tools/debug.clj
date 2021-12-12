@@ -20,6 +20,9 @@
 (defmulti event-data (fn [[event-type]]
                        event-type))
 
+(defmethod event-data :default [[_ e]]
+  e)
+
 (defmethod event-data :profile.type/request [[_ req]]
   ;(prn (keys req))
   {:request/uuid (:request/uuid req)
