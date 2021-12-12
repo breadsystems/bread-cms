@@ -17,16 +17,16 @@
   (event-log [debugger]))
 
 (def event-data nil)
-(defmulti event-data (fn [e]
-                       (::bread/profile.type e)))
+(defmulti event-data (fn [[event-type]]
+                       event-type))
 
-(defmethod event-data :profile.type/request [{req ::bread/profile}]
+(defmethod event-data :profile.type/request [[_ req]]
   ;(prn (keys req))
   {:request/uuid (:request/uuid req)
    :request/method (:request-method req)
    :request/uri (:uri req)})
 
-(defmethod event-data :profile.type/response [{res ::bread/profile}]
+(defmethod event-data :profile.type/response [[_ res]]
   ;(prn (keys res))
   (select-keys res [:request/uuid #_#_:request-method :uri]))
 
@@ -54,7 +54,7 @@
     (swap! (:event-log config) conj pe)
     (srv/publish!
       [(::bread/profile.type pe)
-       (walk/prewalk datafy (event-data pe))]))
+       (walk/prewalk datafy (event-data [(::bread/profile.type pe) (::bread/profile pe)]))]))
   (profile [this e _]
     (profile this e))
   (event-log [this]
