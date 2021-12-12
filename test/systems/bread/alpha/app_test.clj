@@ -4,6 +4,7 @@
   (:require
     [clojure.test :refer [are deftest is testing]]
     [kaocha.repl :as k]
+    [systems.bread.alpha.cms :as cms]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.i18n :as i18n]
@@ -203,13 +204,8 @@
                      (:resolver/not-found-component (:bread/resolver match)))
                    (bread/dispatch [router req]
                      (assoc req ::bread/resolver (route/resolver req))))
-          ;; TODO call (cms/defaults ...)
-          app (bread/app {:plugins [(store/plugin config)
-                                    (route/plugin router)
-                                    (resolver/plugin)
-                                    (query/plugin)
-                                    (i18n/plugin)
-                                    (component/plugin)]})
+          app (bread/app {:plugins (cms/defaults {:datastore config
+                                                  :router router})})
           handler (bread/load-handler app)]
       (are
         [expected res]
