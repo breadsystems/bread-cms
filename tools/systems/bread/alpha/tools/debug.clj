@@ -13,8 +13,7 @@
 
 (defprotocol BreadDebugger
   (start [debugger opts])
-  (profile [debugger e] [debugger e opts])
-  (event-log [debugger]))
+  (profile [debugger e] [debugger e opts]))
 
 (def event-data nil)
 (defmulti event-data (fn [[event-type]]
@@ -36,14 +35,17 @@
 ;; TODO client ID?
 (defmulti handle-message (fn [_ [k]] k))
 
-(defrecord WebsocketDebugger [config]
+(defmethod handle-message :replay-event-log [debugger _]
+  (doseq [entry @(.log debugger)]
+    (srv/publish! entry)))
+
+(defrecord WebsocketDebugger [log config]
   BreadDebugger
   (start [this opts]
     (let [stop-server (srv/start
                         (assoc opts
                                :ws-on-message
                                (fn [msg]
-                                 ;; TODO accept client ID here?
                                  (handle-message this msg))))
           tap (bread/add-profiler
                 (fn [profile-event]
@@ -55,27 +57,22 @@
   (profile [this pe]
     (let [{t ::bread/profile.type e ::bread/profile} pe
           entry [t (walk/prewalk datafy (event-data [t e]))]]
-      ;; TODO fix log persistence
-      (swap! (:event-log config) conj entry)
+      (swap! (.log this) conj entry)
       (srv/publish! entry)))
   (profile [this e _]
-    (profile this e))
-  (event-log [this]
-    (deref (:event-log config))))
+    (profile this e)))
 
 (defn debugger
-  ([]
-   (debugger {}))
-  ([config]
-   (let [config (merge {:event-log (atom [])} config)]
-     (WebsocketDebugger. config))))
+  ([log]
+   (debugger log {}))
+  ([log config]
+   (WebsocketDebugger. log config)))
 
 (comment
-  (let [dbg (debugger)]
+  (def events (atom []))
+  (let [dbg (debugger events)]
     (profile dbg {::bread/profile.type :something ::bread/profile {}})
-    (event-log (debugger)))
-  (event-log (debugger))
-  (event-log (debugger {:event-log (atom [:stuff])})))
+    @(.log dbg)))
 
 (defn plugin []
   (fn [app]

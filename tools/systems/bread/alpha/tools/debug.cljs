@@ -54,11 +54,11 @@
 (defn init []
   (js/console.log "Initializing debugger...")
   (let [ws (js/WebSocket. (str "ws://" js/location.host "/ws"))]
-    ;; TODO do we need an open listener?
-    #_
     (.addEventListener ws "open"
                        (fn [_]
-                         (.send ws (prn-str [:subscribe [:request/uuid :request/uri]]))))
+                         (js/console.log "Connected to WebSocket.")
+                         (when (empty? @event-log)
+                           (.send ws (prn-str [:replay-event-log])))))
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close"
                        #(do
