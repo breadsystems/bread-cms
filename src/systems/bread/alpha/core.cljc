@@ -256,7 +256,6 @@
   for h."
   {:arglists '([app h f] [app h f options])}
   ([app h f options]
-   {:pre [(s/valid? ::app app) (keyword? h) (ifn? f) (map? options)]}
    (update-in app [::hooks h] append-hook f options))
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
