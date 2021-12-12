@@ -2,6 +2,7 @@
   (:require
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
 (defn plugins->app [plugins]
@@ -40,21 +41,18 @@
 (comment
   (macroexpand '(use-datastore :each {:my :config})))
 
-(defn map->route-plugin [routes-map]
-  (fn [app]
-    (bread/add-hooks->
-      app
-      (:hook/match-route (fn [req _]
-                           (get routes-map (:uri req))))
-      (:hook/match->resolver
-        (fn [_ match]
-          (:bread/resolver match)))
-      (:hook/match->component
-        (fn [_ match]
-          (:bread/component match)))
-      (:hook/match->not-found-component
-        (fn [_ match]
-          (:bread/not-found-component match)))
-      (:hook/route-params
-        (fn [_ match]
-          (:route/params match))))))
+(defn map->route-plugin [routes]
+  (route/plugin
+    (reify bread/Router
+      (bread/match [_ req]
+        (get routes (:uri req)))
+      (bread/params [_ match]
+        (:route/params match))
+      (bread/resolver [_ match]
+        (:bread/resolver match))
+      (bread/component [_ match]
+        (:resolver/component (:bread/resolver match)))
+      (bread/not-found-component [_ match]
+        (:resolver/not-found-component (:bread/resolver match)))
+      (bread/dispatch [router req]
+        (assoc req ::bread/resolver (route/resolver req))))))

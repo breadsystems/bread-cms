@@ -63,10 +63,10 @@
 
     (are [resolver uri] (= resolver
                            (binding [component/*registry* registry]
-                             (->> {:uri uri}
-                                  (merge app)
-                                  route/dispatch
-                                  ::bread/resolver)))
+                             (-> {:uri uri}
+                                 (merge app)
+                                 (bread/hook :hook/dispatch)
+                                 ::bread/resolver)))
 
          {:resolver/type :resolver.type/page
           :resolver/i18n? true
