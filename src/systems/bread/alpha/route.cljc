@@ -74,7 +74,3 @@
       (:hook/dispatch
         (fn [req]
           (bread/dispatch router req))))))
-
-(comment
-
-  (sitemap {}))
