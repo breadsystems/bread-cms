@@ -12,6 +12,8 @@
   (bread/hook->> req :hook/route-params match))
 
 (defn resolver [req]
+  "Get the full resolver for the given request. Router implementations should
+  call this function."
   (let [default {:resolver/i18n? true
                  :resolver/type :resolver.type/page
                  :post/type :post.type/page}
