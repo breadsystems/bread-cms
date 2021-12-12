@@ -93,6 +93,7 @@
   [{::bread/keys [resolver] :as req}]
   (let [{k :resolver/key params :route/params
          :resolver/keys [ancestral? pull]} resolver
+        k (or k :post)
         db (store/datastore req)
 
         page-query

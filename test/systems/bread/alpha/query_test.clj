@@ -7,6 +7,14 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
 (deftest test-query-expand
+  ;; A fn resolver short-circuits query expansion.
+  (let [response {:body "Returned from fn" :status 200}
+        resolver (constantly response)]
+    (is (= response
+           (-> (plugins->loaded [(query/plugin)])
+               (assoc ::bread/resolver (constantly response))
+               (bread/hook :hook/expand)))))
+
   (are [data queries] (= data (-> (plugins->loaded [(query/plugin)])
                                   (assoc ::bread/queries queries
                                          ;; Assume the first thing in

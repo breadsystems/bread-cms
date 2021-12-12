@@ -25,13 +25,13 @@
   (let [k (:resolver/key resolver)]
     (assoc data :not-found? (nil? (get data k)))))
 
-(defn expand [{::bread/keys [resolver] :as app}]
-  {:pre [(s/valid? ::bread/app app)]
-   :post [(s/valid? ::bread/app %)]}
-  (->> (::bread/queries app)
-       expand-queries
-       (expand-not-found resolver)
-       (assoc app ::bread/data)))
+(defn expand [{::bread/keys [resolver] :as req}]
+  (if (fn? resolver)
+    (resolver req)
+    (->> (::bread/queries req)
+         expand-queries
+         (expand-not-found resolver)
+         (assoc req ::bread/data))))
 
 (defn plugin []
   (fn [app]

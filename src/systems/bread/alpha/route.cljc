@@ -12,6 +12,8 @@
   (bread/hook->> req :hook/route-params match))
 
 (defn resolver [req]
+  "Get the full resolver for the given request. Router implementations should
+  call this function."
   (let [default {:resolver/i18n? true
                  :resolver/type :resolver.type/page
                  :post/type :post.type/page}
@@ -26,8 +28,10 @@
         declared (cond
                    (= :default declared)
                    default
+                   ;; Support keyword shorthands.
                    (keyword->type declared)
                    {:resolver/type (keyword->type declared)}
+                   ;; Support resolvers declared as arbitrary keywords.
                    (keyword? declared)
                    {:resolver/type declared}
                    :else
@@ -45,11 +49,6 @@
                          :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
-(defn dispatch [req]
-  {:pre [(s/valid? ::bread/app req)]
-   :post [(s/valid? ::bread/app %)]}
-  (assoc req ::bread/resolver (resolver req)))
-
 (defn sitemap [app]
   [{}])
 
@@ -62,6 +61,7 @@
       (:hook/match->resolver
         (fn [_ match]
           (bread/resolver router match)))
+      ;; TODO pull this out into a separate mechanism
       (:hook/match->component
         (fn [_ match]
           (bread/component router match)))
@@ -71,8 +71,6 @@
       (:hook/route-params
         (fn [_ match]
           (bread/params router match)))
-      (:hook/dispatch dispatch))))
-
-(comment
-
-  (sitemap {}))
+      (:hook/dispatch
+        (fn [req]
+          (bread/dispatch router req))))))

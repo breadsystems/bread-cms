@@ -6,10 +6,11 @@
     [clojure.core.protocols :refer [Datafiable]]
     [clojure.datafy :refer [datafy]]
     [clojure.edn :as edn]
-    [clojure.string :as str]
+    [clojure.string :as string]
     [config.core :as config]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
+    [systems.bread.alpha.cms :as cms]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dev-helpers :as help]
@@ -60,7 +61,6 @@
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
-     [:pre i18n]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
@@ -89,19 +89,29 @@
    [:body
     [:div (:not-found i18n)]]])
 
+(defn hello-handler [_]
+  {:body "Hello!"
+   :status 200
+   :headers {"X-Hello" "hi"}})
+
 ;; NOTE: this is kinda jank because /en and /en/ (for example) are treated
 ;; as different.
 (def $router
   (reitit/router
-    ["/:lang"
-     ["/" {:bread/resolver {:resolver/type :resolver.type/page}
-           :bread/component home}]
-     ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
-                       :bread/component static-page
-                       :bread/watch-static {:dir "dev/content"
-                                            :path->req [0 "static" 1]}}]
-     ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
-                 :bread/component page}]]
+    [;; TODO i18n plugin for redirecting to lang route based on Accept-Language
+     ["/" (fn [req]
+            (prn 'lang (get-in req [:headers "accept-language"]))
+            {:body "" :status 302 :headers {"Location" "/en/"}})]
+     ["/hello/" hello-handler]
+     ["/:lang"
+      ["/" {:bread/resolver {:resolver/type :resolver.type/page}
+            :bread/component home}]
+      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
+                        :bread/component static-page
+                        :bread/watch-static {:dir "dev/content"
+                                             :path->req [0 "static" 1]}}]
+      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
+                  :bread/component page}]]]
     {:conflicts nil}))
 
 (comment
@@ -127,6 +137,7 @@
   (i18n/lang (assoc @app :uri "/en/asdf"))
   (i18n/lang (assoc @app :uri "/fr/asdf"))
   (i18n/lang (assoc @app :uri "/es/asdf")) ;; defaults to :en
+  (i18n/lang (assoc @app :uri "/")) ;; defaults to :en
 
   (let [req (-> @app
                 (assoc :uri "/fr")
@@ -161,35 +172,33 @@
 (defstate load-app
   :start (reset! app
                  (bread/load-app
-                   (bread/app
-                     {:plugins [(debug*/plugin) ;; TODO remove
-                                (debug/plugin)
-                                (store/plugin $config)
-                                (i18n/plugin)
-                                (route/plugin $router)
-                                (resolver/plugin)
-                                (query/plugin)
-                                (component/plugin)
+                   (cms/default-app
+                     {:datastore $config
+                      :router $router
+                      :plugins
+                      [(debug*/plugin)
+                       (debug/plugin)
+                       (rum/plugin)
 
-                                (rum/plugin)
+                       ;; TODO make this a default plugin
+                       (fn [app]
+                         (bread/add-hook
+                           app
+                           :hook/render
+                           (fn [{::bread/keys [data] :as res}]
+                             (let [status (if (:not-found? data)
+                                            404
+                                            (or (:status res) 200))]
+                               (assoc res
+                                      :headers {"content-type"
+                                                "text/html"}
+                                      :status status)))))
 
-                                ;; TODO make this a default plugin
-                                ;; that honors :not-found?
-                                (fn [app]
-                                  (bread/add-hook
-                                    app
-                                    :hook/render
-                                    (fn [res]
-                                      (assoc res
-                                             :headers {"content-type"
-                                                       "text/html"}
-                                             :status (or (:status res) 200)))))
+                       ;; TODO layouts
+                       ;; TODO themes
 
-                                ;; TODO layouts
-                                ;; TODO themes
-
-                                (static-be/plugin)
-                                (static-fe/plugin)]})))
+                       (static-be/plugin)
+                       (static-fe/plugin)]})))
   :stop (reset! app nil))
 
 ;; TODO themes
@@ -203,9 +212,13 @@
 
   (def $req (merge {:uri "/en/"} @app))
   (route/params $req (route/match $req))
+  (bread/match $router $req)
   (-> $req route/dispatch ::bread/resolver)
   (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
   (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
+
+  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
+  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
   (store/q
     (store/datastore $req)
@@ -234,6 +247,14 @@
 
 (defonce stop-http (atom nil))
 
+(defn wrap-trailing-slash [handler]
+  (fn [{:keys [uri] :as req}]
+    (if (string/ends-with? uri "/")
+      (handler req)
+      {:headers {"Location" (str uri "/")}
+       :status 302
+       :body ""})))
+
 (defn start! []
   ;; TODO config
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
@@ -242,6 +263,7 @@
       (mid/wrap-exceptions $)
       (wrap-keyword-params $)
       (wrap-params $)
+      (wrap-trailing-slash $)
       (http/run-server $ {:port port})
       (reset! stop-http $))
   nil))

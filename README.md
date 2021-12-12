@@ -31,15 +31,15 @@ Bread's high-level feature set:
 
 ```clojure
 (ns my-project
-  (:require [systems.bread.alpha.core :as bread]))
+  (:require
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.cms :as cms]))
 
 (defn hello [_]
   [:h1 "Hello, Breadsters!"])
 
 (def handler
-  (-> (bread/app)
-      (bread/post-type :page
-                       {:browse hello})
+  (-> (bread/app {:plugins (cms/defaults {})})
       (bread/load-handler)))
 
 (handler {:uri "/"})
@@ -52,40 +52,45 @@ Bread's high-level feature set:
 (ns my.simple.blog
 	(:require
    [systems.bread.alpha.blog]
+   [systems.bread.alpha.cms :as cms]
    [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.plugin.reitit :as br]))
+   [systems.bread.alpha.route :as route]))
+
+(def router
+  (reitit/router
+    [["/" {:bread/resolver :resolver.type/articles
+           ;; equivalent to:
+           ;; {:bread/resolver
+           ;;  {:resolver/type :resolver.type/post
+           ;;   :resolver/cardinality :resolver.cardinality/many
+           ;;   :post/type :post.type/article}}
+           }]
+     ["/about" {:bread/resolver :resolver.type/page
+                :post/slug "about"}]
+     ["/article/:slug" {:bread/resolver :resolver.type/article
+                        ;; equivalent to:
+                        ;; {:bread/resolver
+                        ;;  {:resolver/type :resolver.type/post
+                        ;;   :resolver/cardinality :resolver.cardinality/one
+                        ;;   :post/type :post.type/article
+                        ;;   :resolver/attr->param {:post/slug :slug}}}
+                        }]
+     ["/tag/:slug" {:bread/resolver :resolver.type/tag
+                    ;; equivalent to:
+                    ;; {:bread/resolver
+                    ;;  {:resolver/type :resolver.type/post
+                    ;;   :resolver/taxonomy :taxon.taxonomy/tag
+                    ;;   :resolver/cardinality :resolver.cardinality/many
+                    ;;   :post/type :post.type/article
+                    ;;   :resolver/attr->param {:taxon/slug :slug}}}
+                    ]]))
 
 (def handler
-  (-> {:plugins [(br/plugin
-                   {:routes
-                    [["/" {:bread/resolver :resolver.type/articles
-                           ;; equivalent to:
-                           ;; {:bread/resolver
-                           ;;  {:resolver/type :resolver.type/post
-                           ;;   :resolver/cardinality :resolver.cardinality/many
-                           ;;   :post/type :post.type/article}}
-                           }]
-                     ["/about" {:bread/resolver :resolver.type/page
-                                :post/slug "about"}]
-                     ["/article/:slug" {:bread/resolver :resolver.type/article
-                                        ;; equivalent to:
-                                        ;; {:bread/resolver
-                                        ;;  {:resolver/type :resolver.type/post
-                                        ;;   :resolver/cardinality :resolver.cardinality/one
-                                        ;;   :post/type :post.type/article
-                                        ;;   :resolver/attr->param {:post/slug :slug}}}
-                                        }]
-                     ["/tag/:slug" {:bread/resolver :resolver.type/tag
-                                    ;; equivalent to:
-                                    ;; {:bread/resolver
-                                    ;;  {:resolver/type :resolver.type/post
-                                    ;;   :resolver/taxonomy :taxon.taxonomy/tag
-                                    ;;   :resolver/cardinality :resolver.cardinality/many
-                                    ;;   :post/type :post.type/article
-                                    ;;   :resolver/attr->param {:taxon/slug :slug}}}
-                                    ]]})]}
+  (-> {:plugins (cms/defaults {:router router})}
     (bread/app)
     (bread/load-handler))
+  
+;; ...pass handler to Ring per usual...
 ```
 
 ### A more detailed example

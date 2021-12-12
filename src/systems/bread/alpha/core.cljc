@@ -54,6 +54,7 @@
 
 (defprotocol Router
   :extend-via-metadata true
+  (dispatch [this req])
   (routes [this])
   (match [this req])
   (params [this match])
@@ -90,6 +91,21 @@
 
 (s/def ::app (s/keys :req [::config ::hooks ::plugins]
                      :opt [::resolver ::queries ::data]))
+
+(comment
+  ;; Valid and invalid examples...
+  (and
+    (s/valid? ::queries [])
+    (s/valid? ::queries [[:post (constantly {})]])
+    (not (s/valid? ::queries [[nil]]))
+
+    (s/valid? ::resolver {:resolver/type :example})
+    (s/valid? ::resolver {:resolver/type nil})
+    (not (s/valid? ::resolver {}))
+    (not (s/valid? ::resolver nil))
+
+    ;; TODO more examples
+    ))
 
 
 
@@ -183,7 +199,6 @@
   "Returns a response with the current app (req) merged into raw map,
   preserving any hooks/config added to req."
   [req raw]
-  {:pre [(s/valid? ::app req)]}
   (merge raw (select-keys req [::config ::hooks ::plugins])))
 
 (defn config
@@ -223,8 +238,7 @@
   "Runs all plugin functions currently in app, in the order they were specified
   in :plugins when the app was created."
   [app]
-  (reduce #(%2 %1) app (::plugins app)))
-
+  (reduce (fn [app plugin] (plugin app)) app (::plugins app)))
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -270,7 +284,6 @@
   for h."
   {:arglists '([app h f] [app h f options])}
   ([app h f options]
-   {:pre [(s/valid? ::app app) (keyword? h) (ifn? f) (map? options)]}
    (update-in app [::hooks h] append-hook f options))
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
