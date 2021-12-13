@@ -48,17 +48,10 @@
                                (println "channel closed:" status)))
       (http/on-receive ws-chan (fn [message]
                                  (let [msg (edn/read-string message)]
-                                   (prn ws-on-message)
-                                   ;; TODO send client ID
-                                   (ws-on-message msg)
-                                   #_
-                                   (on-event (assoc msg :channel ws-chan)))))
+                                   (ws-on-message msg))))
       (subscribe! (fn [event]
                     ;; TODO transit
                     (http/send! ws-chan (prn-str event)))))))
-
-(comment
-  (publish! {:hi 'there}))
 
 (defn handler [{:keys [csp-ports ws-on-message]}]
   (ring/ring-handler
