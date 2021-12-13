@@ -3,10 +3,47 @@
     [citrus.core :as citrus]
     [clojure.edn :as edn]
     [clojure.string :as string]
+    [datascript.core :as d]
     [editscript.core :as ed]
     [rum.core :as rum]
     #_
     [systems.bread.alpha.tools.debugger.diff :as diff]))
+
+(comment
+  (def schema {:person/aka {:db/cardinality :db.cardinality/many}})
+  (def conn (d/create-conn schema))
+
+  (d/transact! conn [{:person/name "Coby"
+                      :person/age 33
+                      :person/aka ["Cobster" "Cobmeister"]}
+                     {:person/name "Rowan"
+                      :person/age 20
+                      :person/aka ["Old Man Carrick" "Carrick"]}])
+
+  ;; Pull query
+  (->>
+    (d/q '{:find [(pull ?e [:db/id :person/name :person/age :person/aka])]
+           :in [$]
+           :where [[?e :person/name ]]}
+         @conn)
+    (map first)
+    vec)
+
+  ;; Map query
+  (d/q '{:find [?e ?name ?age]
+         :in [$]
+         :where [[?e :person/name ?name]
+                 [?e :person/age ?age]]}
+       @conn)
+
+  ;; Basic query
+  (d/q '[:find ?e ?name ?age
+         :in $
+         :where
+         [?e :person/name ?name]
+         [?e :person/age ?age]]
+       @conn)
+  )
 
 (defonce event-log (atom []))
 
