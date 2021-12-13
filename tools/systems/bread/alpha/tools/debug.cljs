@@ -9,14 +9,6 @@
 
 (defonce event-log (atom []))
 
-(defn log-entries [e]
-  (prn 'log-entries e)
-  @event-log)
-
-(defonce state (atom {:stuff {:a :A :b :B}}))
-
-(def stuff (rum/cursor-in state [:stuff]))
-
 (rum/defc ui
   < rum/reactive
   []
@@ -25,7 +17,6 @@
                    (js/encodeURIComponent (prn-str (rum/react event-log))))
         :download "debug-log.edn"}
     "DOWNLOAD DEBUG EVENT LOG"]
-   [:pre (str (rum/react stuff))]
    (map-indexed
      (fn [idx e]
        [:div {:key idx}
