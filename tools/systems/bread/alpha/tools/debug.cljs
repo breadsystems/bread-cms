@@ -1,23 +1,28 @@
 (ns systems.bread.alpha.tools.debug
   (:require
+    [citrus.core :as citrus]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [editscript.core :as ed]
     [rum.core :as rum]
-    #_#_#_
-    [systems.bread.alpha.tools.debugger.diff :as diff]
-    [systems.bread.alpha.tools.impl :as impl :refer [publish!
-                                                     subscribe-db
-                                                     on-event]]
-    [systems.bread.alpha.tools.util :refer [ago
-                                            date-fmt
-                                            date-fmt-ms
-                                            join-some
-                                            pp
-                                            req->url
-                                            shorten-uuid]]))
+    #_
+    [systems.bread.alpha.tools.debugger.diff :as diff]))
 
 (defonce event-log (atom []))
+
+(defn log-entries [e]
+  (prn 'log-entries e)
+  @event-log)
+
+(defonce state (atom {:stuff {:a :A :b :B}}))
+
+(defonce reconciler
+  (citrus/reconciler {:state state
+                      :controllers {:log-entries log-entries}
+                      :effect-handlers {}}))
+
+(defn stuff [reconciler]
+  (citrus/subscription reconciler [:stuff]))
 
 (rum/defc ui
   < rum/reactive
@@ -27,6 +32,7 @@
                    (js/encodeURIComponent (prn-str (rum/react event-log))))
         :download "debug-log.edn"}
     "DOWNLOAD DEBUG EVENT LOG"]
+   [:pre (str (rum/react (stuff reconciler)))]
    (map-indexed
      (fn [idx e]
        [:div {:key idx}

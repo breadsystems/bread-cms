@@ -28,6 +28,7 @@
             :extra-deps {http-kit/http-kit       {:mvn/version "2.3.0"}
                          juji/editscript         {:mvn/version "0.5.7"}
                          rum/rum                 {:mvn/version "0.12.6"}
+                         clj-commons/citrus      {:mvn/version "3.3.0"}
                          org.clojars.quoll/asami {:mvn/version "2.1.1"}}}
 
            :flowstorm
