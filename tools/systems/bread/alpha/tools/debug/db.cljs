@@ -10,7 +10,8 @@
                    :ui/diff-type :response-pre-render
                    :ui/selected-req nil
                    :ui/selected-reqs (sorted-set)
-                   :ui/loading? false}))
+                   :ui/loading? false
+                   :ui/print-db? true}))
 
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))

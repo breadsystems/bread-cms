@@ -7,6 +7,7 @@
     [rum.core :as rum]
     [systems.bread.alpha.tools.debug.db :as db :refer [db]]
     [systems.bread.alpha.tools.debug.event :as e]
+    [systems.bread.alpha.tools.debug.request :as r]
     [systems.bread.alpha.tools.util :refer [date-fmt
                                             date-fmt-ms
                                             join-some
@@ -210,7 +211,8 @@
        [:p.info "connected to " ws])
      [:div.with-sidebar
       [:div
-       [:div.rows
+       [:div.rows.sidebar
+        [:h2 "Requests"]
         (cond
           (seq reqs)
           [:ul
@@ -222,13 +224,10 @@
                            [:div
                             [:input {:type :checkbox
                                      :checked (contains? selected idx)
-                                     :on-change #(publish!
-                                                   {:event/type :ui/select-req
-                                                    :uuids/index idx})}]]
+                                     :on-change #(e/on-event
+                                                   [:ui/select-req idx])}]]
                            [:label.req-label
-                            ;; TODO decouple publish! from UI events...?
-                            {:on-click #(publish! {:event/type :ui/view-req
-                                                   :request/uuid uuid})}
+                            {:on-click #(e/on-event [:ui/view-req uuid])}
                             [:div [:code (:uri req)]]
                             [:div (:request/id req)]
                             [:div (some-> (:request/timestamp req) date-fmt)]]])

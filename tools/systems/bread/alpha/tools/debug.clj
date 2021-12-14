@@ -22,11 +22,13 @@
 (defmethod event-data :default [[_ e]]
   e)
 
-(defmethod event-data :profile.type/request [[_ req]]
-  ;(prn (keys req))
-  {:request/uuid (:request/uuid req)
-   :request/method (:request-method req)
-   :request/uri (:uri req)})
+(defmethod event-data :profile.type/request
+  [[_ {uuid :request/uuid :as req}]]
+  (assoc req
+         :request/uuid (str uuid)
+         :request/id (subs (str uuid) 0 8)
+         ;; TODO support extending these fields via metadata
+         :request/datastore (store/datastore req)))
 
 (defmethod event-data :profile.type/response [[_ res]]
   ;(prn (keys res))
