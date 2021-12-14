@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.tools.middleware
+(ns systems.bread.alpha.tools.debug.middleware
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as string]

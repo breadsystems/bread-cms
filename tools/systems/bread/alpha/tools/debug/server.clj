@@ -4,7 +4,7 @@
     [clojure.edn :as edn]
     [org.httpkit.server :as http]
     [reitit.ring :as ring]
-    [systems.bread.alpha.tools.middleware :as mid]))
+    [systems.bread.alpha.tools.debug.middleware :as mid]))
 
 ;; PUBLISH to events>
 (def ^:private events> (chan 1))
