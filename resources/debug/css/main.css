@@ -23,7 +23,7 @@ h1, h2, h3, h4 {
   margin-top: 0;
   margin-bottom: 0;
 }
-label.req-label {
+.req-item {
   display: block;
   margin-left: var(--padding-small);
 

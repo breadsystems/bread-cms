@@ -122,14 +122,15 @@
                                   req :request/initial}]
                           [:li.req-item {:key uuid
                                          :class (when (= uuid current-uuid)
-                                                  "current")}
+                                                  "current")
+                                         :on-click #(e/on-event
+                                                      [:ui/view-req uuid])}
                            [:div
                             [:input {:type :checkbox
                                      :checked (contains? selected idx)
                                      :on-change #(e/on-event
                                                    [:ui/select-req idx])}]]
                            [:label.req-label
-                            {:on-click #(e/on-event [:ui/view-req uuid])}
                             [:div [:code (:uri req)]]
                             [:div (:request/id req)]
                             [:div (some-> (:request/timestamp req) date-fmt)]]])
