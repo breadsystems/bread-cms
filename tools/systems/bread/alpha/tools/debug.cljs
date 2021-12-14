@@ -165,6 +165,8 @@
          current-uuid (r/request-details)
          (seq reqs) [:p "Click a request to view details"]
          :else [:p.info "No requests yet."])]]
+     ;; TODO maybe optimize event log/db for printing?
+     #_
      (when print?
        [:div
         [:h3 "Debug DB"]
