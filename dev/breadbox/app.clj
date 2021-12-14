@@ -283,7 +283,9 @@
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
   :start (reset! stop-debug-server! (debug/start
-                                      (debug/debugger debug-log)
+                                      (debug/debugger
+                                        debug-log
+                                        {:replay-handler handler})
                                       {:http-port 1316
                                        :csp-ports [9630]}))
   :stop (when-let [stop! @stop-debug-server!]

@@ -182,8 +182,13 @@
                replays)]]])
      [:div.flex
       [:div
-       [:button {:on-click #(client/send! [:replay-requests [req]])}
-        "Replay this request"]]
+       [:button {:on-click #(client/send!
+                              [:replay-requests [req]])}
+        "Replay"]]
+       [:button {:on-click #(client/send!
+                              [:replay-requests [req]
+                               {:as-of (:request/timestamp req)}])}
+        "Replay as of " (date-fmt-ms (:request/timestamp req))]
       [:div
        [:select
         {:on-change (fn [e]

@@ -13,7 +13,8 @@
 
 (defprotocol BreadDebugger
   (start [debugger opts])
-  (profile [debugger e] [debugger e opts]))
+  (profile [debugger e] [debugger e opts])
+  (replay [debugger req opts]))
 
 (def event-data nil)
 (defmulti event-data (fn [[event-type]]
@@ -63,9 +64,8 @@
 (defmethod handle-message :clear-debug-log [debugger _]
   (reset! (.log debugger) []))
 
-(defmethod handle-message :replay-requests [debugger [_ reqs]]
-  (prn (keys (first reqs)))
-  ())
+(defmethod handle-message :replay-requests [debugger [_ reqs opts]]
+  (replay debugger reqs opts))
 
 (defrecord WebsocketDebugger [log config]
   BreadDebugger
@@ -88,7 +88,10 @@
       (swap! (.log this) conj entry)
       (srv/publish! entry)))
   (profile [this e _]
-    (profile this e)))
+    (profile this e))
+  (replay [this reqs opts]
+    ;; TODO
+    (prn (count reqs) opts)))
 
 (defn debugger
   ([log]
