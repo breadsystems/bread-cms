@@ -269,11 +269,8 @@
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
-      (mid/wrap-exceptions $ {:handler-opts
-                              {:headers {"Content-Security-Policy"
-                                         (format "default-src 'self' http://localhost:%d;"
-                                                 ;; TODO get this from atom
-                                                 1316)}}})
+      ;; TODO get these ports from mounted state
+      (mid/wrap-exceptions $ {:csp-ports [1316 9630]})
       (wrap-keyword-params $)
       (wrap-params $)
       (wrap-trailing-slash $)

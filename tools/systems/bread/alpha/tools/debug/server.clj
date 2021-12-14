@@ -2,20 +2,9 @@
   (:require
     [clojure.core.async :as async :refer [<! chan go-loop mult put! tap untap]]
     [clojure.edn :as edn]
-    [clojure.string :as string]
     [org.httpkit.server :as http]
-    [reitit.ring :as ring]))
-
-;; TODO move this to debug middleware
-(defn- wrap-csp-header [handler ports]
-  (fn [req]
-    (update
-      (handler req) :headers merge
-      {"Content-Security-Policy"
-       (str
-         "connect-src 'self' "
-         (string/join " " (map #(format "ws://localhost:%s" %)
-                               (filter some? ports))))})))
+    [reitit.ring :as ring]
+    [systems.bread.alpha.tools.middleware :as mid]))
 
 ;; PUBLISH to events>
 (def ^:private events> (chan 1))
@@ -61,7 +50,7 @@
        ["/ws" (ws-handler ws-on-message)]])
 
     (ring/routes
-      (wrap-csp-header
+      (mid/wrap-websocket-csp-header
         (ring/create-resource-handler {:path "/"
                                        :root "debug"})
         csp-ports)

@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.tools.middleware
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as string]
     [rum.core :as rum]
     [systems.bread.alpha.core :as bread]))
 
@@ -54,26 +55,37 @@
 (comment
   (Throwable->map $last-err))
 
-(defn handle-throwable [err {:keys [headers]}]
+(defn handle-throwable [err]
   {:status 500
-   :headers (merge {"Content-Type" "text/html"
-                    "Cache-Control" "no-cache"
-                    "Pragma" "no-cache"
-                    "Server" "bread-debug"}
-                   headers)
+   :headers {"Content-Type" "text/html"
+             "Cache-Control" "no-cache"
+             "Pragma" "no-cache"
+             "Server" "bread-debug"}
    :body (rum/render-static-markup
            (error-page {:error err}))})
+
+(defn wrap-websocket-csp-header [handler ports]
+  (fn [req]
+    (update
+      (handler req) :headers merge
+      {"Content-Security-Policy"
+       (str
+         "connect-src 'self' "
+         (string/join " " (map #(format "ws://localhost:%s" %)
+                               (filter some? ports))))})))
 
 (defn wrap-exceptions
   ([handler]
    (wrap-exceptions handler {}))
-  ([handler {:keys [throwable-handler handler-opts]}]
-   (let [throwable-handler (or throwable-handler handle-throwable)
-         opts (or handler-opts {})]
+  ([handler {:keys [throwable-handler csp-ports]}]
+   (let [throwable-handler (or
+                             throwable-handler
+                             (-> handle-throwable
+                                 (wrap-websocket-csp-header csp-ports)))]
      (fn [req]
        (try
          (handler req)
          (catch Throwable err
            ;; TODO debug/*e
            (def $last-err err)
-           (throwable-handler err opts)))))))
+           (throwable-handler err)))))))
