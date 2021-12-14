@@ -436,6 +436,7 @@
   `(try
      ;; TODO delete legacy call
      (profile-hook! ~h ~f ~args ~hook ~app)
+     ;; TODO include result
      (profile-hook {:hook ~h :f ~f :args ~args :detail ~hook :app ~app})
      (apply ~f ~args)
      (catch java.lang.Throwable e#

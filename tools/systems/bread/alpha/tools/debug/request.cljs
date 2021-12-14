@@ -41,6 +41,16 @@
 ;; Data coming over the wire, or arbitrary UI changes
 ;;
 
+(defmulti on-hook :hook/name)
+
+(defmethod on-hook :default [{h :hook/name} rid]
+  ;; noop
+  )
+
+(defmethod on-hook :hook/render [inv rid]
+  (swap! db assoc-in [:request/uuid rid :response/pre-render]
+         (some-> inv :hook/args first :body)))
+
 (defmethod e/on-event :profile.type/request
   [[_ {uuid :request/uuid :as req}]]
   (swap! db (fn [state]
@@ -57,13 +67,14 @@
                   (record-replay req)))))
 
 (defmethod e/on-event :profile.type/response
-  [[_ {uuid :response/uuid :as res}]]
+  [[_ {uuid :request/uuid :as res}]]
   (swap! db assoc-in [:request/uuid uuid :request/response] res))
 
 (defmethod e/on-event :profile.type/hook
   [[_ {{rid :request/uuid} :hook/request :as invocation}]]
+  (on-hook invocation rid)
   (swap! db
-         update-in [:request/uuid (str rid) :request/hooks]
+         update-in [:request/uuid rid :request/hooks]
          conjv invocation))
 
 

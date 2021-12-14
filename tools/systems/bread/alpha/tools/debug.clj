@@ -29,14 +29,18 @@
          ;; TODO support extending these fields via metadata
          :request/datastore (store/datastore req)))
 
-(defmethod event-data :profile.type/response [[_ res]]
-  (select-keys res [:request/uuid #_#_:request-method :uri]))
+(defmethod event-data :profile.type/response
+  [[_ {uuid :request/uuid :as res}]]
+  (assoc res
+         :request/uuid (str uuid)
+         :response/datastore (store/datastore res)))
 
 (defmethod event-data :profile.type/hook
   [[_ {:keys [hook args app f]
        {::bread/keys [file line column from-ns precedence]} :detail}]]
-  {:hook/uuid (UUID/randomUUID)
-   :hook/request app
+  ;; TODO include result
+  {:hook/uuid (str (UUID/randomUUID))
+   :hook/request (update app :request/uuid str)
    :hook/name hook
    :hook/args args
    :hook/f f
