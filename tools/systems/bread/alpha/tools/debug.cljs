@@ -6,6 +6,7 @@
     [editscript.core :as ed]
     [rum.core :as rum]
     [systems.bread.alpha.tools.debug.db :as db :refer [db]]
+    [systems.bread.alpha.tools.debug.event :as e]
     [systems.bread.alpha.tools.util :refer [date-fmt
                                             date-fmt-ms
                                             join-some
@@ -18,8 +19,6 @@
 ;; TODO delete this
 (defmulti publish! :event/type)
 (defmethod publish! :default [e] (prn 'TODO (:event/type e)))
-
-(defonce event-log (atom []))
 
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
@@ -260,19 +259,28 @@
      (when print?
        [:div
         [:h3 "Debug DB"]
-        [:pre (pp (rum/react db))]])]))
+        [:pre (pp (rum/react db))]
+        [:h3 "Events"]
+        (when-let [entries (seq @e/event-log)]
+          [:ul
+           (map-indexed (fn [idx entry]
+                          ^{:key idx}
+                          [:li
+                           [:code (prn-str entry)]])
+                        entries)])])]))
+
+(comment
+  (swap! db update :ui/print-db? not))
 
 (defn ^:dev/after-load start []
   (rum/mount (ui) (js/document.getElementById "app")))
-
-(defmulti on-event first)
 
 (declare init)
 
 (defn- on-open [ws url]
   (js/console.log "Connected to WebSocket.")
   (swap! db assoc :ui/websocket url)
-  (when (empty? @event-log)
+  (when (empty? @e/event-log)
     (.send ws (prn-str [:replay-event-log]))))
 
 (defn- on-message [message]
@@ -282,8 +290,8 @@
                        (js/console.error (.-message err))
                        (prn (.-data message))
                        nil))]
-    (swap! event-log conj event)
-    (on-event event)))
+    (swap! e/event-log conj event)
+    (e/on-event event)))
 
 (defn- attempt-reconnect []
   (js/setTimeout

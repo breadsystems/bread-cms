@@ -4,6 +4,7 @@
 
 (defonce db (atom {:request/uuid {}
                    :request/uuids []
+
                    :ui/websocket (str "ws://" js/location.host "/ws")
                    :ui/diff nil
                    :ui/diff-type :response-pre-render
