@@ -54,15 +54,26 @@
 (comment
   (Throwable->map $last-err))
 
+(defn handle-throwable [err {:keys [headers]}]
+  {:status 500
+   :headers (merge {"Content-Type" "text/html"
+                    "Cache-Control" "no-cache"
+                    "Pragma" "no-cache"
+                    "Server" "bread-debug"}
+                   headers)
+   :body (rum/render-static-markup
+           (error-page {:error err}))})
+
 (defn wrap-exceptions
   ([handler]
    (wrap-exceptions handler {}))
-  ([handler opts]
-   (fn [req]
-     (try
-       (handler req)
-       (catch Throwable err
-         (def $last-err err)
-         {:status 500
-          :body (rum/render-static-markup
-                  (error-page {:error err}))})))))
+  ([handler {:keys [throwable-handler handler-opts]}]
+   (let [throwable-handler (or throwable-handler handle-throwable)
+         opts (or handler-opts {})]
+     (fn [req]
+       (try
+         (handler req)
+         (catch Throwable err
+           ;; TODO debug/*e
+           (def $last-err err)
+           (throwable-handler err opts)))))))

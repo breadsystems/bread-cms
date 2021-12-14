@@ -194,6 +194,15 @@
                                                 "text/html"}
                                       :status status)))))
 
+                       ;; BREAK IT ON PURPOSE
+                       (fn [app]
+                         (bread/add-hook
+                           app
+                           :hook/dispatch
+                           (fn [_]
+                             (throw (ex-info "OH NOEZ"
+                                             {:something :bad})))))
+
                        ;; TODO layouts
                        ;; TODO themes
 
@@ -260,7 +269,11 @@
   (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
-      (mid/wrap-exceptions $)
+      (mid/wrap-exceptions $ {:handler-opts
+                              {:headers {"Content-Security-Policy"
+                                         (format "default-src 'self' http://localhost:%d;"
+                                                 ;; TODO get this from atom
+                                                 1316)}}})
       (wrap-keyword-params $)
       (wrap-params $)
       (wrap-trailing-slash $)
@@ -282,6 +295,7 @@
 
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
+  ;; TODO store debug-port in an atom for middleware to use
   :start (reset! stop-debug-server! (debug/start
                                       (debug/debugger
                                         debug-log

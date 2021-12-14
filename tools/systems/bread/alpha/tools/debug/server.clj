@@ -6,6 +6,7 @@
     [org.httpkit.server :as http]
     [reitit.ring :as ring]))
 
+;; TODO move this to debug middleware
 (defn- wrap-csp-header [handler ports]
   (fn [req]
     (update
@@ -80,6 +81,7 @@
           stop-srv (try
                      ;; TODO proper logging
                      (printf "Starting debug server on port %d\n" port)
+                     ;; TODO return [stop-srv port]
                      (http/run-server handler {:port port})
                      (catch java.net.BindException e
                        (printf "%s: %s\n" (.getMessage e) port)))]
