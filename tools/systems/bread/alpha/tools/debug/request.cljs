@@ -171,8 +171,8 @@
      (when viewing-hooks?
        [:ul
         (map-indexed
-          (fn [idx {:hook/keys [name args f file line column from-ns] :as h}]
-            [:li {:key idx}
+          (fn [idx {:hook/keys [name args f file line column] :as hook}]
+            [:li.flex.space-between {:key idx}
              [:strong (clojure.core/name name)]
              " "
              [:code

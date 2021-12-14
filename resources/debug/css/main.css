@@ -31,6 +31,10 @@ h1, h2, h3, h4 {
   font-weight: bold;
   cursor: pointer;
 }
+article {
+  /* TODO why doesn't this work? */
+  max-width: 70ch;
+}
 ul {
   margin: 0;
   padding: 0;
@@ -104,6 +108,9 @@ button.lowkey, select.lowkey {
 }
 .flex > * + * {
   margin-inline-start: var(--padding-large);
+}
+.flex.space-between {
+  justify-content: space-between;
 }
 .diff {
   display: flex;

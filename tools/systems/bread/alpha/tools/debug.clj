@@ -38,7 +38,6 @@
 (defmethod event-data :profile.type/hook
   [[_ {:keys [hook args app f result]
        {::bread/keys [file line column from-ns precedence]} :detail}]]
-  (prn hook (keys result))
   {:hook/uuid (str (UUID/randomUUID))
    :hook/name hook
    :hook/result result
