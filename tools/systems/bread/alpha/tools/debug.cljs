@@ -23,9 +23,11 @@
     (send! [:clear-debug-log])
     (reset! db db/initial)))
 
+(defn- uuid->req [uuid]
+  (get-in @db [:request/uuid uuid]))
+
 (rum/defc ui < rum/reactive []
-  (let [reqs (map #(get-in @db [:request/uuid %])
-                  (rum/react db/req-uuids))
+  (let [reqs (map uuid->req (rum/react db/req-uuids))
         selected (rum/react db/selected)
         loading? (rum/react db/loading?)
         diff (rum/react db/diff-uuids)
