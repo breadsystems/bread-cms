@@ -106,6 +106,12 @@
 ;; Rum component definitions
 ;;
 
+(rum/defc arg-detail < rum/static [k x]
+  [:pre {:key k}
+   (if (app? x)
+     "$APP" ;; TODO make this explorable
+     (pp x))])
+
 (rum/defcs hook-item < (rum/local false :details?)
   [{:keys [details?]} idx
    {:hook/keys [name args f file line column result millis] :as hook}]
@@ -120,10 +126,13 @@
                        "core")
                      line column])]]
    (when @details?
-     [:div
-      (if (app? result)
-        "$APP" ;; TODO make this explorable
-        (prn-str result))])])
+     [:div.flex.space-between
+      [:div.rows.args
+       [:h5 "args (" (count args) ")"]
+       (map-indexed arg-detail args)]
+      [:div.rows.result
+       [:h5 "result"]
+       (arg-detail nil result)]])])
 
 (rum/defc request-details < rum/reactive []
   (let [{uuid :request/uuid
