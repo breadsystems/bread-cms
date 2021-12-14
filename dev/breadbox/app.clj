@@ -310,14 +310,7 @@
 (extend-protocol Datafiable
   org.httpkit.server.AsyncChannel
   (datafy [ch]
-    (str "org.httpkit.server.AsyncChannel[" ch "]"))
-
-  datahike.db.DB
-  (datafy [db]
-    (let [data (select-keys db [:max-tx :max-eid])
-          posts (store/q db '{:find [?slug ?t]
-                              :where [[?e :post/slug ?slug ?t]]})]
-      (assoc data :slugs (sort-by second posts)))))
+    (str "org.httpkit.server.AsyncChannel[" ch "]")))
 
 (defstate flow
   :start (when (:connect-flowstorm? env)
