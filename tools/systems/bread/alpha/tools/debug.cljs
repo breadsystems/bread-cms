@@ -287,6 +287,7 @@
 
 (defn- on-message [message]
   (when-let [event (try
+                     ;; TODO transit
                      (edn/read-string (.-data message))
                      (catch js/Error ^js/Error err
                        (js/console.error (.-message err))
