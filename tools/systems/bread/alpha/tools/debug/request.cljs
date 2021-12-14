@@ -30,6 +30,13 @@
   [[_ {uuid :response/uuid :as res}]]
   (swap! db assoc-in [:request/uuid uuid :request/response] res))
 
+(defmethod e/on-event :profile.type/hook
+  [[_ {{rid :request/uuid} :hook/request :as invocation}]]
+  (swap! db
+         update-in [:request/uuid (str rid) :request/hooks]
+         conjv invocation))
+
+
 (defmethod e/on-event :ui/view-req [[_ uuid]]
   (swap! db assoc :ui/selected-req (str uuid)))
 

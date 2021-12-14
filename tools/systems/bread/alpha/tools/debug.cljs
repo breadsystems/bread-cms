@@ -113,26 +113,36 @@
                [:option {:key opt :value opt :disabled (= id opt)}
                 opt (when (= id opt) " (this request)")])
              diff-opts)]]]
+
      [:h3 "Request hooks"]
      [:p.info
-      [:span (str (count (:request/hooks req-data)) " hooks")]
+      (str (count (:request/hooks req-data))
+           " hooks were invoked during this request")]
+     [:div
       [:button.lowkey {:on-click #(swap! db update :ui/viewing-hooks? not)}
        (if viewing-hooks? "Hide" "Show")]]
      (when viewing-hooks?
        [:ul
-        (map-indexed (fn [idx {:keys [hook args f file line column]}]
-                       [:li {:key idx}
-                        [:strong (name hook)]
-                        " "
-                        [:code
-                         (join-some ":" [file line column])]])
-                     (:request/hooks req-data))])
+        (map-indexed
+          (fn [idx {:hook/keys [name args f file line column from-ns] :as h}]
+            [:li {:key idx}
+             [:strong (clojure.core/name name)]
+             " "
+             [:code
+              (join-some ":" [(string/replace file
+                                              #"systems/bread/alpha"
+                                              "core")
+                              line column])]])
+          (:request/hooks req-data))])
+
      [:h3 "Response (HTML)"]
      [:div.response
       (:body res)]
+
      [:h3 "Response (pre-render)"]
      [:div.response
       (pp (:response/pre-render req-data))]
+
      [:h3 "Raw request"]
      [:div
       [:button.lowkey {:on-click #(swap! db update :ui/viewing-raw-request? not)}

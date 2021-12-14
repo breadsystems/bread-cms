@@ -26,13 +26,25 @@
   [[_ {uuid :request/uuid :as req}]]
   (assoc req
          :request/uuid (str uuid)
-         :request/id (subs (str uuid) 0 8)
          ;; TODO support extending these fields via metadata
          :request/datastore (store/datastore req)))
 
 (defmethod event-data :profile.type/response [[_ res]]
-  ;(prn (keys res))
   (select-keys res [:request/uuid #_#_:request-method :uri]))
+
+(defmethod event-data :profile.type/hook
+  [[_ {:keys [hook args app f]
+       {::bread/keys [file line column from-ns precedence]} :detail}]]
+  {:hook/uuid (UUID/randomUUID)
+   :hook/request app
+   :hook/name hook
+   :hook/args args
+   :hook/f f
+   :hook/file file
+   :hook/line line
+   :hook/column column
+   :hook/from-ns from-ns
+   :hook/precedence precedence})
 
 ;; TODO client ID?
 (defmulti handle-message (fn [_ [k]] k))
@@ -50,8 +62,8 @@
                                (fn [msg]
                                  (handle-message this msg))))
           tap (bread/add-profiler
-                (fn [profile-event]
-                  (profile this profile-event)))]
+                (fn [hook-event]
+                  (profile this hook-event)))]
       (fn []
         (remove-tap tap)
         (stop-server))))
