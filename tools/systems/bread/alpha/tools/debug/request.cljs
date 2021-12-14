@@ -2,7 +2,8 @@
   (:require
     [systems.bread.alpha.tools.debug.event :as e]
     [systems.bread.alpha.tools.debug.db :as db :refer [db]]
-    [systems.bread.alpha.tools.impl.util :refer [conjv]]))
+    [systems.bread.alpha.tools.impl.util :refer [conjv]]
+    [systems.bread.alpha.tools.util :refer [shorten-uuid]]))
 
 (defn- record-replay [state {replayed :profiler/replay-uuid
                              uuid :request/uuid}]
@@ -15,13 +16,14 @@
   (swap! db (fn [state]
               (-> state
                   (assoc-in
-                    [:request/uuid (str uuid)]
-                    {:request/uuid (str uuid)
+                    [:request/uuid uuid]
+                    {:request/uuid uuid
+                     :request/id (shorten-uuid uuid)
                      ;; Record the raw request on its own.
                      :request/initial req
                      ;; TODO make this a sorted-set?
                      :request/replays []})
-                  (update :request/uuids conjv (str uuid))
+                  (update :request/uuids conjv uuid)
                   (record-replay req)))))
 
 (defmethod e/on-event :profile.type/response

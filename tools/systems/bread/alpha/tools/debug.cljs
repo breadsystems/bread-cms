@@ -56,11 +56,12 @@
 
 (rum/defc request-details < rum/reactive []
   (let [{uuid :request/uuid
+         id :request/id
          req :request/initial
          res :request/response
          :as req-data}
         (uuid->req (rum/react db/req-uuid))
-        diff-opts (diff-uuid-options uuid)
+        diff-opts (map shorten-uuid @db/req-uuids)
         viewing-hooks? (rum/react db/viewing-hooks?)
         viewing-raw-request? (rum/react db/viewing-raw-request?)
         viewing-raw-response? (rum/react db/viewing-raw-response?)]
@@ -100,15 +101,17 @@
                replays)]]])
      [:div.flex
       [:div
-       [:button {:on-click #(prn 'TODO 'replay-request!)} "Replay this request"]]
+       [:button {:on-click #(prn 'TODO 'replay-request!)}
+        "Replay this request"]]
       [:div
        [:select
         {:on-change (fn [e]
                       (let [target (.. e -target -value)]
                         (swap! db assoc :ui/diff [uuid target])))}
         [:option "Diff against..."]
-        (map (fn [[value label]]
-               [:option {:key value :value value} label])
+        (map (fn [opt]
+               [:option {:key opt :value opt :disabled (= id opt)}
+                opt (when (= id opt) " (this request)")])
              diff-opts)]]]
      [:h3 "Request hooks"]
      [:p.info
