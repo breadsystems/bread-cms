@@ -19,15 +19,15 @@
 (defn- idx->req [idx]
   (get @db/requests (get @db/req-uuids idx)))
 
+(def ^:private type->path
+  {:response-pre-render [:response/pre-render]
+   :database [:request/response :response/datastore]})
+
 (defn- diff-entities [[a b] diff-type]
   (when (and a b)
-    (condp = diff-type
-      :response-pre-render
-      [(get-in (uuid->req a) [:response/pre-render])
-       (get-in (uuid->req b) [:response/pre-render])]
-      :database
-      [(get-in (uuid->req a) [:request/response :response/datastore])
-       (get-in (uuid->req b) [:request/response :response/datastore])])))
+    (let [path (type->path diff-type)]
+      [(get-in (uuid->req a) path)
+       (get-in (uuid->req b) path)])))
 
 (defn- diff-uuid-options [uuid]
   (map (fn [req-uuid]
