@@ -2,20 +2,17 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [clojure.string :as string]
-    ["date-fns" :refer [formatISO9075]]))
+    #?(:cljs ["date-fns" :refer [formatISO9075]])))
 
-(defn date-fmt [dt]
-  (when dt
-    (formatISO9075 dt)))
+#?(:cljs
+    (defn date-fmt [dt]
+      (when dt
+        (formatISO9075 dt))))
 
-(defn date-fmt-ms [dt]
-  (when dt
-    (str (formatISO9075 dt) "." (.getMilliseconds dt))))
-
-;; TODO use this, I guess :shrug:
-(defn ago [dt]
-  (let [rtf (js/Intl.RelativeTimeFormat. "en" #js {:numeric "auto"})]
-    (.format rtf -3 "day")))
+#?(:cljs
+   (defn date-fmt-ms [dt]
+     (when dt
+       (str (formatISO9075 dt) "." (.getMilliseconds dt)))))
 
 (defn req->url [{:keys [headers scheme uri query-string]}]
   (when headers

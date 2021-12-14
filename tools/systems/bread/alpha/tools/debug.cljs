@@ -13,8 +13,7 @@
                                             pp
                                             req->url
                                             shorten-uuid]]
-    ;; TODO move this ns up into tools
-    [systems.bread.alpha.tools.debugger.diff :as diff]))
+    [systems.bread.alpha.tools.diff :as diff]))
 
 (defonce !ws (atom nil))
 
