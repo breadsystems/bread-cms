@@ -46,23 +46,22 @@
         (cond
           (seq reqs)
           [:ul
-           (map-indexed (fn [idx {uuid :request/uuid
-                                  req :request/initial}]
-                          [:li.req-item {:key uuid
-                                         :class (when (= uuid current-uuid)
-                                                  "current")
-                                         :on-click #(e/on-event
-                                                      [:ui/view-req uuid])}
-                           [:div
-                            [:input {:type :checkbox
-                                     :checked (contains? selected idx)
-                                     :on-change #(e/on-event
-                                                   [:ui/select-req idx])}]]
-                           [:label.req-label
-                            [:div [:code (:uri req)]]
-                            [:div (:request/id req)]
-                            [:div (some-> (:request/timestamp req) date-fmt)]]])
-                        reqs)]
+           (map-indexed
+             (fn [idx {uuid :request/uuid
+                       req :request/initial}]
+               [:li.req-item {:key uuid
+                              :class (when (= uuid current-uuid)
+                                       "current")
+                              :on-click #(e/on-event [:ui/view-req uuid])}
+                [:div
+                 [:input {:type :checkbox
+                          :checked (contains? selected idx)
+                          :on-change #(e/on-event [:ui/select-req idx])}]]
+                [:label.req-label
+                 [:div [:code (:uri req)]]
+                 [:div (:request/id req)]
+                 [:div (some-> (:request/timestamp req) date-fmt)]]])
+             reqs)]
           loading?
           [:p "Loading..."])
         [:div.rows
