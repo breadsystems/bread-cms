@@ -31,12 +31,7 @@
 
 (defn clear-requests! []
   (when (js/confirm "Clear all request data? This cannot be undone.")
-    (publish! {:event/type :clear-requests})
-    #_
-    (send! {:event/type :clear-requests})))
-
-(defn prefer! [pref-key pref]
-  (swap! db assoc-in [:ui/preferences pref-key] pref))
+    (publish! {:event/type :clear-requests})))
 
 (defn- diff-entities [[a b] diff-type]
   (when (and a b)
@@ -155,7 +150,7 @@
                    :id "pref-replay-as-of"
                    :checked (boolean as-of?)
                    :value 1
-                   :on-change #(prefer! :replay-as-of? (not as-of?))}]
+                   :on-change #(swap! db update :ui/replay-as-of? not)}]
           [:label {:for "pref-replay-as-of"} "Replay with " [:code "as-of"]]]]]
        (cond
          diff (diff-ui)

@@ -11,7 +11,8 @@
                    :ui/selected-req nil
                    :ui/selected-reqs (sorted-set)
                    :ui/loading? false
-                   :ui/print-db? false}))
+                   :ui/print-db? false
+                   :ui/replay-as-of? false}))
 
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))
@@ -29,4 +30,4 @@
 (def diff-uuids (rum/cursor-in db [:ui/diff]))
 (def diff-type (rum/cursor-in db [:ui/diff-type]))
 
-(def replay-as-of? (rum/cursor-in db [:ui/preferences :replay-as-of?]))
+(def replay-as-of? (rum/cursor-in db [:ui/replay-as-of?]))
