@@ -141,9 +141,14 @@
 (defn profile> [t e]
   (tap> {::profile.type t ::profile e}))
 
-(defn- profile-hook [invocation]
+(defn- profile-hook [h f args detail app result]
   (when *profile-hooks*
-    (profile> :profile.type/hook invocation)))
+    (profile> :profile.type/hook {:hook h
+                                  :f f
+                                  :args args
+                                  :detail detail
+                                  :app app
+                                  :result result})))
 
 
 ;; TODO vvv delete this vvv
@@ -437,8 +442,7 @@
      ;; TODO delete legacy call
      (profile-hook! ~h ~f ~args ~hook ~app)
      (let [result# (apply ~f ~args)]
-       (profile-hook {:hook ~h :f ~f :args ~args :detail ~hook :app ~app
-                      :result result#})
+       (profile-hook ~h ~f ~args ~hook ~app result#)
        result#)
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
