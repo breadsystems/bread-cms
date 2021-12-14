@@ -436,9 +436,10 @@
   `(try
      ;; TODO delete legacy call
      (profile-hook! ~h ~f ~args ~hook ~app)
-     ;; TODO include result
-     (profile-hook {:hook ~h :f ~f :args ~args :detail ~hook :app ~app})
-     (apply ~f ~args)
+     (let [result# (apply ~f ~args)]
+       (profile-hook {:hook ~h :f ~f :args ~args :detail ~hook :app ~app
+                      :result result#})
+       result#)
      (catch java.lang.Throwable e#
        ;; If bread.core threw this exception, don't wrap it
        (throw (if (-> e# ex-data ::core?) e#

@@ -36,12 +36,13 @@
          :response/datastore (store/datastore res)))
 
 (defmethod event-data :profile.type/hook
-  [[_ {:keys [hook args app f]
+  [[_ {:keys [hook args app f result]
        {::bread/keys [file line column from-ns precedence]} :detail}]]
-  ;; TODO include result
+  (prn hook (keys result))
   {:hook/uuid (str (UUID/randomUUID))
-   :hook/request (update app :request/uuid str)
    :hook/name hook
+   :hook/result result
+   :hook/request (update app :request/uuid str)
    :hook/args args
    :hook/f f
    :hook/file file
