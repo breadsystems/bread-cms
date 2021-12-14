@@ -166,6 +166,9 @@ button.lowkey, select.lowkey {
   color: var(--text-red);
 }
 
+.clickable {
+  cursor: pointer;
+}
 .emphasized {
   color: purple;
 }

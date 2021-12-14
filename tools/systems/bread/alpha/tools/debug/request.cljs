@@ -21,6 +21,12 @@
 ;; General helpers for dealing with requests
 ;;
 
+;; TODO replace this once we can compile core to JS
+(defn- app? [x]
+  (and (map? (:systems.bread.alpha.core/config x))
+       (map? (:systems.bread.alpha.core/hooks x))
+       (sequential? (:systems.bread.alpha.core/plugins x))))
+
 (defn- record-replay [state {replayed :profiler/replay-uuid
                              uuid :request/uuid}]
   (if replayed
@@ -100,6 +106,25 @@
 ;; Rum component definitions
 ;;
 
+(rum/defcs hook-item < (rum/local false :details?)
+  [{:keys [details?]} idx
+   {:hook/keys [name args f file line column result millis] :as hook}]
+  [:li.clickable {:key idx
+        :on-click #(swap! details? not)}
+   [:div.flex.space-between
+    [:strong (clojure.core/name name)]
+    [:code
+     (join-some ":" [(string/replace
+                       file
+                       #"^systems/bread/alpha"
+                       "core")
+                     line column])]]
+   (when @details?
+     [:div
+      (if (app? result)
+        "$APP" ;; TODO make this explorable
+        (prn-str result))])])
+
 (rum/defc request-details < rum/reactive []
   (let [{uuid :request/uuid
          id :request/id
@@ -171,16 +196,8 @@
      (when viewing-hooks?
        [:ul
         (map-indexed
-          (fn [idx {:hook/keys [name args f file line column] :as hook}]
-            [:li.flex.space-between {:key idx}
-             [:strong (clojure.core/name name)]
-             " "
-             [:code
-              (join-some ":" [(string/replace file
-                                              #"systems/bread/alpha"
-                                              "core")
-                              line column])]])
-          (:request/hooks req-data))])
+          hook-item
+          (sort-by :hook/millis (:request/hooks req-data)))])
 
      [:h3 "Response (HTML)"]
      [:div.response

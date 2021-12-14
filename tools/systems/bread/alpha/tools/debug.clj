@@ -26,6 +26,7 @@
   [[_ {uuid :request/uuid :as req}]]
   (assoc req
          :request/uuid (str uuid)
+         :request/millis (.getTime (Date.))
          ;; TODO support extending these fields via metadata
          :request/datastore (store/datastore req)))
 
@@ -33,10 +34,11 @@
   [[_ {uuid :request/uuid :as res}]]
   (assoc res
          :request/uuid (str uuid)
+         ;; TODO compute duration?
          :response/datastore (store/datastore res)))
 
 (defmethod event-data :profile.type/hook
-  [[_ {:keys [hook args app f result]
+  [[_ {:keys [hook args app f result millis]
        {::bread/keys [file line column from-ns precedence]} :detail}]]
   {:hook/uuid (str (UUID/randomUUID))
    :hook/name hook
@@ -48,7 +50,8 @@
    :hook/line line
    :hook/column column
    :hook/from-ns from-ns
-   :hook/precedence precedence})
+   :hook/precedence precedence
+   :hook/millis millis})
 
 ;; TODO client ID?
 (defmulti handle-message (fn [_ [k]] k))

@@ -1,7 +1,9 @@
 (ns systems.bread.alpha.core
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.set :refer [rename-keys]]))
+    [clojure.set :refer [rename-keys]])
+  #?(:clj (:import
+            [java.util Date])))
 
 
 
@@ -148,7 +150,9 @@
                                   :args args
                                   :detail detail
                                   :app app
-                                  :result result})))
+                                  :result result
+                                  ;; TODO CLJS
+                                  :millis (.getTime (Date.))})))
 
 
 ;; TODO vvv delete this vvv
