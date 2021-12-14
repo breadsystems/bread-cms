@@ -74,10 +74,7 @@
         ;; reverse-chronologically, and, if so, to indicate that to the user.
         [ta tb] (mapv uuid->max-tx [ua ub])
         [source target] (diff-entities [ua ub] diff-type)
-        [ra rb script] (diff/diff-struct-lines source target)
-        #_#_
-        [ra rb script] (diff/diff-struct-lines a' b')
-        ]
+        [ra rb script] (diff/diff-struct-lines source target)]
     [:article.rows
      [:header.rows
       [:h2 "Diff: " [:code (shorten-uuid ua)] " → " [:code (shorten-uuid ub)]]
