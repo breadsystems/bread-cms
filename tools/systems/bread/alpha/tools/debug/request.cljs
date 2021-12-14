@@ -2,8 +2,9 @@
   (:require
     [clojure.string :as string]
     [rum.core :as rum]
-    [systems.bread.alpha.tools.debug.event :as e]
+    [systems.bread.alpha.tools.debug.client :as client]
     [systems.bread.alpha.tools.debug.db :as db :refer [db]]
+    [systems.bread.alpha.tools.debug.event :as e]
     [systems.bread.alpha.tools.impl.util :refer [conjv]]
     [systems.bread.alpha.tools.util :refer [date-fmt date-fmt-ms
                                             join-some pp
@@ -181,7 +182,7 @@
                replays)]]])
      [:div.flex
       [:div
-       [:button {:on-click #(prn 'TODO 'replay-request!)}
+       [:button {:on-click #(client/send! [:replay-requests [req]])}
         "Replay this request"]]
       [:div
        [:select

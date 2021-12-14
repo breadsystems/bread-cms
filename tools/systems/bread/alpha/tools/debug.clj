@@ -63,6 +63,10 @@
 (defmethod handle-message :clear-debug-log [debugger _]
   (reset! (.log debugger) []))
 
+(defmethod handle-message :replay-requests [debugger [_ reqs]]
+  (prn (keys (first reqs)))
+  ())
+
 (defrecord WebsocketDebugger [log config]
   BreadDebugger
   (start [this opts]

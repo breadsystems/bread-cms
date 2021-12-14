@@ -3,6 +3,7 @@
     [clojure.edn :as edn]
     [editscript.core :as ed]
     [rum.core :as rum]
+    [systems.bread.alpha.tools.debug.client :as client]
     [systems.bread.alpha.tools.debug.db :as db :refer [db]]
     [systems.bread.alpha.tools.debug.event :as e]
     [systems.bread.alpha.tools.debug.request :as r]
@@ -11,16 +12,9 @@
                                             pp]]
     [systems.bread.alpha.tools.debug.diff :as diff]))
 
-(defonce !ws (atom nil))
-
-(defn- send! [msg]
-  (when-let [ws @!ws]
-    ;; TODO transit
-    (.send ws (prn-str msg))))
-
 (defn- clear-debug-log! []
   (when (js/confirm "Clear all debug data? This cannot be undone.")
-    (send! [:clear-debug-log])
+    (client/send! [:clear-debug-log])
     (reset! db db/initial)))
 
 (defn- uuid->req [uuid]
@@ -112,7 +106,7 @@
   (js/console.log "Connected to WebSocket.")
   (swap! db assoc :ui/websocket url)
   (when (empty? @e/event-log)
-    (send! [:replay-event-log])))
+    (client/send! [:replay-event-log])))
 
 (defn- on-message [message]
   (when-let [event (try
@@ -141,7 +135,7 @@
   (js/console.log "Initializing debugger...")
   (let [url (str "ws://" js/location.host "/ws")
         ws (js/WebSocket. url)]
-    (reset! !ws ws)
+    (reset! client/ws ws)
     (.addEventListener ws "open" (fn [_] (on-open ws url)))
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close" attempt-reconnect))
