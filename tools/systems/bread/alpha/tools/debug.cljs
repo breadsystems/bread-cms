@@ -16,22 +16,24 @@
     ;; TODO move this ns up into tools
     [systems.bread.alpha.tools.debugger.diff :as diff]))
 
-;; TODO delete this
-(defmulti publish! :event/type)
-(defmethod publish! :default [e] (prn 'TODO (:event/type e)))
+(defonce !ws (atom nil))
+
+(defn send! [msg]
+  (when-let [ws @!ws]
+    ;; TODO transit
+    (.send ws (prn-str msg))))
 
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 
 (defn- uuid->max-tx [uuid]
   (-> uuid uuid->req (get-in [:request/response :response/datastore :max-tx])))
-
 (defn- idx->req [idx]
   (get @db/requests (get @db/req-uuids idx)))
 
 (defn clear-requests! []
   (when (js/confirm "Clear all request data? This cannot be undone.")
-    (publish! {:event/type :clear-requests})))
+    (prn 'TODO :clear-requests)))
 
 (defn- diff-entities [[a b] diff-type]
   (when (and a b)
@@ -139,7 +141,7 @@
           [:p "Loading..."])
         [:div.rows
          [:div
-          [:button {:on-click #(publish! {:event/type :replay-selected!})
+          [:button {:on-click #(prn 'TODO :replay-selected!)
                     :disabled (not (seq selected))}
            "Replay selected"]]
          [:div
@@ -185,7 +187,7 @@
   (js/console.log "Connected to WebSocket.")
   (swap! db assoc :ui/websocket url)
   (when (empty? @e/event-log)
-    (.send ws (prn-str [:replay-event-log]))))
+    (send! [:replay-event-log])))
 
 (defn- on-message [message]
   (when-let [event (try
@@ -214,6 +216,7 @@
   (js/console.log "Initializing debugger...")
   (let [url (str "ws://" js/location.host "/ws")
         ws (js/WebSocket. url)]
+    (reset! !ws ws)
     (.addEventListener ws "open" (fn [_] (on-open ws url)))
     (.addEventListener ws "message" on-message)
     (.addEventListener ws "close" attempt-reconnect))
