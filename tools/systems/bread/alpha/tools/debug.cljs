@@ -13,12 +13,12 @@
 
 (defonce !ws (atom nil))
 
-(defn send! [msg]
+(defn- send! [msg]
   (when-let [ws @!ws]
     ;; TODO transit
     (.send ws (prn-str msg))))
 
-(defn clear-debug-log! []
+(defn- clear-debug-log! []
   (when (js/confirm "Clear all debug data? This cannot be undone.")
     (send! [:clear-debug-log])
     (reset! db db/initial)))
