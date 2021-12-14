@@ -107,7 +107,7 @@
          res :request/response
          :as req-data}
         (uuid->req (rum/react db/req-uuid))
-        diff-opts (map shorten-uuid @db/req-uuids)
+        diff-opts (rum/react db/req-uuids)
         viewing-hooks? (rum/react db/viewing-hooks?)
         viewing-raw-request? (rum/react db/viewing-raw-request?)
         viewing-raw-response? (rum/react db/viewing-raw-response?)]
@@ -156,8 +156,9 @@
                         (swap! db assoc :ui/diff [uuid target])))}
         [:option "Diff against..."]
         (map (fn [opt]
-               [:option {:key opt :value opt :disabled (= id opt)}
-                opt (when (= id opt) " (this request)")])
+               [:option {:key opt :value opt :disabled (= uuid opt)}
+                (shorten-uuid opt)
+                (when (= uuid opt) " (this request)")])
              diff-opts)]]]
 
      [:h3 "Request hooks"]
