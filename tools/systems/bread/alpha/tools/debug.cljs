@@ -20,6 +20,15 @@
 (defn- uuid->req [uuid]
   (get-in @db [:request/uuid uuid]))
 
+(defn- idx->req [idx]
+  (get @db/requests (get @db/req-uuids idx)))
+
+(defn- replay-selected! []
+  (client/send!
+    [:replay-requests
+     (map (comp :request/initial idx->req) @db/selected)
+     {:replay/as-of? @db/replay-as-of?}]))
+
 (rum/defc ui < rum/reactive []
   (let [reqs (map uuid->req (rum/react db/req-uuids))
         selected (rum/react db/selected)
@@ -60,7 +69,7 @@
           [:p "Loading..."])
         [:div.rows
          [:div
-          [:button {:on-click #(prn 'TODO :replay-selected!)
+          [:button {:on-click replay-selected!
                     :disabled (not (seq selected))}
            "Replay selected"]]
          [:div

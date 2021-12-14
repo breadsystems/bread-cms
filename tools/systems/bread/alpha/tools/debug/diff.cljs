@@ -16,9 +16,6 @@
 (defn- uuid->max-tx [uuid]
   (-> uuid uuid->req (get-in [:request/response :response/datastore :max-tx])))
 
-(defn- idx->req [idx]
-  (get @db/requests (get @db/req-uuids idx)))
-
 (def ^:private type->path
   {:response-pre-render [:response/pre-render]
    :database [:request/response :response/datastore]})
