@@ -57,6 +57,9 @@
   (doseq [entry @(.log debugger)]
     (srv/publish! entry)))
 
+(defmethod handle-message :clear-debug-log [debugger _]
+  (reset! (.log debugger) []))
+
 (defrecord WebsocketDebugger [log config]
   BreadDebugger
   (start [this opts]

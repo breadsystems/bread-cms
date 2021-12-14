@@ -2,17 +2,19 @@
   (:require
     [rum.core :as rum]))
 
-(defonce db (atom {:request/uuid {}
-                   :request/uuids []
+(defonce initial {:request/uuid {}
+                  :request/uuids []
 
-                   :ui/websocket (str "ws://" js/location.host "/ws")
-                   :ui/diff nil
-                   :ui/diff-type :response-pre-render
-                   :ui/selected-req nil
-                   :ui/selected-reqs (sorted-set)
-                   :ui/loading? false
-                   :ui/print-db? false
-                   :ui/replay-as-of? false}))
+                  :ui/websocket (str "ws://" js/location.host "/ws")
+                  :ui/diff nil
+                  :ui/diff-type :response-pre-render
+                  :ui/selected-req nil
+                  :ui/selected-reqs (sorted-set)
+                  :ui/loading? false
+                  :ui/print-db? false
+                  :ui/replay-as-of? false})
+
+(defonce db (atom initial))
 
 (def requests (rum/cursor-in db [:request/uuid]))
 (def loading? (rum/cursor-in db [:ui/loading?]))

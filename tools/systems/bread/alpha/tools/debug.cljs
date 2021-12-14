@@ -31,9 +31,10 @@
 (defn- idx->req [idx]
   (get @db/requests (get @db/req-uuids idx)))
 
-(defn clear-requests! []
-  (when (js/confirm "Clear all request data? This cannot be undone.")
-    (prn 'TODO :clear-requests)))
+(defn clear-debug-log! []
+  (when (js/confirm "Clear all debug data? This cannot be undone.")
+    (send! [:clear-debug-log])
+    (reset! db db/initial)))
 
 (defn- diff-entities [[a b] diff-type]
   (when (and a b)
@@ -145,9 +146,9 @@
                     :disabled (not (seq selected))}
            "Replay selected"]]
          [:div
-          [:button {:on-click #(clear-requests!)
+          [:button {:on-click #(clear-debug-log!)
                     :disabled (not (seq reqs))}
-           "Clear requests"]]
+           "Clear debug log"]]
          [:div
           [:input {:type :checkbox
                    :id "pref-replay-as-of"
