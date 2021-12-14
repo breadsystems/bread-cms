@@ -92,8 +92,20 @@
   (profile [this e _]
     (profile this e))
   (replay [this reqs opts]
-    ;; TODO
-    (prn (count reqs) opts)))
+    (let [handler (:replay-handler config)]
+      (when-not (fn? handler)
+        (throw (ex-info "replay-handler is not a function"
+                        {:replay-handler handler})))
+      (let [{:replay/keys [as-of?]} opts
+            reqs (if as-of?
+                   (map (fn [{param :profiler/as-of-param
+                              as-of :request/as-of
+                              :as req}]
+                          (assoc-in req [:params param] as-of))
+                          reqs)
+                   reqs)]
+        (doseq [req reqs]
+          (handler req))))))
 
 (defn debugger
   ([log]

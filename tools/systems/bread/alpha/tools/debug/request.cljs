@@ -187,7 +187,7 @@
         "Replay"]]
        [:button {:on-click #(client/send!
                               [:replay-requests [req]
-                               {:as-of (:request/timestamp req)}])}
+                               {:replay/as-of? true}])}
         "Replay as of " (date-fmt-ms (:request/timestamp req))]
       [:div
        [:select
