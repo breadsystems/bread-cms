@@ -11,7 +11,7 @@
    :asset-path "/js"
    :devtools {:watch-dir "resources/debug"}
    :modules {:main ; becomes debug/js/main.js
-             {:init-fn systems.bread.alpha.tools.debug/init}}}
+             {:init-fn systems.bread.alpha.tools.debug.core/init}}}
   ;; TODO remove this
   :debugger
   {:target :browser

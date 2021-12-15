@@ -28,7 +28,7 @@
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debugger :as debug*]
-    [systems.bread.alpha.tools.debug :as debug]
+    [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]

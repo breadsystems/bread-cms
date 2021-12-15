@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.tools.debug
+(ns systems.bread.alpha.tools.debug.core
   (:require
     [clojure.edn :as edn]
     [editscript.core :as ed]

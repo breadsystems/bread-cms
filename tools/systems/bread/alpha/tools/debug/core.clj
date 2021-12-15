@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.tools.debug
+(ns systems.bread.alpha.tools.debug.core
   (:require
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
