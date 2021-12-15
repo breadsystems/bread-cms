@@ -137,12 +137,17 @@
     1000)
   (js/console.error "WebSocket connection closed!"))
 
+(defn- ws-url []
+  (if-let [elem (js/document.querySelector "meta[name=ws-url]")]
+    (.getAttribute elem "content")
+    (str "ws://" js/location.host "/ws")))
+
 ;; init is called ONCE when the page loads
 ;; this is called in the index.html and must be exported
 ;; so it is available even in :advanced release builds
 (defn init []
   (js/console.log "Initializing debugger...")
-  (let [url (str "ws://" js/location.host "/ws")
+  (let [url (ws-url)
         ws (js/WebSocket. url)]
     (reset! client/ws ws)
     (.addEventListener ws "open" (fn [_] (on-open ws url)))

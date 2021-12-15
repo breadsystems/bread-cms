@@ -30,11 +30,20 @@
     [:html
      [:head
       [:meta {:charset "utf-8"}]
-      [:title cause " | Bread CMS"]]
+      [:title cause " | Bread CMS"]
+      #_#_
+      [:link {:rel :stylesheet
+              ;; TODO parameterize this
+              :href "http://localhost:1316/css/main.css"}]
+      ;; Tell the embedded debugger where the WebSocket connection lives.
+      [:meta {:name "ws-url"
+              :content "ws://localhost:1316/ws"}]]
      [:body
       [:header
        [:h1 cause]]
       [:main
+       #_
+       [:div#app]
        [:div
         [:h2 "Error info"]
         (if (seq (ex-data error))
@@ -50,7 +59,10 @@
         [:ul
          (map (fn [elem]
                 [:li [:code (str elem)]])
-              trace)]]]]]))
+              trace)]]]
+      #_
+      ;; TODO parameterize this
+      [:script {:src "http://localhost:1316/js/main.js"}]]]))
 
 (comment
   (Throwable->map $last-err))
