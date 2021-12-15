@@ -27,7 +27,6 @@
     [systems.bread.alpha.static-frontend :as static-fe]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
-    [systems.bread.alpha.tools.debugger :as debug*]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
@@ -314,13 +313,6 @@
     (println "Stopping file watch...")
     (@stop-watch)))
 
-(defonce stop-debugger! (atom nil))
-
-(defstate debugger
-  :start (reset! stop-debugger! (debug*/start! {:replay-handler handler}))
-  :stop  (when-let [stop! @stop-debugger!]
-           (stop!)))
-
 (extend-protocol Datafiable
   org.httpkit.server.AsyncChannel
   (datafy [ch]
@@ -335,7 +327,7 @@
   (mount/start))
 
 (defn restart-cms! []
-  (mount/stop-except #'debugger)
+  (mount/stop-except #'debug-server)
   (mount/start))
 
 (comment

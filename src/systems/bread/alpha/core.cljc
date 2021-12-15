@@ -155,42 +155,6 @@
                                   :millis (.getTime (Date.))})))
 
 
-;; TODO vvv delete this vvv
-(def ^{:dynamic true
-       :doc
-       "Dynamic var for debugging. If this var is bound to a function f,
-        causes (hook-> h ...) to call:
-
-       (f {:hook h    ;; the hook being called
-           :f f       ;; the hook callback to be invoked
-           :args args ;; the args being passed (the first of which is the result
-                      ;; of the previous invocation, if there was one)
-        })
-
-       before each invocation of each hook."}
-  *hook-profiler*)
-
-(defn- profile-hook! [h f args detail app]
-  (when (fn? *hook-profiler*)
-    (*hook-profiler* {:hook h :f f :args args :detail detail :app app})))
-
-(defn profiler-for [{:keys [hooks on-hook map-args transform-app]}]
-  (let [transform-app (or transform-app (constantly '$APP))
-        map-args (or map-args (fn [args]
-                                (map #(if (s/valid? ::app %)
-                                        (transform-app %)
-                                        %)
-                                     args)))
-        on-hook  (or on-hook (fn [{:keys [hook f args]}]
-                                   (prn hook f (map-args args))))]
-    (fn [hook-invocation]
-      (when (contains? hooks (:hook hook-invocation))
-        (on-hook hook-invocation)))))
-
-(defn bind-profiler! [profiler]
-  (alter-var-root (var *hook-profiler*) (constantly profiler)))
-;; TODO ^^^ end delete ^^^
-
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
@@ -443,8 +407,6 @@
 
 (defmacro ^:private try-hook [app hook h f args]
   `(try
-     ;; TODO delete legacy call
-     (profile-hook! ~h ~f ~args ~hook ~app)
      (let [result# (apply ~f ~args)]
        (profile-hook ~h ~f ~args ~hook ~app result#)
        result#)
