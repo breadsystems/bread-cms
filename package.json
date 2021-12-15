@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "shadow-cljs": "^2.14.3"
+    "shadow-cljs": "^2.16.8"
   },
   "dependencies": {
     "date-fns": "^2.22.1",
