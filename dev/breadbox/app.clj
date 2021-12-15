@@ -175,8 +175,7 @@
                      {:datastore $config
                       :router $router
                       :plugins
-                      [(debug*/plugin)
-                       (debug/plugin)
+                      [(debug/plugin)
                        (rum/plugin)
 
                        ;; TODO make this a default plugin
