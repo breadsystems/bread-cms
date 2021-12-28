@@ -4,7 +4,9 @@
     [clojure.edn :as edn]
     [org.httpkit.server :as http]
     [reitit.ring :as ring]
-    [systems.bread.alpha.tools.debug.middleware :as mid]))
+    [systems.bread.alpha.tools.debug.middleware :as mid])
+  (:import
+    [java.util UUID]))
 
 ;; PUBLISH to events>
 (def ^:private events> (chan 1))
@@ -12,15 +14,20 @@
 (def ^:private <events (mult events>))
 
 (defn publish!
-  "Publishes e, broadcasting all subscribers (attached via subscribe!)"
-  [e]
-  (put! events> e))
+  "Publishes e to the client identified by cid (attached via subscribe!)"
+  ([e]
+   (put! events> e))
+  ([e client-id]
+   (put! events> (with-meta e {:client-id client-id}))))
 
 (defn subscribe!
   "Subscribes (taps) to a mult of the <events channel, attaching f as a handler.
   Returns an unsubscribe callback that closes around the mult (calls untap)."
-  [f]
-  (let [listener (chan 1)]
+  [client-id f]
+  (let [listener (chan 1 (filter (fn [e]
+                                   (let [{ecid :client-id} (meta e)]
+                                     (or (nil? ecid)
+                                         (= client-id ecid))))))]
     (tap <events listener)
     (go-loop []
              (let [e (<! listener)]
@@ -32,16 +39,16 @@
 (defn- ws-handler [ws-on-message]
   (fn [req]
     (http/with-channel req ws-chan
-      (println "Debug WebSocket connection created...")
-      ;; TODO create unique client ID here
-      (http/on-close ws-chan (fn [status]
-                               (println "channel closed:" status)))
-      (http/on-receive ws-chan (fn [message]
-                                 (let [msg (edn/read-string message)]
-                                   (ws-on-message msg))))
-      (subscribe! (fn [event]
-                    ;; TODO transit
-                    (http/send! ws-chan (prn-str event)))))))
+      (let [client-id (str (UUID/randomUUID))]
+        (println "Debug WebSocket connection created...")
+        (http/on-close ws-chan (fn [status]
+                                 (println "channel closed:" status)))
+        (http/on-receive ws-chan (fn [message]
+                                   (let [msg (edn/read-string message)]
+                                     (ws-on-message client-id msg))))
+        (subscribe! client-id (fn [event]
+                                ;; TODO transit
+                                (http/send! ws-chan (prn-str event))))))))
 
 (defn handler [{:keys [csp-ports ws-on-message]}]
   (ring/ring-handler

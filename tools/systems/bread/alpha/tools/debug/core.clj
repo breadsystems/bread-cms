@@ -55,11 +55,11 @@
    :hook/millis millis})
 
 ;; TODO client ID?
-(defmulti handle-message (fn [_ [k]] k))
+(defmulti handle-message (fn [_ _ [k]] k))
 
-(defmethod handle-message :replay-event-log [debugger _]
+(defmethod handle-message :replay-event-log [debugger client-id _]
   (doseq [entry @(.log debugger)]
-    (srv/publish! entry)))
+    (srv/publish! entry client-id)))
 
 (defmethod handle-message :clear-debug-log [debugger _]
   (reset! (.log debugger) []))
@@ -75,8 +75,8 @@
     (let [stop-server (srv/start
                         (assoc opts
                                :ws-on-message
-                               (fn [msg]
-                                 (handle-message this msg))))
+                               (fn [client-id msg]
+                                 (handle-message this client-id msg))))
           tap (bread/add-profiler
                 (fn [hook-event]
                   (profile this hook-event)))]
