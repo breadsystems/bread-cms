@@ -57,17 +57,16 @@
    :hook/precedence precedence
    :hook/millis millis})
 
-;; TODO client ID?
 (defmulti handle-message (fn [_ _ [k]] k))
 
 (defmethod handle-message :replay-event-log [debugger client-id _]
   (doseq [entry @(.log debugger)]
     (srv/publish! entry client-id)))
 
-(defmethod handle-message :clear-debug-log [debugger _]
+(defmethod handle-message :clear-debug-log [debugger & _]
   (reset! (.log debugger) []))
 
-(defmethod handle-message :replay-requests [debugger [_ reqs opts]]
+(defmethod handle-message :replay-requests [debugger _ [_ reqs opts]]
   (replay debugger reqs opts))
 
 (defrecord WebsocketDebugger [log config]
