@@ -193,7 +193,6 @@
                                       :status status)))))
 
                        ;; BREAK IT ON PURPOSE
-                       #_
                        (fn [app]
                          (bread/add-hook
                            app
