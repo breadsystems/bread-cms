@@ -1,4 +1,5 @@
 (ns systems.bread.alpha.tools.debug.core
+  (:refer-clojure :exclude [*e])
   (:require
     [clojure.datafy :refer [datafy nav]]
     [clojure.core.protocols :as proto :refer [Datafiable Navigable]]
@@ -10,6 +11,8 @@
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import
     [java.util UUID Date]))
+
+(def ^:dynamic *e nil)
 
 (defprotocol BreadDebugger
   (start [debugger opts])

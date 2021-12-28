@@ -98,6 +98,5 @@
        (try
          (handler req)
          (catch Throwable err
-           ;; TODO debug/*e
-           (def $last-err err)
+           (alter-var-root #'debug/*e (constantly err))
            (throwable-handler err)))))))
