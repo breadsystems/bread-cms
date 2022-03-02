@@ -3,7 +3,8 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as string]
     [rum.core :as rum]
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.tools.debug.core :as debug]))
 
 (defmulti error-field (fn [k _] k))
 
@@ -92,5 +93,6 @@
        (try
          (handler req)
          (catch Throwable err
-           (alter-var-root #'debug/*e (constantly err))
+           (alter-var-root #'debug/*err (constantly err))
+           (bread/profile> :profile.type/throwable err)
            (throwable-handler err)))))))

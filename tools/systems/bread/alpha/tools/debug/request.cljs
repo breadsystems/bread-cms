@@ -84,6 +84,14 @@
          update-in [:request/uuid rid :request/hooks]
          conjv invocation))
 
+(defmethod e/on-event :profile.type/throwable
+  [[_ err]]
+  (let [{data :data} (get-in err [:via 0])
+        rid (str (get-in data [:app :request/uuid]))]
+    (swap! db
+           update-in [:request/uuid rid :request/errors]
+           conjv err)))
+
 
 (defmethod e/on-event :ui/view-req [[_ uuid]]
   (swap! db assoc :ui/selected-req (str uuid)))
@@ -113,6 +121,25 @@
      "$APP" ;; TODO make this explorable
      (pp x))])
 
+(rum/defcs error-item < (rum/local false :trace?)
+  [{:keys [trace?]} k {:keys [via trace cause data]}]
+  ;; TODO dril
+  (let [[x] via]
+    (prn (keys x))
+    [:div.rows {:key k}
+     [:p.info type]
+     [:h4.error cause]
+     [:button {:on-click #(swap! trace? not)}
+      (if @trace? "Hide trace" "Show trace")]
+     (when @trace?
+       [:ul
+        (map-indexed
+          (fn [idx call]
+            [:li {:key idx}
+             ;; TODO proper formatting
+             (str call)])
+          trace)])]))
+
 (rum/defcs hook-item < (rum/local false :details?)
   [{:keys [details?]} idx
    {:hook/keys [name args f file line column result millis] :as hook}]
@@ -140,6 +167,7 @@
          id :request/id
          req :request/initial
          res :request/response
+         errors :request/errors
          :as req-data}
         (uuid->req (rum/react db/req-uuid))
         diff-opts (rum/react db/req-uuids)
@@ -200,6 +228,11 @@
                 (shorten-uuid opt)
                 (when (= uuid opt) " (this request)")])
              diff-opts)]]]
+
+     [:h3 "Errors"]
+     (if (seq errors)
+       (map-indexed error-item errors)
+       [:p.info "No errors"])
 
      [:h3 "Request hooks"]
      [:p.info
