@@ -168,6 +168,9 @@
           (store/delete-database! $config)))
 
 ;; TODO reload app automatically when src changes
+;; NOTE: I think the simplest thing is to put handler in a defstate,
+;; so that wrap-reload picks up on it. Not sure if we even need a dedicated
+;; app atom at this point...
 (defstate load-app
   :start (reset! app
                  (bread/load-app
@@ -235,7 +238,6 @@
                                :post/fields {:post/fields [:field/key
                                                            :field/content]}
                                :post/parent {:post/parent ...}])]
-              ;:in [$ ?type ?status ?slug]
               :where [[?e :post/slug ?slug]
                       [?e :post/status :post.status/published]]}
      :args [(store/datastore $req)]})
