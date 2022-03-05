@@ -123,6 +123,7 @@
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
+   ;; TODO record diffs instead
    {:db/ident :revision/fields
     :db/doc "EDN-serialized post fields as they exist as of this revision"
     :db/valueType :db.type/string
