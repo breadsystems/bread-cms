@@ -228,6 +228,18 @@
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
+  ;; Query posts (with fields) recursively
+  (store/q
+    (store/datastore $req)
+    {:query '{:find [(pull ?e [:db/id :post/slug
+                               :post/fields {:post/fields [:field/key
+                                                           :field/content]}
+                               :post/parent {:post/parent ...}])]
+              ;:in [$ ?type ?status ?slug]
+              :where [[?e :post/slug ?slug]
+                      [?e :post/status :post.status/published]]}
+     :args [(store/datastore $req)]})
+
   (store/q
     (store/datastore $req)
     {:query '{:find [?e ?slug]
