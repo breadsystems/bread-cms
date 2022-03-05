@@ -204,19 +204,20 @@
   ;;
   )
 
+(defn- query-db [db data qry args]
+  (let [args (map (partial eval-arg data) args)]
+    (when (every? some? args)
+      (apply d/q qry db args))))
+
 (extend-type datahike.db.DB
   bread/Queryable
   (query [db data [qry & args]]
-    (let [args (map (partial eval-arg data) args)]
-      (when (every? some? args)
-        (apply d/q qry db args)))))
+    (query-db db data qry args)))
 
 (extend-type datahike.db.AsOfDB
   bread/Queryable
   (query [db data [qry & args]]
-    (let [args (map (partial eval-arg data) args)]
-      (when (every? some? args)
-        (apply d/q qry db args)))))
+    (query-db db data qry args)))
 
 
 
