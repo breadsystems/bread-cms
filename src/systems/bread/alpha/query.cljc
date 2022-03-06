@@ -38,7 +38,7 @@
   [req query]
   (update req ::bread/queries
           (fn [queries]
-            (vec (conj queries query)))))
+            (vec (conj (vec queries) query)))))
 
 (defn plugin []
   (fn [app]
