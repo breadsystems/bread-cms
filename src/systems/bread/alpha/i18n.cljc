@@ -3,8 +3,9 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.query :as query]))
 
 ;; TODO make this fn pluggable
 (defn supported-langs
@@ -59,12 +60,11 @@
   (k (strings app)))
 
 (defn add-i18n-queries [app]
-  ;; TODO query/add
   (-> app
-      (update ::bread/queries conj [:i18n (fn [_]
-                                            (strings app))])
-      (update ::bread/queries conj [:lang (fn [_]
-                                            (lang app))])))
+      (query/add [:i18n (fn [_]
+                          (strings app))])
+      (query/add [:lang (fn [_]
+                          (lang app))])))
 
 (defn plugin
   ([]
