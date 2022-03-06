@@ -53,9 +53,10 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(defc page [{:keys [post i18n]}]
+(defc page [{:keys [post i18n nav] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
+  (prn nav)
   (let [post (post/compact-fields post)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
@@ -205,6 +206,19 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
+                       (fn [app]
+                         (bread/add-hook
+                           app
+                           :hook/resolve
+                           (fn [{::bread/keys [queries] :as req}]
+                             (query/add
+                               req
+                               [:nav
+                                (store/datastore req)
+                                '{:find [?p (pull ?e [:field/key :field/content])]
+                                  :where [[?e :field/lang :en]
+                                          [?p :post/fields ?e]]}]))))
+
                        ;; TODO layouts
                        ;; TODO themes
 
@@ -231,16 +245,51 @@
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
+  (defn map-keyed-by [key-fn coll]
+    (into {} (map (fn [x] [(key-fn x) x]) coll)))
+
   ;; Query posts (with fields) recursively
-  (store/q
-    (store/datastore $req)
-    {:query '{:find [(pull ?e [:db/id :post/slug
-                               :post/fields {:post/fields [:field/key
-                                                           :field/content]}
-                               :post/parent {:post/parent ...}])]
-              :where [[?e :post/slug ?slug]
-                      [?e :post/status :post.status/published]]}
-     :args [(store/datastore $req)]})
+  (->> (store/q
+         (store/datastore $req)
+         {:query '{:find [(pull ?e [:db/id :post/slug
+                                    {:post/fields [:field/key :field/content]}
+                                    {:post/parent ...}])]
+                   :where [[?e :post/status :post.status/published]
+                           [?e :post/type :post.type/page]]}
+          :args [(store/datastore $req)]})
+      (map first))
+
+  ;; test query for getting all fields in English
+  (store/q (store/datastore $req)
+           '[:find ?p (pull ?e [:field/key :field/content])
+             :where
+             [?e :field/lang :en]
+             [?e :field/key :title]
+             [?p :post/fields ?e]
+             (or [51 :post/fields ?e]
+                 [48 :post/fields ?e]
+                 ;; etc.
+                 )])
+
+  (defn with-fields [req post]
+    (let [db (store/datastore req)
+          query
+          {:find '[(pull ?e [:field/key :field/content])]
+           :where ['[?e :field/lang :en]
+                   [(:db/id post) :post/fields '?e]]}]
+      (assoc post :post/fields (store/q db query))))
+
+
+  ;; Query posts and their ancestors recursively, then get the title for each
+  (->> (store/q
+         (store/datastore $req)
+         {:query '{:find [(pull ?e [:db/id :post/slug {:post/parent ...}])]
+                   :where [[?e :post/status :post.status/published]
+                           [?e :post/type :post.type/page]]}
+          :args [(store/datastore $req)]})
+       (map (comp post/compact-fields
+                  (partial with-fields $req)
+                  first)))
 
   (store/q
     (store/datastore $req)
