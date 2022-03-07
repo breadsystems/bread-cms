@@ -72,9 +72,53 @@
        (map (comp (partial format-menu req) parse-content first))
        by-location))
 
+(defn posts-menu*
+  ([req]
+   (posts-menu* req {}))
+  ([req opts]
+   (let [t (:post/type opts :post.type/page)
+         max-recur* (bread/hook-> req :hook/posts-menu-recursion 3)
+         max-recur (:recursion-limit opts max-recur*)
+         spec [:db/id {:post/parent max-recur}]
+         pull (list 'pull '?e spec)]
+     (->> (store/q
+            (store/datastore req)
+            {:find [pull]
+             :where [['?e :post/type t]]})
+          ;; Invert structure so that ancestors are at the top of the tree.
+          (map (comp (juxt :db/id identity) first))
+          (into {})))))
+
+(defn posts-menu
+  ([req]
+   (posts-menu req {}))
+  ([req opts]
+   (let [t (:post/type opts :post.type/page)]
+     (->> (store/q
+            (store/datastore req)
+            {:find '[?e ?slug ?parent]
+             :where [['?e :post/type t]
+                     ['?e :post/slug '?slug]
+                     ['(get-else $ ?e :post/parent false) '?parent]]})
+          ;; TODO generalize this to any level of nesting...
+          (reduce (fn [tree [id slug parent]]
+                    (let [post {:db/id id
+                                :post/slug slug}]
+                      (if parent
+                        (update tree parent #(update (or % {:db/id parent
+                                                            :children []})
+                                                     :children conj post))
+                        (update tree id merge {:db/id id
+                                               :post post}))))
+                  {})
+          (mapv val)))))
+
 (comment
+  (posts-menu* $req)
   (global-menus $req)
-  (format-menu $req {:menu/content [{:db/id 47}]}))
+  (format-menu $req {:menu/content [{:db/id 47}
+                                    {:db/id 52
+                                     :children [{:db/id 55}]}]}))
 
 (defn query-menus [req]
   #_
