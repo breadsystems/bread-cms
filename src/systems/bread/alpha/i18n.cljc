@@ -66,11 +66,15 @@
       (query/add [:lang (fn [_]
                           (lang app))])))
 
+(defn url [req url _post]
+  (str "/" (name (lang req)) url))
+
 (defn plugin
   ([]
    (plugin {}))
   ([opts]
-   (let [fallback (:i18n/fallback opts :en)]
-     (fn [app]
-       (bread/add-hook (bread/set-config app :i18n/fallback-lang fallback)
-         :hook/resolve add-i18n-queries)))))
+   (fn [app]
+     (bread/add-hooks->
+       (bread/set-config app :i18n/fallback-lang (:i18n/fallback opts :en))
+       (:hook/post-url url)
+       (:hook/resolve add-i18n-queries)))))
