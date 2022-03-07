@@ -69,9 +69,11 @@
                      :taxon/taxonomy :taxon.taxonomy/category}}}
    #:menu{:location :main-nav
           :key :main
-          :menu/content (prn-str [{:post/id 47}
-                                  {:post/id 52}
-                                  {:post/id 55}])}
+          :menu/content (prn-str [{:post/id 52     ;; parent
+                                   :children
+                                   [{:post/id 55}]} ;; child
+                                  {:post/id 47}    ;; home
+                                  ])}
    #:menu{:location :footer-nav
           :key :footer
           :menu/content (prn-str [{:post/id 47}

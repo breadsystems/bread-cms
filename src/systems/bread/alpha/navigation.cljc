@@ -7,11 +7,18 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.datastore :as store]))
 
+(defn- collect-post-ids [tree]
+  (reduce (fn [ids node]
+            (apply conj ids (:post/id node)
+                   (collect-post-ids (:children node))))
+          #{}
+          tree))
+
 (defn- post-items-query [req menu]
   (let [lang (i18n/lang req)
         ids-clause (->> menu
                         :menu/content
-                        (map :post/id)
+                        collect-post-ids
                         (filter some?)
                         (map (fn [id]
                                [id :post/fields '?e]))
@@ -24,6 +31,11 @@
              ['?p :post/fields '?e]
              ids-clause]}))
 
+(defn- walk-items [by-id items]
+  (mapv (fn [{id :post/id subtree :children}]
+          (assoc (by-id id) :children (walk-items by-id subtree)))
+        items))
+
 (defn expand-post-ids [req menu]
   (let [results (store/q (store/datastore req)
                          (post-items-query req menu))
@@ -35,7 +47,7 @@
                             :url (post/url req post)
                             :title (edn/read-string title)}]))
                    (into {}))]
-    (mapv (comp by-id :post/id) (:menu/content menu))))
+    (walk-items by-id (:menu/content menu))))
 
 (defn- format-menu [req {k :menu/key loc :menu/location :as menu}]
   {:key k
@@ -56,21 +68,6 @@
            :where [[?e :menu/location _]]})
        (map (comp (partial format-menu req) first))
        by-location))
-
-(comment
-  (map
-    (fn [rows]
-      (let [menu (update (first rows) :menu/content edn/read-string)]
-        (expand-post-ids $req menu)))
-    (store/q (store/datastore $req)
-     '{:find [(pull ?e [:menu/location :menu/key :menu/content])]
-       :where [[?e :menu/location _]]}))
-
-  (global-menus $req)
-
-  ;;
-  )
-
 
 (defn query-menus [req]
   (query/add req [:menus (fn [_]

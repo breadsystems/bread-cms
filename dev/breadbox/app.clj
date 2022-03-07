@@ -45,37 +45,54 @@
               :datastore/initial-txns
               data/initial-content})
 
-(defc home [{:keys [post] :as x}]
+(defn main-nav [menu]
+  [:nav
+   [:ul
+    (map
+      (fn [{:keys [url title children]}]
+        [:li
+         [:a {:href url} title]
+         (when (seq children)
+           [:ul
+            (map
+              (fn [{:keys [url title]}]
+                [:li
+                 [:a {:href url} title]])
+              children)])])
+      (:items menu))]])
+
+(defc home [{:keys [post menus] :as x}]
   {:query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
     [:main
      [:h1 title]
+     (main-nav (:main-nav menus))
      [:p (:hello simple)]
-     [:pre (str post)]]))
+     [:pre (str post)]
+     ;; TODO layouts
+     [:footer
+      (main-nav (:footer-nav menus))]]))
 
 (defc page [{:keys [post i18n menus] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
-        main-nav (:main-nav menus)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
-     [:nav
-      [:ul
-       (map
-         (fn [{:keys [url title]}]
-           [:li [:a {:href url} title]])
-         (:items main-nav))]]
+     (main-nav (:main-nav menus))
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]
       [:p.flex flex-content]]
      [:pre
-      (str post)]]))
+      (str post)]
+     ;; TODO layouts
+     [:footer
+      (main-nav (:footer-nav menus))]]))
 
 (defc static-page [{:keys [post lang]}]
   {:key :post}
