@@ -67,6 +67,14 @@
           :taxons #{{:taxon/slug "my-cat"
                      :taxon/name "My Cat"
                      :taxon/taxonomy :taxon.taxonomy/category}}}
+   #:post{:type :post.type/menu
+          :slug "my-menu"
+          :status :post.status/published
+          :fields #{{:field/key :menu/items
+                     :field/content (prn-str [{:post/id 51}
+                                              {:post/id 43}
+                                              {:post/id 48}])}
+                    }}
    #:i18n{:lang :en
           :key :not-found
           :string "404 Not Found"}

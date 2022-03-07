@@ -21,6 +21,7 @@
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.static-backend :as static-be]
     [systems.bread.alpha.post :as post]
+    [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
@@ -53,14 +54,19 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(defc page [{:keys [post i18n nav] :as data}]
+(defc page [{:keys [post i18n my-menu] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
-  (prn nav)
   (let [post (post/compact-fields post)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
+     [:nav
+      [:ul
+       (map
+         (fn [{:keys [url title]}]
+           [:li [:a {:href url} title]])
+         (:items my-menu))]]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
@@ -206,18 +212,7 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (fn [app]
-                         (bread/add-hook
-                           app
-                           :hook/resolve
-                           (fn [{::bread/keys [queries] :as req}]
-                             (query/add
-                               req
-                               [:nav
-                                (store/datastore req)
-                                '{:find [?p (pull ?e [:field/key :field/content])]
-                                  :where [[?e :field/lang :en]
-                                          [?p :post/fields ?e]]}]))))
+                       (navigation/plugin)
 
                        ;; TODO layouts
                        ;; TODO themes
