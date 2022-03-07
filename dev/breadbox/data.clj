@@ -67,14 +67,14 @@
           :taxons #{{:taxon/slug "my-cat"
                      :taxon/name "My Cat"
                      :taxon/taxonomy :taxon.taxonomy/category}}}
-   #:menu{:location :main-nav
+   #:menu{:locations [:main-nav]
           :key :main
           :menu/content (prn-str [{:post/id 52     ;; parent
                                    :children
                                    [{:post/id 55}]} ;; child
                                   {:post/id 47}    ;; home
                                   ])}
-   #:menu{:location :footer-nav
+   #:menu{:locations [:footer-nav]
           :key :footer
           :menu/content (prn-str [{:post/id 47}
                                   {:post/id 52}

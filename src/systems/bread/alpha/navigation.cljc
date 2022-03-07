@@ -49,23 +49,25 @@
                    (into {}))]
     (walk-items by-id (:menu/content menu))))
 
-(defn- format-menu [req {k :menu/key loc :menu/location :as menu}]
+(defn- format-menu [req {k :menu/key loc :menu/locations :as menu}]
   {:key k
-   :location loc
+   :locations loc
    :items (as-> menu $
             (update $ :menu/content edn/read-string)
             (expand-post-ids req $))})
 
 (defn- by-location [menus]
-  (into {} (map (juxt :location identity) menus)))
+  (reduce (fn [by-loc {locs :locations :as menu}]
+            (apply assoc by-loc (interleave locs (repeat menu))))
+          {} menus))
 
 (defn global-menus [req]
   (->> (store/q
          (store/datastore req)
-         '{:find [(pull ?e [:menu/location
+         '{:find [(pull ?e [:menu/locations
                             :menu/key
                             :menu/content])]
-           :where [[?e :menu/location _]]})
+           :where [[?e :menu/locations _]]})
        (map (comp (partial format-menu req) first))
        by-location))
 

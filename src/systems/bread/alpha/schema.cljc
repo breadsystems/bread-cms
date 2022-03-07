@@ -164,11 +164,12 @@
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   {:db/ident :menu/location
-    :db/doc "Globally unique menu location."
+   ;; TODO rename to context?
+   {:db/ident :menu/locations
+    :db/doc "Locations this menu is being used for."
     :db/valueType :db.type/keyword
     :db/unique :db.unique/value
-    :db/cardinality :db.cardinality/one
+    :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
    {:db/ident :menu/key
     :db/doc "Globally unique menu name."
