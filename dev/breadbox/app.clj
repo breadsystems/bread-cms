@@ -52,12 +52,14 @@
         {:keys [title simple]} (:post/fields post)]
     [:main
      [:h1 title]
-     [:p (:hello simple)]]))
+     [:p (:hello simple)]
+     [:pre (str post)]]))
 
-(defc page [{:keys [post i18n my-menu] :as data}]
+(defc page [{:keys [post i18n menus] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
+        main-nav (:main-nav menus)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
@@ -66,12 +68,14 @@
        (map
          (fn [{:keys [url title]}]
            [:li [:a {:href url} title]])
-         (:items my-menu))]]
+         (:items main-nav))]]
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]
-      [:p.flex flex-content]]]))
+      [:p.flex flex-content]]
+     [:pre
+      (str post)]]))
 
 (defc static-page [{:keys [post lang]}]
   {:key :post}

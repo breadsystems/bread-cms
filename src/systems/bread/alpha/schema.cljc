@@ -157,6 +157,31 @@
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
 
+   ;; Menus
+   {:db/ident :menu/uuid
+    :db/doc "Universally unique identifier for the menu. Distinct from the Datahike entity ID."
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu/location
+    :db/doc "Globally unique menu location."
+    :db/valueType :db.type/keyword
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu/key
+    :db/doc "Globally unique menu name."
+    :db/valueType :db.type/keyword
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu/content
+    :db/doc "EDN-serialized menu tree."
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+
    ;; Comments
    {:db/ident :comment/uuid
     :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
