@@ -34,20 +34,25 @@
         (store/q (store/datastore req)
                  (post-items-query req menu))))
 
+(defn- format-menu [req {k :menu/key loc :menu/location :as menu}]
+  {:key k
+   :location loc
+   :items (as-> menu $
+            (update $ :menu/content edn/read-string)
+            (expand-post-ids req $))})
+
+(defn- by-location [menus]
+  (into {} (map (juxt :location identity) menus)))
+
 (defn global-menus [req]
-  (into {}
-        (map (fn [results]
-               (let [{:menu/keys [key location] :as result} (first results)
-                     menu (update result :menu/content edn/read-string)]
-                 [location {:key key
-                  :location location
-                  :items (expand-post-ids req menu)}]))
-             (store/q
-               (store/datastore req)
-               '{:find [(pull ?e [:menu/location
-                                  :menu/key
-                                  :menu/content])]
-                 :where [[?e :menu/location _]]}))))
+  (->> (store/q
+         (store/datastore req)
+         '{:find [(pull ?e [:menu/location
+                            :menu/key
+                            :menu/content])]
+           :where [[?e :menu/location _]]})
+       (map (comp (partial format-menu req) first))
+       by-location))
 
 (comment
   (map
