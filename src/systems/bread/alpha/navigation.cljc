@@ -25,14 +25,17 @@
              ids-clause]}))
 
 (defn expand-post-ids [req menu]
-  (mapv (fn [[post {title :field/content}]]
-          (bread/hook->
-            req :hook/post-menu-item
-            {:post post
-             :url (post/url req post)
-             :title (edn/read-string title)}))
-        (store/q (store/datastore req)
-                 (post-items-query req menu))))
+  (let [results (store/q (store/datastore req)
+                         (post-items-query req menu))
+        by-id (->> results
+                   (map (fn [[{id :db/id :as post}
+                              {title :field/content}]]
+                          [id
+                           {:post post
+                            :url (post/url req post)
+                            :title (edn/read-string title)}]))
+                   (into {}))]
+    (mapv (comp by-id :post/id) (:menu/content menu))))
 
 (defn- format-menu [req {k :menu/key loc :menu/location :as menu}]
   {:key k
