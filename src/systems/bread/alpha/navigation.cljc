@@ -52,9 +52,10 @@
 (defn- format-menu [req {k :menu/key loc :menu/locations :as menu}]
   {:key k
    :locations loc
-   :items (as-> menu $
-            (update $ :menu/content edn/read-string)
-            (expand-post-ids req $))})
+   :items (expand-post-ids req menu)})
+
+(defn- parse-content [menu]
+  (update menu :menu/content edn/read-string))
 
 (defn- by-location [menus]
   (reduce (fn [by-loc {locs :locations :as menu}]
@@ -68,8 +69,11 @@
                             :menu/key
                             :menu/content])]
            :where [[?e :menu/locations _]]})
-       (map (comp (partial format-menu req) first))
+       (map (comp (partial format-menu parse-content req) first))
        by-location))
+
+(comment
+  (format-menu $req {:menu/content [{:post/id 47}]}))
 
 (defn query-menus [req]
   (query/add req [:menus (fn [_]
