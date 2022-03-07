@@ -69,16 +69,16 @@
                      :taxon/taxonomy :taxon.taxonomy/category}}}
    #:menu{:locations [:main-nav]
           :key :main
-          :menu/content (prn-str [{:post/id 52     ;; parent
+          :menu/content (prn-str [{:db/id 52     ;; parent
                                    :children
-                                   [{:post/id 55}]} ;; child
-                                  {:post/id 47}    ;; home
+                                   [{:db/id 55}]} ;; child
+                                  {:db/id 47}    ;; home
                                   ])}
    #:menu{:locations [:footer-nav]
           :key :footer
-          :menu/content (prn-str [{:post/id 47}
-                                  {:post/id 52}
-                                  {:post/id 55}])}
+          :menu/content (prn-str [{:db/id 47}
+                                  {:db/id 52}
+                                  {:db/id 55}])}
    #:i18n{:lang :en
           :key :not-found
           :string "404 Not Found"}

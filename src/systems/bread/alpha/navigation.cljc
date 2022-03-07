@@ -9,7 +9,7 @@
 
 (defn- collect-post-ids [tree]
   (reduce (fn [ids node]
-            (apply conj ids (:post/id node)
+            (apply conj ids (:db/id node)
                    (collect-post-ids (:children node))))
           #{}
           tree))
@@ -32,7 +32,7 @@
              ids-clause]}))
 
 (defn- walk-items [by-id items]
-  (mapv (fn [{id :post/id subtree :children}]
+  (mapv (fn [{id :db/id subtree :children}]
           (assoc (by-id id) :children (walk-items by-id subtree)))
         items))
 
@@ -69,13 +69,16 @@
                             :menu/key
                             :menu/content])]
            :where [[?e :menu/locations _]]})
-       (map (comp (partial format-menu parse-content req) first))
+       (map (comp (partial format-menu req) parse-content first))
        by-location))
 
 (comment
-  (format-menu $req {:menu/content [{:post/id 47}]}))
+  (global-menus $req)
+  (format-menu $req {:menu/content [{:db/id 47}]}))
 
 (defn query-menus [req]
+  #_
+  (def $req req)
   (query/add req [:menus (fn [_]
                            (global-menus req))]))
 
