@@ -39,10 +39,10 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
-   {:db/ident :post/parent
-    :db/doc "Entity ID of the parent post, if any"
+   {:db/ident :post/children
+    :db/doc "Entity IDs of child posts, if any"
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
+    :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
    {:db/ident :post/status
     :db/doc "Post status, i.e. whether it is published, in review, drafting, etc."

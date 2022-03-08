@@ -2,7 +2,7 @@
   (:import
     [java.util UUID]))
 
-(def parent-uuid
+(def child-uuid
   #uuid "cd255e79-93c3-447c-ad94-045758de9b31")
 
 (def initial-content
@@ -26,21 +26,9 @@
                     }
           :status :post.status/published}
    #:post{:type :post.type/page
-          :uuid parent-uuid
-          :slug "parent-page"
-          :status :post.status/published
-          :fields #{{:field/key :title
-                     :field/lang :en
-                     :field/content (prn-str "Parent Page")}
-                    {:field/key :title
-                     :field/lang :fr
-                     :field/content (prn-str "La Page Parent")}
-                    }}
-   #:post{:type :post.type/page
-          :uuid (UUID/randomUUID)
+          :uuid child-uuid
           :slug "child-page"
           :status :post.status/published
-          :parent [:post/uuid parent-uuid]
           :fields #{{:field/key :title
                      :field/lang :en
                      :field/content (prn-str "Child Page")}
@@ -67,8 +55,35 @@
           :taxons #{{:taxon/slug "my-cat"
                      :taxon/name "My Cat"
                      :taxon/taxonomy :taxon.taxonomy/category}}}
+   #:post{:type :post.type/page
+          :uuid (UUID/randomUUID)
+          :slug "parent-page"
+          :children [[:post/uuid child-uuid]]
+          :status :post.status/published
+          :fields #{{:field/key :title
+                     :field/lang :en
+                     :field/content (prn-str "Parent Page")}
+                    {:field/key :title
+                     :field/lang :fr
+                     :field/content (prn-str "La Page Parent")}
+                    {:field/key :simple
+                     :field/lang :en
+                     :field/content
+                     (prn-str {:hello "Hello"
+                               :body "Lorem ipsum dolor sit amet"
+                               :goodbye "Goodbye from Parent!"
+                               :img-url "https://via.placeholder.com/300"})}
+                    {:field/key :simple
+                     :field/lang :fr
+                     :field/content
+                     (prn-str {:hello "Bonjour"
+                               :body "Lorem ipsum en francais"
+                               :goodbye "Salut de la page parent"
+                               :img-url "https://via.placeholder.com/300"})}
+                    }}
    #:menu{:locations [:main-nav]
           :key :main
+          ;; TODO use UUIDs to accomplish this :P
           :menu/content (prn-str [{:db/id 52     ;; parent
                                    :children
                                    [{:db/id 55}]} ;; child
