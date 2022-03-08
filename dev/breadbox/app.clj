@@ -233,6 +233,7 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
+                       #_
                        (navigation/plugin)
 
                        ;; TODO layouts
