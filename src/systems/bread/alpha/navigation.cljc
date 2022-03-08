@@ -82,7 +82,9 @@
     (->> query
          (bread/hook->> req :hook/global-menu-query)
          (store/q (store/datastore req))
-         (map (comp (partial format-menu req) parse-content first))
+         (map (comp #(assoc % :type :location)
+                    (partial format-menu req)
+                    parse-content first))
          by-location
          (reduce (fn [menus [loc menu]]
                    (->> menu
@@ -94,6 +96,9 @@
                         (bread/hook->> req (key-hook (:key menu)))
                         (assoc menus loc))) {}))))
 
+(defn- post-type-menu-hook [t]
+  (keyword (str "hook/posts-menu." (name t))))
+
 (defn posts-menu
   ([req]
    (posts-menu req {}))
@@ -103,19 +108,28 @@
          max-recur (:recursion-limit opts max-recur*)
          posts-pull (list 'pull '?e [:db/id
                                      {:post/children max-recur}])
+         query
+         {:find [posts-pull]
+          :where [['?e :post/type t]
+                  ;; Only include top-level posts. Descendants will get
+                  ;; picked up by the recursive :post/children query.
+                  '(not-join [?e] [?parent :post/children ?e])]}
          items
-         (->> (store/q
-                (store/datastore req)
-                {:find [posts-pull]
-                 :where [['?e :post/type t]
-                         ;; Only include top-level posts. Descendants will get
-                         ;; picked up by the recursive :post/children query.
-                         '(not-join [?e] [?parent :post/children ?e])]})
+         (->> query
+              (bread/hook->> req :hook/posts-menu-query)
+              (store/q (store/datastore req))
               ;; Ensure :children key for expand-post-ids.
               (map (comp #(assoc % :children (:post/children %)) first))
               (expand-post-ids req))]
-     ;; TODO denote type in a :menu/type key or something?
-     {:items items})))
+     (->> {:type :posts
+           :post/type t
+           :items items}
+          ;; Run general menu hook...
+          (bread/hook->> req :hook/menu)
+          ;; ...then posts-menu hook...
+          (bread/hook->> req :hook/posts-menu)
+          ;; ...then post-type specific.
+          (bread/hook->> req (post-type-menu-hook t))))))
 
 (comment
   (format-menu $req {:menu/locations [:somewhere]
