@@ -73,20 +73,28 @@
        (map (comp (partial format-menu req) parse-content first))
        by-location))
 
-(defn posts-menu*
+(defn posts-menu
   ([req]
-   (posts-menu* req {}))
+   (posts-menu req {}))
   ([req opts]
    (let [t (:post/type opts :post.type/page)
          max-recur* (bread/hook-> req :hook/posts-menu-recursion 3)
          max-recur (:recursion-limit opts max-recur*)
-         spec [:db/id {:post/parent max-recur}]
-         pull (list 'pull '?e spec)]
-     (->> (store/q
-            (store/datastore req)
-            {:find [pull]
-             :where [['?e :post/type t]]})
-          ))))
+         posts-pull (list 'pull '?e [:db/id
+                                     {:post/children max-recur}])
+         items
+         (->> (store/q
+                (store/datastore req)
+                {:find [posts-pull]
+                 :where [['?e :post/type t]
+                         ;; Only include top-level posts. Descendants will get
+                         ;; picked up by the recursive :post/children query.
+                         '(not-join [?e] [?parent :post/children ?e])]})
+              ;; Ensure :children key for expand-post-ids.
+              (map (comp #(assoc % :children (:post/children %)) first))
+              (expand-post-ids req))]
+     ;; TODO denote type in a :menu/type key or something?
+     {:items items})))
 
 (comment
   (posts-menu $req)
@@ -99,7 +107,7 @@
       :where [[?e :post/type :post.type/page]
               [?e :post/slug ?slug]]})
 
-  (global-menus $req)
+  (:main-nav (global-menus $req))
   (format-menu $req {:menu/content [{:db/id 47}
                                     {:db/id 59
                                      :children [{:db/id 52}]}]}))
