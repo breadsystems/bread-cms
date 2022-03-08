@@ -9,16 +9,6 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn url
-  "Compute the URL for the given post"
-  [req post]
-  (let [url (loop [{:post/keys [slug parent] :as post} post
-                   slugs ()]
-              (if post
-                (recur parent (cons slug slugs))
-                (str "/" (string/join "/" slugs))))]
-    (bread/hook->> req :hook/post-url url post)))
-
 (defn- syms
   ([prefix]
    (syms prefix 0))

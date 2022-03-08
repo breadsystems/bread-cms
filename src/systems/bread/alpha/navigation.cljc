@@ -1,10 +1,12 @@
 (ns systems.bread.alpha.navigation
   (:require
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
 (defn- collect-post-ids [tree]
@@ -30,9 +32,13 @@
              ['?p :post/fields '?e]
              ids-clause]}))
 
-(defn- walk-items [by-id items]
+(defn- walk-items [req by-id items ancestry]
   (mapv (fn [{id :db/id subtree :children}]
-          (assoc (by-id id) :children (walk-items by-id subtree)))
+          (let [{{slug :post/slug :as post} :post :as item} (by-id id)
+                ancestry (conj (or ancestry []) slug)]
+            (assoc item
+                   :url (route/path req ancestry :bread.route/page)
+                   :children (walk-items req by-id subtree ancestry))))
         items))
 
 ;; TODO figure out the best way to compute URLs now that we can't just walk
@@ -45,10 +51,9 @@
                               {title :field/content}]]
                           [id
                            {:post post
-                            :url (post/url req post)
                             :title (edn/read-string title)}]))
                    (into {}))]
-    (walk-items by-id tree)))
+    (walk-items req by-id tree nil)))
 
 (defn- format-menu [req {k :menu/key locs :menu/locations tree :menu/content}]
   {:key k

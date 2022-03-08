@@ -66,8 +66,8 @@
       (query/add [:lang (fn [_]
                           (lang app))])))
 
-(defn url [req url _post]
-  (str "/" (name (lang req)) url))
+(defn path-params [req params _]
+  (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
 (defn plugin
   ([]
