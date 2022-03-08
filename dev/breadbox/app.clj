@@ -243,7 +243,6 @@
                          {:menus [{:key :main-nav
                                    :type :posts
                                    :post/type :post.type/page}
-                                  #_ ;; TODO add support for :location
                                   {:key :footer-nav
                                    :type :location
                                    :location :footer-nav}]

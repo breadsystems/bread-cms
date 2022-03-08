@@ -96,6 +96,25 @@
                         (bread/hook->> req (key-hook (:key menu)))
                         (assoc menus loc))) {}))))
 
+(defn location-menu [req location]
+  (let [query {:find '[(pull ?e [:menu/locations
+                                 :menu/key
+                                 :menu/content]) .]
+               :where [['?e :menu/locations location]]}
+        menu (as-> query $
+               (bread/hook->> req :hook/location-menu-query $)
+               (store/q (store/datastore req) $)
+               (parse-content $)
+               (format-menu req $)
+               (assoc $ :type :location))]
+    (->> menu
+         ;; Run general menu hook...
+         (bread/hook->> req :hook/menu)
+         ;; ...then location-specific...
+         (bread/hook->> req (location-hook location))
+         ;; ...then by key.
+         (bread/hook->> req (key-hook (:key menu))))))
+
 (defn- post-type-menu-hook [t]
   (keyword (str "hook/posts-menu." (name t))))
 
@@ -137,6 +156,8 @@
                                     {:db/id 59
                                      :children [{:db/id 52}]}]})
   (posts-menu $req)
+  (location-menu $req :footer-nav)
+  (location-menu $req :main-nav)
   (:main-nav (global-menus $req)))
 
 (defn query-menus [req]
@@ -148,10 +169,13 @@
 (defmulti add-menu (fn [_ opts]
                      (:type opts)))
 
-(defmethod add-menu :posts [req opts]
+(defmethod add-menu :posts [req {k :key :as opts}]
   (query/add req [:menus (fn [{:keys [menus]}]
-                           (assoc menus
-                                  (:key opts) (posts-menu req opts)))]))
+                           (assoc menus k (posts-menu req opts)))]))
+
+(defmethod add-menu :location [req {k :key location :location}]
+  (query/add req [:menus (fn [{:keys [menus]}]
+                           (assoc menus k (location-menu req location)))]))
 
 (defn plugin
   ([]
