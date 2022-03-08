@@ -102,20 +102,11 @@
      {:items items})))
 
 (comment
-  (posts-menu $req)
-  (invert-tree (posts-menu $req))
-  (invert-tree $tree)
-
-  (store/q
-    (store/datastore $req)
-    '{:find [?e ?slug]
-      :where [[?e :post/type :post.type/page]
-              [?e :post/slug ?slug]]})
-
-  (:main-nav (global-menus $req))
   (format-menu $req {:menu/content [{:db/id 47}
                                     {:db/id 59
-                                     :children [{:db/id 52}]}]}))
+                                     :children [{:db/id 52}]}]})
+  (posts-menu $req)
+  (:main-nav (global-menus $req)))
 
 (defn query-menus [req]
   (def $req req)
