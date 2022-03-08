@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.plugin.reitit
   (:require
     [clojure.core.protocols :refer [Datafiable datafy]]
+    [clojure.string :as string]
     [reitit.core :as reitit]
     [systems.bread.alpha.core :as bread :refer [Router]]
     [systems.bread.alpha.i18n :as i18n]
@@ -24,6 +25,12 @@
                          (let [{:keys [ext] :or {ext ".md"}} config]
                            (assoc config :ext ext))))})
       (reitit/compiled-routes router)))
+  (bread/path [router route-name params]
+    ;; TODO figure out a non-terrible way to do this
+    (as-> router $
+      (reitit/match-by-name $ route-name params)
+      (:path $)
+      (string/replace $ #"%2F" "/")))
   ;; If the matched result is a handler (fn), set it as the resolver directly.
   ;; This lets users opt in or out of Bread's routing on a per-route basis.
   (bread/dispatch [router req]

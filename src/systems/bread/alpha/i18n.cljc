@@ -75,6 +75,8 @@
   ([opts]
    (fn [app]
      (bread/add-hooks->
-       (bread/set-config app :i18n/fallback-lang (:i18n/fallback opts :en))
-       (:hook/post-url url)
+       (bread/set-config app
+                         :i18n/lang-param (:i18n/lang-param opts :lang)
+                         :i18n/fallback-lang (:i18n/fallback opts :en))
+       (:hook/path-params path-params)
        (:hook/resolve add-i18n-queries)))))

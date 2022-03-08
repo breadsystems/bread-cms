@@ -56,11 +56,13 @@
 
 (defprotocol Router
   :extend-via-metadata true
+  (path [this route-name params])
   (dispatch [this req])
   (routes [this])
   (match [this req])
   (params [this match])
   (resolver [this match])
+  ;; TODO redesign component matching
   (component [this match])
   (not-found-component [this match]))
 
