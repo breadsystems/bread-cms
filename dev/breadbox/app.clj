@@ -46,7 +46,7 @@
               data/initial-content})
 
 (defn main-nav [menu]
-  [:nav
+  [:nav {:class (:my/class menu)}
    [:ul
     (map
       (fn [{:keys [url title children]}]
@@ -239,23 +239,13 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (navigation/plugin)
-
-                       (fn [app]
-                         (bread/add-hooks->
-                           app
-                           (:hook/menu
-                             (fn [_ menu]
-                               (prn 'menu (:key menu))
-                               menu))
-                           (:hook/menu.location.footer-nav
-                             (fn [_ menu]
-                               (prn 'loc (:key menu))
-                               menu))
-                           (:hook/menu.key.footer
-                             (fn [_ menu]
-                               (prn 'key (:key menu))
-                               menu))))
+                       (navigation/plugin
+                         {:hooks {:hook/menu
+                                  #(assoc %2 :my/class "nav-menu")
+                                  :hook/menu.location.main-nav
+                                  #(update %2 :my/class str " main-nav")
+                                  :hook/menu.key.main
+                                  #(update %2 :my/class str " special")}})
 
                        ;; TODO layouts
                        ;; TODO themes

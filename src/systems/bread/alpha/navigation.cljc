@@ -130,6 +130,12 @@
   (query/add req [:menus (fn [_]
                            (global-menus req))]))
 
-(defn plugin []
-  (fn [app]
-    (bread/add-hook app :hook/resolve query-menus)))
+(defn plugin
+  ([]
+   (plugin {}))
+  ([opts]
+   (let [hooks (merge (:hooks opts) {:hook/resolve query-menus})]
+     (fn [app]
+       (reduce (fn [app [hook callback]]
+                 (bread/add-hook app hook callback))
+               app hooks)))))
