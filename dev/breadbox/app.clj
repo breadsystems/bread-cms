@@ -132,18 +132,24 @@
      ["/hello/" hello-handler]
      ["/:lang"
       ["/" {:bread/resolver {:resolver/type :resolver.type/page}
-            :bread/component home}]
+            :bread/component home
+            :name :bread.route/home}]
       ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
                         :bread/component static-page
                         :bread/watch-static {:dir "dev/content"
-                                             :path->req [0 "static" 1]}}]
+                                             :path->req [0 "static" 1]}
+                        :name :bread.route/static}]
       ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
-                  :bread/component page}]]]
+                  :bread/component page
+                  :name :bread.route/page}]]]
     {:conflicts nil}))
 
 (comment
-  (def $res (handler {:uri "/en/qwerty"}))
+  (def $res (handler {:uri "/en/one/two"}))
   (route/params @app (route/match $res))
+  (reitit/match-by-path $router "/en/one/two")
+  (reitit/match-by-name $router :bread.route/page
+                        {:lang :en :slugs "one/two"})
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
