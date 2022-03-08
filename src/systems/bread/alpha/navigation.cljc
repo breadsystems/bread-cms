@@ -14,10 +14,9 @@
           #{}
           tree))
 
-(defn- post-items-query [req menu]
+(defn- post-items-query [req tree]
   (let [lang (i18n/lang req)
-        ids-clause (->> menu
-                        :menu/content
+        ids-clause (->> tree
                         collect-post-ids
                         (filter some?)
                         (map (fn [id]
@@ -36,9 +35,11 @@
           (assoc (by-id id) :children (walk-items by-id subtree)))
         items))
 
-(defn expand-post-ids [req menu]
+;; TODO figure out the best way to compute URLs now that we can't just walk
+;; up the ancestry...
+(defn expand-post-ids [req tree]
   (let [results (store/q (store/datastore req)
-                         (post-items-query req menu))
+                         (post-items-query req tree))
         by-id (->> results
                    (map (fn [[{id :db/id :as post}
                               {title :field/content}]]
@@ -47,12 +48,12 @@
                             :url (post/url req post)
                             :title (edn/read-string title)}]))
                    (into {}))]
-    (walk-items by-id (:menu/content menu))))
+    (walk-items by-id tree)))
 
-(defn- format-menu [req {k :menu/key loc :menu/locations :as menu}]
+(defn- format-menu [req {k :menu/key locs :menu/locations tree :menu/content}]
   {:key k
-   :locations loc
-   :items (expand-post-ids req menu)})
+   :locations locs
+   :items (expand-post-ids req tree)})
 
 (defn- parse-content [menu]
   (update menu :menu/content edn/read-string))
