@@ -60,7 +60,7 @@
                           (get-in req [::bread/resolver :resolver/type])))
 
 (defn resolve-queries [req]
-  (update req ::bread/queries concat (resolve-query req)))
+  (update req ::bread/queries (comp vec concat) (resolve-query req)))
 
 (defn plugin []
   (fn [app]

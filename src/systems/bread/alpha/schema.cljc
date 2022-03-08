@@ -39,10 +39,10 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
-   {:db/ident :post/parent
-    :db/doc "Entity ID of the parent post, if any"
+   {:db/ident :post/children
+    :db/doc "Entity IDs of child posts, if any"
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
+    :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
    {:db/ident :post/status
     :db/doc "Post status, i.e. whether it is published, in review, drafting, etc."
@@ -153,6 +153,32 @@
     :migration/key :bread.migration/initial}
    {:db/ident :i18n/string
     :db/doc "The value of the string itself, specific to a given path/lang combination."
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+
+   ;; Menus
+   {:db/ident :menu/uuid
+    :db/doc "Universally unique identifier for the menu. Distinct from the Datahike entity ID."
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   ;; TODO rename to context?
+   {:db/ident :menu/locations
+    :db/doc "Locations this menu is being used for."
+    :db/valueType :db.type/keyword
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/many
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu/key
+    :db/doc "Globally unique menu name."
+    :db/valueType :db.type/keyword
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu/content
+    :db/doc "EDN-serialized menu tree."
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}

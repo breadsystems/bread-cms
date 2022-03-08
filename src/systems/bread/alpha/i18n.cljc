@@ -3,8 +3,9 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.query :as query]))
 
 ;; TODO make this fn pluggable
 (defn supported-langs
@@ -59,18 +60,23 @@
   (k (strings app)))
 
 (defn add-i18n-queries [app]
-  ;; TODO query/add
   (-> app
-      (update ::bread/queries conj [:i18n (fn [_]
-                                            (strings app))])
-      (update ::bread/queries conj [:lang (fn [_]
-                                            (lang app))])))
+      (query/add [:i18n (fn [_]
+                          (strings app))])
+      (query/add [:lang (fn [_]
+                          (lang app))])))
+
+(defn path-params [req params _]
+  (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
 (defn plugin
   ([]
    (plugin {}))
   ([opts]
-   (let [fallback (:i18n/fallback opts :en)]
-     (fn [app]
-       (bread/add-hook (bread/set-config app :i18n/fallback-lang fallback)
-         :hook/resolve add-i18n-queries)))))
+   (fn [app]
+     (bread/add-hooks->
+       (bread/set-config app
+                         :i18n/lang-param (:lang-param opts :lang)
+                         :i18n/fallback-lang (:fallback-lang opts :en))
+       (:hook/path-params path-params)
+       (:hook/resolve add-i18n-queries)))))

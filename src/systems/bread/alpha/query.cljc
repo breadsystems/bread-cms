@@ -33,6 +33,13 @@
          (expand-not-found resolver)
          (assoc req ::bread/data))))
 
+(defn add
+  "Add query to the vector of queries to be run."
+  [req query]
+  (update req ::bread/queries
+          (fn [queries]
+            (vec (conj (vec queries) query)))))
+
 (defn plugin []
   (fn [app]
     (bread/add-hook app :hook/expand expand)))

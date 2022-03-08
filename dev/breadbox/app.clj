@@ -44,27 +44,54 @@
               :datastore/initial-txns
               data/initial-content})
 
-(defc home [{:keys [post] :as x}]
+(defn main-nav [menu]
+  [:nav {:class (:my/class menu)}
+   [:ul
+    (map
+      (fn [{:keys [url title children]}]
+        [:li
+         [:a {:href url} title]
+         (when (seq children)
+           [:ul
+            (map
+              (fn [{:keys [url title]}]
+                [:li
+                 [:a {:href url} title]])
+              children)])])
+      (:items menu))]])
+
+(defc home [{:keys [post menus] :as x}]
   {:query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
     [:main
      [:h1 title]
-     [:p (:hello simple)]]))
+     (main-nav (:main-nav menus))
+     [:p (:hello simple)]
+     [:pre (str post)]
+     ;; TODO layouts
+     [:footer
+      (main-nav (:footer-nav menus))]]))
 
-(defc page [{:keys [post i18n]}]
+(defc page [{:keys [post i18n menus] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
+     (main-nav (:main-nav menus))
      [:main
       [:h2 (:hello simple)]
       [:p (:body simple)]
       [:p.goodbye (:goodbye simple)]
-      [:p.flex flex-content]]]))
+      [:p.flex flex-content]]
+     [:pre
+      (str post)]
+     ;; TODO layouts
+     [:footer
+      (main-nav (:footer-nav menus))]]))
 
 (defc static-page [{:keys [post lang]}]
   {:key :post}
@@ -104,18 +131,24 @@
      ["/hello/" hello-handler]
      ["/:lang"
       ["/" {:bread/resolver {:resolver/type :resolver.type/page}
-            :bread/component home}]
+            :bread/component home
+            :name :bread.route/home}]
       ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
                         :bread/component static-page
                         :bread/watch-static {:dir "dev/content"
-                                             :path->req [0 "static" 1]}}]
+                                             :path->req [0 "static" 1]}
+                        :name :bread.route/static}]
       ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
-                  :bread/component page}]]]
+                  :bread/component page
+                  :name :bread.route/page}]]]
     {:conflicts nil}))
 
 (comment
-  (def $res (handler {:uri "/en/qwerty"}))
+  (def $res (handler {:uri "/en/one/two"}))
   (route/params @app (route/match $res))
+  (reitit/match-by-path $router "/en/one/two")
+  (reitit/match-by-name $router :bread.route/page
+                        {:lang :en :slugs "one/two"})
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
@@ -177,6 +210,26 @@
                    (cms/default-app
                      {:datastore $config
                       :router $router
+                      :navigation
+                      {:menus [{:key :main-nav
+                                :type :posts
+                                :post/type :post.type/page}
+                               {:key :footer-nav
+                                :type :location
+                                :location :footer-nav}]
+                       :global-menus? false
+                       :hooks [[:hook/posts-menu
+                                #(update %2 :my/class str " posts-menu")]
+                               [:hook/posts-menu.page
+                                #(update %2 :my/class str " posts-menu--page")]
+                               [:hook/menu
+                                #(assoc %2 :my/class "nav-menu")]
+                               ;; These don't currently run
+                               ;; because global menus are disabled...
+                               [:hook/menu.location.main-nav
+                                #(update %2 :my/class str " main-nav")]
+                               [:hook/menu.key.main
+                                #(update %2 :my/class str " special")]]}
                       :plugins
                       [(debug/plugin)
                        (rum/plugin)
@@ -231,16 +284,51 @@
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
+  (defn map-keyed-by [key-fn coll]
+    (into {} (map (fn [x] [(key-fn x) x]) coll)))
+
   ;; Query posts (with fields) recursively
-  (store/q
-    (store/datastore $req)
-    {:query '{:find [(pull ?e [:db/id :post/slug
-                               :post/fields {:post/fields [:field/key
-                                                           :field/content]}
-                               :post/parent {:post/parent ...}])]
-              :where [[?e :post/slug ?slug]
-                      [?e :post/status :post.status/published]]}
-     :args [(store/datastore $req)]})
+  (->> (store/q
+         (store/datastore $req)
+         {:query '{:find [(pull ?e [:db/id :post/slug
+                                    {:post/fields [:field/key :field/content]}
+                                    {:post/parent ...}])]
+                   :where [[?e :post/status :post.status/published]
+                           [?e :post/type :post.type/page]]}
+          :args [(store/datastore $req)]})
+      (map first))
+
+  ;; test query for getting all fields in English
+  (store/q (store/datastore $req)
+           '[:find ?p (pull ?e [:field/key :field/content])
+             :where
+             [?e :field/lang :en]
+             [?e :field/key :title]
+             [?p :post/fields ?e]
+             (or [51 :post/fields ?e]
+                 [48 :post/fields ?e]
+                 ;; etc.
+                 )])
+
+  (defn with-fields [req post]
+    (let [db (store/datastore req)
+          query
+          {:find '[(pull ?e [:field/key :field/content])]
+           :where ['[?e :field/lang :en]
+                   [(:db/id post) :post/fields '?e]]}]
+      (assoc post :post/fields (store/q db query))))
+
+
+  ;; Query posts and their ancestors recursively, then get the title for each
+  (->> (store/q
+         (store/datastore $req)
+         {:query '{:find [(pull ?e [:db/id :post/slug {:post/parent ...}])]
+                   :where [[?e :post/status :post.status/published]
+                           [?e :post/type :post.type/page]]}
+          :args [(store/datastore $req)]})
+       (map (comp post/compact-fields
+                  (partial with-fields $req)
+                  first)))
 
   (store/q
     (store/datastore $req)

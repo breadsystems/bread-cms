@@ -1,9 +1,16 @@
 (ns systems.bread.alpha.route
   (:require
-    [clojure.spec.alpha :as s]
+    [clojure.string :as string]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
+
+;; TODO opts
+(defn path [req path route-name]
+  (let [path (if (sequential? path) (string/join "/" path) path)
+        ;; TODO get :slugs from opts
+        params (bread/hook->> req :hook/path-params {:slugs path} route-name)]
+    (bread/hook->> req :hook/route-path path route-name params)))
 
 (defn match [req]
   (bread/hook->> req :hook/match-route))
@@ -55,6 +62,9 @@
 (defn plugin [router]
   (fn [app]
     (bread/add-hooks-> app
+      (:hook/route-path
+        (fn [req _ route-name params]
+          (bread/path router route-name params)))
       (:hook/match-route
         (fn [req _]
           (bread/match router req)))

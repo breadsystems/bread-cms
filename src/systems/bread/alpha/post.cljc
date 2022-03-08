@@ -49,9 +49,9 @@
                             [(list
                                'not-join
                                [descendant-sym]
-                               [descendant-sym :post/parent '?root-ancestor])]))]
+                               ['?root-ancestor :post/children descendant-sym])]))]
               (recur
-                (concat query where [[descendant-sym :post/parent parent-sym]])
+                (concat query where [[parent-sym :post/children descendant-sym]])
                 [inputs (butlast path)]
                 parent-sym ;; the new descendant-sym
                 parent-syms
@@ -60,7 +60,8 @@
 (comment
   (path->constraints ["grandparent" "parent" "child"])
   (path->constraints ["parent" "child"])
-  (path->constraints ["parent" "child"] )
+
+  ;;
   )
 
 (defn- ancestralize [query ancestry]
