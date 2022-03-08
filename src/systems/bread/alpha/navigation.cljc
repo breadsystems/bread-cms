@@ -69,14 +69,16 @@
           {} menus))
 
 (defn global-menus [req]
-  (->> (store/q
-         (store/datastore req)
-         '{:find [(pull ?e [:menu/locations
-                            :menu/key
-                            :menu/content])]
-           :where [[?e :menu/locations _]]})
-       (map (comp (partial format-menu req) parse-content first))
-       by-location))
+  (let [query
+        (bread/hook->> req :hook/global-menu-query
+                       '{:find [(pull ?e [:menu/locations
+                                          :menu/key
+                                          :menu/content])]
+                         :where [[?e :menu/locations _]]})]
+    (->> query
+         (store/q (store/datastore req))
+         (map (comp (partial format-menu req) parse-content first))
+         by-location)))
 
 (defn posts-menu
   ([req]
