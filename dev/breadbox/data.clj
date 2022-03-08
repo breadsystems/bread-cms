@@ -69,14 +69,14 @@
                     {:field/key :simple
                      :field/lang :en
                      :field/content
-                     (prn-str {:hello "Hello"
+                     (prn-str {:hello "Greetings!"
                                :body "Lorem ipsum dolor sit amet"
                                :goodbye "Goodbye from Parent!"
                                :img-url "https://via.placeholder.com/300"})}
                     {:field/key :simple
                      :field/lang :fr
                      :field/content
-                     (prn-str {:hello "Bonjour"
+                     (prn-str {:hello "Ca va?"
                                :body "Lorem ipsum en francais"
                                :goodbye "Salut de la page parent"
                                :img-url "https://via.placeholder.com/300"})}
@@ -84,16 +84,16 @@
    #:menu{:locations [:main-nav]
           :key :main
           ;; TODO use UUIDs to accomplish this :P
-          :menu/content (prn-str [{:db/id 52     ;; parent
+          :menu/content (prn-str [{:db/id 59     ;; parent
                                    :children
-                                   [{:db/id 55}]} ;; child
+                                   [{:db/id 52}]} ;; child
                                   {:db/id 47}    ;; home
                                   ])}
    #:menu{:locations [:footer-nav]
           :key :footer
           :menu/content (prn-str [{:db/id 47}
                                   {:db/id 52}
-                                  {:db/id 55}])}
+                                  {:db/id 59}])}
    #:i18n{:lang :en
           :key :not-found
           :string "404 Not Found"}

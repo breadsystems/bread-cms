@@ -24,7 +24,7 @@
                                [id :post/fields '?e]))
                         (apply list 'or))]
     {:find '[(pull ?p [:db/id :post/slug :post/status
-                       {:post/parent ...}])
+                       {:post/children ...}])
              (pull ?e [:field/content])]
      :where [['?e :field/lang lang]
              ['?e :field/key :title]
@@ -85,43 +85,25 @@
             (store/datastore req)
             {:find [pull]
              :where [['?e :post/type t]]})
-          ;; Invert structure so that ancestors are at the top of the tree.
-          (map (comp (juxt :db/id identity) first))
-          (into {})))))
-
-(defn posts-menu
-  ([req]
-   (posts-menu req {}))
-  ([req opts]
-   (let [t (:post/type opts :post.type/page)]
-     (->> (store/q
-            (store/datastore req)
-            {:find '[?e ?slug ?parent]
-             :where [['?e :post/type t]
-                     ['?e :post/slug '?slug]
-                     ['(get-else $ ?e :post/parent false) '?parent]]})
-          ;; TODO generalize this to any level of nesting...
-          (reduce (fn [tree [id slug parent]]
-                    (let [post {:db/id id
-                                :post/slug slug}]
-                      (if parent
-                        (update tree parent #(update (or % {:db/id parent
-                                                            :children []})
-                                                     :children conj post))
-                        (update tree id merge {:db/id id
-                                               :post post}))))
-                  {})
-          (mapv val)))))
+          ))))
 
 (comment
-  (posts-menu* $req)
+  (posts-menu $req)
+  (invert-tree (posts-menu $req))
+  (invert-tree $tree)
+
+  (store/q
+    (store/datastore $req)
+    '{:find [?e ?slug]
+      :where [[?e :post/type :post.type/page]
+              [?e :post/slug ?slug]]})
+
   (global-menus $req)
   (format-menu $req {:menu/content [{:db/id 47}
-                                    {:db/id 52
-                                     :children [{:db/id 55}]}]}))
+                                    {:db/id 59
+                                     :children [{:db/id 52}]}]}))
 
 (defn query-menus [req]
-  #_
   (def $req req)
   (query/add req [:menus (fn [_]
                            (global-menus req))]))
