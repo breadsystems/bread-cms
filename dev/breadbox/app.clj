@@ -21,7 +21,6 @@
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.static-backend :as static-be]
     [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
@@ -211,6 +210,26 @@
                    (cms/default-app
                      {:datastore $config
                       :router $router
+                      :navigation
+                      {:menus [{:key :main-nav
+                                :type :posts
+                                :post/type :post.type/page}
+                               {:key :footer-nav
+                                :type :location
+                                :location :footer-nav}]
+                       :global-menus? false
+                       :hooks [[:hook/posts-menu
+                                #(update %2 :my/class str " posts-menu")]
+                               [:hook/posts-menu.page
+                                #(update %2 :my/class str " posts-menu--page")]
+                               [:hook/menu
+                                #(assoc %2 :my/class "nav-menu")]
+                               ;; These don't currently run
+                               ;; because global menus are disabled...
+                               [:hook/menu.location.main-nav
+                                #(update %2 :my/class str " main-nav")]
+                               [:hook/menu.key.main
+                                #(update %2 :my/class str " special")]]}
                       :plugins
                       [(debug/plugin)
                        (rum/plugin)
@@ -238,27 +257,6 @@
                            (fn [_]
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
-
-                       (navigation/plugin
-                         {:menus [{:key :main-nav
-                                   :type :posts
-                                   :post/type :post.type/page}
-                                  {:key :footer-nav
-                                   :type :location
-                                   :location :footer-nav}]
-                          :global-menus? false
-                          :hooks [[:hook/posts-menu
-                                   #(update %2 :my/class str " posts-menu")]
-                                  [:hook/posts-menu.page
-                                   #(update %2 :my/class str " posts-menu--page")]
-                                  [:hook/menu
-                                   #(assoc %2 :my/class "nav-menu")]
-                                  ;; These don't currently run
-                                  ;; because global menus are disabled...
-                                  [:hook/menu.location.main-nav
-                                   #(update %2 :my/class str " main-nav")]
-                                  [:hook/menu.key.main
-                                   #(update %2 :my/class str " special")]]})
 
                        ;; TODO layouts
                        ;; TODO themes
