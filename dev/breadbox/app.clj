@@ -241,6 +241,22 @@
 
                        (navigation/plugin)
 
+                       (fn [app]
+                         (bread/add-hooks->
+                           app
+                           (:hook/menu
+                             (fn [_ menu]
+                               (prn 'menu (:key menu))
+                               menu))
+                           (:hook/menu.location.footer-nav
+                             (fn [_ menu]
+                               (prn 'loc (:key menu))
+                               menu))
+                           (:hook/menu.key.footer
+                             (fn [_ menu]
+                               (prn 'key (:key menu))
+                               menu))))
+
                        ;; TODO layouts
                        ;; TODO themes
 

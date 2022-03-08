@@ -68,17 +68,31 @@
             (apply assoc by-loc (interleave locs (repeat menu))))
           {} menus))
 
+(defn- location-hook [loc]
+  (keyword (str "hook/menu.location." (name loc))))
+
+(defn- key-hook [k]
+  (keyword (str "hook/menu.key." (name k))))
+
 (defn global-menus [req]
-  (let [query
-        (bread/hook->> req :hook/global-menu-query
-                       '{:find [(pull ?e [:menu/locations
-                                          :menu/key
-                                          :menu/content])]
-                         :where [[?e :menu/locations _]]})]
+  (let [query '{:find [(pull ?e [:menu/locations
+                                 :menu/key
+                                 :menu/content])]
+                :where [[?e :menu/locations _]]}]
     (->> query
+         (bread/hook->> req :hook/global-menu-query)
          (store/q (store/datastore req))
          (map (comp (partial format-menu req) parse-content first))
-         by-location)))
+         by-location
+         (reduce (fn [menus [loc menu]]
+                   (->> menu
+                        ;; Run general menu hook...
+                        (bread/hook->> req :hook/menu)
+                        ;; ...then location-specific...
+                        (bread/hook->> req (location-hook loc))
+                        ;; ...then by key.
+                        (bread/hook->> req (key-hook (:key menu)))
+                        (assoc menus loc))) {}))))
 
 (defn posts-menu
   ([req]
@@ -104,7 +118,8 @@
      {:items items})))
 
 (comment
-  (format-menu $req {:menu/content [{:db/id 47}
+  (format-menu $req {:menu/locations [:somewhere]
+                     :menu/content [{:db/id 47}
                                     {:db/id 59
                                      :children [{:db/id 52}]}]})
   (posts-menu $req)
