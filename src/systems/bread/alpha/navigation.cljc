@@ -80,7 +80,7 @@
                                  :menu/content])]
                 :where [[?e :menu/locations _]]}]
     (->> query
-         (bread/hook->> req :hook/global-menu-query)
+         (bread/hook->> req :hook/global-menus-query)
          (store/q (store/datastore req))
          (map (comp #(assoc % :type :location)
                     (partial format-menu req)
@@ -140,15 +140,34 @@
   (:main-nav (global-menus $req)))
 
 (defn query-menus [req]
+  #_
   (def $req req)
   (query/add req [:menus (fn [_]
                            (global-menus req))]))
+
+(defmulti add-menu (fn [_ opts]
+                     (:type opts)))
+
+(defmethod add-menu :posts [req opts]
+  (query/add req [:menus (fn [{:keys [menus]}]
+                           (assoc menus
+                                  (:key opts) (posts-menu req opts)))]))
 
 (defn plugin
   ([]
    (plugin {}))
   ([opts]
-   (let [hooks (merge (:hooks opts) {:hook/resolve query-menus})]
+   (let [{:keys [hooks menus global-menus?]} opts
+         ;; Query for global menus by default; support explicit opt-out.
+         global-menus? (not (false? global-menus?))
+         ;; Any additional menus to be added...
+         menu-hooks (map (fn [opts]
+                           [:hook/resolve #(add-menu % opts)])
+                         menus)
+         hooks (apply conj hooks
+                      (when global-menus?
+                        [:hook/resolve query-menus])
+                      menu-hooks)]
      (fn [app]
        (reduce (fn [app [hook callback]]
                  (bread/add-hook app hook callback))

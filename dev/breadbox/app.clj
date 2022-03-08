@@ -240,12 +240,26 @@
                                              {:something :bad})))))
 
                        (navigation/plugin
-                         {:hooks {:hook/menu
-                                  #(assoc %2 :my/class "nav-menu")
-                                  :hook/menu.location.main-nav
-                                  #(update %2 :my/class str " main-nav")
-                                  :hook/menu.key.main
-                                  #(update %2 :my/class str " special")}})
+                         {:menus [{:key :main-nav
+                                   :type :posts
+                                   :post/type :post.type/page}
+                                  #_ ;; TODO add support for :location
+                                  {:key :footer-nav
+                                   :type :location
+                                   :location :footer-nav}]
+                          :global-menus? false
+                          :hooks [[:hook/posts-menu
+                                   #(update %2 :my/class str " posts-menu")]
+                                  [:hook/posts-menu.page
+                                   #(update %2 :my/class str " posts-menu--page")]
+                                  [:hook/menu
+                                   #(assoc %2 :my/class "nav-menu")]
+                                  ;; These don't currently run
+                                  ;; because global menus are disabled...
+                                  [:hook/menu.location.main-nav
+                                   #(update %2 :my/class str " main-nav")]
+                                  [:hook/menu.key.main
+                                   #(update %2 :my/class str " special")]]})
 
                        ;; TODO layouts
                        ;; TODO themes
