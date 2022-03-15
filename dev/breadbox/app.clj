@@ -147,8 +147,9 @@
   (def $res (handler {:uri "/en/one/two"}))
   (route/params @app (route/match $res))
   (reitit/match-by-path $router "/en/one/two")
-  (reitit/match-by-name $router :bread.route/page
-                        {:lang :en :slugs "one/two"})
+  (reitit/match-by-name $router :bread.route/page {:lang :en
+                                                   :slugs "one/two"})
+  (route/path $res "one/two" :bread.route/page)
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
