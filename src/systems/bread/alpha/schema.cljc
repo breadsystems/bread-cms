@@ -88,6 +88,7 @@
     :migration/key :bread.migration/initial}
 
    ;; Post taxons
+   ;; TODO ARE TAXONS JUST POSTS????
    {:db/ident :taxon/taxonomy
     :db/doc "The hierarchy of taxons in which this taxon lives, e.g. tags, categories, etc. Analogous to WordPress taxonomies."
     :db/valueType :db.type/keyword
@@ -105,7 +106,6 @@
     :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO i18n for taxon name and description -> :taxon/fields
    {:db/ident :taxon/name
     :db/doc "The human-readable name of the taxon"
     :db/valueType :db.type/string
@@ -164,7 +164,6 @@
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO rename to context?
    {:db/ident :menu/locations
     :db/doc "Locations this menu is being used for."
     :db/valueType :db.type/keyword
@@ -178,6 +177,7 @@
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
 
+   ;; Menu Items
    {:db/ident :menu/items
     :db/doc "Menu items."
     :db/valueType :db.type/ref
