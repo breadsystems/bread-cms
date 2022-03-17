@@ -110,7 +110,7 @@
                                    {:menu.item/children ...}]}]) .]
                :where [['?e :menu/locations location]]}
         menu (as-> query $
-               (bread/hook->> req :hook/location-menu-query $)
+               (bread/hook->> req :hook/location-menu-query $ location)
                (store/q (store/datastore req) $)
                (format-menu req $)
                (assoc $ :type :location))]
