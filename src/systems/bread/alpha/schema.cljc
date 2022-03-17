@@ -183,6 +183,29 @@
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
 
+   ;; TODO
+   #_#_#_#_
+   {:db/ident :menu/items
+    :db/doc "Menu items."
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu.item/id
+    :db/doc "DB entity this item references (if any)."
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu.item/order
+    :db/doc "Ordinal number in which this item appears in the menu."
+    :db/valueType :db.type/number
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :menu.item/children
+    :db/doc "Any child items of this item."
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :migration/key :bread.migration/initial}
+
    ;; Comments
    {:db/ident :comment/uuid
     :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."

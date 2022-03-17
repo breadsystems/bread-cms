@@ -56,7 +56,6 @@
                      :taxon/name "My Cat"
                      :taxon/taxonomy :taxon.taxonomy/category}}}
    #:post{:type :post.type/page
-          :uuid (UUID/randomUUID)
           :slug "parent-page"
           :children [[:post/uuid child-uuid]]
           :status :post.status/published
@@ -79,8 +78,7 @@
                      (prn-str {:hello "Ca va?"
                                :body "Lorem ipsum en francais"
                                :goodbye "Salut de la page parent"
-                               :img-url "https://via.placeholder.com/300"})}
-                    }}
+                               :img-url "https://via.placeholder.com/300"})}}}
    #:menu{:locations [:main-nav]
           :key :main
           ;; TODO use UUIDs to accomplish this :P
