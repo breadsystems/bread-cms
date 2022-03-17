@@ -189,7 +189,7 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :migration/key :bread.migration/initial}
-   {:db/ident :menu.item/id
+   {:db/ident :menu.item/entity
     :db/doc "DB entity this item references (if any)."
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one

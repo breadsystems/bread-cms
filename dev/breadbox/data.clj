@@ -77,15 +77,15 @@
                               :goodbye "Salut de la page parent"
                               :img-url "https://via.placeholder.com/300"})}}}
    {:db/id "menu.item.home"
-    :menu.item/id "page.home"
+    :menu.item/entity "page.home"
     :menu.item/order 0
     :menu.item/children []}
    {:db/id "menu.item.parent"
-    :menu.item/id "page.parent"
+    :menu.item/entity "page.parent"
     :menu.item/order 0
     :menu.item/children ["menu.item.child"]}
    {:db/id "menu.item.child"
-    :menu.item/id "page.child"
+    :menu.item/entity "page.child"
     :menu.item/order 0
     :menu.item/children []}
    #:menu{:locations [:main-nav]
