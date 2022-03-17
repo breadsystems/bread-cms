@@ -125,6 +125,15 @@
 (defn- post-type-menu-hook [t]
   (keyword (str "hook/posts-menu." (name t))))
 
+(defn- walk-posts->items
+  "Walk posts tree and make it look like menu items, so that walk-items
+  knows how to parse it."
+  [posts]
+  (map (fn [{children :post/children :as post}]
+         {:menu.item/entity post
+          :menu.item/children (walk-posts->items children)})
+       posts))
+
 (defn posts-menu
   ([req]
    (posts-menu req {}))
@@ -144,10 +153,8 @@
          (->> query
               (bread/hook->> req :hook/posts-menu-query)
               (store/q (store/datastore req))
-              ;; Ensure :children key for expand-post-ids.
-              (map (comp (fn [{:post/keys [children] :as post}]
-                           (assoc post :menu.item/children children))
-                         first))
+              (map first)
+              walk-posts->items
               (expand-post-ids req))]
      (->> {:type :posts
            :post/type t
