@@ -177,12 +177,6 @@
     :db/unique :db.unique/value
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   #_
-   {:db/ident :menu/content
-    :db/doc "EDN-serialized menu tree."
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
 
    {:db/ident :menu/items
     :db/doc "Menu items."

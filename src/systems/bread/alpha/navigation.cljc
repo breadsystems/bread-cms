@@ -34,13 +34,14 @@
 
 (defn- walk-items [req by-id items ancestry]
   (mapv (fn [{{id :db/id} :menu.item/entity
-              subtree :menu.item/children}]
+              children :menu.item/children}]
           (let [{{slug :post/slug :as post} :post :as item} (by-id id)
+                subtree (sort-by :menu.item/order children)
                 ancestry (conj ancestry slug)]
             (assoc item
                    :url (route/path req ancestry :bread.route/page)
                    :children (walk-items req by-id subtree ancestry))))
-        items))
+        (sort-by :menu.item/order items)))
 
 (defn expand-post-ids [req tree]
   (let [results (some->> tree
