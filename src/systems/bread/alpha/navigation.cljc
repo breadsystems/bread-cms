@@ -139,6 +139,8 @@
    (posts-menu req {}))
   ([req opts]
    (let [t (:post/type opts :post.type/page)
+         status* (bread/hook-> req :hook/post.status :post.status/published)
+         status (:post/status opts status*)
          max-recur* (bread/hook-> req :hook/posts-menu-recursion 3)
          max-recur (:recursion-limit opts max-recur*)
          posts-pull (list 'pull '?e [:db/id
@@ -146,6 +148,7 @@
          query
          {:find [posts-pull]
           :where [['?e :post/type t]
+                  ['?e :post/status status]
                   ;; Only include top-level posts. Descendants will get
                   ;; picked up by the recursive :post/children query.
                   '(not-join [?e] [?parent :post/children ?e])]}
