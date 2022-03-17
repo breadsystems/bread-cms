@@ -134,6 +134,13 @@
           :menu.item/children (walk-posts->items children)})
        posts))
 
+;; TODO move this somewhere more universal
+(defn- or-clause
+  ([field coll]
+   (or-clause '?e field coll))
+  ([sym field coll]
+   (apply list 'or (map (fn [x] [sym field x]) coll))))
+
 (defn posts-menu
   ([req]
    (posts-menu req {}))
@@ -141,6 +148,7 @@
    (let [t (:post/type opts :post.type/page)
          status* (bread/hook-> req :hook/post.status :post.status/published)
          status (:post/status opts status*)
+         statuses (if (coll? status) status #{status})
          max-recur* (bread/hook-> req :hook/posts-menu-recursion 3)
          max-recur (:recursion-limit opts max-recur*)
          posts-pull (list 'pull '?e [:db/id
@@ -148,7 +156,7 @@
          query
          {:find [posts-pull]
           :where [['?e :post/type t]
-                  ['?e :post/status status]
+                  (or-clause :post/status statuses)
                   ;; Only include top-level posts. Descendants will get
                   ;; picked up by the recursive :post/children query.
                   '(not-join [?e] [?parent :post/children ?e])]}
