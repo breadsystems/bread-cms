@@ -9,43 +9,43 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn- collect-post-ids [tree]
+(defn- collect-item-ids [tree]
   (reduce (fn [ids node]
-            (apply conj ids (:db/id node)
-                   (collect-post-ids (:children node))))
+            (apply conj ids (:db/id (:menu.item/entity node))
+                   (collect-item-ids (:menu.item/children node))))
           #{}
           tree))
 
 (defn- post-items-query [req tree]
   (let [lang (i18n/lang req)
         ids-clause (->> tree
-                        collect-post-ids
+                        collect-item-ids
                         (filter some?)
                         (map (fn [id]
-                               [id :post/fields '?e]))
-                        (apply list 'or))]
-    {:find '[(pull ?p [:db/id :post/slug :post/status
-                       {:post/children ...}])
-             (pull ?e [:field/content])]
-     :where [['?e :field/lang lang]
-             ['?e :field/key :title]
-             ['?p :post/fields '?e]
-             ids-clause]}))
+                               [id :post/fields '?e])))]
+    (when (seq ids-clause)
+      {:find '[(pull ?p [:db/id :post/slug :post/status
+                         {:post/children ...}])
+               (pull ?e [:field/content])]
+       :where [['?e :field/lang lang]
+               ['?e :field/key :title]
+               ['?p :post/fields '?e]
+               (apply list 'or ids-clause)]})))
 
 (defn- walk-items [req by-id items ancestry]
-  (mapv (fn [{id :db/id subtree :children}]
+  (mapv (fn [{{id :db/id} :menu.item/entity
+              subtree :menu.item/children}]
           (let [{{slug :post/slug :as post} :post :as item} (by-id id)
-                ancestry (conj (or ancestry []) slug)]
+                ancestry (conj ancestry slug)]
             (assoc item
                    :url (route/path req ancestry :bread.route/page)
                    :children (walk-items req by-id subtree ancestry))))
         items))
 
-;; TODO figure out the best way to compute URLs now that we can't just walk
-;; up the ancestry...
 (defn expand-post-ids [req tree]
-  (let [results (store/q (store/datastore req)
-                         (post-items-query req tree))
+  (let [results (some->> tree
+                         (post-items-query req)
+                         (store/q (store/datastore req)))
         by-id (->> results
                    (map (fn [[{id :db/id :as post}
                               {title :field/content}]]
@@ -53,9 +53,9 @@
                            {:post post
                             :title (edn/read-string title)}]))
                    (into {}))]
-    (walk-items req by-id tree nil)))
+    (walk-items req by-id tree [])))
 
-(defn- format-menu [req {k :menu/key locs :menu/locations tree :menu/content}]
+(defn- format-menu [req {k :menu/key locs :menu/locations tree :menu/items}]
   {:key k
    :locations locs
    :items (expand-post-ids req tree)})
@@ -77,14 +77,17 @@
 (defn global-menus [req]
   (let [query '{:find [(pull ?e [:menu/locations
                                  :menu/key
-                                 :menu/content])]
+                                 {:menu/items
+                                  [{:menu.item/entity [:db/id]}
+                                   :menu.item/order
+                                   {:menu.item/children ...}]}])]
                 :where [[?e :menu/locations _]]}]
     (->> query
          (bread/hook->> req :hook/global-menus-query)
          (store/q (store/datastore req))
          (map (comp #(assoc % :type :location)
                     (partial format-menu req)
-                    parse-content first))
+                    first))
          by-location
          (reduce (fn [menus [loc menu]]
                    (->> menu
@@ -96,15 +99,18 @@
                         (bread/hook->> req (key-hook (:key menu)))
                         (assoc menus loc))) {}))))
 
+;; TODO opts
 (defn location-menu [req location]
   (let [query {:find '[(pull ?e [:menu/locations
                                  :menu/key
-                                 :menu/content]) .]
+                                 {:menu/items
+                                  [{:menu.item/entity [:db/id]}
+                                   :menu.item/order
+                                   {:menu.item/children ...}]}]) .]
                :where [['?e :menu/locations location]]}
         menu (as-> query $
                (bread/hook->> req :hook/location-menu-query $)
                (store/q (store/datastore req) $)
-               (parse-content $)
                (format-menu req $)
                (assoc $ :type :location))]
     (->> menu
@@ -138,7 +144,9 @@
               (bread/hook->> req :hook/posts-menu-query)
               (store/q (store/datastore req))
               ;; Ensure :children key for expand-post-ids.
-              (map (comp #(assoc % :children (:post/children %)) first))
+              (map (comp (fn [{:post/keys [children] :as post}]
+                           (assoc post :menu.item/children children))
+                         first))
               (expand-post-ids req))]
      (->> {:type :posts
            :post/type t
@@ -151,18 +159,13 @@
           (bread/hook->> req (post-type-menu-hook t))))))
 
 (comment
-  (format-menu $req {:menu/locations [:somewhere]
-                     :menu/content [{:db/id 47}
-                                    {:db/id 59
-                                     :children [{:db/id 52}]}]})
+  (def $req (assoc @breadbox.app/app :uri "/en/"))
   (posts-menu $req)
   (location-menu $req :footer-nav)
   (location-menu $req :main-nav)
   (:main-nav (global-menus $req)))
 
 (defn query-menus [req]
-  #_
-  (def $req req)
   (query/add req [:menus (fn [_]
                            (global-menus req))]))
 
