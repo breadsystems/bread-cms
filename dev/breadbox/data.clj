@@ -76,9 +76,22 @@
                               :body "Lorem ipsum en francais"
                               :goodbye "Salut de la page parent"
                               :img-url "https://via.placeholder.com/300"})}}}
+   {:db/id "menu.item.home"
+    :menu.item/id "page.home"
+    :menu.item/order 0
+    :menu.item/children []}
+   {:db/id "menu.item.parent"
+    :menu.item/id "page.parent"
+    :menu.item/order 0
+    :menu.item/children ["menu.item.child"]}
+   {:db/id "menu.item.child"
+    :menu.item/id "page.child"
+    :menu.item/order 0
+    :menu.item/children []}
    #:menu{:locations [:main-nav]
           :key :main
-          ;; TODO use UUIDs to accomplish this :P
+          :items ["menu.item.home" "menu.item.parent"]
+          #_#_
           :menu/content (prn-str [{:db/id 59     ;; parent
                                    :children
                                    [{:db/id 52}]} ;; child
@@ -86,6 +99,8 @@
                                   ])}
    #:menu{:locations [:footer-nav]
           :key :footer
+          :items ["menu.item.home" "menu.item.parent"]
+          #_#_
           :menu/content (prn-str [{:db/id 47}
                                   {:db/id 52}
                                   {:db/id 59}])}

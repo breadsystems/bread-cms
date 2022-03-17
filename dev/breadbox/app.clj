@@ -266,7 +266,8 @@
                        (static-fe/plugin)]})))
   :stop (reset! app nil))
 
-;; TODO themes
+(defstate handler
+  :start (bread/handler @app))
 
 (comment
 
@@ -353,8 +354,6 @@
 
   ;;
   )
-
-(def handler (bread/handler @app))
 
 (defonce stop-http (atom nil))
 
