@@ -83,30 +83,32 @@
       :menu.item/order
       {:menu.item/children max-recur}]}])
 
-(defn global-menus [req]
-  (let [query '{:find [(pull ?e [:menu/locations
-                                 :menu/key
-                                 {:menu/items
-                                  [{:menu.item/entity [:db/id]}
-                                   :menu.item/order
-                                   {:menu.item/children ...}]}])]
-                :where [[?e :menu/locations _]]}]
-    (->> query
-         (bread/hook->> req :hook/global-menus-query)
-         (store/q (store/datastore req))
-         (map (comp #(assoc % :type :location)
-                    (partial format-menu req)
-                    first))
-         by-location
-         (reduce (fn [menus [loc menu]]
-                   (->> menu
-                        ;; Run general menu hook...
-                        (bread/hook->> req :hook/menu)
-                        ;; ...then location-specific...
-                        (bread/hook->> req (location-hook loc))
-                        ;; ...then by key.
-                        (bread/hook->> req (key-hook (:key menu)))
-                        (assoc menus loc))) {}))))
+(defn global-menus
+  ([req]
+   (global-menus req {}))
+  ([req opts]
+   (let [max-recur (if-let [max-recur (:recursion-limit opts)]
+                     max-recur
+                     (bread/hook->> req :hook/global-menus-recursion 3))
+         query {:find [(list 'pull '?e (pull-spec {:recursion-limit
+                                                   max-recur}))]
+                :where '[[?e :menu/locations _]]}]
+     (->> query
+          (bread/hook->> req :hook/global-menus-query)
+          (store/q (store/datastore req))
+          (map (comp #(assoc % :type :location)
+                     (partial format-menu req)
+                     first))
+          by-location
+          (reduce (fn [menus [loc menu]]
+                    (->> menu
+                         ;; Run general menu hook...
+                         (bread/hook->> req :hook/menu)
+                         ;; ...then location-specific...
+                         (bread/hook->> req (location-hook loc))
+                         ;; ...then by key.
+                         (bread/hook->> req (key-hook (:key menu)))
+                         (assoc menus loc))) {})))))
 
 (defn location-menu
   ([req location]
@@ -195,9 +197,10 @@
   (location-menu $req :main-nav)
   (:main-nav (global-menus $req)))
 
-(defn query-menus [req]
-  (query/add req [:menus (fn [_]
-                           (global-menus req))]))
+(defn- adder [f opts]
+  (fn [req]
+    (query/add req [:menus (fn [{:keys [menus]}]
+                             (merge menus (f req opts)))])))
 
 (defmulti add-menu (fn [_ opts]
                      (:type opts)))
@@ -214,16 +217,14 @@
   ([]
    (plugin {}))
   ([opts]
-   (let [{:keys [hooks menus global-menus?]} opts
-         ;; Query for global menus by default; support explicit opt-out.
-         global-menus? (not (false? global-menus?))
+   (let [{:keys [hooks menus] global-menu-opts :global-menus} opts
          ;; Any additional menus to be added...
          menu-hooks (map (fn [opts]
                            [:hook/resolve #(add-menu % opts)])
                          menus)
          hooks (apply conj hooks
-                      (when global-menus?
-                        [:hook/resolve query-menus])
+                      (when (not (false? global-menu-opts))
+                        [:hook/resolve (adder global-menus global-menu-opts)])
                       menu-hooks)]
      (fn [app]
        (reduce (fn [app [hook callback]]
