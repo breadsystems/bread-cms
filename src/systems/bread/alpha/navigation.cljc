@@ -75,6 +75,14 @@
 (defn- key-hook [k]
   (keyword (str "hook/menu.key." (name k))))
 
+(defn- pull-spec [{max-recur :recursion-limit}]
+  [:menu/locations
+   :menu/key
+   {:menu/items
+    [{:menu.item/entity [:db/id]}
+      :menu.item/order
+      {:menu.item/children max-recur}]}])
+
 (defn global-menus [req]
   (let [query '{:find [(pull ?e [:menu/locations
                                  :menu/key
@@ -100,27 +108,30 @@
                         (bread/hook->> req (key-hook (:key menu)))
                         (assoc menus loc))) {}))))
 
-;; TODO opts
-(defn location-menu [req location]
-  (let [query {:find '[(pull ?e [:menu/locations
-                                 :menu/key
-                                 {:menu/items
-                                  [{:menu.item/entity [:db/id]}
-                                   :menu.item/order
-                                   {:menu.item/children ...}]}]) .]
-               :where [['?e :menu/locations location]]}
-        menu (as-> query $
-               (bread/hook->> req :hook/location-menu-query $ location)
-               (store/q (store/datastore req) $)
-               (format-menu req $)
-               (assoc $ :type :location))]
-    (->> menu
-         ;; Run general menu hook...
-         (bread/hook->> req :hook/menu)
-         ;; ...then location-specific...
-         (bread/hook->> req (location-hook location))
-         ;; ...then by key.
-         (bread/hook->> req (key-hook (:key menu))))))
+(defn location-menu
+  ([req location]
+   (location-menu req location {}))
+  ([req location opts]
+   (let [max-recur (if-let [max-recur (:recursion-limit opts)]
+                     max-recur
+                     (bread/hook->> req :hook/location-menu-recursion
+                                    3 location))
+         query {:find [(list 'pull '?e (pull-spec {:recursion-limit
+                                                   max-recur}))
+                       '.]
+                :where [['?e :menu/locations location]]}
+         menu (as-> query $
+                (bread/hook->> req :hook/location-menu-query $ location)
+                (store/q (store/datastore req) $)
+                (format-menu req $)
+                (assoc $ :type :location))]
+     (->> menu
+          ;; Run general menu hook...
+          (bread/hook->> req :hook/menu)
+          ;; ...then location-specific...
+          (bread/hook->> req (location-hook location))
+          ;; ...then by key.
+          (bread/hook->> req (key-hook (:key menu)))))))
 
 (defn- post-type-menu-hook [t]
   (keyword (str "hook/posts-menu." (name t))))
@@ -195,9 +206,9 @@
   (query/add req [:menus (fn [{:keys [menus]}]
                            (assoc menus k (posts-menu req opts)))]))
 
-(defmethod add-menu :location [req {k :key location :location}]
+(defmethod add-menu :location [req {k :key location :location opts :opts}]
   (query/add req [:menus (fn [{:keys [menus]}]
-                           (assoc menus k (location-menu req location)))]))
+                           (assoc menus k (location-menu req location opts)))]))
 
 (defn plugin
   ([]
