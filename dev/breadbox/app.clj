@@ -269,6 +269,8 @@
 (defstate handler
   :start (bread/handler @app))
 
+(defonce stop-http (atom nil))
+
 (comment
 
   (do
@@ -276,62 +278,18 @@
     (handler (merge @app {:uri "/en/parent-page"}))
     (slurp "resources/public/en/parent-page/index.html"))
 
+  ;; Test out the whole Bread request lifecycle!
   (def $req (merge {:uri "/en/"} @app))
   (route/params $req (route/match $req))
   (bread/match $router $req)
-  (-> $req route/dispatch ::bread/resolver)
-  (-> $req route/dispatch resolver/resolve-queries ::bread/queries)
-  (-> $req route/dispatch resolver/resolve-queries query/expand ::bread/data)
+  (->> $req (bread/dispatch $router) ::bread/resolver)
+  (->> $req (bread/dispatch $router) resolver/resolve-queries ::bread/queries)
+  (->> $req (bread/dispatch $router) resolver/resolve-queries query/expand ::bread/data)
 
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
-  (defn map-keyed-by [key-fn coll]
-    (into {} (map (fn [x] [(key-fn x) x]) coll)))
-
-  ;; Query posts (with fields) recursively
-  (->> (store/q
-         (store/datastore $req)
-         {:query '{:find [(pull ?e [:db/id :post/slug
-                                    {:post/fields [:field/key :field/content]}
-                                    {:post/parent ...}])]
-                   :where [[?e :post/status :post.status/published]
-                           [?e :post/type :post.type/page]]}
-          :args [(store/datastore $req)]})
-      (map first))
-
-  ;; test query for getting all fields in English
-  (store/q (store/datastore $req)
-           '[:find ?p (pull ?e [:field/key :field/content])
-             :where
-             [?e :field/lang :en]
-             [?e :field/key :title]
-             [?p :post/fields ?e]
-             (or [51 :post/fields ?e]
-                 [48 :post/fields ?e]
-                 ;; etc.
-                 )])
-
-  (defn with-fields [req post]
-    (let [db (store/datastore req)
-          query
-          {:find '[(pull ?e [:field/key :field/content])]
-           :where ['[?e :field/lang :en]
-                   [(:db/id post) :post/fields '?e]]}]
-      (assoc post :post/fields (store/q db query))))
-
-
-  ;; Query posts and their ancestors recursively, then get the title for each
-  (->> (store/q
-         (store/datastore $req)
-         {:query '{:find [(pull ?e [:db/id :post/slug {:post/parent ...}])]
-                   :where [[?e :post/status :post.status/published]
-                           [?e :post/type :post.type/page]]}
-          :args [(store/datastore $req)]})
-       (map (comp post/compact-fields
-                  (partial with-fields $req)
-                  first)))
-
+  ;; Get all post ids & slugs
   (store/q
     (store/datastore $req)
     {:query '{:find [?e ?slug]
@@ -339,13 +297,25 @@
               :where [[?e :post/slug ?slug]]}
      :args [(store/datastore $req)]})
 
+  ;; Set of all attrs on entities that are part of a migration
+  (set (map first (store/q
+                    (store/datastore $req)
+                    '{:find [?attr ?v]
+                      :where [[?e :migration/key _]
+                              [?e ?attr ?v]]})))
+
+  ;; All schema changes
   (store/q
     (store/datastore $req)
-    {:query '{:find [?attr ?v]
-              ;:in [$ ?type ?status ?slug]
-              :where [[44 ?attr ?v]]}
-     :args [(store/datastore $req)]})
+    '{:find [(pull ?e [:migration/key :migration/description
+                       :db/ident :db/doc :db/valueType
+                       :db/index :db/cardinality :db/unique])]
+      :where [[?e :migration/key _]
+              [?e ?attr ?v]]})
 
+  (i18n/strings $req)
+
+  ;; Get all global i18n keys
   (store/q
     (store/datastore $req)
     '{:find [?k]
@@ -354,8 +324,6 @@
 
   ;;
   )
-
-(defonce stop-http (atom nil))
 
 (defn wrap-trailing-slash [handler]
   (fn [{:keys [uri] :as req}]
