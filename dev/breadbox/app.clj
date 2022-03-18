@@ -218,7 +218,7 @@
                                {:key :footer-nav
                                 :type :location
                                 :location :footer-nav}]
-                       :global-menus? false
+                       :global-menus false
                        :hooks [[:hook/posts-menu
                                 #(update %2 :my/class str " posts-menu")]
                                [:hook/posts-menu.page
@@ -266,7 +266,8 @@
                        (static-fe/plugin)]})))
   :stop (reset! app nil))
 
-;; TODO themes
+(defstate handler
+  :start (bread/handler @app))
 
 (comment
 
@@ -353,8 +354,6 @@
 
   ;;
   )
-
-(def handler (bread/handler @app))
 
 (defonce stop-http (atom nil))
 
