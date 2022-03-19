@@ -56,7 +56,6 @@
     constraints))
 
 ;; TODO Accept keyword shorthand for ::bread/resolver
-(def resolve-query nil)
 (defmulti resolve-query (fn [req]
                           (get-in req [::bread/resolver :resolver/type])))
 
