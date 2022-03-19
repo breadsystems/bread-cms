@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.test-helpers
   (:require
+    [clojure.tools.logging :as log]
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
@@ -32,10 +33,14 @@
 
 (defmacro use-datastore [freq config]
   `(t/use-fixtures ~freq (fn [f#]
-                           (store/delete-database! ~config)
+                           (try
+                             (store/delete-database! ~config)
+                             (catch Throwable e#
+                               (log/warn (.getMessage e#))))
                            (store/install! ~config)
                            (store/connect! ~config)
                            (f#)
+                           #_
                            (store/delete-database! ~config))))
 
 (comment

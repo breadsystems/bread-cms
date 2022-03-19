@@ -1,8 +1,9 @@
 (ns systems.bread.alpha.schema)
 
-
-;; TODO I18n for db docs
-(defn initial-schema []
+(def
+  ^{:doc "Schema for database migrations, so that schema migrations
+         can be reified and self-documenting."}
+  migrations
   [{:db/ident :migration/key
     :db/doc "Human-readable keyword for the schema migration"
     :db/valueType :db.type/keyword
@@ -11,12 +12,13 @@
     :db/doc "Brief description of what this schema migration does"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
-
    {:migration/key :bread.migration/initial
-    :migration/description "Core schema for posts, users, and related data."}
+    :migration/description "Core schema for posts, users, and related data."}])
 
-   ;; Posts, the central concept of Bread CMS.
-   {:db/ident :post/uuid
+(def
+  ^{:doc "Schema for Posts, the central concept of Bread CMS."}
+  posts
+  [{:db/ident :post/uuid
     :db/doc "Unique identifier for the post. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
@@ -68,10 +70,13 @@
     :db/doc "Zero or more entity IDs of a Post's taxons"
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Post fields
-   {:db/ident :field/key
+(def
+  ^{:doc
+    "Schema for arbitrary Post data, stored as Fields."}
+  fields
+  [{:db/ident :field/key
     :db/doc "Unique-per-post keyword for this field"
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one
@@ -85,11 +90,32 @@
     :db/doc "Language this field is written in"
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Post taxons
-   ;; TODO ARE TAXONS JUST POSTS????
-   {:db/ident :taxon/taxonomy
+(def
+  ^{:doc
+    "Schema for (site-wide) i18n strings."}
+  i18n
+  [{:db/ident :i18n/key
+    :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :i18n/lang
+    :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
+   {:db/ident :i18n/string
+    :db/doc "The value of the string itself, specific to a given path/lang combination."
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}])
+
+(def
+  ^{:doc "Schema for Taxons"}
+  taxons
+  [{:db/ident :taxon/taxonomy
     :db/doc "The hierarchy of taxons in which this taxon lives, e.g. tags, categories, etc. Analogous to WordPress taxonomies."
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one
@@ -101,29 +127,26 @@
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
    {:db/ident :taxon/slug
-    :db/doc "Route-unique slug, typically based on the taxon name"
+    :db/doc "Route-unique slug, typically based on the taxon title."
     :db/valueType :db.type/string
     :db/index true
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   {:db/ident :taxon/name
-    :db/doc "The human-readable name of the taxon"
+   {:db/ident :taxon/fields
+    :db/doc "Translatable fields for this taxon."
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
-   {:db/ident :taxon/description
-    :db/doc "Description of the taxon"
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Post Revisions
-   {:db/ident :revision/post-id
+(def
+  ^{:doc "Schema for Post Revisions."}
+  revisions
+  [{:db/ident :revision/post-id
     :db/doc "The entity ID of the Post being revised"
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO record diffs instead
+   ;; TODO track just diffs - are diffs their own db entities??
    {:db/ident :revision/fields
     :db/doc "EDN-serialized post fields as they exist as of this revision"
     :db/valueType :db.type/string
@@ -138,27 +161,12 @@
     :db/doc "Date/time this revision was made"
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Strings, for i18n
-   {:db/ident :i18n/key
-    :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
-    :db/valueType :db.type/keyword
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
-   {:db/ident :i18n/lang
-    :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
-    :db/valueType :db.type/keyword
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
-   {:db/ident :i18n/string
-    :db/doc "The value of the string itself, specific to a given path/lang combination."
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
-
-   ;; Menus
-   {:db/ident :menu/uuid
+(def
+  ^{:doc "Schema for navigation Menus."}
+  menus
+  [{:db/ident :menu/uuid
     :db/doc "Universally unique identifier for the menu. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
@@ -175,10 +183,12 @@
     :db/valueType :db.type/keyword
     :db/unique :db.unique/value
     :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Menu Items
-   {:db/ident :menu/items
+(def
+  ^{:doc "Schema for navigation Menu Items."}
+  menu-items
+  [{:db/ident :menu/items
     :db/doc "Menu items."
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
@@ -197,10 +207,12 @@
     :db/doc "Any child items of this item."
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Comments
-   {:db/ident :comment/uuid
+(def
+  ^{:doc "Schema for Post Comments."}
+  comments
+  [{:db/ident :comment/uuid
     :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
@@ -226,15 +238,21 @@
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}
-   ;; TODO :comment/status (pending, approved, spam...)
+   {:db/ident :comment/status
+    :db/doc "The status of this comment (pending, approved, spam, etc.)"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :migration/key :bread.migration/initial}
    {:db/ident :comment/replies
     :db/doc "Zero or more replies (comment entity IDs) to this comment. Order by :comment/created-at to build a comment thread."
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Users
-   {:db/ident :user/uuid
+(def
+  ^{:doc "Schema for Users."}
+  users
+  [{:db/ident :user/uuid
     :db/doc "Unique identifier. Distinct from the Datahike entity ID."
     :db/valueType :db.type/uuid
     :db/unique :db.unique/identity
@@ -265,10 +283,12 @@
     :db/doc "User roles. Used for mapping to abilities for authorization"
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/many
-    :migration/key :bread.migration/initial}
+    :migration/key :bread.migration/initial}])
 
-   ;; Role-based Abilities
-   {:db/ident :ability/key
+(def
+  ^{:doc "Schema for User Roles."}
+  user-roles
+  [{:db/ident :ability/key
     :db/doc "The keyword identifier for an ability (for role-based authorization)"
     :db/valueType :db.type/keyword
     :db/unique :db.unique/identity
@@ -279,3 +299,19 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :migration/key :bread.migration/initial}])
+
+(def
+  ^{:doc "Initial schema for the Bread CMS database."}
+  initial
+  (concat
+    migrations
+    posts
+    fields
+    i18n
+    taxons
+    menus
+    menu-items
+    revisions
+    comments
+    users
+    user-roles))

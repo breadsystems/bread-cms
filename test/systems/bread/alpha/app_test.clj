@@ -13,116 +13,76 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]])
-  (:import
-    [java.util UUID]))
-
-(def parent-uuid (UUID/randomUUID))
+    [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.test-helpers :refer [use-datastore]]))
 
 (def config {:datastore/type :datahike
              :store {:backend :mem
-                     :id "breadbox-db"}
+                     :id "app-test-db"}
              :datastore/initial-txns
-             [;; init simplified schema
-              {:db/ident :post/slug
-               :db/valueType :db.type/string
-               :db/index true
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :post/parent
-               :db/valueType :db.type/ref
-               :db/index true
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :post/fields
-               :db/valueType :db.type/ref
-               :db/cardinality :db.cardinality/many}
-              {:db/ident :post/status
-               :db/valueType :db.type/keyword
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :field/key
-               :db/valueType :db.type/keyword
-               :db/index true
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :field/lang
-               :db/valueType :db.type/keyword
-               :db/index true
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :field/content
-               :db/valueType :db.type/string
-               :db/cardinality :db.cardinality/one}
-
-              {:db/ident :i18n/key
-               :db/valueType :db.type/keyword
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :i18n/lang
-               :db/valueType :db.type/keyword
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :i18n/string
-               :db/valueType :db.type/string
-               :db/cardinality :db.cardinality/one}
-
-              ;; init post content
-              #:post{:type :post.type/page
-                     :uuid (UUID/randomUUID)
-                     :slug ""
-                     :fields #{{:field/key :title
-                                :field/lang :en
-                                :field/content (prn-str "Home Page")}
-                               {:field/key :title
-                                :field/lang :fr
-                                :field/content (prn-str "Page D'Accueil")}
-                               {:field/key :simple
-                                :field/lang :en
-                                :field/content (prn-str {:hello "Hi!"})}
-                               {:field/key :simple
-                                :field/lang :fr
-                                :field/content (prn-str {:hello "Allo!"})}}
-                     :status :post.status/published}
-              #:post{:type :post.type/page
-                     :uuid parent-uuid
-                     :slug "parent-page"
-                     :status :post.status/published
-                     :fields #{{:field/key :title
-                                :field/lang :en
-                                :field/content (prn-str "Parent Page")}
-                               {:field/key :title
-                                :field/lang :fr
-                                :field/content (prn-str "La Page Parent")}
-                               {:field/key :simple
-                                :field/lang :en
-                                :field/content
-                                (prn-str {:hello "Hello from parent"})}
-                               {:field/key :simple
-                                :field/lang :fr
-                                :field/content
-                                (prn-str {:hello "Bonjour de parent"})}
-                               }}
-              #:post{:type :post.type/page
-                     :uuid (UUID/randomUUID)
-                     :slug "child-page"
-                     :status :post.status/published
-                     :parent [:post/uuid parent-uuid]
-                     :fields #{{:field/key :title
-                                :field/lang :en
-                                :field/content (prn-str "Child Page")}
-                               {:field/key :title
-                                :field/lang :fr
-                                :field/content (prn-str "La Page Enfant")}
-                               {:field/key :simple
-                                :field/lang :en
-                                :field/content
-                                (prn-str {:hello "Hello from child"})}
-                               {:field/key :simple
-                                :field/lang :fr
-                                :field/content
-                                (prn-str {:hello "Bonjour d'enfant"})}
-                               }}
-              #:i18n{:lang :en
-                     :key :not-found
-                     :string "404 Not Found"}
-              #:i18n{:lang :fr
-                     :key :not-found
-                     :string "404 Pas Trouvé"}
-              ]})
+             [;; init post content
+              {:db/id "page.home"
+               :post/type :post.type/page
+               :post/slug ""
+               :post/status :post.status/published
+               :post/fields
+               #{{:field/key :title
+                  :field/lang :en
+                  :field/content (prn-str "Home Page")}
+                 {:field/key :title
+                  :field/lang :fr
+                  :field/content (prn-str "Page D'Accueil")}
+                 {:field/key :simple
+                  :field/lang :en
+                  :field/content (prn-str {:hello "Hi!"})}
+                 {:field/key :simple
+                  :field/lang :fr
+                  :field/content (prn-str {:hello "Allo!"})}}}
+              {:db/id "page.parent"
+               :post/type :post.type/page
+               :post/slug "parent-page"
+               :post/status :post.status/published
+               :post/children ["page.child"]
+               :post/fields
+               #{{:field/key :title
+                  :field/lang :en
+                  :field/content (prn-str "Parent Page")}
+                 {:field/key :title
+                  :field/lang :fr
+                  :field/content (prn-str "La Page Parent")}
+                 {:field/key :simple
+                  :field/lang :en
+                  :field/content
+                  (prn-str {:hello "Hello from parent"})}
+                 {:field/key :simple
+                  :field/lang :fr
+                  :field/content
+                  (prn-str {:hello "Bonjour de parent"})}}}
+              {:db/id "page.child"
+               :post/type :post.type/page
+               :post/slug "child-page"
+               :post/status :post.status/published
+               :post/fields
+               #{{:field/key :title
+                  :field/lang :en
+                  :field/content (prn-str "Child Page")}
+                 {:field/key :title
+                  :field/lang :fr
+                  :field/content (prn-str "La Page Enfant")}
+                 {:field/key :simple
+                  :field/lang :en
+                  :field/content
+                  (prn-str {:hello "Hello from child"})}
+                 {:field/key :simple
+                  :field/lang :fr
+                  :field/content
+                  (prn-str {:hello "Bonjour d'enfant"})}}}
+              {:i18n/lang :en
+               :i18n/key :not-found
+               :i18n/string "404 Not Found"}
+              {:i18n/lang :fr
+               :i18n/key :not-found
+               :i18n/string "404 Pas Trouvé"}]})
 
 (use-datastore :each config)
 

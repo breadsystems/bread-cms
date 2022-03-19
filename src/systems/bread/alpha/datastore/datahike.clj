@@ -247,7 +247,7 @@
 
 (defmethod store/install! :datahike [config]
   (d/create-database config)
-  (d/transact (store/connect! config) (schema/initial-schema)))
+  (d/transact (store/connect! config) schema/initial))
 
 (defmethod store/delete-database! :datahike [config]
   (d/delete-database config))

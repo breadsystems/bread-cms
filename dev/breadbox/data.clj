@@ -56,7 +56,6 @@
     ;; TODO use unique refs for this
     :post/taxons
     #{{:taxon/slug "my-cat"
-       :taxon/name "My Cat"
        :taxon/taxonomy :taxon.taxonomy/category}}}
    {:db/id "page.sister"
     :post/type :post.type/page
@@ -89,7 +88,6 @@
        :field/content (prn-str {:todo "TODO"})}}
     :post/taxons
     #{{:taxon/slug "my-cat"
-       :taxon/name "My Cat"
        :taxon/taxonomy :taxon.taxonomy/category}}}
    {:db/id "page.parent"
     :post/type :post.type/page
