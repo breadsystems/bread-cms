@@ -9,6 +9,7 @@
     (keyword (namespace x))))
 
 (defn- expand-query [data [k q & args]]
+  (prn 'expand data k q)
   (let [path (cond
                (seqable? k) k
                ;; "compact" :parent/child into :parent if (:parent data) is

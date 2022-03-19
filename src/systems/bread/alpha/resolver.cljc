@@ -56,8 +56,15 @@
     constraints))
 
 ;; TODO Accept keyword shorthand for ::bread/resolver
+(def resolve-query nil)
 (defmulti resolve-query (fn [req]
                           (get-in req [::bread/resolver :resolver/type])))
+
+(defmethod resolve-query nil [req]
+  (let [resolver (::bread/resolver req)]
+    (if (fn? resolver)
+      (resolver req)
+      req)))
 
 (defn resolve-queries [req]
   (update req ::bread/queries (comp vec concat) (resolve-query req)))
