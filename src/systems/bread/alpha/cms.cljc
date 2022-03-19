@@ -11,11 +11,11 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.component :as component]))
 
-(defn defaults [{:keys [datastore router plugins navigation]}]
+(defn defaults [{:keys [datastore router i18n navigation plugins]}]
   (concat
     [(store/plugin datastore)
      (route/plugin router)
-     (i18n/plugin)
+     (i18n/plugin i18n)
      (nav/plugin navigation)
      (resolver/plugin)
      (query/plugin)
