@@ -210,7 +210,7 @@
                  (bread/load-app
                    (cms/default-app
                      {:datastore $config
-                      :router $router
+                      :routes {:router $router}
                       :navigation
                       {:menus [{:key :main-nav
                                 :type :posts

@@ -59,7 +59,7 @@
 (defn sitemap [app]
   [{}])
 
-(defn plugin [router]
+(defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
       (:hook/route-path
