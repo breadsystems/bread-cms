@@ -12,7 +12,7 @@
 
 (def config {:datastore/type :datahike
              :store {:backend :mem
-                     :id "something-else"}
+                     :id "test-i18n-db"}
              :datastore/initial-txns
              ;; TODO test locales e.g. en-gb
              [#:i18n{:key :one :string "One" :lang :en}
@@ -113,10 +113,11 @@
       )))
 
 (deftest test-fallback
-  (let [load-app #(plugins->loaded [(store/plugin config)
-                                    (i18n/plugin {:i18n/fallback %})
-                                    (query/plugin)
-                                    (naive-string-parsing-route-plugin)])]
+  (let [load-app #(plugins->loaded
+                    [(store/plugin config)
+                     (i18n/plugin {:fallback-lang %})
+                     (query/plugin)
+                     (naive-string-parsing-route-plugin)])]
     (are
       [strings fallback-lang]
       (= strings
