@@ -35,7 +35,7 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    (not-join [?e] [?e :post/parent ?root-ancestor])]}
+                    (not-join [?e] [?root-ancestor :post/children ?e])]}
           :post.type/page
           :post.status/published
           "simple"]]
@@ -54,11 +54,11 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/children ?e]
                     [?parent_1 :post/slug ?slug_1]
                     (not-join
                       [?parent_1]
-                      [?parent_1 :post/parent ?root-ancestor])]}
+                      [?root-ancestor :post/children ?parent_1])]}
           :post.type/page
           :post.status/published
           "two"
@@ -77,11 +77,11 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/children ?e]
                     [?parent_1 :post/slug ?slug_1]
                     (not-join
                       [?parent_1]
-                      [?parent_1 :post/parent ?root-ancestor])]}
+                      [?root-ancestor :post/children ?parent_1])]}
           :post.type/page
           :post.status/published
           "two"
@@ -99,11 +99,11 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/children ?e]
                     [?parent_1 :post/slug ?slug_1]
                     (not-join
                       [?parent_1]
-                      [?parent_1 :post/parent ?root-ancestor])]}
+                      [?root-ancestor :post/children ?parent_1])]}
           :post.type/page
           :post.status/published
           "two"
@@ -121,13 +121,13 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    [?e :post/parent ?parent_1]
+                    [?parent_1 :post/children ?e]
                     [?parent_1 :post/slug ?slug_1]
-                    [?parent_1 :post/parent ?parent_2]
+                    [?parent_2 :post/children ?parent_1]
                     [?parent_2 :post/slug ?slug_2]
                     (not-join
                       [?parent_2]
-                      [?parent_2 :post/parent ?root-ancestor])]}
+                      [?root-ancestor :post/children ?parent_2])]}
           :post.type/page
           :post.status/published
           "three"
@@ -147,7 +147,7 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    (not-join [?e] [?e :post/parent ?root-ancestor])]}
+                    (not-join [?e] [?root-ancestor :post/children ?e])]}
           :post.type/page
           :post.status/published
           "simple"]
@@ -177,7 +177,7 @@
                     [?e :post/slug ?slug_0]
                     (not-join
                       [?e]
-                      [?e :post/parent ?root-ancestor])]}
+                      [?root-ancestor :post/children ?e])]}
           :post.type/page
           :post.status/published
           "simple"]
@@ -203,7 +203,7 @@
             :where [[?e :post/type ?type]
                     [?e :post/status ?status]
                     [?e :post/slug ?slug_0]
-                    (not-join [?e] [?e :post/parent ?root-ancestor])]}
+                    (not-join [?e] [?root-ancestor :post/children ?e])]}
           :post.type/page
           :post.status/published
           ;; Empty slug!
