@@ -130,15 +130,15 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
-      ["/" {:bread/resolver {:resolver/type :resolver.type/page}
+      ["/" {:bread/resolver :resolver.type/page
             :bread/component home
             :name :bread.route/home}]
-      ["/static/:slug" {:bread/resolver {:resolver/type :resolver.type/static}
+      ["/static/:slug" {:bread/resolver :resolver.type/static
                         :bread/component static-page
                         :bread/watch-static {:dir "dev/content"
                                              :path->req [0 "static" 1]}
                         :name :bread.route/static}]
-      ["/*slugs" {:bread/resolver {:resolver/type :resolver.type/page}
+      ["/*slugs" {:bread/resolver :resolver.type/page
                   :bread/component page
                   :name :bread.route/page}]]]
     {:conflicts nil}))

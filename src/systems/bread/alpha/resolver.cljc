@@ -55,18 +55,16 @@
     query
     constraints))
 
-;; TODO Accept keyword shorthand for ::bread/resolver
-(defmulti resolve-query (fn [req]
-                          (get-in req [::bread/resolver :resolver/type])))
+(defmulti resolve-query
+  (fn [req]
+    (get-in req [::bread/resolver :resolver/type])))
 
-(defmethod resolve-query nil [req]
-  (let [resolver (::bread/resolver req)]
-    (if (fn? resolver)
-      (resolver req)
-      req)))
-
-(defn resolve-queries [req]
-  (update req ::bread/queries (comp vec concat) (resolve-query req)))
+(defn resolve-queries [{resolver ::bread/resolver :as req}]
+  (if (fn? resolver)
+    ;; We have a vanilla fn handler:
+    ;; Short-circuit the rest of the lifecycle.
+    (resolver req)
+    (update req ::bread/queries (comp vec concat) (resolve-query req))))
 
 (defn plugin []
   (fn [app]
