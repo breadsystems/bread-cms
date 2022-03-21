@@ -1,7 +1,8 @@
 (ns systems.bread.alpha.core
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.set :refer [rename-keys]])
+    [clojure.set :refer [rename-keys]]
+    [clojure.string :as string])
   #?(:clj (:import
             [java.util Date])))
 
@@ -496,8 +497,15 @@
       (hook :hook/init)))
 
 (defn shutdown
+  "Shuts down the app, removing all ::systems.bread* keys.
+  Runs the :hook/shutdown hook, which is useful e.g. for unmounting long-lived
+  application state."
   [app]
-  (dissoc (hook app :hook/shutdown) ::plugins ::hooks ::config ::data))
+  (letfn [(bread-key? [k]
+            (and (keyword? k)
+                 (string/starts-with?
+                   (str (namespace k)) "systems.bread")))]
+    (apply dissoc (hook app :hook/shutdown) (filter bread-key? (keys app)))))
 
 (defn handler
   "Returns a handler function that takes a Ring request and threads it
