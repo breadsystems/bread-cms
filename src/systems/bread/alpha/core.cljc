@@ -495,6 +495,10 @@
       (hook :hook/load-plugins)
       (hook :hook/init)))
 
+(defn shutdown
+  [app]
+  (dissoc (hook app :hook/shutdown) ::plugins ::hooks ::config ::data))
+
 (defn handler
   "Returns a handler function that takes a Ring request and threads it
   through the Bread request/response lifecycle."

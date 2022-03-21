@@ -275,7 +275,9 @@
 
                        (static-be/plugin)
                        (static-fe/plugin)]})))
-  :stop (reset! app nil))
+  :stop (do
+          (bread/shutdown @app)
+          (reset! app nil)))
 
 (defstate handler
   :start (bread/handler @app))
