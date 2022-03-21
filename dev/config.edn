@@ -1,6 +1,9 @@
 {:dev-port 1312
  :debug-port 1315
  ;; Reinstall dev database on restart.
+ ;; NOTE: to go from true to false, you must first stop the app, then change
+ ;; the value, then start again. Otherwise you might get a "Backend does not
+ ;; exist" error.
  :reinstall-db? true
  :datahike {:backend :jdbc
             :dbtype "postgresql"
