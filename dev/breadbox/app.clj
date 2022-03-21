@@ -260,6 +260,24 @@
                                                 "text/html"}
                                       :status status)))))
 
+                       (fn [app]
+                         (bread/add-hook
+                           app :hook/dispatch
+                           (fn [req]
+                             (let [uniq (str (gensym "new-"))]
+                               (store/add-txs
+                                 req
+                                 [{:post/slug uniq
+                                   :post/type :post.type/page
+                                   :post/status :post.status/published
+                                   :post/fields
+                                   #{{:field/lang :en
+                                      :field/key :title
+                                      :field/content (prn-str uniq)}
+                                     {:field/lang :fr
+                                      :field/key :title
+                                      :field/content (prn-str uniq)}}}])))))
+
                        ;; BREAK IT ON PURPOSE
                        #_
                        (fn [app]
