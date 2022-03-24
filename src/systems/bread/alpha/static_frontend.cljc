@@ -34,6 +34,44 @@
     (mkdir path)
     (spit (str path sep file) contents)))
 
+(defn get-attr-via [entity [step & steps]]
+  (if step
+    (let [node (get entity step)]
+      (cond
+        (coll? node) (set (map #(get-attr-via % steps) node))
+        (keyword? node) (name node)
+        :else node))
+    entity))
+
+(defn with-params [mapping spec]
+  (let [paths (atom {})]
+    (letfn [(walk [path spec]
+              (vec (mapv #(walk-spec path %) spec)))
+            (walk-spec [path node]
+              (cond
+                (keyword? node)
+                (let [attr (mapping node)]
+                  (swap! paths assoc node (conj path attr))
+                  attr)
+                (map? node)
+                (into {} (map (fn [[attr spec]]
+                                [attr (walk (conj path attr) spec)])
+                              node))
+                :else node))
+            (walk-path [entity path]
+              (get-in entity path))]
+      (let [spec (walk [] spec)
+            query {:find [(list 'pull '?e spec) '.]
+                   :in '[$ ?e]
+                   :where '[[?e]]}]
+        (fn [eid]
+          (let [entity (q query eid)]
+            (reduce (fn [m [param path]]
+                      (let [attr (get-attr-via entity path)
+                            attr (if (coll? attr) attr (set (list attr)))]
+                        (assoc m param attr)))
+                    {} @paths)))))))
+
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
@@ -216,24 +254,34 @@
     (into {} (map (juxt key (comp vec #(map second %) val)) {:post/fields [(list 'hi :lang)]}))
 
     (do
-      (defmacro defx [mapping spec]
-        (letfn [(walk [path spec]
-                  (mapv #(walk-spec path %) spec))
-                (walk-spec [path node]
-                  (prn path)
-                  (cond
-                    (list? node)
-                    (mapping (second node))
-                    (map? node)
-                    (into {} (map (fn [[attr spec]]
-                                    [attr (walk (conj path attr) spec)])
-                                  node))
-                    :else node))]
-          `(fn [_#] ~(walk [] spec))))
-      ((defx
-        {:slug :post/slug :lang :field/lang}
-        [(param :slug) {:post/fields [(param :lang) {:lang/sub [:hi]}]}])
-       69))
+      )
+
+      (get-attr-via $ent [:post/slug])
+      (get-attr-via $ent [:post/fields])
+      (get-attr-via $ent [:post/fields :field/lang])
+
+      (def $ent
+        {:post/slug "sister-page",
+         :post/fields
+         [{:field/lang :en}
+          {:field/lang :fr}
+          {:field/lang :en}
+          {:field/lang :fr}
+          {:field/lang :en}]})
+
+    (update
+      (q '{:find [(pull ?e [:post/slug {:post/fields [:field/lang]}]) .]
+           :in [$ ?e]
+           :where [[?e]]}
+         $pid)
+      :post/fields (comp set #(map (comp name :field/lang) %)))
+
+    (q '{:find [?slug ?lang]
+         :in [$ ?post]
+         :where [[?post :post/slug ?slug]
+                 [?post :post/fields ?f]
+                 [?f :field/lang ?lang]]}
+       $pid)
 
     ;; Once matching datoms are found, we can query the db explicitly for
     ;; the respective entities to see if any of their attrs are among those
@@ -286,13 +334,6 @@
     ;;
     ;; (for [uri ["/en/my-page" "/fr/my-page"]]
     ;;   (bread/handler (assoc res :uri uri ::internal? true)))
-
-    (q '{:find [?slug ?lang]
-         :in [$ ?post]
-         :where [[?post :post/slug ?slug]
-                 [?post :post/fields ?f]
-                 [?f :field/lang ?lang]]}
-       $pid)
 
     ;; Query for original query data + attrs from the route params
     ;; [:post/slug <- route param = :slug
