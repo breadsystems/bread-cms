@@ -320,38 +320,35 @@
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
+  (defn q [query & args]
+    (apply store/q (store/datastore $req) query args))
+
   ;; Get all post ids & slugs
-  (store/q
-    (store/datastore $req)
-    {:query '{:find [?e ?slug]
-              ;:in [$ ?type ?status ?slug]
-              :where [[?e :post/slug ?slug]]}
-     :args [(store/datastore $req)]})
+  (q '{:find [?e ?slug] :where [[?e :post/slug ?slug]]})
 
   ;; Set of all attrs on entities that are part of a migration
-  (set (map first (store/q
-                    (store/datastore $req)
-                    '{:find [?attr ?v]
-                      :where [[?e :migration/key _]
-                              [?e ?attr ?v]]})))
+  (set (map first (q '{:find [?attr ?v]
+                       :where [[?e :migration/key _]
+                               [?e ?attr ?v]]})))
 
   ;; All schema changes
-  (store/q
-    (store/datastore $req)
-    '{:find [(pull ?e [:migration/key :migration/description
-                       :db/ident :db/doc :db/valueType
-                       :db/index :db/cardinality :db/unique])]
-      :where [[?e :migration/key _]
-              [?e ?attr ?v]]})
+  (q '{:find [(pull ?e [:migration/key :migration/description
+                        :db/ident :db/doc :db/valueType :db/index
+                        :db/cardinality :db/unique]) ?inst]
+       :where [[?e :migration/key _ ?inst]
+               [?e ?attr ?v]]})
 
+  ;; Using collection binding (like an OR clause)
+  (q '{:find [(pull ?e [:db/id :post/slug :post/status])]
+       :in [$ [?slug ...]]
+       :where [[?e :post/slug ?slug]]}
+     #{"parent-page" "child-page"})
+
+  ;; Site-wide string in the requested lang
   (i18n/strings $req)
 
   ;; Get all global i18n keys
-  (store/q
-    (store/datastore $req)
-    '{:find [?k]
-      :in [$]
-      :where [[?e :i18n/key ?k]]})
+  (q '{:find [?k] :where [[_ :i18n/key ?k]]})
 
   ;;
   )
