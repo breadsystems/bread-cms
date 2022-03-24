@@ -213,115 +213,27 @@
 
     $mapping
 
-    ;; As a reminder, the whole reason we're doing any of this is to figure
-    ;; out which concrete routes, e.g. "/en/one/two/three" we need to update in
-    ;; the cache. In practical terms, that means that what we need to figure out
-    ;; at this step is all the different permutations of concrete values we know
-    ;; of for those abstract route params, e.g. :slug.
-    ;;
-    ;; To do *that*, we simply construct a query.
+    (into {} (map (juxt key (comp vec #(map second %) val)) {:post/fields [(list 'hi :lang)]}))
 
-    ;; There's one more trick we have to pull, though. We know we need to query
-    ;; for :post/slug and :field/lang based on the mapping, but we don't know,
-    ;; from the program's perspective, how those two attrs are related. For
-    ;; example, what would a pull spec look like for querying those two attrs?
-    ;; If you know the schema, you probably intuitively know we have to do
-    ;; something like:
-    ;;
-    ;; [:post/slug {:post/fields [:field/lang]}]
-    ;;
-    ;; However, our program doesn't have any kind of intuition. We need some way
-    ;; to generically figure out, for any set of attrs we get from a route
-    ;; mapping, how the set of attrs relate to each other.
-
-
-    $cq
-
-    (defn all-attrs []
-      (let [query '{:find [?attr]
-                    :where [[_ ?attr _]]}
-            exclusions #{"db" "migration"}]
-        (->> (q query) (map first) set
-             (filter (complement (comp exclusions namespace))))))
-
-    (all-attrs)
-
-    (defn ref-attrs []
-      (let [query '{:find [?attr]
-                    :where [[?e :db/ident ?attr]
-                            [?e :db/valueType :db.type/ref]]}]
-        (->> (q query) (map first) set)))
-
-    (defn attrs-on [eids]
-      (q '{:find [?attr]
-           :in [$ [?e ...]]
-           :where [[?e ?attr _]]}
-         eids))
-
-    (attrs-on #{62 69 55 50 83})
-
-    (ref-attrs)
-
-    (reduce (fn [relations attr]
-              (reduce
-                (fn [relations sibling]
-                  (update relations sibling clojure.set/union #{attr}))
-                relations (sibling-attrs attr)))
-            {} (all-attrs))
-
-    (map #(conj #{} %) (take 5 (repeat :x)))
-
-    (defn sibling-attrs [attr]
-      (let [query '{:find [?rel]
-                    :in [$ ?attr]
-                    :where [[?e ?attr _] [?e ?rel]]}]
-        (disj (->> attr (q query) (apply concat) set) attr)))
-
-    (defn sibling-attr? [a b]
-      (boolean ((sibling-attrs a) b)))
-
-    (sibling-attrs :post/slug)
-    (sibling-attrs :post/fields)
-    (sibling-attrs :field/lang)
-
-    (sibling-attr? :field/lang :post/slug)
-    (sibling-attr? :field/lang :post/fields)
-    (sibling-attr? :field/lang :field/key)
-    (sibling-attr? :post/slug :post/fields)
-    (sibling-attr? :post/fields :post/slug)
-
-    ;; An attr should not be its own sibling.
-    (false? (sibling-attr? :post/fields :post/fields))
-    (false? (sibling-attr? :post/children :post/children))
-
-    (defn with-attr [attr]
-      (let [query '{:find [?e]
-                    :in [$ ?attr]
-                    :where [[?e ?attr _]]}]
-        (->> attr (q query) (map first) set)))
-
-    (with-attr :post/slug)
-    (with-attr :post/fields)
-
-    (ref? :post/slug)
-    (ref? :post/fields)
-
-    (defn not-in [the-set]
-      (complement the-set))
-
-    ((defn relation [src dest path]
-      (if (sibling-attr? src dest)
-        [src dest]
-        (let [siblings (sibling-attrs src)
-              refs (filter #(and (ref? %) ((complement (set path)) %)) siblings)]
-          (map (juxt identity with-attr) refs))))
-     :post/slug :field/lang [])
-
-    (relation :post/slug :post/fields [] 0)
-    (relation :post/slug :field/lang [] 0)
-
-    not-in-set
-
+    (do
+      (defmacro defx [mapping spec]
+        (letfn [(walk [path spec]
+                  (mapv #(walk-spec path %) spec))
+                (walk-spec [path node]
+                  (prn path)
+                  (cond
+                    (list? node)
+                    (mapping (second node))
+                    (map? node)
+                    (into {} (map (fn [[attr spec]]
+                                    [attr (walk (conj path attr) spec)])
+                                  node))
+                    :else node))]
+          `(fn [_#] ~(walk [] spec))))
+      ((defx
+        {:slug :post/slug :lang :field/lang}
+        [(param :slug) {:post/fields [(param :lang) {:lang/sub [:hi]}]}])
+       69))
 
     ;; Once matching datoms are found, we can query the db explicitly for
     ;; the respective entities to see if any of their attrs are among those
