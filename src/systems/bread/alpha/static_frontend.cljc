@@ -72,6 +72,12 @@
                         (assoc m param attr)))
                     {} @paths)))))))
 
+(defn cartesian-maps [m]
+      (let [[ks vs] ((juxt keys vals) m)]
+        (map (fn [k v]
+               (zipmap k v))
+             (repeat ks) (cart vs))))
+
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
@@ -253,21 +259,18 @@
 
     (into {} (map (juxt key (comp vec #(map second %) val)) {:post/fields [(list 'hi :lang)]}))
 
-    (do
-      )
+    (get-attr-via $ent [:post/slug])
+    (get-attr-via $ent [:post/fields])
+    (get-attr-via $ent [:post/fields :field/lang])
 
-      (get-attr-via $ent [:post/slug])
-      (get-attr-via $ent [:post/fields])
-      (get-attr-via $ent [:post/fields :field/lang])
-
-      (def $ent
-        {:post/slug "sister-page",
-         :post/fields
-         [{:field/lang :en}
-          {:field/lang :fr}
-          {:field/lang :en}
-          {:field/lang :fr}
-          {:field/lang :en}]})
+    (def $ent
+      {:post/slug "sister-page",
+       :post/fields
+       [{:field/lang :en}
+        {:field/lang :fr}
+        {:field/lang :en}
+        {:field/lang :fr}
+        {:field/lang :en}]})
 
     (update
       (q '{:find [(pull ?e [:post/slug {:post/fields [:field/lang]}]) .]
@@ -297,7 +300,22 @@
     ;;
     ;; ...where the ?post (eid) arg is extrapolated from the tx data.
 
+    ;; reference impl, for lists
+    (defn cart [colls]
+      (if (empty? colls)
+        '(())
+        (for [more (cart (rest colls))
+              x (first colls)]
+          (cons x more))))
 
+    ;; Generate a list of URLs at the end of it all.
+    (->> (extrapolate-eid $normalized $datoms)
+         ((with-params
+            {:slugs :post/slug :lang :field/lang}
+            [:slugs {:post/fields [:lang]}]))
+         (cartesian-maps)
+         (mapv (fn [params]
+                 (bread/path $router :bread.route/page params))))
 
     ;; The results of these queries gives us a holistic context of the entities/
     ;; routes that need to be updated in the cache:
