@@ -31,7 +31,7 @@
 
 (defc special [{:keys [content]}]
   {:extends [parent [:special]]}
-  [:div.child content])
+  [:div.special-child content])
 
 (defc filtered [{:keys [content]}]
   {}
@@ -58,6 +58,11 @@
     [:div.parent [:div.child "child content"]]
     {::bread/data {:content "child content"}
      ::bread/resolver {:resolver/component child}}
+
+    ;; With :extends vector - parent <- special
+    [:div.parent [:div.special [:div.special-child "child content"]]]
+    {::bread/data {:content "child content"}
+     ::bread/resolver {:resolver/component special}}
 
     ;; Test recursive extension - grandparent <- parent <- child
     [:main [:div.parent [:div.child "child content"]]]

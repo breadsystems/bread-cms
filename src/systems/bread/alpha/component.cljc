@@ -44,10 +44,16 @@
       (:resolver/component resolver))))
 
 (defn- render-extended [component content]
-  (loop [content content
-         component component]
-    (if component
-      (recur (component {:content content}) (extended component))
+  (loop [component component
+         content content]
+    (cond
+      (vector? component)
+      (let [[component coord] component
+            data (assoc-in {} coord content)]
+        (recur (extended component) (component data)))
+      component
+      (recur (extended component) (component {:content content}))
+      :else
       content)))
 
 (defn render [{::bread/keys [data] :as res}]
