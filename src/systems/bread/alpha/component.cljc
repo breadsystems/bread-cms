@@ -2,36 +2,39 @@
   (:require
     [systems.bread.alpha.core :as bread]))
 
-(defonce ^:dynamic *registry* (atom {}))
-
-(defn define-component [sym metadata]
-  (swap! *registry* assoc sym metadata))
-
-(defmacro defc [sym arglist metadata & forms]
-  (let [not-found-component? (:not-found (meta sym))]
-    `(do
-       (defn ~sym ~arglist ~@forms)
-       (when ~not-found-component?
-         (define-component :not-found ~sym))
-       (define-component ~sym ~metadata))))
+(defmacro defc [sym arglist metadata & exprs]
+  `(def
+     ~(with-meta sym metadata)
+     (with-meta (fn ~sym ~arglist ~@exprs) ~metadata)))
 
 (comment
-  (deref *registry*)
-  (reset! *registry* {})
+  (macroexpand '(defc hello []
+                  {:bread/extends 'foo}
+                  [:<>]))
+  (do
+    (defc hello [x]
+      {:test 1}
+      [:div x])
+    {:meta (meta hello) :html (hello "there")})
+
   (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
-  (macroexpand '(defc ^:not-found not-found [] {} [:<>])))
+  (macroexpand '(defc not-found [] {} [:<>])))
 
-(defn get-key [component]
-  (:key (get @*registry* component)))
+(defn get-key
+  "Get the key at which this component should show up in ::bread/data."
+  [component]
+  (:key (meta component)))
 
-(defn get-query [component]
-  (:query (get @*registry* component)))
-
-(defn not-found []
-  (get @*registry* :not-found))
+(defn get-query
+  "Get the query for this component. Not recursive (yet)."
+  [component]
+  (:query (meta component)))
 
 (defn extended [component]
-  (:extends (get @*registry* component)))
+  (:extends (meta component)))
+
+(defn not-found? [component]
+  (boolean (:not-found (meta component))))
 
 (defn component [{::bread/keys [data resolver] :as res}]
   (bread/hook->>
