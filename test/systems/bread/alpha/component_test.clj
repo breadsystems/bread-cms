@@ -55,6 +55,13 @@
     {::bread/data {:content "child content"}
      ::bread/resolver {:resolver/component child}}
 
+    ;; Test recursive extension
+    [:main [:div.parent [:div.child "child content"]]]
+    (let [parent (vary-meta parent assoc :extends grandparent)
+          child (vary-meta child assoc :extends parent)]
+      {::bread/data {:content "child content"}
+       ::bread/resolver {:resolver/component child}})
+
     ;; With plugins filtering the component
     [:div.plugin "filtered content"]
     (assoc (plugins->loaded [(fn [app]

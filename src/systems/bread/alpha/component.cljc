@@ -43,13 +43,19 @@
       (:resolver/not-found-component resolver)
       (:resolver/component resolver))))
 
+(defn- render-extended [component content]
+  (loop [content content
+         component component]
+    (if component
+      (recur (component {:content content}) (extended component))
+      content)))
+
 (defn render [{::bread/keys [data] :as res}]
-  (let [cpt (component res)
-        parent (extended cpt)
+  (let [component (component res)
+        parent (extended component)
         body (cond
-               parent (let [content (cpt data)]
-                        (parent {:content content}))
-               cpt (cpt data)
+               parent (render-extended parent (component data))
+               component (component data)
                :else nil)]
     (assoc res :body body)))
 
