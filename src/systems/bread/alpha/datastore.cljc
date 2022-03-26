@@ -5,8 +5,10 @@
     [systems.bread.alpha.core :as bread]))
 
 (defmulti connect! :datastore/type)
-(defmulti create-database! :datastore/type)
-(defmulti install! :datastore/type)
+(defmulti create-database! (fn [config _opts]
+                             (:datastore/type config)))
+(defmulti install! (fn [config _opts]
+                     (:datastore/type config)))
 (defmulti installed? :datastore/type)
 (defmulti delete-database! :datastore/type)
 (defmulti connection :datastore/type)
@@ -97,7 +99,8 @@
                             [?e :migration/key :bread.migration/initial]]]
       (->> (q db migration-query) seq boolean))
     (catch clojure.lang.ExceptionInfo e
-      (when (not= (:type (ex-data e)) :backend-does-not-exist)
+      (when-not (#{:db-does-not-exist :backend-does-not-exist}
+                  (:type (ex-data e)))
         (throw e))
       false)))
 
@@ -111,7 +114,12 @@
   (if (seq txns)
     (fn [app]
       (letfn [(do-txns [app]
-                (transact (connection app) txns)
+                (let [conn (connection app)]
+                  (when-not conn
+                    (throw (ex-info
+                             "Failed to connect to datastore."
+                             {:type :no-connection})))
+                  (transact conn txns))
                 app)]
         (bread/add-hook app :hook/init do-txns)))
     identity))
@@ -129,11 +137,16 @@
         as-of-param (or as-of-param :as-of)
         as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z")
         ->timepoint (:datastore/req->timepoint config db-tx)
-        transact-initial (initial-transactor initial-txns)]
+        transact-initial (initial-transactor initial-txns)
+        connection (try
+                     (connect! config)
+                     (catch clojure.lang.ExceptionInfo e
+                       (when-not (= :db-does-not-exist (:type (ex-data e)))
+                         (throw e))))]
     (fn [app]
       (-> app
           (bread/set-config :datastore/config config)
-          (bread/set-config :datastore/connection (connect! config))
+          (bread/set-config :datastore/connection connection)
           (bread/set-config :datastore/as-of-param as-of-param)
           (bread/set-config :datastore/as-of-format as-of-format)
           (transact-initial)

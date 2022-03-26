@@ -42,7 +42,7 @@
 (def $config {:datastore/type :datahike
               :store {:backend :jdbc
                       :dbtype "postgresql"
-                      :user "tamayo"
+                      :user "breadbox"
                       :dbname "breadbox"
                       :password "breadbox"
                       :id "breadbox-db"}
@@ -200,11 +200,21 @@
 
 (defstate db
   :start (when (:reinstall-db? env)
-           (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
-           (store/install! $config))
+           (println "REINSTALLING DATABASE.")
+           (try
+             (store/install! $config {:force? true})
+             (catch clojure.lang.ExceptionInfo e
+               (println (format "Error reinstalling database: %s"
+                                (ex-message e)))
+               (prn (ex-data e)))))
   :stop (when (:reinstall-db? env)
-          (prn "DELETING DEV DATABASE.")
-          (store/delete-database! $config)))
+          (println "DELETING DEV DATABASE.")
+          (try
+            (store/delete-database! $config)
+            (catch clojure.lang.ExceptionInfo e
+              (println (format "Error deleting database on stop: %s"
+                               (ex-message e)))
+              (prn (ex-data e))))))
 
 ;; TODO reload app automatically when src changes
 ;; NOTE: I think the simplest thing is to put handler in a defstate,
