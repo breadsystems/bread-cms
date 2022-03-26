@@ -6,30 +6,34 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(component/defc paragraph [{:keys [content]}]
+(defc paragraph [{:keys [content]}]
   {}
   [:p content])
 
-(component/defc not-found-page [_]
+(defc not-found-page [_]
   {}
   [:div "404 Not Found"])
 
-(component/defc parent [{:keys [special content]}]
+(defc grandparent [{:keys [content]}]
+  {}
+  [:main content])
+
+(defc parent [{:keys [special content]}]
   {}
   [:div.parent
    (if special
      [:div.special special]
      content)])
 
-(component/defc child [{:keys [content]}]
+(defc child [{:keys [content]}]
   {:extends parent}
   [:div.child content])
 
-(component/defc special [{:keys [content]}]
+(defc special [{:keys [content]}]
   {:extends [parent [:special]]}
   [:div.child content])
 
-(component/defc filtered [{:keys [content]}]
+(defc filtered [{:keys [content]}]
   {}
   [:div.plugin (str "filtered " content)])
 
@@ -55,7 +59,7 @@
     {::bread/data {:content "child content"}
      ::bread/resolver {:resolver/component child}}
 
-    ;; Test recursive extension
+    ;; Test recursive extension - grandparent <- parent <- child
     [:main [:div.parent [:div.child "child content"]]]
     (let [parent (vary-meta parent assoc :extends grandparent)
           child (vary-meta child assoc :extends parent)]
