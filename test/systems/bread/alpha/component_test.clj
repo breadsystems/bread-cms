@@ -81,8 +81,36 @@
     (assoc (plugins->loaded [(fn [app]
                                (bread/add-value-hook app
                                  :hook/component filtered))])
-           ::bread/data {:content "content"})
-    ))
+           ::bread/data {:content "content"})))
+
+(defc blank [] {} [:<>])
+
+(defc my-component []
+  {:key :my/key
+   :query [:db/id :post/slug]}
+  [:<>])
+
+(defc recursive-component []
+  {:key :recursive
+   :query [:db/id {:my/post (component/query my-component)}]}
+  [:<>])
+
+(defc next-level []
+  {:key :next
+   :query [:level/next {:level/below (component/query recursive-component)}]}
+  [:<>])
+
+(deftest test-key
+  (is (nil? (component/get-key blank)))
+  (is (= :my/key (component/get-key my-component))))
+
+(deftest test-query
+  (is (nil? (component/query blank)))
+  (is (= [:db/id :post/slug] (component/query my-component))
+  (is (= [:db/id {:my/post [:db/id :post/slug]}]
+         (component/query recursive-component))))
+  (is (= [:level/next {:level/below [:db/id {:my/post [:db/id :post/slug]}]}]
+         (component/query next-level))))
 
 (comment
   (prn child)

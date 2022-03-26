@@ -58,6 +58,12 @@
 (def ^{:doc "Alias of get-key"} k get-key)
 
 (defn get-query
+  "DEPRECATED. Get the query for this component. Not recursive (yet)."
+  [component]
+  (println "component/get-query is deprecated. Use query instead.")
+  (:query (meta component)))
+
+(defn query
   "Get the query for this component. Not recursive (yet)."
   [component]
   (:query (meta component)))
