@@ -71,6 +71,11 @@
       {::bread/data {:content "child content"}
        ::bread/resolver {:resolver/component child}})
 
+    ;; With extension disabled
+    [:div.child "child content"]
+    {::bread/data {:component/extend? false :content "child content"}
+     ::bread/resolver {:resolver/component child}}
+
     ;; With plugins filtering the component
     [:div.plugin "filtered content"]
     (assoc (plugins->loaded [(fn [app]

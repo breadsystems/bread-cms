@@ -60,6 +60,9 @@
   (let [component (component res)
         parent (extended component)
         body (cond
+               (and component
+                    (false? (:component/extend? data)))
+               (component data)
                parent (render-extended parent (component data))
                component (component data)
                :else nil)]
