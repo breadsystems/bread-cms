@@ -165,7 +165,7 @@
                    (bread/dispatch [router req]
                      (assoc req ::bread/resolver (route/resolver req))))
           app (cms/default-app {:datastore config
-                                :router router})
+                                :routes {:router router}})
           handler (bread/load-handler app)]
       (are
         [expected res]

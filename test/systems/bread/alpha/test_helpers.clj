@@ -61,17 +61,17 @@
   and returns a plugin that does a simple (get m (:uri req))
   to get the matched route. Reifies a Router instance internally
   to pass to route/plugin."
-  (route/plugin
-    (reify bread/Router
-      (bread/match [_ req]
-        (get routes (:uri req)))
-      (bread/params [_ match]
-        (:route/params match))
-      (bread/resolver [_ match]
-        (:bread/resolver match))
-      (bread/component [_ match]
-        (:bread/component match))
-      (bread/not-found-component [_ match]
-        (:bread/not-found-component match))
-      (bread/dispatch [router req]
-        (assoc req ::bread/resolver (route/resolver req))))))
+  (let [router (reify bread/Router
+                 (bread/match [_ req]
+                   (get routes (:uri req)))
+                 (bread/params [_ match]
+                   (:route/params match))
+                 (bread/resolver [_ match]
+                   (:bread/resolver match))
+                 (bread/component [_ match]
+                   (:bread/component match))
+                 (bread/not-found-component [_ match]
+                   (:bread/not-found-component match))
+                 (bread/dispatch [router req]
+                   (assoc req ::bread/resolver (route/resolver req))))]
+    (route/plugin {:router router})))
