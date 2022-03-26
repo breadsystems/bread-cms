@@ -22,12 +22,11 @@
      content)])
 
 (component/defc child [{:keys [content]}]
-  {:bread/extends parent}
+  {:extends parent}
   [:div.child content])
-(component/extended child)
 
 (component/defc special [{:keys [content]}]
-  {:bread/extends [parent [:special]]}
+  {:extends [parent [:special]]}
   [:div.child content])
 
 (component/defc filtered [{:keys [content]}]
@@ -63,10 +62,6 @@
                                  :hook/component filtered))])
            ::bread/data {:content "content"})
     ))
-
-(deftest test-not-found
-  (binding [component/*registry* (atom {:not-found 'not-found-component})]
-    (is (= 'not-found-component (component/not-found)))))
 
 (comment
   (k/run))

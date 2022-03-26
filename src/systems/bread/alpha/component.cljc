@@ -45,10 +45,10 @@
 
 (defn render [{::bread/keys [data] :as res}]
   (let [cpt (component res)
-        {extended :bread/extends} (get @*registry* cpt)
+        parent (extended cpt)
         body (cond
-               extended (let [content (cpt data)]
-                          (extended {:content content}))
+               parent (let [content (cpt data)]
+                        (parent {:content content}))
                cpt (cpt data)
                :else nil)]
     (assoc res :body body)))

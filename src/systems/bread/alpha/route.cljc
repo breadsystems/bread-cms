@@ -50,8 +50,7 @@
                          :route/match match
                          :route/params (params req match)
                          :resolver/component component
-                         :resolver/not-found-component
-                         (or not-found-component (component/not-found))
+                         :resolver/not-found-component not-found-component
                          :resolver/key (component/get-key component)
                          :resolver/pull (component/get-query component))]
     (bread/hook->> req :hook/resolver resolver')))

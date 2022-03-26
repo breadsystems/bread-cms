@@ -104,7 +104,7 @@
      [:h1 title]
      [:p (:hello simple)]]))
 
-(component/defc ^:not-found not-found [{:keys [i18n]}]
+(component/defc not-found [{:keys [i18n]}]
   {}
   [:main (:not-found i18n)])
 
@@ -141,14 +141,14 @@
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
                   {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
-                   :bread/not-found-component not-found
+                                    :resolver/component page
+                                    :resolver/not-found-component not-found}
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
                   {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
-                   :bread/not-found-component not-found
+                                    :resolver/component page
+                                    :resolver/not-found-component not-found}
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router
