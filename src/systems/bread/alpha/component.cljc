@@ -3,22 +3,30 @@
     [systems.bread.alpha.core :as bread]))
 
 (defmacro defc [sym arglist metadata & exprs]
-  `(def
-     ~(with-meta sym metadata)
-     (with-meta (fn ~sym ~arglist ~@exprs) ~metadata)))
+  (let [cmeta (assoc metadata :name (name sym) :type ::component)]
+    `(def
+       ~(with-meta sym cmeta)
+       (with-meta (fn ~sym ~arglist ~@exprs) ~(assoc cmeta :ns *ns*)))))
+
+(defmethod print-method ::component [c ^java.io.Writer w]
+  (let [m (meta c)]
+    (.write w (str (:ns m) ".component$" (:name m)))))
 
 (comment
   (macroexpand '(defc hello []
                   {:bread/extends 'foo}
                   [:<>]))
+  (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
+  (macroexpand '(defc not-found [] {} [:<>]))
+
   (do
     (defc hello [x]
       {:test 1}
       [:div x])
-    {:meta (meta hello) :html (hello "there")})
+    {:meta (meta hello) :html (hello "there") :str (with-out-str (pr hello))})
 
-  (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
-  (macroexpand '(defc not-found [] {} [:<>])))
+  ;;
+  )
 
 (defn get-key
   "Get the key at which this component should show up in ::bread/data."
