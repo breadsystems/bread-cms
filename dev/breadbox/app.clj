@@ -8,6 +8,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [config.core :as config]
+    [datahike-jdbc.core]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
     [systems.bread.alpha.cms :as cms]
@@ -39,7 +40,11 @@
 (defonce app (atom nil))
 
 (def $config {:datastore/type :datahike
-              :store {:backend :mem
+              :store {:backend :jdbc
+                      :dbtype "postgresql"
+                      :user "tamayo"
+                      :dbname "breadbox"
+                      :password "breadbox"
                       :id "breadbox-db"}
               :datastore/initial-txns
               data/initial-content})
