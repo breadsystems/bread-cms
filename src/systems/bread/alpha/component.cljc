@@ -30,12 +30,25 @@
 (defn not-found []
   (get @*registry* :not-found))
 
-(defn render [{::bread/keys [data resolver] :as res}]
-  (if-let [component (if (:not-found? data)
-                       (:resolver/not-found-component resolver)
-                       (:resolver/component resolver))]
-    (assoc res :body (component data))
-    res))
+(defn extended [component]
+  (:extends (get @*registry* component)))
+
+(defn component [{::bread/keys [data resolver] :as res}]
+  (bread/hook->>
+    res :hook/component
+    (if (:not-found? data)
+      (:resolver/not-found-component resolver)
+      (:resolver/component resolver))))
+
+(defn render [{::bread/keys [data] :as res}]
+  (let [cpt (component res)
+        {extended :bread/extends} (get @*registry* cpt)
+        body (cond
+               extended (let [content (cpt data)]
+                          (extended {:content content}))
+               cpt (cpt data)
+               :else nil)]
+    (assoc res :body body)))
 
 (defn plugin []
   (fn [app]
