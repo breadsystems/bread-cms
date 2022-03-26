@@ -2,4 +2,10 @@
  :debug-port 1315
  ;; Reinstall dev database on restart.
  :reinstall-db? true
+ :datahike {:backend :jdbc
+            :dbtype "postgresql"
+            :user "breadbox"
+            :dbname "breadbox"
+            :password "breadbox"
+            :id "breadbox-db"}
  :connect-flowstorm? false}

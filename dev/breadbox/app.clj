@@ -37,15 +37,24 @@
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]))
 
+;; This needs to install db on init in order for db and load-app to
+;; initialize correctly.
+(defstate env
+  :start (config/load-env))
+
+(defn reload-env []
+  (mount/stop #'env)
+  (mount/start #'env)
+  env)
+
+(comment
+  (:datahike (reload-env))
+  (:reinstall-db? (reload-env)))
+
 (defonce app (atom nil))
 
 (def $config {:datastore/type :datahike
-              :store {:backend :jdbc
-                      :dbtype "postgresql"
-                      :user "breadbox"
-                      :dbname "breadbox"
-                      :password "breadbox"
-                      :id "breadbox-db"}
+              :store (:datahike env)
               :datastore/initial-txns
               data/initial-content})
 
@@ -184,19 +193,6 @@
     (i18n/strings req))
 
   )
-
-;; This needs to install db on init in order for db and load-app to
-;; initialize correctly.
-(defstate env
-  :start (config/load-env))
-
-(defn reload-env []
-  (mount/stop #'env)
-  (mount/start #'env)
-  env)
-
-(comment
-  (:reinstall-db? (reload-env)))
 
 (defstate db
   :start (when (:reinstall-db? env)
