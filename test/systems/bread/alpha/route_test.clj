@@ -50,15 +50,17 @@
                  :bread/component 'page
                  :route/params {:lang nil
                                 :slug "overridden"}}}
-        ;; Mock the component registry with key/pull values.
-        ;; These values are not valid for the default schema but are meant to
-        ;; be illustrative.
-        registry (atom {'home {:key :home :query [:db/id :home/slug]}
-                        'page {:key :page :query [:db/id :page/slug]}})
+        ;; Mock component metadata with key/pull values.
+        ;; These are not valid (for the default schema) but they are intended
+        ;; to be illustrative.
+        get-query* {'home [:db/id :home/slug]
+                    'page [:db/id :page/slug]}
+        get-key* {'home :home 'page :page}
         app (plugins->loaded [(map->route-plugin routes)])]
 
     (are [resolver uri] (= resolver
-                           (binding [component/*registry* registry]
+                           (with-redefs [component/query get-query*
+                                         component/query-key get-key*]
                              (-> {:uri uri}
                                  (merge app)
                                  (bread/hook :hook/dispatch)
