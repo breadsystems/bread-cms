@@ -2,11 +2,27 @@
   (:require
     [systems.bread.alpha.core :as bread]))
 
+(defn- macro-symbolize [tree]
+  (clojure.walk/postwalk
+    (fn [node]
+      (cond
+        (list? node) (cons 'list node)
+        (symbol? node) (list symbol (name node))
+        :else node))
+    tree))
+
 (defmacro defc [sym arglist metadata & exprs]
-  (let [cmeta (assoc metadata :name (name sym) :type ::component)]
+  (let [vmeta (assoc metadata :name (name sym))
+        expr (cons 'list (list
+                           (macro-symbolize arglist)
+                           (macro-symbolize (last exprs))))]
     `(def
-       ~(with-meta sym cmeta)
-       (with-meta (fn ~sym ~arglist ~@exprs) ~(assoc cmeta :ns *ns*)))))
+       ~(with-meta sym vmeta)
+       (with-meta (fn ~sym ~arglist ~@exprs)
+                  ~(assoc vmeta
+                          :type ::component
+                          :ns *ns*
+                          :expr expr)))))
 
 (defmethod print-method ::component [c ^java.io.Writer w]
   (let [m (meta c)]
@@ -14,16 +30,22 @@
 
 (comment
   (macroexpand '(defc hello []
-                  {:bread/extends 'foo}
+                  {:extends greeting}
                   [:<>]))
+  (macroexpand '(defc hello [x]
+                  {}
+                  (if x [:div x] [:div "no x"])))
   (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
   (macroexpand '(defc not-found [] {} [:<>]))
 
   (do
     (defc hello [x]
       {:test 1}
-      [:div x])
+      (if x [:div "hello " x] [:div.somebody "hello somebody"]))
     {:meta (meta hello) :html (hello "there") :str (with-out-str (pr hello))})
+
+  (prn #'hello)
+  (prn hello)
 
   ;;
   )
@@ -32,6 +54,8 @@
   "Get the key at which this component should show up in ::bread/data."
   [component]
   (:key (meta component)))
+
+(def ^{:doc "Alias of get-key"} k get-key)
 
 (defn get-query
   "Get the query for this component. Not recursive (yet)."
