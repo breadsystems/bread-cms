@@ -2,7 +2,7 @@
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as string]
-    [systems.bread.alpha.component :as comp :refer [defc]]
+    [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]
@@ -16,12 +16,12 @@
 (defn query-key [resolver]
   "Get from the component layer the key at which to store the resolved query
   within the ::bread/queries map"
-  (comp/get-key (:resolver/component resolver)))
+  (component/query-key (:resolver/component resolver)))
 
 (defn pull
   "Get the (pull ...) form for the given resolver."
   [resolver]
-  (let [schema (comp/get-query (:resolver/component resolver))]
+  (let [schema (component/query (:resolver/component resolver))]
     (list 'pull '?e schema)))
 
 (defn- apply-where

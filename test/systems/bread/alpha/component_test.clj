@@ -101,8 +101,8 @@
   [:<>])
 
 (deftest test-key
-  (is (nil? (component/get-key blank)))
-  (is (= :my/key (component/get-key my-component))))
+  (is (nil? (component/query-key blank)))
+  (is (= :my/key (component/query-key my-component))))
 
 (deftest test-query
   (is (nil? (component/query blank)))

@@ -59,8 +59,8 @@
         app (plugins->loaded [(map->route-plugin routes)])]
 
     (are [resolver uri] (= resolver
-                           (with-redefs [component/get-query get-query*
-                                         component/get-key get-key*]
+                           (with-redefs [component/query get-query*
+                                         component/query-key get-key*]
                              (-> {:uri uri}
                                  (merge app)
                                  (bread/hook :hook/dispatch)
