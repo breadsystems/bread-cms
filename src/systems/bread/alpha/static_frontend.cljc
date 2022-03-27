@@ -134,7 +134,6 @@
          (repeat ks) (cart vs))))
 
 (defn affected-uris [req router route tx]
-  (prn 'affected)
   (let [{route-name :name cache-config :bread/cache} route
         {mapping :param->attr pull :pull} cache-config
         param-sets (param-sets mapping pull)]
@@ -144,6 +143,20 @@
          (map (fn [params]
                 (bread/path router route-name params)))
          (filter some?))))
+
+(defn process-txns! [res router]
+  (future
+    (let [txs (::bread/transactions (::bread/data res))]
+      ;; TODO what to do with routes w/ no cache data?
+      (prn 'AFFECTED (set (mapcat deref
+        (doall (for [route (bread/routes router)
+              tx txs]
+          ;; TODO abstract route data behind a protocol
+          (let [route-data (second route)]
+            (future
+              (Thread/sleep 500)
+              (prn 'computing)
+              (affected-uris res router route-data tx)))))))))))
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
@@ -165,18 +178,7 @@
              app))
          (:hook/response
            (fn [{:keys [body uri status] data ::bread/data :as res}]
-             (future
-               (let [txs (::bread/transactions data)]
-                 ;; TODO what to do with routes w/ no cache data?
-                 (prn 'ROUTES*TXS)
-                 (prn (set (mapcat deref
-                   (doall (for [route (bread/routes router)
-                         tx txs]
-                     ;; TODO abstract route data behind a protocol
-                     (let [route-data (second route)]
-                       (future
-                         (Thread/sleep 3000)
-                         (affected-uris res router route-data tx))))))))))
+             (process-txns! res router)
              ;; TODO check ::internal?
              (when (= 200 status)
                (prn 'render-static! uri)
