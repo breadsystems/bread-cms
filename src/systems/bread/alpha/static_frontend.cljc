@@ -34,7 +34,7 @@
     (mkdir path)
     (spit (str path sep file) contents)))
 
-(defn get-attr-via [entity [step & steps]]
+(defn- get-attr-via [entity [step & steps]]
   (if step
     (let [node (get entity step)]
       (cond
@@ -43,7 +43,7 @@
         :else node))
     entity))
 
-(defn with-params [mapping spec]
+(defn- param-sets [mapping spec]
   (let [paths (atom {})]
     (letfn [(walk [path spec]
               (vec (mapv #(walk-spec path %) spec)))
@@ -64,26 +64,93 @@
             query {:find [(list 'pull '?e spec) '.]
                    :in '[$ ?e]
                    :where '[[?e]]}]
-        (fn [eid]
-          (let [entity (q query eid)]
+        ;; TODO can we express this in a more data-oriented way?
+        (fn [req eid]
+          (let [entity (store/q (store/datastore req) query eid)]
             (reduce (fn [m [param path]]
                       (let [attr (get-attr-via entity path)
                             attr (if (coll? attr) attr (set (list attr)))]
                         (assoc m param attr)))
                     {} @paths)))))))
 
-(defn cartesian-maps [m]
-      (let [[ks vs] ((juxt keys vals) m)]
-        (map (fn [k v]
-               (zipmap k v))
-             (repeat ks) (cart vs))))
+(defn- relations [query]
+  (let [maps (filter map? query)]
+    (apply concat (mapcat keys maps)
+           (map relations (mapcat vals maps)))))
+
+(defn- concrete-attrs [query]
+  (let [maps (filter map? query)]
+    (apply concat (filter keyword? query)
+           (map concrete-attrs (mapcat vals maps)))))
+
+(defn- affecting-attrs [query mapping]
+  (concat (relations query) (concrete-attrs query) (vals mapping)))
+
+(defn- datoms-with-attrs [attrs tx]
+  (let [attrs (set attrs)
+        datoms (:tx-data tx)]
+    (filter (fn [[_ attr]] (attrs attr)) datoms)))
+
+(defn- normalize [datoms]
+  (reduce (fn [entities [eid attr v]]
+            (if (cardinality-many? attr)
+              (update-in entities [eid attr] (comp set conj) v)
+              (assoc-in entities [eid attr] v)))
+          {} datoms))
+
+(defn- extrapolate-eid [datoms]
+  (let [;; Putting refs first helps us eliminate eids more efficiently,
+        ;; since any eid that is a value in a ref datom within a tx is,
+        ;; by definition, not the primary entity being transacted.
+        datoms (sort-by (complement (comp ref? second)) datoms)
+        normalized (normalize datoms)]
+    (first (keys (reduce (fn [norm [eid attr v]]
+                           (cond
+                             (= 1 (count norm)) (reduced norm)
+                             (ref? attr)        (dissoc norm v)
+                             :else              norm))
+                         normalized datoms)))))
+
+(defn- eid [req router mapping tx]
+  (-> router
+      (bread/component (bread/match router req))
+      component/query
+      ;; TODO accept route instead of mapping
+      (affecting-attrs mapping)
+      (datoms-with-attrs tx)
+      extrapolate-eid))
+
+(defn- cart [colls]
+  (if (empty? colls)
+    '(())
+    (for [more (cart (rest colls))
+          x (first colls)]
+      (cons x more))))
+
+(defn- cartesian-maps [m]
+  (let [[ks vs] ((juxt keys vals) m)]
+    (map (fn [k v]
+           (zipmap k v))
+         (repeat ks) (cart vs))))
+
+(defn affected-uris [req router route tx]
+  (prn 'affected)
+  (let [{route-name :name cache-config :bread/cache} route
+        {mapping :param->attr pull :pull} cache-config
+        param-sets (param-sets mapping pull)]
+    (->> (eid req router mapping tx)
+         (param-sets req)
+         (cartesian-maps)
+         (map (fn [params]
+                (bread/path router route-name params)))
+         (filter some?))))
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
   ([]
    (plugin {}))
-  ([{:keys [root index-file]}]
+  ([{:keys [root index-file router]}]
    (let [index-file (or index-file "index.html")
          root (or root "resources/public")]
      (fn [app]
@@ -98,8 +165,18 @@
              app))
          (:hook/response
            (fn [{:keys [body uri status] data ::bread/data :as res}]
-             (doseq [tx (::bread/transactions data)]
-               (prn 'tx))
+             (future
+               (let [txs (::bread/transactions data)]
+                 ;; TODO what to do with routes w/ no cache data?
+                 (prn 'ROUTES*TXS)
+                 (prn (set (mapcat deref
+                   (doall (for [route (bread/routes router)
+                         tx txs]
+                     ;; TODO abstract route data behind a protocol
+                     (let [route-data (second route)]
+                       (future
+                         (Thread/sleep 3000)
+                         (affected-uris res router route-data tx))))))))))
              ;; TODO check ::internal?
              (when (= 200 status)
                (prn 'render-static! uri)
@@ -121,24 +198,6 @@
     (defn q [query & args]
       (apply store/q (store/datastore $req) query args))
 
-    ;; Get all post ids & slugs
-    (q '{:find [?e ?slug]
-         :where [[?e :post/slug ?slug]]})
-
-    ;; Get an eid with a :post/slug attr
-    (def $pid (ffirst (q '{:find [?e] :where [[?e :post/slug _]]})))
-
-    ;; Find a field in English
-    (def $en (ffirst (q '{:find [?e] :where [[?e :field/lang :en]]})))
-
-    ;; Ditto French
-    (def $fr (ffirst (q '{:find [?e] :where [[?e :field/lang :fr]]})))
-
-    ;; Check that a given entity has a :field/lang attr
-    (seq (q '{:find [[?e]] :in [$ ?e] :where [[?e :field/lang _]]} $en))
-
-
-
     ;;
     ;; STATIC FRONTEND LOGIC!
     ;;
@@ -150,16 +209,16 @@
     ;;
     ;; [{:post/fields [:field/key :field/content]}]
 
-    (def $cq
-      (component/get-query $component))
-
     ;; Let's further say that the routing table tells us we care about
     ;; these route params (mapped to their respective db attrs):
     ;;
     ;; {:bread.route/page {:post/slug :slugs :field/lang :lang}}
 
-    (def $mapping
-      (-> $router bread/routes last second :bread/static.attr->param))
+    ;; (:data match)
+    (def $route {:name :bread.route/page
+                 :bread/cache
+                 {:param->attr {:slugs :post/slug :lang :field/lang}
+                  :pull [:slugs {:post/fields [:lang]}]}})
 
     ;; Together, these pieces of info tell us that we should check among
     ;; the transactions that have just run for datoms that have the
@@ -170,22 +229,6 @@
     ;; The :post/slug is included here in case the slug changed, in which case a
     ;; new cache entry needs to be generated for it. The others are there simply
     ;; by virtue of being present in the component query.
-
-    (defn relations [query]
-      (let [maps (filter map? query)]
-        (apply concat (mapcat keys maps)
-               (map relations (mapcat vals maps)))))
-    (def $relations (relations $cq))
-
-    (defn concrete-attrs [query]
-      (let [maps (filter map? query)]
-        (apply concat (filter keyword? query)
-               (map concrete-attrs (mapcat vals maps)))))
-    (def $concrete (concrete-attrs $cq))
-
-    ;; NOTE: in reality, we'll need a hook here so plugins can add e.g. status
-    (def $attrs (concat $relations $concrete (keys $mapping)))
-
     ;; Let's go on a slight detour now.
     ;;
     ;; For a given attr in a query, we need to know its cardinality. This is
@@ -227,42 +270,6 @@
     (value-type :post/fields)
     (ref? :post/fields)
 
-    (defn datoms [attrs tx]
-      (filter #((set attrs) (second %)) (:tx-data tx)))
-
-    (def $datoms
-      (sort-by (complement (comp ref? second)) (datoms $attrs $tx)))
-
-    (defn normalize [datoms]
-      (reduce (fn [entities [eid attr v]]
-                (if (cardinality-many? attr)
-                  (update-in entities [eid attr] (comp set conj) v)
-                  (assoc-in entities [eid attr] v)))
-              {} datoms))
-
-    (def $normalized (normalize $datoms))
-
-    (defn extrapolate-eid [normalized datoms]
-      (first (keys (reduce (fn [norm [eid attr v]]
-                             (cond
-                               (= 1 (count norm)) (reduced norm)
-                               (ref? attr)        (dissoc norm v)
-                               :else              norm))
-                           normalized datoms))))
-
-    (extrapolate-eid $normalized $datoms)
-
-    ;; Now we need to figure out what to query for. Well, we have our mapping
-    ;; for that:
-
-    $mapping
-
-    (into {} (map (juxt key (comp vec #(map second %) val)) {:post/fields [(list 'hi :lang)]}))
-
-    (get-attr-via $ent [:post/slug])
-    (get-attr-via $ent [:post/fields])
-    (get-attr-via $ent [:post/fields :field/lang])
-
     (def $ent
       {:post/slug "sister-page",
        :post/fields
@@ -272,19 +279,17 @@
         {:field/lang :fr}
         {:field/lang :en}]})
 
-    (update
-      (q '{:find [(pull ?e [:post/slug {:post/fields [:field/lang]}]) .]
-           :in [$ ?e]
-           :where [[?e]]}
-         $pid)
-      :post/fields (comp set #(map (comp name :field/lang) %)))
+    (get-attr-via $ent [:post/slug])
+    (get-attr-via $ent [:post/fields])
+    (get-attr-via $ent [:post/fields :field/lang])
 
-    (q '{:find [?slug ?lang]
-         :in [$ ?post]
-         :where [[?post :post/slug ?slug]
-                 [?post :post/fields ?f]
-                 [?f :field/lang ?lang]]}
-       $pid)
+    ;; TODO pass route instead
+    (eid $req $router (:param->attr $route) $tx)
+
+    ;; Now we need to figure out what to query for. Well, we have our mapping
+    ;; for that:
+
+    (:param->attr $route)
 
     ;; Once matching datoms are found, we can query the db explicitly for
     ;; the respective entities to see if any of their attrs are among those
@@ -300,22 +305,8 @@
     ;;
     ;; ...where the ?post (eid) arg is extrapolated from the tx data.
 
-    ;; reference impl, for lists
-    (defn cart [colls]
-      (if (empty? colls)
-        '(())
-        (for [more (cart (rest colls))
-              x (first colls)]
-          (cons x more))))
-
     ;; Generate a list of URLs at the end of it all.
-    (->> (extrapolate-eid $normalized $datoms)
-         ((with-params
-            {:slugs :post/slug :lang :field/lang}
-            [:slugs {:post/fields [:lang]}]))
-         (cartesian-maps)
-         (mapv (fn [params]
-                 (bread/path $router :bread.route/page params))))
+    (affected-uris $req $router $route $tx)
 
     ;; The results of these queries gives us a holistic context of the entities/
     ;; routes that need to be updated in the cache:
@@ -353,42 +344,7 @@
     ;; (for [uri ["/en/my-page" "/fr/my-page"]]
     ;;   (bread/handler (assoc res :uri uri ::internal? true)))
 
-    ;; Query for original query data + attrs from the route params
-    ;; [:post/slug <- route param = :slug
-    ;;  {:post/fields [:field/key :field/content :field/lang]}]
-    (seq (q '{:find [(pull ?post [;; param = :slug
-                                  :post/slug
-                                  {:post/fields
-                                   [;; param = :lang
-                                    :field/lang]}])]
-              :in [$ ?post]
-              :where [[?post :post/slug ?slug]]}
-            $pid))
-
   ) ;; end do
-
-  (require '[systems.bread.alpha.component :as component])
-
-  (bread/routes $router)
-
-  ;; First enumerate all the fields we care about.
-  ;; This will eventually become from the routing table directly.
-  ;; For now, we just hard-code it.
-
-  (defn slug? [[_ attr _ _]]
-    (= :post/slug attr))
-
-  ;; Gather up all slugs
-  (reduce
-    (fn [slugs [_ _ slug :as datom]]
-      (if (slug? datom)
-        (conj slugs slug)
-        slugs))
-    #{}
-    (:tx-data (first @$txs)))
-
-  ;; Gather all tx data
-  (reduce #(conj %1 (:tx-data %2)) #{} @$txs)
 
   (string/replace "/1/2" (re-pattern (str "^" File/separator)) "")
   (string/replace "/leading/slash" #"^/" "")

@@ -152,9 +152,12 @@
                         :bread/watch-static {:dir "dev/content"
                                              :path->req [0 "static" 1]}
                         :name :bread.route/static}]
-      ["/*slugs" {:bread/resolver :resolver.type/page
+      ["/*slugs" {:name :bread.route/page
+                  :bread/resolver :resolver.type/page
                   :bread/component page
-                  :name :bread.route/page}]]]
+                  :bread/cache
+                  {:param->attr {:slugs :post/slug :lang :field/lang}
+                   :pull [:slugs {:post/fields [:lang]}]}}]]]
     {:conflicts nil}))
 
 (comment
@@ -292,7 +295,8 @@
                        ;; TODO themes
 
                        (static-be/plugin)
-                       (static-fe/plugin)]})))
+                       (static-fe/plugin {:router $router
+                                          :strategy :html})]})))
   :stop (do
           (bread/shutdown @app)
           (reset! app nil)))
