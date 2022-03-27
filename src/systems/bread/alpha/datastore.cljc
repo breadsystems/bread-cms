@@ -105,7 +105,6 @@
       false)))
 
 (defn add-txs [req txs]
-  ;; TODO fire a hook that static-frontend can hook into...
   (bread/add-effect req (fn [{data ::bread/data :as app}]
                           (let [result (transact
                                          (connection app)
