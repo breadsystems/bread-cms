@@ -8,6 +8,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [config.core :as config]
+    [datahike-jdbc.core]
     [flow-storm.api :as flow]
     [kaocha.repl :as k]
     [systems.bread.alpha.cms :as cms]
@@ -36,11 +37,24 @@
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [ring.middleware.reload :refer [wrap-reload]]))
 
+;; This needs to install db on init in order for db and load-app to
+;; initialize correctly.
+(defstate env
+  :start (config/load-env))
+
+(defn reload-env []
+  (mount/stop #'env)
+  (mount/start #'env)
+  env)
+
+(comment
+  (:datahike (reload-env))
+  (:reinstall-db? (reload-env)))
+
 (defonce app (atom nil))
 
 (def $config {:datastore/type :datahike
-              :store {:backend :mem
-                      :id "breadbox-db"}
+              :store (:datahike env)
               :datastore/initial-txns
               data/initial-content})
 
@@ -180,26 +194,23 @@
 
   )
 
-;; This needs to install db on init in order for db and load-app to
-;; initialize correctly.
-(defstate env
-  :start (config/load-env))
-
-(defn reload-env []
-  (mount/stop #'env)
-  (mount/start #'env)
-  env)
-
-(comment
-  (:reinstall-db? (reload-env)))
-
 (defstate db
   :start (when (:reinstall-db? env)
-           (prn "REINSTALLING DATABASE:" (:datastore/initial-txns $config))
-           (store/install! $config))
+           (println "REINSTALLING DATABASE.")
+           (try
+             (store/install! $config {:force? true})
+             (catch clojure.lang.ExceptionInfo e
+               (println (format "Error reinstalling database: %s"
+                                (ex-message e)))
+               (prn (ex-data e)))))
   :stop (when (:reinstall-db? env)
-          (prn "DELETING DEV DATABASE.")
-          (store/delete-database! $config)))
+          (println "DELETING DEV DATABASE.")
+          (try
+            (store/delete-database! $config)
+            (catch clojure.lang.ExceptionInfo e
+              (println (format "Error deleting database on stop: %s"
+                               (ex-message e)))
+              (prn (ex-data e))))))
 
 ;; TODO reload app automatically when src changes
 ;; NOTE: I think the simplest thing is to put handler in a defstate,

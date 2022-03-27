@@ -239,14 +239,21 @@
       (throw (ex-info (str "Exception connecting to datahike: "
                            (.getMessage e))
                       {:exception e
+                       :type      :connection-error
                        :message   (.getMessage e)
                        :config    config})))))
 
-(defmethod store/create-database! :datahike [config]
-  (d/create-database config))
+(defmethod store/create-database! :datahike [config & [{:keys [force?]}]]
+  (try
+    (d/create-database config)
+    (catch clojure.lang.ExceptionInfo e
+      (let [exists? (= :db-already-exists (:type (ex-data e)))]
+        (when (and force? exists?)
+          (d/delete-database config)
+          (d/create-database config))))))
 
-(defmethod store/install! :datahike [config]
-  (d/create-database config)
+(defmethod store/install! :datahike [config & {:keys [force?]}]
+  (store/create-database! config {:force? force?})
   (d/transact (store/connect! config) schema/initial))
 
 (defmethod store/delete-database! :datahike [config]

@@ -35,6 +35,7 @@
 
 (defprotocol Effect
   "Protocol for encapsulating side-effects"
+  :extend-via-metadata true
   (effect! [this req]))
 
 (extend-protocol Effect
