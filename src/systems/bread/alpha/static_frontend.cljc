@@ -154,8 +154,6 @@
           ;; TODO abstract route data behind a protocol
           (let [route-data (second route)]
             (future
-              (Thread/sleep 500)
-              (prn 'computing)
               (affected-uris res router route-data tx)))))))))))
 
 (defn plugin
@@ -177,12 +175,14 @@
              (prn :hook/shutdown)
              app))
          (:hook/response
-           (fn [{:keys [body uri status] data ::bread/data :as res}]
-             (process-txns! res router)
-             ;; TODO check ::internal?
-             (when (= 200 status)
+           (fn [{:keys [body uri status] ::keys [internal?] :as res}]
+             ;; Internal cache-refresh request: render static HTML on the fs.
+             (when (and internal? (= 200 status))
                (prn 'render-static! uri)
                (render-static! (str root uri) index-file body))
+             ;; Asynchronously process transactions that happened during
+             ;; this request.
+             (process-txns! res router)
              res)))))))
 
 (comment
