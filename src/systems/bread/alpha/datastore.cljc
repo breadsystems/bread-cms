@@ -5,9 +5,9 @@
     [systems.bread.alpha.core :as bread]))
 
 (defmulti connect! :datastore/type)
-(defmulti create-database! (fn [config _opts]
+(defmulti create-database! (fn [config & _]
                              (:datastore/type config)))
-(defmulti install! (fn [config _opts]
+(defmulti install! (fn [config & _]
                      (:datastore/type config)))
 (defmulti installed? :datastore/type)
 (defmulti delete-database! :datastore/type)

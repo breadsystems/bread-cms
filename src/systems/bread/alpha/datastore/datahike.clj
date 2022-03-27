@@ -243,7 +243,7 @@
                        :message   (.getMessage e)
                        :config    config})))))
 
-(defmethod store/create-database! :datahike [config {:keys [force?]}]
+(defmethod store/create-database! :datahike [config & [{:keys [force?]}]]
   (try
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
@@ -252,7 +252,7 @@
           (d/delete-database config)
           (d/create-database config))))))
 
-(defmethod store/install! :datahike [config {:keys [force?]}]
+(defmethod store/install! :datahike [config & {:keys [force?]}]
   (store/create-database! config {:force? force?})
   (d/transact (store/connect! config) schema/initial))
 
