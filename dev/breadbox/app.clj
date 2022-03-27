@@ -289,20 +289,23 @@
                        (fn [app]
                          (bread/add-hook
                            app :hook/dispatch
-                           (fn [req]
-                             (let [uniq (str (gensym "new-"))]
-                               (store/add-txs
-                                 req
-                                 [{:post/slug uniq
-                                   :post/type :post.type/page
-                                   :post/status :post.status/published
-                                   :post/fields
-                                   #{{:field/lang :en
-                                      :field/key :title
-                                      :field/content (prn-str uniq)}
-                                     {:field/lang :fr
-                                      :field/key :title
-                                      :field/content (prn-str uniq)}}}])))))
+                           (fn [{::static-fe/keys [internal?] :as req}]
+                             (prn 'internal? internal?)
+                             (if internal?
+                               req
+                               (let [uniq (str (gensym "new-"))]
+                                 (store/add-txs
+                                   req
+                                   [{:post/slug uniq
+                                     :post/type :post.type/page
+                                     :post/status :post.status/published
+                                     :post/fields
+                                     #{{:field/lang :en
+                                        :field/key :title
+                                        :field/content (prn-str uniq)}
+                                       {:field/lang :fr
+                                        :field/key :title
+                                        :field/content (prn-str uniq)}}}]))))))
 
                        ;; BREAK IT ON PURPOSE
                        #_
@@ -350,32 +353,11 @@
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
 
-  ;; Get all post ids & slugs
-  (q '{:find [?e ?slug] :where [[?e :post/slug ?slug]]})
-
-  ;; Set of all attrs on entities that are part of a migration
-  (set (map first (q '{:find [?attr ?v]
-                       :where [[?e :migration/key _]
-                               [?e ?attr ?v]]})))
-
-  ;; All schema changes
-  (q '{:find [(pull ?e [:migration/key :migration/description
-                        :db/ident :db/doc :db/valueType :db/index
-                        :db/cardinality :db/unique]) ?inst]
-       :where [[?e :migration/key _ ?inst]
-               [?e ?attr ?v]]})
-
-  ;; Using collection binding (like an OR clause)
-  (q '{:find [(pull ?e [:db/id :post/slug :post/status])]
-       :in [$ [?slug ...]]
-       :where [[?e :post/slug ?slug]]}
-     #{"parent-page" "child-page"})
-
   ;; Site-wide string in the requested lang
   (i18n/strings $req)
 
   ;; Get all global i18n keys
-  (q '{:find [?k] :where [[_ :i18n/key ?k]]})
+  (map first (q '{:find [?k] :where [[_ :i18n/key ?k]]}))
 
   ;;
   )

@@ -3,6 +3,8 @@
     [clojure.string :as string]
     [clojure.core.async :as async]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.util.db :as db]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
     #?(:cljs
@@ -93,32 +95,31 @@
 
 (defn- normalize [datoms]
   (reduce (fn [entities [eid attr v]]
-            (if (cardinality-many? attr)
+            (if (db/cardinality-many? attr)
               (update-in entities [eid attr] (comp set conj) v)
               (assoc-in entities [eid attr] v)))
           {} datoms))
 
-(defn- extrapolate-eid [datoms]
+(defn- extrapolate-eid [store datoms]
   (let [;; Putting refs first helps us eliminate eids more efficiently,
         ;; since any eid that is a value in a ref datom within a tx is,
         ;; by definition, not the primary entity being transacted.
-        datoms (sort-by (complement (comp ref? second)) datoms)
+        datoms (sort-by (complement (comp #(db/ref? store %) second)) datoms)
         normalized (normalize datoms)]
     (first (keys (reduce (fn [norm [eid attr v]]
                            (cond
-                             (= 1 (count norm)) (reduced norm)
-                             (ref? attr)        (dissoc norm v)
-                             :else              norm))
+                             (= 1 (count norm))   (reduced norm)
+                             (db/ref? store attr) (dissoc norm v)
+                             :else                norm))
                          normalized datoms)))))
 
 (defn- eid [req router mapping tx]
-  (-> router
-      (bread/component (bread/match router req))
-      component/query
-      ;; TODO accept route instead of mapping
-      (affecting-attrs mapping)
-      (datoms-with-attrs tx)
-      extrapolate-eid))
+  (as-> router $
+    (bread/component $ (bread/match router req))
+    (component/query $)
+    (affecting-attrs $ mapping)
+    (datoms-with-attrs $ tx)
+    (extrapolate-eid (store/datastore req) $)))
 
 (defn- cart [colls]
   (if (empty? colls)
@@ -145,11 +146,12 @@
          (filter some?))))
 
 (defn- gather-affected-uris [res router]
-  (->> (for [route (bread/routes router)
+  (->> (doall (for [route (bread/routes router)
              tx (::bread/transactions (::bread/data res))]
          (future
+           (prn 'route-data (second route))
            ;; TODO abstract route data behind a protocol
-           (affected-uris res router (second route) tx)))
+           (affected-uris res router (second route) tx))))
        (mapcat deref)
        set))
 
@@ -161,12 +163,16 @@
   (let [app (select-keys res [::bread/plugins ::bread/hooks ::bread/config])
         handler (or (:handler config) (bread/handler app))
         req {:uri uri ::internal? true}]
-    (prn req)
     (handler req)))
 
 (defn process-txs! [res router config]
+  (prn 'process! (router config))
+  (prn 'affected (gather-affected-uris res router))
+  #_
   (future
+    (prn 'affected (gather-affected-uris res router))
     (doseq [uri (gather-affected-uris res router)]
+      (prn 'uri uri)
       (refresh-path! config res uri))))
 
 (defn plugin
@@ -196,7 +202,8 @@
              (render-static! (str root uri) index-file body))
            ;; Asynchronously process transactions that happened during
            ;; this request.
-           (process-txs! res router config)
+           #_
+           (prn 'processed @(process-txs! res router config))
            res))))))
 
 (comment
@@ -210,9 +217,6 @@
     (def $tx (first (::bread/transactions (::bread/data $req))))
     (def $match (bread/match $router $req))
     (def $component (bread/component $router $match))
-
-    (defn q [query & args]
-      (apply store/q (store/datastore $req) query args))
 
     ;;
     ;; STATIC FRONTEND LOGIC!
@@ -251,40 +255,8 @@
     ;; so that we can faithfully re-normalize the data into a mini-db of entities
     ;; from which we can extrapolate the ONE TRUE ENTITY ID (e.g. ?post).
 
-    (defn cardinality [attr]
-      (first (q '{:find [[?card]]
-                  :in [$ ?attr]
-                  :where [[?e :db/ident ?attr]
-                          [?e :db/cardinality ?card]]}
-                attr)))
-
-    (defn cardinality-one? [attr]
-      (= :db.cardinality/one (cardinality attr)))
-    (defn cardinality-many? [attr]
-      (= :db.cardinality/many (cardinality attr)))
-
-    (cardinality :post/slug)
-    (cardinality :post/fields)
-    (cardinality-one? :post/slug)
-    (cardinality-one? :post/fields)
-    (cardinality-many? :post/slug)
-    (cardinality-many? :post/fields)
-
     ;; We also need to know the value type, to distinguish refs from
     ;; other attrs...
-
-    (defn value-type [attr]
-      (first (q '{:find [[?type]]
-                  :in [$ ?attr]
-                  :where [[?e :db/ident ?attr]
-                          [?e :db/valueType ?type]]}
-                attr)))
-
-    (defn ref? [attr]
-      (= :db.type/ref (value-type attr)))
-
-    (value-type :post/fields)
-    (ref? :post/fields)
 
     (def $ent
       {:post/slug "sister-page",
@@ -299,7 +271,6 @@
     (get-attr-via $ent [:post/fields])
     (get-attr-via $ent [:post/fields :field/lang])
 
-    ;; TODO pass route instead
     (eid $req $router (:param->attr $route) $tx)
 
     ;; Now we need to figure out what to query for. Well, we have our mapping
