@@ -144,46 +144,60 @@
                 (bread/path router route-name params)))
          (filter some?))))
 
-(defn process-txns! [res router]
+(defn- gather-affected-uris [res router]
+  (->> (for [route (bread/routes router)
+             tx (::bread/transactions (::bread/data res))]
+         (future
+           ;; TODO abstract route data behind a protocol
+           (affected-uris res router (second route) tx)))
+       (mapcat deref)
+       set))
+
+(defmulti refresh-path! (fn [config res uri]
+                        (:strategy config)))
+
+(defmethod refresh-path! :default [config res uri]
+  (prn 'refresh uri #_(keys res))
+  (let [app (select-keys res [::bread/plugins ::bread/hooks ::bread/config])
+        handler (or (:handler config) (bread/handler app))
+        req {:uri uri ::internal? true}]
+    (prn req)
+    (handler req)))
+
+(defn process-txs! [res router config]
   (future
-    (let [txs (::bread/transactions (::bread/data res))]
-      ;; TODO what to do with routes w/ no cache data?
-      (prn 'AFFECTED (set (mapcat deref
-        (doall (for [route (bread/routes router)
-              tx txs]
-          ;; TODO abstract route data behind a protocol
-          (let [route-data (second route)]
-            (future
-              (affected-uris res router route-data tx)))))))))))
+    (doseq [uri (gather-affected-uris res router)]
+      (refresh-path! config res uri))))
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
   ([]
    (plugin {}))
-  ([{:keys [root index-file router]}]
-   (let [index-file (or index-file "index.html")
-         root (or root "resources/public")]
-     (fn [app]
-       (bread/add-hooks-> app
-         (:hook/init
-           (fn [app]
-             (prn :hook/init)
-             app))
-         (:hook/shutdown
-           (fn [app]
-             (prn :hook/shutdown)
-             app))
-         (:hook/response
-           (fn [{:keys [body uri status] ::keys [internal?] :as res}]
-             ;; Internal cache-refresh request: render static HTML on the fs.
-             (when (and internal? (= 200 status))
-               (prn 'render-static! uri)
-               (render-static! (str root uri) index-file body))
-             ;; Asynchronously process transactions that happened during
-             ;; this request.
-             (process-txns! res router)
-             res)))))))
+  ([{:keys [root index-file router]
+     :or {index-file "index.html"
+          root "resources/public"}
+     :as config}]
+   (fn [app]
+     (bread/add-hooks-> app
+       (:hook/init
+         (fn [app]
+           (prn :hook/init)
+           app))
+       (:hook/shutdown
+         (fn [app]
+           (prn :hook/shutdown)
+           app))
+       (:hook/response
+         (fn [{:keys [body uri status] ::keys [internal?] :as res}]
+           ;; Internal cache-refresh request: render static HTML on the fs.
+           (when (and internal? (= 200 status))
+             (prn 'render-static! uri)
+             (render-static! (str root uri) index-file body))
+           ;; Asynchronously process transactions that happened during
+           ;; this request.
+           (process-txs! res router config)
+           res))))))
 
 (comment
 
