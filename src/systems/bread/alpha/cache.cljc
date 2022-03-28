@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.cache
   (:require
     [clojure.string :as string]
-    [clojure.core.async :as async]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.util.db :as db]
@@ -28,8 +27,6 @@
 (defonce ^:private leading-slash
   #?(:clj
      (re-pattern (str "^" sep))))
-
-(defonce ^:private txs> (async/chan))
 
 (defn render-static! [path file contents]
   (let [path (string/replace path leading-slash "")]
