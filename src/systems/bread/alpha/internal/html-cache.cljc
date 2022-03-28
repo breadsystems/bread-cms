@@ -15,11 +15,21 @@
 (defonce ^:private sep
   #?(:clj
      File/separator))
+
 (defonce ^:private leading-slash
   #?(:clj
      (re-pattern (str "^" sep))))
 
+(defonce ^:private trailing-slash
+  #?(:clj
+     (re-pattern (str sep "$"))))
+
+(defn- trim-slashes [s]
+  (-> s
+      (string/replace leading-slash "")
+      (string/replace trailing-slash "")))
+
 (defn render-static! [path file contents]
-  (let [path (string/replace path leading-slash "")]
+  (let [path (trim-slashes path)]
     (mkdir path)
     (spit (str path sep file) contents)))

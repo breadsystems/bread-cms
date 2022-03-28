@@ -144,9 +144,12 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
-      ["/" {:bread/resolver :resolver.type/page
+      ["/" {:name :bread.route/home
+            :bread/resolver :resolver.type/page
             :bread/component home
-            :name :bread.route/home}]
+            :bread/cache
+            {:param->attr {:lang :field/lang}
+             :pull [{:post/fields [:lang]}]}}]
       ["/static/:slug" {:bread/resolver :resolver.type/static
                         :bread/component static-page
                         :bread/watch-static {:dir "dev/content"
