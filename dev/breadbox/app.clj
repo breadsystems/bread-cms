@@ -442,8 +442,10 @@
   (k/run :unit)
 
   bread/*profile-hooks*
-  (alter-var-root #'bread/*profile-hooks* (constantly true))
-  (alter-var-root #'bread/*profile-hooks* (constantly false))
+  (alter-var-root #'bread/*profile-hooks* not)
+
+  (do (time (handler {:uri "/"})) nil)
+  (do (time (handler {:uri "/en/"})) nil)
 
   (mount/start)
   (mount/stop)
