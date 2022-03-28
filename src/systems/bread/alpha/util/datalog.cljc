@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.util.db
+(ns systems.bread.alpha.util.datalog
   "Database helper utilities."
   (:require
     [systems.bread.alpha.core :as bread]
