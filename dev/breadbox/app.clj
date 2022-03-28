@@ -24,7 +24,6 @@
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
-    [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
@@ -315,9 +314,6 @@
                            (fn [_]
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
-
-                       ;; TODO layouts
-                       ;; TODO themes
 
                        (static-be/plugin)
                        (cache/plugin {:router $router
