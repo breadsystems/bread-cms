@@ -12,6 +12,7 @@
     :db/doc "Brief description of what this schema migration does"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   ;; TODO add :attr/migration ref, reference it instead of :migration/key
    {:migration/key :bread.migration/initial
     :migration/description "Core schema for posts, users, and related data."}])
 

@@ -25,7 +25,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.static-frontend :as static-fe]
+    [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debug.core :as debug]
@@ -144,17 +144,23 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
-      ["/" {:bread/resolver :resolver.type/page
+      ["/" {:name :bread.route/home
+            :bread/resolver :resolver.type/page
             :bread/component home
-            :name :bread.route/home}]
+            :bread/cache
+            {:param->attr {:lang :field/lang}
+             :pull [{:post/fields [:lang]}]}}]
       ["/static/:slug" {:bread/resolver :resolver.type/static
                         :bread/component static-page
                         :bread/watch-static {:dir "dev/content"
                                              :path->req [0 "static" 1]}
                         :name :bread.route/static}]
-      ["/*slugs" {:bread/resolver :resolver.type/page
+      ["/*slugs" {:name :bread.route/page
+                  :bread/resolver :resolver.type/page
                   :bread/component page
-                  :name :bread.route/page}]]]
+                  :bread/cache
+                  {:param->attr {:slugs :post/slug :lang :field/lang}
+                   :pull [:slugs {:post/fields [:lang]}]}}]]]
     {:conflicts nil}))
 
 (comment
@@ -260,6 +266,49 @@
                                                 "text/html"}
                                       :status status)))))
 
+                       ;; TODO make this API more data-oriented, e.g.:
+                       ;;
+                       ;; {:bread/hooks
+                       ;;  [:hook/dispatch
+                       ;;   {:action :action/add-transactions
+                       ;;    ;; only take this action if
+                       ;;    ;; (get-in req [::bread/internal?])
+                       ;;    ;; is truthy
+                       ;;    :action/conditions
+                       ;;    [[::bread/internal?]]
+                       ;;    :action/transactions
+                       ;;    {[{:post/slug uniq
+                       ;;       :post/type :post.type/page
+                       ;;       :post/status :post.status/published
+                       ;;       :post/fields
+                       ;;       #{{:field/lang :en
+                       ;;          :field/key :title
+                       ;;          :field/content (prn-str uniq)}
+                       ;;         {:field/lang :fr
+                       ;;          :field/key :title
+                       ;;          :field/content (prn-str uniq)}}}]}}]}
+                       ;;
+                       ;; ^^^^^^^^^^^ THIS MAP IS A PLUGIN ^^^^^^^^^^^^^
+                       (fn [app]
+                         (bread/add-hook
+                           app :hook/dispatch
+                           (fn [{::cache/keys [internal?] :as req}]
+                             (if internal?
+                               req
+                               (let [uniq (str (gensym "new-"))]
+                                 (store/add-txs
+                                   req
+                                   [{:post/slug uniq
+                                     :post/type :post.type/page
+                                     :post/status :post.status/published
+                                     :post/fields
+                                     #{{:field/lang :en
+                                        :field/key :title
+                                        :field/content (prn-str uniq)}
+                                       {:field/lang :fr
+                                        :field/key :title
+                                        :field/content (prn-str uniq)}}}]))))))
+
                        ;; BREAK IT ON PURPOSE
                        #_
                        (fn [app]
@@ -274,8 +323,11 @@
                        ;; TODO themes
 
                        (static-be/plugin)
-                       (static-fe/plugin)]})))
-  :stop (reset! app nil))
+                       (cache/plugin {:router $router
+                                      :cache/strategy :html})]})))
+  :stop (do
+          (bread/shutdown @app)
+          (reset! app nil)))
 
 (defstate handler
   :start (bread/handler @app))
@@ -300,38 +352,14 @@
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
   (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
 
-  ;; Get all post ids & slugs
-  (store/q
-    (store/datastore $req)
-    {:query '{:find [?e ?slug]
-              ;:in [$ ?type ?status ?slug]
-              :where [[?e :post/slug ?slug]]}
-     :args [(store/datastore $req)]})
+  (defn q [query & args]
+    (apply store/q (store/datastore $req) query args))
 
-  ;; Set of all attrs on entities that are part of a migration
-  (set (map first (store/q
-                    (store/datastore $req)
-                    '{:find [?attr ?v]
-                      :where [[?e :migration/key _]
-                              [?e ?attr ?v]]})))
-
-  ;; All schema changes
-  (store/q
-    (store/datastore $req)
-    '{:find [(pull ?e [:migration/key :migration/description
-                       :db/ident :db/doc :db/valueType
-                       :db/index :db/cardinality :db/unique])]
-      :where [[?e :migration/key _]
-              [?e ?attr ?v]]})
-
+  ;; Site-wide string in the requested lang
   (i18n/strings $req)
 
   ;; Get all global i18n keys
-  (store/q
-    (store/datastore $req)
-    '{:find [?k]
-      :in [$]
-      :where [[?e :i18n/key ?k]]})
+  (map first (q '{:find [?k] :where [[_ :i18n/key ?k]]}))
 
   ;;
   )

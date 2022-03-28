@@ -105,10 +105,13 @@
       false)))
 
 (defn add-txs [req txs]
-  (bread/add-effect req (fn [app]
-                          (transact
-                            (connection app)
-                            {:tx-data txs}))))
+  (bread/add-effect req (fn [{data ::bread/data :as app}]
+                          (let [result (transact
+                                         (connection app)
+                                         {:tx-data txs})]
+                            {::bread/data
+                             (update data ::bread/transactions
+                                     (comp vec conj) result)}))))
 
 (defn- initial-transactor [txns]
   (if (seq txns)
