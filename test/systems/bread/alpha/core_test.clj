@@ -4,7 +4,6 @@
     [clojure.test :refer [are deftest is testing]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.test-helpers :refer [distill-hooks plugins->handler]])
   (:import (clojure.lang ExceptionInfo)))
 

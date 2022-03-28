@@ -24,7 +24,6 @@
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
-    [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
