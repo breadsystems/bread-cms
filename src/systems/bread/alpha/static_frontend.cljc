@@ -93,9 +93,9 @@
         datoms (:tx-data tx)]
     (filter (fn [[_ attr]] (attrs attr)) datoms)))
 
-(defn- normalize [datoms]
+(defn- normalize [store datoms]
   (reduce (fn [entities [eid attr v]]
-            (if (db/cardinality-many? attr)
+            (if (db/cardinality-many? store attr)
               (update-in entities [eid attr] (comp set conj) v)
               (assoc-in entities [eid attr] v)))
           {} datoms))
@@ -105,7 +105,7 @@
         ;; since any eid that is a value in a ref datom within a tx is,
         ;; by definition, not the primary entity being transacted.
         datoms (sort-by (complement (comp #(db/ref? store %) second)) datoms)
-        normalized (normalize datoms)]
+        normalized (normalize store datoms)]
     (first (keys (reduce (fn [norm [eid attr v]]
                            (cond
                              (= 1 (count norm))   (reduced norm)
@@ -159,20 +159,14 @@
                         (:strategy config)))
 
 (defmethod refresh-path! :default [config res uri]
-  (prn 'refresh uri #_(keys res))
   (let [app (select-keys res [::bread/plugins ::bread/hooks ::bread/config])
         handler (or (:handler config) (bread/handler app))
         req {:uri uri ::internal? true}]
     (handler req)))
 
-(defn process-txs! [res router config]
-  (prn 'process! (router config))
-  (prn 'affected (gather-affected-uris res router))
-  #_
+(defn process-txs! [res {:keys [router] :as config}]
   (future
-    (prn 'affected (gather-affected-uris res router))
     (doseq [uri (gather-affected-uris res router)]
-      (prn 'uri uri)
       (refresh-path! config res uri))))
 
 (defn plugin
@@ -186,24 +180,14 @@
      :as config}]
    (fn [app]
      (bread/add-hooks-> app
-       (:hook/init
-         (fn [app]
-           (prn :hook/init)
-           app))
-       (:hook/shutdown
-         (fn [app]
-           (prn :hook/shutdown)
-           app))
        (:hook/response
          (fn [{:keys [body uri status] ::keys [internal?] :as res}]
            ;; Internal cache-refresh request: render static HTML on the fs.
            (when (and internal? (= 200 status))
-             (prn 'render-static! uri)
              (render-static! (str root uri) index-file body))
            ;; Asynchronously process transactions that happened during
            ;; this request.
-           #_
-           (prn 'processed @(process-txs! res router config))
+           (process-txs! res config)
            res))))))
 
 (comment

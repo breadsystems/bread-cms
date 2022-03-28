@@ -290,7 +290,6 @@
                          (bread/add-hook
                            app :hook/dispatch
                            (fn [{::static-fe/keys [internal?] :as req}]
-                             (prn 'internal? internal?)
                              (if internal?
                                req
                                (let [uniq (str (gensym "new-"))]
