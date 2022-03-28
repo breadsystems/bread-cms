@@ -9,7 +9,6 @@
     [clojure.string :as string]
     [config.core :as config]
     [datahike-jdbc.core]
-    [flow-storm.api :as flow]
     [kaocha.repl :as k]
     [systems.bread.alpha.cms :as cms]
     [systems.bread.alpha.core :as bread]
@@ -424,10 +423,6 @@
   org.httpkit.server.AsyncChannel
   (datafy [ch]
     (str "org.httpkit.server.AsyncChannel[" ch "]")))
-
-(defstate flow
-  :start (when (:connect-flowstorm? env)
-           (flow/connect)))
 
 (defn restart! []
   (mount/stop)

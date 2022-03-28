@@ -9,8 +9,7 @@
  {:dev
   {:extra-paths ["dev"]
    :extra-deps
-   {jpmonettas/flow-storm                           {:mvn/version "0.5.0"}
-    juxt/dirwatch                                   {:mvn/version "0.2.5"}
+   {juxt/dirwatch                                   {:mvn/version "0.2.5"}
     lambdaisland/kaocha                             {:mvn/version "1.64.1010"}
     markdown-clj/markdown-clj                       {:mvn/version "1.10.5"}
     org.clojure/clojurescript                       {:mvn/version "1.10.891"}
@@ -38,10 +37,6 @@
     juji/editscript                                 {:mvn/version "0.5.7"}
     rum/rum                                         {:mvn/version "0.12.6"}
     com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}}}
-
-  :flowstorm
-  {:extra-deps {jpmonettas/flow-storm-debugger {:mvn/version "0.6.0"}}
-   :main-opts ["-m" "flow-storm-debugger.main"]}
 
   :cms
   {:extra-paths ["plugins" "resources"]
