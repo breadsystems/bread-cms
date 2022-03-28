@@ -147,13 +147,6 @@
           :menu.item/children (walk-posts->items children)})
        posts))
 
-;; TODO move this somewhere more universal
-(defn- or-clause
-  ([field coll]
-   (or-clause '?e field coll))
-  ([sym field coll]
-   (apply list 'or (map (fn [x] [sym field x]) coll))))
-
 (defn posts-menu
   ([req]
    (posts-menu req {}))
@@ -168,18 +161,19 @@
                                      {:post/children max-recur}])
          query
          {:find [posts-pull]
-          :where [['?e :post/type t]
-                  (or-clause :post/status statuses)
-                  ;; Only include top-level posts. Descendants will get
-                  ;; picked up by the recursive :post/children query.
-                  '(not-join [?e] [?parent :post/children ?e])]}
+          :in '[$ ?type [?status ...]]
+          :where '[[?e :post/type ?type]
+                   [?e :post/status ?status]
+                   ;; Only include top-level posts. Descendants will get
+                   ;; picked up by the recursive :post/children query.
+                   (not-join [?e] [?parent :post/children ?e])]}
          items
-         (->> query
-              (bread/hook->> req :hook/posts-menu-query)
-              (store/q (store/datastore req))
-              (map first)
-              walk-posts->items
-              (expand-post-ids req))]
+         (as-> query $
+               (bread/hook->> req :hook/posts-menu-query $)
+               (store/q (store/datastore req) $ t statuses)
+               (map first $)
+               (walk-posts->items $)
+               (expand-post-ids req $))]
      (->> {:type :posts
            :post/type t
            :items items}
