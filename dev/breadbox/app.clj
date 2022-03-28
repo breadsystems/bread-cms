@@ -321,7 +321,7 @@
 
                        (static-be/plugin)
                        (cache/plugin {:router $router
-                                          :strategy :html})]})))
+                                      :cache/strategy :html})]})))
   :stop (do
           (bread/shutdown @app)
           (reset! app nil)))

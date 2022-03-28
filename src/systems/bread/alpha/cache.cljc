@@ -3,35 +3,10 @@
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
-    [systems.bread.alpha.util.db :as db]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.internal.html-cache :as html]
     [systems.bread.alpha.route :as route]
-    #?(:cljs
-       ["fs" :as fs]))
-  #?(:clj
-     (:import
-       [java.io File])))
-
-;; HELPERS
-
-(defn- mkdir [path]
-  #?(:clj
-     (.mkdirs (File. path))
-     :cljs
-     ;; TODO test this
-     (fs/mkdir path {:recursive true})))
-
-(defonce ^:private sep
-  #?(:clj
-     File/separator))
-(defonce ^:private leading-slash
-  #?(:clj
-     (re-pattern (str "^" sep))))
-
-(defn render-static! [path file contents]
-  (let [path (string/replace path leading-slash "")]
-    (mkdir path)
-    (spit (str path sep file) contents)))
+    [systems.bread.alpha.util.db :as db]))
 
 (defn- get-attr-via [entity [step & steps]]
   (if step
@@ -151,42 +126,45 @@
        (mapcat deref)
        set))
 
-(defmulti refresh-path! (fn [config res uri]
-                        (:strategy config)))
-
-(defmethod refresh-path! :default [config res uri]
-  (let [app (select-keys res [::bread/plugins ::bread/hooks ::bread/config])
-        handler (or (:handler config) (bread/handler app))
-        req {:uri uri ::internal? true}]
-    (handler req)))
-
 (defn process-txs! [res {:keys [router] :as config}]
   (future
     (doseq [uri (gather-affected-uris res router)]
-      (refresh-path! config res uri))))
+      (let [app (select-keys res [::bread/plugins ::bread/hooks ::bread/config])
+            ;; TODO filter which plugins load here - we don't want internal
+            ;; requests showing up in analytics, for example.
+            handler (or (:handler config) (bread/handler app))
+            req {:uri uri ::internal? true}]
+        (handler req)))))
+
+(defmulti cache! (fn [_res config]
+                   (:cache/strategy config)))
+
+(defmethod cache! :html
+  [{:keys [body uri status] ::keys [internal?]}
+   {:keys [root index-file router] :or {index-file "index.html"
+                                        root "resources/public"}}]
+  (html/render-static! (str root uri) index-file body))
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
   ([]
    (plugin {}))
-  ([{:keys [root index-file router]
-     :or {index-file "index.html"
-          root "resources/public"}
-     :as config}]
+  ([config]
    (fn [app]
      (bread/add-hooks-> app
        (:hook/response
-         (fn [{:keys [body uri status] ::keys [internal?] :as res}]
-           ;; Internal cache-refresh request: render static HTML on the fs.
-           (when (and internal? (= 200 status))
-             (render-static! (str root uri) index-file body))
+         (fn [res]
            ;; Asynchronously process transactions that happened during
            ;; this request.
            (process-txs! res config)
+           ;; Refresh the cache according to the specified strategy.
+           (cache! res config)
            res))))))
 
 (comment
+
+  (do ((bread/handler $app) {:uri "/en/parent-page/" ::internal? true}) nil)
 
   (do
     (require '[clojure.repl :as repl :refer [doc]]
