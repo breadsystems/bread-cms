@@ -25,7 +25,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.static-frontend :as static-fe]
+    [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.template :as tpl]
     [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debug.core :as debug]
@@ -289,7 +289,7 @@
                        (fn [app]
                          (bread/add-hook
                            app :hook/dispatch
-                           (fn [{::static-fe/keys [internal?] :as req}]
+                           (fn [{::cache/keys [internal?] :as req}]
                              (if internal?
                                req
                                (let [uniq (str (gensym "new-"))]
@@ -320,7 +320,7 @@
                        ;; TODO themes
 
                        (static-be/plugin)
-                       (static-fe/plugin {:router $router
+                       (cache/plugin {:router $router
                                           :strategy :html})]})))
   :stop (do
           (bread/shutdown @app)

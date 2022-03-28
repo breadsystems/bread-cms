@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.static-frontend
+(ns systems.bread.alpha.cache
   (:require
     [clojure.string :as string]
     [clojure.core.async :as async]
@@ -149,7 +149,6 @@
   (->> (doall (for [route (bread/routes router)
              tx (::bread/transactions (::bread/data res))]
          (future
-           (prn 'route-data (second route))
            ;; TODO abstract route data behind a protocol
            (affected-uris res router (second route) tx))))
        (mapcat deref)
