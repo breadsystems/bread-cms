@@ -14,7 +14,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.datastore.datahike :as dh]
+    [systems.bread.alpha.plugin.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]

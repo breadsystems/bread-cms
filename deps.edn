@@ -1,9 +1,7 @@
 {:paths ["src"]
- :deps {org.clojure/tools.logging  {:mvn/version "1.1.0"}
-        org.clojure/clojure        {:mvn/version "1.10.3"}
-        org.clojure/core.async     {:mvn/version "1.5.648"}
-        ;; TODO break this out into its own plugin/alias
-        io.replikativ/datahike     {:mvn/version "0.3.6"}}
+ :deps {org.clojure/tools.logging {:mvn/version "1.1.0"}
+        org.clojure/clojure       {:mvn/version "1.10.3"}
+        org.clojure/core.async    {:mvn/version "1.5.648"}}
 
  :aliases
  {:dev
@@ -45,6 +43,7 @@
     io.replikativ/datahike-jdbc {:mvn/version "0.1.2-SNAPSHOT"}
     metosin/reitit              {:mvn/version "0.5.12"}
     mount/mount                 {:mvn/version "0.1.16"}
+    io.replikativ/datahike      {:mvn/version "0.3.6"}
     ring/ring                   {:mvn/version "1.7.0"}
     rum/rum                     {:mvn/version "0.12.6"}}}
 
