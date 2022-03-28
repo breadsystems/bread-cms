@@ -140,7 +140,7 @@
     (are [effects app] (= effects (::bread/effects app))
 
       [prn] (-> (bread/app)
-                     (bread/add-effect prn))
+                (bread/add-effect prn))
 
       [inc] (-> (bread/app)
                 (bread/add-effect inc))
