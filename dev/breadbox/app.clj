@@ -285,7 +285,10 @@
                        ;;          :field/content (prn-str uniq)}}}]}}]}
                        ;;
                        ;; ^^^^^^^^^^^ THIS MAP IS A PLUGIN ^^^^^^^^^^^^^
+                       #_
                        (fn [app]
+                         ;; Transact some random post data into the db
+                         ;; on every external request.
                          (bread/add-hook
                            app :hook/dispatch
                            (fn [{::cache/keys [internal?] :as req}]
