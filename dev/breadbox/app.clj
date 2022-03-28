@@ -44,6 +44,7 @@
   env)
 
 (comment
+  (:debug? (reload-env))
   (:datahike (reload-env))
   (:reinstall-db? (reload-env)))
 
@@ -397,12 +398,13 @@
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
   ;; TODO store debug-port in an atom for middleware to use
-  :start (reset! stop-debug-server! (debug/start
-                                      (debug/debugger
-                                        debug-log
-                                        {:replay-handler handler})
-                                      {:http-port 1316
-                                       :csp-ports [9630]}))
+  :start (when (:debug? env)
+           (reset! stop-debug-server! (debug/start
+                                        (debug/debugger
+                                          debug-log
+                                          {:replay-handler handler})
+                                        {:http-port 1316
+                                         :csp-ports [9630]})))
   :stop (when-let [stop! @stop-debug-server!]
           (stop!)))
 

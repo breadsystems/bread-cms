@@ -1,4 +1,5 @@
 {:dev-port 1312
+ :debug? false
  :debug-port 1315
  ;; Reinstall dev database on restart.
  ;; NOTE: to go from true to false, you must first stop the app, then change
