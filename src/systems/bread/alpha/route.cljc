@@ -55,9 +55,6 @@
                          :resolver/pull (component/query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
-(defn sitemap [app]
-  [{}])
-
 (defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
