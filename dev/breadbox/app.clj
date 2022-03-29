@@ -10,7 +10,7 @@
     [config.core :as config]
     [datahike-jdbc.core]
     [kaocha.repl :as k]
-    [systems.bread.alpha.cms :as cms]
+    [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.datastore :as store]
@@ -222,7 +222,7 @@
 (defstate load-app
   :start (reset! app
                  (bread/load-app
-                   (cms/default-app
+                   (defaults/app
                      {:datastore $config
                       :routes {:router $router}
                       :navigation

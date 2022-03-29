@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.cms
+(ns systems.bread.alpha.defaults
   (:require
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
@@ -11,7 +11,7 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.component :as component]))
 
-(defn defaults [{:keys [datastore routes i18n navigation plugins]}]
+(defn plugins [{:keys [datastore routes i18n navigation plugins]}]
   (concat
     [(store/plugin datastore)
      (route/plugin routes)
@@ -22,5 +22,5 @@
      (component/plugin)]
     plugins))
 
-(defn default-app [config]
-  (bread/app {:plugins (defaults config)}))
+(defn app [config]
+  (bread/app {:plugins (plugins config)}))
