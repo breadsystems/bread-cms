@@ -34,6 +34,7 @@
                          (let [{:keys [ext] :or {ext ".md"}} config]
                            (assoc config :ext ext))))})
       (reitit/compiled-routes router)))
+  ;; TODO route-name
   (bread/path [router route-name params]
     (let [;; Dash-encode all string params
           params (into {} (map (juxt key (comp dash-encode val)) params))]
@@ -44,6 +45,8 @@
               (string/replace #"-%2F" "/"))))
   ;; If the matched result is a handler (fn), set it as the resolver directly.
   ;; This lets users opt in or out of Bread's routing on a per-route basis.
+  ;; TODO dispatch moves up out of Router protocol;
+  ;; resolver returns resolver data from the matched route.
   (bread/dispatch [router req]
     (let [resolver (route/resolver req)
           result (:result (:route/match resolver))]

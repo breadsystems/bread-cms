@@ -141,6 +141,8 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
+      ;; TODO :bread/resolver -> :resolver/type
+      ;; TODO :bread/component -> :resolver/component etc.
       ["/" {:name :bread.route/home
             :bread/resolver :resolver.type/page
             :bread/component home
@@ -163,6 +165,7 @@
 (comment
   (def $res (handler {:uri "/en/one/two"}))
   (route/params @app (route/match $res))
+  (reitit/match-by-path $router "/hello/")
   (reitit/match-by-path $router "/en/one/two")
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})

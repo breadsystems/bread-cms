@@ -116,6 +116,7 @@
 (def
   ^{:doc "Schema for Taxons"}
   taxons
+  ;; TODO :taxon/children
   [{:db/ident :taxon/taxonomy
     :db/doc "The hierarchy of taxons in which this taxon lives, e.g. tags, categories, etc. Analogous to WordPress taxonomies."
     :db/valueType :db.type/keyword
