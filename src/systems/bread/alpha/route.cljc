@@ -55,6 +55,39 @@
                          :resolver/pull (component/query component))]
     (bread/hook->> req :hook/resolver resolver')))
 
+(comment
+
+  ;; TODO Some hypothetical actions...
+
+  (defmethod action ::bread/dispatch [req {:keys [router]} _]
+    (bread/dispatch router req))
+
+  ;; Third param is any extra args passed.
+  (defmethod action ::path [_ {:keys [router]} [route-name params]]
+    (bread/path router route-name params))
+
+  (defmethod action ::match [req {:keys [router]} _]
+    (bread/match router req))
+
+  ;; TODO make default plugin look more like this:
+  {:hooks
+   [[::bread/dispatch
+     {:action/name ::bread/dispatch :router router}]
+    [::path
+     {:action/name ::path :router router}]
+    [::match
+     {:action/name ::match :router router}]
+    [::resolve
+     {:action/name ::resolve :router router}]
+    [::params
+     {:action/name ::params :router router}]
+    [::component
+     {:action/name ::component :action/conditions [[:found?]]}]
+    [::component
+     {:action/name ::not-found :action/conditions [[:not-found?]]}]]}
+
+  )
+
 (defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
@@ -67,7 +100,6 @@
       (:hook/match->resolver
         (fn [_ match]
           (bread/resolver router match)))
-      ;; TODO pull this out into a separate mechanism
       (:hook/match->component
         (fn [_ match]
           (bread/component router match)))
