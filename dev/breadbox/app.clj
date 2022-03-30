@@ -268,25 +268,20 @@
 
                        ;; TODO make this API more data-oriented, e.g.:
                        ;;
-                       ;; {:bread/hooks
-                       ;;  [:hook/dispatch
-                       ;;   {:action :action/add-transactions
-                       ;;    ;; only take this action if
-                       ;;    ;; (get-in req [::bread/internal?])
-                       ;;    ;; is truthy
-                       ;;    :action/conditions
-                       ;;    [[::bread/internal?]]
-                       ;;    :action/transactions
-                       ;;    {[{:post/slug uniq
-                       ;;       :post/type :post.type/page
-                       ;;       :post/status :post.status/published
-                       ;;       :post/fields
-                       ;;       #{{:field/lang :en
-                       ;;          :field/key :title
-                       ;;          :field/content (prn-str uniq)}
-                       ;;         {:field/lang :fr
-                       ;;          :field/key :title
-                       ;;          :field/content (prn-str uniq)}}}]}}]}
+                       ;; {:hook
+                       ;;  [::bread/dispatch
+                       ;;   {:action/name ::add-txs-external
+                       ;;    :txs
+                       ;;    [{:post/slug uniq
+                       ;;      :post/type :post.type/page
+                       ;;      :post/status :post.status/published
+                       ;;      :post/fields
+                       ;;      #{{:field/lang :en
+                       ;;         :field/key :title
+                       ;;         :field/content (prn-str uniq)}
+                       ;;        {:field/lang :fr
+                       ;;         :field/key :title
+                       ;;         :field/content (prn-str uniq)}}}]}]}
                        ;;
                        ;; ^^^^^^^^^^^ THIS MAP IS A PLUGIN ^^^^^^^^^^^^^
                        #_
