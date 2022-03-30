@@ -114,27 +114,27 @@
 
   ;; TODO
   {:hooks
-   [::component
-    {:action/name ::component
-     :cond [:found? [::bread/resolver :resolver/component]
-            :not-found? not-found]
-     :action/description "Returns the component to be rendered."}]
-   [::bread/render
-    {:action/name ::render
-     :data {:layout? {:content-type [complement #{"application/json"}]}}
-     :action/description
-     "Sets [::bread/data :layout?] according to request content-type."}]
-   ;; TODO put these in ring utility ns?
-   [::bread/headers
-    {:action/name ::bread/headers
-     :headers {:content-type "text/html"}
-     :action/description "Sets the content-type header to text/html."}]
-   [::bread/status
-    {:action/name ::bread/status
-     :cond [:found? 200
-            :not-found? 404
-            :bad-request? 400]
-     :action/description "Set HTTP status according to :found?"}]}
+   [[::component
+     {:action/name ::component
+      :cond [:found? [::bread/resolver :resolver/component]
+             :not-found? not-found]
+      :action/description "Returns the component to be rendered."}]
+    [::bread/render
+     {:action/name ::render
+      :data {:layout? {:content-type [complement #{"application/json"}]}}
+      :action/description
+      "Sets [::bread/data :layout?] according to request content-type."}]
+    ;; TODO put these in ring utility ns?
+    [::bread/headers
+     {:action/name ::bread/headers
+      :headers {:content-type "text/html"}
+      :action/description "Sets the content-type header to text/html."}]
+    [::bread/status
+     {:action/name ::bread/status
+      :cond [:found? 200
+             :not-found? 404
+             :bad-request? 400]
+      :action/description "Set HTTP status according to :found?"}]]}
 
   )
 
