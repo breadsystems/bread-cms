@@ -438,6 +438,21 @@
   (Throwable->map (Exception. "bad"))
   )
 
+(defmulti action (fn [_app hook _args]
+                   (:action/name hook)))
+
+(defn- load-plugin [app {:keys [hooks] :as plugin}]
+  ;; TODO DATA rm fn branch
+  (if (fn? plugin)
+    (plugin app)
+    (reduce (fn [app [hook actions]]
+              (update-in app [::hooks hook] concat actions))
+            app hooks)))
+
+(defmethod action ::load-plugins
+  [{::keys [plugins] :as app} _ _]
+  (reduce load-plugin app plugins))
+
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through
   all callbacks for h. The result of applying each callback is passed as the
@@ -460,10 +475,15 @@
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [[{::keys [f] :as hook} & fs] hooks x x]
-       (if (seq fs)
-         (recur fs (try-hook app hook h f (cons x args)))
-         (try-hook app hook h f (cons x args))))
+     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
+       (if a
+         (if hook
+           (recur (action app hook (cons x args)) hs)
+           x)
+         ;; TODO do away with fns as hooks and remove this branch
+         (if hook
+           (recur (try-hook app hook h f (cons x args)) hs)
+           x)))
      x))
   ([app h]
    (hook-> app h nil)))
@@ -481,10 +501,12 @@
   {:arglist '([] [opts])}
   ([{:keys [plugins]}]
    (-> {::plugins (or plugins [])
-        ::hooks   {}
+        ::hooks   {::load-plugins
+                   [{:action/name ::load-plugins
+                     :action/description
+                     "Load hooks declared in all plugins"}]}
         ::config  {}
-        ::data    {}}
-       (add-hook :hook/load-plugins load-plugins)))
+        ::data    {}}))
   ([]
    (app {})))
 
@@ -493,7 +515,7 @@
   [app]
   (-> app
       (hook :hook/bootstrap)
-      (hook :hook/load-plugins)
+      (hook ::load-plugins)
       (hook :hook/init)))
 
 (defn shutdown

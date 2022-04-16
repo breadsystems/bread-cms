@@ -4,7 +4,9 @@
     [clojure.test :refer [are deftest is testing]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.test-helpers :refer [distill-hooks plugins->handler]])
+    [systems.bread.alpha.test-helpers :refer [distill-hooks
+                                              plugins->handler
+                                              plugins->loaded]])
   (:import (clojure.lang ExceptionInfo)))
 
 (deftest test-response
@@ -52,6 +54,15 @@
 
 (deftest test-load-plugins
 
+  (testing "it loads all plugins in order"
+    (let [one {:action/name :a/one
+               :action/description "desc one"}
+          two {:action/name :a/two
+               :action/description "desc two"}
+          app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
+      (is (= [one two] (bread/hooks-for app :hook/a)))))
+
+  ;; TODO DATA
   (testing "it applies all plugin fns"
     (let [plugin-a (fn [app]
                      (bread/add-hook app :plugin.a/inc inc))
@@ -480,13 +491,7 @@
   (testing "it populates itself with passed plugins"
     (let [app (bread/app {:plugins [:some :fake :plugins]})]
       (is (= [:some :fake :plugins]
-             (::bread/plugins app)))))
-
-  (testing "it enriches the request with the app data itself"
-    (let [app (bread/app)]
-      (is (= [{::bread/precedence 1 ::bread/f bread/load-plugins}]
-             (distill-hooks
-               (bread/hooks-for app :hook/load-plugins)))))))
+             (::bread/plugins app))))))
 
 (deftest test-load-handler
 
