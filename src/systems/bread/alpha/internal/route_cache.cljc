@@ -4,7 +4,7 @@
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.util.db :as db]))
+    [systems.bread.alpha.util.datalog :as datalog]))
 
 (defn- get-attr-via [entity [step & steps]]
   (if step
@@ -65,7 +65,7 @@
 
 (defn- normalize [store datoms]
   (reduce (fn [entities [eid attr v]]
-            (if (db/cardinality-many? store attr)
+            (if (datalog/cardinality-many? store attr)
               (update-in entities [eid attr] (comp set conj) v)
               (assoc-in entities [eid attr] v)))
           {} datoms))
@@ -74,13 +74,13 @@
   (let [;; Putting refs first helps us eliminate eids more efficiently,
         ;; since any eid that is a value in a ref datom within a tx is,
         ;; by definition, not the primary entity being transacted.
-        datoms (sort-by (complement (comp #(db/ref? store %) second)) datoms)
+        datoms (sort-by (complement (comp #(datalog/ref? store %) second)) datoms)
         normalized (normalize store datoms)]
     (first (keys (reduce (fn [norm [eid attr v]]
                            (cond
-                             (= 1 (count norm))   (reduced norm)
-                             (db/ref? store attr) (dissoc norm v)
-                             :else                norm))
+                             (= 1 (count norm))        (reduced norm)
+                             (datalog/ref? store attr) (dissoc norm v)
+                             :else                     norm))
                          normalized datoms)))))
 
 (defn- eid [req router mapping tx]
@@ -123,3 +123,21 @@
            (affected-uris res router (second route) tx))))
        (mapcat deref)
        set))
+
+(comment
+
+  (def $ent
+    {:post/slug "sister-page",
+     :post/fields
+     [{:field/lang :en}
+      {:field/lang :fr}
+      {:field/lang :en}
+      {:field/lang :fr}
+      {:field/lang :en}]})
+
+  (get-attr-via $ent [:post/slug])
+  (get-attr-via $ent [:post/fields])
+  (get-attr-via $ent [:post/fields :field/lang])
+
+  ;;
+  )

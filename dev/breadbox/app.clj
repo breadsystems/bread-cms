@@ -9,14 +9,12 @@
     [clojure.string :as string]
     [config.core :as config]
     [datahike-jdbc.core]
-    [flow-storm.api :as flow]
     [kaocha.repl :as k]
-    [systems.bread.alpha.cms :as cms]
+    [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component :refer [defc]]
-    [systems.bread.alpha.dev-helpers :as help]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.datastore.datahike :as dh]
+    [systems.bread.alpha.plugin.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
@@ -26,8 +24,6 @@
     [systems.bread.alpha.resolver :as resolver]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
-    [systems.bread.alpha.template :as tpl]
-    [systems.bread.alpha.theme :as theme]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [mount.core :as mount :refer [defstate]]
@@ -48,6 +44,7 @@
   env)
 
 (comment
+  (:debug? (reload-env))
   (:datahike (reload-env))
   (:reinstall-db? (reload-env)))
 
@@ -144,6 +141,8 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
+      ;; TODO :bread/resolver -> :resolver/type
+      ;; TODO :bread/component -> :resolver/component etc.
       ["/" {:name :bread.route/home
             :bread/resolver :resolver.type/page
             :bread/component home
@@ -166,6 +165,7 @@
 (comment
   (def $res (handler {:uri "/en/one/two"}))
   (route/params @app (route/match $res))
+  (reitit/match-by-path $router "/hello/")
   (reitit/match-by-path $router "/en/one/two")
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})
@@ -225,7 +225,7 @@
 (defstate load-app
   :start (reset! app
                  (bread/load-app
-                   (cms/default-app
+                   (defaults/app
                      {:datastore $config
                       :routes {:router $router}
                       :navigation
@@ -268,28 +268,26 @@
 
                        ;; TODO make this API more data-oriented, e.g.:
                        ;;
-                       ;; {:bread/hooks
-                       ;;  [:hook/dispatch
-                       ;;   {:action :action/add-transactions
-                       ;;    ;; only take this action if
-                       ;;    ;; (get-in req [::bread/internal?])
-                       ;;    ;; is truthy
-                       ;;    :action/conditions
-                       ;;    [[::bread/internal?]]
-                       ;;    :action/transactions
-                       ;;    {[{:post/slug uniq
-                       ;;       :post/type :post.type/page
-                       ;;       :post/status :post.status/published
-                       ;;       :post/fields
-                       ;;       #{{:field/lang :en
-                       ;;          :field/key :title
-                       ;;          :field/content (prn-str uniq)}
-                       ;;         {:field/lang :fr
-                       ;;          :field/key :title
-                       ;;          :field/content (prn-str uniq)}}}]}}]}
+                       ;; {:hook
+                       ;;  [::bread/dispatch
+                       ;;   {:action/name ::add-txs-external
+                       ;;    :txs
+                       ;;    [{:post/slug uniq
+                       ;;      :post/type :post.type/page
+                       ;;      :post/status :post.status/published
+                       ;;      :post/fields
+                       ;;      #{{:field/lang :en
+                       ;;         :field/key :title
+                       ;;         :field/content (prn-str uniq)}
+                       ;;        {:field/lang :fr
+                       ;;         :field/key :title
+                       ;;         :field/content (prn-str uniq)}}}]}]}
                        ;;
                        ;; ^^^^^^^^^^^ THIS MAP IS A PLUGIN ^^^^^^^^^^^^^
+                       #_
                        (fn [app]
+                         ;; Transact some random post data into the db
+                         ;; on every external request.
                          (bread/add-hook
                            app :hook/dispatch
                            (fn [{::cache/keys [internal?] :as req}]
@@ -318,9 +316,6 @@
                            (fn [_]
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
-
-                       ;; TODO layouts
-                       ;; TODO themes
 
                        (static-be/plugin)
                        (cache/plugin {:router $router
@@ -401,12 +396,13 @@
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
   ;; TODO store debug-port in an atom for middleware to use
-  :start (reset! stop-debug-server! (debug/start
-                                      (debug/debugger
-                                        debug-log
-                                        {:replay-handler handler})
-                                      {:http-port 1316
-                                       :csp-ports [9630]}))
+  :start (when (:debug? env)
+           (reset! stop-debug-server! (debug/start
+                                        (debug/debugger
+                                          debug-log
+                                          {:replay-handler handler})
+                                        {:http-port 1316
+                                         :csp-ports [9630]})))
   :stop (when-let [stop! @stop-debug-server!]
           (stop!)))
 
@@ -425,10 +421,6 @@
   org.httpkit.server.AsyncChannel
   (datafy [ch]
     (str "org.httpkit.server.AsyncChannel[" ch "]")))
-
-(defstate flow
-  :start (when (:connect-flowstorm? env)
-           (flow/connect)))
 
 (defn restart! []
   (mount/stop)

@@ -3,7 +3,7 @@
     [clojure.test :refer :all]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.datastore.datahike :as plugin]
+    [systems.bread.alpha.plugin.datahike :as plugin]
     [systems.bread.alpha.test-helpers :as h]))
 
 

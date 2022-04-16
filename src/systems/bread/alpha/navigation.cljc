@@ -39,6 +39,9 @@
                 subtree (sort-by :menu.item/order children)
                 ancestry (conj ancestry slug)]
             (assoc item
+                   ;; TODO specify which route name to use dynamically
+                   ;; based on :post/type?
+                   ;; TODO also figure out how to walk other kinds of entities.
                    :url (route/path req ancestry :bread.route/page)
                    :children (walk-items req by-id subtree ancestry))))
         (sort-by :menu.item/order items)))

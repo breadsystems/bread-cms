@@ -56,15 +56,87 @@
   (:key (meta component)))
 
 (defn query
-  "Get the query for this component. Not recursive (yet)."
+  "Get the query for this component."
   [component]
   (:query (meta component)))
 
+;; TODO s/extended/parent
 (defn extended [component]
   (:extends (meta component)))
 
+;; TODO layout
+
+;; TODO rm this
 (defn not-found? [component]
   (boolean (:not-found (meta component))))
+
+(comment
+
+  (defmethod action ::render
+    [{::bread/keys [data] :as req} {exprs-map :data :as _action} _]
+    (let [data (merge data (interpret exprs-map req))
+          ;; equivalent:
+          ;; data (reduce (fn [data [k expr]]
+          ;;                (assoc k (interpret expr req)))
+          ;;              data exprs-map)
+          component (bread/hook req ::component)
+          layout (layout component)
+          parent (parent component)]
+      (->> (cond
+             (nil? component) nil
+             (and layout (not (:layout? data))) (component data)
+             layout (render layout (component data))
+             parent (render parent (component data))
+             :else (component data))
+           (assoc req ::bread/data data :body))))
+
+  (defmethod action ::component
+    [{::bread/keys [data] :as req} {expr :component/cond} _]
+    (let [result (interpret-cond expr data)]
+      (if (vector? result)
+        (get-in req result)
+        result)))
+
+  ;; in core.cljc
+  (defmethod action ::headers [req {:keys [headers]} _]
+    (update-in req :headers merge headers))
+
+  (defmethod action ::status [{::keys [data]} {expr :cond} _]
+    (interpret-cond expr data))
+
+  (defmethod action ::cond.data [{::keys [data]} {:cond/keys [expr]} _]
+    (interpret-cond expr data))
+
+  (defmethod action ::cond [req {:cond/keys [expr]} _]
+    (interpret-cond expr req))
+
+
+
+  ;; TODO
+  {:hooks
+   [[::component
+     {:action/name ::component
+      :cond [:found? [::bread/resolver :resolver/component]
+             :not-found? not-found]
+      :action/description "Returns the component to be rendered."}]
+    [::bread/render
+     {:action/name ::render
+      :data {:layout? {:content-type [complement #{"application/json"}]}}
+      :action/description
+      "Sets [::bread/data :layout?] according to request content-type."}]
+    ;; TODO put these in ring utility ns?
+    [::bread/headers
+     {:action/name ::bread/headers
+      :headers {:content-type "text/html"}
+      :action/description "Sets the content-type header to text/html."}]
+    [::bread/status
+     {:action/name ::bread/status
+      :cond [:found? 200
+             :not-found? 404
+             :bad-request? 400]
+      :action/description "Set HTTP status according to :found?"}]]}
+
+  )
 
 (defn component [{::bread/keys [data resolver] :as res}]
   (bread/hook->>
@@ -90,6 +162,7 @@
   (let [component (component res)
         parent (extended component)
         body (cond
+               ;; TODO :layout
                (and component
                     (false? (:component/extend? data)))
                (component data)

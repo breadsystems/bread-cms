@@ -1,5 +1,5 @@
 ;; TODO migrate to CLJC
-(ns systems.bread.alpha.datastore.datahike
+(ns systems.bread.alpha.plugin.datahike
   (:require
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]

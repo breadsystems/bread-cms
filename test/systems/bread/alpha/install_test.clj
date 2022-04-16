@@ -2,7 +2,7 @@
   (:require
    [clojure.test :refer [deftest is use-fixtures]]
    [systems.bread.alpha.datastore :as store]
-   [systems.bread.alpha.datastore.datahike]))
+   [systems.bread.alpha.plugin.datahike]))
 
 (defonce config {:datastore/type :datahike
                  :store          {:backend :mem :id "install-db"}})

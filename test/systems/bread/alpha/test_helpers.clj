@@ -31,6 +31,16 @@
 (defn datastore-config->handler [config]
   (-> config datastore-config->app bread/load-handler))
 
+(defn distill-hooks
+  "Returns a subset of the keys in each hook (map) in (the vector of) hooks.
+  Default Keys are:
+  - ::systems.bread.alpha.core/precedence
+  - ::systems.bread.alpha.core/f"
+  ([hooks]
+   (distill-hooks [::bread/precedence ::bread/f] hooks))
+  ([ks hooks]
+   (map #(select-keys % ks) hooks)))
+
 (defmacro use-datastore [freq config]
   `(t/use-fixtures ~freq (fn [f#]
                            (try

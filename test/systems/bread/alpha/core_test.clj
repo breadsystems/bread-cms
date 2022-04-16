@@ -4,9 +4,7 @@
     [clojure.test :refer [are deftest is testing]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.dev-helpers :refer [distill-hooks]]
-    [systems.bread.alpha.template :as tpl]
-    [systems.bread.alpha.test-helpers :refer [plugins->handler]])
+    [systems.bread.alpha.test-helpers :refer [distill-hooks plugins->handler]])
   (:import (clojure.lang ExceptionInfo)))
 
 (deftest test-response
@@ -140,7 +138,7 @@
     (are [effects app] (= effects (::bread/effects app))
 
       [prn] (-> (bread/app)
-                     (bread/add-effect prn))
+                (bread/add-effect prn))
 
       [inc] (-> (bread/app)
                 (bread/add-effect inc))
