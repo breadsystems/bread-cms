@@ -478,7 +478,7 @@
      (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
        (if a
          (if hook
-           (recur (action app hook (cons x args)) hs)
+           (recur (action x hook (cons x args)) hs)
            x)
          ;; TODO do away with fns as hooks and remove this branch
          (if hook
