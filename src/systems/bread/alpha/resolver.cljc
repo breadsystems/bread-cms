@@ -68,4 +68,4 @@
 
 (defn plugin []
   (fn [app]
-    (bread/add-hook app :hook/resolve resolve-queries)))
+    (bread/add-hook app ::bread/resolve resolve-queries)))

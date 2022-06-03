@@ -537,7 +537,7 @@
     (-> (merge req app)
         (hook :hook/request)
         (hook :hook/dispatch) ;; -> ::resolver
-        (hook :hook/resolve)  ;; -> ::queries
+        (hook ::resolve)      ;; -> ::queries
         (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body

@@ -217,11 +217,11 @@
    (let [{:keys [hooks menus] global-menu-opts :global-menus} opts
          ;; Any additional menus to be added...
          menu-hooks (map (fn [opts]
-                           [:hook/resolve #(add-menu % opts)])
+                           [::bread/resolve #(add-menu % opts)])
                          menus)
          hooks (apply conj hooks
                       (when (not (false? global-menu-opts))
-                        [:hook/resolve (adder global-menus global-menu-opts)])
+                        [::bread/resolve (adder global-menus global-menu-opts)])
                       menu-hooks)]
      (fn [app]
        (reduce (fn [app [hook callback]]

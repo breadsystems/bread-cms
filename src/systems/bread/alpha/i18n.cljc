@@ -79,4 +79,4 @@
                          :i18n/lang-param (:lang-param opts :lang)
                          :i18n/fallback-lang (:fallback-lang opts :en))
        (:hook/path-params path-params)
-       (:hook/resolve add-i18n-queries)))))
+       (::bread/resolve add-i18n-queries)))))
