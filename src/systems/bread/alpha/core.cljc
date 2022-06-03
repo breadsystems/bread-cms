@@ -460,10 +460,10 @@
   present."
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [[{::keys [f] :as hook} & fs] hooks x x]
-       (if (seq fs)
-         (recur fs (try-hook app hook h f (concat [app x] args)))
-         (try-hook app hook h f (concat [app x] args))))
+     (loop [x x [{::keys [f] :as hook} & fs] hooks]
+       (if hook
+         (recur (try-hook app hook h f (concat [app x] args)) fs)
+         x))
      x))
   ([app h]
    (hook->> app h nil)))
