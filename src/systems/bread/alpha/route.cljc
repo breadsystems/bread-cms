@@ -10,13 +10,13 @@
   (let [path (if (sequential? path) (string/join "/" path) path)
         ;; TODO get :slugs from opts
         params (bread/hook->> req :hook/path-params {:slugs path} route-name)]
-    (bread/hook->> req :hook/route-path path route-name params)))
+    (bread/hook->> req ::path path route-name params)))
 
 (defn match [req]
-  (bread/hook->> req :hook/match-route))
+  (bread/hook->> req ::match))
 
 (defn params [req match]
-  (bread/hook->> req :hook/route-params match))
+  (bread/hook->> req ::params match))
 
 (defn resolver [req]
   "Get the full resolver for the given request. Router implementations should
@@ -25,10 +25,10 @@
                  :resolver/type :resolver.type/page
                  :post/type :post.type/page}
         match (match req)
-        declared (bread/hook->> req :hook/match->resolver match)
-        component (bread/hook->> req :hook/match->component match)
+        declared (bread/hook->> req ::resolver match)
+        component (bread/hook->> req ::component match)
         not-found-component
-        (bread/hook->> req :hook/match->not-found-component match)
+        (bread/hook->> req ::not-found-component match)
         {:resolver/keys [defaults?]} declared
         keyword->type {:resolver.type/home :resolver.type/page
                        :resolver.type/page :resolver.type/page}
@@ -100,7 +100,7 @@
     ;; NOTE: no more match! We are flipping the responsibility: protocol
     ;; impls are now responsible for running hooks on their return values.
     ;; The bread/match protocol fn still exists, we just don't wrap the call
-    ;; to it in a (bread/hook req :hook/match-route) from core anymore.
+    ;; to it in a (bread/hook req ::match) from core anymore.
     [::params
      {:action/name ::params
       :router router}]]}
@@ -110,22 +110,22 @@
 (defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
-      (:hook/route-path
+      (::path
         (fn [req _ route-name params]
           (bread/path router route-name params)))
-      (:hook/match-route
+      (::match
         (fn [req _]
           (bread/match router req)))
-      (:hook/match->resolver
+      (::resolver
         (fn [_ match]
           (bread/resolver router match)))
-      (:hook/match->component
+      (::component
         (fn [_ match]
           (bread/component router match)))
-      (:hook/match->not-found-component
+      (::not-found-component
         (fn [_ match]
           (bread/not-found-component router match)))
-      (:hook/route-params
+      (::params
         (fn [_ match]
           (bread/params router match)))
       (::bread/dispatch

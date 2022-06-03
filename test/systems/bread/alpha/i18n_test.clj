@@ -7,6 +7,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               use-datastore]]))
 
@@ -29,7 +30,7 @@
 
 (defn naive-string-parsing-route-plugin []
   (fn [app]
-    (bread/add-hook app :hook/route-params naive-params)))
+    (bread/add-hook app ::route/params naive-params)))
 
 (comment
   (string/split "a/b/c" #"/" 2)
