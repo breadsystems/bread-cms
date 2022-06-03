@@ -128,6 +128,6 @@
       (:hook/route-params
         (fn [_ match]
           (bread/params router match)))
-      (:hook/dispatch
+      (::bread/dispatch
         (fn [req]
           (bread/dispatch router req))))))

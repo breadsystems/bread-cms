@@ -290,7 +290,7 @@
                          ;; Transact some random post data into the db
                          ;; on every external request.
                          (bread/add-hook
-                           app :hook/dispatch
+                           app ::bread/dispatch
                            (fn [{::cache/keys [internal?] :as req}]
                              (if internal?
                                req
@@ -313,7 +313,7 @@
                        (fn [app]
                          (bread/add-hook
                            app
-                           :hook/dispatch
+                           ::bread/dispatch
                            (fn [_]
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))

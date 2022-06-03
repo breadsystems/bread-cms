@@ -536,7 +536,7 @@
   (fn [req]
     (-> (merge req app)
         (hook :hook/request)
-        (hook :hook/dispatch) ;; -> ::resolver
+        (hook ::dispatch)     ;; -> ::resolver
         (hook ::resolve)      ;; -> ::queries
         (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
