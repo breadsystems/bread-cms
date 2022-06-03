@@ -538,7 +538,7 @@
         (hook :hook/request)
         (hook :hook/dispatch) ;; -> ::resolver
         (hook :hook/resolve)  ;; -> ::queries
-        (hook :hook/expand)   ;; -> ::data
+        (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
         (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))

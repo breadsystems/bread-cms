@@ -64,7 +64,7 @@
                   (assoc ::bread/queries queries
                          ::bread/resolver {:resolver/type :resolver.type/page
                                            :resolver/key :post})
-                  (bread/hook :hook/expand)
+                  (bread/hook ::bread/expand)
                   ::bread/data))
 
        ;; Querying for a non-existent post

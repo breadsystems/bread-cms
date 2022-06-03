@@ -18,18 +18,17 @@
                :else [k])]
     (assoc-in data path (bread/query q data args))))
 
-(defn- expand-queries [queries]
-  (reduce expand-query {} queries))
-
 (defn- expand-not-found [resolver data]
+  ;; TODO make key optional?
   (let [k (:resolver/key resolver)]
     (assoc data :not-found? (nil? (get data k)))))
 
-(defn expand [{::bread/keys [resolver] :as req}]
+(defmethod bread/action ::expand-queries
+  [{::bread/keys [resolver queries] :as req} _ _]
   (if (fn? resolver)
     (resolver req)
-    (->> (::bread/queries req)
-         expand-queries
+    (->> queries
+         (reduce expand-query {})
          (expand-not-found resolver)
          (assoc req ::bread/data))))
 
@@ -41,5 +40,8 @@
             (vec (conj (vec queries) query)))))
 
 (defn plugin []
-  (fn [app]
-    (bread/add-hook app :hook/expand expand)))
+  {:hooks
+   {::bread/expand
+    [{:action/name ::expand-queries
+      :action/description
+      "Expand ::bread/queries into their respective results"}]}})
