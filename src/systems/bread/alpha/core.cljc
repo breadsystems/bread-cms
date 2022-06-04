@@ -248,6 +248,7 @@
    (let [hooks (hooks-for app h)]
      (boolean (some #(hook-matches? % f options) hooks)))))
 
+;; TODO delete add-hook & friends in favor of a defhook that captures equiv.
 (defn- append-hook [hooks f options]
   (let [hook (assoc (dissoc options :precedence)
                     ::f f
@@ -261,7 +262,9 @@
   for h."
   {:arglists '([app h f] [app h f options])}
   ([app h f options]
-   (update-in app [::hooks h] append-hook f options))
+   (if (fn? f)
+     (update-in app [::hooks h] append-hook f options)
+     (update-in app [::hooks h] conj f)))
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
 
