@@ -284,4 +284,4 @@
 
 (defmethod store/plugin :datahike [config]
   (let [config (merge {:datastore/req->datastore datastore} config)]
-    (store/plugin* config)))
+    (store/base-plugin config)))

@@ -122,7 +122,16 @@
       (throw (ex-info "Failed to connect to datastore." {:type :no-connection}))))
   app)
 
-(defn plugin*
+;; TODO drop support for these in favor of simply overriding multimethods
+(defmethod bread/action ::timepoint
+  [req {:keys [req->timepoint]} _]
+  (req->timepoint req))
+
+(defmethod bread/action ::datastore
+  [req {:keys [req->datastore]} _]
+  (req->datastore req))
+
+(defn base-plugin
   "Helper for instantiating a datastore. Do not call this fn directly from
   application code; recommended for use from plugins only. Use store/plugin
   instead."
@@ -140,14 +149,15 @@
                      (catch clojure.lang.ExceptionInfo e
                        (when-not (= :db-does-not-exist (:type (ex-data e)))
                          (throw e))))]
-    (fn [app]
-      (-> app
-          (bread/set-config :datastore/config config)
-          (bread/set-config :datastore/connection connection)
-          (bread/set-config :datastore/as-of-param as-of-param)
-          (bread/set-config :datastore/as-of-format as-of-format)
-          (bread/add-hook :hook/init {:action/name ::transact-initial
-                                      :txs initial-txns})
-          ;; TODO drop support for these in favor of simply overriding the multimethod
-          (bread/add-hook :hook/datastore.req->timepoint req->timepoint)
-          (bread/add-hook :hook/datastore req->datastore)))))
+    {:config
+     {:datastore/config config
+      :datastore/connection connection
+      :datastore/as-of-param as-of-param
+      :datastore/as-of-format as-of-format}
+     :hooks
+     {:hook/init
+      [{:action/name ::transact-initial :txs initial-txns}]
+      :hook/datastore.req->timepoint
+      [{:action/name ::timepoint :req->timepoint req->timepoint}]
+      :hook/datastore
+      [{:action/name ::datastore :req->datastore req->datastore}]}}))
