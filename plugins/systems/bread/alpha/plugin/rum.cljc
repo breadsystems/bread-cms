@@ -13,4 +13,4 @@
    (let [render-opts (merge {:precedence Double/POSITIVE_INFINITY}
                             render-opts)]
      (fn [app]
-       (bread/add-hook app :hook/render render-body render-opts)))))
+       (bread/add-hook app ::bread/render render-body render-opts)))))

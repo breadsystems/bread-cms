@@ -526,7 +526,7 @@
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
           renderer-plugin (fn [app]
-                            (bread/add-hook app :hook/render (constantly res)))
+                            (bread/add-hook app ::bread/render (constantly res)))
           handler (plugins->handler [renderer-plugin])]
       (is (= res (handler {})))))
 

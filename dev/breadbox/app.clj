@@ -257,7 +257,7 @@
                        (fn [app]
                          (bread/add-hook
                            app
-                           :hook/render
+                           ::bread/render
                            (fn [{::bread/keys [data] :as res}]
                              (let [status (if (:not-found? data)
                                             404

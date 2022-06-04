@@ -552,7 +552,7 @@
         (hook ::resolve)      ;; -> ::queries
         (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
-        (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
+        (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
         (hook :hook/response))))
 
 (defn load-handler
