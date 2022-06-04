@@ -171,6 +171,7 @@
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})
   (route/path $res "one/two" :bread.route/page)
+  (bread/hook->> $res :hook/path-params {:slugs "one/two"} :bread.route/page)
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
@@ -374,6 +375,7 @@
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       ;; TODO get these ports from mounted state
+      #_
       (mid/wrap-exceptions $ {:csp-ports [1316 9630]})
       (wrap-keyword-params $)
       (wrap-params $)
