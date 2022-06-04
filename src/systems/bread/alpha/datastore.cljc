@@ -113,19 +113,14 @@
                              (update data ::bread/transactions
                                      (comp vec conj) result)}))))
 
-(defn- initial-transactor [txns]
-  (if (seq txns)
-    (fn [app]
-      (letfn [(do-txns [app]
-                (let [conn (connection app)]
-                  (when-not conn
-                    (throw (ex-info
-                             "Failed to connect to datastore."
-                             {:type :no-connection})))
-                  (transact conn txns))
-                app)]
-        (bread/add-hook app :hook/init do-txns)))
-    identity))
+(defmethod bread/action ::transact-initial
+  [app {:keys [txs]} _]
+  (when (seq txs)
+    (prn 'INITIAL txs)
+    (if-let [conn (connection app)]
+      (transact conn txs)
+      (throw (ex-info "Failed to connect to datastore." {:type :no-connection}))))
+  app)
 
 (defn plugin*
   "Helper for instantiating a datastore. Do not call this fn directly from
@@ -135,12 +130,11 @@
   (let [{:datastore/keys [as-of-format
                           as-of-param
                           req->datastore
-                          initial-txns]} config
-        ;; Support shorthands for (bread/add-hook :hook/datastore*)
-        as-of-param (or as-of-param :as-of)
-        as-of-format (or as-of-format "yyyy-MM-dd HH:mm:ss z")
-        ->timepoint (:datastore/req->timepoint config db-tx)
-        transact-initial (initial-transactor initial-txns)
+                          req->timepoint
+                          initial-txns]
+         :or {as-of-param :as-of
+              as-of-format "yyyy-MM-dd HH:mm:ss z"
+              req->timepoint db-tx}} config
         connection (try
                      (connect! config)
                      (catch clojure.lang.ExceptionInfo e
@@ -152,6 +146,8 @@
           (bread/set-config :datastore/connection connection)
           (bread/set-config :datastore/as-of-param as-of-param)
           (bread/set-config :datastore/as-of-format as-of-format)
-          (transact-initial)
-          (bread/add-hook :hook/datastore.req->timepoint ->timepoint)
+          (bread/add-hook :hook/init {:action/name ::transact-initial
+                                      :txs initial-txns})
+          ;; TODO drop support for these in favor of simply overriding the multimethod
+          (bread/add-hook :hook/datastore.req->timepoint req->timepoint)
           (bread/add-hook :hook/datastore req->datastore)))))
