@@ -55,6 +55,9 @@
   :test
   {:main-opts ["-m" "kaocha.runner"]}
 
+  :app
+  {:main-opts ["-m" "breadbox.app"]}
+
   :build
   {:deps
    {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}

@@ -31,7 +31,8 @@
     [reitit.core :as reitit]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-    [ring.middleware.reload :refer [wrap-reload]]))
+    [ring.middleware.reload :refer [wrap-reload]])
+  (:gen-class))
 
 ;; This needs to install db on init in order for db and load-app to
 ;; initialize correctly.
@@ -428,6 +429,9 @@
 
 (defn restart-cms! []
   (mount/stop-except #'debug-server)
+  (mount/start))
+
+(defn -main [& _]
   (mount/start))
 
 (comment
