@@ -553,7 +553,7 @@
         (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
         (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
-        (hook :hook/response))))
+        (hook ::response))))
 
 (defn load-handler
   "Loads the given app, returning a Ring handler that wraps the loaded app."

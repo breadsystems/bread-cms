@@ -142,7 +142,7 @@
             (bread/profile> :profile.type/request req)
             req))
         {:precedence Double/NEGATIVE_INFINITY})
-      (:hook/response
+      (::bread/response
         (fn [res]
           (let [res (assoc res :response/timestamp (Date.))]
             (bread/profile> :profile.type/response res)

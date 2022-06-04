@@ -15,6 +15,9 @@
             req {:uri uri ::internal? true}]
         (handler req)))))
 
+;; TODO fetch multimethod
+;; TODO db wrap layer
+
 (defmulti cache! (fn [_res config]
                    (:cache/strategy config)))
 
@@ -22,7 +25,28 @@
   [{:keys [body uri status] ::keys [internal?]}
    {:keys [root index-file router] :or {index-file "index.html"
                                         root "resources/public"}}]
-  (html/render-static! (str root uri) index-file body))
+  (prn 'render root index-file router)
+  (when internal?
+    (prn 'process!)
+    (html/render-static! (str root uri) index-file body)))
+
+(comment
+
+  ;; NOTE: we want to keep caching configuration plugin-specific, rather than
+  ;; global (i.e. ::bread/config). To see why, imagine two caching strategies,
+  ;; side by side. For example the default :html strategy and a second
+  ;; :memcached strategy:
+  [,,,
+   (cache/plugin {:router my-router
+                  :strategy :html
+                  :root "path/to/root"
+                  :index-file "index.html"})
+   (cache/plugin {:router my-router
+                  :strategy :memcached
+                  :ip-pool #{"192.168.1.10" "192.168.1.11" "192.168.1.12"}})
+   ,,,]
+
+  )
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
@@ -32,7 +56,7 @@
   ([config]
    (fn [app]
      (bread/add-hooks-> app
-       (:hook/response
+       (::bread/response
          (fn [res]
            ;; Asynchronously process transactions that happened during
            ;; this request.
