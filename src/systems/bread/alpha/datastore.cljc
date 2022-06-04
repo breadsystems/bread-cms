@@ -116,7 +116,6 @@
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
-    (prn 'INITIAL txs)
     (if-let [conn (connection app)]
       (transact conn txs)
       (throw (ex-info "Failed to connect to datastore." {:type :no-connection}))))
