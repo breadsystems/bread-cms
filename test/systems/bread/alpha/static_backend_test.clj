@@ -15,24 +15,17 @@
          "content/fr/other.md" "OTHER doc in French under /content"
          "content/en/page.ext" ".ext doc in English under /content"
          "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
-         }]
+         }
+        default-opts {:root "content"
+                      :ext ".md"
+                      :lang-param :lang
+                      :slug-param :slug}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
         [content args]
-        (= content (apply static/query-fs {} args))
-
-        ;; Passing no opts arg
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"}]
-
-        ;; Passing nil opts
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"} nil]
-
-        ;; Passing empty opts
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"} {}]
+        (= content (let [[params opts] args]
+                     (static/query-fs {} params (merge default-opts opts))))
 
         {:html "<p>Markdown doc in English under /alt</p>"}
         [{:lang "en" :slug "page"} {:root "alt"}]
