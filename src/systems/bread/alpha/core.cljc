@@ -526,9 +526,9 @@
   "Loads the given app by calling bootstrap, load-plugins, and init hooks."
   [app]
   (-> app
-      (hook :hook/bootstrap)
+      (hook ::bootstrap)
       (hook ::load-plugins)
-      (hook :hook/init)))
+      (hook ::init)))
 
 (defn shutdown
   "Shuts down the app, removing all ::systems.bread* keys.

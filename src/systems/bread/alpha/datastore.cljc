@@ -154,7 +154,7 @@
       :datastore/as-of-param as-of-param
       :datastore/as-of-format as-of-format}
      :hooks
-     {:hook/init
+     {::bread/init
       [{:action/name ::transact-initial :txs initial-txns}]
       :hook/datastore.req->timepoint
       [{:action/name ::timepoint :req->timepoint req->timepoint}]
