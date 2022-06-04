@@ -26,6 +26,7 @@
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
+    [markdown.core :as md]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -319,7 +320,12 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (static-be/plugin)
+                       (static-be/plugin {:parse-meta? false
+                                          :parse (fn [markdown]
+                                                   (prn 'md markdown)
+                                                   (str "<div class=\"xxx\">"
+                                                        (md/md-to-html-string markdown)
+                                                        "</div>"))})
                        (cache/plugin {:router $router
                                       :cache/strategy :html})]})))
   :stop (do

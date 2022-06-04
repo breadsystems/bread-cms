@@ -14,12 +14,12 @@
          "content/en/other.md" "OTHER doc in English under /content"
          "content/fr/other.md" "OTHER doc in French under /content"
          "content/en/page.ext" ".ext doc in English under /content"
-         "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
-         }
+         "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"}
         default-opts {:root "content"
                       :ext ".md"
                       :lang-param :lang
-                      :slug-param :slug}]
+                      :slug-param :slug
+                      :parse-meta? true}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are

@@ -49,8 +49,15 @@
                    {:static/root :root
                     :static/ext :ext
                     :static/lang-param :lang-param
-                    :static/slug-param :slug-param})
-                 (select-keys [:root :ext :lang-param :slug-param]))]
+                    :static/slug-param :slug-param
+                    :static/parse :parse
+                    :static/parse-meta? :parse-meta?})
+                 (select-keys [:root
+                               :ext
+                               :lang-param
+                               :slug-param
+                               :parse
+                               :parse-meta?]))]
     [[:post query-fs params opts]]))
 
 (defprotocol ^:private RequestCreator
@@ -133,10 +140,17 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [root ext lang-param slug-param]
-     :or {root "content" ext ".md" lang-param :lang slug-param :slug}}]
+  ([{:keys [root ext lang-param slug-param parse-meta? parse]
+     :or {root "content"
+          ext ".md"
+          lang-param :lang
+          slug-param :slug
+          ;; There is no default for parse, which is determined dynamically.
+          parse-meta? true}}]
    {:config
     {:static/root root
      :static/ext ext
      :static/lang-param lang-param
-     :static/slug-param slug-param}}))
+     :static/slug-param slug-param
+     :static/parse parse
+     :static/parse-meta? parse-meta?}}))
