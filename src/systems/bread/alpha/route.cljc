@@ -107,6 +107,10 @@
 
   )
 
+(defmethod bread/action ::dispatch
+  [req {:keys [router]} _]
+  (bread/dispatch router req))
+
 (defn plugin [{:keys [router]}]
   (fn [app]
     (bread/add-hooks-> app
@@ -129,5 +133,4 @@
         (fn [_ match]
           (bread/params router match)))
       (::bread/dispatch
-        (fn [req]
-          (bread/dispatch router req))))))
+        {:action/name ::dispatch :router router}))))
