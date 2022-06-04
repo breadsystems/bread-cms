@@ -136,6 +136,31 @@
   (bread/dispatch router req))
 
 (defn plugin [{:keys [router]}]
+  (fn [app]
+    (bread/add-hooks-> app
+      (::path
+        (fn [req _ route-name params]
+          (bread/path router route-name params)))
+      (::match {:action/name ::match :router router} #_
+        (fn [req _]
+          (bread/match router req)))
+      (::resolver {:action/name ::resolver :router router} #_
+        (fn [_ match]
+          (bread/resolver router match)))
+      (::component {:action/name ::component :router router} #_
+        (fn [_ match]
+          (bread/component router match)))
+      (::not-found-component {:action/name ::not-found-component :router router} #_
+        (fn [_ match]
+          (bread/not-found-component router match)))
+      (::params {:action/name ::params :router router} #_
+        (fn [_ match]
+          (bread/params router match)))
+      (::bread/dispatch
+        {:action/name ::dispatch :router router}))))
+
+#_
+(defn plugin [{:keys [router]}]
   {:hooks
    {::path
     [{:action/name ::path :router router}]
