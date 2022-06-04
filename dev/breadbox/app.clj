@@ -320,9 +320,7 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (static-be/plugin)
-                       (cache/plugin {:router $router
-                                      :cache/strategy :html})]})))
+                       (static-be/plugin)]})))
   :stop (do
           (bread/shutdown @app)
           (reset! app nil)))
