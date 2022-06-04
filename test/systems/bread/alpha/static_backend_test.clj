@@ -19,7 +19,7 @@
                       :ext ".md"
                       :lang-param :lang
                       :slug-param :slug
-                      :parse-meta? true}]
+                      :parse md/md-to-html-string-with-meta}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
@@ -51,7 +51,7 @@
 
         ;; Ignore meta data
         {:html "<p>Title: Whoa, Meta!</p><p>Doc with metadata</p>"}
-        [{:lang "en" :slug "meta"} {:parse-meta? false}]
+        [{:lang "en" :slug "meta"} {:parse md/md-to-html-string}]
 
         ;; With custom parser
         {:html "<div>Markdown doc in English under /content</div>"}

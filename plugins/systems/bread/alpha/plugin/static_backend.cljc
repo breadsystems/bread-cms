@@ -25,17 +25,13 @@
   )
 
 (defn query-fs [data params opts]
-  (let [{:keys [root ext lang-param slug-param parse parse-meta?]}
+  (let [{:keys [root ext lang-param slug-param parse]}
         opts
         sep java.io.File/separator
         path (string/join sep (map params [lang-param slug-param]))
         path (str root sep path ext)
-        parse (cond
-                (ifn? parse) parse
-                (false? parse-meta?) md/md-to-html-string
-                :else md/md-to-html-string-with-meta)
         parsed (some-> path io/resource slurp parse)]
-    (if (false? parse-meta?)
+    (if (string? parsed)
       {:html parsed}
       (let [{:keys [html metadata]} parsed]
         (when html
@@ -50,14 +46,8 @@
                     :static/ext :ext
                     :static/lang-param :lang-param
                     :static/slug-param :slug-param
-                    :static/parse :parse
-                    :static/parse-meta? :parse-meta?})
-                 (select-keys [:root
-                               :ext
-                               :lang-param
-                               :slug-param
-                               :parse
-                               :parse-meta?]))]
+                    :static/parse :parse})
+                 (select-keys [:root :ext :lang-param :slug-param :parse]))]
     [[:post query-fs params opts]]))
 
 (defprotocol ^:private RequestCreator
@@ -145,12 +135,15 @@
           ext ".md"
           lang-param :lang
           slug-param :slug
-          ;; There is no default for parse, which is determined dynamically.
           parse-meta? true}}]
-   {:config
-    {:static/root root
-     :static/ext ext
-     :static/lang-param lang-param
-     :static/slug-param slug-param
-     :static/parse parse
-     :static/parse-meta? parse-meta?}}))
+   (let [parse (cond
+                 parse parse
+                 parse-meta? md/md-to-html-string-with-meta
+                 :else md/md-to-html-string)]
+     {:config
+      {:static/root root
+       :static/ext ext
+       :static/lang-param lang-param
+       :static/slug-param slug-param
+       :static/parse parse
+       :static/parse-meta? parse-meta?}})))

@@ -320,12 +320,7 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (static-be/plugin {:parse-meta? false
-                                          :parse (fn [markdown]
-                                                   (prn 'md markdown)
-                                                   (str "<div class=\"xxx\">"
-                                                        (md/md-to-html-string markdown)
-                                                        "</div>"))})
+                       (static-be/plugin)
                        (cache/plugin {:router $router
                                       :cache/strategy :html})]})))
   :stop (do
