@@ -44,11 +44,13 @@
 (defmethod resolver/resolve-query :resolver.type/static
   [{::bread/keys [resolver config] :as req}]
   (let [params (:route/params resolver)
-        opts (rename-keys config
-                          {:static/root :root
-                           :static/ext :ext
-                           :static/lang-param :lang-param
-                           :static/slug-param :slug-param})]
+        opts (-> config
+                 (rename-keys
+                   {:static/root :root
+                    :static/ext :ext
+                    :static/lang-param :lang-param
+                    :static/slug-param :slug-param})
+                 (select-keys [:root :ext :lang-param :slug-param]))]
     [[:post query-fs params opts]]))
 
 (defprotocol ^:private RequestCreator

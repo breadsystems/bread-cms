@@ -150,11 +150,11 @@
             :bread/cache
             {:param->attr {:lang :field/lang}
              :pull [{:post/fields [:lang]}]}}]
-      ["/static/:slug" {:bread/resolver :resolver.type/static
-                        :bread/component static-page
-                        :bread/watch-static {:dir "dev/content"
-                                             :path->req [0 "static" 1]}
-                        :name :bread.route/static}]
+      ["/static/:slug/" {:bread/resolver :resolver.type/static
+                         :bread/component static-page
+                         :bread/watch-static {:dir "dev/content"
+                                              :path->req [0 "static" 1]}
+                         :name :bread.route/static}]
       ["/*slugs" {:name :bread.route/page
                   :bread/resolver :resolver.type/page
                   :bread/component page
