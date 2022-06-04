@@ -5,6 +5,7 @@
     [systems.bread.alpha.internal.route-cache :as cache]
     [systems.bread.alpha.route :as route]))
 
+;; TODO refactor this into the action itself
 (defn- process-txs! [res {:keys [router] :as config}]
   (future
     (doseq [uri (cache/gather-affected-uris res router)]
@@ -25,9 +26,7 @@
   [{:keys [body uri status] ::keys [internal?]}
    {:keys [root index-file router] :or {index-file "index.html"
                                         root "resources/public"}}]
-  (prn 'render root index-file router)
   (when internal?
-    (prn 'process!)
     (html/render-static! (str root uri) index-file body)))
 
 (comment
@@ -48,19 +47,30 @@
 
   )
 
+(defmethod bread/action ::process-txs!
+  [res {:keys [config]} _]
+  ;; TODO consolidate process-txs! fn here
+  (process-txs! res config)
+  res)
+
+(defmethod bread/action ::update!
+  [res {:keys [config]} _]
+  (cache! res config)
+  res)
+
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
   HTML body of each response."
   ([]
    (plugin {}))
   ([config]
-   (fn [app]
-     (bread/add-hooks-> app
-       (::bread/response
-         (fn [res]
-           ;; Asynchronously process transactions that happened during
-           ;; this request.
-           (process-txs! res config)
-           ;; Refresh the cache according to the specified strategy.
-           (cache! res config)
-           res))))))
+   {:hooks
+    {::bread/response
+     [{:action/name ::process-txs!
+       :action/description
+       "Trigger any necessary cache updates in response to db transactions"
+       :config config}
+      {:action/name ::update!
+       :action/description
+       "Perform cache updates. Typically async in the background."
+       :config config}]}}))
