@@ -463,10 +463,15 @@
   present."
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] :as hook} & fs] hooks]
-       (if hook
-         (recur (try-hook app hook h f (concat [app x] args)) fs)
-         x))
+     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
+       ;; TODO delete fn branch
+       (if a
+         (if hook
+           (recur (action app hook (concat [app x] args)) hs)
+           x)
+         (if hook
+           (recur (try-hook app hook h f (concat [app x] args)) hs)
+           x)))
      x))
   ([app h]
    (hook->> app h nil)))
