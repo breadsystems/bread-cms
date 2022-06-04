@@ -62,6 +62,15 @@
           app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
       (is (= [one two] (bread/hooks-for app :hook/a)))))
 
+  (testing "it applies config map"
+    (let [app (plugins->loaded [{:config {:a :A :b :B :c :C}}])]
+      (are
+        [v k] (= v (bread/config app k))
+        :A :a
+        :B :b
+        :C :c
+        nil :something)))
+
   ;; TODO DATA
   (testing "it applies all plugin fns"
     (let [plugin-a (fn [app]
