@@ -107,30 +107,47 @@
 
   )
 
+(defmethod bread/action ::path
+  [_ {:keys [router]} [_ route-name params]]
+  (bread/path router route-name params))
+
+(defmethod bread/action ::match
+  [req {:keys [router]} _]
+  (bread/match router req))
+
+(defmethod bread/action ::resolver
+  [_ {:keys [router]} [_ match]]
+  (bread/resolver router match))
+
+(defmethod bread/action ::component
+  [_ {:keys [router]} [_ match]]
+  (bread/component router match))
+
+(defmethod bread/action ::not-found-component
+  [req {:keys [router]} [_ match]]
+  (bread/not-found-component router match))
+
+(defmethod bread/action ::params
+  [_ {:keys [router]} [_ match]]
+  (bread/params router match))
+
 (defmethod bread/action ::dispatch
   [req {:keys [router]} _]
   (bread/dispatch router req))
 
 (defn plugin [{:keys [router]}]
-  (fn [app]
-    (bread/add-hooks-> app
-      (::path
-        (fn [req _ route-name params]
-          (bread/path router route-name params)))
-      (::match
-        (fn [req _]
-          (bread/match router req)))
-      (::resolver
-        (fn [_ match]
-          (bread/resolver router match)))
-      (::component
-        (fn [_ match]
-          (bread/component router match)))
-      (::not-found-component
-        (fn [_ match]
-          (bread/not-found-component router match)))
-      (::params
-        (fn [_ match]
-          (bread/params router match)))
-      (::bread/dispatch
-        {:action/name ::dispatch :router router}))))
+  {:hooks
+   {::path
+    [{:action/name ::path :router router}]
+    ::match
+    [{:action/name ::match :router router}]
+    ::resolver
+    [{:action/name ::resolver :router router}]
+    ::component
+    [{:action/name ::component :router router}]
+    ::not-found-component
+    [{:action/name ::not-found-component :router router}]
+    ::params
+    [{:action/name ::params :router router}]
+    ::bread/dispatch
+    [{:action/name ::dispatch :router router}]}})
