@@ -126,7 +126,7 @@
   (fn [app]
     (bread/add-hooks->
       app
-      (:hook/request
+      (::bread/request
         (fn [req]
           (let [rid (UUID/randomUUID)
                 as-of-param (bread/config req :datastore/as-of-param)
