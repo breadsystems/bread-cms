@@ -116,39 +116,38 @@
   ([log config]
    (WebsocketDebugger. log config)))
 
-(comment
-  (def events (atom []))
-  (let [dbg (debugger events)]
-    (profile dbg {::bread/profile.type :something ::bread/profile {}})
-    @(.log dbg)))
+(defmethod bread/action ::request
+  [req _ _]
+  ;; TODO support passing a in a fn for filtering request data
+  (let [;; TODO parameterize getting IDs
+        rid (UUID/randomUUID)
+        as-of-param (bread/config req :datastore/as-of-param)
+        as-of (or (store/timepoint req) (store/max-tx req))
+        req (assoc req
+                   :profiler/profiled? true
+                   :profiler/as-of-param as-of-param
+                   :request/uuid rid
+                   :request/as-of as-of
+                   :request/timestamp (Date.))]
+    (bread/profile> :profile/type.request req)
+    req))
+
+(defmethod bread/action ::response
+  [res _ _]
+  (let [res (assoc res :response/timestamp (Date.))]
+    (bread/profile> :profile.type/response res)
+    res))
 
 (defn plugin []
-  (fn [app]
-    (bread/add-hooks->
-      app
-      (::bread/request
-        (fn [req]
-          (let [rid (UUID/randomUUID)
-                as-of-param (bread/config req :datastore/as-of-param)
-                ;; The request either has a timepoint set by virtue of having
-                ;; an `as-of` param, OR its db is a vanilla DB instance from
-                ;; which we can grab a max-tx.
-                as-of (or (store/timepoint req) (store/max-tx req))
-                req (assoc req
-                           :profiler/profiled? true
-                           :profiler/as-of-param as-of-param
-                           :request/uuid rid
-                           :request/as-of as-of
-                           :request/timestamp (Date.))]
-            (bread/profile> :profile.type/request req)
-            req))
-        {:precedence Double/NEGATIVE_INFINITY})
-      (::bread/response
-        (fn [res]
-          (let [res (assoc res :response/timestamp (Date.))]
-            (bread/profile> :profile.type/response res)
-            res))
-        {:precedence Double/POSITIVE_INFINITY}))))
+  {:hooks
+   {::bread/request
+    [{:action/name ::request
+      :action/description
+      "Profile each new request to Bread, to send it to the debugger"}]
+    ::bread/response
+    [{:action/name ::response
+      :action/description
+      "Profile the full response, for correlating in the debugger"}]}})
 
 (comment
   (srv/publish! [:test (walk/prewalk datafy {:fn (fn [] 'hello)})])
