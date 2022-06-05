@@ -374,8 +374,7 @@
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       ;; TODO get these ports from mounted state
-      #_
-      (mid/wrap-exceptions $ {:csp-ports [1316 9630]})
+      (mid/wrap-exceptions $ {:csp-ports (:dev-csp-ports env)})
       (wrap-keyword-params $)
       (wrap-params $)
       (wrap-trailing-slash $)
@@ -397,14 +396,13 @@
 
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
-  ;; TODO store debug-port in an atom for middleware to use
   :start (when (:debug? env)
            (reset! stop-debug-server! (debug/start
                                         (debug/debugger
                                           debug-log
                                           {:replay-handler handler})
-                                        {:http-port 1316
-                                         :csp-ports [9630]})))
+                                        {:http-port (:debug-port env)
+                                         :csp-ports (:debug-csp-ports env)})))
   :stop (when-let [stop! @stop-debug-server!]
           (stop!)))
 

@@ -83,6 +83,7 @@
                 (fn [hook-event]
                   (profile this hook-event)))]
       (fn []
+        (println "Stopping debug server.")
         (remove-tap tap)
         (stop-server))))
   ;; Publish the given profiler event to the Websocket connection.
