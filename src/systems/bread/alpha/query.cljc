@@ -39,6 +39,10 @@
           (fn [queries]
             (vec (conj (vec queries) query)))))
 
+(defmethod bread/action ::add
+  [req {:keys [query]} _]
+  (add req query))
+
 (defn plugin []
   {:hooks
    {::bread/expand

@@ -19,6 +19,7 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.static-backend :as static-be]
+    [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
@@ -221,6 +222,10 @@
                                (ex-message e)))
               (prn (ex-data e))))))
 
+(defmethod bread/action ::menu.class
+  [_ {cls :class} [_ {classes :my/class :as menu}]]
+  (assoc menu :my/class (if classes (str classes " " cls) cls)))
+
 ;; TODO reload app automatically when src changes
 ;; NOTE: I think the simplest thing is to put handler in a defstate,
 ;; so that wrap-reload picks up on it. Not sure if we even need a dedicated
@@ -239,18 +244,17 @@
                                 :type :location
                                 :location :footer-nav}]
                        :global-menus false
-                       :hooks [[:hook/posts-menu
-                                #(update %2 :my/class str " posts-menu")]
-                               [:hook/posts-menu.page
-                                #(update %2 :my/class str " posts-menu--page")]
-                               [:hook/menu
-                                #(assoc %2 :my/class "nav-menu")]
-                               ;; These don't currently run
-                               ;; because global menus are disabled...
-                               [:hook/menu.location.main-nav
-                                #(update %2 :my/class str " main-nav")]
-                               [:hook/menu.key.main
-                                #(update %2 :my/class str " special")]]}
+                       :hooks
+                       {:hook/posts-menu
+                        [{:action/name ::menu.class
+                          :class "posts"}]
+                        :hook/posts-menu.page
+                        [{:action/name ::menu.class
+                          :class "posts-menu--page"}]
+                        :hook/menu
+                        [{:action/name ::menu.class
+                          :class "nav-menu"}]}}
+
                       :plugins
                       [(debug/plugin)
                        (rum/plugin)
@@ -448,6 +452,9 @@
 
   (reset! debug-log [])
   (slurp "http://localhost:1312/en/")
+
+  (::bread/resolve (::bread/hooks @app))
+  (:hook/posts-menu (::bread/hooks @app))
 
   ;; TODO figure out why this doesn't work the first time
   ;; on a fresh REPL? Evaling the buffer once more fixes it...

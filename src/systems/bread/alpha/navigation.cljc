@@ -64,9 +64,6 @@
    :locations locs
    :items (expand-post-ids req tree)})
 
-(defn- parse-content [menu]
-  (update menu :menu/content edn/read-string))
-
 (defn- by-location [menus]
   (reduce (fn [by-loc {locs :locations :as menu}]
             (apply assoc by-loc (interleave locs (repeat menu))))
@@ -194,11 +191,6 @@
   (location-menu $req :main-nav)
   (:main-nav (global-menus $req)))
 
-(defn- adder [f opts]
-  (fn [req]
-    (query/add req [:menus (fn [{:keys [menus]}]
-                             (merge menus (f req opts)))])))
-
 (defmulti add-menu (fn [_ opts]
                      (:type opts)))
 
@@ -210,20 +202,32 @@
   (query/add req [:menus (fn [{:keys [menus]}]
                            (assoc menus k (location-menu req location opts)))]))
 
+(defmethod bread/action ::add-global-menus-query
+  [req {:keys [opts]} _]
+  ;; TODO data-orient queries themselves...
+  (if (not (false? opts))
+    (query/add req [:menus (fn [{:keys [menus]}]
+                             (merge menus (doto (global-menus req opts) (#(prn (keys %))))))])
+    req))
+
+(defmethod bread/action ::add
+  [req {:keys [opts]} _]
+  (add-menu req opts))
+
 (defn plugin
   ([]
    (plugin {}))
-  ([opts]
-   (let [{:keys [hooks menus] global-menu-opts :global-menus} opts
-         ;; Any additional menus to be added...
-         menu-hooks (map (fn [opts]
-                           [::bread/resolve #(add-menu % opts)])
-                         menus)
-         hooks (apply conj hooks
-                      (when (not (false? global-menu-opts))
-                        [::bread/resolve (adder global-menus global-menu-opts)])
-                      menu-hooks)]
-     (fn [app]
-       (reduce (fn [app [hook callback]]
-                 (bread/add-hook app hook callback))
-               app hooks)))))
+  ([{:keys [hooks menus] global-menu-opts :global-menus}]
+   (let [menu-hooks (map (fn [opts]
+                           {:action/name ::add
+                            :action/description
+                            "Add a menu with the given opts"
+                            :opts opts}) menus)
+         resolve-hooks (concat
+                         [{:action/name ::add-global-menus-query
+                           :action/description
+                           "Add a query to fetch global menus"
+                           :opts global-menu-opts}]
+                         menu-hooks)]
+     {:hooks
+      (merge-with conj {::bread/resolve resolve-hooks} hooks)})))

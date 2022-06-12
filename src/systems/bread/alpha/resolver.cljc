@@ -70,4 +70,5 @@
 (defn plugin []
   {:hooks
    {::bread/resolve
-    [{:action/name ::resolve}]}})
+    [{:action/name ::resolve
+      :action/description "Resolve queries"}]}})
