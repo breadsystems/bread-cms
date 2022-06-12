@@ -16,12 +16,12 @@
                (some->> k keyword-namespace (get data) associative?)
                [(keyword-namespace k) k]
                :else [k])]
-    (assoc-in data path (bread/query q data args))))
+    (doto (assoc-in data path (bread/query q data args)) prn)))
 
 (defn- expand-not-found [resolver data]
-  ;; TODO make key optional?
-  (let [k (:resolver/key resolver)]
-    (assoc data :not-found? (nil? (get data k)))))
+  (if-let [k (:resolver/key resolver)]
+    (assoc data :not-found? (nil? (get data k)))
+    data))
 
 (defmethod bread/action ::expand-queries
   [{::bread/keys [resolver queries] :as req} _ _]
@@ -35,6 +35,7 @@
 (defn add
   "Add query to the vector of queries to be run."
   [req query]
+  ;; TODO data-orient queries themselves here
   (update req ::bread/queries
           (fn [queries]
             (vec (conj (vec queries) query)))))

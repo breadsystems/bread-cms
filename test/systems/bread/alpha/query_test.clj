@@ -47,9 +47,8 @@
     [[:my/nums (constantly [1 2 3 4])]
      [:my/nums #(reduce + (:my/nums %))]]
 
-    ;; TODO fix NullPointerException
-    #_#_
-    {:my/meta-expanded "whoa, meta"}
+    {:my/meta-expanded "whoa, meta"
+     :not-found? false}
     [[:my/meta-expanded (with-meta {} {`bread/query
                                        (constantly "whoa, meta")})]]
 
