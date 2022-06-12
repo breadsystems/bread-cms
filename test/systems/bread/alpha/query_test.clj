@@ -15,15 +15,17 @@
                (assoc ::bread/resolver (constantly response))
                (bread/hook ::bread/expand)))))
 
-  (are [data queries] (= data (-> (plugins->loaded [(query/plugin)])
-                                  (assoc ::bread/queries queries
-                                         ;; Assume the first thing in
-                                         ;; ::queries is for our main key.
-                                         ::bread/resolver
-                                         {:resolver/type :whatevs
-                                          :resolver/key (ffirst queries)})
-                                  (bread/hook ::bread/expand)
-                                  ::bread/data))
+  (are
+    [data queries]
+    (= data (-> (plugins->loaded [(query/plugin)])
+                (assoc ::bread/queries queries
+                       ;; Assume the first thing in
+                       ;; ::queries is for our main key.
+                       ::bread/resolver
+                       {:resolver/type :whatevs
+                        :resolver/key (ffirst queries)})
+                (bread/hook ::bread/expand)
+                ::bread/data))
 
     {:my/result "the result"
      :not-found? false}
