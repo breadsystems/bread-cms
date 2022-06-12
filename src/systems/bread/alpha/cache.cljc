@@ -5,6 +5,7 @@
     [systems.bread.alpha.internal.route-cache :as cache]
     [systems.bread.alpha.route :as route]))
 
+;; TODO refactor this into the action itself
 (defn- process-txs! [res {:keys [router] :as config}]
   (future
     (doseq [uri (cache/gather-affected-uris res router)]
@@ -15,6 +16,9 @@
             req {:uri uri ::internal? true}]
         (handler req)))))
 
+;; TODO fetch multimethod
+;; TODO db wrap layer
+
 (defmulti cache! (fn [_res config]
                    (:cache/strategy config)))
 
@@ -22,7 +26,37 @@
   [{:keys [body uri status] ::keys [internal?]}
    {:keys [root index-file router] :or {index-file "index.html"
                                         root "resources/public"}}]
-  (html/render-static! (str root uri) index-file body))
+  (when internal?
+    (html/render-static! (str root uri) index-file body)))
+
+(comment
+
+  ;; NOTE: we want to keep caching configuration plugin-specific, rather than
+  ;; global (i.e. ::bread/config). To see why, imagine two caching strategies,
+  ;; side by side. For example the default :html strategy and a second
+  ;; :memcached strategy:
+  [,,,
+   (cache/plugin {:router my-router
+                  :strategy :html
+                  :root "path/to/root"
+                  :index-file "index.html"})
+   (cache/plugin {:router my-router
+                  :strategy :memcached
+                  :ip-pool #{"192.168.1.10" "192.168.1.11" "192.168.1.12"}})
+   ,,,]
+
+  )
+
+(defmethod bread/action ::process-txs!
+  [res {:keys [config]} _]
+  ;; TODO consolidate process-txs! fn here
+  (process-txs! res config)
+  res)
+
+(defmethod bread/action ::update!
+  [res {:keys [config]} _]
+  (cache! res config)
+  res)
 
 (defn plugin
   "Returns a plugin that renders a static file with the fully rendered
@@ -30,13 +64,13 @@
   ([]
    (plugin {}))
   ([config]
-   (fn [app]
-     (bread/add-hooks-> app
-       (:hook/response
-         (fn [res]
-           ;; Asynchronously process transactions that happened during
-           ;; this request.
-           (process-txs! res config)
-           ;; Refresh the cache according to the specified strategy.
-           (cache! res config)
-           res))))))
+   {:hooks
+    {::bread/response
+     [{:action/name ::process-txs!
+       :action/description
+       "Trigger any necessary cache updates in response to db transactions"
+       :config config}
+      {:action/name ::update!
+       :action/description
+       "Perform cache updates. Typically async in the background."
+       :config config}]}}))

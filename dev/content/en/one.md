@@ -1,3 +1,5 @@
+Title: TITLE ONE
+
 ## ONE!!
 
 One is the loneliest number that you'll ever doooo.
@@ -6,7 +8,7 @@ One is the loneliest number that you'll ever doooo.
 
 **This stuff is bold** and *this is italicized!* This is just regular type but `here is some code`.
 
-![Placeholder image](https://placehold.it/500x300)
+![Placeholder image](https://place-hold.it/300x200)
 
 Irure proident sit cumque voluptas nihil veniam. Eu repellendus animi in pariatur placeat aliquip. Labore dignissimos minim excepturi atque. Enim quod distinctio corrupti vero corrupti. Officia at nam atque. Anim dolorum consectetur magna placeat iusto. Pariatur aliqua excepturi et, optio nam reprehenderit quod labore fugiat do in. Vero ullamco atque enim placeat, mollitia ullamco aute quod labore animi.
 

@@ -158,7 +158,8 @@
       :else
       content)))
 
-(defn render [{::bread/keys [data] :as res}]
+(defmethod bread/action ::render
+  [{::bread/keys [data] :as res} _ _]
   (let [component (component res)
         parent (extended component)
         body (cond
@@ -172,5 +173,7 @@
     (assoc res :body body)))
 
 (defn plugin []
-  (fn [app]
-    (bread/add-hook app :hook/render render)))
+  {:hooks
+   {::bread/render
+    [{:action/name ::render
+      :action/description "Render the selected component"}]}})

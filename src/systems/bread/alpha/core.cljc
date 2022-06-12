@@ -248,6 +248,7 @@
    (let [hooks (hooks-for app h)]
      (boolean (some #(hook-matches? % f options) hooks)))))
 
+;; TODO delete add-hook & friends in favor of a defhook that captures equiv.
 (defn- append-hook [hooks f options]
   (let [hook (assoc (dissoc options :precedence)
                     ::f f
@@ -261,7 +262,9 @@
   for h."
   {:arglists '([app h f] [app h f options])}
   ([app h f options]
-   (update-in app [::hooks h] append-hook f options))
+   (if (fn? f)
+     (update-in app [::hooks h] append-hook f options)
+     (update-in app [::hooks h] conj f)))
   ([app h f]
    (update-in app [::hooks h] append-hook f {:precedence 1})))
 
@@ -438,6 +441,25 @@
   (Throwable->map (Exception. "bad"))
   )
 
+(defmulti action (fn [_app hook _args]
+                   (:action/name hook)))
+
+(defn- load-plugin [app {:keys [config hooks] :as plugin}]
+  ;; TODO DATA rm fn branch
+  (if (fn? plugin)
+    (plugin app)
+    (letfn [(configure [app config]
+              (if config
+                (apply set-config app (mapcat (juxt key val) config))
+                app))
+            (append-hook [app [hook actions]]
+              (update-in app [::hooks hook] concat actions))]
+      (reduce append-hook (configure app config) hooks))))
+
+(defmethod action ::load-plugins
+  [{::keys [plugins] :as app} _ _]
+  (reduce load-plugin app plugins))
+
 (defn hook->>
   "Threads app, x, and any (optional) subsequent args, in that order, through
   all callbacks for h. The result of applying each callback is passed as the
@@ -445,10 +467,15 @@
   present."
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [[{::keys [f] :as hook} & fs] hooks x x]
-       (if (seq fs)
-         (recur fs (try-hook app hook h f (concat [app x] args)))
-         (try-hook app hook h f (concat [app x] args))))
+     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
+       ;; TODO delete fn branch
+       (if a
+         (if hook
+           (recur (action app hook (concat [app x] args)) hs)
+           x)
+         (if hook
+           (recur (try-hook app hook h f (concat [app x] args)) hs)
+           x)))
      x))
   ([app h]
    (hook->> app h nil)))
@@ -460,10 +487,15 @@
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
    (if-let [hooks (get-in app [::hooks h])]
-     (loop [[{::keys [f] :as hook} & fs] hooks x x]
-       (if (seq fs)
-         (recur fs (try-hook app hook h f (cons x args)))
-         (try-hook app hook h f (cons x args))))
+     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
+       (if a
+         (if hook
+           (recur (action x hook (cons x args)) hs)
+           x)
+         ;; TODO do away with fns as hooks and remove this branch
+         (if hook
+           (recur (try-hook app hook h f (cons x args)) hs)
+           x)))
      x))
   ([app h]
    (hook-> app h nil)))
@@ -481,10 +513,12 @@
   {:arglist '([] [opts])}
   ([{:keys [plugins]}]
    (-> {::plugins (or plugins [])
-        ::hooks   {}
+        ::hooks   {::load-plugins
+                   [{:action/name ::load-plugins
+                     :action/description
+                     "Load hooks declared in all plugins"}]}
         ::config  {}
-        ::data    {}}
-       (add-hook :hook/load-plugins load-plugins)))
+        ::data    {}}))
   ([]
    (app {})))
 
@@ -492,9 +526,9 @@
   "Loads the given app by calling bootstrap, load-plugins, and init hooks."
   [app]
   (-> app
-      (hook :hook/bootstrap)
-      (hook :hook/load-plugins)
-      (hook :hook/init)))
+      (hook ::bootstrap)
+      (hook ::load-plugins)
+      (hook ::init)))
 
 (defn shutdown
   "Shuts down the app, removing all ::systems.bread* keys.
@@ -513,13 +547,13 @@
   [app]
   (fn [req]
     (-> (merge req app)
-        (hook :hook/request)
-        (hook :hook/dispatch) ;; -> ::resolver
-        (hook :hook/resolve)  ;; -> ::queries
-        (hook :hook/expand)   ;; -> ::data
+        (hook ::request)
+        (hook ::dispatch)     ;; -> ::resolver
+        (hook ::resolve)      ;; -> ::queries
+        (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
-        (hook :hook/render)   ;; -> standard Ring keys: :status, :headers, :body
-        (hook :hook/response))))
+        (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
+        (hook ::response))))
 
 (defn load-handler
   "Loads the given app, returning a Ring handler that wraps the loaded app."

@@ -23,7 +23,7 @@
         [query resolver]
         (= query (-> resolver
                      ->app
-                     resolver/resolve-queries
+                     (bread/action {:action/name ::resolver/resolve} nil)
                      ::bread/queries))
 
         ;; {:uri "/en/simple"}

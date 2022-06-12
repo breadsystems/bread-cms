@@ -3,14 +3,13 @@
     [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]
     [systems.bread.alpha.core :as bread]))
 
-(defn render-body [res]
+(defmethod bread/action ::render
+  [res _ _]
   (update res :body rum/render-static-markup))
 
 (defn plugin
   ([]
-   (plugin {}))
-  ([{:keys [render-opts]}]
-   (let [render-opts (merge {:precedence Double/POSITIVE_INFINITY}
-                            render-opts)]
-     (fn [app]
-       (bread/add-hook app :hook/render render-body render-opts)))))
+   {:hooks
+    {::bread/render
+     [{:action/name ::render
+       :action/description "Render response body into HTML"}]}}))

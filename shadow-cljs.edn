@@ -1,7 +1,7 @@
 ;; shadow-cljs configuration
 {:deps true
  :dev-http
- {1315 "resources/debugger"}
+ {1315 "resources/debug"}
 
  :builds
  {;; shadow-cljs -A:dev:tools watch debug
