@@ -40,7 +40,7 @@
 (deftest test-render
   (are
     [expected app]
-    (= expected (:body (component/render app)))
+    (= expected (:body (bread/action app {:action/name ::component/render} nil)))
 
     [:p "the content"]
     {::bread/data {:content "the content"}

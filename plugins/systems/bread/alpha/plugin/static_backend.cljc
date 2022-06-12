@@ -13,54 +13,41 @@
     [systems.bread.alpha.resolver :as resolver]))
 
 (comment
-  (instant/read-instant-date "2020-10-25T20:59:36+00:00")
-  (inst-ms (java.util.Date.))
 
-  (slurp "dev/pages/one.md")
-  (slurp (io/resource "pages/one.md"))
+  (slurp "dev/content/en/one.md")
+  (slurp (io/resource "content/en/one.md"))
 
-  (md/md-to-html-string (slurp (io/resource "pages/one.md")))
+  (md/md-to-html-string (slurp (io/resource "content/en/one.md")))
 
   (clojure.string/join java.io.File/separator (map {:lang "en" :slug "one"} [:lang :slug]))
 
   ;;
   )
 
-(defn query-fs
-  ([data params]
-   (query-fs data params {}))
-  ([data params opts]
-   (let [{:keys [root ext lang-param slug-param parse parse-meta?]
-          :or {root "content" ext ".md" lang-param :lang slug-param :slug}}
-         opts
-         sep java.io.File/separator
-         path (string/join sep (map params [lang-param slug-param]))
-         path (str root sep path ext)
-         parse (cond
-                 (ifn? parse) parse
-                 (false? parse-meta?) md/md-to-html-string
-                 :else md/md-to-html-string-with-meta)
-         parsed (some-> path io/resource slurp parse)]
-     (if (false? parse-meta?)
-       {:html parsed}
-       (let [{:keys [html metadata]} parsed]
-         (when html
-           (assoc metadata :html html)))))))
-
-(defn- rename-ns-keys [key-ns m names]
-  (let [keymap (into {} (map (fn [k]
-                               [(keyword (str (name key-ns) "/" (name k))) k])
-                             names))]
-    (rename-keys (select-keys m (keys keymap)) keymap)))
-
-(comment
-  (rename-ns-keys :my {:my/a "A" :my/b "B" :my/c "C"} [:a :b]))
+(defn query-fs [data params opts]
+  (let [{:keys [root ext lang-param slug-param parse]}
+        opts
+        sep java.io.File/separator
+        path (string/join sep (map params [lang-param slug-param]))
+        path (str root sep path ext)
+        parsed (some-> path io/resource slurp parse)]
+    (if (string? parsed)
+      {:html parsed}
+      (let [{:keys [html metadata]} parsed]
+        (when html
+          (assoc metadata :html html))))))
 
 (defmethod resolver/resolve-query :resolver.type/static
   [{::bread/keys [resolver config] :as req}]
   (let [params (:route/params resolver)
-        opts (rename-ns-keys :static-backend config
-                             [:root :ext :lang-param :slug-param])]
+        opts (-> config
+                 (rename-keys
+                   {:static/root :root
+                    :static/ext :ext
+                    :static/lang-param :lang-param
+                    :static/slug-param :slug-param
+                    :static/parse :parse})
+                 (select-keys [:root :ext :lang-param :slug-param :parse]))]
     [[:post query-fs params opts]]))
 
 (defprotocol ^:private RequestCreator
@@ -140,32 +127,23 @@
       (doall (for [watcher watchers]
                (watch/close-watcher watcher))))))
 
-(comment
-
-  (defn $handler [req]
-    (prn 'MOCK req))
-  (def $router breadbox.app/$router)
-
-  (defonce stop (atom nil))
-
-  (do
-    (when (fn? @stop)
-      (@stop))
-    (reset! stop (watch* $handler $router)))
-
-  (.getCanonicalPath (io/file "dev/content"))
-  (.getCanonicalPath (io/file "dev/content/en/one.md"))
-
-  ;;
-  )
-
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [root ext lang-param slug-param]}]
-   (fn [app]
-     (bread/set-config-cond-> app
-       root :static-backend/root
-       ext :static-backend/ext
-       lang-param :static-backend/lang-param
-       slug-param :static-backend/slug-param))))
+  ([{:keys [root ext lang-param slug-param parse-meta? parse]
+     :or {root "content"
+          ext ".md"
+          lang-param :lang
+          slug-param :slug
+          parse-meta? true}}]
+   (let [parse (cond
+                 parse parse
+                 parse-meta? md/md-to-html-string-with-meta
+                 :else md/md-to-html-string)]
+     {:config
+      {:static/root root
+       :static/ext ext
+       :static/lang-param lang-param
+       :static/slug-param slug-param
+       :static/parse parse
+       :static/parse-meta? parse-meta?}})))

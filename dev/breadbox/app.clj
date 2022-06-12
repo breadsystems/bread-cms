@@ -19,6 +19,7 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.static-backend :as static-be]
+    [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.resolver :as resolver]
@@ -26,6 +27,7 @@
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
+    [markdown.core :as md]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -150,11 +152,11 @@
             :bread/cache
             {:param->attr {:lang :field/lang}
              :pull [{:post/fields [:lang]}]}}]
-      ["/static/:slug" {:bread/resolver :resolver.type/static
-                        :bread/component static-page
-                        :bread/watch-static {:dir "dev/content"
-                                             :path->req [0 "static" 1]}
-                        :name :bread.route/static}]
+      ["/static/:slug/" {:bread/resolver :resolver.type/static
+                         :bread/component static-page
+                         :bread/watch-static {:dir "dev/content"
+                                              :path->req [0 "static" 1]}
+                         :name :bread.route/static}]
       ["/*slugs" {:name :bread.route/page
                   :bread/resolver :resolver.type/page
                   :bread/component page
@@ -171,6 +173,7 @@
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})
   (route/path $res "one/two" :bread.route/page)
+  (bread/hook->> $res :hook/path-params {:slugs "one/two"} :bread.route/page)
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
@@ -219,6 +222,10 @@
                                (ex-message e)))
               (prn (ex-data e))))))
 
+(defmethod bread/action ::menu.class
+  [_ {cls :class} [_ {classes :my/class :as menu}]]
+  (assoc menu :my/class (if classes (str classes " " cls) cls)))
+
 ;; TODO reload app automatically when src changes
 ;; NOTE: I think the simplest thing is to put handler in a defstate,
 ;; so that wrap-reload picks up on it. Not sure if we even need a dedicated
@@ -237,18 +244,20 @@
                                 :type :location
                                 :location :footer-nav}]
                        :global-menus false
-                       :hooks [[:hook/posts-menu
-                                #(update %2 :my/class str " posts-menu")]
-                               [:hook/posts-menu.page
-                                #(update %2 :my/class str " posts-menu--page")]
-                               [:hook/menu
-                                #(assoc %2 :my/class "nav-menu")]
-                               ;; These don't currently run
-                               ;; because global menus are disabled...
-                               [:hook/menu.location.main-nav
-                                #(update %2 :my/class str " main-nav")]
-                               [:hook/menu.key.main
-                                #(update %2 :my/class str " special")]]}
+                       :hooks
+                       {::navigation/menu
+                        [{:action/name ::menu.class
+                          :class "nav-menu"}]
+                        ::navigation/menu.type=posts
+                        [{:action/name ::menu.class
+                          :class "posts"}]
+                        ::navigation/menu.post-type=page
+                        [{:action/name ::menu.class
+                          :class "posts-menu--page"}]
+                        ::navigation/menu.location=footer-nav
+                        [{:action/name ::menu.class
+                          :class "footer-nav"}]}}
+
                       :plugins
                       [(debug/plugin)
                        (rum/plugin)
@@ -257,7 +266,7 @@
                        (fn [app]
                          (bread/add-hook
                            app
-                           :hook/render
+                           ::bread/render
                            (fn [{::bread/keys [data] :as res}]
                              (let [status (if (:not-found? data)
                                             404
@@ -290,7 +299,7 @@
                          ;; Transact some random post data into the db
                          ;; on every external request.
                          (bread/add-hook
-                           app :hook/dispatch
+                           app ::bread/dispatch
                            (fn [{::cache/keys [internal?] :as req}]
                              (if internal?
                                req
@@ -313,14 +322,12 @@
                        (fn [app]
                          (bread/add-hook
                            app
-                           :hook/dispatch
+                           ::bread/dispatch
                            (fn [_]
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
-                       (static-be/plugin)
-                       (cache/plugin {:router $router
-                                      :cache/strategy :html})]})))
+                       (static-be/plugin)]})))
   :stop (do
           (bread/shutdown @app)
           (reset! app nil)))
@@ -374,7 +381,7 @@
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       ;; TODO get these ports from mounted state
-      (mid/wrap-exceptions $ {:csp-ports [1316 9630]})
+      (mid/wrap-exceptions $ {:csp-ports (:dev-csp-ports env)})
       (wrap-keyword-params $)
       (wrap-params $)
       (wrap-trailing-slash $)
@@ -396,14 +403,13 @@
 
 (defonce stop-debug-server! (atom nil))
 (defstate debug-server
-  ;; TODO store debug-port in an atom for middleware to use
   :start (when (:debug? env)
            (reset! stop-debug-server! (debug/start
                                         (debug/debugger
                                           debug-log
                                           {:replay-handler handler})
-                                        {:http-port 1316
-                                         :csp-ports [9630]})))
+                                        {:http-port (:debug-port env)
+                                         :csp-ports (:debug-csp-ports env)})))
   :stop (when-let [stop! @stop-debug-server!]
           (stop!)))
 
@@ -449,6 +455,9 @@
 
   (reset! debug-log [])
   (slurp "http://localhost:1312/en/")
+
+  (::bread/resolve (::bread/hooks @app))
+  (:hook/posts-menu (::bread/hooks @app))
 
   ;; TODO figure out why this doesn't work the first time
   ;; on a fresh REPL? Evaling the buffer once more fixes it...

@@ -1,6 +1,8 @@
 {:dev-port 1312
- :debug? false
- :debug-port 1315
+ :debug? true
+ :debug-port 1316
+ :dev-csp-ports [1316 9630]
+ :debug-csp-ports [9630]
  ;; Reinstall dev database on restart.
  ;; NOTE: to go from true to false, you must first stop the app, then change
  ;; the value, then start again. Otherwise you might get a "Backend does not

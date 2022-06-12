@@ -77,21 +77,4 @@
       (let [->timepoint (constantly (java.util.Date.))
             config (assoc config :datastore/req->timepoint ->timepoint)
             app (h/plugins->loaded [(store/plugin config)])]
-        (is (instance? datahike.db.AsOfDB (store/datastore app)))))
-
-    ;; TODO assert actual schema updates
-    #_
-    (testing "it honors initial transactions"
-      (let [txns->app #(->handler (assoc config :datastore/initial-txns %))
-            ;; TODO load this schema and query attrs
-            schema-attr {:db/ident :thingy/test
-                         :db/doc "this is a test thingy"
-                         :db/valueType :db.type/keyword
-                         :db/cardinality :db.cardinality/one}
-            query '[:find ?doc
-                    :where
-                    [?e :db/doc ?doc]
-                    [?e :db/ident :thingy/test]]]
-        (is (= 0 (count (bread/hooks-for (txns->app []) :hook/init))))
-        #_
-        (is (= 1 (count (bread/hooks-for (txns->app [schema-attr]) :hook/init))))))))
+        (is (instance? datahike.db.AsOfDB (store/datastore app)))))))

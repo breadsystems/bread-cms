@@ -13,7 +13,7 @@
     (is (= response
            (-> (plugins->loaded [(query/plugin)])
                (assoc ::bread/resolver (constantly response))
-               (bread/hook :hook/expand)))))
+               (bread/hook ::bread/expand)))))
 
   (are [data queries] (= data (-> (plugins->loaded [(query/plugin)])
                                   (assoc ::bread/queries queries
@@ -22,7 +22,7 @@
                                          ::bread/resolver
                                          {:resolver/type :whatevs
                                           :resolver/key (ffirst queries)})
-                                  (bread/hook :hook/expand)
+                                  (bread/hook ::bread/expand)
                                   ::bread/data))
 
     {:my/result "the result"

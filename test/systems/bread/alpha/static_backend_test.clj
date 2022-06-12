@@ -14,25 +14,18 @@
          "content/en/other.md" "OTHER doc in English under /content"
          "content/fr/other.md" "OTHER doc in French under /content"
          "content/en/page.ext" ".ext doc in English under /content"
-         "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
-         }]
+         "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"}
+        default-opts {:root "content"
+                      :ext ".md"
+                      :lang-param :lang
+                      :slug-param :slug
+                      :parse md/md-to-html-string-with-meta}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
         [content args]
-        (= content (apply static/query-fs {} args))
-
-        ;; Passing no opts arg
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"}]
-
-        ;; Passing nil opts
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"} nil]
-
-        ;; Passing empty opts
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:lang "en" :slug "page"} {}]
+        (= content (let [[params opts] args]
+                     (static/query-fs {} params (merge default-opts opts))))
 
         {:html "<p>Markdown doc in English under /alt</p>"}
         [{:lang "en" :slug "page"} {:root "alt"}]
@@ -58,7 +51,7 @@
 
         ;; Ignore meta data
         {:html "<p>Title: Whoa, Meta!</p><p>Doc with metadata</p>"}
-        [{:lang "en" :slug "meta"} {:parse-meta? false}]
+        [{:lang "en" :slug "meta"} {:parse md/md-to-html-string}]
 
         ;; With custom parser
         {:html "<div>Markdown doc in English under /content</div>"}

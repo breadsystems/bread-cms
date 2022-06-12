@@ -59,13 +59,16 @@
   (fn [req]
     (get-in req [::bread/resolver :resolver/type])))
 
-(defn resolve-queries [{resolver ::bread/resolver :as req}]
+(defmethod bread/action ::resolve
+  [{::bread/keys [resolver queries] :as req} _ _]
   (if (fn? resolver)
-    ;; We have a vanilla fn handler:
-    ;; Short-circuit the rest of the lifecycle.
-    (resolver req)
-    (update req ::bread/queries (comp vec concat) (resolve-query req))))
+      ;; We have a vanilla fn handler:
+      ;; Short-circuit the rest of the lifecycle.
+      (resolver req)
+      (update req ::bread/queries (comp vec concat) (resolve-query req))))
 
 (defn plugin []
-  (fn [app]
-    (bread/add-hook app :hook/resolve resolve-queries)))
+  {:hooks
+   {::bread/resolve
+    [{:action/name ::resolve
+      :action/description "Resolve queries"}]}})
