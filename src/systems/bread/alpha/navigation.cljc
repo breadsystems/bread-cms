@@ -69,11 +69,18 @@
             (apply assoc by-loc (interleave locs (repeat menu))))
           {} menus))
 
-(defn- location-hook [loc]
-  (keyword (str "hook/menu.location." (name loc))))
+(defn- hook-builder [prefix]
+  (fn [k] (keyword "systems.bread.alpha.navigation"
+                   (str (name prefix) (name k)))))
 
-(defn- key-hook [k]
-  (keyword (str "hook/menu.key." (name k))))
+(def location-hook (hook-builder :menu.location=))
+(def key-hook (hook-builder :menu.key=))
+(def post-type-menu-hook (hook-builder :menu.post-type=))
+
+(comment
+  (location-hook :footer)
+  (key-hook :main-menu)
+  (post-type-menu-hook :post))
 
 (defn- pull-spec [{max-recur :recursion-limit}]
   [:menu/locations
@@ -103,7 +110,7 @@
           (reduce (fn [menus [loc menu]]
                     (->> menu
                          ;; Run general menu hook...
-                         (bread/hook->> req :hook/menu)
+                         (bread/hook->> req ::menu)
                          ;; ...then location-specific...
                          (bread/hook->> req (location-hook loc))
                          ;; ...then by key.
@@ -133,10 +140,7 @@
           ;; ...then location-specific...
           (bread/hook->> req (location-hook location))
           ;; ...then by key.
-          (bread/hook->> req (key-hook (:key menu)))))))
-
-(defn- post-type-menu-hook [t]
-  (keyword (str "hook/posts-menu." (name t))))
+          (bread/hook->> req (key-hook :main))))))
 
 (defn- walk-posts->items
   "Walk posts tree and make it look like menu items, so that walk-items
@@ -178,11 +182,11 @@
            :post/type t
            :items items}
           ;; Run general menu hook...
-          (bread/hook->> req :hook/menu)
+          (bread/hook->> req ::menu)
           ;; ...then posts-menu hook...
-          (bread/hook->> req :hook/posts-menu)
+          (bread/hook->> req ::menu.type=posts)
           ;; ...then post-type specific.
-          (bread/hook->> req (post-type-menu-hook t))))))
+          (bread/hook->> req (post-type-menu-hook :page))))))
 
 (comment
   (def $req (assoc @breadbox.app/app :uri "/en/"))

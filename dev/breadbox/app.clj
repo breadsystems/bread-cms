@@ -245,15 +245,18 @@
                                 :location :footer-nav}]
                        :global-menus false
                        :hooks
-                       {:hook/posts-menu
+                       {::navigation/menu
+                        [{:action/name ::menu.class
+                          :class "nav-menu"}]
+                        ::navigation/menu.type=posts
                         [{:action/name ::menu.class
                           :class "posts"}]
-                        :hook/posts-menu.page
+                        ::navigation/menu.post-type=page
                         [{:action/name ::menu.class
                           :class "posts-menu--page"}]
-                        :hook/menu
+                        ::navigation/menu.location=footer-nav
                         [{:action/name ::menu.class
-                          :class "nav-menu"}]}}
+                          :class "footer-nav"}]}}
 
                       :plugins
                       [(debug/plugin)
