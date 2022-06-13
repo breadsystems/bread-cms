@@ -32,20 +32,28 @@
 (def naive-plugin
   {:hooks {::route/params [{:action/name ::naive-params}]}})
 
-(defn- load-app []
+(defn- load-app [i18n-config]
   (plugins->loaded [(store/plugin config)
-                    (i18n/plugin)
+                    (i18n/plugin i18n-config)
                     naive-plugin]))
 
 
 (deftest test-supported-langs
-  (is (= #{:en :es}
-         (i18n/supported-langs (load-app)))))
+  (are
+    [langs supported]
+    (= langs (-> {:supported-langs supported} load-app i18n/supported-langs))
+
+    nil nil
+    #{} #{}
+    #{:en} #{:en}
+    #{:en :es} #{:en :es}))
 
 (deftest test-lang
   (are
     [lang uri]
-    (= lang (i18n/lang ((bread/handler (load-app)) {:uri uri})))
+    (= lang (i18n/lang ((bread/handler
+                          (load-app {:supported-langs #{:en :es}}))
+                        {:uri uri})))
 
     :en "/" ;; No lang route; Defaults to :en.
     :en "/qwerty" ;; Ditto.
@@ -60,7 +68,7 @@
 (deftest test-strings-for
   (are
     [strings lang]
-    (= strings (i18n/strings (load-app) lang))
+    (= strings (i18n/strings (load-app {:supported-langs #{:en :es}}) lang))
 
     {:one "Uno" :two "Dos"} :es
     {:one "One" :two "Two"} :en
@@ -70,7 +78,9 @@
 (deftest test-strings
   (are
     [strings uri]
-    (= strings (i18n/strings ((bread/handler (load-app)) {:uri uri})))
+    (= strings (i18n/strings ((bread/handler
+                                (load-app {:supported-langs #{:en :es}}))
+                              {:uri uri})))
 
     {:one "Uno" :two "Dos"} "/es"
     {:one "One" :two "Two"} "/en"
@@ -81,7 +91,7 @@
 ;; i18n/plugin loads I18n strings for the given language automatically.
 (deftest test-add-i18n-query
   (let [app (plugins->loaded [(store/plugin config)
-                              (i18n/plugin)
+                              (i18n/plugin {:supported-langs #{:en :es}})
                               (query/plugin)
                               naive-plugin])]
     (are
@@ -110,7 +120,7 @@
 (deftest test-fallback
   (let [load-app #(plugins->loaded
                     [(store/plugin config)
-                     (i18n/plugin %)
+                     (i18n/plugin (merge {:supported-langs #{:en :es}} %))
                      (query/plugin)
                      naive-plugin])]
     (are

@@ -165,7 +165,8 @@
                    (bread/dispatch [router req]
                      (assoc req ::bread/resolver (route/resolver req))))
           app (defaults/app {:datastore config
-                             :routes {:router router}})
+                             :routes {:router router}
+                             :i18n {:supported-langs #{:en :fr}}})
           handler (bread/load-handler app)]
       (are
         [expected res]

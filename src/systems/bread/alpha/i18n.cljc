@@ -11,11 +11,8 @@
   "Checks all supported languages in the database. Returns supported langs
   as a set of keywords."
   [req]
-  ;; TODO reify this as a setting stored in the db
-  (->> '{:find [?lang] :in [$]
-         :where [[?e :i18n/lang ?lang]]}
-       (store/q (store/datastore req))
-       (map first) set (bread/hook->> req ::supported-langs)))
+  (bread/hook->> req ::supported-langs
+                 (bread/config req :i18n/supported-langs)))
 
 (defn lang
   "High-level fn for getting the language for the current request."
@@ -76,11 +73,12 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang]
-     :or {lang-param :lang fallback-lang :en}}]
+  ([{:keys [lang-param fallback-lang supported-langs]
+     :or {lang-param :lang fallback-lang :en supported-langs #{:en}}}]
    {:config
     {:i18n/lang-param lang-param
-     :i18n/fallback-lang fallback-lang}
+     :i18n/fallback-lang fallback-lang
+     :i18n/supported-langs supported-langs}
     :hooks
     {:hook/path-params
      [{:action/name ::path-params
