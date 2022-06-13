@@ -16,7 +16,7 @@
                (some->> k keyword-namespace (get data) associative?)
                [(keyword-namespace k) k]
                :else [k])]
-    (doto (assoc-in data path (bread/query q data args)) prn)))
+    (assoc-in data path (bread/query q data args))))
 
 (defn- expand-not-found [resolver data]
   (if-let [k (:resolver/key resolver)]
