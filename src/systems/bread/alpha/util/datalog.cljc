@@ -75,7 +75,7 @@
   "Get the latest migration performed on the given datastore"
   [store]
   (first (store/q
-           $store
+           store
            '{:find [?key ?desc (max ?inst)]
              :keys [:migration/key :migration/description :db/txInstant]
              :where [[?e :migration/key ?key ?inst]
