@@ -54,30 +54,22 @@
                                         [?e :db/valueType ?types]]} types))))
 
 (defn migrations
-  "All schema changes throughout the history of store"
+  "All schema changes throughout the history of the given datastore"
   [store]
-  (let [result
-        (store/q store '{:find
-                         [(pull ?e [:migration/key :migration/description
-                                    :db/ident :db/doc :db/valueType
-                                    :db/index :db/cardinality :db/unique])
-                          ?inst]
-                         :where [[?e :migration/key _ ?inst]]})]
-    (->> result
-         (sort-by (comp nil? :migration/description))
-         (reduce (fn [migrations [attr inst]]
-                   (let [{:migration/keys [description key]} attr]
-                     (if description
-                       ;; attr represents the migration itself
-                       (let [migration {:migration/key key
-                                        :migration/description description
-                                        :db/txInstant inst}]
-                         (update migrations key merge migration))
-                       ;; attr is a plain entity column
-                       (update-in migrations [key :migration/attrs]
-                                  (comp vec conj) attr))))
-                 {})
-         vals (sort-by :db/txInstant) vec)))
+  (->> (store/q store '{:find
+                        [(pull ?e [:db/id :db/txInstant
+                                   :migration/key :migration/description])]
+                        :where [[?e :migration/key _]]})
+       (map (fn [[{id :db/id :as migration}]]
+              (let [attrs
+                    (store/q store '{:find
+                                     [(pull ?e [:db/ident :db/doc
+                                                :db/valueType :db/index
+                                                :db/cardinality :db/unique])]
+                                     :in [$ ?m]
+                                     :where [[?e :attr/migration ?m]]})]
+                (assoc migration :migration/attrs (map first attrs)))))
+       (sort-by :db/txInstant)))
 
 (comment
 
@@ -88,6 +80,8 @@
     (require '[clojure.repl :as repl]
              '[breadbox.app :as breadbox :refer [app]])
     (def $store (store/datastore @app)))
+
+  (migrations $store)
 
   (attrs $store)
   (attr $store :post/fields)
@@ -110,12 +104,6 @@
   (attrs-by-type $store :db.type/ref)
   (attrs-by-type $store nil)
   (attrs-by-type $store :fake)
-
-  (map (juxt :migration/key
-             :migration/description
-             (comp count :migration/attrs)
-             :db/txInstant)
-       (migrations $store))
 
   ;;
   )
