@@ -7,16 +7,15 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]))
 
-;; TODO make this fn pluggable
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
-   as a set of keywords."
-  [app]
-  (set (map first
-            (let [db (store/datastore app)]
-              (store/q db
-                     '{:find [?lang] :in [$]
-                       :where [[?e :i18n/lang ?lang]]})))))
+  as a set of keywords."
+  [req]
+  ;; TODO caching...
+  (->> '{:find [?lang] :in [$]
+         :where [[?e :i18n/lang ?lang]]}
+       (store/q (store/datastore req))
+       (map first) set (bread/hook->> req ::supported-langs)))
 
 (defn lang
   "High-level fn for getting the language for the current request."
@@ -63,7 +62,15 @@
 (defmethod bread/action ::add-queries
   [req _ _]
   (-> req
-      (query/add [:i18n (fn [_] (strings req))])
+      (query/add [:i18n
+                  (store/datastore req)
+                  '{:find [?key ?string]
+                    :in [$ ?lang]
+                    :where [[?e :i18n/key ?key]
+                            [?e :i18n/string ?string]
+                            [?e :i18n/lang ?lang]]}
+                  (lang req)])
+      (query/add [:i18n query/key-into :i18n])
       (query/add [:lang (fn [_] (lang req))])))
 
 (defn plugin

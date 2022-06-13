@@ -32,6 +32,13 @@
          (expand-not-found resolver)
          (assoc req ::bread/data))))
 
+(defn key-into
+  "Takes a ::bread/data map and a key fn f and calls (into {} (f data)).
+  Use this to collect data returned from earlier queries (for the same key),
+  e.g. when a Datalog query returns a set of vectors."
+  [data f]
+  (into {} (f data)))
+
 (defn add
   "Add query to the vector of queries to be run."
   [req query]
