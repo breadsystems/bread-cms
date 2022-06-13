@@ -459,6 +459,4 @@
   (::bread/resolve (::bread/hooks @app))
   (:hook/posts-menu (::bread/hooks @app))
 
-  ;; TODO figure out why this doesn't work the first time
-  ;; on a fresh REPL? Evaling the buffer once more fixes it...
   (restart!))
