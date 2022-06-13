@@ -60,7 +60,7 @@
 (deftest test-strings-for
   (are
     [strings lang]
-    (= strings (i18n/strings-for (load-app) lang))
+    (= strings (i18n/strings (load-app) lang))
 
     {:one "Uno" :two "Dos"} :es
     {:one "One" :two "Two"} :en

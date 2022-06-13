@@ -34,24 +34,21 @@
   [app lang]
   (contains? (supported-langs app) lang))
 
-(defn strings-for
-  "Load the strings from the database for the given language."
-  [req lang]
-  ;; TODO support locales
-  (->> (store/q (store/datastore req)
-                (conj '[:find ?key ?str
-                        :where
-                        [?e :i18n/key ?key]
-                        [?e :i18n/string ?str]]
-                      ['?e :i18n/lang lang]))
-       (into {})
-       (bread/hook-> req :hook/strings-for)))
-
 (defn strings
   "Load the strings from the database for the current language, i.e.
   (lang req)."
-  [req]
-  (bread/hook-> req :hook/strings (strings-for req (lang req))))
+  ([req]
+   (strings req (lang req)))
+  ([req lang]
+   (->> (store/q (store/datastore req)
+                 '{:find [?key ?string]
+                   :in [$ ?lang]
+                   :where [[?e :i18n/key ?key]
+                           [?e :i18n/string ?string]
+                           [?e :i18n/lang ?lang]]}
+                 lang)
+        (into {})
+        (bread/hook->> req ::strings))))
 
 (defn t
   "Query the database for the translatable string represented by keyword k."
