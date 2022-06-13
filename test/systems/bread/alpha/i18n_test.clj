@@ -105,13 +105,12 @@
       :en "/en"
       :en "/"
       :en "/fr"
-      :en "/de"
-      )))
+      :en "/de")))
 
 (deftest test-fallback
   (let [load-app #(plugins->loaded
                     [(store/plugin config)
-                     (i18n/plugin {:fallback-lang %})
+                     (i18n/plugin %)
                      (query/plugin)
                      naive-plugin])]
     (are
@@ -120,15 +119,20 @@
          (get-in ((bread/handler (load-app fallback-lang)) {:uri "/"})
                  [::bread/data :i18n]))
 
-      {:one "Uno" :two "Dos"} :es
-      {:one "One" :two "Two"} :en
+      {:one "Uno" :two "Dos"} {:fallback-lang :es}
+      {:one "One" :two "Two"} {:fallback-lang :en}
 
       ;; English is the fallback fallback.
+      {:one "One" :two "Two"} {}
       {:one "One" :two "Two"} nil
 
       ;; Nothing in the database for the configured fallback lang.
-      {} :fr
-      {} :de)))
+      {} {:fallback-lang :fr}
+      {} {:fallback-lang :de}
+
+      ;; Support disabling fallback lang.
+      {} {:fallback-lang nil}
+      {} {:fallback-lang false})))
 
 (deftest ^:kaocha/skip test-lang-param-config)
 
