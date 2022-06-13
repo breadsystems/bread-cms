@@ -71,9 +71,17 @@
                 (assoc migration :migration/attrs (map first attrs)))))
        (sort-by :db/txInstant)))
 
-(comment
+(defn latest-migration
+  "Get the latest migration performed on the given datastore"
+  [store]
+  (first (store/q
+           $store
+           '{:find [?key ?desc (max ?inst)]
+             :keys [:migration/key :migration/description :db/txInstant]
+             :where [[?e :migration/key ?key ?inst]
+                     [?e :migration/description ?desc]]})))
 
-  (sort-by (comp nil? :x) [{} {:x "z"} {:x "a"}])
+(comment
 
   ;; Do some minimal setup to get an example datastore instance.
   (do
@@ -82,6 +90,7 @@
     (def $store (store/datastore @app)))
 
   (migrations $store)
+  (latest-migration $store)
 
   (attrs $store)
   (attr $store :post/fields)
