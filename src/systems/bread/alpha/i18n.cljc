@@ -11,7 +11,7 @@
   "Checks all supported languages in the database. Returns supported langs
   as a set of keywords."
   [req]
-  ;; TODO caching...
+  ;; TODO reify this as a setting stored in the db
   (->> '{:find [?lang] :in [$]
          :where [[?e :i18n/lang ?lang]]}
        (store/q (store/datastore req))
@@ -21,8 +21,8 @@
   "High-level fn for getting the language for the current request."
   [req]
   (let [params (route/params req (route/match req))
-        ;; TODO configurable param key
-        supported ((supported-langs req) (keyword (:lang params)))
+        lang-param (bread/config req :i18n/lang-param)
+        supported ((supported-langs req) (keyword (lang-param params)))
         fallback (bread/config req :i18n/fallback-lang)
         lang (or supported fallback)]
     (bread/hook->> req :hook/lang lang)))
