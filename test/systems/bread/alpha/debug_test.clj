@@ -25,14 +25,14 @@
 
   ;; Default behavior.
   (testing "with profiling disabled"
-    (bread/hook-> (load-app) :my/hook 5)
+    (bread/hook->> (load-app) :my/hook 5)
     (is (empty? @invocations)))
 
   ;; TODO
   #_
   (testing "with profiling enabled"
     (binding [bread/*profile-hooks* true]
-      (bread/hook-> (load-app) :my/hook 5)
+      (bread/hook->> (load-app) :my/hook 5)
       (is (= #{:my/hook}
              @invocations)))))
 

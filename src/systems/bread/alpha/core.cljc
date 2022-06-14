@@ -301,19 +301,6 @@
   ([app h]
    (hook->> app h nil)))
 
-(defn hook->
-  "Threads x and any (optional) subsequent args, in that order, through all
-  callbacks for h. The result of applying each callback is passed as the first
-  argument to the next callback. Returns x if no callbacks for h are present."
-  {:arglists '([app h] [app h x & args])}
-  ([app h x & args]
-   (loop [x x [hook & hooks] (get-in app [::hooks h])]
-     (if hook
-       (recur (action x hook (cons x args)) hooks)
-       x)))
-  ([app h]
-   (hook-> app h nil)))
-
 (defn hook
   "Threads app and any (optional) subsequent args, in that order, through all
   callbacks for h. Intended for modifying app/request/response maps with a
