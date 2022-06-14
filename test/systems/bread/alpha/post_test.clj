@@ -216,5 +216,4 @@
         )))
 
 (comment
-  (test-resolve-post-queries)
   (k/run))

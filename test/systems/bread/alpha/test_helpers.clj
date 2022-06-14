@@ -18,9 +18,14 @@
 (defn datastore-config->app [config]
   (plugins->app [(store/plugin config)]))
 
+(defmethod bread/action ::datastore
+  [_ {:keys [store]} _]
+  store)
+
 (defn datastore->plugin [store]
-  (fn [app]
-    (bread/add-value-hook app :hook/datastore store)))
+  {:hooks {:hook/datastore [{:action/name ::datastore
+                             :action/description "Mock datastore"
+                             :store store}]}})
 
 (defn datastore->loaded [store]
   (plugins->loaded [(datastore->plugin store)]))

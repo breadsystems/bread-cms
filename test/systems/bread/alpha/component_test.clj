@@ -37,6 +37,10 @@
   {}
   [:div.plugin (str "filtered " content)])
 
+(defmethod bread/action ::filtered
+  [_ {:keys [component]} _]
+  component)
+
 (deftest test-render
   (are
     [expected app]
@@ -78,9 +82,10 @@
 
     ;; With plugins filtering the component
     [:div.plugin "filtered content"]
-    (assoc (plugins->loaded [(fn [app]
-                               (bread/add-value-hook app
-                                 :hook/component filtered))])
+    (assoc (plugins->loaded [{:hooks
+                              {:hook/component
+                               [{:action/name ::filtered
+                                 :component filtered}]}}])
            ::bread/data {:content "content"})))
 
 (defc blank [] {} [:<>])
@@ -113,5 +118,4 @@
          (component/query next-level))))
 
 (comment
-  (prn child)
   (k/run))

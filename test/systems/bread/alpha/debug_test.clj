@@ -15,22 +15,26 @@
                         (run)
                         (remove-tap added))))
 
+(defn- load-app []
+  (assoc-in (bread/app) [::bread/hooks :my/hook] [{:action/name ::my.hook}]))
+
+(defmethod bread/action ::my.hook
+  [_ _ _])
+
 (deftest test-profile-hook
 
   ;; Default behavior.
   (testing "with profiling disabled"
-    (let [app (bread/add-hook (bread/app) :my/hook inc)]
-      (bread/hook-> app :my/hook 5)
-      (is (empty? @invocations))))
+    (bread/hook-> (load-app) :my/hook 5)
+    (is (empty? @invocations)))
 
   ;; TODO
   #_
   (testing "with profiling enabled"
     (binding [bread/*profile-hooks* true]
-      (let [app (bread/add-hook (bread/app) :my/hook inc)]
-        (bread/hook-> app :my/hook 5)
-        (is (= #{:my/hook}
-               @invocations))))))
+      (bread/hook-> (load-app) :my/hook 5)
+      (is (= #{:my/hook}
+             @invocations)))))
 
 (comment
   (k/run))
