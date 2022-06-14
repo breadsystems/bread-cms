@@ -157,10 +157,10 @@
    (posts-menu req {}))
   ([req opts]
    (let [t (:post/type opts :post.type/page)
-         status* (bread/hook-> req :hook/post.status :post.status/published)
+         status* (bread/hook->> req :hook/post.status :post.status/published)
          status (:post/status opts status*)
          statuses (if (coll? status) status #{status})
-         max-recur* (bread/hook-> req :hook/posts-menu-recursion 3)
+         max-recur* (bread/hook->> req :hook/posts-menu-recursion 3)
          max-recur (:recursion-limit opts max-recur*)
          posts-pull (list 'pull '?e [:db/id
                                      {:post/children max-recur}])
