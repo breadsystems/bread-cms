@@ -97,12 +97,12 @@
   ([req opts]
    (let [max-recur (if-let [max-recur (:recursion-limit opts)]
                      max-recur
-                     (bread/hook->> req :hook/global-menus-recursion 3))
+                     (bread/hook req :hook/global-menus-recursion 3))
          query {:find [(list 'pull '?e (pull-spec {:recursion-limit
                                                    max-recur}))]
                 :where '[[?e :menu/locations _]]}]
      (->> query
-          (bread/hook->> req :hook/global-menus-query)
+          (bread/hook req :hook/global-menus-query)
           (store/q (store/datastore req))
           (map (comp #(assoc % :type :location)
                      (partial format-menu req)
@@ -111,11 +111,11 @@
           (reduce (fn [menus [loc menu]]
                     (->> menu
                          ;; Run general menu hook...
-                         (bread/hook->> req ::menu)
+                         (bread/hook req ::menu)
                          ;; ...then location-specific...
-                         (bread/hook->> req (location-hook loc))
+                         (bread/hook req (location-hook loc))
                          ;; ...then by key.
-                         (bread/hook->> req (key-hook (:key menu)))
+                         (bread/hook req (key-hook (:key menu)))
                          (assoc menus loc))) {})))))
 
 (defn location-menu
@@ -124,24 +124,24 @@
   ([req location opts]
    (let [max-recur (if-let [max-recur (:recursion-limit opts)]
                      max-recur
-                     (bread/hook->> req :hook/location-menu-recursion
+                     (bread/hook req :hook/location-menu-recursion
                                     3 location))
          query {:find [(list 'pull '?e (pull-spec {:recursion-limit
                                                    max-recur}))
                        '.]
                 :where [['?e :menu/locations location]]}
          menu (as-> query $
-                (bread/hook->> req :hook/location-menu-query $ location)
+                (bread/hook req :hook/location-menu-query $ location)
                 (store/q (store/datastore req) $)
                 (format-menu req $)
                 (assoc $ :type :location))]
      (->> menu
           ;; Run general menu hook...
-          (bread/hook->> req :hook/menu)
+          (bread/hook req :hook/menu)
           ;; ...then location-specific...
-          (bread/hook->> req (location-hook location))
+          (bread/hook req (location-hook location))
           ;; ...then by key.
-          (bread/hook->> req (key-hook :main))))))
+          (bread/hook req (key-hook :main))))))
 
 (defn- walk-posts->items
   "Walk posts tree and make it look like menu items, so that walk-items
@@ -157,10 +157,10 @@
    (posts-menu req {}))
   ([req opts]
    (let [t (:post/type opts :post.type/page)
-         status* (bread/hook->> req :hook/post.status :post.status/published)
+         status* (bread/hook req :hook/post.status :post.status/published)
          status (:post/status opts status*)
          statuses (if (coll? status) status #{status})
-         max-recur* (bread/hook->> req :hook/posts-menu-recursion 3)
+         max-recur* (bread/hook req :hook/posts-menu-recursion 3)
          max-recur (:recursion-limit opts max-recur*)
          posts-pull (list 'pull '?e [:db/id
                                      {:post/children max-recur}])
@@ -174,7 +174,7 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          items
          (as-> query $
-               (bread/hook->> req :hook/posts-menu-query $)
+               (bread/hook req :hook/posts-menu-query $)
                (store/q (store/datastore req) $ t statuses)
                (map first $)
                (walk-posts->items $)
@@ -183,11 +183,11 @@
            :post/type t
            :items items}
           ;; Run general menu hook...
-          (bread/hook->> req ::menu)
+          (bread/hook req ::menu)
           ;; ...then posts-menu hook...
-          (bread/hook->> req ::menu.type=posts)
+          (bread/hook req ::menu.type=posts)
           ;; ...then post-type specific.
-          (bread/hook->> req (post-type-menu-hook :page))))))
+          (bread/hook req (post-type-menu-hook :page))))))
 
 (comment
   (def $req (assoc @breadbox.app/app :uri "/en/"))

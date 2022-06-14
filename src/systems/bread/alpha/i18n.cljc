@@ -11,8 +11,8 @@
   "Checks all supported languages in the database. Returns supported langs
   as a set of keywords."
   [req]
-  (bread/hook->> req ::supported-langs
-                 (bread/config req :i18n/supported-langs)))
+  (bread/hook req ::supported-langs
+              (bread/config req :i18n/supported-langs)))
 
 (defn lang
   "High-level fn for getting the language for the current request."
@@ -22,7 +22,7 @@
         supported ((supported-langs req) (keyword (lang-param params)))
         fallback (bread/config req :i18n/fallback-lang)
         lang (or supported fallback)]
-    (bread/hook->> req :hook/lang lang)))
+    (bread/hook req :hook/lang lang)))
 
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
@@ -44,7 +44,7 @@
                            [?e :i18n/lang ?lang]]}
                  lang)
         (into {})
-        (bread/hook->> req ::strings))))
+        (bread/hook req ::strings))))
 
 (defn t
   "Query the database for the translatable string represented by keyword k."

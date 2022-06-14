@@ -9,14 +9,14 @@
 (defn path [req path route-name]
   (let [path (if (sequential? path) (string/join "/" path) path)
         ;; TODO get :slugs from opts
-        params (bread/hook->> req :hook/path-params {:slugs path} route-name)]
-    (bread/hook->> req ::path path route-name params)))
+        params (bread/hook req :hook/path-params {:slugs path} route-name)]
+    (bread/hook req ::path path route-name params)))
 
 (defn match [req]
-  (bread/hook->> req ::match))
+  (bread/hook req ::match))
 
 (defn params [req match]
-  (bread/hook->> req ::params match))
+  (bread/hook req ::params match))
 
 (defn resolver [req]
   "Get the full resolver for the given request. Router implementations should
@@ -25,10 +25,10 @@
                  :resolver/type :resolver.type/page
                  :post/type :post.type/page}
         match (match req)
-        declared (bread/hook->> req ::resolver match)
-        component (bread/hook->> req ::component match)
+        declared (bread/hook req ::resolver match)
+        component (bread/hook req ::component match)
         not-found-component
-        (bread/hook->> req ::not-found-component match)
+        (bread/hook req ::not-found-component match)
         {:resolver/keys [defaults?]} declared
         keyword->type {:resolver.type/home :resolver.type/page
                        :resolver.type/page :resolver.type/page}
@@ -53,10 +53,10 @@
                          :resolver/not-found-component not-found-component
                          :resolver/key (component/query-key component)
                          :resolver/pull (component/query component))]
-    (bread/hook->> req :hook/resolver resolver')))
+    (bread/hook req :hook/resolver resolver')))
 
 (defmethod bread/action ::path
-  [_ {:keys [router]} [_ _path route-name params]]
+  [_ {:keys [router]} [_path route-name params]]
   (bread/path router route-name params))
 
 (defmethod bread/action ::match
@@ -64,19 +64,19 @@
   (bread/match router req))
 
 (defmethod bread/action ::resolver
-  [_ {:keys [router]} [_ match]]
+  [_ {:keys [router]} [match]]
   (bread/resolver router match))
 
 (defmethod bread/action ::component
-  [_ {:keys [router]} [_ match]]
+  [_ {:keys [router]} [match]]
   (bread/component router match))
 
 (defmethod bread/action ::not-found-component
-  [req {:keys [router]} [_ match]]
+  [req {:keys [router]} [match]]
   (bread/not-found-component router match))
 
 (defmethod bread/action ::params
-  [_ {:keys [router]} [_ match]]
+  [_ {:keys [router]} [match]]
   (bread/params router match))
 
 (defmethod bread/action ::dispatch
