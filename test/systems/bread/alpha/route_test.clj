@@ -8,6 +8,9 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               map->route-plugin]]))
 
+(defmethod bread/action ::stuff [_ _ _]
+  {:resolver/stuff :totally-different})
+
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
         routes {"/en/home"
@@ -195,13 +198,10 @@
         )
 
     (testing "with a custom resolver hook"
-      (let [opinionated-resolver-plugin
-            (fn [app]
-              (bread/add-hook
-                app :hook/resolver
-                (constantly {:resolver/stuff :totally-different})))
-            app (plugins->loaded [(map->route-plugin routes)
-                                  opinionated-resolver-plugin])]
+      (let [app (plugins->loaded [(map->route-plugin routes)
+                                  {:hooks
+                                   {:hook/resolver
+                                    [{:action/name ::stuff}]}}])]
         (is (= {:resolver/stuff :totally-different}
                (route/resolver (merge app {:uri "/whatever"}))))))
 
