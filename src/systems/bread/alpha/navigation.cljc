@@ -18,6 +18,7 @@
 
 (defn- post-items-query [req tree]
   (let [lang (i18n/lang req)
+        ;; TODO use collection binding here
         ids-clause (->> tree
                         collect-item-ids
                         (filter some?)
