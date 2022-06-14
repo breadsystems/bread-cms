@@ -288,25 +288,34 @@
   [{::keys [plugins] :as app} _ _]
   (reduce load-plugin app plugins))
 
-(defn hook->>
-  "Threads app, x, and any (optional) subsequent args, in that order, through
-  all callbacks for h. The result of applying each callback is passed as the
-  second argument to the next callback. Returns x if no callbacks for h are
-  present."
-  ([app h x & args]
-   (loop [x x [hook & hooks] (get-in app [::hooks h])]
-     (if hook
-       (recur (action app hook (concat [app x] args)) hooks)
-       x)))
-  ([app h]
-   (hook->> app h nil)))
-
 (defn hook
-  "Threads app and any (optional) subsequent args, in that order, through all
-  callbacks for h. Intended for modifying app/request/response maps with a
-  chain of arbitrary functions. Returns app if no callbacks for h are present."
-  [app h & args]
-  (apply hook-> app h app args))
+  "Threads app and any (optional) args through any actions for hook h. Calls
+  (action app current-action ...) on successive actions for the given hook, in
+  the order they were added. When passed only two args (an app and a hook),
+  calls (action app current-action nil) repeatedly, returning the modified app.
+  When called with three or more args, calls (action app current-action ...args)
+  repeatedly, returning the (presumably modified) third arg. Note that by
+  convention, actions corresponding to hooks that are called with three or more
+  args operate on - and return modified versions of - the third arg, but this
+  is not enforced."
+  {:arglists '([app h] [app h x] [app h x & args])}
+  ([app h]
+   (loop [app app [current-action & actions] (get-in app [::hooks h])]
+     (if current-action
+       (recur (action app current-action nil) actions)
+       app)))
+  ([app h x]
+   (loop [x x [current-action & actions] (get-in app [::hooks h])]
+     (if current-action
+       (recur (action app current-action [x]) actions)
+       x)))
+  ([app h x & args]
+   (loop [x x [current-action & actions] (get-in app [::hooks h])]
+     (if current-action
+       ;; TODO this concat isn't right, but tests currently rely on the
+       ;; incorrect behavior. Should be (cons x args).
+       (recur (action app current-action (cons x args)) actions)
+       x))))
 
 (defn app
   "Creates a new Bread app. Optionally accepts an options map. A single option
