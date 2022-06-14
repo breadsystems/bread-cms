@@ -196,12 +196,6 @@
   (i18n/lang (assoc @app :uri "/es/asdf")) ;; defaults to :en
   (i18n/lang (assoc @app :uri "/")) ;; defaults to :en
 
-  (let [req (-> @app
-                (assoc :uri "/fr")
-                (bread/add-hook :hook/strings-for #(assoc % :x "l'X"))
-                (bread/add-hook :hook/strings #(assoc % :yes "Oui")))]
-    (i18n/strings req))
-
   )
 
 (defstate db
@@ -226,10 +220,22 @@
   [_ {cls :class} [_ {classes :my/class :as menu}]]
   (assoc menu :my/class (if classes (str classes " " cls) cls)))
 
-;; TODO reload app automatically when src changes
-;; NOTE: I think the simplest thing is to put handler in a defstate,
-;; so that wrap-reload picks up on it. Not sure if we even need a dedicated
-;; app atom at this point...
+
+;; (fn [{::bread/keys [data] :as res}]
+;;   (let [status (if (:not-found? data)
+;;                  404
+;;                  (or (:status res) 200))]
+;;     (assoc res
+;;            :headers {"content-type"
+;;                      "text/html"}
+;;            :status status)))))
+
+(defmethod bread/action ::render-ring
+  [{::bread/keys [data] :keys [status] :as res} {:keys [headers]} _]
+  (assoc res
+         :headers headers
+         :status (if (:not-found? data) 404 (or status 200))))
+
 (defstate load-app
   :start (reset! app
                  (bread/load-app
@@ -263,37 +269,12 @@
                        (rum/plugin)
 
                        ;; TODO make this a default plugin
-                       (fn [app]
-                         (bread/add-hook
-                           app
-                           ::bread/render
-                           (fn [{::bread/keys [data] :as res}]
-                             (let [status (if (:not-found? data)
-                                            404
-                                            (or (:status res) 200))]
-                               (assoc res
-                                      :headers {"content-type"
-                                                "text/html"}
-                                      :status status)))))
+                       {:hooks
+                        {::bread/render
+                         [{:action/name ::render-ring
+                           :action/description "Render Ring response"
+                           :headers {"content-type" "text/html"}}]}}
 
-                       ;; TODO make this API more data-oriented, e.g.:
-                       ;;
-                       ;; {:hook
-                       ;;  [::bread/dispatch
-                       ;;   {:action/name ::add-txs-external
-                       ;;    :txs
-                       ;;    [{:post/slug uniq
-                       ;;      :post/type :post.type/page
-                       ;;      :post/status :post.status/published
-                       ;;      :post/fields
-                       ;;      #{{:field/lang :en
-                       ;;         :field/key :title
-                       ;;         :field/content (prn-str uniq)}
-                       ;;        {:field/lang :fr
-                       ;;         :field/key :title
-                       ;;         :field/content (prn-str uniq)}}}]}]}
-                       ;;
-                       ;; ^^^^^^^^^^^ THIS MAP IS A PLUGIN ^^^^^^^^^^^^^
                        #_
                        (fn [app]
                          ;; Transact some random post data into the db
@@ -381,6 +362,7 @@
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       ;; TODO get these ports from mounted state
+      #_
       (mid/wrap-exceptions $ {:csp-ports (:dev-csp-ports env)})
       (wrap-keyword-params $)
       (wrap-params $)
