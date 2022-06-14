@@ -466,17 +466,10 @@
   second argument to the next callback. Returns x if no callbacks for h are
   present."
   ([app h x & args]
-   (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
-       ;; TODO delete fn branch
-       (if a
-         (if hook
-           (recur (action app hook (concat [app x] args)) hs)
-           x)
-         (if hook
-           (recur (try-hook app hook h f (concat [app x] args)) hs)
-           x)))
-     x))
+   (loop [x x [hook & hooks] (get-in app [::hooks h])]
+     (if hook
+       (recur (action app hook (concat [app x] args)) hooks)
+       x)))
   ([app h]
    (hook->> app h nil)))
 
@@ -486,17 +479,10 @@
   argument to the next callback. Returns x if no callbacks for h are present."
   {:arglists '([app h] [app h x & args])}
   ([app h x & args]
-   (if-let [hooks (get-in app [::hooks h])]
-     (loop [x x [{::keys [f] a :action/name :as hook} & hs] hooks]
-       (if a
-         (if hook
-           (recur (action x hook (cons x args)) hs)
-           x)
-         ;; TODO do away with fns as hooks and remove this branch
-         (if hook
-           (recur (try-hook app hook h f (cons x args)) hs)
-           x)))
-     x))
+   (loop [x x [hook & hooks] (get-in app [::hooks h])]
+     (if hook
+       (recur (action x hook (cons x args)) hooks)
+       x)))
   ([app h]
    (hook-> app h nil)))
 
