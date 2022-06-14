@@ -53,7 +53,7 @@
   (k (strings app)))
 
 (defmethod bread/action ::path-params
-  [req _ [_ params]]
+  [req _ [params]]
   (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
 (defmethod bread/action ::add-queries

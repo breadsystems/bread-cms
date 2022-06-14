@@ -125,7 +125,7 @@
    (let [max-recur (if-let [max-recur (:recursion-limit opts)]
                      max-recur
                      (bread/hook req :hook/location-menu-recursion
-                                    3 location))
+                                 3 location))
          query {:find [(list 'pull '?e (pull-spec {:recursion-limit
                                                    max-recur}))
                        '.]

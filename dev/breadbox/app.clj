@@ -217,7 +217,7 @@
               (prn (ex-data e))))))
 
 (defmethod bread/action ::menu.class
-  [_ {cls :class} [_ {classes :my/class :as menu}]]
+  [_ {cls :class} [{classes :my/class :as menu}]]
   (assoc menu :my/class (if classes (str classes " " cls) cls)))
 
 
