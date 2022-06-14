@@ -56,15 +56,8 @@
   (db [conn])
   (transact [conn tx]))
 
-(defn store->plugin [store]
-  (fn [app]
-    (bread/add-value-hook app :hook/datastore store)))
-
 (defn datastore [app]
   (bread/hook app :hook/datastore))
-
-(defn set-datastore [app store]
-  (bread/add-value-hook app :hook/datastore store))
 
 (defn db-datetime
   "Returns the as-of database instant (DateTime) for the given request,
