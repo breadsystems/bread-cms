@@ -66,11 +66,9 @@
 ;; TODO layout
 
 (defn component [{::bread/keys [data resolver] :as res}]
-  (bread/hook->>
-    res :hook/component
-    (if (:not-found? data)
-      (:resolver/not-found-component resolver)
-      (:resolver/component resolver))))
+  (bread/hook res :hook/component (if (:not-found? data)
+                                    (:resolver/not-found-component resolver)
+                                    (:resolver/component resolver))))
 
 (defn- render-parent [component content]
   (loop [component component

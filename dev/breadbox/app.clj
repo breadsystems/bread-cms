@@ -173,7 +173,7 @@
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})
   (route/path $res "one/two" :bread.route/page)
-  (bread/hook->> $res :hook/path-params {:slugs "one/two"} :bread.route/page)
+  (bread/hook $res :hook/path-params {:slugs "one/two"} :bread.route/page)
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
   (i18n/t (assoc @app :uri "/fr/") :not-found)
@@ -217,7 +217,7 @@
               (prn (ex-data e))))))
 
 (defmethod bread/action ::menu.class
-  [_ {cls :class} [_ {classes :my/class :as menu}]]
+  [_ {cls :class} [{classes :my/class :as menu}]]
   (assoc menu :my/class (if classes (str classes " " cls) cls)))
 
 
