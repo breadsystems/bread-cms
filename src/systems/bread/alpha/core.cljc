@@ -36,28 +36,6 @@
   (query [f data args]
     (apply f data args)))
 
-(defprotocol Effect
-  "Protocol for encapsulating side-effects"
-  :extend-via-metadata true
-  (effect! [this req]))
-
-(extend-protocol Effect
-  clojure.lang.Fn
-  (effect!
-    ([f req]
-     (f req)))
-
-  clojure.lang.PersistentVector
-  (effect!
-    ([v req]
-     (let [[f & args] v]
-       (apply f req args))))
-
-  java.util.concurrent.Future
-  (effect!
-    ([fut _]
-     (deref fut))))
-
 (defprotocol Router
   :extend-via-metadata true
   (path [this route-name params])
@@ -172,6 +150,12 @@
 ;; The main API for working with hooks.
 ;;
 
+(defmulti action (fn [_app hook _args]
+                   (:action/name hook)))
+
+(defmulti effect (fn [effect _data]
+                   (:effect/name effect)))
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]
@@ -182,65 +166,48 @@
   [req e]
   (update req ::effects (comp vec conj) e))
 
-(defn add-transform
-  "Add as an Effect a function that wraps f, setting the transformed request's
-  ::data to the value returned from f. Any Effect added via add-transform can
-  only affect ::data and cannot add new Effects."
-  [req f]
-  (let [e (fn [req]
-            {::data (effect! f req)})]
-    (add-effect req e)))
-
-(defn effect?
-  "Whether x implements (satisfies) the Effect protocol"
-  [x]
-  (satisfies? Effect x))
-
-(defn- do-effect [effect req]
-  (letfn [(maybe-wrap-exception [ex]
-            (if (instance? clojure.lang.ExceptionInfo ex)
-              ex
-              (ex-info (.getMessage ex) {:exception ex})))
-          (retry []
-            (let [em (meta effect)
-                  backoff (:effect/backoff em)
-                  sleep-ms (when (fn? backoff) (backoff em))]
-              (when sleep-ms
-                (Thread/sleep sleep-ms)))
-            (do-effect
-              (vary-meta effect update :effect/retries dec)
-              req))
-          (handle-exception [ex]
-            (let [em (meta effect)]
-              (cond
-                (not (:effect/catch? em)) (throw ex)
-                (:effect/retries em) (retry)
-                (:effect/key em) {::data {(:effect/key em)
-                                          (maybe-wrap-exception ex)}}
-                :else {})))]
-    (try
-      (effect! effect req)
-      (catch java.lang.Throwable ex
-        (handle-exception ex)))))
-
-(defn- apply-effects [req]
-  (loop [{data ::data [effect & effects] ::effects :as req} req]
-    (if-not (effect? effect)
-      req
-      (let [;; DO THE THING!
-            ;; NOTE: it's important that we do this after we check effect?
-            ;; but before we merge the old req with the value(s) returned
-            ;; from effect!. Because of the possibility of new Effects being
-            ;; returned and replacing or appending to old ones, applying
-            ;; Effects is not a simple reduction over the original ::effects
-            ;; vector.
-            {new-data ::data new-effects ::effects} (do-effect effect req)
-            data (or new-data data)
-            effects (or new-effects effects)
-            req (assoc req ::data data ::effects effects)]
-        (if-not (seq effects)
-          req
-          (recur req))))))
+(defmethod action ::do-effects
+  [{::keys [effects data] :as req} _ _]
+  (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
+          (success [e success?] (vary-meta e assoc :success? success?))
+          (retried [e] (vary-meta e update :retried inc))]
+    (loop [[e & effects] effects data data completed []]
+      (if e
+        (let [e (vary-meta e #(or % {:errors []
+                                     :success? false
+                                     :retried 0}))
+              retry-count (:retried (meta e))
+              {data-key :effect/data-key max-retries :effect/retries} e
+              [result ex] (try
+                            [(effect e data) nil]
+                            (catch Throwable ex
+                              [nil ex]))
+              result (with-meta (if (instance? clojure.lang.IDeref result)
+                                  result
+                                  (reify
+                                    clojure.lang.IDeref
+                                    (deref [_] result)))
+                                (meta e))]
+          (cond
+            (nil? ex)
+            (recur effects
+                   (if data-key
+                     (assoc data data-key (success result true))
+                     data)
+                   (conj completed (success e true)))
+            (and ex max-retries (> max-retries retry-count))
+            (recur (cons (-> e
+                             (add-error ex)
+                             (retried))
+                         effects)
+                   data completed)
+            ex
+            (recur effects data (conj completed (-> e
+                                                    (add-error ex)
+                                                    (success false))))
+            :else
+            (recur effects data (conj completed (success e true)))))
+        (assoc req ::data data ::effects completed)))))
 
 (defmacro ^:private try-action [hook app current-action args]
   `(try
@@ -258,10 +225,7 @@
                           ::core? true}
                          e#))))))
 
-(defmulti action (fn [_app hook _args]
-                   (:action/name hook)))
-
-(defn- load-plugin [app {:keys [config hooks] :as plugin}]
+(defn- load-plugin [app {:keys [config hooks effects] :as plugin}]
   (letfn [(configure [app config]
             (if config
               (apply set-config app (mapcat (juxt key val) config))
@@ -269,8 +233,13 @@
           (append-hook [app [hook actions]]
             (update-in app [::hooks hook]
                        (comp (partial sort-by :action/priority) concat)
-                       actions))]
-    (reduce append-hook (configure app config) hooks)))
+                       actions))
+          (add-effects [app effects]
+            (update app ::effects (comp vec concat) effects))]
+    (as-> effects $
+      (add-effects app $)
+      (configure $ config)
+      (reduce append-hook $ hooks))))
 
 (defmethod action ::load-plugins
   [{::keys [plugins] :as app} _ _]
@@ -312,7 +281,11 @@
         ::hooks   {::load-plugins
                    [{:action/name ::load-plugins
                      :action/description
-                     "Load hooks declared in all plugins"}]}
+                     "Load hooks declared in all plugins"}]
+                   ::do-effects
+                   [{:action/name ::do-effects
+                     :action/description
+                     "Do side effects"}]}
         ::config  {}
         ::data    {}}))
   ([]
@@ -344,11 +317,11 @@
   (fn [req]
     (-> (merge req app)
         (hook ::request)
-        (hook ::dispatch)     ;; -> ::resolver
-        (hook ::resolve)      ;; -> ::queries
-        (hook ::expand)       ;; -> ::data
-        (apply-effects)       ;; -> more ::data, ::effects
-        (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
+        (hook ::dispatch)    ; -> ::resolver
+        (hook ::resolve)     ; -> ::queries
+        (hook ::expand)      ; -> ::data
+        (hook ::do-effects)  ; -> more ::data
+        (hook ::render)      ; -> standard Ring keys: :status, :headers, :body
         (hook ::response))))
 
 (defn load-handler

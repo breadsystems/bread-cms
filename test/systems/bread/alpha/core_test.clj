@@ -76,6 +76,12 @@
       :C :c
       nil :something)))
 
+(deftest test-load-plugins-adds-effects
+  (let [app (plugins->loaded [{:effects [{:effect/name :alpha}
+                                         {:effect/name :omega}]}])]
+    (is (= [{:effect/name :alpha} {:effect/name :omega}]
+           (::bread/effects app)))))
+
 (deftest test-hooks-for
 
   (testing "it returns data for a specific hook"
@@ -101,172 +107,192 @@
                             (bread/add-effect dec)
                             (bread/add-effect prn-str)))))
 
-(deftest test-apply-effects-lifecycle-phase
+(defmethod bread/effect :inc
+  [{:keys [world]} data]
+  (swap! world update :count #(inc (or % 0))))
 
-  (testing "it applies Effects until none are left to apply"
-    (letfn [(count-to-seven [{::bread/keys [data]}]
-              (if (> 7 (:counter data))
-                {::bread/data (update data :counter inc)
-                 ::bread/effects [count-to-seven]}
-                {::bread/data data
-                 ::bread/effects []}))]
-          (let [handler (-> (bread/app)
-                            (bread/add-effect count-to-seven)
-                            (assoc ::bread/data {:counter 0})
-                            (bread/handler))]
-            (is (= 7 (-> (handler {:uri "/"})
-                         (get-in [::bread/data :counter])))))))
+(defmethod bread/effect :dec
+  [{:keys [world]} data]
+  (swap! world update :count #(dec (or % 0))))
 
-  (testing "it ignores Effects that are not functions"
-    (let [;; Once an invalid Effect is returned, the whole fx chain
-          ;; short-circuits and no subsequent Effects are run.
-          never-run #(throw (Exception. "shouldn't get here."))
-          ;; This effect will be applied (i.e. its returned ::data will
-          ;; be honored) but the invalid Effect(s) it adds will not.
-          effect (constantly {::bread/data {:counter 1}
-                              ::bread/effects ["not an Effect" never-run]})
-          handler (-> (bread/app)
-                      (bread/add-effect effect)
-                      (assoc ::bread/data {:counter 0})
-                      (bread/handler))]
-      (is (= 1 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :counter]))))))
+(deftest test-do-effects-hook
 
-  (testing "vectors are valid Effects"
-    (let [sum (fn [{::bread/keys [data]} & nums]
-                {::bread/data (assoc data :sum (reduce + nums))})
-          handler (-> (bread/app)
-                      (bread/add-effect [sum 3 2 1])
-                      (assoc ::bread/data {:sum 0})
-                      (bread/handler))]
-      (is (= 6 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :sum]))))))
+  (are
+    [state effects]
+    (= state (let [world (atom {})
+                   app (plugins->loaded
+                         [{:effects (map #(assoc % :world world) effects)}])]
+               (bread/hook app ::bread/do-effects)
+               @world))
 
-  (testing "futures are valid Effects"
-    (let [external (atom 0)
-          future-effect (future
-                          {::bread/data {:num (swap! external inc)}})
-          handler (-> (bread/app)
-                      (bread/add-effect future-effect)
-                      (bread/handler))]
-      (is (= 1 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :num]))))))
+    {} []
+    {:count 1} [{:effect/name :inc}]
+    {:count 2} [{:effect/name :inc} {:effect/name :inc}]
+    {:count 3} [{:effect/name :inc} {:effect/name :inc} {:effect/name :inc}]
+    {:count 1} [{:effect/name :inc} {:effect/name :dec} {:effect/name :inc}]))
 
-  (testing "it returns any errors thrown as ExceptionInfo instances based on metadata"
-    (let [handler (fn [effect]
-                    (-> (bread/app)
-                        (bread/add-effect effect)
-                        (bread/handler)))]
+(defmethod bread/effect :flaky
+  [{:keys [flakes state ex]} _]
+  (if (< @state flakes)
+    ;; It's unrealistic to pass an exception like this, but this makes it easy
+    ;; to check equality.
+    (do (swap! state inc) (throw ex))
+    (swap! state inc)))
 
-      (are [data effect] (let [handle (handler effect)
-                               result-data (-> (handle {:uri "/"})
-                                               ::bread/data)]
-                           (reduce
-                             (fn [acc [k ex]]
-                               (let [result-ex (get result-data k)
-                                     rd (ex-data result-ex)
-                                     xd (ex-data ex)]
-                                 (and acc
-                                      (= (.getMessage result-ex)
-                                         (.getMessage ex))
-                                      (or
-                                        ;; either ex-data is exactly the same,
-                                        ;; or it's the same class & message.
-                                        (= rd xd)
-                                        (and
-                                          (= (.getMessage (:exception rd))
-                                             (.getMessage (:exception xd)))
-                                          (= (class (:exception rd))
-                                             (class (:exception xd))))))))
-                             true
-                             data))
+(deftest test-do-effects-hook-retries
 
-           {:info (ex-info "something happened" {:oh :no})}
-           (with-meta
-             (fn [_] (throw (ex-info "something happened" {:oh :no})))
-             {:effect/key :info
-              :effect/catch? true})
+  (let [ex (ex-info "ERROR" {})]
+    (are
+      [metadata effects]
+      (= metadata (let [state (atom 0)
+                        app (plugins->loaded
+                              [{:effects
+                                (map #(assoc % :state state) effects)}])]
+                    (->> (bread/hook app ::bread/do-effects)
+                         (::bread/effects)
+                         (map meta))))
 
-           {:wrapped (ex-info "this gets wrapped"
-                              {:exception (Exception. "this gets wrapped")})}
-           (with-meta
-             (fn [_] (throw (Exception. "this gets wrapped")))
-             {:effect/key :wrapped
-              :effect/catch? true})
+      [] []
 
-           ;; no key
-           {}
-           (with-meta
-             (fn [_] (throw (ex-info "hi" {})))
-             {:effect/catch? true}))))
+      [{:retried 0
+        :errors [ex]
+        :success? false}]
+      [{:effect/name :flaky
+        :flakes 1
+        :ex ex}]
 
-  (testing "it retries per metadata Effects that error out"
-    (let [handler (fn [effect]
-                    (-> (bread/app)
-                        (bread/add-effect effect)
-                        (bread/handler)))
-          attempts (atom 0)
-          flaky-effect (fn [_]
-                         (swap! attempts inc)
-                         (when (> 5 @attempts)
-                           (throw (ex-info "retry!" {}))))]
-      (is (= 5 (do
-                 ((handler (with-meta flaky-effect {:effect/retries 5
-                                                    :effect/catch? true}))
-                  {:uri "/"})
-                 @attempts)))))
+      [{:retried 3
+        :errors [ex ex ex]
+        :success? true}]
+      [{:effect/name :flaky
+        :effect/retries 5
+        :flakes 3
+        :ex ex}]
 
-  (testing "it retries with the given backoff algorithm"
-    (let [handler (fn [effect]
-                    (-> (bread/app)
-                        (bread/add-effect effect)
-                        (bread/handler)))
-          attempts (atom [])
-          backoff (fn [{:effect/keys [retries]}]
-                    ;; record the fact that backoff has been called with
-                    ;; the given :effect/retries value
-                    (swap! attempts conj retries)
-                    ;; NOTE: returning nil means don't sleep.
-                    nil)
-          flaky-effect (fn [_]
-                         (when (> 5 (count @attempts))
-                           (throw (ex-info "retry!" {}))))]
-      ;; Assert that backoff was called consecutively with an :effect/retries
-      ;; value of 5, 4, 3, 2, 1
-      (is (= [5 4 3 2 1]
-             (do
-               ((handler (with-meta flaky-effect {:effect/retries 5
-                                                  :effect/backoff backoff
-                                                  :effect/catch? true}))
-                {:uri "/"})
-               @attempts)))))
+      [{:retried 2
+        :errors [ex ex ex]
+        :success? false}
+       {:retried 1
+        :errors [ex]
+        :success? true}]
+      [{:effect/name :flaky
+        :effect/retries 2
+        :flakes 4
+        :ex ex}
+       {:effect/name :flaky
+        :effect/retries 2
+        :flakes 4
+        :ex ex}]
 
-  (testing "add-transform only affects ::data"
-    (are [data transform] (= data (let [handler #(-> (bread/app)
-                                                     (bread/add-transform %)
-                                                     (assoc ::bread/data {:num 0})
-                                                     (bread/handler))]
-                                    (-> ((handler transform) {:uri "/"})
-                                        ::bread/data)))
+      )))
 
-      {:new :data}
-      (constantly {:new :data})
+(defmethod bread/effect ::passthru
+  [{:keys [v]} _]
+  v)
 
-      {:num 1}
-      (fn [{::bread/keys [data]}]
-        (update data :num inc))
+(deftest test-do-effects-data
+  (are
+    [data effects]
+    (= data (let [app (plugins->loaded [{:effects effects}])]
+              (reduce
+                (fn [acc [k v]] (assoc acc k (deref v))) {}
+                (::bread/data (bread/hook app ::bread/do-effects)))))
 
-      {:num 0 :extra "stuff"}
-      (fn [{::bread/keys [data]}]
-        (assoc data :extra "stuff"))
+    {} []
 
-      ;; Transforms can themselves be arbitrary Effects, such as vectors...
-      {:num 3}
-      [#(assoc (::bread/data %1) :num %2) 3]
+    ;; A nil effect key means it doesn't show up in ::bread/data.
+    {} [{:effect/name ::passthru
+         :v "whatever"}]
+    {} [{:effect/name ::passthru
+         :effect/data-key nil
+         :v "won't show up"}]
 
-      ;; ...or futures.
-      {:future "value"}
-      (future {:future "value"}))))
+    {:a "A"} [{:effect/name ::passthru
+               :effect/data-key :a
+               :v "A"}]
+
+    ;; nil values should still come through.
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a}]
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a :v nil}]
+
+    ;; Effects are cumulative.
+    {:a 1 :b 2} [{:effect/name ::passthru
+                  :effect/data-key :a
+                  :v 1}
+                 {:effect/name ::passthru
+                  :effect/data-key :b
+                  :v 2}]
+
+    ;; Effects can overwrite each other.
+    {:a 2} [{:effect/name ::passthru
+             :effect/data-key :a
+             :v 1}
+            {:effect/name ::passthru
+             :effect/data-key :a
+             :v 2}]
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a
+               :v 1}
+              {:effect/name ::passthru
+               :effect/data-key :a
+               :v nil}]
+
+    {:a "I AM FROM THE FUTURE"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (future "I AM FROM THE FUTURE")}]
+
+    ))
+
+(deftest test-do-effects-meta
+  (are
+    [data effects]
+    (= data (let [app (plugins->loaded [{:effects effects}])]
+              (reduce
+                (fn [acc [k v]] (assoc acc k (meta v))) {}
+                (::bread/data (bread/hook app ::bread/do-effects)))))
+
+    {} []
+
+    {:a {:success? true
+         :errors []
+         :retried 0}}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (future "I AM FROM THE FUTURE")}]
+
+    {:a {:success? true
+         :errors []
+         :retried 0}}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v nil}]
+
+    ;; NOTE: If a Derefable effect can throw an exception,
+    ;; it's on the user to catch it.
+    {:a {:success? true
+         :errors []
+         :retried 0}}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (future (throw (Exception. "ERROR")))}]
+
+    ))
+
+(deftest test-do-effects-promise
+
+  (is (= "As promised"
+         (let [p (promise)
+               app (plugins->loaded [{:effects
+                                      [{:effect/name ::passthru
+                                        :effect/data-key :promised
+                                        :v p}]}])]
+           (deliver p "As promised")
+           (-> app
+               (bread/hook ::bread/do-effects)
+               ::bread/data :promised deref)))))
 
 (defmethod bread/action ::my.hook
   [_ {:keys [v]} [arg]]
