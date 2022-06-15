@@ -272,6 +272,10 @@
   [_ {:keys [v]} [arg]]
   (conj arg v))
 
+(defmethod bread/action ::variadic.hook
+  [_ _ [arg & args]]
+  (concat arg args))
+
 (deftest test-hook
 
   (let [plugin-a {:hooks {:hook/a [{:action/name ::my.hook :v "A"}]}}
@@ -279,7 +283,9 @@
         plugin-aa {:hooks {:hook/a [{:action/name ::my.hook :v "AA"}
                                     {:action/name ::my.hook :v "AA"}]}}
         plugin-ab {:hooks {:hook/a [{:action/name ::my.hook :v "A"}
-                                    {:action/name ::my.hook :v "B"}]}}]
+                                    {:action/name ::my.hook :v "B"}]}}
+        plugin-concat {:hooks {:hook/a [{:action/name ::variadic.hook}
+                                        {:action/name ::variadic.hook}]}}]
     (are
       [result plugins&args]
       (= result (let [[plugins args] plugins&args
@@ -300,7 +306,15 @@
       ["default" "AA" "AA"] [[plugin-aa] [:hook/a ["default"]]]
       ["default" "A" "B"] [[plugin-ab] [:hook/a ["default"]]]
       ["default" "A" "AA" "AA" "A" "B"] [[plugin-a plugin-aa plugin-ab]
-                                         [:hook/a ["default"]]])))
+                                         [:hook/a ["default"]]]
+      [1 2 3, 4, 4] [[plugin-concat]
+                     [:hook/a [1 2 3] 4]]
+      [1 2 3, 4 5, 4 5] [[plugin-concat]
+                         [:hook/a [1 2 3] 4 5]]
+      [1 2 3, 4 5 6, 4 5 6] [[plugin-concat]
+                             [:hook/a [1 2 3] 4 5 6]]
+      [1 2 3, 4 5, 4 5, 4 5, 4 5] [[plugin-concat plugin-concat]
+                                   [:hook/a [1 2 3] 4 5]])))
 
 (defmethod bread/action ::throw
   [_ {:keys [ex]} _]
