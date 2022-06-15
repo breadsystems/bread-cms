@@ -54,7 +54,7 @@
 
 (defprotocol TransactionalDatastoreConnection
   (db [conn])
-  (transact [conn tx]))
+  (transact [conn txs]))
 
 (defn datastore [app]
   (bread/hook app :hook/datastore))
@@ -97,14 +97,26 @@
         (throw e))
       false)))
 
-(defn add-txs [req txs]
-  (bread/add-effect req (fn [{data ::bread/data :as app}]
-                          (let [result (transact
-                                         (connection app)
-                                         {:tx-data txs})]
-                            {::bread/data
-                             (update data ::bread/transactions
-                                     (comp vec conj) result)}))))
+(defmethod bread/effect ::transact
+  [{:keys [conn txs]} _]
+  (transact conn {:tx-data txs}))
+
+(defn add-txs
+  "Adds the given txs as effects to be run on the app datastore.
+  Options include:
+  * :description - a custom description to use for :effect/description in the
+    Effect map. Default is \"Run database transactions\".
+  * :key - the :effect/key to set in the Effect map. Default is nil."
+  {:arglists '([req txs] [req txs opts])}
+  ([req txs]
+   (add-txs req txs {}))
+  ([req txs opts]
+   (bread/add-effect req {:effect/name ::transact
+                          :effect/description
+                          (:description opts "Run database transactions")
+                          :effect/key (:key opts)
+                          :conn (connection req)
+                          :txs txs})))
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
