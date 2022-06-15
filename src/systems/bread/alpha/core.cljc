@@ -250,8 +250,36 @@
 
 (defmethod action ::do-effects
   [{::keys [effects data] :as req} _ _]
-  (doseq [e effects] (effect e data))
-  req)
+  (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
+          (success [e success?] (vary-meta e assoc :success? success?))
+          (retried [e] (vary-meta e update :retried inc))]
+    (loop [[e & effects] effects data data completed []]
+      (if e
+        (let [e (vary-meta e #(or % {:errors []
+                                     :success? false
+                                     :retried 0}))
+              retry-count (:retried (meta e))
+              max-retries (:effect/retries e)
+              [new-data ex] (try
+                              [(effect e data) nil]
+                              (catch Throwable ex
+                                [nil ex]))]
+          (cond
+            new-data
+            (recur effects data (conj completed (success e true)))
+            (and ex max-retries (> max-retries retry-count))
+            (recur (cons (-> e
+                             (add-error ex)
+                             (retried))
+                         effects)
+                   data completed)
+            ex
+            (recur effects data (conj completed (-> e
+                                                    (add-error ex)
+                                                    (success false))))
+            :else
+            (recur effects data (conj completed (success e true)))))
+        (assoc req ::data data ::effects completed)))))
 
 (defmacro ^:private try-action [hook app current-action args]
   `(try

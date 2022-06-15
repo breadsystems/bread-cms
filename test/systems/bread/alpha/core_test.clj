@@ -116,12 +116,12 @@
   (swap! world update :count #(dec (or % 0))))
 
 (deftest test-do-effects-hook
+
   (are
     [state effects]
     (= state (let [world (atom {})
                    app (plugins->loaded
                          [{:effects (map #(assoc % :world world) effects)}])]
-               (prn (::bread/effects app))
                (bread/hook app ::bread/do-effects)
                @world))
 
@@ -130,6 +130,61 @@
     {:count 2} [{:effect/name :inc} {:effect/name :inc}]
     {:count 3} [{:effect/name :inc} {:effect/name :inc} {:effect/name :inc}]
     {:count 1} [{:effect/name :inc} {:effect/name :dec} {:effect/name :inc}]))
+
+(defmethod bread/effect :flaky
+  [{:keys [flakes state ex]} _]
+  (if (< @state flakes)
+    ;; It's unrealistic to pass an exception like this, but this makes it easy
+    ;; to check equality.
+    (do (swap! state inc) (throw ex))
+    (swap! state inc)))
+
+(deftest test-do-effects-hook-retries
+
+  (let [ex (ex-info "ERROR" {})]
+    (are
+      [metadata effects]
+      (= metadata (let [state (atom 0)
+                        app (plugins->loaded
+                              [{:effects
+                                (map #(assoc % :state state) effects)}])]
+                    (->> (bread/hook app ::bread/do-effects)
+                         (::bread/effects)
+                         (map meta))))
+
+      [] []
+
+      [{:retried 0
+        :errors [ex]
+        :success? false}]
+      [{:effect/name :flaky
+        :flakes 1
+        :ex ex}]
+
+      [{:retried 3
+        :errors [ex ex ex]
+        :success? true}]
+      [{:effect/name :flaky
+        :effect/retries 5
+        :flakes 3
+        :ex ex}]
+
+      [{:retried 2
+        :errors [ex ex ex]
+        :success? false}
+       {:retried 1
+        :errors [ex]
+        :success? true}]
+      [{:effect/name :flaky
+        :effect/retries 2
+        :flakes 4
+        :ex ex}
+       {:effect/name :flaky
+        :effect/retries 2
+        :flakes 4
+        :ex ex}]
+
+      )))
 
 #_
 (deftest test-apply-effects-lifecycle-phase
