@@ -166,7 +166,7 @@
   [req e]
   (update req ::effects (comp vec conj) e))
 
-(defmethod action ::do-effects
+(defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
   (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
           (success [e success?] (vary-meta e assoc :success? success?))
@@ -282,8 +282,8 @@
                    [{:action/name ::load-plugins
                      :action/description
                      "Load hooks declared in all plugins"}]
-                   ::do-effects
-                   [{:action/name ::do-effects
+                   ::effects!
+                   [{:action/name ::effects!
                      :action/description
                      "Do side effects"}]}
         ::config  {}
@@ -319,8 +319,8 @@
         (hook ::request)
         (hook ::route)       ; -> ::dispatcher
         (hook ::dispatch)    ; -> ::queries, ::data, ::effects
-        (hook ::expand)      ; -> ::data
-        (hook ::do-effects)  ; -> more ::data
+        (hook ::expand)      ; -> more ::data
+        (hook ::effects!)    ; -> possibly more ::data
         (hook ::render)      ; -> standard Ring keys: :status, :headers, :body
         (hook ::response))))
 

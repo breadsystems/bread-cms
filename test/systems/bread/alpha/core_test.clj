@@ -115,14 +115,14 @@
   [{:keys [world]} data]
   (swap! world update :count #(dec (or % 0))))
 
-(deftest test-do-effects-hook
+(deftest test-effects
 
   (are
     [state effects]
     (= state (let [world (atom {})
                    app (plugins->loaded
                          [{:effects (map #(assoc % :world world) effects)}])]
-               (bread/hook app ::bread/do-effects)
+               (bread/hook app ::bread/effects!)
                @world))
 
     {} []
@@ -139,7 +139,7 @@
     (do (swap! state inc) (throw ex))
     (swap! state inc)))
 
-(deftest test-do-effects-hook-retries
+(deftest test-effects-retries
 
   (let [ex (ex-info "ERROR" {})]
     (are
@@ -148,7 +148,7 @@
                         app (plugins->loaded
                               [{:effects
                                 (map #(assoc % :state state) effects)}])]
-                    (->> (bread/hook app ::bread/do-effects)
+                    (->> (bread/hook app ::bread/effects!)
                          (::bread/effects)
                          (map meta))))
 
@@ -190,13 +190,13 @@
   [{:keys [v]} _]
   v)
 
-(deftest test-do-effects-data
+(deftest test-effects-data
   (are
     [data effects]
     (= data (let [app (plugins->loaded [{:effects effects}])]
               (reduce
                 (fn [acc [k v]] (assoc acc k (deref v))) {}
-                (::bread/data (bread/hook app ::bread/do-effects)))))
+                (::bread/data (bread/hook app ::bread/effects!)))))
 
     {} []
 
@@ -246,13 +246,13 @@
 
     ))
 
-(deftest test-do-effects-meta
+(deftest test-effects-meta
   (are
     [data effects]
     (= data (let [app (plugins->loaded [{:effects effects}])]
               (reduce
                 (fn [acc [k v]] (assoc acc k (meta v))) {}
-                (::bread/data (bread/hook app ::bread/do-effects)))))
+                (::bread/data (bread/hook app ::bread/effects!)))))
 
     {} []
 
@@ -281,7 +281,7 @@
 
     ))
 
-(deftest test-do-effects-promise
+(deftest test-effects-promise
 
   (is (= "As promised"
          (let [p (promise)
@@ -291,7 +291,7 @@
                                         :v p}]}])]
            (deliver p "As promised")
            (-> app
-               (bread/hook ::bread/do-effects)
+               (bread/hook ::bread/effects!)
                ::bread/data :promised deref)))))
 
 (defmethod bread/action ::my.hook
