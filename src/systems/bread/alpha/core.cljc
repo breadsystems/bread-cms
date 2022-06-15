@@ -317,7 +317,7 @@
   (fn [req]
     (-> (merge req app)
         (hook ::request)
-        (hook ::dispatch)    ; -> ::resolver
+        (hook ::route)       ; -> ::dispatcher
         (hook ::resolve)     ; -> ::queries
         (hook ::expand)      ; -> ::data
         (hook ::do-effects)  ; -> more ::data

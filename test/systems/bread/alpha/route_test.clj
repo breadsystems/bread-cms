@@ -66,7 +66,7 @@
                                          component/query-key get-key*]
                              (-> {:uri uri}
                                  (merge app)
-                                 (bread/hook ::bread/dispatch)
+                                 (bread/hook ::bread/route)
                                  ::bread/resolver)))
 
          {:resolver/type :resolver.type/page

@@ -97,5 +97,5 @@
     [{:action/name ::not-found-component :router router}]
     ::params
     [{:action/name ::params :router router}]
-    ::bread/dispatch
+    ::bread/route
     [{:action/name ::dispatch :router router}]}})
