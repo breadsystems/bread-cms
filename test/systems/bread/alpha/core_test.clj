@@ -186,6 +186,59 @@
 
       )))
 
+(defmethod bread/effect ::passthru
+  [{:keys [v]} _]
+  v)
+
+(deftest test-do-effects-data
+  (are
+    [data effects]
+    (= data (let [app (plugins->loaded [{:effects effects}])]
+              (::bread/data (bread/hook app ::bread/do-effects))))
+
+    {} []
+
+    ;; A nil effect key means it doesn't show up in ::bread/data.
+    {} [{:effect/name ::passthru
+         :v "whatever"}]
+    {} [{:effect/name ::passthru
+         :effect/data-key nil
+         :v "won't show up"}]
+
+    {:a "A"} [{:effect/name ::passthru
+               :effect/data-key :a
+               :v "A"}]
+
+    ;; nil values should still come through.
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a}]
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a :v nil}]
+
+    ;; Effects are cumulative.
+    {:a 1 :b 2} [{:effect/name ::passthru
+                  :effect/data-key :a
+                  :v 1}
+                 {:effect/name ::passthru
+                  :effect/data-key :b
+                  :v 2}]
+
+    ;; Effects can overwrite each other.
+    {:a 2} [{:effect/name ::passthru
+             :effect/data-key :a
+             :v 1}
+            {:effect/name ::passthru
+             :effect/data-key :a
+             :v 2}]
+    {:a nil} [{:effect/name ::passthru
+               :effect/data-key :a
+               :v 1}
+              {:effect/name ::passthru
+               :effect/data-key :a
+               :v nil}]
+
+    ))
+
 #_
 (deftest test-apply-effects-lifecycle-phase
 

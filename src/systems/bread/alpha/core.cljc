@@ -255,30 +255,34 @@
           (retried [e] (vary-meta e update :retried inc))]
     (loop [[e & effects] effects data data completed []]
       (if e
+        ;; TODO merge metadata
         (let [e (vary-meta e #(or % {:errors []
                                      :success? false
                                      :retried 0}))
               retry-count (:retried (meta e))
-              max-retries (:effect/retries e)
-              [new-data ex] (try
-                              [(effect e data) nil]
-                              (catch Throwable ex
-                                [nil ex]))]
+              {data-key :effect/data-key max-retries :effect/retries} e
+              [result ex] (try
+                            [(effect e data) nil]
+                            (catch Throwable ex
+                              [nil ex]))]
+          (prn 'result result)
           (cond
-            new-data
-            (recur effects data (conj completed (success e true)))
+            (nil? ex)
+            (let [data (if data-key (assoc data data-key result) data)]
+              (prn :effect/data-key data-key)
+              (recur effects data (conj completed (success e true))))
             (and ex max-retries (> max-retries retry-count))
-            (recur (cons (-> e
+            (do (prn max-retries '> retry-count) (recur (cons (-> e
                              (add-error ex)
                              (retried))
                          effects)
-                   data completed)
+                   data completed))
             ex
-            (recur effects data (conj completed (-> e
+            (do (prn 'ex) (recur effects data (conj completed (-> e
                                                     (add-error ex)
-                                                    (success false))))
+                                                    (success false)))))
             :else
-            (recur effects data (conj completed (success e true)))))
+            (do (prn :else) (recur effects data (conj completed (success e true))))))
         (assoc req ::data data ::effects completed)))))
 
 (defmacro ^:private try-action [hook app current-action args]
