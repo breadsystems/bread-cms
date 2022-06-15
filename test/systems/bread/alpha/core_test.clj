@@ -263,7 +263,36 @@
       :effect/data-key :a
       :v (future "I AM FROM THE FUTURE")}]
 
+    {:a {:success? true
+         :errors []
+         :retried 0}}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v nil}]
+
+    ;; NOTE: If a Derefable effect can throw an exception,
+    ;; it's on the user to catch it.
+    {:a {:success? true
+         :errors []
+         :retried 0}}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (future (throw (Exception. "ERROR")))}]
+
     ))
+
+(deftest test-do-effects-promise
+
+  (is (= "As promised"
+         (let [p (promise)
+               app (plugins->loaded [{:effects
+                                      [{:effect/name ::passthru
+                                        :effect/data-key :promised
+                                        :v p}]}])]
+           (deliver p "As promised")
+           (-> app
+               (bread/hook ::bread/do-effects)
+               ::bread/data :promised deref)))))
 
 #_
 (deftest test-apply-effects-lifecycle-phase
