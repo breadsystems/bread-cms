@@ -117,41 +117,6 @@
             (is (= 7 (-> (handler {:uri "/"})
                          (get-in [::bread/data :counter])))))))
 
-  (testing "it ignores Effects that are not functions"
-    (let [;; Once an invalid Effect is returned, the whole fx chain
-          ;; short-circuits and no subsequent Effects are run.
-          never-run #(throw (Exception. "shouldn't get here."))
-          ;; This effect will be applied (i.e. its returned ::data will
-          ;; be honored) but the invalid Effect(s) it adds will not.
-          effect (constantly {::bread/data {:counter 1}
-                              ::bread/effects ["not an Effect" never-run]})
-          handler (-> (bread/app)
-                      (bread/add-effect effect)
-                      (assoc ::bread/data {:counter 0})
-                      (bread/handler))]
-      (is (= 1 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :counter]))))))
-
-  (testing "vectors are valid Effects"
-    (let [sum (fn [{::bread/keys [data]} & nums]
-                {::bread/data (assoc data :sum (reduce + nums))})
-          handler (-> (bread/app)
-                      (bread/add-effect [sum 3 2 1])
-                      (assoc ::bread/data {:sum 0})
-                      (bread/handler))]
-      (is (= 6 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :sum]))))))
-
-  (testing "futures are valid Effects"
-    (let [external (atom 0)
-          future-effect (future
-                          {::bread/data {:num (swap! external inc)}})
-          handler (-> (bread/app)
-                      (bread/add-effect future-effect)
-                      (bread/handler))]
-      (is (= 1 (-> (handler {:uri "/"})
-                   (get-in [::bread/data :num]))))))
-
   (testing "it returns any errors thrown as ExceptionInfo instances based on metadata"
     (let [handler (fn [effect]
                     (-> (bread/app)
