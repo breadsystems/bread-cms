@@ -59,7 +59,13 @@
         two {:action/name :a/two
              :action/description "desc two"}
         app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
-    (is (= [one two] (bread/hooks-for app :hook/a)))))
+    (is (= [one two] (bread/hooks-for app :hook/a))))
+
+  (let [one {:action/name :sorted :action/priority 1}
+        two {:action/name :sorted :action/priority 2}
+        three {:action/name :sorted :action/priority 3}
+        app (plugins->loaded [{:hooks {:sorted [three one two]}}])]
+    (is (= [one two three] (bread/hooks-for app :sorted)))))
 
 (deftest test-load-plugins-applies-config-map
   (let [app (plugins->loaded [{:config {:a :A :b :B :c :C}}])]

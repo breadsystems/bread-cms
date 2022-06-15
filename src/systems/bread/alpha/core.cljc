@@ -262,16 +262,15 @@
                    (:action/name hook)))
 
 (defn- load-plugin [app {:keys [config hooks] :as plugin}]
-  ;; TODO DATA rm fn branch
-  (if (fn? plugin)
-    (plugin app)
-    (letfn [(configure [app config]
-              (if config
-                (apply set-config app (mapcat (juxt key val) config))
-                app))
-            (append-hook [app [hook actions]]
-              (update-in app [::hooks hook] concat actions))]
-      (reduce append-hook (configure app config) hooks))))
+  (letfn [(configure [app config]
+            (if config
+              (apply set-config app (mapcat (juxt key val) config))
+              app))
+          (append-hook [app [hook actions]]
+            (update-in app [::hooks hook]
+                       (comp (partial sort-by :action/priority) concat)
+                       actions))]
+    (reduce append-hook (configure app config) hooks)))
 
 (defmethod action ::load-plugins
   [{::keys [plugins] :as app} _ _]
