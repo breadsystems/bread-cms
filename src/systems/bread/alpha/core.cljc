@@ -264,7 +264,11 @@
               [result ex] (try
                             [(effect e data) nil]
                             (catch Throwable ex
-                              [nil ex]))]
+                              [nil ex]))
+              result (if (instance? clojure.lang.IDeref result)
+                       result
+                       (reify clojure.lang.IDeref
+                         (deref [_] result)))]
           (prn 'result result)
           (cond
             (nil? ex)

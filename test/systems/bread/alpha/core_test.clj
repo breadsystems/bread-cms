@@ -194,7 +194,9 @@
   (are
     [data effects]
     (= data (let [app (plugins->loaded [{:effects effects}])]
-              (::bread/data (bread/hook app ::bread/do-effects))))
+              (reduce
+                (fn [acc [k v]] (assoc acc k (deref v))) {}
+                (::bread/data (bread/hook app ::bread/do-effects)))))
 
     {} []
 
@@ -236,6 +238,21 @@
               {:effect/name ::passthru
                :effect/data-key :a
                :v nil}]
+
+    {:a "I AM FROM THE FUTURE"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (future "I AM FROM THE FUTURE")}]
+
+    {:a "The universe in a single atom"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (atom "The universe in a single atom")}]
+
+    {:a "I was...delayed"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (delay "I was...delayed")}]
 
     ))
 
