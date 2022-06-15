@@ -36,28 +36,6 @@
   (query [f data args]
     (apply f data args)))
 
-(defprotocol Effect
-  "Protocol for encapsulating side-effects"
-  :extend-via-metadata true
-  (effect! [this req]))
-
-(extend-protocol Effect
-  clojure.lang.Fn
-  (effect!
-    ([f req]
-     (f req)))
-
-  clojure.lang.PersistentVector
-  (effect!
-    ([v req]
-     (let [[f & args] v]
-       (apply f req args))))
-
-  java.util.concurrent.Future
-  (effect!
-    ([fut _]
-     (deref fut))))
-
 (defprotocol Router
   :extend-via-metadata true
   (path [this route-name params])
@@ -187,66 +165,6 @@
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."
   [req e]
   (update req ::effects (comp vec conj) e))
-
-(defn add-transform
-  "Add as an Effect a function that wraps f, setting the transformed request's
-  ::data to the value returned from f. Any Effect added via add-transform can
-  only affect ::data and cannot add new Effects."
-  [req f]
-  (let [e (fn [req]
-            {::data (effect! f req)})]
-    (add-effect req e)))
-
-(defn effect?
-  "Whether x implements (satisfies) the Effect protocol"
-  [x]
-  (satisfies? Effect x))
-
-(defn- do-effect [effect req]
-  (letfn [(maybe-wrap-exception [ex]
-            (if (instance? clojure.lang.ExceptionInfo ex)
-              ex
-              (ex-info (.getMessage ex) {:exception ex})))
-          (retry []
-            (let [em (meta effect)
-                  backoff (:effect/backoff em)
-                  sleep-ms (when (fn? backoff) (backoff em))]
-              (when sleep-ms
-                (Thread/sleep sleep-ms)))
-            (do-effect
-              (vary-meta effect update :effect/retries dec)
-              req))
-          (handle-exception [ex]
-            (let [em (meta effect)]
-              (cond
-                (not (:effect/catch? em)) (throw ex)
-                (:effect/retries em) (retry)
-                (:effect/key em) {::data {(:effect/key em)
-                                          (maybe-wrap-exception ex)}}
-                :else {})))]
-    (try
-      (effect! effect req)
-      (catch java.lang.Throwable ex
-        (handle-exception ex)))))
-
-(defn- apply-effects [req]
-  (loop [{data ::data [effect & effects] ::effects :as req} req]
-    (if-not (effect? effect)
-      req
-      (let [;; DO THE THING!
-            ;; NOTE: it's important that we do this after we check effect?
-            ;; but before we merge the old req with the value(s) returned
-            ;; from effect!. Because of the possibility of new Effects being
-            ;; returned and replacing or appending to old ones, applying
-            ;; Effects is not a simple reduction over the original ::effects
-            ;; vector.
-            {new-data ::data new-effects ::effects} (do-effect effect req)
-            data (or new-data data)
-            effects (or new-effects effects)
-            req (assoc req ::data data ::effects effects)]
-        (if-not (seq effects)
-          req
-          (recur req))))))
 
 (defmethod action ::do-effects
   [{::keys [effects data] :as req} _ _]
@@ -399,12 +317,11 @@
   (fn [req]
     (-> (merge req app)
         (hook ::request)
-        (hook ::dispatch)     ;; -> ::resolver
-        (hook ::resolve)      ;; -> ::queries
-        (hook ::expand)       ;; -> ::data
-        (apply-effects)       ;; -> more ::data, ::effects
-        (hook ::do-effects)   ;; -> more ::data, ::effects
-        (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
+        (hook ::dispatch)    ; -> ::resolver
+        (hook ::resolve)     ; -> ::queries
+        (hook ::expand)      ; -> ::data
+        (hook ::do-effects)  ; -> more ::data
+        (hook ::render)      ; -> standard Ring keys: :status, :headers, :body
         (hook ::response))))
 
 (defn load-handler
