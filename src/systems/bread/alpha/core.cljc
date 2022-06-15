@@ -175,6 +175,9 @@
 (defmulti action (fn [_app hook _args]
                    (:action/name hook)))
 
+(defmulti effect (fn [effect _data]
+                   (:effect/name effect)))
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]
@@ -246,8 +249,8 @@
           (recur req))))))
 
 (defmethod action ::do-effects
-  [req _ _]
-  ;; TODO
+  [{::keys [effects data] :as req} _ _]
+  (doseq [e effects] (effect e data))
   req)
 
 (defmacro ^:private try-action [hook app current-action args]
@@ -266,7 +269,7 @@
                           ::core? true}
                          e#))))))
 
-(defn- load-plugin [app {:keys [config hooks] :as plugin}]
+(defn- load-plugin [app {:keys [config hooks effects] :as plugin}]
   (letfn [(configure [app config]
             (if config
               (apply set-config app (mapcat (juxt key val) config))
@@ -274,8 +277,13 @@
           (append-hook [app [hook actions]]
             (update-in app [::hooks hook]
                        (comp (partial sort-by :action/priority) concat)
-                       actions))]
-    (reduce append-hook (configure app config) hooks)))
+                       actions))
+          (add-effects [app effects]
+            (update app ::effects (comp vec concat) effects))]
+    (as-> effects $
+      (add-effects app $)
+      (configure $ config)
+      (reduce append-hook $ hooks))))
 
 (defmethod action ::load-plugins
   [{::keys [plugins] :as app} _ _]

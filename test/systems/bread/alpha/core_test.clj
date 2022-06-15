@@ -76,6 +76,12 @@
       :C :c
       nil :something)))
 
+(deftest test-load-plugins-adds-effects
+  (let [app (plugins->loaded [{:effects [{:effect/name :alpha}
+                                         {:effect/name :omega}]}])]
+    (is (= [{:effect/name :alpha} {:effect/name :omega}]
+           (::bread/effects app)))))
+
 (deftest test-hooks-for
 
   (testing "it returns data for a specific hook"
@@ -101,6 +107,31 @@
                             (bread/add-effect dec)
                             (bread/add-effect prn-str)))))
 
+(defmethod bread/effect :inc
+  [{:keys [world]} data]
+  (swap! world update :count #(inc (or % 0))))
+
+(defmethod bread/effect :dec
+  [{:keys [world]} data]
+  (swap! world update :count #(dec (or % 0))))
+
+(deftest test-do-effects-hook
+  (are
+    [state effects]
+    (= state (let [world (atom {})
+                   app (plugins->loaded
+                         [{:effects (map #(assoc % :world world) effects)}])]
+               (prn (::bread/effects app))
+               (bread/hook app ::bread/do-effects)
+               @world))
+
+    {} []
+    {:count 1} [{:effect/name :inc}]
+    {:count 2} [{:effect/name :inc} {:effect/name :inc}]
+    {:count 3} [{:effect/name :inc} {:effect/name :inc} {:effect/name :inc}]
+    {:count 1} [{:effect/name :inc} {:effect/name :dec} {:effect/name :inc}]))
+
+#_
 (deftest test-apply-effects-lifecycle-phase
 
   (testing "it applies Effects until none are left to apply"
