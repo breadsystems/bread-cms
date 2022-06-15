@@ -52,24 +52,23 @@
                           #"set-config expects an even number of extra args, 3 extra args passed."
                           (bread/set-config {} :a :a :b :b :c)))))
 
-(deftest test-load-plugins
+(deftest test-load-plugins-order
 
-  (testing "it loads all plugins in order"
-    (let [one {:action/name :a/one
-               :action/description "desc one"}
-          two {:action/name :a/two
-               :action/description "desc two"}
-          app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
-      (is (= [one two] (bread/hooks-for app :hook/a)))))
+  (let [one {:action/name :a/one
+             :action/description "desc one"}
+        two {:action/name :a/two
+             :action/description "desc two"}
+        app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
+    (is (= [one two] (bread/hooks-for app :hook/a)))))
 
-  (testing "it applies config map"
-    (let [app (plugins->loaded [{:config {:a :A :b :B :c :C}}])]
-      (are
-        [v k] (= v (bread/config app k))
-        :A :a
-        :B :b
-        :C :c
-        nil :something))))
+(deftest test-load-plugins-applies-config-map
+  (let [app (plugins->loaded [{:config {:a :A :b :B :c :C}}])]
+    (are
+      [v k] (= v (bread/config app k))
+      :A :a
+      :B :b
+      :C :c
+      nil :something)))
 
 (deftest test-hooks-for
 
@@ -263,12 +262,60 @@
       {:future "value"}
       (future {:future "value"}))))
 
-#_
+(defmethod bread/action ::my.hook
+  [_ {:keys [v]} [arg]]
+  (conj arg v))
+
 (deftest test-hook
 
-  ;; TODO
+  (let [plugin-a {:hooks {:hook/a [{:action/name ::my.hook :v "A"}]}}
+        plugin-b {:hooks {:hook/b [{:action/name ::my.hook :v "B"}]}}
+        plugin-aa {:hooks {:hook/a [{:action/name ::my.hook :v "AA"}
+                                    {:action/name ::my.hook :v "AA"}]}}
+        plugin-ab {:hooks {:hook/a [{:action/name ::my.hook :v "A"}
+                                    {:action/name ::my.hook :v "B"}]}}]
+    (are
+      [result plugins&args]
+      (= result (let [[plugins args] plugins&args
+                      app (plugins->loaded plugins)]
+                  (apply bread/hook app args)))
 
-  )
+      (plugins->loaded []) [[] [nil]]
+      (plugins->loaded [{}]) [[{}] [nil]]
+      (plugins->loaded [plugin-a]) [[plugin-a] [nil]]
+      (plugins->loaded [plugin-a]) [[plugin-a] [:nope]]
+      (plugins->loaded [plugin-a]) [[plugin-a] [:hook/b]]
+      (plugins->loaded [plugin-a]) [[plugin-a] [:hook/c]]
+
+      ["A"] [[plugin-a] [:hook/a]]
+      ["A"] [[plugin-a] [:hook/a nil]]
+      ["default" "A"] [[plugin-a] [:hook/a ["default"]]]
+      ["default" "A" "A"] [[plugin-a plugin-a] [:hook/a ["default"]]]
+      ["default" "AA" "AA"] [[plugin-aa] [:hook/a ["default"]]]
+      ["default" "A" "B"] [[plugin-ab] [:hook/a ["default"]]]
+      ["default" "A" "AA" "AA" "A" "B"] [[plugin-a plugin-aa plugin-ab]
+                                         [:hook/a ["default"]]])))
+
+(defmethod bread/action ::throw
+  [_ {:keys [ex]} _]
+  (throw ex))
+
+(deftest test-hook-exception-handling
+
+  (let [ex (Exception. "something bad happened")
+        app (plugins->loaded [{:hooks {:throw [{:action/name ::throw
+                                                :ex ex}]}}])]
+    (is (thrown-with-msg? ExceptionInfo #"something bad happened"
+                          (bread/hook app :throw)))
+    (is (= {:hook :throw
+            :app app
+            :action {:action/name ::throw :ex ex}
+            :args [1 2 3]
+            ::bread/core? true}
+           (try
+             (bread/hook app :throw 1 2 3)
+             (catch ExceptionInfo e
+               (ex-data e)))))))
 
 (deftest test-app
 

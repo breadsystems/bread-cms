@@ -107,14 +107,13 @@
 (defn profile> [t e]
   (tap> {::profile.type t ::profile e}))
 
-(defn- profile-hook [h f args detail app result]
+(defn- profile-hook [hook app action args result]
   ;; TODO fix this
   (when *profile-hooks*
-    (profile> :profile.type/hook {:hook h
-                                  :f f
-                                  :args args
-                                  :detail detail
+    (profile> :profile.type/hook {:hook hook
                                   :app app
+                                  :action action
+                                  :args args
                                   :result result
                                   ;; TODO CLJS
                                   :millis (.getTime (Date.))})))
@@ -243,31 +242,21 @@
           req
           (recur req))))))
 
-(defmacro ^:private try-hook [app hook h f args]
+(defmacro ^:private try-action [hook app current-action args]
   `(try
-     (let [result# (apply ~f ~args)]
-       (profile-hook ~h ~f ~args ~hook ~app result#)
+     (let [result# (action ~app ~current-action ~args)]
+       (profile-hook ~hook ~app ~current-action ~args result#)
        result#)
      (catch java.lang.Throwable e#
-       ;; If bread.core threw this exception, don't wrap it
+       ;; If bread core threw this exception, don't wrap it.
        (throw (if (-> e# ex-data ::core?) e#
                 (ex-info (.getMessage e#)
-                         {:name ~h
-                          :hook ~hook
-                          :args ~args
+                         {:hook ~hook
                           :app ~app
-                          ;; Indicate to the caller that this exception
-                          ;; wraps one from somewhere else.
+                          :action ~current-action
+                          :args ~args
                           ::core? true}
                          e#))))))
-
-(comment
-  (macroexpand '(try-hook
-                  (bread/app)
-                  {::precedence 1 ::f identity}
-                  :hook/test
-                  identity
-                  ['$APP "some value" "other" "args"])))
 
 (defmulti action (fn [_app hook _args]
                    (:action/name hook)))
@@ -302,19 +291,17 @@
   ([app h]
    (loop [app app [current-action & actions] (get-in app [::hooks h])]
      (if current-action
-       (recur (action app current-action nil) actions)
+       (recur (try-action h app current-action nil) actions)
        app)))
   ([app h x]
    (loop [x x [current-action & actions] (get-in app [::hooks h])]
      (if current-action
-       (recur (action app current-action [x]) actions)
+       (recur (try-action h app current-action [x]) actions)
        x)))
   ([app h x & args]
    (loop [x x [current-action & actions] (get-in app [::hooks h])]
      (if current-action
-       ;; TODO this concat isn't right, but tests currently rely on the
-       ;; incorrect behavior. Should be (cons x args).
-       (recur (action app current-action (cons x args)) actions)
+       (recur (try-action h app current-action (cons x args)) actions)
        x))))
 
 (defn app
