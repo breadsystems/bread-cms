@@ -330,11 +330,15 @@
   (route/params $req (route/match $req))
   (bread/match $router $req)
   (->> $req (bread/dispatch $router) ::bread/resolver)
-  (->> $req (bread/dispatch $router) resolver/resolve-queries ::bread/queries)
-  (->> $req (bread/dispatch $router) resolver/resolve-queries query/expand ::bread/data)
-
-  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/resolver)
-  (-> (assoc @app :uri "/hello/") route/dispatch ::bread/queries)
+  (as-> $req $
+    (bread/dispatch $router $)
+    (bread/hook $ ::bread/resolve)
+    (::bread/queries $))
+  (as-> $req $
+    (bread/dispatch $router $)
+    (bread/hook $ ::bread/resolve)
+    (bread/hook $ ::bread/expand)
+    (::bread/data $))
 
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))

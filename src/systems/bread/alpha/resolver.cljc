@@ -65,7 +65,8 @@
       ;; We have a vanilla fn handler:
       ;; Short-circuit the rest of the lifecycle.
       (resolver req)
-      (update req ::bread/queries (comp vec concat) (resolve-query req))))
+      (let [{:keys [queries data effects]} (resolve-query req)]
+        (update req ::bread/queries (comp vec concat) queries))))
 
 (defn plugin []
   {:hooks

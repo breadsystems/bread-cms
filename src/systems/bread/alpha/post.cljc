@@ -124,8 +124,7 @@
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e [::bread/data k :db/id]]
                         ['?lang :field/lang (keyword (:lang params))]]))))]
-
-    (if fields-query
-      [(apply conj [k db] page-query)
-       (apply conj [:post/fields db] fields-query)]
-      [(apply conj [k db] page-query)])))
+    {:queries (if fields-query
+                [(apply conj [k db] page-query)
+                 (apply conj [:post/fields db] fields-query)]
+                [(apply conj [k db] page-query)])}))

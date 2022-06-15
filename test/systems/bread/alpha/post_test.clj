@@ -15,7 +15,8 @@
         ;; while it doesn't need to be a realistic or usable value, it DOES
         ;; need to be a valid Queryable.
         db (reify bread/Queryable (bread/query [_ _ _]))
-        app (plugins->loaded [(datastore->plugin db)])
+        app (plugins->loaded [(datastore->plugin db)
+                              (resolver/plugin)])
         ->app (fn [resolver]
                 (assoc app ::bread/resolver resolver))]
 
@@ -23,7 +24,7 @@
         [query resolver]
         (= query (-> resolver
                      ->app
-                     (bread/action {:action/name ::resolver/resolve} nil)
+                     (bread/hook ::bread/resolve)
                      ::bread/queries))
 
         ;; {:uri "/en/simple"}
