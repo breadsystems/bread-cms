@@ -172,6 +172,9 @@
 ;; The main API for working with hooks.
 ;;
 
+(defmulti action (fn [_app hook _args]
+                   (:action/name hook)))
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]
@@ -242,6 +245,11 @@
           req
           (recur req))))))
 
+(defmethod action ::do-effects
+  [req _ _]
+  ;; TODO
+  req)
+
 (defmacro ^:private try-action [hook app current-action args]
   `(try
      (let [result# (action ~app ~current-action ~args)]
@@ -257,9 +265,6 @@
                           :args ~args
                           ::core? true}
                          e#))))))
-
-(defmulti action (fn [_app hook _args]
-                   (:action/name hook)))
 
 (defn- load-plugin [app {:keys [config hooks] :as plugin}]
   (letfn [(configure [app config]
@@ -312,7 +317,11 @@
         ::hooks   {::load-plugins
                    [{:action/name ::load-plugins
                      :action/description
-                     "Load hooks declared in all plugins"}]}
+                     "Load hooks declared in all plugins"}]
+                   ::do-effects
+                   [{:action/name ::do-effects
+                     :action/description
+                     "Do side effects"}]}
         ::config  {}
         ::data    {}}))
   ([]
@@ -348,6 +357,7 @@
         (hook ::resolve)      ;; -> ::queries
         (hook ::expand)       ;; -> ::data
         (apply-effects)       ;; -> more ::data, ::effects
+        (hook ::do-effects)   ;; -> more ::data, ::effects
         (hook ::render)       ;; -> standard Ring keys: :status, :headers, :body
         (hook ::response))))
 
