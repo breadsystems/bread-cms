@@ -91,7 +91,7 @@
   (update post :post/fields field/compact))
 
 ;; TODO oof.
-(defmethod resolver/resolve-query :resolver.type/page
+(defmethod resolver/dispatch :resolver.type/page
   [{::bread/keys [resolver] :as req}]
   (let [{k :resolver/key params :route/params
          :resolver/keys [ancestral? pull]} resolver

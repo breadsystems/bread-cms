@@ -55,7 +55,7 @@
     query
     constraints))
 
-(defmulti resolve-query
+(defmulti dispatch
   (fn [req]
     (get-in req [::bread/resolver :resolver/type])))
 
@@ -65,7 +65,7 @@
       ;; We have a vanilla fn handler:
       ;; Short-circuit the rest of the lifecycle.
       (resolver req)
-      (let [{:keys [queries data effects]} (resolve-query req)]
+      (let [{:keys [queries data effects]} (dispatch req)]
         (update req ::bread/queries (comp vec concat) queries))))
 
 (defn plugin []

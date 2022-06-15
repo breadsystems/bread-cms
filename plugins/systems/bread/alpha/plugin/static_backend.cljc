@@ -37,7 +37,7 @@
         (when html
           (assoc metadata :html html))))))
 
-(defmethod resolver/resolve-query :resolver.type/static
+(defmethod resolver/dispatch :resolver.type/static
   [{::bread/keys [resolver config] :as req}]
   (let [params (:route/params resolver)
         opts (-> config
