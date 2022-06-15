@@ -7,12 +7,12 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
 (deftest test-query-expand
-  ;; A fn resolver short-circuits query expansion.
+  ;; A fn dispatcher short-circuits query expansion.
   (let [response {:body "Returned from fn" :status 200}
-        resolver (constantly response)]
+        dispatcher (constantly response)]
     (is (= response
            (-> (plugins->loaded [(query/plugin)])
-               (assoc ::bread/resolver (constantly response))
+               (assoc ::bread/dispatcher (constantly response))
                (bread/hook ::bread/expand)))))
 
   (are
@@ -21,9 +21,9 @@
                 (assoc ::bread/queries queries
                        ;; Assume the first thing in
                        ;; ::queries is for our main key.
-                       ::bread/resolver
-                       {:resolver/type :whatevs
-                        :resolver/key (ffirst queries)})
+                       ::bread/dispatcher
+                       {:dispatcher/type :whatevs
+                        :dispatcher/key (ffirst queries)})
                 (bread/hook ::bread/expand)
                 ::bread/data))
 

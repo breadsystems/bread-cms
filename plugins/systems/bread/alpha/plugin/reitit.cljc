@@ -5,7 +5,7 @@
     [reitit.core :as reitit]
     [systems.bread.alpha.core :as bread :refer [Router]]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.resolver :as resolver]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route])
   (:import
     [reitit.core Match]))
@@ -43,20 +43,20 @@
               :path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
-  ;; If the matched result is a handler (fn), set it as the resolver directly.
+  ;; If the matched result is a handler (fn), set it as the dispatcher directly.
   ;; This lets users opt in or out of Bread's routing on a per-route basis.
   ;; TODO dispatch moves up out of Router protocol;
-  ;; resolver returns resolver data from the matched route.
+  ;; dispatcher returns dispatcher data from the matched route.
   (bread/dispatch [router req]
-    (let [resolver (route/resolver req)
-          result (:result (:route/match resolver))]
-      (assoc req ::bread/resolver (if (fn? result) result resolver))))
+    (let [dispatcher (route/dispatcher req)
+          result (:result (:route/match dispatcher))]
+      (assoc req ::bread/dispatcher (if (fn? result) result dispatcher))))
   (bread/match [router req]
     (reitit/match-by-path router (:uri req)))
   (bread/params [router match]
     (:path-params match))
-  (bread/resolver [router match]
-    (:bread/resolver (:data match)))
+  (bread/dispatcher [router match]
+    (:bread/dispatcher (:data match)))
   (bread/component [router match]
     (:bread/component (:data match)))
   (bread/not-found-component [router match]

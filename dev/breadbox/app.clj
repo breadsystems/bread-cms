@@ -22,7 +22,7 @@
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.resolver :as resolver]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.tools.debug.core :as debug]
@@ -144,21 +144,21 @@
             {:body "" :status 302 :headers {"Location" "/en/"}})]
      ["/hello/" hello-handler]
      ["/:lang"
-      ;; TODO :bread/resolver -> :resolver/type
-      ;; TODO :bread/component -> :resolver/component etc.
+      ;; TODO :bread/dispatcher -> :dispatcher/type
+      ;; TODO :bread/component -> :dispatcher/component etc.
       ["/" {:name :bread.route/home
-            :bread/resolver :resolver.type/page
+            :bread/dispatcher :dispatcher.type/page
             :bread/component home
             :bread/cache
             {:param->attr {:lang :field/lang}
              :pull [{:post/fields [:lang]}]}}]
-      ["/static/:slug/" {:bread/resolver :resolver.type/static
+      ["/static/:slug/" {:bread/dispatcher :dispatcher.type/static
                          :bread/component static-page
                          :bread/watch-static {:dir "dev/content"
                                               :path->req [0 "static" 1]}
                          :name :bread.route/static}]
       ["/*slugs" {:name :bread.route/page
-                  :bread/resolver :resolver.type/page
+                  :bread/dispatcher :dispatcher.type/page
                   :bread/component page
                   :bread/cache
                   {:param->attr {:slugs :post/slug :lang :field/lang}
@@ -329,14 +329,14 @@
   (def $req (merge {:uri "/en/"} @app))
   (route/params $req (route/match $req))
   (bread/match $router $req)
-  (->> $req (bread/dispatch $router) ::bread/resolver)
+  (->> $req (bread/dispatch $router) ::bread/dispatcher)
   (as-> $req $
     (bread/dispatch $router $)
-    (bread/hook $ ::bread/resolve)
+    (bread/hook $ ::bread/dispatch)
     (::bread/queries $))
   (as-> $req $
     (bread/dispatch $router $)
-    (bread/hook $ ::bread/resolve)
+    (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
 
@@ -442,7 +442,7 @@
   (reset! debug-log [])
   (slurp "http://localhost:1312/en/")
 
-  (::bread/resolve (::bread/hooks @app))
+  (::bread/dispatch (::bread/hooks @app))
   (:hook/posts-menu (::bread/hooks @app))
 
   (restart!))

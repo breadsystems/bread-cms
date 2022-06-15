@@ -8,7 +8,7 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.resolver :as resolver]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.component :as component]))
 
@@ -33,7 +33,7 @@
          (route/plugin routes)
          (i18n/plugin i18n)
          (nav/plugin navigation)
-         (resolver/plugin)
+         (dispatcher/plugin)
          (query/plugin)
          (component/plugin)
          (when (not (false? cache))

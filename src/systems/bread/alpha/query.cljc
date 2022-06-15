@@ -18,18 +18,18 @@
                :else [k])]
     (assoc-in data path (bread/query q data args))))
 
-(defn- expand-not-found [resolver data]
-  (if-let [k (:resolver/key resolver)]
+(defn- expand-not-found [dispatcher data]
+  (if-let [k (:dispatcher/key dispatcher)]
     (assoc data :not-found? (nil? (get data k)))
     data))
 
 (defmethod bread/action ::expand-queries
-  [{::bread/keys [resolver queries] :as req} _ _]
-  (if (fn? resolver)
-    (resolver req)
+  [{::bread/keys [dispatcher queries] :as req} _ _]
+  (if (fn? dispatcher)
+    (dispatcher req)
     (->> queries
          (reduce expand-query {})
-         (expand-not-found resolver)
+         (expand-not-found dispatcher)
          (assoc req ::bread/data))))
 
 (defn key-into

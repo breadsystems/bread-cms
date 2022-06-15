@@ -11,7 +11,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.resolver :as resolver]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [use-datastore]]))
@@ -112,43 +112,43 @@
 
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component home}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component home}
                    :route/params {:lang "en"}}
                   "/fr"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component home}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component home}
                    :route/params {:lang "fr"}}
                   "/en/parent-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page"}}
                   "/en/parent-page/child-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page
-                                    :resolver/not-found-component not-found}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page
+                                    :dispatcher/not-found-component not-found}
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
-                  {:bread/resolver {:resolver/type :resolver.type/page
-                                    :resolver/component page
-                                    :resolver/not-found-component not-found}
+                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                    :dispatcher/component page
+                                    :dispatcher/not-found-component not-found}
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router
@@ -156,14 +156,14 @@
                      (get routes (:uri req)))
                    (bread/params [router match]
                      (:route/params match))
-                   (bread/resolver [router match]
-                     (:bread/resolver match))
+                   (bread/dispatcher [router match]
+                     (:bread/dispatcher match))
                    (bread/component [_ match]
-                     (:resolver/component (:bread/resolver match)))
+                     (:dispatcher/component (:bread/dispatcher match)))
                    (bread/not-found-component [router match]
-                     (:resolver/not-found-component (:bread/resolver match)))
+                     (:dispatcher/not-found-component (:bread/dispatcher match)))
                    (bread/dispatch [router req]
-                     (assoc req ::bread/resolver (route/resolver req))))
+                     (assoc req ::bread/dispatcher (route/dispatcher req))))
           app (defaults/app {:datastore config
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}})

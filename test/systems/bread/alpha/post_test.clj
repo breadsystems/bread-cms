@@ -5,26 +5,26 @@
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.resolver :as resolver]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [datastore->plugin
                                               plugins->loaded]]))
 
-(deftest test-resolve-post-queries
+(deftest test-dispatch-post-queries
   (let [;; Datastore shows up directly in our args, so we need to mock it.
         ;; We're only checking for its presence in the ::queries spec, so
         ;; while it doesn't need to be a realistic or usable value, it DOES
         ;; need to be a valid Queryable.
         db (reify bread/Queryable (bread/query [_ _ _]))
         app (plugins->loaded [(datastore->plugin db)
-                              (resolver/plugin)])
-        ->app (fn [resolver]
-                (assoc app ::bread/resolver resolver))]
+                              (dispatcher/plugin)])
+        ->app (fn [dispatcher]
+                (assoc app ::bread/dispatcher dispatcher))]
 
       (are
-        [query resolver]
-        (= query (-> resolver
+        [query dispatcher]
+        (= query (-> dispatcher
                      ->app
-                     (bread/hook ::bread/resolve)
+                     (bread/hook ::bread/dispatch)
                      ::bread/queries))
 
         ;; {:uri "/en/simple"}
@@ -40,10 +40,10 @@
           :post.type/page
           :post.status/published
           "simple"]]
-        {:resolver/type :resolver.type/page
+        {:dispatcher/type :dispatcher.type/page
          ;; pull and key come from component
-         :resolver/pull [:post/title :custom/key]
-         :resolver/key :post
+         :dispatcher/pull [:post/title :custom/key]
+         :dispatcher/key :post
          :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/one/two"}
@@ -64,8 +64,8 @@
           :post.status/published
           "two"
           "one"]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :custom/key]
          ;; default key -> :post
          :route/params {:slugs "one/two" :lang "en"}}
 
@@ -87,9 +87,9 @@
           :post.status/published
           "two"
           "one"]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
-         :resolver/key nil ;; default -> :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :custom/key]
+         :dispatcher/key nil ;; default -> :post
          :route/params {:slugs "one/two" :lang "en"}}
 
         ;; {:uri "/en/one/two"}
@@ -109,9 +109,9 @@
           :post.status/published
           "two"
           "one"]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
-         :resolver/key :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :custom/key]
+         :dispatcher/key :post
          :route/params {:slugs "one/two" :lang "en"}}
 
         ;; {:uri "/en/one/two/three"}
@@ -134,9 +134,9 @@
           "three"
           "two"
           "one"]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
-         :resolver/key :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :custom/key]
+         :dispatcher/key :post
          :route/params {:slugs "one/two/three" :lang "en"}}
 
         ;; {:uri "/en/simple"}
@@ -160,9 +160,9 @@
                     [?e :field/lang ?lang]]}
           [::bread/data :post :db/id]
           :en]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :post/fields]
-         :resolver/key :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :post/fields]
+         :dispatcher/key :post
          :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en/simple"}
@@ -190,9 +190,9 @@
                     [?e :field/lang ?lang]]}
           [::bread/data :post :db/id]
           :en]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title {:post/fields [:field/key :field/lang]}]
-         :resolver/key :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title {:post/fields [:field/key :field/lang]}]
+         :dispatcher/key :post
          :route/params {:slugs "simple" :lang "en"}}
 
         ;; {:uri "/en"}
@@ -209,9 +209,9 @@
           :post.status/published
           ;; Empty slug!
           ""]]
-        {:resolver/type :resolver.type/page
-         :resolver/pull [:post/title :custom/key]
-         :resolver/key :post
+        {:dispatcher/type :dispatcher.type/page
+         :dispatcher/pull [:post/title :custom/key]
+         :dispatcher/key :post
          :route/params {:lang "en"}}
 
         )))

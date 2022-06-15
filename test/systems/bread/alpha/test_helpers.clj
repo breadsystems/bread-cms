@@ -65,11 +65,11 @@
   "Takes a map m like:
 
   {\"/first/route\"
-   {:bread/resolver :resolver.type/first
+   {:bread/dispatcher :dispatcher.type/first
     :bread/component 'first-component
     :route/params ...}
    \"/second/route\"
-   {:bread/resolver :resolver.type/second
+   {:bread/dispatcher :dispatcher.type/second
     :bread/component 'second-component
     :route/params ...}}
 
@@ -81,12 +81,12 @@
                    (get routes (:uri req)))
                  (bread/params [_ match]
                    (:route/params match))
-                 (bread/resolver [_ match]
-                   (:bread/resolver match))
+                 (bread/dispatcher [_ match]
+                   (:bread/dispatcher match))
                  (bread/component [_ match]
                    (:bread/component match))
                  (bread/not-found-component [_ match]
                    (:bread/not-found-component match))
                  (bread/dispatch [router req]
-                   (assoc req ::bread/resolver (route/resolver req))))]
+                   (assoc req ::bread/dispatcher (route/dispatcher req))))]
     (route/plugin {:router router})))

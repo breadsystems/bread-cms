@@ -62,8 +62,8 @@
       [data queries]
       (= data (-> app
                   (assoc ::bread/queries queries
-                         ::bread/resolver {:resolver/type :resolver.type/page
-                                           :resolver/key :post})
+                         ::bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                                           :dispatcher/key :post})
                   (bread/hook ::bread/expand)
                   ::bread/data))
 

@@ -48,37 +48,37 @@
 
     [:p "the content"]
     {::bread/data {:content "the content"}
-     ::bread/resolver {:resolver/component paragraph}}
+     ::bread/dispatcher {:dispatcher/component paragraph}}
 
     ;; 404 Not Found
-    ;; resolver/expander are responsible for setting up this data
+    ;; dispatcher/expander are responsible for setting up this data
     [:div "404 Not Found"]
     {::bread/data {:content nil
                    :not-found? true}
-     ::bread/resolver {:resolver/component paragraph
-                       :resolver/not-found-component not-found-page}}
+     ::bread/dispatcher {:dispatcher/component paragraph
+                       :dispatcher/not-found-component not-found-page}}
 
     ;; With :extends - parent <- child
     [:div.parent [:div.child "child content"]]
     {::bread/data {:content "child content"}
-     ::bread/resolver {:resolver/component child}}
+     ::bread/dispatcher {:dispatcher/component child}}
 
     ;; With :extends vector - parent <- special
     [:div.parent [:div.special [:div.special-child "child content"]]]
     {::bread/data {:content "child content"}
-     ::bread/resolver {:resolver/component special}}
+     ::bread/dispatcher {:dispatcher/component special}}
 
     ;; Test recursive extension - grandparent <- parent <- child
     [:main [:div.parent [:div.child "child content"]]]
     (let [parent (vary-meta parent assoc :extends grandparent)
           child (vary-meta child assoc :extends parent)]
       {::bread/data {:content "child content"}
-       ::bread/resolver {:resolver/component child}})
+       ::bread/dispatcher {:dispatcher/component child}})
 
     ;; With extension disabled
     [:div.child "child content"]
     {::bread/data {:component/extend? false :content "child content"}
-     ::bread/resolver {:resolver/component child}}
+     ::bread/dispatcher {:dispatcher/component child}}
 
     ;; With plugins filtering the component
     [:div.plugin "filtered content"]

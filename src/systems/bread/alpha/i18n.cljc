@@ -83,6 +83,6 @@
     {:hook/path-params
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
-     ::bread/resolve
+     ::bread/dispatch
      [{:action/name ::add-queries
        :action/description "Add I18n queries"}]}}))

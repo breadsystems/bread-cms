@@ -228,11 +228,11 @@
                             :action/description
                             "Add a menu with the given opts"
                             :opts opts}) menus)
-         resolve-hooks (concat
+         dispatch-hooks (concat
                          [{:action/name ::add-global-menus-query
                            :action/description
                            "Add a query to fetch global menus"
                            :opts global-menu-opts}]
                          menu-hooks)]
      {:hooks
-      (merge-with conj {::bread/resolve resolve-hooks} hooks)})))
+      (merge-with conj {::bread/dispatch dispatch-hooks} hooks)})))

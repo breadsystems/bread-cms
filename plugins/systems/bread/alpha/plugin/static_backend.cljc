@@ -10,7 +10,7 @@
     [juxt.dirwatch :as watch]
     [markdown.core :as md]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.resolver :as resolver]))
+    [systems.bread.alpha.dispatcher :as dispatcher]))
 
 (comment
 
@@ -37,9 +37,9 @@
         (when html
           (assoc metadata :html html))))))
 
-(defmethod resolver/dispatch :resolver.type/static
-  [{::bread/keys [resolver config] :as req}]
-  (let [params (:route/params resolver)
+(defmethod dispatcher/dispatch :dispatcher.type/static
+  [{::bread/keys [dispatcher config] :as req}]
+  (let [params (:route/params dispatcher)
         opts (-> config
                  (rename-keys
                    {:static/root :root

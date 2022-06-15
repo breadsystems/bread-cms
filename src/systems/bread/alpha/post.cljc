@@ -5,7 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.resolver :as resolver :refer [where pull-query]]
+    [systems.bread.alpha.dispatcher :as dispatcher :refer [where pull-query]]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
@@ -91,15 +91,15 @@
   (update post :post/fields field/compact))
 
 ;; TODO oof.
-(defmethod resolver/dispatch :resolver.type/page
-  [{::bread/keys [resolver] :as req}]
-  (let [{k :resolver/key params :route/params
-         :resolver/keys [ancestral? pull]} resolver
+(defmethod dispatcher/dispatch :dispatcher.type/page
+  [{::bread/keys [dispatcher] :as req}]
+  (let [{k :dispatcher/key params :route/params
+         :dispatcher/keys [ancestral? pull]} dispatcher
         k (or k :post)
         db (store/datastore req)
 
         page-query
-        (-> (pull-query resolver)
+        (-> (pull-query dispatcher)
             ;; TODO handle this in pull-query?
             (update-in [0 :find] conj '.) ;; Query for a single post.
             (where [['?type :post/type :post.type/page]
@@ -119,7 +119,7 @@
                             pull))]
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
-            (-> (resolver/empty-query)
+            (-> (dispatcher/empty-query)
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e [::bread/data k :db/id]]

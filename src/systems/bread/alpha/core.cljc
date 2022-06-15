@@ -43,7 +43,7 @@
   (routes [this])
   (match [this req])
   (params [this match])
-  (resolver [this match])
+  (dispatcher [this match])
   ;; TODO redesign component matching
   (component [this match])
   (not-found-component [this match]))
@@ -318,7 +318,7 @@
     (-> (merge req app)
         (hook ::request)
         (hook ::route)       ; -> ::dispatcher
-        (hook ::resolve)     ; -> ::queries
+        (hook ::dispatch)    ; -> ::queries, ::data, ::effects
         (hook ::expand)      ; -> ::data
         (hook ::do-effects)  ; -> more ::data
         (hook ::render)      ; -> standard Ring keys: :status, :headers, :body

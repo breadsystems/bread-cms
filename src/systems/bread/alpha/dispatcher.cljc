@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.resolver
+(ns systems.bread.alpha.dispatcher
   (:require
     [clojure.spec.alpha :as s]
     [clojure.string :as string]
@@ -13,15 +13,15 @@
     :in ['$]
     :where []}])
 
-(defn query-key [resolver]
-  "Get from the component layer the key at which to store the resolved query
+(defn query-key [dispatcher]
+  "Get from the component layer the key at which to store the dispatchd query
   within the ::bread/queries map"
-  (component/query-key (:resolver/component resolver)))
+  (component/query-key (:dispatcher/component dispatcher)))
 
 (defn pull
-  "Get the (pull ...) form for the given resolver."
-  [resolver]
-  (let [schema (component/query (:resolver/component resolver))]
+  "Get the (pull ...) form for the given dispatcher."
+  [dispatcher]
+  (let [schema (component/query (:dispatcher/component dispatcher))]
     (list 'pull '?e schema)))
 
 (defn- apply-where
@@ -38,7 +38,7 @@
 
 (defn pull-query
   "Get a basic query with a (pull ...) form in the :find clause"
-  [{:resolver/keys [pull]}]
+  [{:dispatcher/keys [pull]}]
   (let [pulling-eid? (some #{:db/id} pull)
         pull-expr (if pulling-eid? pull (cons :db/id pull))]
     (update-in
@@ -57,19 +57,19 @@
 
 (defmulti dispatch
   (fn [req]
-    (get-in req [::bread/resolver :resolver/type])))
+    (get-in req [::bread/dispatcher :dispatcher/type])))
 
-(defmethod bread/action ::resolve
-  [{::bread/keys [resolver queries] :as req} _ _]
-  (if (fn? resolver)
+(defmethod bread/action ::dispatch
+  [{::bread/keys [dispatcher queries] :as req} _ _]
+  (if (fn? dispatcher)
       ;; We have a vanilla fn handler:
       ;; Short-circuit the rest of the lifecycle.
-      (resolver req)
+      (dispatcher req)
       (let [{:keys [queries data effects]} (dispatch req)]
         (update req ::bread/queries (comp vec concat) queries))))
 
 (defn plugin []
   {:hooks
-   {::bread/resolve
-    [{:action/name ::resolve
+   {::bread/dispatch
+    [{:action/name ::dispatch
       :action/description "Resolve queries"}]}})

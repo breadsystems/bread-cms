@@ -9,47 +9,47 @@
                                               map->route-plugin]]))
 
 (defmethod bread/action ::stuff [_ _ _]
-  {:resolver/stuff :totally-different})
+  {:dispatcher/stuff :totally-different})
 
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
         routes {"/en/home"
-                {:bread/resolver :resolver.type/home
+                {:bread/dispatcher :dispatcher.type/home
                  :bread/component 'home
                  :route/params {:lang "en"}}
                 "/en/keyword"
-                {:bread/resolver :resolver.type/page
+                {:bread/dispatcher :dispatcher.type/page
                  :bread/component 'page
                  :route/params {:lang "en"
                                 :slug "keyword"}}
                 "/en/default"
-                {:bread/resolver :default
+                {:bread/dispatcher :default
                  :bread/component 'page
                  :route/params {:lang "en"
                                 :slug "default"}}
-                "/en/empty-resolver-map"
-                {:bread/resolver {}
+                "/en/empty-dispatcher-map"
+                {:bread/dispatcher {}
                  :bread/component 'page
                  :route/params {:lang "en"
-                                :slug "empty-resolver-map"}}
+                                :slug "empty-dispatcher-map"}}
                 "/en/no-defaults"
-                {:bread/resolver {:resolver/type :whatevs
-                                  :resolver/defaults? false}
+                {:bread/dispatcher {:dispatcher/type :whatevs
+                                  :dispatcher/defaults? false}
                  :bread/component 'page
                  :route/params {:lang "en"
                                 :slug "no-defaults"}}
                 "/en/no-component"
-                {:bread/resolver {:resolver/type :whatevs}
+                {:bread/dispatcher {:dispatcher/type :whatevs}
                  :route/params {:lang "en"
                                 :slug "no-component"}}
                 "/en/not-found"
-                {:bread/resolver {:resolver/type :whatevs}
+                {:bread/dispatcher {:dispatcher/type :whatevs}
                  :bread/component 'page
                  :bread/not-found-component 'not-found
                  :route/params {:lang "en"
                                 :slug "not-found"}}
                 "/overridden"
-                {:bread/resolver {:resolver/i18n? false}
+                {:bread/dispatcher {:dispatcher/i18n? false}
                  :bread/component 'page
                  :route/params {:lang nil
                                 :slug "overridden"}}}
@@ -61,135 +61,135 @@
         get-key* {'home :home 'page :page}
         app (plugins->loaded [(map->route-plugin routes)])]
 
-    (are [resolver uri] (= resolver
+    (are [dispatcher uri] (= dispatcher
                            (with-redefs [component/query get-query*
                                          component/query-key get-key*]
                              (-> {:uri uri}
                                  (merge app)
                                  (bread/hook ::bread/route)
-                                 ::bread/resolver)))
+                                 ::bread/dispatcher)))
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? true
-          :resolver/component nil
-          :resolver/not-found-component nil
-          :resolver/key nil
-          :resolver/pull nil
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? true
+          :dispatcher/component nil
+          :dispatcher/not-found-component nil
+          :dispatcher/key nil
+          :dispatcher/pull nil
           :post/type :post.type/page
           :route/params nil
           :route/match nil}
          "/nil"
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? true
-          :resolver/component 'home
-          :resolver/not-found-component nil
-          :resolver/key :home
-          :resolver/pull [:db/id :home/slug]
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? true
+          :dispatcher/component 'home
+          :dispatcher/not-found-component nil
+          :dispatcher/key :home
+          :dispatcher/pull [:db/id :home/slug]
           :post/type :post.type/page
           :route/params {:lang "en"}
-          :route/match {:bread/resolver :resolver.type/home
+          :route/match {:bread/dispatcher :dispatcher.type/home
                         :bread/component 'home
                         :route/params {:lang "en"}}}
          "/en/home"
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? true
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? true
           :post/type :post.type/page
-          :resolver/component 'page
-          :resolver/not-found-component nil
-          :resolver/key :page
-          :resolver/pull [:db/id :page/slug]
+          :dispatcher/component 'page
+          :dispatcher/not-found-component nil
+          :dispatcher/key :page
+          :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en" :slug "keyword"}
-          :route/match {:bread/resolver :resolver.type/page
+          :route/match {:bread/dispatcher :dispatcher.type/page
                         :bread/component 'page
                         :route/params {:lang "en" :slug "keyword"}}}
          "/en/keyword"
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? true
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? true
           :post/type :post.type/page
-          :resolver/component 'page
-          :resolver/not-found-component nil
-          :resolver/key :page
-          :resolver/pull [:db/id :page/slug]
+          :dispatcher/component 'page
+          :dispatcher/not-found-component nil
+          :dispatcher/key :page
+          :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en"
-                         :slug "empty-resolver-map"}
-          :route/match {:bread/resolver {}
+                         :slug "empty-dispatcher-map"}
+          :route/match {:bread/dispatcher {}
                         :bread/component 'page
                         :route/params {:lang "en"
-                                       :slug "empty-resolver-map"}}}
-         "/en/empty-resolver-map"
+                                       :slug "empty-dispatcher-map"}}}
+         "/en/empty-dispatcher-map"
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? true
-          :resolver/component 'page
-          :resolver/not-found-component nil
-          :resolver/key :page
-          :resolver/pull [:db/id :page/slug]
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? true
+          :dispatcher/component 'page
+          :dispatcher/not-found-component nil
+          :dispatcher/key :page
+          :dispatcher/pull [:db/id :page/slug]
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "default"}
-          :route/match {:bread/resolver :default
+          :route/match {:bread/dispatcher :default
                         :bread/component 'page
                         :route/params {:lang "en"
                                        :slug "default"}}}
          "/en/default"
 
-         {:resolver/type :resolver.type/page
-          :resolver/i18n? false
-          :resolver/component 'page
-          :resolver/not-found-component nil
-          :resolver/key :page
-          :resolver/pull [:db/id :page/slug]
+         {:dispatcher/type :dispatcher.type/page
+          :dispatcher/i18n? false
+          :dispatcher/component 'page
+          :dispatcher/not-found-component nil
+          :dispatcher/key :page
+          :dispatcher/pull [:db/id :page/slug]
           :post/type :post.type/page
           :route/params {:lang nil :slug "overridden"}
-          :route/match {:bread/resolver {:resolver/i18n? false}
+          :route/match {:bread/dispatcher {:dispatcher/i18n? false}
                         :route/params {:lang nil :slug "overridden"}
                         :bread/component 'page}}
          "/overridden"
 
-         {:resolver/type :whatevs
-          :resolver/defaults? false
-          :resolver/component 'page
-          :resolver/not-found-component nil
-          :resolver/key :page
-          :resolver/pull [:db/id :page/slug]
+         {:dispatcher/type :whatevs
+          :dispatcher/defaults? false
+          :dispatcher/component 'page
+          :dispatcher/not-found-component nil
+          :dispatcher/key :page
+          :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "no-defaults"}
-          :route/match {:bread/resolver {:resolver/type :whatevs
-                                         :resolver/defaults? false}
+          :route/match {:bread/dispatcher {:dispatcher/type :whatevs
+                                         :dispatcher/defaults? false}
                         :bread/component 'page
                         :route/params {:lang "en"
                                        :slug "no-defaults"}}}
          "/en/no-defaults"
 
-         {:resolver/type :whatevs
-          :resolver/i18n? true
-          :resolver/component 'page
-          :resolver/not-found-component 'not-found
-          :resolver/key :page
+         {:dispatcher/type :whatevs
+          :dispatcher/i18n? true
+          :dispatcher/component 'page
+          :dispatcher/not-found-component 'not-found
+          :dispatcher/key :page
           :post/type :post.type/page
-          :resolver/pull [:db/id :page/slug]
+          :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en"
                          :slug "not-found"}
-          :route/match {:bread/resolver {:resolver/type :whatevs}
+          :route/match {:bread/dispatcher {:dispatcher/type :whatevs}
                         :bread/component 'page
                         :bread/not-found-component 'not-found
                         :route/params {:lang "en"
                                        :slug "not-found"}}}
          "/en/not-found"
 
-         {:resolver/type :whatevs
-          :resolver/i18n? true
-          :resolver/component nil
-          :resolver/not-found-component nil
-          :resolver/key nil
-          :resolver/pull nil
+         {:dispatcher/type :whatevs
+          :dispatcher/i18n? true
+          :dispatcher/component nil
+          :dispatcher/not-found-component nil
+          :dispatcher/key nil
+          :dispatcher/pull nil
           :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "no-component"}
-          :route/match {:bread/resolver {:resolver/type :whatevs}
+          :route/match {:bread/dispatcher {:dispatcher/type :whatevs}
                         :route/params {:lang "en"
                                        :slug "no-component"}}}
          "/en/no-component"
@@ -197,13 +197,13 @@
         ;;
         )
 
-    (testing "with a custom resolver hook"
+    (testing "with a custom dispatcher hook"
       (let [app (plugins->loaded [(map->route-plugin routes)
                                   {:hooks
-                                   {:hook/resolver
+                                   {:hook/dispatcher
                                     [{:action/name ::stuff}]}}])]
-        (is (= {:resolver/stuff :totally-different}
-               (route/resolver (merge app {:uri "/whatever"}))))))
+        (is (= {:dispatcher/stuff :totally-different}
+               (route/dispatcher (merge app {:uri "/whatever"}))))))
 
     ))
 

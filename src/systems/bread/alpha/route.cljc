@@ -18,42 +18,42 @@
 (defn params [req match]
   (bread/hook req ::params match))
 
-(defn resolver [req]
-  "Get the full resolver for the given request. Router implementations should
+(defn dispatcher [req]
+  "Get the full dispatcher for the given request. Router implementations should
   call this function."
-  (let [default {:resolver/i18n? true
-                 :resolver/type :resolver.type/page
+  (let [default {:dispatcher/i18n? true
+                 :dispatcher/type :dispatcher.type/page
                  :post/type :post.type/page}
         match (match req)
-        declared (bread/hook req ::resolver match)
+        declared (bread/hook req ::dispatcher match)
         component (bread/hook req ::component match)
         not-found-component
         (bread/hook req ::not-found-component match)
-        {:resolver/keys [defaults?]} declared
-        keyword->type {:resolver.type/home :resolver.type/page
-                       :resolver.type/page :resolver.type/page}
+        {:dispatcher/keys [defaults?]} declared
+        keyword->type {:dispatcher.type/home :dispatcher.type/page
+                       :dispatcher.type/page :dispatcher.type/page}
         declared (cond
                    (= :default declared)
                    default
                    ;; Support keyword shorthands.
                    (keyword->type declared)
-                   {:resolver/type (keyword->type declared)}
-                   ;; Support resolvers declared as arbitrary keywords.
+                   {:dispatcher/type (keyword->type declared)}
+                   ;; Support dispatchers declared as arbitrary keywords.
                    (keyword? declared)
-                   {:resolver/type declared}
+                   {:dispatcher/type declared}
                    :else
                    declared)
         ;; defaults? can only be turned off *explicitly* with false
-        resolver' (assoc (if (not (false? defaults?))
+        dispatcher' (assoc (if (not (false? defaults?))
                            (merge default declared)
                            declared)
                          :route/match match
                          :route/params (params req match)
-                         :resolver/component component
-                         :resolver/not-found-component not-found-component
-                         :resolver/key (component/query-key component)
-                         :resolver/pull (component/query component))]
-    (bread/hook req :hook/resolver resolver')))
+                         :dispatcher/component component
+                         :dispatcher/not-found-component not-found-component
+                         :dispatcher/key (component/query-key component)
+                         :dispatcher/pull (component/query component))]
+    (bread/hook req :hook/dispatcher dispatcher')))
 
 (defmethod bread/action ::path
   [_ {:keys [router]} [_path route-name params]]
@@ -63,9 +63,9 @@
   [req {:keys [router]} _]
   (bread/match router req))
 
-(defmethod bread/action ::resolver
+(defmethod bread/action ::dispatcher
   [_ {:keys [router]} [match]]
-  (bread/resolver router match))
+  (bread/dispatcher router match))
 
 (defmethod bread/action ::component
   [_ {:keys [router]} [match]]
@@ -89,8 +89,8 @@
     [{:action/name ::path :router router}]
     ::match
     [{:action/name ::match :router router}]
-    ::resolver
-    [{:action/name ::resolver :router router}]
+    ::dispatcher
+    [{:action/name ::dispatcher :router router}]
     ::component
     [{:action/name ::component :router router}]
     ::not-found-component
