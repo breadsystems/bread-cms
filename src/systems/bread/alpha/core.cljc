@@ -265,26 +265,29 @@
                             [(effect e data) nil]
                             (catch Throwable ex
                               [nil ex]))
-              result (if (instance? clojure.lang.IDeref result)
-                       result
-                       (reify clojure.lang.IDeref
-                         (deref [_] result)))]
-          (prn 'result result)
+              result (with-meta (if (instance? clojure.lang.IDeref result)
+                                  result
+                                  (reify
+                                    clojure.lang.IDeref
+                                    (deref [_] result)))
+                                (meta e))]
           (cond
             (nil? ex)
-            (let [data (if data-key (assoc data data-key result) data)]
+            (let [data (if data-key
+                         (assoc data data-key (success result true))
+                         data)]
               (prn :effect/data-key data-key)
               (recur effects data (conj completed (success e true))))
             (and ex max-retries (> max-retries retry-count))
             (do (prn max-retries '> retry-count) (recur (cons (-> e
-                             (add-error ex)
-                             (retried))
-                         effects)
-                   data completed))
+                                                                  (add-error ex)
+                                                                  (retried))
+                                                              effects)
+                                                        data completed))
             ex
             (do (prn 'ex) (recur effects data (conj completed (-> e
-                                                    (add-error ex)
-                                                    (success false)))))
+                                                                  (add-error ex)
+                                                                  (success false)))))
             :else
             (do (prn :else) (recur effects data (conj completed (success e true))))))
         (assoc req ::data data ::effects completed)))))

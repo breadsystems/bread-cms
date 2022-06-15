@@ -244,15 +244,24 @@
       :effect/data-key :a
       :v (future "I AM FROM THE FUTURE")}]
 
-    {:a "The universe in a single atom"}
-    [{:effect/name ::passthru
-      :effect/data-key :a
-      :v (atom "The universe in a single atom")}]
+    ))
 
-    {:a "I was...delayed"}
+(deftest test-do-effects-meta
+  (are
+    [data effects]
+    (= data (let [app (plugins->loaded [{:effects effects}])]
+              (reduce
+                (fn [acc [k v]] (assoc acc k (meta v))) {}
+                (::bread/data (bread/hook app ::bread/do-effects)))))
+
+    {} []
+
+    {:a {:success? true
+         :errors []
+         :retried 0}}
     [{:effect/name ::passthru
       :effect/data-key :a
-      :v (delay "I was...delayed")}]
+      :v (future "I AM FROM THE FUTURE")}]
 
     ))
 
