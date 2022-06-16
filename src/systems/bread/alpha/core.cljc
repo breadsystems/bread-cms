@@ -235,7 +235,7 @@
                        (comp (partial sort-by :action/priority) concat)
                        actions))
           (add-effects [app effects]
-            (update app ::effects (comp vec concat) effects))]
+            (update app ::effects concat effects))]
     (as-> effects $
       (add-effects app $)
       (configure $ config)
@@ -286,6 +286,7 @@
                    [{:action/name ::effects!
                      :action/description
                      "Do side effects"}]}
+        ::queries []
         ::config  {}
         ::data    {}}))
   ([]

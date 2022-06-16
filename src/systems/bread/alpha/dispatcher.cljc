@@ -66,10 +66,14 @@
       ;; Short-circuit the rest of the lifecycle.
       (dispatcher req)
       (let [{:keys [queries data effects]} (dispatch req)]
-        (update req ::bread/queries (comp vec concat) queries))))
+        (-> req
+            (update ::bread/data merge data)
+            (update ::bread/queries concat queries)
+            (update ::bread/effects concat effects)))))
 
 (defn plugin []
   {:hooks
    {::bread/dispatch
     [{:action/name ::dispatch
-      :action/description "Resolve queries"}]}})
+      :action/description
+      "Translate high-level dispatcher into queries, data, and effects"}]}})

@@ -2,8 +2,9 @@
   (:require
     [clojure.test :as t :refer [deftest are]]
     [kaocha.repl :as k]
-    [systems.bread.alpha.component :refer [defc]]
-    [systems.bread.alpha.dispatcher :as dispatcher]))
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
 (deftest test-pull-query
   (are [clause dispatcher] (= clause (-> dispatcher
@@ -14,6 +15,58 @@
        {:dispatcher/pull [:post/title :post/slug]}
 
        ))
+
+(defmethod dispatcher/dispatch ::passthru [{::bread/keys [dispatcher]}]
+  (:v dispatcher))
+
+(deftest test-dispatch
+  (are
+    [data&queries&effects dispatcher]
+    (= data&queries&effects (let [app (plugins->loaded [(dispatcher/plugin)])]
+                              (-> app
+                                  (assoc ::bread/dispatcher dispatcher)
+                                  (bread/hook ::bread/dispatch)
+                                  (select-keys [::bread/data
+                                                ::bread/queries
+                                                ::bread/effects]))))
+
+    {::bread/data {}
+     ::bread/queries []
+     ::bread/effects []}
+    {:dispatcher/type ::passthru
+     :v {}}
+
+    {::bread/data {:x :Y}
+     ::bread/queries []
+     ::bread/effects []}
+    {:dispatcher/type ::passthru
+     :v {:data {:x :Y}}}
+
+    {::bread/data {}
+     ::bread/queries [[:key "yo"]]
+     ::bread/effects []}
+    {:dispatcher/type ::passthru
+     :v {:queries [[:key "yo"]]}}
+
+    {::bread/data {}
+     ::bread/queries []
+     ::bread/effects [{:effect/name :do-stuff
+                       :effect/description "Example effect"}]}
+    {:dispatcher/type ::passthru
+     :v {:effects [{:effect/name :do-stuff
+                    :effect/description "Example effect"}]}}
+
+    {::bread/data {:key "value"}
+     ::bread/queries [[:key "example query"]]
+     ::bread/effects [{:effect/name :do-stuff
+                       :effect/description "Example effect"}]}
+    {:dispatcher/type ::passthru
+     :v {:data {:key "value"}
+         :queries [[:key "example query"]]
+         :effects [{:effect/name :do-stuff
+                    :effect/description "Example effect"}]}}
+
+    ))
 
 (comment
   (k/run))
