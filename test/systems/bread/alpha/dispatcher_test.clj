@@ -68,5 +68,50 @@
 
     ))
 
+(deftest test-dispatch-hooks
+  (let [{default-hooks ::bread/hooks :as app}
+        (plugins->loaded [(dispatcher/plugin)])]
+    (are
+      [hooks dispatcher]
+      (= (merge-with concat hooks default-hooks)
+         (-> app
+             (assoc ::bread/dispatcher dispatcher)
+             (bread/hook ::bread/dispatch)
+             ::bread/hooks))
+
+      {}
+      {:dispatcher/type ::passthru
+       :v {}}
+
+      {}
+      {:dispatcher/type ::passthru
+       :v {:hooks nil}}
+
+      {}
+      {:dispatcher/type ::passthru
+       :v {:hooks {}}}
+
+      {}
+      {:dispatcher/type ::passthru
+       :v {:hooks {::whatever []}}}
+
+      {::hook.1 [{:action/name ::hook.1}]}
+      {:dispatcher/type ::passthru
+       :v {:hooks {::hook.1 [{:action/name ::hook.1}]}}}
+
+      {::bread/queries [{:action/name ::queries}]}
+      {:dispatcher/type ::passthru
+       :v {:hooks {::bread/queries [{:action/name ::queries}]}}}
+
+      {::bread/queries [{:action/name ::queries}]
+       ::bread/render [{:action/name ::render}]
+       ::greet [{:action/name ::hello}]}
+      {:dispatcher/type ::passthru
+       :v {:hooks {::bread/queries [{:action/name ::queries}]
+                   ::bread/render [{:action/name ::render}]
+                   ::greet [{:action/name ::hello}]}}}
+
+      )))
+
 (comment
   (k/run))

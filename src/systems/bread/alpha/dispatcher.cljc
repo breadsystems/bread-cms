@@ -59,17 +59,22 @@
   (fn [req]
     (get-in req [::bread/dispatcher :dispatcher/type])))
 
+(defn- merge-with-concat [& maps]
+  (apply merge-with concat maps))
+
 (defmethod bread/action ::dispatch
   [{::bread/keys [dispatcher queries] :as req} _ _]
   (if (fn? dispatcher)
-      ;; We have a vanilla fn handler:
-      ;; Short-circuit the rest of the lifecycle.
-      (dispatcher req)
-      (let [{:keys [queries data effects]} (dispatch req)]
-        (-> req
-            (update ::bread/data merge data)
-            (update ::bread/queries concat queries)
-            (update ::bread/effects concat effects)))))
+    ;; We have a vanilla fn handler:
+    ;; Short-circuit the rest of the lifecycle.
+    (dispatcher req)
+    (let [{:keys [queries data effects hooks]} (dispatch req)
+          hooks (filter (comp seq val) hooks)]
+      (-> req
+          (update ::bread/data merge data)
+          (update ::bread/queries concat queries)
+          (update ::bread/effects concat effects)
+          (update ::bread/hooks merge-with-concat hooks)))))
 
 (defn plugin []
   {:hooks
