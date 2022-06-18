@@ -8,15 +8,19 @@
     nil
     (keyword (namespace x))))
 
-(defn- expand-query [data [k q & args]]
-  (let [path (cond
-               (seqable? k) k
-               ;; "compact" :parent/child into :parent if (:parent data) is
-               ;; something we can assoc-in(to).
-               (some->> k keyword-namespace (get data) associative?)
-               [(keyword-namespace k) k]
-               :else [k])]
-    (assoc-in data path (bread/query q data args))))
+(defn- expand-query [data args]
+  (if (map? args)
+    (let [q args]
+      (assoc data (:query/key q) (bread/query* q data)))
+    (let [[k q & args] args
+          path (cond
+                 (seqable? k) k
+                 ;; "compact" :parent/child into :parent if (:parent data) is
+                 ;; something we can assoc-in(to).
+                 (some->> k keyword-namespace (get data) associative?)
+                 [(keyword-namespace k) k]
+                 :else [k])]
+      (assoc-in data path (bread/query q data args)))))
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]

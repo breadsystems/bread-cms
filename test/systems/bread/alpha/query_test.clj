@@ -6,6 +6,10 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
+(defmethod bread/query* ::passthru
+  [query _]
+  (:v query))
+
 (deftest test-query-expand
   ;; A fn dispatcher short-circuits query expansion.
   (let [response {:body "Returned from fn" :status 200}
@@ -23,9 +27,26 @@
                        ;; ::queries is for our main key.
                        ::bread/dispatcher
                        {:dispatcher/type :whatevs
-                        :dispatcher/key (ffirst queries)})
+                        :dispatcher/key (let [q (first queries)]
+                                          (if (map? q)
+                                            (:query/key q)
+                                            (first q)))})
                 (bread/hook ::bread/expand)
                 ::bread/data))
+
+    {:my/result "the result"
+     :not-found? false}
+    [{:query/key :my/result
+      :query/name ::passthru
+      :v "the result"}]
+
+    {:my/result "the result"
+     :not-found? false}
+    [{:query/key :my/result
+      :query/name ::passthru
+      :v "the result"}]
+
+    ;; TODO DELETE THESE vvv
 
     {:my/result "the result"
      :not-found? false}

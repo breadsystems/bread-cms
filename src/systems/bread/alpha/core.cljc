@@ -156,6 +156,9 @@
 (defmulti effect (fn [effect _data]
                    (:effect/name effect)))
 
+(defmulti query* (fn [query _data]
+                   (:query/name query)))
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]

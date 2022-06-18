@@ -118,6 +118,10 @@
                           :conn (connection req)
                           :txs txs})))
 
+(defmethod bread/query* ::query
+  [{:query/keys [db query args]} _]
+  (apply q db query args))
+
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)

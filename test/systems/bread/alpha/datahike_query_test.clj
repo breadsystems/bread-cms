@@ -69,6 +69,18 @@
 
        ;; Querying for a non-existent post
        {:post nil :not-found? true}
+       [{:query/key :post
+         :query/name ::store/query
+         :query/db db
+         :query/query
+         '{:find [(pull ?e [:post/slug {:post/fields
+                                        [:field/key :field/lang]}]) .]
+           :in [$ ?slug]
+           :where [[?e :post/slug ?slug]]}
+         :query/args ["non-existent-slug"]}]
+
+       ;; Querying for a non-existent post
+       {:post nil :not-found? true}
        [[:post db '{:find [(pull ?e [:post/slug {:post/fields
                                                  [:field/key :field/lang]}]) .]
                     :in [$ ?slug]
