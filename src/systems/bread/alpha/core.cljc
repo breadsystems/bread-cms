@@ -185,6 +185,7 @@
                             [(effect e data) nil]
                             (catch Throwable ex
                               [nil ex]))
+              ;; TODO abstract this properly to support any ref type
               result (with-meta (if (instance? clojure.lang.IDeref result)
                                   result
                                   (reify
