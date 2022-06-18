@@ -32,12 +32,10 @@
 
 (defmethod bread/action ::expand-queries
   [{::bread/keys [dispatcher queries] :as req} _ _]
-  (if (fn? dispatcher)
-    (dispatcher req)
-    (->> queries
-         (reduce expand-query {})
-         (expand-not-found dispatcher)
-         (assoc req ::bread/data))))
+  (->> queries
+       (reduce expand-query {})
+       (expand-not-found dispatcher)
+       (assoc req ::bread/data)))
 
 (defn key-into
   "Takes a ::bread/data map and a key fn f and calls (into {} (f data)).

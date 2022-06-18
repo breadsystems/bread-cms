@@ -11,13 +11,6 @@
   (:v query))
 
 (deftest test-query-expand
-  ;; A fn dispatcher short-circuits query expansion.
-  (let [response {:body "Returned from fn" :status 200}
-        dispatcher (constantly response)]
-    (is (= response
-           (-> (plugins->loaded [(query/plugin)])
-               (assoc ::bread/dispatcher (constantly response))
-               (bread/hook ::bread/expand)))))
 
   (are
     [data queries]
