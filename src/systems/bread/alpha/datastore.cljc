@@ -118,9 +118,18 @@
                           :conn (connection req)
                           :txs txs})))
 
+(defn- data-path? [x]
+  (and (sequential? x) (= ::bread/data (first x))))
+
 (defmethod bread/query* ::query
-  [{:query/keys [db query args]} _]
-  (apply q db query args))
+  [{:query/keys [db query args]} data]
+  (let [args (map (fn [arg]
+                    (if (data-path? arg)
+                      (get-in data (rest arg))
+                      arg))
+                  args)]
+    (when (every? some? args)
+      (apply q db query args))))
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]

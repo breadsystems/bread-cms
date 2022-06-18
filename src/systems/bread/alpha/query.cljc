@@ -8,10 +8,13 @@
     nil
     (keyword (namespace x))))
 
+(defn- assoc-at [m k v]
+  ((if (sequential? k) assoc-in assoc) m k v))
+
 (defn- expand-query [data args]
   (if (map? args)
     (let [q args]
-      (assoc data (:query/key q) (bread/query* q data)))
+      (assoc-at data (:query/key q) (bread/query* q data)))
     (let [[k q & args] args
           path (cond
                  (seqable? k) k
