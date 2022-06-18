@@ -25,6 +25,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [markdown.core :as md]
