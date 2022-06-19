@@ -17,6 +17,12 @@
                 (str "::" (last (split kns #"\.")) "/" (name k))
                 :else (str k)))))
 
+(defmethod print-method :bread/schema-migration [migration writer]
+  (.write writer (let [nm (or (:bread.migration/name (meta migration))
+                              (hash migration))
+                       summary {:attr-count (count migration)}]
+                   (str "#migration[" summary " " nm "]"))))
+
 (comment
   (and
     (= ":systems.bread.alpha.core/x" (str ::core/x))

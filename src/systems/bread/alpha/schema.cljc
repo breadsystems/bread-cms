@@ -339,12 +339,19 @@
 (def
   ^{:doc "Initial schema for the Bread CMS database."}
   initial
-  (concat
-    migrations
-    posts
-    i18n
-    taxons
-    menus
-    revisions
-    comments
-    users))
+  (with-meta
+    (concat
+      migrations
+      posts
+      i18n
+      taxons
+      menus
+      revisions
+      comments
+      users)
+    {:type :bread/schema-migration
+     :bread.migration/name :initial}))
+
+(comment
+  (hash initial)
+  (prn {:migration initial}))
