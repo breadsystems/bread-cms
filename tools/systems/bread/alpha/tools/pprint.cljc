@@ -8,6 +8,11 @@
     [clojure.lang Keyword]
     [java.io Writer]))
 
+(def ^{:dynamic true
+       :doc "Whether to abbreviate schema migration data when printing.
+            Reduces noise when printing app config data. Defaults to true."}
+  *summarize-migrations* true)
+
 (defmethod print-method Keyword [^Keyword k ^Writer w]
   (.write w (let [kns (.getNamespace k)]
               (cond
@@ -18,12 +23,16 @@
                 :else (str k)))))
 
 (defmethod print-method :bread/schema-migration [migration writer]
-  (.write writer (let [nm (or (:bread.migration/name (meta migration))
-                              (hash migration))
-                       summary {:attr-count (count migration)}]
-                   (str "#migration[" summary " " nm "]"))))
+  (.write writer (if *summarize-migrations*
+                   (let [nm (or (:bread.migration/name (meta migration))
+                                (hash migration))
+                         summary {:attr-count (count migration)}]
+                     (str "#migration[" summary " " nm "]"))
+                   (str (seq migration)))))
 
 (comment
+  (alter-var-root (var *summarize-migrations*) not)
+
   (and
     (= ":systems.bread.alpha.core/x" (str ::core/x))
     (= "[:a/b :xyz :clojure.string/hi :clojure.string/hi ::bread/x]\n"
