@@ -66,9 +66,12 @@
                                      [(pull ?e [:db/ident :db/doc
                                                 :db/valueType :db/index
                                                 :db/cardinality :db/unique])]
-                                     :in [$ ?m]
-                                     :where [[?e :attr/migration ?m]]})]
-                (assoc migration :migration/attrs (map first attrs)))))
+                                     :in [$ ?mid]
+                                     :where [[?e :attr/migration ?mid]]}
+                             id)]
+                (assoc migration :migration/attrs (->> attrs
+                                                       (map first)
+                                                       (sort-by str))))))
        (sort-by :db/txInstant)))
 
 (defn latest-migration
@@ -90,6 +93,13 @@
     (def $store (store/datastore @app)))
 
   (migrations $store)
+  (map (fn [migration]
+         (-> migration
+             (select-keys [:migration/key
+                           :migration/description
+                           :migration/attrs])
+             (update :migration/attrs #(map :db/ident %))))
+       (migrations $store))
   (latest-migration $store)
 
   (attrs $store)
