@@ -22,11 +22,11 @@
                 (str "::" (last (split kns #"\.")) "/" (name k))
                 :else (str k)))))
 
-(defmethod print-method :bread/schema-migration [migration writer]
+(defmethod print-method :bread/migration [migration writer]
   (.write writer (if *summarize-migrations*
-                   (let [nm (or (:bread.migration/name (meta migration))
+                   (let [nm (or (:migration/key (meta migration))
                                 (hash migration))
-                         summary {:attr-count (count migration)}]
+                         summary {:tx-count (count migration)}]
                      (str "#migration[" summary " " nm "]"))
                    (str (seq migration)))))
 

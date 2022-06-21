@@ -349,8 +349,8 @@
       revisions
       comments
       users)
-    {:type :bread/schema-migration
-     :bread.migration/name :initial}))
+    {:type :bread/migration
+     :migration/key :initial}))
 
 (comment
   (hash initial)
