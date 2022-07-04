@@ -36,7 +36,10 @@
 
     {:my/map {:my/result "the result"}
      :not-found? false}
-    [{:query/key [:my/map :my/result]
+    [{:query/key :my/map
+      :query/name ::passthru
+      :v {}}
+     {:query/key [:my/map :my/result]
       :query/name ::passthru
       :v "the result"}]))
 

@@ -12,7 +12,10 @@
   ((if (sequential? k) get-in get) m k))
 
 (defn- assoc-at [m k v]
-  ((if (sequential? k) assoc-in assoc) m k v))
+  (cond
+    (not (sequential? k)) (assoc m k v)
+    (get-in m (butlast k)) (assoc-in m k v)
+    :else m))
 
 (defn- expand-query [data args]
   (if (map? args)
