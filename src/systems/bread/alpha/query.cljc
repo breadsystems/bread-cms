@@ -8,6 +8,9 @@
     nil
     (keyword (namespace x))))
 
+(defn- get-at [m k]
+  ((if (sequential? k) get-in get) m k))
+
 (defn- assoc-at [m k v]
   ((if (sequential? k) assoc-in assoc) m k v))
 
@@ -27,7 +30,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (assoc data :not-found? (nil? (get data k)))
+    (assoc data :not-found? (nil? (get-at data k)))
     data))
 
 (defmethod bread/action ::expand-queries

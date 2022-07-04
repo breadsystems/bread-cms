@@ -39,6 +39,12 @@
       :query/name ::passthru
       :v "the result"}]
 
+    {:my/map {:my/result "the result"}
+     :not-found? false}
+    [{:query/key [:my/map :my/result]
+      :query/name ::passthru
+      :v "the result"}]
+
     ;; TODO DELETE THESE vvv
 
     {:my/result "the result"
