@@ -212,7 +212,7 @@
   ;; TODO data-orient queries themselves...
   (if (not (false? opts))
     (query/add req [:menus (fn [{:keys [menus]}]
-                             (merge menus (doto (global-menus req opts) (#(prn (keys %))))))])
+                             (merge menus (global-menus req opts)))])
     req))
 
 (defmethod bread/action ::add

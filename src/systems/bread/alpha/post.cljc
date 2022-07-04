@@ -90,7 +90,8 @@
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
-;; TODO oof.
+;; TODO use Rules here instead of all this ornate logic...
+;; https://docs.datomic.com/on-prem/query/query.html#rules
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key params :route/params
