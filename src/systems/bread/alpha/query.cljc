@@ -15,8 +15,7 @@
   (cond
     (not (sequential? k)) (assoc m k v)
     (get-in m (butlast k)) (assoc-in m k v)
-    m
-     m k v))
+    :else m))
 
 (defn- expand-query [data args]
   (if (map? args)
@@ -34,7 +33,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (doto (assoc data :not-found? (nil? (get-at data k))) prn)
+    (assoc data :not-found? (nil? (get-at data k)))
     data))
 
 (defmethod bread/action ::expand-queries
