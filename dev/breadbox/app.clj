@@ -428,6 +428,9 @@
 
 (comment
   (k/run :unit)
+  (k/run 'systems.bread.alpha.app-test)
+  (k/run 'systems.bread.alpha.query-test)
+  (k/run 'systems.bread.alpha.post-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)
