@@ -59,15 +59,18 @@
 (defmethod bread/action ::add-queries
   [req _ _]
   (-> req
-      (query/add [:i18n
-                  (store/datastore req)
+      (query/add {:query/name ::store/query
+                  :query/key :i18n
+                  :query/into {}
+                  :query/db (store/datastore req)
+                  :query/query
                   '{:find [?key ?string]
                     :in [$ ?lang]
                     :where [[?e :i18n/key ?key]
                             [?e :i18n/string ?string]
                             [?e :i18n/lang ?lang]]}
-                  (lang req)])
-      (query/add [:i18n query/key-into :i18n])
+                  :query/args
+                  [(lang req)]})
       (query/add [:lang (fn [_] (lang req))])))
 
 (defn plugin
@@ -86,3 +89,7 @@
      ::bread/dispatch
      [{:action/name ::add-queries
        :action/description "Add I18n queries"}]}}))
+
+(comment
+  (require '[kaocha.repl :as k])
+  (k/run 'systems.bread.alpha.i18n-test))

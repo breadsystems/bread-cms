@@ -15,7 +15,8 @@
   (cond
     (not (sequential? k)) (assoc m k v)
     (get-in m (butlast k)) (assoc-in m k v)
-    :else m))
+    m
+     m k v))
 
 (defn- expand-query [data args]
   (if (map? args)
@@ -33,7 +34,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (assoc data :not-found? (nil? (get-at data k)))
+    (doto (assoc data :not-found? (nil? (get-at data k))) prn)
     data))
 
 (defmethod bread/action ::expand-queries
@@ -42,13 +43,6 @@
        (reduce expand-query {})
        (expand-not-found dispatcher)
        (assoc req ::bread/data)))
-
-(defn key-into
-  "Takes a ::bread/data map and a key fn f and calls (into {} (f data)).
-  Use this to collect data returned from earlier queries (for the same key),
-  e.g. when a Datalog query returns a set of vectors."
-  [data f]
-  (into {} (f data)))
 
 (defn add
   "Add query to the vector of queries to be run."

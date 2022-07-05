@@ -122,14 +122,20 @@
   (and (sequential? x) (= ::bread/data (first x))))
 
 (defmethod bread/query* ::query
-  [{:query/keys [db query args]} data]
+  query-db
+  [{:query/keys [db query args] :as desc} data]
+  "Run the given query against db. If :query/into is present, returns
+  (into into-val query-result)."
   (let [args (map (fn [arg]
                     (if (data-path? arg)
                       (get-in data (rest arg))
                       arg))
-                  args)]
-    (when (every? some? args)
-      (apply q db query args))))
+                  args)
+        result (when (every? some? args)
+                 (apply q db query args))]
+    (if (:query/into desc)
+      (into (:query/into desc) result)
+      result)))
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
