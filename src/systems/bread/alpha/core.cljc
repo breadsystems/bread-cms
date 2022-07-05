@@ -159,6 +159,12 @@
 (defmulti query* (fn [query _data]
                    (:query/name query)))
 
+(defmethod query* ::value
+  return-value
+  [{:keys [value]} _]
+  "Pass-through query that simply returns the value given by :query/value."
+  value)
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]

@@ -71,7 +71,9 @@
                             [?e :i18n/lang ?lang]]}
                   :query/args
                   [(lang req)]})
-      (query/add [:lang (fn [_] (lang req))])))
+      (query/add {:query/name ::bread/value
+                  :query/key :lang
+                  :value (lang req)})))
 
 (defn plugin
   ([]
