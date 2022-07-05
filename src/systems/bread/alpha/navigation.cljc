@@ -223,16 +223,16 @@
   ([]
    (plugin {}))
   ([{:keys [hooks menus] global-menu-opts :global-menus}]
-   (let [menu-hooks (map (fn [opts]
-                           {:action/name ::add
-                            :action/description
-                            "Add a menu with the given opts"
-                            :opts opts}) menus)
-         dispatch-hooks (concat
-                         [{:action/name ::add-global-menus-query
+   (let [menu-hooks
+         (mapv (fn [opts]
+                 {:action/name ::add
+                  :action/description
+                  "Add a menu with the given opts"
+                  :opts opts}) menus)
+         dispatch-hooks
+         (conj menu-hooks {:action/name ::add-global-menus-query
                            :action/description
                            "Add a query to fetch global menus"
-                           :opts global-menu-opts}]
-                         menu-hooks)]
+                           :opts global-menu-opts})]
      {:hooks
       (merge-with conj {::bread/dispatch dispatch-hooks} hooks)})))
