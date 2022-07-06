@@ -6,10 +6,6 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(defmethod bread/query* ::passthru
-  [query _]
-  (:v query))
-
 (deftest test-query-expand
 
   (are
@@ -25,23 +21,23 @@
     {:my/result "the result"
      :not-found? false}
     [{:query/key :my/result
-      :query/name ::passthru
-      :v "the result"}]
+      :query/name ::bread/value
+      :value "the result"}]
 
     {:my/result "the result"
      :not-found? false}
     [{:query/key :my/result
-      :query/name ::passthru
-      :v "the result"}]
+      :query/name ::bread/value
+      :value "the result"}]
 
     {:my/map {:my/result "the result"}
      :not-found? false}
     [{:query/key :my/map
-      :query/name ::passthru
-      :v {}}
+      :query/name ::bread/value
+      :value {}}
      {:query/key [:my/map :my/result]
-      :query/name ::passthru
-      :v "the result"}]))
+      :query/name ::bread/value
+      :value "the result"}]))
 
 (comment
   (k/run))
