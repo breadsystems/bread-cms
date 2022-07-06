@@ -139,21 +139,23 @@
       result)))
 
 (defn migration-keys [db]
+  "Returns the :migration/key of each migration that has been run on db."
   (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
 
-(defn migration-installed? [db migration]
-  (let [ks (migration-keys db)]
+(defn migration-ran? [db migration]
+  "Returns true if the given migration has been run on db, false otherwise."
+  (let [key-tx (first migration)
+        ks (migration-keys db)]
     (or
-      (contains? (migration-keys db) (:migration/key (first migration)))
-      (and (seq ks) (= :migration/key (:db/ident (first migration)))))))
+      (contains? ks (:migration/key key-tx))
+      (and (seq ks) (= :migration/key (:db/ident key-tx))))))
 
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
   (let [conn (connection app)]
     (doseq [migration migrations]
-      (prn 'installed? (:migration/key (first migration)) (migration-installed? (datastore app) migration))
       ;; Get a new db instance each time, to see the latest migrations
-      (when-not (migration-installed? (datastore app) migration)
+      (when-not (migration-ran? (datastore app) migration)
         (transact conn migration))))
   app)
 
