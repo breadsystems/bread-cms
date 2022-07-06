@@ -73,12 +73,12 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:post/slug {:post/fields
-                                        [:field/key :field/lang]}]) .]
-           :in [$ ?slug]
-           :where [[?e :post/slug ?slug]]}
-         :query/args ["non-existent-slug"]}]
+         :query/args
+         ['{:find [(pull ?e [:post/slug {:post/fields
+                                         [:field/key :field/lang]}]) .]
+            :in [$ ?slug]
+            :where [[?e :post/slug ?slug]]}
+          "non-existent-slug"]}]
 
        ;; Querying for a non-existent post and its fields
        {:post nil
@@ -87,22 +87,22 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:post/slug {:post/fields
-                                        [:field/key :field/lang]}]) .]
-           :in [$ ?slug]
-           :where [[?e :post/slug ?slug]]}
-         :query/args ["non-existent-slug"]}
+         :query/args
+         ['{:find [(pull ?e [:post/slug {:post/fields
+                                         [:field/key :field/lang]}]) .]
+            :in [$ ?slug]
+            :where [[?e :post/slug ?slug]]}
+          "non-existent-slug"]}
         {:query/key :post/fields
          :query/name ::store/query
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:field/key :field/content])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-         :query/args [[::bread/data :post :db/id]
-                      :en]}]
+         :query/args
+         ['{:find [(pull ?e [:field/key :field/content])]
+            :in [$ ?p ?lang]
+            :where [[?p :post/fields ?e]
+                    [?e :field/lang ?lang]]}
+          [::bread/data :post :db/id]
+          :en]}]
 
        {:post {:post/slug "parent-post"
                :post/fields [{:field/key :stuff :field/lang :en}
@@ -113,11 +113,11 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:post/slug {:post/fields
-                                        [:field/key :field/lang]}]) .]
-           :in [$]
-           :where [[?e :post/slug ?slug]]}}]
+         :query/args
+         ['{:find [(pull ?e [:post/slug {:post/fields
+                                         [:field/key :field/lang]}]) .]
+            :in [$]
+            :where [[?e :post/slug ?slug]]}]}]
 
        ;; with query input args (slug)
        {:post {:post/slug "parent-post"
@@ -129,13 +129,13 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:post/slug {:post/fields
-                                        [:field/key
-                                         :field/lang]}]) .]
-           :in [$ ?slug]
-           :where [[?e :post/slug ?slug]]}
-         :query/args ["parent-post"]}]
+         :query/args
+         ['{:find [(pull ?e [:post/slug {:post/fields
+                                         [:field/key
+                                          :field/lang]}]) .]
+            :in [$ ?slug]
+            :where [[?e :post/slug ?slug]]}
+          "parent-post"]}]
 
        ;; with explicit input args (for i18n)
        {:post {:post/slug "parent-post"
@@ -147,20 +147,21 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:post/slug]) .]
-           :in [$ ?slug]
-           :where [[?e :post/slug ?slug]]}
-         :query/args ["parent-post"]}
+         :query/args
+         ['{:find [(pull ?e [:post/slug]) .]
+            :in [$ ?slug]
+            :where [[?e :post/slug ?slug]]}
+          "parent-post"]}
         {:query/name ::store/query
          :query/key [:post :post/fields]
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:field/key :field/content])]
-                           :in [$ ?p ?lang]
-                           :where [[?p :post/fields ?e]
-                                   [?e :field/lang ?lang]]}
-         :query/args [100 :en]}]
+         :query/args
+         ['{:find [(pull ?e [:field/key :field/content])]
+            :in [$ ?p ?lang]
+            :where [[?p :post/fields ?e]
+                    [?e :field/lang ?lang]]}
+          100
+          :en]}]
 
        ;; deriving input args from previous data (for i18n)
        {:post {:db/id 100 :post/slug "parent-post"
@@ -172,20 +173,21 @@
        [{:query/name ::store/query
          :query/key :post
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:db/id :post/slug]) .]
-           :in [$ ?slug]
-           :where [[?e :post/slug ?slug]]}
-         :query/args ["parent-post"]}
+         :query/args
+         ['{:find [(pull ?e [:db/id :post/slug]) .]
+            :in [$ ?slug]
+            :where [[?e :post/slug ?slug]]}
+          "parent-post"]}
         {:query/name ::store/query
          :query/key [:post :post/fields]
          :query/db db
-         :query/query
-         '{:find [(pull ?e [:field/key :field/content])]
+         :query/args
+         ['{:find [(pull ?e [:field/key :field/content])]
            :in [$ ?p ?lang]
            :where [[?p :post/fields ?e]
                    [?e :field/lang ?lang]]}
-         :query/args [[::bread/data :post :db/id] :en]}])))
+          [::bread/data :post :db/id]
+          :en]}])))
 
 (comment
   (k/run))

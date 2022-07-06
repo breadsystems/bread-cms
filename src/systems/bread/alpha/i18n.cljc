@@ -63,14 +63,13 @@
                   :query/key :i18n
                   :query/into {}
                   :query/db (store/datastore req)
-                  :query/query
-                  '{:find [?key ?string]
-                    :in [$ ?lang]
-                    :where [[?e :i18n/key ?key]
-                            [?e :i18n/string ?string]
-                            [?e :i18n/lang ?lang]]}
                   :query/args
-                  [(lang req)]})
+                  ['{:find [?key ?string]
+                     :in [$ ?lang]
+                     :where [[?e :i18n/key ?key]
+                             [?e :i18n/string ?string]
+                             [?e :i18n/lang ?lang]]}
+                   (lang req)]})
       (query/add {:query/name ::bread/value
                   :query/key :lang
                   :value (lang req)})))

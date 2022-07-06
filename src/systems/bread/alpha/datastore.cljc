@@ -123,7 +123,7 @@
 
 (defmethod bread/query ::query
   query-db
-  [{:query/keys [db query args] :as desc} data]
+  [{:query/keys [db args] :as query} data]
   "Run the given query against db. If :query/into is present, returns
   (into into-val query-result)."
   (let [args (map (fn [arg]
@@ -132,9 +132,9 @@
                       arg))
                   args)
         result (when (every? some? args)
-                 (apply q db query args))]
-    (if (:query/into desc)
-      (into (:query/into desc) result)
+                 (apply q db args))]
+    (if (:query/into query)
+      (into (:query/into query) result)
       result)))
 
 (defmethod bread/action ::transact-initial
