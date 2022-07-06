@@ -153,8 +153,15 @@
   (let [conn (connection app)]
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
-      (when-not (migration-ran? (datastore app) migration)
-        (transact conn migration))))
+      (let [db (datastore app)
+            unmet-deps (filter
+                         (complement (migration-keys db))
+                         (:migration/dependencies (meta migration)))]
+        (when (seq unmet-deps)
+          (throw (ex-info "Migration has one or more unmet dependencies!"
+                          {:unmet-deps (set unmet-deps)})))
+        (when-not (migration-ran? (datastore app) migration)
+          (transact conn migration)))))
   app)
 
 (defmethod bread/action ::transact-initial
