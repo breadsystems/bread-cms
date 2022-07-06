@@ -17,6 +17,7 @@
     :db/doc "Ref to the migration in which a given attr was introduced"
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
+   ;; TODO support tracking seed data too?
    #_
    {:db/id "migration.initial"
     :migration/key :bread.migration/migrations
