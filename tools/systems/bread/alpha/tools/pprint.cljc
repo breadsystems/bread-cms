@@ -3,7 +3,7 @@
     [clojure.string :as string :refer [split starts-with?]]
     [systems.bread.alpha.core :as core]
     [systems.bread.alpha.cache]
-    )
+    [systems.bread.alpha.datastore :as store])
   (:import
     [clojure.lang Keyword]
     [java.io Writer]))
@@ -24,7 +24,7 @@
 
 (defmethod print-method :bread/migration [migration writer]
   (.write writer (if *summarize-migrations*
-                   (let [nm (or (:migration/key (meta migration))
+                   (let [nm (or (store/migration-key migration)
                                 (hash migration))
                          summary {:tx-count (count migration)}]
                      (str "#migration[" summary " " nm "]"))
