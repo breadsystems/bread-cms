@@ -344,6 +344,9 @@
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
 
+  (q '{:find [?e] :where [[?e :x]]})
+
+  (store/installed? $config)
   (store/migration-keys (store/datastore $req))
   (store/migration-ran? (store/datastore $req) schema/migrations)
   (store/migration-ran? (store/datastore $req) schema/posts)
@@ -439,6 +442,7 @@
   (k/run 'systems.bread.alpha.query-test)
   (k/run 'systems.bread.alpha.post-test)
   (k/run 'systems.bread.alpha.i18n-test)
+  (k/run 'systems.bread.alpha.install-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)

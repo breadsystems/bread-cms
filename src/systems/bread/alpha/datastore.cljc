@@ -88,10 +88,8 @@
 
 (defmethod installed? :default [config]
   (try
-    (let [db (-> config connect! db)
-          migration-query '[:find ?e :where
-                            [?e :migration/key :bread.migration/initial]]]
-      (->> (q db migration-query) seq boolean))
+    (let [db (-> config connect! db)]
+      (set? (q db '[:find ?e :where [?e :db/ident]])))
     (catch clojure.lang.ExceptionInfo e
       (when-not (#{:db-does-not-exist :backend-does-not-exist}
                   (:type (ex-data e)))
