@@ -121,7 +121,7 @@
 (defn- data-path? [x]
   (and (sequential? x) (= ::bread/data (first x))))
 
-(defmethod bread/query* ::query
+(defmethod bread/query ::query
   query-db
   [{:query/keys [db query args] :as desc} data]
   "Run the given query against db. If :query/into is present, returns

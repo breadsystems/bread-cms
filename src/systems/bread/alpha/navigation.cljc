@@ -199,7 +199,7 @@
   (global-menus $req false)
   (:main-nav (global-menus $req)))
 
-(defmethod bread/query* ::menu
+(defmethod bread/query ::menu
   query-menu
   [{:keys [f args]} _]
   (apply f args))

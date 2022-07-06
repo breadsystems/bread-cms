@@ -11,11 +11,7 @@
                                               plugins->loaded]]))
 
 (deftest test-dispatch-post-queries
-  (let [;; Datastore shows up directly in our args, so we need to mock it.
-        ;; We're only checking for its presence in the ::queries spec, so
-        ;; while it doesn't need to be a realistic or usable value, it DOES
-        ;; need to be a valid Queryable.
-        db (reify bread/Queryable (bread/query [_ _ _]))
+  (let [db ::FAKEDB
         app (plugins->loaded [(datastore->plugin db)
                               (dispatcher/plugin)])
         ->app (fn [dispatcher]
