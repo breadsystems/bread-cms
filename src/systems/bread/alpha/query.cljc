@@ -8,36 +8,29 @@
     nil
     (keyword (namespace x))))
 
-(defn- expand-query [data [k q & args]]
-  (let [path (cond
-               (seqable? k) k
-               ;; "compact" :parent/child into :parent if (:parent data) is
-               ;; something we can assoc-in(to).
-               (some->> k keyword-namespace (get data) associative?)
-               [(keyword-namespace k) k]
-               :else [k])]
-    (assoc-in data path (bread/query q data args))))
+(defn- get-at [m k]
+  ((if (sequential? k) get-in get) m k))
+
+(defn- assoc-at [m k v]
+  (cond
+    (not (sequential? k)) (assoc m k v)
+    (get-in m (butlast k)) (assoc-in m k v)
+    :else m))
+
+(defn- expand-query [data query]
+  (assoc-at data (:query/key query) (bread/query query data)))
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (assoc data :not-found? (nil? (get data k)))
+    (assoc data :not-found? (nil? (get-at data k)))
     data))
 
 (defmethod bread/action ::expand-queries
   [{::bread/keys [dispatcher queries] :as req} _ _]
-  (if (fn? dispatcher)
-    (dispatcher req)
-    (->> queries
-         (reduce expand-query {})
-         (expand-not-found dispatcher)
-         (assoc req ::bread/data))))
-
-(defn key-into
-  "Takes a ::bread/data map and a key fn f and calls (into {} (f data)).
-  Use this to collect data returned from earlier queries (for the same key),
-  e.g. when a Datalog query returns a set of vectors."
-  [data f]
-  (into {} (f data)))
+  (->> queries
+       (reduce expand-query {})
+       (expand-not-found dispatcher)
+       (assoc req ::bread/data)))
 
 (defn add
   "Add query to the vector of queries to be run."

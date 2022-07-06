@@ -90,7 +90,8 @@
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
-;; TODO oof.
+;; TODO use Rules here instead of all this ornate logic...
+;; https://docs.datomic.com/on-prem/query/query.html#rules
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key params :route/params
@@ -98,7 +99,7 @@
         k (or k :post)
         db (store/datastore req)
 
-        page-query
+        page-args
         (-> (pull-query dispatcher)
             ;; TODO handle this in pull-query?
             (update-in [0 :find] conj '.) ;; Query for a single post.
@@ -110,7 +111,7 @@
         ;; a map key, use the corresponding value as our pull expr. If it's a
         ;; a keyword, query for a sensible default. Always include :db/id in
         ;; the queried attrs.
-        fields-query
+        fields-args
         (when-let [fields-binding
                    (first (keep
                             (some-fn
@@ -124,7 +125,16 @@
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e [::bread/data k :db/id]]
                         ['?lang :field/lang (keyword (:lang params))]]))))]
-    {:queries (if fields-query
-                [(apply conj [k db] page-query)
-                 (apply conj [:post/fields db] fields-query)]
-                [(apply conj [k db] page-query)])}))
+    {:queries (if fields-args
+                [{:query/name ::store/query
+                  :query/key k
+                  :query/db db
+                  :query/args page-args}
+                 {:query/name ::store/query
+                  :query/key [k :post/fields]
+                  :query/db db
+                  :query/args fields-args}]
+                [{:query/name ::store/query
+                  :query/key k
+                  :query/db db
+                  :query/args page-args}])}))

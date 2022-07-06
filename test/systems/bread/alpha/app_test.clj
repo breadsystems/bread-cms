@@ -113,42 +113,50 @@
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component home}
+                                      :dispatcher/key :post
+                                      :dispatcher/component home}
                    :route/params {:lang "en"}}
                   "/fr"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component home}
+                                      :dispatcher/key :post
+                                      :dispatcher/component home}
                    :route/params {:lang "fr"}}
                   "/en/parent-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page"}}
                   "/en/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page}
                    :route/params {:lang "en"
                                   :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page}
                    :route/params {:lang "fr"
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page
-                                    :dispatcher/not-found-component not-found}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page
+                                      :dispatcher/not-found-component not-found}
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
-                                    :dispatcher/component page
-                                    :dispatcher/not-found-component not-found}
+                                      :dispatcher/key :post
+                                      :dispatcher/component page
+                                      :dispatcher/not-found-component not-found}
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router

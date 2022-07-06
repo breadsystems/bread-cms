@@ -20,22 +20,6 @@
 ;; Generic abstractions over queries and effects.
 ;;
 
-(defprotocol Queryable
-  "Protocol for generically expanding queries into data during the
-  query expansion lifecycle phase"
-  :extend-via-metadata true
-  (query [this data args]))
-
-(defn queryable?
-  "Whether x is an instance Queryable"
-  [x]
-  (satisfies? Queryable x))
-
-(extend-protocol Queryable
-  clojure.lang.Fn
-  (query [f data args]
-    (apply f data args)))
-
 (defprotocol Router
   :extend-via-metadata true
   (path [this route-name params])
@@ -156,6 +140,15 @@
 (defmulti effect (fn [effect _data]
                    (:effect/name effect)))
 
+(defmulti query (fn [query _data]
+                  (:query/name query)))
+
+(defmethod query ::value
+  return-value
+  [{:keys [value]} _]
+  "Pass-through query that simply returns the value given by :query/value."
+  value)
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]
@@ -182,6 +175,7 @@
                             [(effect e data) nil]
                             (catch Throwable ex
                               [nil ex]))
+              ;; TODO abstract this properly to support any ref type
               result (with-meta (if (instance? clojure.lang.IDeref result)
                                   result
                                   (reify

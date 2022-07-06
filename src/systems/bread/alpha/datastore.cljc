@@ -118,6 +118,25 @@
                           :conn (connection req)
                           :txs txs})))
 
+(defn- data-path? [x]
+  (and (sequential? x) (= ::bread/data (first x))))
+
+(defmethod bread/query ::query
+  query-db
+  [{:query/keys [db args] :as query} data]
+  "Run the given query against db. If :query/into is present, returns
+  (into into-val query-result)."
+  (let [args (map (fn [arg]
+                    (if (data-path? arg)
+                      (get-in data (rest arg))
+                      arg))
+                  args)
+        result (when (every? some? args)
+                 (apply q db args))]
+    (if (:query/into query)
+      (into (:query/into query) result)
+      result)))
+
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)

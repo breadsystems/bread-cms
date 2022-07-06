@@ -209,16 +209,6 @@
     (when (every? some? args)
       (apply d/q qry db args))))
 
-(extend-type datahike.db.DB
-  bread/Queryable
-  (query [db data [qry & args]]
-    (query-db db data qry args)))
-
-(extend-type datahike.db.AsOfDB
-  bread/Queryable
-  (query [db data [qry & args]]
-    (query-db db data qry args)))
-
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
