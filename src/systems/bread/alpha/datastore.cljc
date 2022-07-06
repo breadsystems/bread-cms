@@ -2,7 +2,8 @@
   (:require
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.schema :as schema]))
 
 (defmulti connect! :datastore/type)
 (defmulti create-database! (fn [config & _]
@@ -137,6 +138,13 @@
       (into (:query/into query) result)
       result)))
 
+(defmethod bread/action ::migrate
+  [app {:keys [migrations]} _]
+  (let [conn (connection app)]
+    (doseq [migration migrations]
+      (transact conn migration)))
+  app)
+
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
@@ -159,14 +167,17 @@
   application code; recommended for use from plugins only. Use store/plugin
   instead."
   [config]
+  ;; TODO make these simple keys
   (let [{:datastore/keys [as-of-format
                           as-of-param
                           req->datastore
                           req->timepoint
-                          initial-txns]
+                          initial-txns
+                          migrations]
          :or {as-of-param :as-of
               as-of-format "yyyy-MM-dd HH:mm:ss z"
-              req->timepoint db-tx}} config
+              req->timepoint db-tx
+              migrations schema/initial}} config
         connection (try
                      (connect! config)
                      (catch clojure.lang.ExceptionInfo e
@@ -179,7 +190,8 @@
       :datastore/as-of-format as-of-format}
      :hooks
      {::bread/init
-      [{:action/name ::transact-initial :txs initial-txns}]
+      [{:action/name ::migrate :migrations migrations}
+       {:action/name ::transact-initial :txs initial-txns}]
       :hook/datastore.req->timepoint
       [{:action/name ::timepoint :req->timepoint req->timepoint}]
       :hook/datastore
