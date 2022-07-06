@@ -136,6 +136,15 @@
       (into (:query/into query) result)
       result)))
 
+(defn migration-key [migration]
+  (reduce (fn [_ {k :migration/key}]
+            (when k (reduced k)))
+          nil migration))
+
+(comment
+  (migration-key schema/migrations)
+  (migration-key schema/posts))
+
 (defn migration-keys [db]
   "Returns the :migration/key of each migration that has been run on db."
   (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
@@ -144,9 +153,7 @@
   "Returns true if the given migration has been run on db, false otherwise."
   (let [key-tx (first migration)
         ks (migration-keys db)]
-    (or
-      (contains? ks (:migration/key key-tx))
-      (and (seq ks) (= :migration/key (:db/ident key-tx))))))
+    (contains? ks (migration-key migration))))
 
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
