@@ -212,11 +212,11 @@
        ;; If bread core threw this exception, don't wrap it.
        (throw (if (-> e# ex-data ::core?) e#
                 (ex-info (.getMessage e#)
-                         {:hook ~hook
-                          :app ~app
-                          :action ~current-action
-                          :args ~args
-                          ::core? true}
+                         (merge (ex-data e#) {:hook ~hook
+                                              :app ~app
+                                              :action ~current-action
+                                              :args ~args
+                                              ::core? true})
                          e#))))))
 
 (defn- load-plugin [app {:keys [config hooks effects] :as plugin}]
