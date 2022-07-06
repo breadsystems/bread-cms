@@ -55,7 +55,6 @@
                            (store/install! ~config)
                            (store/connect! ~config)
                            (f#)
-                           #_
                            (store/delete-database! ~config))))
 
 (comment

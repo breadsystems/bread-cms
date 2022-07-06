@@ -18,8 +18,7 @@
       :db/doc "Ref to the migration in which a given attr was introduced"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/one}
-     {:db/id "migration.initial"
-      :migration/key :bread.migration/migrations
+     {:migration/key :bread.migration/migrations
       :migration/description
       "Minimal schema for safely performing future migrations."}]
     {:type :bread/migration

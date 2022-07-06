@@ -138,11 +138,23 @@
       (into (:query/into query) result)
       result)))
 
+(defn migration-keys [db]
+  (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
+
+(defn migration-installed? [db migration]
+  (let [ks (migration-keys db)]
+    (or
+      (contains? (migration-keys db) (:migration/key (first migration)))
+      (and (seq ks) (= :migration/key (:db/ident (first migration)))))))
+
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
   (let [conn (connection app)]
     (doseq [migration migrations]
-      (transact conn migration)))
+      (prn 'installed? (:migration/key (first migration)) (migration-installed? (datastore app) migration))
+      ;; Get a new db instance each time, to see the latest migrations
+      (when-not (migration-installed? (datastore app) migration)
+        (transact conn migration))))
   app)
 
 (defmethod bread/action ::transact-initial

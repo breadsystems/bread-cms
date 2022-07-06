@@ -344,6 +344,11 @@
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
 
+  (store/migration-keys (store/datastore $req))
+  (store/migration-installed? (store/datastore $req) schema/migrations)
+  (store/migration-installed? (store/datastore $req) schema/posts)
+  (store/migration-installed? (store/datastore $req) schema/i18n)
+
   ;; Site-wide string in the requested lang
   (i18n/strings $req)
 
