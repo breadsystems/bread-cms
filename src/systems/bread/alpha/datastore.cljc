@@ -2,7 +2,8 @@
   (:require
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.schema :as schema]))
 
 (defmulti connect! :datastore/type)
 (defmulti create-database! (fn [config & _]
@@ -87,10 +88,8 @@
 
 (defmethod installed? :default [config]
   (try
-    (let [db (-> config connect! db)
-          migration-query '[:find ?e :where
-                            [?e :migration/key :bread.migration/initial]]]
-      (->> (q db migration-query) seq boolean))
+    (let [db (-> config connect! db)]
+      (set? (q db '[:find ?e :where [?e :db/ident]])))
     (catch clojure.lang.ExceptionInfo e
       (when-not (#{:db-does-not-exist :backend-does-not-exist}
                   (:type (ex-data e)))
@@ -137,6 +136,41 @@
       (into (:query/into query) result)
       result)))
 
+(defn migration-key [migration]
+  (reduce (fn [_ {k :migration/key}]
+            (when k (reduced k)))
+          nil migration))
+
+(comment
+  (migration-key schema/migrations)
+  (migration-key schema/posts))
+
+(defn migration-keys [db]
+  "Returns the :migration/key of each migration that has been run on db."
+  (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
+
+(defn migration-ran? [db migration]
+  "Returns true if the given migration has been run on db, false otherwise."
+  (let [key-tx (first migration)
+        ks (migration-keys db)]
+    (contains? ks (migration-key migration))))
+
+(defmethod bread/action ::migrate
+  [app {:keys [migrations]} _]
+  (let [conn (connection app)]
+    (doseq [migration migrations]
+      ;; Get a new db instance each time, to see the latest migrations
+      (let [db (datastore app)
+            unmet-deps (filter
+                         (complement (migration-keys db))
+                         (:migration/dependencies (meta migration)))]
+        (when (seq unmet-deps)
+          (throw (ex-info "Migration has one or more unmet dependencies!"
+                          {:unmet-deps (set unmet-deps)})))
+        (when-not (migration-ran? (datastore app) migration)
+          (transact conn migration)))))
+  app)
+
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
@@ -159,14 +193,17 @@
   application code; recommended for use from plugins only. Use store/plugin
   instead."
   [config]
+  ;; TODO make these simple keys
   (let [{:datastore/keys [as-of-format
                           as-of-param
                           req->datastore
                           req->timepoint
-                          initial-txns]
+                          initial-txns
+                          migrations]
          :or {as-of-param :as-of
               as-of-format "yyyy-MM-dd HH:mm:ss z"
-              req->timepoint db-tx}} config
+              req->timepoint db-tx
+              migrations schema/initial}} config
         connection (try
                      (connect! config)
                      (catch clojure.lang.ExceptionInfo e
@@ -179,7 +216,8 @@
       :datastore/as-of-format as-of-format}
      :hooks
      {::bread/init
-      [{:action/name ::transact-initial :txs initial-txns}]
+      [{:action/name ::migrate :migrations migrations}
+       {:action/name ::transact-initial :txs initial-txns}]
       :hook/datastore.req->timepoint
       [{:action/name ::timepoint :req->timepoint req->timepoint}]
       :hook/datastore

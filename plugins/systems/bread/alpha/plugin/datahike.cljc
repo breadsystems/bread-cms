@@ -243,8 +243,7 @@
           (d/create-database config))))))
 
 (defmethod store/install! :datahike [config & [{:keys [force?]}]]
-  (store/create-database! config {:force? force?})
-  (d/transact (store/connect! config) schema/initial))
+  (store/create-database! config {:force? force?}))
 
 (defmethod store/delete-database! :datahike [config]
   (d/delete-database config))

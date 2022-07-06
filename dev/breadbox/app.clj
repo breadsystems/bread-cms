@@ -25,8 +25,10 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.cache :as cache]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
+    [systems.bread.alpha.tools.pprint]
     [markdown.core :as md]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
@@ -343,6 +345,15 @@
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
 
+  (q '{:find [?e] :where [[?e :x]]})
+
+  (store/installed? $config)
+  (store/migration-keys (store/datastore $req))
+  (store/migration-ran? (store/datastore $req) schema/migrations)
+  (store/migration-ran? (store/datastore $req) schema/posts)
+  (store/migration-ran? (store/datastore $req) schema/i18n)
+  (store/migration-ran? (store/datastore $req) [{:migration/key :x}])
+
   ;; Site-wide string in the requested lang
   (i18n/strings $req)
 
@@ -432,6 +443,7 @@
   (k/run 'systems.bread.alpha.query-test)
   (k/run 'systems.bread.alpha.post-test)
   (k/run 'systems.bread.alpha.i18n-test)
+  (k/run 'systems.bread.alpha.install-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)
