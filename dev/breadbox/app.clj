@@ -28,6 +28,7 @@
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
+    [systems.bread.alpha.tools.pprint]
     [markdown.core :as md]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
