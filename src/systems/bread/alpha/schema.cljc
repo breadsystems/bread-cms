@@ -50,7 +50,7 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
      {:db/ident :post/fields
-      :db/doc "Zero or more content fields"
+      :db/doc "Zero or more post content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :attr/migration "migration.posts"}
@@ -324,6 +324,11 @@
       :db/unique :db.unique/value
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/fields
+      :db/doc "Zero or more user content fields"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.users"}
 
      ;; Authorship of posts
      {:db/ident :post/authors
@@ -350,7 +355,8 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}]
     {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations}}))
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/posts}}))
 
 (def
   ^{:doc "Standard schema for the Bread CMS database."}
