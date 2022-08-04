@@ -21,7 +21,7 @@ Bread's high-level feature set:
 * Next-level user experience for editing content. *Design-aware editing. No separate backend UI.*
 * Collaborative editing
 * Offline first
-* Fully static rendering at write time
+* Fully static rendering at write time (for simple use-cases)
 * First-class support for translation/internationalization
 * An extensible default schema supporting many "open-world" content patterns
 * Co-located component queries for more advanced data models
@@ -32,18 +32,36 @@ Bread's high-level feature set:
 ```clojure
 (ns my-project
   (:require
+    [reitit.core :as reitit]
+    ;; include support for plugging in a Reitit Router
+    [systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.cms :as cms]))
+    [systems.bread.alpha.defaults :as defaults]))
 
-(defn hello [_]
-  [:h1 "Hello, Breadsters!"])
+;; Assume the database has the following global translation strings:
+;; [{:string/key :hello :string/lang :en :string/value "Hello"}
+;;  {:string/key :hello :string/lang :fr :string/value "Bonjour"}]
+
+(defc hello [{:keys [i18n params]}]
+  [:p (format "%s, %s!" (:greeting i18n) (:to params))])
+
+(def router
+  (reitit/router
+    [["/" (fn [req] ...)]
+     ["/hello/:to" {:name :hello
+                    :bread/dispatcher :component
+                    :data [:params]
+                    :component hello}]]))
 
 (def handler
-  (-> (bread/app {:plugins (cms/defaults {})})
-      (bread/load-handler)))
+  (bread/load-handler (defaults/app {:router router})))
 
-(handler {:uri "/"})
-;; => [:h1 "Hello, Breadsters!"]
+(handler {:uri "/en/hello/Breadsters"})
+;; => [:p "Hello, Breadsters!"]
+
+(handler {:uri "/fr/hello/Breadsters"})
+;; => [:p "Bonjour, Breadsters!"]
 ```
 
 ### A simple blog engine
@@ -51,51 +69,48 @@ Bread's high-level feature set:
 ```clojure
 (ns my.simple.blog
 	(:require
-   [systems.bread.alpha.blog]
-   [systems.bread.alpha.cms :as cms]
-   [systems.bread.alpha.core :as bread]
-   [systems.bread.alpha.route :as route]))
+    [my.simple.components :as c]
+    [reitit.core :as reitit]
+    [systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.core :as bread]))
 
 (def router
   (reitit/router
-    [["/" {:bread/resolver :resolver.type/articles
+    [["/" {:bread/dispatcher :dispatcher.type/articles
            ;; equivalent to:
-           ;; {:bread/resolver
-           ;;  {:resolver/type :resolver.type/post
-           ;;   :resolver/cardinality :resolver.cardinality/many
+           ;; {:bread/dispatcher
+           ;;  {:dispatcher/type :dispatcher.type/post
+           ;;   :dispatcher/cardinality :dispatcher.cardinality/many
            ;;   :post/type :post.type/article}}
-           }]
-     ["/about" {:bread/resolver :resolver.type/page
-                :post/slug "about"}]
-     ["/article/:slug" {:bread/resolver :resolver.type/article
+           :bread/component c/article-listing}]
+     ["/article/:slug" {:bread/dispatcher :dispatcher.type/article
                         ;; equivalent to:
-                        ;; {:bread/resolver
-                        ;;  {:resolver/type :resolver.type/post
-                        ;;   :resolver/cardinality :resolver.cardinality/one
+                        ;; {:bread/dispatcher
+                        ;;  {:dispatcher/type :dispatcher.type/post
+                        ;;   :dispatcher/cardinality :dispatcher.cardinality/one
                         ;;   :post/type :post.type/article
-                        ;;   :resolver/attr->param {:post/slug :slug}}}
-                        }]
-     ["/tag/:slug" {:bread/resolver :resolver.type/tag
+                        ;;   :dispatcher/attr->param {:post/slug :slug}}}
+                        :bread/component c/article}]
+     ["/tag/:slug" {:bread/dispatcher :dispatcher.type/tag
                     ;; equivalent to:
-                    ;; {:bread/resolver
-                    ;;  {:resolver/type :resolver.type/post
-                    ;;   :resolver/taxonomy :taxon.taxonomy/tag
-                    ;;   :resolver/cardinality :resolver.cardinality/many
+                    ;; {:bread/dispatcher
+                    ;;  {:dispatcher/type :dispatcher.type/post
+                    ;;   :dispatcher/taxonomy :taxon.taxonomy/tag
+                    ;;   :dispatcher/cardinality :dispatcher.cardinality/many
                     ;;   :post/type :post.type/article
-                    ;;   :resolver/attr->param {:taxon/slug :slug}}}
-                    ]]))
+                    ;;   :dispatcher/attr->param {:taxon/slug :slug}}}
+                    :bread/component c/article-listing]]))
 
 (def handler
-  (-> {:plugins (cms/defaults {:router router})}
-    (bread/app)
-    (bread/load-handler))
+  (bread/load-handler (defaults/app {:router router}})
   
 ;; ...pass handler to Ring per usual...
 ```
 
 ### A more detailed example
 
-**TODO** redefine in terms of **resolvers and stacks**.
+**TODO** redefine in terms of **dispatchers and stacks**.
 
 ```clojure
 ;; namespace where your blog post type is defined
@@ -212,45 +227,45 @@ Bread's high-level feature set:
    [:p "Main footer content"]]]]
 ```
 
-### Resolvers
+### Dispatchers
 
-Resolvers in BreadCMS are conceptually similar to GraphQL/Pathom resolvers, but operate at a higher level of abstraction. They are responsible for taking a Ring request and resolving it to a **query** for one or more objects, such as posts. Resolvers are typically specified at the routing layer.
+Dispatchers in BreadCMS are conceptually similar to GraphQL/Pathom dispatchers, but operate at a higher level of abstraction. They are responsible for taking a Ring request and resolving it to a **query** for one or more objects, such as posts. Dispatchers are typically specified at the routing layer. That is, they are passed as maps
 
-#### Default resolver
+#### Default dispatcher
 
-The simplest way to use a resolver is not to specify one at all:
+The simplest way to use a dispatcher is not to specify one at all:
 
 ```clj
 (bread/route "/my-route")
 ```
 
-This uses the default resolver, which makes a number of assumptions:
+This uses the default dispatcher, which makes a number of assumptions:
 
-1. you want to query for a single post (as opposed to multiple posts, or for some other content type, such as a taxon)
-2. you want to query by slug
+1. you want to query for a single post (as opposed to multiple posts, or for some other content type, such as a taxon) of type `:post.type/page`
+2. you want to query by slug (`:post/slug`)
 3. you want to query only for published posts (unless the user is logged in and can view drafts)
 4. you want to query for a page with no parent: that is, if the user wanted a page nested under `/parent-route` they would have navigated to `/parent-route/my-route`.
 
-The default post resolver uses post slugs and parent/child post hierarchies as its criteria for resolving posts. For example, when handling a request for `/parent/child`, the standard post resolver queries for a post:
+The default post dispatcher uses post slugs and parent/child post hierarchies as its criteria for resolving posts. For example, when handling a request for `/parent/child`, the standard post dispatcher queries for a post:
 
 1. whose slug is `"child"`, and
 2. whose parent is a post whose slug is `"parent"`
 
-#### Custom resolvers via maps
+#### Custom dispatchers via maps
 
 ```clj
-(bread/route "/my-route" {:bread/resolver {:post/slug "my-page"}})
+(bread/route "/my-route" {:bread/dispatcher {:post/slug "my-page"}})
 ```
 
-This simplistic resolver tells Bread to query for a single post with the slug `"my-page"`. It is attached to the custom app route `/my-route`. In effect, this route tells Bread to serve the content for the specific page `my-page` at said route. This can be useful if you know your Information Architecture (IA) ahead of time and you want to save some content entry grunt work.
+This simplistic dispatcher tells Bread to query for a single post with the slug `"my-page"`. It is attached to the custom app route `/my-route`. In effect, this route tells Bread to serve the content for the specific page `my-page` at said route. This can be useful if you know your Information Architecture (IA) ahead of time and you want to save some content entry grunt work.
 
 In a more custom routing scheme, you might declare a matching route dispatched by slug underneath an umbrella parent route, i.e. in the form `/parent/:slug`:
 
 ```clj
 (bread/route "/article/:slug"
-             {:route/resolver {:resolver/params :slug
-                               :post/type :post.type/article
-                               :post/parent false}})
+             {:route/dispatcher {:dispatcher/params :slug
+                                 :post/type :post.type/article
+                                 :post/parent false}})
 ```
 
 Bread will recognize the fact that we are no longer looking for a parent page whose slug is `"parent"`, but are instead looking for posts of a certain type, in this case `:post.type/article`, with no parent article (hence the `false`).
@@ -269,24 +284,24 @@ Note that in addition to the slug, post type, and (lack of) parentage, which we 
 
 ```clj
 (bread/route "/article/:slug"
-             {:route/resolver {:resolver/defaults false ;; <-- this is new
-                               :resolver/params :slug
-                               :post/type :post.type/article
-                               :post/parent false}})
+             {:route/dispatcher {:dispatcher/defaults false ;; <-- this is new
+                                 :dispatcher/params :slug
+                                 :post/type :post.type/article
+                                 :post/parent false}})
 ```
 
-#### Custom resolvers via functions
+#### Custom dispatchers via functions
 
-Bread also has an API for defining your own resolvers that operate on arbitrary request data. Just pass a function:
+Bread also has an API for defining your own dispatchers that operate on arbitrary request data. Just pass a function:
 
 ```clj
 (bread/route "/article/:slug"
-             {:route/resolver (fn [req]
-                                {:resolver/defaults false
-                                 ;; Get the slug from the request.
-                                 :post/slug (:slug (:params req))
-                                 :post/type :post.type/article
-                                 :post/parent false})})
+             {:route/dispatcher (fn [req]
+                                  {:dispatcher/defaults false
+                                   ;; Get the slug from the request.
+                                   :post/slug (:slug (:params req))
+                                   :post/type :post.type/article
+                                   :post/parent false})})
 ```
 
-The resulting query is exactly the same as the previous map-based example. Note that here, you still have to tell Bread explicitly that you don't want it to merge in its opinionated defaults. Of course, if you do want the defaults (published posts only, singular post query), simply omit the `:resolver/defaults` param as you normally would.
+The resulting query is exactly the same as the previous map-based example. Note that here, you still have to tell Bread explicitly that you don't want it to merge in its opinionated defaults. Of course, if you do want the defaults (published posts only, singular post query), simply omit the `:dispatcher/defaults` param as you normally would.
