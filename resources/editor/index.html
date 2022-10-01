@@ -21,7 +21,9 @@
         alt="The first cat"
         data-current-image
         data-bread="{:name :current-image
-                     :synthetic? true}"
+                     :type :image
+                     :delegate [:hero-slideshow :image]
+                     :derived? true}"
       >
       <div
         class="hero-slideshow--handles"
@@ -31,11 +33,11 @@
                               {:name :headline :type :text}
                               {:name :snippet :type :text}]
                      :each {:selector &quot;[data-slide-handle]&quot;
-                            ;; TODO data-orient DOM events, too
-                            :on-click {:event :replace-attrs
-                                       :target-field :current-image
-                                       :with :data-image}}
+                            :events {:on-click {:event :replace-attrs
+                                                :target-field :current-image
+                                                :with :data-image}}}
                      :new {:tag :div
+                           :data {:data-image {:field :image}}
                            :children [{:tag :h2
                                        :field :headline}
                                       {:tag :span

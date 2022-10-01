@@ -3,14 +3,14 @@
     [systems.bread.alpha.editor.core :as core]))
 
 (defmethod core/init-field! :default [_ _ config]
-  (when-not (:synthetic? config)
+  (when-not (:derived? config)
     (js/console.error (str "No init-field! multimethod defined for: "
                            (prn-str (:type config))))))
 
 (defmethod core/init-field! :repeater
   [ed element {:keys [each] :as config}]
   (when each
-    (let [{:keys [on-click]} each
+    (let [{:keys [on-click]} (:events each)
           ;; TODO more event handlers
           ]
       (doseq [child (.querySelectorAll element (:selector each))]
