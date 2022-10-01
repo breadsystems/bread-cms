@@ -2,30 +2,28 @@
   (:require
     [clojure.edn :as edn]))
 
-(defonce EDITOR (atom {:fields {}
-                       :listeners {}}))
-
-(defn declare-field! [elem config]
-  (swap! EDITOR assoc-in [:fields (:name config)]
+(defn declare-field! [ed elem config]
+  (swap! ed assoc-in [:fields (:name config)]
          (assoc config :element elem)))
 
-(defn get-field [field-name]
-  (get-in @EDITOR [:fields field-name]))
+(defn get-field [ed field-name]
+  (get-in @ed [:fields field-name]))
 
-(defn listen! [elem event-name f]
+(defn listen! [ed elem event-name f]
   (let [listener-path [:listeners elem event-name]]
-    (when-let [prev (get-in @EDITOR listener-path)]
+    (when-let [prev (get-in ed listener-path)]
       (.removeEventListener elem event-name prev))
-    (swap! EDITOR assoc-in [:listeners elem event-name] f))
+    (swap! ed assoc-in [:listeners elem event-name] f))
   (.addEventListener elem event-name f))
 
-(defmulti event! (fn [_ _ config] (:event config)))
+(defmulti event! (fn [_ _ _ config]
+                   (:event config)))
 
-(defn handler [elem event-config]
+(defn handler [ed elem event-config]
   (fn [e]
-    (event! e elem event-config)))
+    (event! ed e elem event-config)))
 
-(defmulti init-field! (fn [_ config] (:type config)))
+(defmulti init-field! (fn [_ _ config] (:type config)))
 
 (defn read-attr [elem attr]
   (edn/read-string (.getAttribute elem attr)))
