@@ -1,10 +1,22 @@
 ;; shadow-cljs configuration
 {:deps true
  :dev-http
- {1315 "resources/debug"}
+ {1315 "resources/debug"
+  1316 "resources/editor"}
 
  :builds
- {;; shadow-cljs -A:dev:tools watch debug
+ {;; shadow-cljs -A:dev:tools:editor watch editor
+  :editor
+  {:target :browser ;; TODO :node-library?
+   :output-dir "resources/editor/js"
+   :asset-path "/js"
+   :devtools {:watch-dir "resources/editor"}
+   :modules {:ui ; becomes resources/editor/ui.js
+             {:init-fn systems.bread.alpha.editor.ui/init}}}
+
+  ;; TODO separate build for UI testing...?
+
+  ;; shadow-cljs -A:dev:tools watch debug
   :debug
   {:target :browser
    :output-dir "resources/debug/js"
