@@ -2,10 +2,6 @@
   (:require
     [clojure.edn :as edn]))
 
-(defn declare-field! [ed elem config]
-  (swap! ed assoc-in [:fields (:name config)]
-         (assoc config :element elem)))
-
 (defn get-field [ed field-name]
   (get-in @ed [:fields field-name]))
 

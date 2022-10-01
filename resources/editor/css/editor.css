@@ -6,17 +6,55 @@
   --text: var(--color-white);
 }
 
-[bread-bar] {
+[data-bread-bar], [data-bread-bar] * {
+  box-sizing: border-box;
+}
+
+[data-bread-bar] {
   position: fixed;
+  display: flex;
   width: 100vw;
   bottom: 0;
   left: 0;
   margin: 0;
-  padding: 0.3em;
+  padding: 0.5em;
 
   background: var(--bg);
   color: var(--text);
   font-weight: 700;
   font-family: monospace;
   font-size: 1.3em;
+}
+
+[data-bread-bar] a {
+  text-decoration: default;
+  color: var(--text);
+}
+
+[data-bread-bar] > * + :is(span, div, a)::before {
+  content: "|";
+  display: inline-block;
+  margin-inline-start: 0.3em;
+  margin-inline-end: 0.3em;
+}
+
+[data-bread-spacer] {
+  flex-grow: 1;
+  margin: 0;
+  padding: 0;
+}
+[data-bread-bar] > [data-bread-spacer]::before {
+  display: none;
+}
+
+[data-bread-button] {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: monospace;
+  font-weight: 700;
+  cursor: pointer;
+}
+[data-bread-button]:hover {
+  transform: invert;
 }
