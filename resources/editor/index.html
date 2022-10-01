@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/editor.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <title>Breaditor | Bread CMS</title>
+  <meta name="bread-editor" content="{:post/id 123
+                                      :x :y
+                                      :persistence/strategy :local-storage
+                                      }">
+</head>
+<body>
+  <main>
+    <h1>Breaditor UI sandbox</h1>
+    <section class="hero-slideshow">
+      <img
+        src="/img/cat1.jpg"
+        alt="The first cat"
+        data-current-image
+        data-bread="{:name :current-image
+                     :synthetic? true}"
+      >
+      <div
+        class="hero-slideshow--handles"
+        data-bread="{:name :hero-slideshow
+                     :type :repeater
+                     :fields [{:name :image :type :image}
+                              {:name :headline :type :text}
+                              {:name :snippet :type :text}]
+                     :each {:selector &quot;[data-slide-handle]&quot;
+                            ;; TODO data-orient DOM events, too
+                            :on-click {:event :replace-attrs
+                                       :target-field :current-image
+                                       :with :data-image}}
+                     :new {:tag :div
+                           :children [{:tag :h2
+                                       :field :headline}
+                                      {:tag :span
+                                       :field :snippet}]}}"
+      >
+        <div data-slide-handle data-image="{:data-index 0 :src &quot;/img/cat1.jpg&quot; :alt &quot;The first cat&quot;}">
+          <h2 data-bread-field=":headline">The first cat</h2>
+          <span data-bread-field=":snippet">Lorem ipsum</span>
+        </div>
+        <div data-slide-handle data-image="{:data-index 1 :src &quot;/img/cat2.jpg&quot; :alt &quot;The second cat&quot;}">
+          <h2 data-bread-field=":headline">The second cat</h2>
+          <span data-bread-field=":snippet">Dolor sit amet</span>
+        </div>
+        <div data-slide-handle data-image="{:data-index 2 :src &quot;/img/cat3.jpg&quot; :alt &quot;The third cat&quot;}">
+          <h2 data-bread-field=":headline">The third cat</h2>
+          <span data-bread-field=":snippet">Consectetur adipiscing elit</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="editor-bar" bread-bar>
+    <span>Hello</span>
+    <button>Save</button>
+  </div>
+  <script src="/js/ui.js"></script>
+</body>
+</html>

@@ -64,6 +64,14 @@
    :extra-deps {buddy/buddy-hashers {:mvn/version "2.0.167"}
                 clj-totp/clj-totp   {:mvn/version "0.1.0"}}}
 
+  :editor
+  {:extra-paths ["editor"]
+   :extra-deps
+   {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20220803"}
+    org.clojure/clojurescript                       {:mvn/version "1.11.60"}
+    rum/rum                                         {:mvn/version "0.12.10"}
+    thheller/shadow-cljs                            {:mvn/version "2.20.2"}}}
+
   :bidi
   {:extra-paths ["plugins/bidi"]
    :extra-deps {bidi/bidi {:mvn/version "2.1.6"}}}
