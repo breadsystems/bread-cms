@@ -6,6 +6,12 @@
     [systems.bread.alpha.editor.fields]
     [systems.bread.alpha.editor.events]))
 
+(def init-field! core/init-field!)
+(def get-field core/get-field)
+(def listen! core/listen!)
+(def event! core/event!)
+(def read-attr core/read-attr)
+
 (defn editor [config]
   (assoc config
          :fields {}
