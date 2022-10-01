@@ -14,4 +14,4 @@
           ;; TODO more event handlers
           ]
       (doseq [child (.querySelectorAll element (:selector each))]
-        (core/listen! ed child "click" (core/handler ed child on-click))))))
+        (core/listen! ed child "click" (fn [e] (core/event! ed e child on-click)))))))
