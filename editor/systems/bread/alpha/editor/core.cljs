@@ -2,6 +2,8 @@
   (:require
     [clojure.edn :as edn]))
 
+(defmulti init-field! (fn [_ _ config] (:type config)))
+
 (defn get-field [ed field-name]
   (get-in @ed [:fields field-name]))
 
@@ -14,12 +16,6 @@
 
 (defmulti event! (fn [_ _ _ config]
                    (:event config)))
-
-(defn handler [ed elem event-config]
-  (fn [e]
-    (event! ed e elem event-config)))
-
-(defmulti init-field! (fn [_ _ config] (:type config)))
 
 (defn read-attr [elem attr]
   (edn/read-string (.getAttribute elem attr)))
