@@ -1,0 +1,22 @@
+:root {
+  --color-black: #2f2f2f;
+  --color-white: #f7f7f7;
+
+  --bg: var(--color-black);
+  --text: var(--color-white);
+}
+
+[bread-bar] {
+  position: fixed;
+  width: 100vw;
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  padding: 0.3em;
+
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 1.3em;
+}
