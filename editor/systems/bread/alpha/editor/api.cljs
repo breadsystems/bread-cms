@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.editor.api
   (:require
-    [systems.bread.alpha.editor.core :as core]))
+    [systems.bread.alpha.editor.core :as core]
+    [systems.bread.alpha.editor.fields]
+    [systems.bread.alpha.editor.events]))
 
 (defn init! [{:keys [attr]
                      :or {attr "data-bread"}}]
