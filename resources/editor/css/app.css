@@ -1,6 +1,10 @@
 body {
   width: 70ch;
-  max-width: 100%;
+  max-width: 90%;
   margin: auto;
   padding: 0 1em;
+}
+
+img {
+  max-width: 100%;
 }
