@@ -27,15 +27,14 @@
 }
 
 [data-bread-bar] a {
-  text-decoration: default;
+  text-decoration: underline currentcolor dotted 2px;
   color: var(--text);
 }
 
-[data-bread-bar] > * + :is(span, div, a)::before {
-  content: "|";
-  display: inline-block;
+[data-bread-bar] > * + :is(span, div, a) {
   margin-inline-start: 0.3em;
-  margin-inline-end: 0.3em;
+  padding-inline-start: 0.3em;
+  border-inline-start: 2px dotted currentcolor;
 }
 
 [data-bread-spacer] {
@@ -43,8 +42,8 @@
   margin: 0;
   padding: 0;
 }
-[data-bread-bar] > [data-bread-spacer]::before {
-  display: none;
+[data-bread-bar] > [data-bread-spacer] {
+  border-inline-start: none;
 }
 
 [data-bread-button] {
