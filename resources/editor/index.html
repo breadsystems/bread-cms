@@ -22,8 +22,8 @@
         data-current-image
         data-bread="{:name :current-image
                      :type :image
-                     :delegate [:hero-slideshow :image]
                      :derived? true}"
+        data-bread-state="{:ident [:post 123]}"
       >
       <div
         class="hero-slideshow--handles"
@@ -33,9 +33,12 @@
                               {:name :headline :type :text}
                               {:name :snippet :type :text}]
                      :each {:selector &quot;[data-slide-handle]&quot;
-                            :events {:on-click {:event :replace-attrs
-                                                :target-field :current-image
-                                                :with :data-image}}}
+                            :events {:on-click [{:event :replace-attrs
+                                                 :field :current-image
+                                                 :with :data-image}
+                                                {:event :update-state
+                                                 :field :current-image
+                                                 :with :self}]}}
                      :new {:tag :div
                            :data {:data-image {:field :image}}
                            :children [{:tag :h2
@@ -43,15 +46,33 @@
                                       {:tag :span
                                        :field :snippet}]}}"
       >
-        <div data-slide-handle data-image="{:data-index 0 :src &quot;/img/cat1.jpg&quot; :alt &quot;The first cat&quot;}">
+        <div
+          class="slide"
+          data-slide-handle
+          data-image="{:src &quot;/img/cat1.jpg&quot;
+                       :alt &quot;The first cat&quot;}"
+          data-bread-state="{:ident [:post 123]}"
+        >
           <h2 data-bread-field=":headline">The first cat</h2>
           <span data-bread-field=":snippet">Lorem ipsum</span>
         </div>
-        <div data-slide-handle data-image="{:data-index 1 :src &quot;/img/cat2.jpg&quot; :alt &quot;The second cat&quot;}">
+        <div
+          class="slide"
+          data-slide-handle
+          data-image="{:src &quot;/img/cat2.jpg&quot;
+                       :alt &quot;The second cat&quot;}"
+          data-bread-state="{:ident [:post 456]}"
+        >
           <h2 data-bread-field=":headline">The second cat</h2>
           <span data-bread-field=":snippet">Dolor sit amet</span>
         </div>
-        <div data-slide-handle data-image="{:data-index 2 :src &quot;/img/cat3.jpg&quot; :alt &quot;The third cat&quot;}">
+        <div
+          class="slide"
+          data-slide-handle
+          data-image="{:src &quot;/img/cat3.jpg&quot;
+                       :alt &quot;The third cat&quot;}"
+          data-bread-state="{:ident [:post 789]}"
+        >
           <h2 data-bread-field=":headline">The third cat</h2>
           <span data-bread-field=":snippet">Consectetur adipiscing elit</span>
         </div>
