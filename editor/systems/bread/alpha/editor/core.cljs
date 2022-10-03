@@ -7,6 +7,12 @@
 (defn get-field [ed field-name]
   (get-in @ed [:fields field-name]))
 
+(defn get-target [ed {:keys [selector field]} _elem]
+  ;; TODO :within
+  (cond
+    selector (js/document.querySelector selector)
+    field (:element (get-field ed field))))
+
 (defn listen! [ed elem event-name f]
   (let [listener-path [:listeners elem event-name]]
     (when-let [prev (get-in ed listener-path)]
