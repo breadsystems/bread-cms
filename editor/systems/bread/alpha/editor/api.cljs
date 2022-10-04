@@ -14,16 +14,21 @@
 
 (defn editor [config]
   (assoc config
-         :fields {}
-         :listeners {}))
+         :bread/fields {}
+         :bread/listeners {}))
 
 (defn init! [ed {:keys [attr]
                  :or {attr "data-bread"}}]
-  (let [selector (str "[" attr "]")]
-    (doseq [elem (js/document.querySelectorAll selector)]
+  (let [elements (set (or
+                        (seq (map (comp :element val)
+                                  (:bread/fields @ed)))
+                        (js/document.querySelectorAll
+                          (str "[" attr "]"))))]
+    (doseq [elem elements]
       (let [config (core/read-attr elem attr)]
-        (swap! ed
-               assoc-in [:fields (:name config)] (assoc config :element elem))
-        (core/init-field! ed elem config))))
-  (when-let [mount-point (js/document.querySelector (:bar/mount-into @ed))]
-    (rum/mount (ui/editor-bar @ed) mount-point)))
+        (swap! ed assoc-in [:bread/fields (:name config)]
+               {:config config
+                :element elem})
+        (core/init-field! ed elem config)))
+    (when-let [mount-point (js/document.querySelector (:bar/mount-into @ed))]
+      (rum/mount (ui/editor-bar @ed) mount-point))))

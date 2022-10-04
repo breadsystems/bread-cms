@@ -5,7 +5,7 @@
 (defmulti init-field! (fn [_ _ config] (:type config)))
 
 (defn get-field [ed field-name]
-  (get-in @ed [:fields field-name]))
+  (get-in @ed [:bread/fields field-name]))
 
 (defn get-target [ed {:keys [selector field]} _elem]
   ;; TODO :within
@@ -14,10 +14,10 @@
     field (:element (get-field ed field))))
 
 (defn listen! [ed elem event-name f]
-  (let [listener-path [:listeners elem event-name]]
+  (let [listener-path [:bread/listeners elem event-name]]
     (when-let [prev (get-in ed listener-path)]
       (.removeEventListener elem event-name prev))
-    (swap! ed assoc-in [:listeners elem event-name] f))
+    (swap! ed assoc-in [:bread/listeners elem event-name] f))
   (.addEventListener elem event-name f))
 
 (defmulti event! (fn [_ _ _ config]
