@@ -60,7 +60,7 @@
 (defn extensions [ed tools]
   (let [placeholder-opts (clj->js (merge
                                     {:placeholder "Start writing..."
-                                     :emptyNodeClass "bread-editor--empty"}
+                                     :emptyEditorClass "bread-editor--empty"}
                                     (:placeholder {})))]
     (concat
       [Document
