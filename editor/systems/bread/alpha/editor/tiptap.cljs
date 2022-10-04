@@ -11,6 +11,7 @@
     ["@tiptap/extension-gapcursor" :refer [Gapcursor]]
     ["@tiptap/extension-hard-break" :refer [HardBreak]]
     ["@tiptap/extension-heading" :refer [Heading]]
+    ["@tiptap/extension-highlight" :refer [Highlight]]
     ["@tiptap/extension-history" :refer [History]]
     ["@tiptap/extension-horizontal-rule" :refer [HorizontalRule]]
     ["@tiptap/extension-image" :refer [Image]]
@@ -19,6 +20,8 @@
     ["@tiptap/extension-ordered-list" :refer [OrderedList]]
     ["@tiptap/extension-paragraph" :refer [Paragraph]]
     ["@tiptap/extension-strike" :refer [Strike]]
+    ["@tiptap/extension-subscript" :refer [Subscript]]
+    ["@tiptap/extension-superscript" :refer [Superscript]]
     ["@tiptap/extension-text" :refer [Text]]))
 
 (defmulti extension (fn [ed tool]
@@ -39,6 +42,9 @@
 (defmethod extension :ul [_ _] [BulletList ListItem])
 (defmethod extension :ol [_ _] [OrderedList ListItem])
 (defmethod extension :strike [_ _] [Strike])
+(defmethod extension :highlight [_ _] [Highlight])
+(defmethod extension :sub [_ _] [Subscript])
+(defmethod extension :sup [_ _] [Superscript])
 (defmethod extension :code [_ _] [Code])
 (defmethod extension :codeblock [_ _] [CodeBlock])
 (defmethod extension :br [_ _] [HardBreak])
@@ -53,7 +59,8 @@
 
 (def default-rich-text-tools
   [{:type :heading :levels [2 3 4 5 6]}
-   :bold :italic :blockquote :ul :ol :strike :code :codeblock :hr :br])
+   :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
+   :code :codeblock :hr :br])
 
 (defn extensions [ed tools]
   (mapcat #(extension ed %) tools))
