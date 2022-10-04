@@ -6,6 +6,17 @@
   --text: var(--color-white);
 }
 
+/* Tiptap */
+
+.bread-editor--empty::before {
+  content: attr(data-placeholder);
+  display: inline-block;
+  position: absolute;
+  opacity: 0.8;
+}
+
+/* Admin bar */
+
 [data-bread-bar], [data-bread-bar] * {
   box-sizing: border-box;
 }
