@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.editor.tiptap
   (:require
-    ["@tiptap/core" :refer [Editor]]
+    ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
     ["@tiptap/extension-blockquote" :refer [Blockquote]]
     ["@tiptap/extension-bold" :refer [Bold]]
     ["@tiptap/extension-bullet-list" :refer [BulletList]]
@@ -61,7 +61,8 @@
   (let [placeholder-opts (clj->js (merge
                                     {:placeholder "Start writing..."
                                      :emptyEditorClass "bread-editor--empty"}
-                                    (:placeholder {})))]
+                                    ;; TODO this logic is wrong
+                                    (:tiptap-config ed)))]
     (concat
       [Document
        Dropcursor
@@ -72,8 +73,23 @@
        Typography]
       (mapcat #(extension ed %) tools))))
 
-(defn mount-tiptap-editor! [{:keys [element extensions]}]
-  (Editor. (clj->js {:element (.-parentNode element)
-                     :extensions extensions
-                     :content (.-outerHTML element)}))
+(comment
+  (def a (atom {:a {:b {}}}))
+  (deref a)
+  (swap! a update-in [:a :b] assoc :c (js/Date.))
+  (get-in @a [:a :b :c]))
+
+(defn mount! [{:keys [editor element extensions]
+               {field-name :name} :config}]
+  ;; TODO figure out how to re-mount the entire editor
+  (when-let [tiptap-inst (get-in @editor [:bread/fields field-name :tiptap])]
+    (prn 'TIPTAP? tiptap-inst)
+    (.destroy tiptap-inst))
+  (let [tiptap-inst
+        (TiptapEditor. (clj->js {:element (.-parentNode element)
+                                 :extensions extensions
+                                 :content (.-outerHTML element)}))]
+    (prn 'SET tiptap-inst)
+    (swap! editor update-in [:bread/fields field-name] assoc
+           :tiptap tiptap-inst))
   (.removeChild (.-parentNode element) element))
