@@ -19,10 +19,12 @@
     ["@tiptap/extension-list-item" :refer [ListItem]]
     ["@tiptap/extension-ordered-list" :refer [OrderedList]]
     ["@tiptap/extension-paragraph" :refer [Paragraph]]
+    ["@tiptap/extension-placeholder" :refer [Placeholder]]
     ["@tiptap/extension-strike" :refer [Strike]]
     ["@tiptap/extension-subscript" :refer [Subscript]]
     ["@tiptap/extension-superscript" :refer [Superscript]]
-    ["@tiptap/extension-text" :refer [Text]]))
+    ["@tiptap/extension-text" :refer [Text]]
+    ["@tiptap/extension-typography" :refer [Typography]]))
 
 (defmulti extension (fn [ed tool]
                       (cond
@@ -50,20 +52,25 @@
 (defmethod extension :br [_ _] [HardBreak])
 (defmethod extension :hr [_ _] [HorizontalRule])
 
-(def default-extensions
-  [Document
-   Dropcursor
-   History
-   Paragraph
-   Text])
-
 (def default-rich-text-tools
   [{:type :heading :levels [2 3 4 5 6]}
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
    :code :codeblock :hr :br])
 
 (defn extensions [ed tools]
-  (mapcat #(extension ed %) tools))
+  (let [placeholder-opts (clj->js (merge
+                                    {:placeholder "Start writing..."
+                                     :emptyNodeClass "bread-editor--empty"}
+                                    (:placeholder {})))]
+    (concat
+      [Document
+       Dropcursor
+       History
+       Paragraph
+       (.configure Placeholder placeholder-opts)
+       Text
+       Typography]
+      (mapcat #(extension ed %) tools))))
 
 (defn mount-tiptap-editor! [{:keys [element extensions]}]
   (Editor. (clj->js {:element (.-parentNode element)
