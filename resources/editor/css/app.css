@@ -9,13 +9,17 @@
 }
 
 body {
-  width: 50ch;
+  width: 70ch;
   max-width: 90%;
   margin: auto;
   padding: 0 1em;
 
   background: var(--hot-pink);
   color: var(--blueberry);
+}
+
+main {
+  margin-bottom: 10em;
 }
 
 img {
