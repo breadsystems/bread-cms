@@ -33,6 +33,9 @@
   (let [tools (or (:tools config)
                   (:tools ed)
                   tiptap/default-rich-text-tools)]
-    (tiptap/mount-tiptap-editor!
-      {:element element
+    (prn (:name config) (:tiptap (get-in @ed [:bread/fields (:name config)])))
+    (tiptap/mount!
+      {:editor ed
+       :config config
+       :element element
        :extensions (tiptap/extensions ed tools)})))
