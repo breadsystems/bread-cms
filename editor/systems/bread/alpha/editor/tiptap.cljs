@@ -12,6 +12,7 @@
     ["@tiptap/extension-hard-break" :refer [HardBreak]]
     ["@tiptap/extension-heading" :refer [Heading]]
     ["@tiptap/extension-history" :refer [History]]
+    ["@tiptap/extension-horizontal-rule" :refer [HorizontalRule]]
     ["@tiptap/extension-image" :refer [Image]]
     ["@tiptap/extension-italic" :refer [Italic]]
     ["@tiptap/extension-list-item" :refer [ListItem]]
@@ -38,6 +39,10 @@
 (defmethod extension :ul [_ _] [BulletList ListItem])
 (defmethod extension :ol [_ _] [OrderedList ListItem])
 (defmethod extension :strike [_ _] [Strike])
+(defmethod extension :code [_ _] [Code])
+(defmethod extension :codeblock [_ _] [CodeBlock])
+(defmethod extension :br [_ _] [HardBreak])
+(defmethod extension :hr [_ _] [HorizontalRule])
 
 (def default-extensions
   [Document
@@ -48,7 +53,7 @@
 
 (def default-rich-text-tools
   [{:type :heading :levels [2 3 4 5 6]}
-   :bold :italic :blockquote :ul :ol :strike])
+   :bold :italic :blockquote :ul :ol :strike :code :codeblock :hr :br])
 
 (defn extensions [ed tools]
   (mapcat #(extension ed %) tools))
