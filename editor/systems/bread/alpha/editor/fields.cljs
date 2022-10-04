@@ -32,10 +32,7 @@
   [ed element config]
   (let [tools (or (:tools config)
                   (:tools ed)
-                  tiptap/default-rich-text-tools)
-        extensions (concat
-                     (or (:extensions ed)
-                         tiptap/default-extensions)
-                     (tiptap/extensions ed tools))]
-    (tiptap/mount-tiptap-editor! {:element element
-                                  :extensions extensions})))
+                  tiptap/default-rich-text-tools)]
+    (tiptap/mount-tiptap-editor!
+      {:element element
+       :extensions (tiptap/extensions ed tools)})))
