@@ -30,7 +30,12 @@
 
 (defmethod core/init-field! :rich-text
   [ed element config]
-  (tiptap/mount-tiptap-editor! {:element element
-                                :extensions (or (:extensions config)
-                                                (:extensions ed)
-                                                tiptap/default-extensions)}))
+  (let [tools (or (:tools config)
+                  (:tools ed)
+                  tiptap/default-rich-text-tools)
+        extensions (concat
+                     (or (:extensions ed)
+                         tiptap/default-extensions)
+                     (tiptap/extensions ed tools))]
+    (tiptap/mount-tiptap-editor! {:element element
+                                  :extensions extensions})))
