@@ -1,12 +1,6 @@
 (ns systems.bread.alpha.editor.fields
   (:require
-    ["@tiptap/core" :refer [Editor]]
-    ["@tiptap/extension-document" :refer [Document]]
-    ["@tiptap/extension-dropcursor" :refer [Dropcursor]]
-    ["@tiptap/extension-history" :refer [History]]
-    ["@tiptap/extension-image" :refer [Image]]
-    ["@tiptap/extension-paragraph" :refer [Paragraph]]
-    ["@tiptap/extension-text" :refer [Text]]
+    [systems.bread.alpha.editor.tiptap :as tiptap]
     [systems.bread.alpha.editor.core :as core]))
 
 (defmethod core/init-field! :default [_ _ config]
@@ -36,8 +30,7 @@
 
 (defmethod core/init-field! :rich-text
   [ed element config]
-  (let [clone (.cloneNode element true)]
-    (Editor. (clj->js {:element (.-parentNode element)
-                       :extensions [Document Dropcursor History Image Paragraph Text]
-                       :content (.-outerHTML element)}))
-    (.removeChild (.-parentNode element) element)))
+  (tiptap/mount-tiptap-editor! {:element element
+                                :extensions (or (:extensions config)
+                                                (:extensions ed)
+                                                tiptap/default-extensions)}))
