@@ -115,6 +115,15 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-paragraph/-/extension-paragraph-2.0.0-beta.199.tgz#34213e6594a1183a77bb33ced49502bafb0a3d1c"
   integrity sha512-+BoMCaxlsHqw065zTUNd+ywkvFJzNKbTY461/AlKX2dgHeaO8doXHDQK+9icOpibQvrKaMhOJmuBTgGlJlUUgw==
 
+"@tiptap/extension-placeholder@^2.0.0-beta.199":
+  version "2.0.0-beta.199"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-placeholder/-/extension-placeholder-2.0.0-beta.199.tgz#0208c42f8b92a88e66b726353d07b652f09fd823"
+  integrity sha512-Tdq0r9XQ6hcu4ASvw2Xko6h8uS/xONmMmOFiTkK/54REB3RRQpkdCtXrhFn/T4DunJVBf6FUOLTjYN3SONhuew==
+  dependencies:
+    prosemirror-model "^1.18.1"
+    prosemirror-state "^1.4.1"
+    prosemirror-view "^1.28.2"
+
 "@tiptap/extension-strike@^2.0.0-beta.199":
   version "2.0.0-beta.199"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-strike/-/extension-strike-2.0.0-beta.199.tgz#5fc6e067728009d92027e58a042f18449f2fa264"
@@ -134,6 +143,11 @@
   version "2.0.0-beta.199"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-text/-/extension-text-2.0.0-beta.199.tgz#0204f3e50622e39b6fd08b5ef72fe7d0199117f5"
   integrity sha512-ntOqEhkBjDHrdzxvpPe4U1JB5GgE9/yyWqWdgzSL9lpSndRTJN1xQLOmyuv0qsLqOgBHn1YITHvaxPb3t8FrFw==
+
+"@tiptap/extension-typography@^2.0.0-beta.199":
+  version "2.0.0-beta.199"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-typography/-/extension-typography-2.0.0-beta.199.tgz#68b586964f0185ad65ba24b44033fd207fa36010"
+  integrity sha512-AdpTg/FgPmW3tJb5UGCOo19qh6wC6gQGqMVuDEdm2sErXlhcaoOKxfRgPfamRFTBRDNTarjRwl6Xh2r61eWQ1Q==
 
 asn1.js@^5.2.0:
   version "5.4.1"
