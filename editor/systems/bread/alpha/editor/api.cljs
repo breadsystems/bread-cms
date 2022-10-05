@@ -12,6 +12,11 @@
 (def event! core/event!)
 (def read-attr core/read-attr)
 
+(defn from-meta-element []
+  (core/read-attr
+    (js/document.querySelector "meta[name=bread-editor]")
+    "content"))
+
 (defn editor [config]
   (assoc config
          :bread/fields {}
