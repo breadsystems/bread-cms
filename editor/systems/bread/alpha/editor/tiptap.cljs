@@ -5,6 +5,7 @@
     ["@tiptap/extension-bold" :refer [Bold]]
     ["@tiptap/extension-bullet-list" :refer [BulletList]]
     ["@tiptap/extension-code" :refer [Code]]
+    ["@tiptap/extension-collaboration" :refer [Collaboration]]
     ["@tiptap/extension-code-block" :refer [CodeBlock]]
     ["@tiptap/extension-document" :refer [Document]]
     ["@tiptap/extension-dropcursor" :refer [Dropcursor]]
@@ -24,7 +25,9 @@
     ["@tiptap/extension-subscript" :refer [Subscript]]
     ["@tiptap/extension-superscript" :refer [Superscript]]
     ["@tiptap/extension-text" :refer [Text]]
-    ["@tiptap/extension-typography" :refer [Typography]]))
+    ["@tiptap/extension-typography" :refer [Typography]]
+    ["yjs" :as Y]
+    ["y-webrtc" :refer [WebrtcProvider]]))
 
 (defmulti extension (fn [ed tool]
                       (cond
@@ -58,15 +61,18 @@
    :code :codeblock :hr :br])
 
 (defn extensions [ed tools]
-  (let [placeholder-opts (clj->js (merge
-                                    {:placeholder "Start writing..."
-                                     :emptyEditorClass "bread-editor--empty"}
-                                    ;; TODO this logic is wrong
-                                    (:tiptap-config ed)))]
+  (let [{:keys [ydoc] :as collab} (:collab @ed)
+        placeholder-opts (clj->js {;; TODO parameterize this
+                                   :placeholder "Start writing..."
+                                   :emptyEditorClass "bread-editor--empty"})]
     (concat
-      [Document
+      [;; The Collaboration extension manages its own history, so these two
+       ;; are mutually exclusive.
+       (if collab
+         (.configure Collaboration #js {:document ydoc})
+         History)
+       Document
        Dropcursor
-       History
        Paragraph
        (.configure Placeholder placeholder-opts)
        Text
