@@ -6,6 +6,7 @@
     ["@tiptap/extension-bullet-list" :refer [BulletList]]
     ["@tiptap/extension-code" :refer [Code]]
     ["@tiptap/extension-collaboration" :refer [Collaboration]]
+    ["@tiptap/extension-collaboration-cursor" :refer [CollaborationCursor]]
     ["@tiptap/extension-code-block" :refer [CodeBlock]]
     ["@tiptap/extension-document" :refer [Document]]
     ["@tiptap/extension-dropcursor" :refer [Dropcursor]]
@@ -61,23 +62,28 @@
    :code :codeblock :hr :br])
 
 (defn extensions [ed tools]
-  (let [{:keys [ydoc] :as collab} (:collab @ed)
+  (let [{:keys [ydoc provider user] :as collab} (:collab @ed)
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
                                    :emptyEditorClass "bread-editor--empty"})]
-    (concat
-      [;; The Collaboration extension manages its own history, so these two
-       ;; are mutually exclusive.
-       (if collab
-         (.configure Collaboration #js {:document ydoc})
-         History)
-       Document
-       Dropcursor
-       Paragraph
-       (.configure Placeholder placeholder-opts)
-       Text
-       Typography]
-      (mapcat #(extension ed %) tools))))
+    (filter
+      identity
+      (concat
+        [;; The Collaboration extension manages its own history, so these two
+         ;; are mutually exclusive.
+         (if collab
+           (.configure Collaboration #js {:document ydoc})
+           History)
+         (when collab
+           (.configure CollaborationCursor (clj->js {:provider provider
+                                                     :user user})))
+         Document
+         Dropcursor
+         Paragraph
+         (.configure Placeholder placeholder-opts)
+         Text
+         Typography]
+        (mapcat #(extension ed %) tools)))))
 
 (comment
   (def a (atom {:a {:b {}}}))

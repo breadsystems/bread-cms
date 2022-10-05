@@ -14,7 +14,7 @@ body {
   margin: auto;
   padding: 0 1em;
 
-  background: var(--hot-pink);
+  /*background: var(--hot-pink);*/
   color: var(--blueberry);
 }
 
