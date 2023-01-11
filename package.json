@@ -13,6 +13,7 @@
     "@tiptap/extension-collaboration-cursor": "^2.0.0-beta.199",
     "@tiptap/extension-document": "^2.0.0-beta.199",
     "@tiptap/extension-dropcursor": "^2.0.0-beta.199",
+    "@tiptap/extension-floating-menu": "^2.0.0-beta.209",
     "@tiptap/extension-gapcursor": "^2.0.0-beta.199",
     "@tiptap/extension-hard-break": "^2.0.0-beta.199",
     "@tiptap/extension-heading": "^2.0.0-beta.199",
