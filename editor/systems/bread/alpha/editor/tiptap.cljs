@@ -11,6 +11,7 @@
     ["@tiptap/extension-document" :refer [Document]]
     ["@tiptap/extension-dropcursor" :refer [Dropcursor]]
     ["@tiptap/extension-gapcursor" :refer [Gapcursor]]
+    ["@tiptap/extension-floating-menu" :refer [FloatingMenu]]
     ["@tiptap/extension-hard-break" :refer [HardBreak]]
     ["@tiptap/extension-heading" :refer [Heading]]
     ["@tiptap/extension-highlight" :refer [Highlight]]
@@ -61,8 +62,16 @@
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
    :code :codeblock :hr :br])
 
+(defn- tiptap-menu [tiptap]
+  (prn tiptap)
+  (let [elem (js/document.createElement "DIV")]
+    (-> elem .-innerHTML (set! "MENU"))
+    elem))
+
 (defn extensions [ed tools]
-  (let [{:keys [ydoc provider user] :as collab} (:collab @ed)
+  (let [{:keys [collab menu tiptap]
+         :or {menu true}} @ed
+        {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
                                    :emptyEditorClass "bread-editor--empty"})]
@@ -77,6 +86,12 @@
          (when collab
            (.configure CollaborationCursor (clj->js {:provider provider
                                                      :user user})))
+         (when menu
+           (.configure FloatingMenu
+                       (clj->js {:element (tiptap-menu tiptap)
+                                 :shouldShow (fn [props]
+                                               (prn 'shouldShow props)
+                                               true)})))
          Document
          Dropcursor
          Paragraph
