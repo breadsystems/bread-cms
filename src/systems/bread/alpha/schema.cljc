@@ -155,8 +155,8 @@
       :attr/migration "migration.taxons"}
      {:db/ident :taxon/fields
       :db/doc "Translatable fields for this taxon."
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
       :attr/migration "migration.taxons"}]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
