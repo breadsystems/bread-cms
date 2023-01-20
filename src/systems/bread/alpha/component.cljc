@@ -63,8 +63,6 @@
 (defn parent [component]
   (:extends (meta component)))
 
-;; TODO layout
-
 (defn component [{::bread/keys [data dispatcher] :as res}]
   (bread/hook res :hook/component (if (:not-found? data)
                                     (:dispatcher/not-found-component dispatcher)
@@ -74,10 +72,6 @@
   (loop [component component
          content content]
     (cond
-      (vector? component)
-      (let [[component coord] component
-            data (assoc-in {} coord content)]
-        (recur (parent component) (component data)))
       component
       (recur (parent component) (component {:content content}))
       :else
@@ -88,7 +82,6 @@
   (let [component (component res)
         parent (parent component)
         body (cond
-               ;; TODO :layout
                (and component
                     (false? (:component/extend? data)))
                (component data)

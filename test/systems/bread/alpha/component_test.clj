@@ -18,7 +18,7 @@
   {}
   [:main content])
 
-(defc parent [{:keys [special content]}]
+(defc parent [{:keys [special content extra]}]
   {}
   [:div.parent
    (if special
@@ -28,10 +28,6 @@
 (defc child [{:keys [content]}]
   {:extends parent}
   [:div.child content])
-
-(defc special [{:keys [content]}]
-  {:extends [parent [:special]]}
-  [:div.special-child content])
 
 (defc filtered [{:keys [content]}]
   {}
@@ -56,17 +52,13 @@
     {::bread/data {:content nil
                    :not-found? true}
      ::bread/dispatcher {:dispatcher/component paragraph
-                       :dispatcher/not-found-component not-found-page}}
+                         :dispatcher/not-found-component not-found-page}}
 
     ;; With :extends - parent <- child
     [:div.parent [:div.child "child content"]]
-    {::bread/data {:content "child content"}
+    {::bread/data {:content "child content"
+                   :extra "extra content"}
      ::bread/dispatcher {:dispatcher/component child}}
-
-    ;; With :extends vector - parent <- special
-    [:div.parent [:div.special [:div.special-child "child content"]]]
-    {::bread/data {:content "child content"}
-     ::bread/dispatcher {:dispatcher/component special}}
 
     ;; Test recursive extension - grandparent <- parent <- child
     [:main [:div.parent [:div.child "child content"]]]
