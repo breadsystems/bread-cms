@@ -6,7 +6,8 @@
     [systems.bread.alpha.field :as field]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.util.datalog :as datalog]))
 
 (def post-taxonomized-rule
   '[(post-taxonomized ?post ?taxonomy ?taxon-slug)
@@ -28,22 +29,48 @@
          params :route/params
          taxonomy :taxon/taxonomy} dispatcher
         db (store/datastore req)
-        pull-spec (dispatcher/pull-spec dispatcher)]
-    {:queries [{:query/name ::store/query
-                :query/key k
-                :query/db db
-                :query/args
-                [{:find [(list 'pull '?t pull-spec) '.]
-                  :in '[$ % ?status ?taxonomy ?slug]
-                  :where '[[?t :taxon/slug ?slug]
-                           [?p :post/status ?status]
-                           (post-taxonomized ?p ?taxonomy ?slug)]}
-                 [post-taxonomized-rule]
-                 :post.status/published
-                 taxonomy
-                 (:slug params)]}
-               {:query/name ::compact
-                :query/key k}]}))
+        pull-spec (dispatcher/pull-spec dispatcher)
+        ;; If we're querying for fields, we'll want to run a special query
+        ;; to correctly handle i18n.
+        fields-binding (datalog/attr-binding :taxon/fields pull-spec)
+        ;; Don't query for fields in initial taxon query, it won't be properly
+        ;; internationalized anyway.
+        pull-spec (if fields-binding
+                    (filter #(not= fields-binding %) pull-spec)
+                    pull-spec)
+        taxon-query
+        {:query/name ::store/query
+         :query/key k
+         :query/db db
+         :query/args
+         [{:find [(list 'pull '?t pull-spec) '.]
+           :in '[$ % ?status ?taxonomy ?slug]
+           :where '[[?t :taxon/slug ?slug]
+                    [?p :post/status ?status]
+                    (post-taxonomized ?p ?taxonomy ?slug)]}
+          [post-taxonomized-rule]
+          :post.status/published
+          taxonomy
+          (:slug params)]}
+        fields-query
+        (when fields-binding
+          (let [field-keys (or (:taxon/fields fields-binding)
+                               [:field/key :field/content])]
+            {:query/name ::store/query
+             :query/key [k :taxon/fields]
+             :query/db db
+             :query/args
+             [{:find [(list 'pull '?f (cons :db/id field-keys))]
+               :in '[$ ?t ?lang]
+               :where '[[?t :taxon/fields ?f]
+                        [?f :field/lang ?lang]]}
+              [::bread/data k :db/id]
+              ;; TODO i18n/lang
+              (keyword (:lang params))]}))
+        compact-query {:query/name ::compact :query/key k}]
+    {:queries (if fields-query
+                [taxon-query fields-query compact-query]
+                [taxon-query compact-query])}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]

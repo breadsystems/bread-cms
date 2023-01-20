@@ -4,6 +4,18 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
+(defn attr-binding
+  "Parses pull-expr for attr, returning the attr if found as it appears in
+  pull-expr (i.e. as a keyword or a map)"
+  [attr pull-expr]
+  (let [attrs #{attr}
+        map-with-keys (fn [ks x] (when (and (map? x) (some ks (keys x))) x))]
+    (first (keep (some-fn attrs (partial map-with-keys attrs)) pull-expr))))
+
+(comment
+  (attr-binding :taxon/fields [:taxon/fields])
+  (attr-binding :taxon/fields [{:taxon/fields [:field/key :field/content]}]))
+
 (defn attrs
   "Get all schema data available about every attr present in store"
   [store]
