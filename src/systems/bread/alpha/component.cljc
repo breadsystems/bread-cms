@@ -79,7 +79,7 @@
       component
       (let [path (content-path component)
             data (assoc-in data path content)]
-        (recur (parent component) data (component data)))
+        (recur (component-parent component) data (component data)))
       :else
       content)))
 
