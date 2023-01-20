@@ -64,15 +64,15 @@
 (declare main-nav)
 
 (defc main-layout
-  [{:keys [content i18n menus]}]
-  {}
-  (prn i18n menus)
-  [:html {:lang "en"}
+  [{:keys [main-content i18n menus lang]}]
+  {:content-path [:main-content]}
+  [:html {:lang lang}
    [:head
-    [:title "Bread Site"]]
+    [:title {:breadbox i18n}]]
    [:body
-    (main-nav (:main-nav menus))
-    content
+    [:header
+     (main-nav (:main-nav menus))]
+    [:main main-content]
     [:footer
      (main-nav (:footer-nav menus))]]])
 
@@ -93,18 +93,15 @@
       (:items menu))]])
 
 (defc home [{:keys [post menus] :as x}]
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:extends main-layout
+   :query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
-    [:main
+    [:<>
      [:h1 title]
-     (main-nav (:main-nav menus))
      [:p (:hello simple)]
-     [:pre (str post)]
-     ;; TODO layouts
-     [:footer
-      (main-nav (:footer-nav menus))]]))
+     [:img {:src (:img-url simple)}]]))
 
 (defc category-page [{:keys [taxon i18n menus] :as data}]
   {:extends main-layout
@@ -117,32 +114,24 @@
     [:<>
      [:h1 (:title fields)]
      [:div [:code slug]]
-     (main-nav (:main-nav menus))
-     [:main
-      (map
-        (fn [{:post/keys [slug fields]}]
-          [:article
-           [:h2 (:title fields)]])
-        posts)]]))
+     (map
+       (fn [{:post/keys [slug fields]}]
+         [:article
+          [:h2 (:title fields)]])
+       posts)]))
 
 (defc page [{:keys [post i18n menus] :as data}]
-  {:query [{:post/fields [:field/key :field/content]}]
+  {:extends main-layout
+   :query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
-     (main-nav (:main-nav menus))
-     [:main
-      [:h2 (:hello simple)]
-      [:p (:body simple)]
-      [:p.goodbye (:goodbye simple)]
-      [:p.flex flex-content]]
-     [:pre
-      (str post)]
-     ;; TODO layouts
-     [:footer
-      (main-nav (:footer-nav menus))]]))
+     [:h2 (:hello simple)]
+     [:p (:body simple)]
+     [:p.goodbye (:goodbye simple)]
+     [:p.flex flex-content]]))
 
 (defc static-page [{:keys [post lang]}]
   {:key :post}
