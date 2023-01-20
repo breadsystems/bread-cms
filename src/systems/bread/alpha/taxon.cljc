@@ -27,7 +27,8 @@
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key
          params :route/params
-         taxonomy :taxon/taxonomy} dispatcher
+         taxonomy :taxon/taxonomy
+         post-type :post/type} dispatcher
         db (store/datastore req)
         pull-spec (dispatcher/pull-spec dispatcher)
         ;; If we're querying for fields, we'll want to run a special query
@@ -38,20 +39,30 @@
         pull-spec (if fields-binding
                     (filter #(not= fields-binding %) pull-spec)
                     pull-spec)
+        taxon-inputs (filter identity ['$ '% '?status
+                                       (when post-type '?type)
+                                       '?taxonomy '?slug])
         taxon-query
         {:query/name ::store/query
          :query/key k
          :query/db db
          :query/args
-         [{:find [(list 'pull '?t pull-spec) '.]
-           :in '[$ % ?status ?taxonomy ?slug]
-           :where '[[?t :taxon/slug ?slug]
-                    [?p :post/status ?status]
-                    (post-taxonomized ?p ?taxonomy ?slug)]}
-          [post-taxonomized-rule]
-          :post.status/published
-          taxonomy
-          (:slug params)]}
+         (filter
+           identity
+           [{:find [(list 'pull '?t pull-spec) '.]
+             :in taxon-inputs
+             :where (filter
+                      identity
+                      ['[?t :taxon/slug ?slug]
+                       '[?p :post/status ?status]
+                       (when post-type
+                         '[?p :post/type ?type])
+                       '(post-taxonomized ?p ?taxonomy ?slug)])}
+            [post-taxonomized-rule]
+            :post.status/published
+            post-type
+            taxonomy
+            (:slug params)])}
         fields-query
         (when fields-binding
           (let [field-keys (or (:taxon/fields fields-binding)

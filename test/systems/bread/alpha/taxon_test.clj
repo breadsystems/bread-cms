@@ -100,7 +100,7 @@
         :query/key [:taxon :taxon/fields]
         :query/db db
         :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
+        ['{:find [(pull ?f [:db/id :field/key :field/content :field/lang])]
            :in [$ ?t ?lang]
            :where [[?t :taxon/fields ?f]
                    [?f :field/lang ?lang]]}
@@ -110,12 +110,38 @@
         :query/key :taxon}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
-                         {:taxon/fields [:field/key :field/content]}]
+                         {:taxon/fields [:field/key :field/content :field/lang]}]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag with :post/type
+      [{:query/name ::store/query
+        :query/key :tag
+        :query/db db
+        :query/args
+        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+           :in [$ % ?status ?type ?taxonomy ?slug]
+           :where [[?t :taxon/slug ?slug]
+                   [?p :post/status ?status]
+                   [?p :post/type ?type]
+                   (post-taxonomized ?p ?taxonomy ?slug)]}
+         [taxon/post-taxonomized-rule]
+         :post.status/published
+         :post.type/page
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       {:query/name ::taxon/compact
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
+       :post/type :post.type/page
+       :route/params {:lang "en" :slug "some-tag"}}
+
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag
       [{:query/name ::store/query
         :query/key :tag
         :query/db db
