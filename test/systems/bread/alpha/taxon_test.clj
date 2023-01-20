@@ -30,8 +30,7 @@
         :query/args
         ['{:find [(pull ?t [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [;; TODO support post/type
-                   [?t :taxon/slug ?slug]
+           :where [[?t :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -54,8 +53,7 @@
         :query/args
         ['{:find [(pull ?t [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [;; TODO support post/type
-                   [?t :taxon/slug ?slug]
+           :where [[?t :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -88,8 +86,7 @@
         :query/args
         ['{:find [(pull ?t [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [;; TODO support post/type
-                   [?t :taxon/slug ?slug]
+           :where [[?t :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -141,6 +138,29 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag with :post/status
+      [{:query/name ::store/query
+        :query/key :tag
+        :query/db db
+        :query/args
+        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+           :in [$ % ?status ?taxonomy ?slug]
+           :where [[?t :taxon/slug ?slug]
+                   [?p :post/status ?status]
+                   (post-taxonomized ?p ?taxonomy ?slug)]}
+         [taxon/post-taxonomized-rule]
+         :post.status/draft
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       {:query/name ::taxon/compact
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
+       :post/status :post.status/draft
+       :route/params {:lang "en" :slug "some-tag"}}
+
+      ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
       [{:query/name ::store/query
         :query/key :tag
@@ -148,8 +168,7 @@
         :query/args
         ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [;; TODO support post/type
-                   [?t :taxon/slug ?slug]
+           :where [[?t :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]

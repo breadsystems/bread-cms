@@ -28,7 +28,8 @@
   (let [{k :dispatcher/key
          params :route/params
          taxonomy :taxon/taxonomy
-         post-type :post/type} dispatcher
+         post-type :post/type
+         post-status :post/status} dispatcher
         db (store/datastore req)
         pull-spec (dispatcher/pull-spec dispatcher)
         ;; If we're querying for fields, we'll want to run a special query
@@ -59,7 +60,7 @@
                          '[?p :post/type ?type])
                        '(post-taxonomized ?p ?taxonomy ?slug)])}
             [post-taxonomized-rule]
-            :post.status/published
+            (or post-status :post.status/published)
             post-type
             taxonomy
             (:slug params)])}
