@@ -36,6 +36,12 @@
        (update-in [0 :in] conj sym)
        (conj v))))
 
+(defn pull-spec
+  "Gets the pull spec from the given dispatcher. Adds :db/id to the list
+  of fields to return if it is not already included."
+  [{:dispatcher/keys [pull]}]
+  (vec (if (some #{:db/id} pull) pull (cons :db/id pull))))
+
 (defn pull-query
   "Get a basic query with a (pull ...) form in the :find clause"
   [{:dispatcher/keys [pull]}]
