@@ -60,32 +60,38 @@
   [component]
   (:query (meta component)))
 
-(defn parent [component]
+(defn component-parent [component]
   (:extends (meta component)))
 
-(defn component [{::bread/keys [data dispatcher] :as res}]
+(defn content-path [component]
+  (:content-path (meta component) [:content]))
+
+(defn req->component [{::bread/keys [data dispatcher] :as res}]
   (bread/hook res :hook/component (if (:not-found? data)
                                     (:dispatcher/not-found-component dispatcher)
                                     (:dispatcher/component dispatcher))))
 
-(defn- render-parent [component content]
+(defn- render-parent [component data content]
   (loop [component component
+         data data
          content content]
     (cond
       component
-      (recur (parent component) (component {:content content}))
+      (let [path (content-path component)
+            data (assoc-in data path content)]
+        (recur (parent component) data (component data)))
       :else
       content)))
 
 (defmethod bread/action ::render
   [{::bread/keys [data] :as res} _ _]
-  (let [component (component res)
-        parent (parent component)
+  (let [component (req->component res)
+        parent (component-parent component)
         body (cond
                (and component
                     (false? (:component/extend? data)))
                (component data)
-               parent (render-parent parent (component data))
+               parent (render-parent parent data (component data))
                component (component data)
                :else nil)]
     (assoc res :body body)))
