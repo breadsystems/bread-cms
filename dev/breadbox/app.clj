@@ -24,6 +24,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.tools.debug.core :as debug]
@@ -60,6 +61,21 @@
               :datastore/initial-txns
               data/initial-content})
 
+(declare main-nav)
+
+(defc main-layout
+  [{:keys [content i18n menus]}]
+  {}
+  (prn i18n menus)
+  [:html {:lang "en"}
+   [:head
+    [:title "Bread Site"]]
+   [:body
+    (main-nav (:main-nav menus))
+    content
+    [:footer
+     (main-nav (:footer-nav menus))]]])
+
 (defn main-nav [menu]
   [:nav {:class (:my/class menu)}
    [:ul
@@ -89,6 +105,25 @@
      ;; TODO layouts
      [:footer
       (main-nav (:footer-nav menus))]]))
+
+(defc category-page [{:keys [taxon i18n menus] :as data}]
+  {:extends main-layout
+   :query [:taxon/slug
+           {:taxon/fields [:field/key :field/content]}
+           {:post/_taxons
+            [:post/slug {:post/fields [:field/key :field/content]}]}]
+   :key :taxon}
+  (let [{:taxon/keys [slug fields posts]} taxon]
+    [:<>
+     [:h1 (:title fields)]
+     [:div [:code slug]]
+     (main-nav (:main-nav menus))
+     [:main
+      (map
+        (fn [{:post/keys [slug fields]}]
+          [:article
+           [:h2 (:title fields)]])
+        posts)]]))
 
 (defc page [{:keys [post i18n menus] :as data}]
   {:query [{:post/fields [:field/key :field/content]}]
@@ -159,6 +194,10 @@
                          :bread/watch-static {:dir "dev/content"
                                               :path->req [0 "static" 1]}
                          :name :bread.route/static}]
+      ["/cat/:slug/" {:bread/dispatcher {:dispatcher/type :dispatcher.type/taxon
+                                         :taxon/taxonomy :taxon.taxonomy/category
+                                         :dispatcher/key :posts}
+                     :bread/component category-page}]
       ["/*slugs" {:name :bread.route/page
                   :bread/dispatcher :dispatcher.type/page
                   :bread/component page
@@ -328,7 +367,7 @@
     (slurp "resources/public/en/parent-page/index.html"))
 
   ;; Test out the whole Bread request lifecycle!
-  (def $req (merge {:uri "/en/"} @app))
+  (def $req (merge {:uri "/en/cat/my-cat/"} @app))
   (route/params $req (route/match $req))
   (bread/match $router $req)
   (->> $req (bread/dispatch $router) ::bread/dispatcher)
@@ -344,6 +383,51 @@
 
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
+
+  (q '{:find [(pull ?e [:db/id :post/slug])],
+       :in [$ % ?slug],
+       :where
+       [(post-published ?e)
+        [?e :post/slug ?slug]]}
+     '[[(post-published ?e)
+        [?e :post/status :post.status/published]]]
+     "")
+
+  (q '{:find [(pull ?e [:db/id :post/slug])],
+       :in [$ % ?status ?taxonomy ?slug],
+       :where [[?e :post/status ?status]
+               (post-taxonomized ?e ?taxonomy ?slug)]}
+     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+        [?post :post/taxons ?t]
+        [?t :taxon/taxonomy ?taxonomy]
+        [?t :taxon/slug ?taxon-slug]]]
+     :post.status/published
+     :taxon.taxonomy/category
+     "my-cat")
+
+  (q '{:find
+       [(pull ?e [:db/id :taxon/slug
+                  #:taxon{:fields [:field/key :field/content]}
+                  #_
+                  #:post{:_taxons
+                         [:post/slug
+                          #:post{:fields [:field/key :field/content]}]}])],
+       :in [$ % ?status ?taxonomy ?slug],
+       :where
+       [[?e :taxon/slug ?slug]
+        [?p :post/status ?status]
+        (post-taxonomized ?p ?taxonomy ?slug)]}
+     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+        [?post :post/taxons ?t]
+        [?t :taxon/taxonomy ?taxonomy]
+        [?t :taxon/slug ?taxon-slug]]]
+     :post.status/published
+     :taxon.taxonomy/category
+     "my-cat")
+
+  (q '{:find [(pull ?e [:db/id :taxon/taxonomy :taxon/slug])]
+       :in [$]
+       :where [[?e :taxon/taxonomy]]})
 
   (q '{:find [?e] :where [[?e :x]]})
 

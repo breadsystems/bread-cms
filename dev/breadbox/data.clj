@@ -53,10 +53,8 @@
       {:field/key :flex-content
        :field/lang :en
        :field/content (prn-str {:todo "TODO"})}}
-    ;; TODO use unique refs for this
     :post/taxons
-    #{{:taxon/slug "my-cat"
-       :taxon/taxonomy :taxon.taxonomy/category}}}
+    ["taxon.my-cat"]}
    {:db/id "page.sister"
     :post/type :post.type/page
     :post/slug "sister-page"
@@ -87,8 +85,7 @@
        :field/lang :en
        :field/content (prn-str {:todo "TODO"})}}
     :post/taxons
-    #{{:taxon/slug "my-cat"
-       :taxon/taxonomy :taxon.taxonomy/category}}}
+    ["taxon.my-cat"]}
    {:db/id "page.parent"
     :post/type :post.type/page
     :post/slug "parent-page"
@@ -115,6 +112,18 @@
                  :body "Lorem ipsum en francais"
                  :goodbye "Salut de la page parent"
                  :img-url "https://via.placeholder.com/300"})}}}
+
+   ;; Taxons
+   {:db/id "taxon.my-cat"
+    :taxon/slug "my-cat"
+    :taxon/taxonomy :taxon.taxonomy/category
+    :taxon/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/content (prn-str "My Category")}
+      {:field/key :title
+       :field/lang :fr
+       :field/content (prn-str "Ma Catégorie")}}}
 
    ;; Menu items
    {:db/id "menu.item.home"
