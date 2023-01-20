@@ -29,7 +29,9 @@
          params :route/params
          taxonomy :taxon/taxonomy
          post-type :post/type
-         post-status :post/status} dispatcher
+         post-status :post/status
+         :or {post-status :post.status/published}}
+        dispatcher
         db (store/datastore req)
         pull-spec (dispatcher/pull-spec dispatcher)
         ;; If we're querying for fields, we'll want to run a special query
@@ -40,7 +42,8 @@
         pull-spec (if fields-binding
                     (filter #(not= fields-binding %) pull-spec)
                     pull-spec)
-        taxon-inputs (filter identity ['$ '% '?status
+        taxon-inputs (filter identity ['$ '%
+                                       (when post-status '?status)
                                        (when post-type '?type)
                                        '?taxonomy '?slug])
         taxon-query
@@ -55,12 +58,13 @@
              :where (filter
                       identity
                       ['[?t :taxon/slug ?slug]
-                       '[?p :post/status ?status]
+                       (when post-status
+                         '[?p :post/status ?status])
                        (when post-type
                          '[?p :post/type ?type])
                        '(post-taxonomized ?p ?taxonomy ?slug)])}
             [post-taxonomized-rule]
-            (or post-status :post.status/published)
+            post-status
             post-type
             taxonomy
             (:slug params)])}

@@ -161,6 +161,48 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag with :post/status nil
+      [{:query/name ::store/query
+        :query/key :tag
+        :query/db db
+        :query/args
+        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+           :in [$ % ?taxonomy ?slug]
+           :where [[?t :taxon/slug ?slug]
+                   (post-taxonomized ?p ?taxonomy ?slug)]}
+         [taxon/post-taxonomized-rule]
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       {:query/name ::taxon/compact
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
+       :post/status nil
+       :route/params {:lang "en" :slug "some-tag"}}
+
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag with :post/status false
+      [{:query/name ::store/query
+        :query/key :tag
+        :query/db db
+        :query/args
+        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+           :in [$ % ?taxonomy ?slug]
+           :where [[?t :taxon/slug ?slug]
+                   (post-taxonomized ?p ?taxonomy ?slug)]}
+         [taxon/post-taxonomized-rule]
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       {:query/name ::taxon/compact
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
+       :post/status false ; same as explicit nil.
+       :route/params {:lang "en" :slug "some-tag"}}
+
+      ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
       [{:query/name ::store/query
         :query/key :tag
