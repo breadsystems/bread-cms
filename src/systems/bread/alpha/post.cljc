@@ -15,62 +15,47 @@
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
 (comment
-  (for [n (range 10)] (symbol (str "?slug_" n)))
+  (take 5 (syms "?slug_"))
+  (take 5 (syms "?slug_" 1))
 
-  (loop [[slug & slugs] (take 15 (syms "?slug_"))]
-    (prn slug)
-    (when (seq slugs)
-      (recur slugs)))
-
-  (loop [[slug & slugs] (take 15 (syms "?slug_" 1))]
-    (prn slug)
-    (when (seq slugs)
-      (recur slugs)))
-  )
-
-(defn- path->constraints
-  ([path]
-   (path->constraints path {}))
-  ([path {:keys [child-sym]}]
-   (vec (loop [query []
-               [inputs path] [[] path]
-               descendant-sym (or child-sym '?e)
-               ;; Start the parent count at 1 so that
-               ;; [?parent_x :post/slug ?slug_x] numbers line up.
-               ;; This makes queries easier to read and debug.
-               [parent-sym & parent-syms] (syms "?parent_" 1)
-               [slug-sym & slug-syms] (syms "?slug_")]
-          (let [inputs (conj inputs slug-sym)
-                where [[descendant-sym :post/slug slug-sym]]]
-            (if (<= (count path) 1)
-              [(vec inputs)
-               (vec (concat query where
-                            [(list
-                               'not-join
-                               [descendant-sym]
-                               ['?root-ancestor :post/children descendant-sym])]))]
-              (recur
-                (concat query where [[parent-sym :post/children descendant-sym]])
-                [inputs (butlast path)]
-                parent-sym ;; the new descendant-sym
-                parent-syms
-                slug-syms)))))))
-
-(comment
-  (path->constraints ["grandparent" "parent" "child"])
-  (path->constraints ["parent" "child"])
+  (create-post-ancestry-rule 1)
+  (create-post-ancestry-rule 2)
+  (create-post-ancestry-rule 5)
 
   ;;
   )
 
-(defn- ancestralize [query ancestry]
-  (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
-    (-> query
-      (update-in [0 :in] #(vec (concat % in)))
-      (update-in [0 :where] #(vec (concat % where)))
-      ;; Need to reverse path here because joins go "up" the ancestry tree,
-      ;; away from our immediate child page.
-      (concat (reverse ancestry)))))
+(defn create-post-ancestry-rule [depth]
+  (let [slug-syms (take depth (syms "?slug_"))
+        descendant-syms (take depth (cons '?child (syms "?ancestor_" 1)))
+        earliest-ancestor-sym (last descendant-syms)]
+    (vec (concat
+           [(apply list 'post-ancestry '?child slug-syms)]
+           [['?child :post/slug (first slug-syms)]]
+           (mapcat
+             (fn [[ancestor-sym descendant-sym slug-sym]]
+               [[ancestor-sym :post/children descendant-sym]
+                [ancestor-sym :post/slug slug-sym]])
+             (partition 3 (interleave (rest descendant-syms)
+                                      (butlast descendant-syms)
+                                      (rest slug-syms))))
+           [(list 'not-join [earliest-ancestor-sym]
+                  ['?_ :post/parent earliest-ancestor-sym])]))))
+
+(defn- ancestralize [query slugs]
+  (let [depth (count slugs)
+        slug-syms (take depth (syms "?slug_"))
+        ;; Place slug input args in ancestral order (earliest ancestor first),
+        ;; since that is the order in which they appear in the URL.
+        input-syms (reverse slug-syms)
+        rule-invocation (apply list 'post-ancestry '?e slug-syms)
+        rule (create-post-ancestry-rule depth)]
+    (apply conj
+           (-> query
+               (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
+               (update-in [0 :where] conj rule-invocation)
+               (conj [rule]))
+           slugs)))
 
 (defn expand-post [result]
   (let [post (ffirst result)
@@ -89,8 +74,6 @@
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
-;; TODO use Rules here instead of all this ornate logic...
-;; https://docs.datomic.com/on-prem/query/query.html#rules
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key params :route/params
@@ -102,9 +85,9 @@
         (-> (pull-query dispatcher)
             ;; TODO handle this in pull-query?
             (update-in [0 :find] conj '.) ;; Query for a single post.
+            (ancestralize (string/split (:slugs params "") #"/"))
             (where [['?type :post/type :post.type/page]
-                    ['?status :post/status :post.status/published]])
-            (ancestralize (string/split (:slugs params "") #"/")))
+                    ['?status :post/status :post.status/published]]))
 
         ;; Find any appearances of :post/fields in the query. If it appears as
         ;; a map key, use the corresponding value as our pull expr. If it's a
