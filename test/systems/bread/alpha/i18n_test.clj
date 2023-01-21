@@ -150,7 +150,7 @@
     [queries args]
     (= queries (apply i18n/internationalize-query args))
 
-    ;; Without :post/content
+    ;; Without :field/content
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -159,7 +159,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [#{:post/fields}
+    [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -170,7 +170,7 @@
        :post.type/page]}
      :whatever]
 
-    ;; With :post/fields, but still without :post/content
+    ;; With :post/fields, but still without :field/content
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -181,7 +181,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [#{:post/fields}
+    [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -194,7 +194,7 @@
        :post.type/page]}
      :whatever]
 
-    ;; With :post/content
+    ;; With :field/content
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -213,7 +213,7 @@
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
        :fr]}]
-    [#{:post/fields}
+    [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -226,7 +226,7 @@
        :post.type/page]}
      :fr]
 
-    ;; With :post/content implicity as part of {:post/fields [*]}
+    ;; With :field/content implicity as part of {:post/fields [*]}
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -245,7 +245,7 @@
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
        :fr]}]
-    [#{:post/fields}
+    [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
