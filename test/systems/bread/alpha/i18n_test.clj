@@ -2,7 +2,6 @@
   (:require
     [clojure.string :as string]
     [clojure.test :refer [are deftest is testing use-fixtures]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
@@ -146,5 +145,115 @@
 
 (deftest ^:kaocha/skip test-lang-param-config)
 
+(deftest test-internationalize-query
+  (are
+    [queries args]
+    (= queries (apply i18n/internationalize-query args))
+
+    ;; Without :post/content
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}]
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     :whatever]
+
+    ;; With :post/fields, but still without :post/content
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
+                                             [:field/key
+                                              :field/lang]}]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}]
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
+                                             [:field/key
+                                              :field/lang]}]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     :whatever]
+
+    ;; With :post/content
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     {:query/name ::store/query
+      :query/key [:post :post/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :field/key :field/content])]
+         :in [$ ?p ?lang]
+         :where [[?p :post/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :post :db/id]
+       :fr]}]
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
+                                             [:field/key
+                                              :field/content]}]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     :fr]
+
+    ;; With :post/content implicity as part of {:post/fields [*]}
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     {:query/name ::store/query
+      :query/key [:post :post/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?p ?lang]
+         :where [[?p :post/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :post :db/id]
+       :fr]}]
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :post/slug {:post/fields [*]}]) .]
+         :in [$ ?type]
+         :where [[?e :post/type ?type]]}
+       :post.type/page]}
+     :fr]
+
+    ))
+
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))

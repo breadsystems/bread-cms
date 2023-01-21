@@ -75,10 +75,8 @@
 
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
-  (let [{k :dispatcher/key params :route/params
-         :dispatcher/keys [ancestral? pull]} dispatcher
-        k (or k :post)
-        db (store/datastore req)
+  (let [params (:route/params dispatcher)
+        ;; TODO call (i18n/lang req)
         lang (keyword (:lang params))
         page-args
         (-> (pull-query dispatcher)
@@ -87,7 +85,7 @@
             (where [['?type :post/type :post.type/page]
                     ['?status :post/status :post.status/published]]))
         page-query {:query/name ::store/query
-                    :query/key k
-                    :query/db db
+                    :query/key (or (:dispatcher/key dispatcher) :post)
+                    :query/db (store/datastore req)
                     :query/args page-args}]
     {:queries (i18n/internationalize-query page-query lang)}))

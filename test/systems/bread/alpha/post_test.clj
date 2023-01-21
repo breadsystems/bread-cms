@@ -177,7 +177,7 @@
        :route/params {:slugs "one/two/three" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields i18n
+      ;; :post/fields alone only queries for :db/id, not :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
@@ -190,26 +190,14 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}
-       {:query/name ::store/query
-        :query/key [:post :post/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-         [::bread/data :post :db/id]
-         :en]}]
+         :post.status/published]}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :post/fields]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields i18n w/ nested pull clause
-      ;; TODO this query should actually remain untouched, since it
-      ;; doesn't include :field/content.
+      ;; :post/fields WITHOUT :post/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
@@ -224,17 +212,7 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}
-       {:query/name ::store/query
-        :query/key [:post :post/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/lang])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-         [::bread/data :post :db/id]
-         :en]}]
+         :post.status/published]}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title {:post/fields [:field/key :field/lang]}]
        :dispatcher/key :post

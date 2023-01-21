@@ -53,10 +53,23 @@
   {:pre [(keyword? k)]}
   (k (strings app)))
 
-(defn- map-with-keys [ks m]
-  (when
-    (and (map? m) (some ks (keys m)))
-    m))
+(defn- translatable-binding [ks field]
+  (when (map? field)
+    (let [k (first (keys field))
+          v (get field k)]
+      (when (or (some #{:field/content} v)
+                (and (contains? ks k) (= '[*] v)))
+        field))))
+
+(defn- remove-binding [[_ sym spec] rm]
+  (list 'pull sym (filter #(not= rm %) spec)))
+
+(comment
+  (translatable-binding :post/title)
+  (translatable-binding {:post/fields [:field/key]})
+  (translatable-binding {:post/fields [:field/content]})
+  (translatable-binding {:post/fields [:field/key :field/content]})
+  (translatable-binding {:post/fields '[*]}))
 
 (defn internationalize-query
   "Takes a Bread query and separates out any translatable fields into their
@@ -66,20 +79,14 @@
   [query lang]
   (let [{:query/keys [args db] k :query/key} query
         ;; {:find [(pull ?e _____)]}
+        ;;        this here ^^^^^
         pull (->> (get-in args [0 :find])
                   first rest second)
-        ;; Find any appearances of :post/fields in the query. If it appears as
-        ;; a map key, use the corresponding value as our pull expr. If it's a
-        ;; a keyword, query for a sensible default. Always include :db/id in
-        ;; the queried attrs.
-        ;; TODO generalize this to only look for :field/content
+        translatable-binding (partial translatable-binding #{:post/fields})
+        ;; Find bindings containing :field/content.
+        fields-binding (first (keep translatable-binding pull))
         fields-args
-        (when-let [fields-binding
-                   (first (keep
-                            (some-fn
-                              #{:post/fields}
-                              (partial map-with-keys #{:post/fields}))
-                            pull))]
+        (when fields-binding
           (let [field-keys (or (:post/fields fields-binding)
                                [:field/key :field/content])]
             (-> (empty-query)
@@ -87,10 +94,9 @@
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e [::bread/data k :db/id]]
                         ['?lang :field/lang lang]]))))
-        ;; TODO update original args to omit i18n fields.
         args
         (if fields-args
-          (update-in args [0 :find] identity)
+          (update-in args [0 :find 0] remove-binding fields-binding)
           args)]
     (if fields-args
       [(assoc query :query/args args)
