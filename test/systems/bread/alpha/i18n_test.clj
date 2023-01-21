@@ -286,6 +286,49 @@
        :taxon.taxonomy/tag]}
      :fr]
 
+    ;; With deeply nested, implicit :field/content
+    [{:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     {:query/name ::store/query
+      :query/key [:post :post/taxons :taxon/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?p ?lang]
+         :where [[?p :taxon/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :post :db/id]
+       :fr]}]
+    [#{:post/fields :taxon/fields :user/fields}
+     {:query/name ::store/query
+      :query/key :post
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          #_ ;; TODO handle this too!
+                          {:post/fields [*]}
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy
+                                         {:taxon/fields [*]}]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     :fr]
+
     ))
 
 (comment

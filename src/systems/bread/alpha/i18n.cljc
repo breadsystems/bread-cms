@@ -82,6 +82,8 @@
         ;;        this here ^^^^^
         pull (->> (get-in args [0 :find])
                   first rest second)
+        ;; TODO detect arbitrary nesting!!!
+        ;; TODO deal with multiple keys!!!!!11
         translatable-binding (partial translatable-binding attrs)
         ;; Find bindings containing :field/content.
         fields-binding (first (keep translatable-binding pull))
