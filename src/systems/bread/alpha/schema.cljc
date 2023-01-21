@@ -25,6 +25,36 @@
      :migration/dependencies #{}}))
 
 (def
+  ^{:doc "Schema for (site-wide) internationalization (AKA i18n) strings."}
+  i18n
+  (with-meta
+    [{:db/id "migration.i18n"
+      :migration/key :bread.migration/i18n
+      :migration/description "Migration for global translation strings"}
+     {:db/ident :i18n/key
+      :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :i18n/lang
+      :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :i18n/string
+      :db/doc "The value of the string itself, specific to a given path/lang combination."
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :i18n/translatable?
+      :db/doc "Whether the given attr is translatable."
+      :db/valueType :db.type/boolean
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}]
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations}}))
+
+(def
   ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
   posts
   (with-meta
@@ -53,6 +83,7 @@
       :db/doc "Zero or more post content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
+      :i18n/translatable? true
       :attr/migration "migration.posts"}
      {:db/ident :post/children
       :db/doc "Entity IDs of child posts, if any"
@@ -92,32 +123,8 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}]
     {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations}}))
-
-(def
-  ^{:doc "Schema for (site-wide) internationalization (AKA i18n) strings."}
-  i18n
-  (with-meta
-    [{:db/id "migration.i18n"
-      :migration/key :bread.migration/i18n
-      :migration/description "Migration for global translation strings"}
-     {:db/ident :i18n/key
-      :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     {:db/ident :i18n/lang
-      :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     {:db/ident :i18n/string
-      :db/doc "The value of the string itself, specific to a given path/lang combination."
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}]
-    {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations}}))
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/i18n}}))
 
 (def
   ^{:doc "Schema for taxons, ways of subdividing posts arbitrarily."}
@@ -157,9 +164,11 @@
       :db/doc "Translatable fields for this taxon."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
+      :i18n/translatable? true
       :attr/migration "migration.taxons"}]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/i18n
                                :bread.migration/posts}}))
 
 (def
@@ -328,6 +337,7 @@
       :db/doc "Zero or more user content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
+      :i18n/translatable? true
       :attr/migration "migration.users"}
 
      ;; Authorship of posts
@@ -362,8 +372,8 @@
   ^{:doc "Standard schema for the Bread CMS database."}
   initial
   [migrations
-   posts
    i18n
+   posts
    taxons
    menus
    revisions
