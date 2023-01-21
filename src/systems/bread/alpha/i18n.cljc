@@ -61,15 +61,72 @@
                 (and (contains? ks k) (= '[*] v)))
         field))))
 
-(defn- remove-binding [[_ sym spec] rm]
-  (list 'pull sym (filter #(not= rm %) spec)))
+(defn- translatable-binding [search-key field]
+  (when (map? field)
+    (let [k (first (keys field))
+          v (get field k)]
+      ;; Check for a matching key pointing to EITHER explicit :field/content
+      ;; OR a wildcard.
+      (when (and (= search-key k)
+                 (some #{:field/content '*} v))
+        field))))
+
+(defn- get-binding [search data]
+  (let [field (search data)]
+    (cond
+      field [field []]
+      (seqable? data) (some (fn [[k v]]
+                              (when-let [[field path]
+                                         (get-binding search v)]
+
+                                [field (cons k path)]))
+                            (if (map? data)
+                              data (map-indexed vector data))))))
+
+(defn translatable-paths [ks qk data]
+  (reduce (fn [paths search-key]
+            (let [search (partial translatable-binding search-key)
+                  [field-binding path] (get-binding search data)]
+              (if field-binding
+                (conj paths [field-binding
+                             (concat [qk]
+                                     (filter keyword? path)
+                                     [search-key])])
+                paths)))
+          [] ks))
 
 (comment
-  (translatable-binding :post/title)
-  (translatable-binding {:post/fields [:field/key]})
-  (translatable-binding {:post/fields [:field/content]})
-  (translatable-binding {:post/fields [:field/key :field/content]})
-  (translatable-binding {:post/fields '[*]}))
+  (translatable-paths #{:post/fields :taxon/fields}
+                      :post
+                      [:db/id :post/slug {:post/fields [:field/content]}])
+  (translatable-binding :post/fields {:post/fields [:field/key :field/content]})
+
+  (translatable-paths
+    #{:taxon/fields} :x
+    [:taxon/slug {:taxon/fields [:field/key :field/content]}]))
+
+(defn- remove-bindings [[_ sym spec] rm]
+  (let [pred (complement (set rm))]
+    (list 'pull sym (walk/prewalk (fn [x]
+                                    (if (and (sequential? x)
+                                             (not (map-entry? x)))
+                                      (filter pred x)
+                                      x))
+                                  spec))))
+
+(defn- construct-fields-query [lang orig-query k spec path]
+  (let [rel (last path)
+        spec (get spec rel)]
+    {:query/name ::store/query
+     :query/db (:query/db orig-query)
+     :query/key path
+     :query/args
+     [{:find [(list 'pull '?e (cons :db/id spec))]
+       :in '[$ ?p ?lang]
+       :where [['?p rel '?e]
+               '[?e :field/lang ?lang]]}
+      [::bread/data k :db/id]
+      lang]}))
 
 (defn internationalize-query
   "Takes a Bread query and separates out any translatable fields into their
@@ -82,32 +139,15 @@
         ;;        this here ^^^^^
         pull (->> (get-in args [0 :find])
                   first rest second)
-        ;; TODO detect arbitrary nesting!!!
-        ;; TODO deal with multiple keys!!!!!11
-        translatable-binding (partial translatable-binding attrs)
-        ;; Find bindings containing :field/content.
-        fields-binding (first (keep translatable-binding pull))
-        fields-key (when fields-binding
-                     (first (keys fields-binding)))
-        fields-args
-        (when fields-binding
-          (let [field-keys (or (get fields-binding fields-key)
-                               [:field/key :field/content])]
-            (-> (empty-query)
-                (assoc-in [0 :find]
-                          [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p fields-key '?e [::bread/data k :db/id]]
-                        ['?lang :field/lang lang]]))))
-        args
-        (if fields-args
-          (update-in args [0 :find 0] remove-binding fields-binding)
-          args)]
-    (if fields-args
-      [(assoc query :query/args args)
-       {:query/name ::store/query
-        :query/key [k fields-key]
-        :query/db db
-        :query/args fields-args}]
+        translatables (translatable-paths attrs k pull)]
+    (if (seq translatables)
+      (concat
+        (let [bindings-to-rm (map first translatables)
+              args (update-in args [0 :find 0] remove-bindings bindings-to-rm)]
+          [(assoc query :query/args args)])
+        (map (fn [[spec path]]
+               (construct-fields-query lang query k spec path))
+             translatables))
       [query])))
 
 (defmethod bread/action ::path-params
@@ -148,7 +188,3 @@
      ::bread/dispatch
      [{:action/name ::add-queries
        :action/description "Add I18n queries"}]}}))
-
-(comment
-  (require '[kaocha.repl :as k])
-  (k/run 'systems.bread.alpha.i18n-test))

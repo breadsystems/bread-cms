@@ -196,7 +196,7 @@
 
     ;; With :field/content
     [{:query/name ::store/query
-      :query/key :post
+      :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :post/slug]) .]
@@ -204,18 +204,18 @@
          :where [[?e :post/type ?type]]}
        :post.type/page]}
      {:query/name ::store/query
-      :query/key [:post :post/fields]
+      :query/key [:post-with-content :post/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?p ?lang]
          :where [[?p :post/fields ?e]
                  [?e :field/lang ?lang]]}
-       [::bread/data :post :db/id]
+       [::bread/data :post-with-content :db/id]
        :fr]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
-      :query/key :post
+      :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :post/slug {:post/fields
@@ -288,7 +288,7 @@
 
     ;; With deeply nested, implicit :field/content
     [{:query/name ::store/query
-      :query/key :post
+      :query/key :nested-post
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
@@ -301,24 +301,85 @@
        "my-post"
        :post.type/page]}
      {:query/name ::store/query
-      :query/key [:post :post/taxons :taxon/fields]
+      :query/key [:nested-post :post/taxons :taxon/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?p ?lang]
          :where [[?p :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
-       [::bread/data :post :db/id]
+       [::bread/data :nested-post :db/id]
+       :fr]}
+     {:query/name ::store/query
+      :query/key [:nested-post :post/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?p ?lang]
+         :where [[?p :post/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :nested-post :db/id]
        :fr]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
-      :query/key :post
+      :query/key :nested-post
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          #_ ;; TODO handle this too!
                           {:post/fields [*]}
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy
+                                         {:taxon/fields [*]}]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     :fr]
+
+    ;; With deeply nested, mixed implicit & explicit :field/content
+    [{:query/name ::store/query
+      :query/key :mixed
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     {:query/name ::store/query
+      :query/key [:mixed :post/taxons :taxon/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?p ?lang]
+         :where [[?p :taxon/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :mixed :db/id]
+       :fr]}
+     {:query/name ::store/query
+      :query/key [:mixed :post/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :field/key :field/content])]
+         :in [$ ?p ?lang]
+         :where [[?p :post/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :mixed :db/id]
+       :fr]}]
+    [#{:post/fields :taxon/fields :user/fields}
+     {:query/name ::store/query
+      :query/key :mixed
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/fields [:field/key :field/content]}
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
                                          {:taxon/fields [*]}]}]) .]
