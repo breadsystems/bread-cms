@@ -157,16 +157,6 @@
   [_ {cls :class} [{classes :my/class :as menu}]]
   (assoc menu :my/class (if classes (str classes " " cls) cls)))
 
-
-;; (fn [{::bread/keys [data] :as res}]
-;;   (let [status (if (:not-found? data)
-;;                  404
-;;                  (or (:status res) 200))]
-;;     (assoc res
-;;            :headers {"content-type"
-;;                      "text/html"}
-;;            :status status)))))
-
 (defmethod bread/action ::render-ring
   [{::bread/keys [data] :keys [status] :as res} {:keys [headers]} _]
   (assoc res
@@ -281,15 +271,6 @@
     (apply store/q (store/datastore $req) query args))
 
   (q '{:find [(pull ?e [:db/id :post/slug])],
-       :in [$ % ?slug],
-       :where
-       [(post-published ?e)
-        [?e :post/slug ?slug]]}
-     '[[(post-published ?e)
-        [?e :post/status :post.status/published]]]
-     "")
-
-  (q '{:find [(pull ?e [:db/id :post/slug])],
        :in [$ % ?status ?taxonomy ?slug],
        :where [[?e :post/status ?status]
                (post-taxonomized ?e ?taxonomy ?slug)]}
@@ -303,7 +284,7 @@
 
   (q '{:find
        [(pull ?e [:db/id :taxon/slug
-                  #:taxon{:fields [:field/key :field/content]}
+                  {:taxon/fields [:field/key :field/content]}
                   #_
                   #:post{:_taxons
                          [:post/slug
@@ -439,6 +420,5 @@
   (slurp "http://localhost:1312/en/")
 
   (::bread/dispatch (::bread/hooks @app))
-  (:hook/posts-menu (::bread/hooks @app))
 
   (restart!))
