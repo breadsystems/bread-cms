@@ -282,13 +282,11 @@
      :taxon.taxonomy/category
      "my-cat")
 
+  ;; TODO generic query i18n
+  ;; https://github.com/breadsystems/bread-cms/issues/48
   (q '{:find
        [(pull ?e [:db/id :taxon/slug
-                  {:taxon/fields [:field/key :field/content]}
-                  #_
-                  #:post{:_taxons
-                         [:post/slug
-                          #:post{:fields [:field/key :field/content]}]}])],
+                  {:taxon/fields [:field/key :field/content]}])],
        :in [$ % ?status ?taxonomy ?slug],
        :where
        [[?e :taxon/slug ?slug]
