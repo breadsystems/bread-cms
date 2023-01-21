@@ -1,8 +1,6 @@
 (ns systems.bread.alpha.post-test
   (:require
     [clojure.test :refer [deftest are]]
-    [kaocha.repl :as k]
-    [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
@@ -232,4 +230,5 @@
        :route/params {:lang "en"}})))
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))

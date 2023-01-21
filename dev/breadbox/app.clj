@@ -24,6 +24,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.tools.debug.core :as debug]
@@ -60,6 +61,21 @@
               :datastore/initial-txns
               data/initial-content})
 
+(declare main-nav)
+
+(defc main-layout
+  [{:keys [main-content i18n menus lang]}]
+  {:content-path [:main-content]}
+  [:html {:lang lang}
+   [:head
+    [:title {:breadbox i18n}]]
+   [:body
+    [:header
+     (main-nav (:main-nav menus))]
+    [:main main-content]
+    [:footer
+     (main-nav (:footer-nav menus))]]])
+
 (defn main-nav [menu]
   [:nav {:class (:my/class menu)}
    [:ul
@@ -77,37 +93,45 @@
       (:items menu))]])
 
 (defc home [{:keys [post menus] :as x}]
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:extends main-layout
+   :query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
-    [:main
+    [:<>
      [:h1 title]
-     (main-nav (:main-nav menus))
      [:p (:hello simple)]
-     [:pre (str post)]
-     ;; TODO layouts
-     [:footer
-      (main-nav (:footer-nav menus))]]))
+     [:img {:src (:img-url simple)}]]))
+
+(defc category-page [{:keys [taxon i18n menus] :as data}]
+  {:extends main-layout
+   :query [:taxon/slug
+           {:taxon/fields [:field/key :field/content]}
+           {:post/_taxons
+            [:post/slug {:post/fields [:field/key :field/content]}]}]
+   :key :taxon}
+  (let [{:taxon/keys [slug fields posts]} taxon]
+    [:<>
+     [:h1 (:title fields)]
+     [:div [:code slug]]
+     (map
+       (fn [{:post/keys [slug fields]}]
+         [:article
+          [:h2 (:title fields)]])
+       posts)]))
 
 (defc page [{:keys [post i18n menus] :as data}]
-  {:query [{:post/fields [:field/key :field/content]}]
+  {:extends main-layout
+   :query [{:post/fields [:field/key :field/content]}]
    :key :post}
   (let [post (post/compact-fields post)
         {:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
-     (main-nav (:main-nav menus))
-     [:main
-      [:h2 (:hello simple)]
-      [:p (:body simple)]
-      [:p.goodbye (:goodbye simple)]
-      [:p.flex flex-content]]
-     [:pre
-      (str post)]
-     ;; TODO layouts
-     [:footer
-      (main-nav (:footer-nav menus))]]))
+     [:h2 (:hello simple)]
+     [:p (:body simple)]
+     [:p.goodbye (:goodbye simple)]
+     [:p.flex flex-content]]))
 
 (defc static-page [{:keys [post lang]}]
   {:key :post}
@@ -159,6 +183,10 @@
                          :bread/watch-static {:dir "dev/content"
                                               :path->req [0 "static" 1]}
                          :name :bread.route/static}]
+      ["/cat/:slug/" {:bread/dispatcher {:dispatcher/type :dispatcher.type/taxon
+                                         :taxon/taxonomy :taxon.taxonomy/category
+                                         :dispatcher/key :posts}
+                     :bread/component category-page}]
       ["/*slugs" {:name :bread.route/page
                   :bread/dispatcher :dispatcher.type/page
                   :bread/component page
@@ -328,7 +356,7 @@
     (slurp "resources/public/en/parent-page/index.html"))
 
   ;; Test out the whole Bread request lifecycle!
-  (def $req (merge {:uri "/en/"} @app))
+  (def $req (merge {:uri "/en/cat/my-cat/"} @app))
   (route/params $req (route/match $req))
   (bread/match $router $req)
   (->> $req (bread/dispatch $router) ::bread/dispatcher)
@@ -344,6 +372,51 @@
 
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
+
+  (q '{:find [(pull ?e [:db/id :post/slug])],
+       :in [$ % ?slug],
+       :where
+       [(post-published ?e)
+        [?e :post/slug ?slug]]}
+     '[[(post-published ?e)
+        [?e :post/status :post.status/published]]]
+     "")
+
+  (q '{:find [(pull ?e [:db/id :post/slug])],
+       :in [$ % ?status ?taxonomy ?slug],
+       :where [[?e :post/status ?status]
+               (post-taxonomized ?e ?taxonomy ?slug)]}
+     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+        [?post :post/taxons ?t]
+        [?t :taxon/taxonomy ?taxonomy]
+        [?t :taxon/slug ?taxon-slug]]]
+     :post.status/published
+     :taxon.taxonomy/category
+     "my-cat")
+
+  (q '{:find
+       [(pull ?e [:db/id :taxon/slug
+                  #:taxon{:fields [:field/key :field/content]}
+                  #_
+                  #:post{:_taxons
+                         [:post/slug
+                          #:post{:fields [:field/key :field/content]}]}])],
+       :in [$ % ?status ?taxonomy ?slug],
+       :where
+       [[?e :taxon/slug ?slug]
+        [?p :post/status ?status]
+        (post-taxonomized ?p ?taxonomy ?slug)]}
+     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+        [?post :post/taxons ?t]
+        [?t :taxon/taxonomy ?taxonomy]
+        [?t :taxon/slug ?taxon-slug]]]
+     :post.status/published
+     :taxon.taxonomy/category
+     "my-cat")
+
+  (q '{:find [(pull ?e [:db/id :taxon/taxonomy :taxon/slug])]
+       :in [$]
+       :where [[?e :taxon/taxonomy]]})
 
   (q '{:find [?e] :where [[?e :x]]})
 
