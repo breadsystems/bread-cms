@@ -282,23 +282,20 @@
      :taxon.taxonomy/category
      "my-cat")
 
-  ;; TODO generic query i18n
-  ;; https://github.com/breadsystems/bread-cms/issues/48
+  ;; Lookup translatable entity fields
+  (q '[:find ?attr
+       :where [?e :db/ident ?attr] [?e :i18n/translatable? true]])
+
+  ;; Wildcard query for post/fields by post slug
   (q '{:find
-       [(pull ?e [:db/id :taxon/slug
-                  {:taxon/fields [:field/key :field/content]}])],
-       :in [$ % ?status ?taxonomy ?slug],
+       [(pull ?f [:db/id *])],
+       :in [$ ?slug ?lang],
        :where
-       [[?e :taxon/slug ?slug]
-        [?p :post/status ?status]
-        (post-taxonomized ?p ?taxonomy ?slug)]}
-     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-        [?post :post/taxons ?t]
-        [?t :taxon/taxonomy ?taxonomy]
-        [?t :taxon/slug ?taxon-slug]]]
-     :post.status/published
-     :taxon.taxonomy/category
-     "my-cat")
+       [[?p :post/slug ?slug]
+        [?p :post/fields ?f]
+        [?f :field/lang ?lang]]}
+     "child-page"
+     :en)
 
   ;; Retractions!
   (def child-page
