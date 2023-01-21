@@ -202,6 +202,32 @@
        :post/status false ; same as explicit nil.
        :route/params {:lang "en" :slug "some-tag"}}
 
+      #_#_
+      ;; {:uri "/en/tag/some-tag"}
+      ;; TODO Dynamic params from request...
+      [{:query/name ::store/query
+        :query/key :tag
+        :query/db db
+        :query/args
+        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+           :in [$ % ?status ?type ?taxonomy ?slug]
+           :where [[?t :taxon/slug ?slug]
+                   (post-taxonomized ?p ?taxonomy ?slug)]}
+         [taxon/post-taxonomized-rule]
+         :post.status/draft ; populated from req
+         :post.type/article ; populated from req
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       {:query/name ::taxon/compact
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
+       :dispatcher/params {:post/status :status
+                           :post/type :type}
+       :route/params {:lang "en" :slug "some-tag"
+                      :type "article" :status "draft"}}
+
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
       [{:query/name ::store/query
