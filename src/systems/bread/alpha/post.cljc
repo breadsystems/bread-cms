@@ -74,25 +74,24 @@
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
-(defmethod dispatcher/dispatch :dispatcher.type/page
-  [{::bread/keys [dispatcher] :as req}]
-  (let [{k :dispatcher/key params :route/params
-         :dispatcher/keys [ancestral? pull]} dispatcher
-        k (or k :post)
-        db (store/datastore req)
+(defn- pull-spec? [arg]
+  (and (list? arg) (= 'pull (first arg))))
 
-        page-args
-        (-> (pull-query dispatcher)
-            ;; TODO handle this in pull-query?
-            (update-in [0 :find] conj '.) ;; Query for a single post.
-            (ancestralize (string/split (:slugs params "") #"/"))
-            (where [['?type :post/type :post.type/page]
-                    ['?status :post/status :post.status/published]]))
-
+(defn- internationalize
+  "Takes a Bread query and separates out any translatable fields into their
+  own subsequent queries, returning the entire sequence of one or more queries.
+  The underlying Datalog query must be a map (i.e. with :find as a key) and
+  must contain a pull as the first item in its :find clause."
+  [query lang]
+  (let [{:query/keys [args db] k :query/key} query
+        ;; {:find [(pull ?e _____)]}
+        pull (->> (get-in args [0 :find])
+                  first rest second)
         ;; Find any appearances of :post/fields in the query. If it appears as
         ;; a map key, use the corresponding value as our pull expr. If it's a
         ;; a keyword, query for a sensible default. Always include :db/id in
         ;; the queried attrs.
+        ;; TODO generalize this to only look for :field/content
         fields-args
         (when-let [fields-binding
                    (first (keep
@@ -106,17 +105,35 @@
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
                 (where [['?p :post/fields '?e [::bread/data k :db/id]]
-                        ['?lang :field/lang (keyword (:lang params))]]))))]
-    {:queries (if fields-args
-                [{:query/name ::store/query
-                  :query/key k
-                  :query/db db
-                  :query/args page-args}
-                 {:query/name ::store/query
-                  :query/key [k :post/fields]
-                  :query/db db
-                  :query/args fields-args}]
-                [{:query/name ::store/query
-                  :query/key k
-                  :query/db db
-                  :query/args page-args}])}))
+                        ['?lang :field/lang lang]]))))
+        ;; TODO update original args to omit i18n fields.
+        args
+        (if fields-args
+          (update-in args [0 :find] identity)
+          args)]
+    (if fields-args
+      [(assoc query :query/args args)
+       {:query/name ::store/query
+        :query/key [k :post/fields]
+        :query/db db
+        :query/args fields-args}]
+      [query])))
+
+(defmethod dispatcher/dispatch :dispatcher.type/page
+  [{::bread/keys [dispatcher] :as req}]
+  (let [{k :dispatcher/key params :route/params
+         :dispatcher/keys [ancestral? pull]} dispatcher
+        k (or k :post)
+        db (store/datastore req)
+        lang (keyword (:lang params))
+        page-args
+        (-> (pull-query dispatcher)
+            (update-in [0 :find] conj '.) ;; Query for a single post.
+            (ancestralize (string/split (:slugs params "") #"/"))
+            (where [['?type :post/type :post.type/page]
+                    ['?status :post/status :post.status/published]]))
+        page-query {:query/name ::store/query
+                    :query/key k
+                    :query/db db
+                    :query/args page-args}]
+    {:queries (internationalize page-query lang)}))

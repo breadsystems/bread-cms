@@ -208,6 +208,8 @@
 
       ;; {:uri "/en/simple"}
       ;; :post/fields i18n w/ nested pull clause
+      ;; TODO this query should actually remain untouched, since it
+      ;; doesn't include :field/content.
       [{:query/name ::store/query
         :query/key :post
         :query/db db
