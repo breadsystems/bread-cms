@@ -302,11 +302,31 @@
      :taxon.taxonomy/category
      "my-cat")
 
-  (q '{:find [(pull ?e [:db/id :taxon/taxonomy :taxon/slug])]
-       :in [$]
-       :where [[?e :taxon/taxonomy]]})
-
-  (q '{:find [?e] :where [[?e :x]]})
+  ;; Retractions!
+  (def child-page
+    (q '{:find [(pull ?e [:db/id :post/slug]) .],
+         :in [$ % ?slug],
+         :where
+         [(post-published ?e)
+          [?e :post/slug ?slug]]}
+       '[[(post-published ?e)
+          [?e :post/status :post.status/published]]]
+       "child-page"))
+  ;; Get all attrs of child-page, including tx info.
+  (q '{:find [?attr ?val ?tx ?added]
+       :in [$ ?e]
+       :where [[?e ?attr ?val ?tx ?added]]}
+     (:db/id child-page))
+  ;; Get child-page as a simple map
+  (into {} (q '{:find [?attr ?val]
+                :in [$ ?e]
+                :where [[?e ?attr ?val]]}
+              (:db/id child-page)))
+  ;; RETRACT child-page
+  ;; !!! BE CAREFUL WITH THIS !!!
+  (store/transact
+    (store/connection @app)
+    [[:db/retractEntity 66]])
 
   (store/installed? $config)
   (store/migration-keys (store/datastore $req))
