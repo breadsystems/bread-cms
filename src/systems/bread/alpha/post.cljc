@@ -16,39 +16,7 @@
 
 (comment
   (take 5 (syms "?slug_"))
-  (take 5 (syms "?slug_" 1)))
-
-(defn- path->constraints
-  ([path]
-   (path->constraints path {}))
-  ([path {:keys [child-sym]}]
-   (vec (loop [query []
-               [inputs path] [[] path]
-               descendant-sym (or child-sym '?e)
-               ;; Start the parent count at 1 so that
-               ;; [?parent_x :post/slug ?slug_x] numbers line up.
-               ;; This makes queries easier to read and debug.
-               [parent-sym & parent-syms] (syms "?parent_" 1)
-               [slug-sym & slug-syms] (syms "?slug_")]
-          (let [inputs (conj inputs slug-sym)
-                where [[descendant-sym :post/slug slug-sym]]]
-            (if (<= (count path) 1)
-              [(vec inputs)
-               (vec (concat query where
-                            [(list
-                               'not-join
-                               [descendant-sym]
-                               ['?root-ancestor :post/children descendant-sym])]))]
-              (recur
-                (concat query where [[parent-sym :post/children descendant-sym]])
-                [inputs (butlast path)]
-                parent-sym ;; the new descendant-sym
-                parent-syms
-                slug-syms)))))))
-
-(comment
-  (path->constraints ["grandparent" "parent" "child"])
-  (path->constraints ["parent" "child"])
+  (take 5 (syms "?slug_" 1))
 
   (create-post-ancestry-rule 1)
   (create-post-ancestry-rule 2)
