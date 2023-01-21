@@ -37,99 +37,21 @@
     query
     constraints))
 
-
-(defn attr-binding
-  "Parses pull-expr for attr, returning the attr if found as it appears in
-  pull-expr (i.e. as a keyword or a map)"
-  [attr pull-expr]
-  (let [attrs #{attr}
-        map-with-keys (fn [ks x] (when (and (map? x) (some ks (keys x))) x))]
-    (first (keep (some-fn attrs (partial map-with-keys attrs)) pull-expr))))
+(defn attr-binding [search-key field]
+  (when (map? field)
+    (let [k (first (keys field))
+          v (get field k)]
+      ;; Check for a matching key pointing to EITHER explicit :field/content
+      ;; OR a wildcard.
+      (when (and (= search-key k)
+                 (some #{:field/content '*} v))
+        field))))
 
 (comment
-  (attr-binding :taxon/fields [:taxon/fields])
-  (attr-binding :taxon/fields [{:taxon/fields [:field/key :field/content]}])
-
-  ;; OKAY, let's talk field I18n.
-  ;; We want to be able to detect, at arbitrary depth, any fields that need to
-  ;; be internationalized (or, more generally, queried for separately for
-  ;; any reason):
-  [:taxon/slug :taxon/fields {:post/_taxons [:post/slug :post/fields]}]
-
-  ;; EXPANDED
-  [:taxon/slug
-   {:taxon/fields [:field/key :field/content]}
-   {:post/_taxons [:post/slug {:post/fields [:field/key :field/content]}]}]
-
-  ;; FINAL ::queries
-  [;; initial taxon query
-   {:query/key :taxon
-    :query/args ['{:find [(pull ?t [:taxon/slug {:post/_taxons [:post/slug]}])]
-                   :in [$ ?slug]
-                   :where [[?t :taxon/slug ?slug]]}
-                 "my-cat"]}
-   ;; taxon fields
-   {:query/key [:taxon :taxon/fields]
-    :query/args ['{:find [(pull ?f [:field/key :field/content])]
-                   :in [$ ?t ?lang]
-                   :where [[?t :taxon/fields ?f]
-                           [?f :field/lang ?lang]]}
-                 [::bread/data :taxon :db/id]
-                 :en]}
-   ;; nested posts
-   {:query/key [:taxon :post/_taxons :post/fields]
-    :query/args ['{:find [(pull ?f [[:field/key :field/content]])]
-                   :in [$ ?p ?lang]
-                   :where [[?p :post/fields ?f]
-                           [?f :field/lang ?lang]]}]}
-   {:query/key :taxon
-    :query/name ::rename-keys
-    :kmap {:post/_taxons :taxon/posts}}]
-
-  (defn get-path [search data]
-    (cond
-      (= search data) [search []]
-      (seqable? data) (some (fn [[k v]]
-                              (when-let [[found path] (get-path search v)]
-                                [found (cons k path)]))
-                            (if (map? data) data (map-indexed vector data)))))
-
-  (defn get-paths [qk ks data]
-    (into {} (map (fn [k]
-                    (let [[k path] (get-path k data)]
-                      [k (concat [qk] (filter keyword? path) [k])]))
-                  ks)))
-
-  (get-path
-    :taxon/fields
-    [:taxon/slug :taxon/fields {:post/_taxons [:post/slug :post/fields]}])
-  (get-path
-    :post/fields
-    [:taxon/slug :taxon/fields {:post/_taxons [:post/slug :post/fields]}])
-
-  (get-paths
-    :taxon
-    [:taxon/fields :post/fields]
-    [:taxon/slug :taxon/fields {:post/_taxons [:post/slug :post/fields]}])
-  (get-paths
-    :taxon
-    [:taxon/fields :post/fields]
-    [:post/slug {:some/relation
-                 [:taxon/slug
-                  :taxon/fields
-                  {:post/_taxons [:post/slug :post/fields]}]}])
-
-  (require '[clojure.walk :as walk] '[clojure.set :refer [rename-keys]])
-
-  (walk/postwalk (fn [node]
-                   (if (map? node)
-                     (rename-keys node {:x :X :y :Y})
-                     node))
-                 {:w {:x "Le X"} :y "Y" :z "Z"})
-
-
-
-  )
+  (attr-binding :taxon/fields {:taxon/fields [:field/content]})
+  (attr-binding :taxon/fields {:taxon/fields [:field/key :field/content]})
+  (attr-binding :taxon/fields {:taxon/fields '[*]})
+  (attr-binding :post/fields {:post/fields '[*]}))
 
 (defn attrs
   "Get all schema data available about every attr present in store"

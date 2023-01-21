@@ -6,7 +6,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.util.datalog :refer [empty-query where pull-query]]))
+    [systems.bread.alpha.util.datalog :refer [attr-binding]]))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
@@ -53,24 +53,6 @@
   {:pre [(keyword? k)]}
   (k (strings app)))
 
-(defn- translatable-binding [ks field]
-  (when (map? field)
-    (let [k (first (keys field))
-          v (get field k)]
-      (when (or (some #{:field/content} v)
-                (and (contains? ks k) (= '[*] v)))
-        field))))
-
-(defn- translatable-binding [search-key field]
-  (when (map? field)
-    (let [k (first (keys field))
-          v (get field k)]
-      ;; Check for a matching key pointing to EITHER explicit :field/content
-      ;; OR a wildcard.
-      (when (and (= search-key k)
-                 (some #{:field/content '*} v))
-        field))))
-
 (defn- get-binding [search data]
   (let [field (search data)]
     (cond
@@ -85,7 +67,7 @@
 
 (defn translatable-paths [ks qk data]
   (reduce (fn [paths search-key]
-            (let [search (partial translatable-binding search-key)
+            (let [search (partial attr-binding search-key)
                   [field-binding path] (get-binding search data)]
               (if field-binding
                 (conj paths [field-binding
@@ -99,7 +81,6 @@
   (translatable-paths #{:post/fields :taxon/fields}
                       :post
                       [:db/id :post/slug {:post/fields [:field/content]}])
-  (translatable-binding :post/fields {:post/fields [:field/key :field/content]})
 
   (translatable-paths
     #{:taxon/fields} :x
