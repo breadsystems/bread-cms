@@ -159,7 +159,8 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [{:query/name ::store/query
+    [#{:post/fields}
+     {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -180,7 +181,8 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [{:query/name ::store/query
+    [#{:post/fields}
+     {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -211,7 +213,8 @@
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
        :fr]}]
-    [{:query/name ::store/query
+    [#{:post/fields}
+     {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -242,7 +245,8 @@
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
        :fr]}]
-    [{:query/name ::store/query
+    [#{:post/fields}
+     {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args

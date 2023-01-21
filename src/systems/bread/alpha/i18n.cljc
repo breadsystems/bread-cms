@@ -76,13 +76,13 @@
   own subsequent queries, returning the entire sequence of one or more queries.
   The underlying Datalog query must be a map (i.e. with :find as a key) and
   must contain a pull as the first item in its :find clause."
-  [query lang]
+  [attrs query lang]
   (let [{:query/keys [args db] k :query/key} query
         ;; {:find [(pull ?e _____)]}
         ;;        this here ^^^^^
         pull (->> (get-in args [0 :find])
                   first rest second)
-        translatable-binding (partial translatable-binding #{:post/fields})
+        translatable-binding (partial translatable-binding attrs)
         ;; Find bindings containing :field/content.
         fields-binding (first (keep translatable-binding pull))
         fields-args
