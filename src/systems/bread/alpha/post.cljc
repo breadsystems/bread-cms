@@ -74,14 +74,20 @@
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :post/parent earliest-ancestor-sym])]))))
 
-(defn- ancestralize [query ancestry]
-  (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
-    (-> query
-      (update-in [0 :in] #(vec (concat % in)))
-      (update-in [0 :where] #(vec (concat % where)))
-      ;; Need to reverse path here because joins go "up" the ancestry tree,
-      ;; away from our immediate child page.
-      (concat (reverse ancestry)))))
+(defn- ancestralize [query slugs]
+  (let [depth (count slugs)
+        slug-syms (take depth (syms "?slug_"))
+        ;; Place slug input args in ancestral order (earliest ancestor first),
+        ;; since that is the order in which they appear in the URL.
+        input-syms (reverse slug-syms)
+        rule-invocation (apply list 'post-ancestry '?e slug-syms)
+        rule (create-post-ancestry-rule depth)]
+    (apply conj
+           (-> query
+               (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
+               (update-in [0 :where] conj rule-invocation)
+               (conj [rule]))
+           slugs)))
 
 (defn expand-post [result]
   (let [post (ffirst result)
@@ -100,8 +106,6 @@
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
-;; TODO use Rules here instead of all this ornate logic...
-;; https://docs.datomic.com/on-prem/query/query.html#rules
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key params :route/params
@@ -113,9 +117,9 @@
         (-> (pull-query dispatcher)
             ;; TODO handle this in pull-query?
             (update-in [0 :find] conj '.) ;; Query for a single post.
+            (ancestralize (string/split (:slugs params "") #"/"))
             (where [['?type :post/type :post.type/page]
-                    ['?status :post/status :post.status/published]])
-            (ancestralize (string/split (:slugs params "") #"/")))
+                    ['?status :post/status :post.status/published]]))
 
         ;; Find any appearances of :post/fields in the query. If it appears as
         ;; a map key, use the corresponding value as our pull expr. If it's a
