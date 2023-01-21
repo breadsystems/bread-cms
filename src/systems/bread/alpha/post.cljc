@@ -15,18 +15,8 @@
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
 (comment
-  (for [n (range 10)] (symbol (str "?slug_" n)))
-
-  (loop [[slug & slugs] (take 15 (syms "?slug_"))]
-    (prn slug)
-    (when (seq slugs)
-      (recur slugs)))
-
-  (loop [[slug & slugs] (take 15 (syms "?slug_" 1))]
-    (prn slug)
-    (when (seq slugs)
-      (recur slugs)))
-  )
+  (take 5 (syms "?slug_"))
+  (take 5 (syms "?slug_" 1)))
 
 (defn- path->constraints
   ([path]
@@ -60,8 +50,29 @@
   (path->constraints ["grandparent" "parent" "child"])
   (path->constraints ["parent" "child"])
 
+  (create-post-ancestry-rule 1)
+  (create-post-ancestry-rule 2)
+  (create-post-ancestry-rule 5)
+
   ;;
   )
+
+(defn create-post-ancestry-rule [depth]
+  (let [slug-syms (take depth (syms "?slug_"))
+        descendant-syms (take depth (cons '?child (syms "?ancestor_" 1)))
+        earliest-ancestor-sym (last descendant-syms)]
+    (vec (concat
+           [(apply list 'post-ancestry '?child slug-syms)]
+           [['?child :post/slug (first slug-syms)]]
+           (mapcat
+             (fn [[ancestor-sym descendant-sym slug-sym]]
+               [[ancestor-sym :post/children descendant-sym]
+                [ancestor-sym :post/slug slug-sym]])
+             (partition 3 (interleave (rest descendant-syms)
+                                      (butlast descendant-syms)
+                                      (rest slug-syms))))
+           [(list 'not-join [earliest-ancestor-sym]
+                  ['?_ :post/parent earliest-ancestor-sym])]))))
 
 (defn- ancestralize [query ancestry]
   (let [[in where] (path->constraints ancestry {:slug-sym '?slug})]
