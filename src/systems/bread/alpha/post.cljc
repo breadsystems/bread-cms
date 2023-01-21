@@ -5,8 +5,9 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.dispatcher :as dispatcher :refer [where pull-query]]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.util.datalog :refer [where pull-query]]))
 
 (defn- syms
   ([prefix]
@@ -66,58 +67,11 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
-(defn- map-with-keys [ks m]
-  (when
-    (and (map? m) (some ks (keys m)))
-    m))
-
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
 (defn- pull-spec? [arg]
   (and (list? arg) (= 'pull (first arg))))
-
-(defn- internationalize
-  "Takes a Bread query and separates out any translatable fields into their
-  own subsequent queries, returning the entire sequence of one or more queries.
-  The underlying Datalog query must be a map (i.e. with :find as a key) and
-  must contain a pull as the first item in its :find clause."
-  [query lang]
-  (let [{:query/keys [args db] k :query/key} query
-        ;; {:find [(pull ?e _____)]}
-        pull (->> (get-in args [0 :find])
-                  first rest second)
-        ;; Find any appearances of :post/fields in the query. If it appears as
-        ;; a map key, use the corresponding value as our pull expr. If it's a
-        ;; a keyword, query for a sensible default. Always include :db/id in
-        ;; the queried attrs.
-        ;; TODO generalize this to only look for :field/content
-        fields-args
-        (when-let [fields-binding
-                   (first (keep
-                            (some-fn
-                              #{:post/fields}
-                              (partial map-with-keys #{:post/fields}))
-                            pull))]
-          (let [field-keys (or (:post/fields fields-binding)
-                               [:field/key :field/content])]
-            (-> (dispatcher/empty-query)
-                (assoc-in [0 :find]
-                          [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e [::bread/data k :db/id]]
-                        ['?lang :field/lang lang]]))))
-        ;; TODO update original args to omit i18n fields.
-        args
-        (if fields-args
-          (update-in args [0 :find] identity)
-          args)]
-    (if fields-args
-      [(assoc query :query/args args)
-       {:query/name ::store/query
-        :query/key [k :post/fields]
-        :query/db db
-        :query/args fields-args}]
-      [query])))
 
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
@@ -136,4 +90,4 @@
                     :query/key k
                     :query/db db
                     :query/args page-args}]
-    {:queries (internationalize page-query lang)}))
+    {:queries (i18n/internationalize-query page-query lang)}))

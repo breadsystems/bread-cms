@@ -4,6 +4,40 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
+;; TODO replace with datalog-pull
+(defn empty-query []
+  [{:find []
+    :in ['$]
+    :where []}])
+(defn pull-query
+  "Get a basic query with a (pull ...) form in the :find clause"
+  [{:dispatcher/keys [pull]}]
+  (let [pulling-eid? (some #{:db/id} pull)
+        pull-expr (if pulling-eid? pull (cons :db/id pull))]
+    (update-in
+      (empty-query)
+      [0 :find]
+      conj
+      (list 'pull '?e pull-expr))))
+(defn- apply-where
+  ([query sym k v]
+   (-> query
+       (update-in [0 :where] conj ['?e k sym])
+       (update-in [0 :in] conj sym)
+       (conj v)))
+  ([query sym k input-sym v]
+   (-> query
+       (update-in [0 :where] conj [sym k input-sym])
+       (update-in [0 :in] conj sym)
+       (conj v))))
+(defn where [query constraints]
+  (reduce
+    (fn [query params]
+      (apply apply-where query params))
+    query
+    constraints))
+
+
 (defn attr-binding
   "Parses pull-expr for attr, returning the attr if found as it appears in
   pull-expr (i.e. as a keyword or a map)"

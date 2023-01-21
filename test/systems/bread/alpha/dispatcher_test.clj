@@ -6,16 +6,6 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(deftest test-pull-query
-  (are [clause dispatcher] (= clause (-> dispatcher
-                                       dispatcher/pull-query
-                                       (get-in [0 :find])))
-
-       ['(pull ?e [:db/id :post/title :post/slug])]
-       {:dispatcher/pull [:post/title :post/slug]}
-
-       ))
-
 (defmethod dispatcher/dispatch ::passthru [{::bread/keys [dispatcher]}]
   (:v dispatcher))
 
