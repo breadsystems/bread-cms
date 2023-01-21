@@ -80,7 +80,7 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
      {:db/ident :post/fields
-      :db/doc "Zero or more post content fields"
+      :db/doc "Zero or more translatable post content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :i18n/translatable? true
@@ -161,7 +161,7 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.taxons"}
      {:db/ident :taxon/fields
-      :db/doc "Translatable fields for this taxon."
+      :db/doc "Zero or more translatable fields for this taxon."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :i18n/translatable? true
@@ -334,7 +334,7 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
      {:db/ident :user/fields
-      :db/doc "Zero or more user content fields"
+      :db/doc "Zero or more translatable user content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :i18n/translatable? true
