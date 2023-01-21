@@ -197,7 +197,7 @@
        :route/params {:slugs "simple" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields WITHOUT :post/content
+      ;; :post/fields WITHOUT :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db

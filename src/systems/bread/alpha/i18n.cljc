@@ -85,14 +85,16 @@
         translatable-binding (partial translatable-binding attrs)
         ;; Find bindings containing :field/content.
         fields-binding (first (keep translatable-binding pull))
+        fields-key (when fields-binding
+                     (first (keys fields-binding)))
         fields-args
         (when fields-binding
-          (let [field-keys (or (:post/fields fields-binding)
+          (let [field-keys (or (get fields-binding fields-key)
                                [:field/key :field/content])]
             (-> (empty-query)
                 (assoc-in [0 :find]
                           [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e [::bread/data k :db/id]]
+                (where [['?p fields-key '?e [::bread/data k :db/id]]
                         ['?lang :field/lang lang]]))))
         args
         (if fields-args
@@ -101,7 +103,7 @@
     (if fields-args
       [(assoc query :query/args args)
        {:query/name ::store/query
-        :query/key [k :post/fields]
+        :query/key [k fields-key]
         :query/db db
         :query/args fields-args}]
       [query])))

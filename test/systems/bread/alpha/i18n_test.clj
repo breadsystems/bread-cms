@@ -256,6 +256,36 @@
        :post.type/page]}
      :fr]
 
+    ;; With :field/content implicity as part of {:taxon/fields [*]}
+    [{:query/name ::store/query
+      :query/key :taxon
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+         :in [$ ?taxonomy]
+         :where [[?e :taxon/taxonomy ?taxonomy]]}
+       :taxon.taxonomy/tag]}
+     {:query/name ::store/query
+      :query/key [:taxon :taxon/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?p ?lang]
+         :where [[?p :taxon/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :taxon :db/id]
+       :fr]}]
+    [#{:post/fields :taxon/fields :user/fields}
+     {:query/name ::store/query
+      :query/key :taxon
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :taxon/slug {:taxon/fields [*]}]) .]
+         :in [$ ?taxonomy]
+         :where [[?e :taxon/taxonomy ?taxonomy]]}
+       :taxon.taxonomy/tag]}
+     :fr]
+
     ))
 
 (comment
