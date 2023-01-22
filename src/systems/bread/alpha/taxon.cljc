@@ -11,9 +11,9 @@
 
 (def post-taxonomized-rule
   '[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-    [?post :post/taxons ?e]
-    [?e :taxon/taxonomy ?taxonomy]
-    [?e :taxon/slug ?taxon-slug]])
+    [?post :post/taxons ?e0]
+    [?e0 :taxon/taxonomy ?taxonomy]
+    [?e0 :taxon/slug ?taxon-slug]])
 
 (defmethod bread/query ::compact
   [{k :query/key} data]
@@ -53,11 +53,11 @@
          :query/args
          (filter
            identity
-           [{:find [(list 'pull '?e pull-spec) '.]
+           [{:find [(list 'pull '?e0 pull-spec) '.]
              :in taxon-inputs
              :where (filter
                       identity
-                      ['[?e :taxon/slug ?slug]
+                      ['[?e0 :taxon/slug ?slug]
                        (when post-status
                          '[?p :post/status ?status])
                        (when post-type
@@ -76,10 +76,10 @@
              :query/key [k :taxon/fields]
              :query/db db
              :query/args
-             [{:find [(list 'pull '?f (cons :db/id field-keys))]
-               :in '[$ ?e ?lang]
-               :where '[[?e :taxon/fields ?f]
-                        [?f :field/lang ?lang]]}
+             [{:find [(list 'pull '?e (cons :db/id field-keys))]
+               :in '[$ ?e0 ?lang]
+               :where '[[?e0 :taxon/fields ?e]
+                        [?e :field/lang ?lang]]}
               [::bread/data k :db/id]
               ;; TODO i18n/lang
               (keyword (:lang params))]}))

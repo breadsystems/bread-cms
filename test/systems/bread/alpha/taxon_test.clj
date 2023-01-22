@@ -28,9 +28,9 @@
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -51,9 +51,9 @@
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -64,10 +64,10 @@
         :query/key [:taxon :taxon/fields]
         :query/db db
         :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
-           :in [$ ?e ?lang]
-           :where [[?e :taxon/fields ?f]
-                   [?f :field/lang ?lang]]}
+        ['{:find [(pull ?e [:db/id :field/key :field/content])]
+           :in [$ ?e0 ?lang]
+           :where [[?e0 :taxon/fields ?e]
+                   [?e :field/lang ?lang]]}
          [::bread/data :taxon :db/id]
          :en]}
        {:query/name ::taxon/compact
@@ -84,9 +84,9 @@
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -97,10 +97,10 @@
         :query/key [:taxon :taxon/fields]
         :query/db db
         :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content :field/lang])]
-           :in [$ ?e ?lang]
-           :where [[?e :taxon/fields ?f]
-                   [?f :field/lang ?lang]]}
+        ['{:find [(pull ?e [:db/id :field/key :field/content :field/lang])]
+           :in [$ ?e0 ?lang]
+           :where [[?e0 :taxon/fields ?e]
+                   [?e :field/lang ?lang]]}
          [::bread/data :taxon :db/id]
          :en]}
        {:query/name ::taxon/compact
@@ -118,9 +118,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?type ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    [?p :post/type ?type]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
@@ -143,9 +143,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -166,9 +166,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :taxon.taxonomy/tag
@@ -187,9 +187,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :taxon.taxonomy/tag
@@ -209,9 +209,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?type ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :post.status/draft ; populated from req
@@ -234,9 +234,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
