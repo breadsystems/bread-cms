@@ -244,7 +244,7 @@
          :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
-       :fr]}]
+       :ru]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post
@@ -254,7 +254,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
-     :fr]
+     :ru]
 
     ;; With :field/content implicity as part of {:taxon/fields [*]}
     [{:query/name ::store/query
@@ -274,7 +274,7 @@
          :where [[?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :taxon :db/id]
-       :fr]}]
+       :es]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :taxon
@@ -284,7 +284,7 @@
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
-     :fr]
+     :es]
 
     ;; With deeply nested, implicit :field/content
     [{:query/name ::store/query
@@ -314,7 +314,7 @@
                  [?e :field/lang ?lang]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-fields-and-taxons :db/id]
-       :fr]}
+       :de]}
      {:query/name ::store/query
       :query/key [:post-with-fields-and-taxons :post/fields]
       :query/db ::FAKEDB
@@ -324,7 +324,7 @@
          :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :post-with-fields-and-taxons :db/id]
-       :fr]}]
+       :de]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post-with-fields-and-taxons
@@ -341,7 +341,7 @@
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
-     :fr]
+     :de]
 
     ;; With deeply nested, mixed implicit & explicit :field/content
     [{:query/name ::store/query
@@ -371,7 +371,7 @@
                  [?e :field/lang ?lang]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-taxons-and-field-content :db/id]
-       :fr]}
+       :en]}
      {:query/name ::store/query
       :query/key [:post-with-taxons-and-field-content :post/fields]
       :query/db ::FAKEDB
@@ -381,7 +381,7 @@
          :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
-       :fr]}]
+       :en]}]
     [#{:post/fields :taxon/fields :user/fields}
      {:query/name ::store/query
       :query/key :post-with-taxons-and-field-content
@@ -398,7 +398,7 @@
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
-     :fr]
+     :en]
 
     ;; With posts nested under a taxon
     [{:query/name ::store/query
