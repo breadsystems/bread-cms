@@ -37,6 +37,14 @@
     query
     constraints))
 
+(defn attr-binding*
+  "Parses pull-expr for attr, returning the attr if found as it appears in
+  pull-expr (i.e. as a keyword or a map)"
+  [attr pull-expr]
+  (let [attrs #{attr}
+        map-with-keys (fn [ks x] (when (and (map? x) (some ks (keys x))) x))]
+    (first (keep (some-fn attrs (partial map-with-keys attrs)) pull-expr))))
+
 (defn attr-binding [search-key field]
   (when (map? field)
     (let [k (first (keys field))

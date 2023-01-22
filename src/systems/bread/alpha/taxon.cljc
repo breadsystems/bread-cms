@@ -36,7 +36,7 @@
         pull-spec (dispatcher/pull-spec dispatcher)
         ;; If we're querying for fields, we'll want to run a special query
         ;; to correctly handle i18n.
-        fields-binding (datalog/attr-binding :taxon/fields pull-spec)
+        fields-binding (datalog/attr-binding* :taxon/fields pull-spec)
         ;; Don't query for fields in initial taxon query, it won't be properly
         ;; internationalized anyway.
         pull-spec (if fields-binding
