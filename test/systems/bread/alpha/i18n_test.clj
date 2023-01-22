@@ -208,8 +208,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
-         :in [$ ?p ?lang]
-         :where [[?p :post/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :post-with-content :db/id]
        :fr]}]
@@ -240,8 +240,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?p ?lang]
-         :where [[?p :post/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :post :db/id]
        :fr]}]
@@ -270,8 +270,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?p ?lang]
-         :where [[?p :taxon/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :taxon :db/id]
        :fr]}]
@@ -305,8 +305,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?p ?lang]
-         :where [[?p :taxon/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :nested-post :db/id]
        :fr]}
@@ -315,8 +315,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?p ?lang]
-         :where [[?p :post/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :nested-post :db/id]
        :fr]}]
@@ -357,8 +357,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?p ?lang]
-         :where [[?p :taxon/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :mixed :db/id]
        :fr]}
@@ -367,8 +367,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
-         :in [$ ?p ?lang]
-         :where [[?p :post/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :mixed :db/id]
        :fr]}]
@@ -400,9 +400,9 @@
                           {:post/_taxons [:post/slug]}]) .]
          :in [$ % ?status ?type ?taxonomy ?slug]
          :where [[?e :taxon/slug ?slug]
-                 [?p :post/status ?status]
-                 [?p :post/type ?type]
-                 (post-taxonomized ?p ?taxonomy ?slug)]}
+                 [?e0 :post/status ?status]
+                 [?e0 :post/type ?type]
+                 (post-taxonomized ?e0 ?taxonomy ?slug)]}
        '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
           [?post :post/taxons ?t]
           [?t :taxon/taxonomy ?taxonomy]
@@ -416,8 +416,8 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
-         :in [$ ?p ?lang]
-         :where [[?p :post/fields ?e]
+         :in [$ ?e0 ?lang]
+         :where [[?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
        [::bread/data :nested-taxon :db/id]
        :fr]}]
@@ -435,9 +435,9 @@
          :in [$ % ?status ?type ?taxonomy ?slug]
          :where
          [[?e :taxon/slug ?slug]
-          [?p :post/status ?status]
-          [?p :post/type ?type]
-          (post-taxonomized ?p ?taxonomy ?slug)]}
+          [?e0 :post/status ?status]
+          [?e0 :post/type ?type]
+          (post-taxonomized ?e0 ?taxonomy ?slug)]}
        '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
           [?post :post/taxons ?t]
           [?t :taxon/taxonomy ?taxonomy]

@@ -102,8 +102,8 @@
      :query/key path
      :query/args
      [{:find [(list 'pull '?e (cons :db/id spec))]
-       :in '[$ ?p ?lang]
-       :where [['?p rel '?e]
+       :in '[$ ?e0 ?lang]
+       :where [['?e0 rel '?e]
                '[?e :field/lang ?lang]]}
       [::bread/data k :db/id]
       lang]}))
