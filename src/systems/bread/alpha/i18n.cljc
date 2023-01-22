@@ -6,7 +6,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.util.datalog :refer [attr-binding]]))
+    [systems.bread.alpha.util.datalog :as datalog]))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
@@ -67,33 +67,32 @@
 
 (defn translatable-paths [ks qk data]
   (reduce (fn [paths search-key]
-            (let [search (partial attr-binding search-key)
+            (let [search (partial datalog/attr-binding search-key)
                   [field-binding path] (get-binding search data)]
               (if field-binding
                 (conj paths [field-binding
                              (concat [qk]
-                                     (filter keyword? path)
+                                     (filterv keyword? path)
                                      [search-key])])
                 paths)))
           [] ks))
 
 (comment
-  (translatable-paths #{:post/fields :taxon/fields}
-                      :post
-                      [:db/id :post/slug {:post/fields [:field/content]}])
-
+  (translatable-paths
+    #{:post/fields :taxon/fields} :post
+    [:db/id :post/slug {:post/fields [:field/content]}])
   (translatable-paths
     #{:taxon/fields} :x
     [:taxon/slug {:taxon/fields [:field/key :field/content]}]))
 
 (defn- remove-bindings [[_ sym spec] rm]
   (let [pred (complement (set rm))]
-    (list 'pull sym (walk/prewalk (fn [x]
-                                    (if (and (sequential? x)
-                                             (not (map-entry? x)))
-                                      (filter pred x)
-                                      x))
-                                  spec))))
+    (list 'pull sym (walk/postwalk (fn [x]
+                                     (if (and (sequential? x)
+                                              (not (map-entry? x)))
+                                       (filterv pred x)
+                                       x))
+                                   spec))))
 
 (defn- construct-fields-query [lang orig-query k spec path]
   (let [rel (last path)
@@ -118,14 +117,14 @@
   (let [{:query/keys [args db] k :query/key} query
         ;; {:find [(pull ?e _____)]}
         ;;        this here ^^^^^
-        pull (->> (get-in args [0 :find])
-                  first rest second)
+        pull (some-> args first :find first rest second)
         translatables (translatable-paths attrs k pull)]
     (if (seq translatables)
       (concat
         (let [bindings-to-rm (map first translatables)
-              args (update-in args [0 :find 0] remove-bindings bindings-to-rm)]
-          [(assoc query :query/args args)])
+              pull (-> args first :find first (remove-bindings
+                                                bindings-to-rm))]
+          [(update query :query/args #(-> % vec (assoc-in [0 :find 0] pull)))])
         (map (fn [[spec path]]
                (construct-fields-query lang query k spec path))
              translatables))

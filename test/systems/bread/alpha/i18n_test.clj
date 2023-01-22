@@ -390,6 +390,64 @@
        :post.type/page]}
      :fr]
 
+    ;; With posts nested under a taxon
+    [{:query/name ::store/query
+      :query/key :nested-taxon
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :taxon/slug
+                          {:post/_taxons [:post/slug]}]) .]
+         :in [$ % ?status ?type ?taxonomy ?slug]
+         :where [[?e :taxon/slug ?slug]
+                 [?p :post/status ?status]
+                 [?p :post/type ?type]
+                 (post-taxonomized ?p ?taxonomy ?slug)]}
+       '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+          [?post :post/taxons ?t]
+          [?t :taxon/taxonomy ?taxonomy]
+          [?t :taxon/slug ?taxon-slug]]]
+       :post.status/published
+       :post.type/page
+       :taxon.taxonomy/category
+       "my-cat"]}
+     {:query/name ::store/query
+      :query/key [:nested-taxon :post/_taxons :post/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :field/key :field/content])]
+         :in [$ ?p ?lang]
+         :where [[?p :post/fields ?e]
+                 [?e :field/lang ?lang]]}
+       [::bread/data :nested-taxon :db/id]
+       :fr]}]
+    [#{:post/fields :taxon/fields :user/fields}
+     {:query/name ::store/query,
+      :query/key :nested-taxon,
+      :query/db ::FAKEDB,
+      :query/args
+      ['{:find
+         [(pull ?e [:db/id
+                    :taxon/slug
+                    {:post/_taxons [:post/slug
+                                    {:post/fields [:field/key
+                                                   :field/content]}]}]) .]
+         :in [$ % ?status ?type ?taxonomy ?slug]
+         :where
+         [[?e :taxon/slug ?slug]
+          [?p :post/status ?status]
+          [?p :post/type ?type]
+          (post-taxonomized ?p ?taxonomy ?slug)]}
+       '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
+          [?post :post/taxons ?t]
+          [?t :taxon/taxonomy ?taxonomy]
+          [?t :taxon/slug ?taxon-slug]]]
+       :post.status/published
+       :post.type/page
+       :taxon.taxonomy/category
+       "my-cat"]}
+     :fr]
+
     ))
 
 (comment
