@@ -305,9 +305,14 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?e0 ?lang]
-         :where [[?e0 :taxon/fields ?e]
+         ;; Post ID gets passed in as ?e1.
+         :in [$ ?e1 ?lang]
+         :where [;; Go through the :post/taxons relationship to get to the
+                 ;; :taxon/fields content.
+                 [?e1 :post/taxons ?e0]
+                 [?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
+       ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-fields-and-taxons :db/id]
        :fr]}
      {:query/name ::store/query
@@ -357,9 +362,14 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
-         :in [$ ?e0 ?lang]
-         :where [[?e0 :taxon/fields ?e]
+         ;; Post ID gets passed in as ?e1.
+         :in [$ ?e1 ?lang]
+         :where [;; Go through the :post/taxons relationship to get to the
+                 ;; :taxon/fields content.
+                 [?e1 :post/taxons ?e0]
+                 [?e0 :taxon/fields ?e]
                  [?e :field/lang ?lang]]}
+       ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :fr]}
      {:query/name ::store/query
@@ -416,9 +426,16 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
-         :in [$ ?e0 ?lang]
-         :where [[?e0 :post/fields ?e]
+         ;; Post ID gets passed in as ?e1.
+         :in [$ ?e1 ?lang]
+         :where [;; Go through the :post/taxons relationship to get to the
+                 ;; :taxon/fields content. In this case we also need to
+                 ;; recognize that the :post/_taxons attr is an inverse
+                 ;; relationship, and reverse it back the :where clause.
+                 [?e0 :post/taxons ?e1]
+                 [?e0 :post/fields ?e]
                  [?e :field/lang ?lang]]}
+       ;; Get the post ID to be passed in from this data path.
        [::bread/data :nested-taxon :db/id]
        :fr]}]
     [#{:post/fields :taxon/fields :user/fields}

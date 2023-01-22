@@ -94,17 +94,46 @@
                                        x))
                                    spec))))
 
+(defn- syms
+  ([prefix]
+   (syms prefix 0))
+  ([prefix start]
+   (for [n (range)] (symbol (str prefix (+ start n))))))
+
+(defn- reverse-relation [k]
+  (let [[kns kname] ((juxt namespace name) k)]
+    (keyword (string/join "/" [kns (subs kname 1)]))))
+
+(comment
+  (take 3 (syms "?e"))
+  (reverse-relation :post/_taxons))
+
 (defn- construct-fields-query [lang orig-query k spec path]
   (let [rel (last path)
-        spec (get spec rel)]
+        spec (get spec rel)
+        depth (dec (count path))
+        ;; TODO eliminate this reverse...
+        ;; We don't actually need this reverse here, it's just what the tests
+        ;; expect and it's a very surgical procedure to change that.
+        left-syms (reverse (cons '?e (take depth (syms "?e"))))
+        where-clause
+        (conj
+          (mapv (fn [s1 k s2]
+                  (if (string/starts-with? (name k) "_")
+                    [s2 (reverse-relation k) s1]
+                    [s1 k s2]))
+                left-syms (rest path) (rest left-syms))
+          '[?e :field/lang ?lang])]
+    (when (> (count path) 2)
+      (prn path (first left-syms))
+      (pprint where-clause))
     {:query/name ::store/query
      :query/db (:query/db orig-query)
      :query/key path
      :query/args
      [{:find [(list 'pull '?e (cons :db/id spec))]
-       :in '[$ ?e0 ?lang]
-       :where [['?e0 rel '?e]
-               '[?e :field/lang ?lang]]}
+       :in ['$ (first left-syms) '?lang]
+       :where where-clause}
       [::bread/data k :db/id]
       lang]}))
 
