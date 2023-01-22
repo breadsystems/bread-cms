@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.i18n
   (:require
-    [clojure.string :as str]
+    [clojure.string :as string]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
@@ -100,6 +100,9 @@
   ([prefix start]
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
+(defn- relation-reversed? [k]
+  (string/starts-with? (name k) "_"))
+
 (defn- reverse-relation [k]
   (let [[kns kname] ((juxt namespace name) k)]
     (keyword (string/join "/" [kns (subs kname 1)]))))
@@ -119,14 +122,11 @@
         where-clause
         (conj
           (mapv (fn [s1 k s2]
-                  (if (string/starts-with? (name k) "_")
+                  (if (relation-reversed? k)
                     [s2 (reverse-relation k) s1]
                     [s1 k s2]))
                 left-syms (rest path) (rest left-syms))
           '[?e :field/lang ?lang])]
-    (when (> (count path) 2)
-      (prn path (first left-syms))
-      (pprint where-clause))
     {:query/name ::store/query
      :query/db (:query/db orig-query)
      :query/key path
