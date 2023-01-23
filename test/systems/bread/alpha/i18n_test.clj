@@ -175,9 +175,9 @@
       :query/key :post
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
-                                             [:field/key
-                                              :field/lang]}]) .]
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/fields [:field/key :field/lang]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
@@ -186,9 +186,9 @@
       :query/key :post
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
-                                             [:field/key
-                                              :field/lang]}]) .]
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/fields [:field/key :field/lang]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
@@ -218,9 +218,9 @@
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug {:post/fields
-                                             [:field/key
-                                              :field/content]}]) .]
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:post/fields [:field/key :field/content]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
