@@ -209,8 +209,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?e0 ?lang]
-         :where [[?e0 :post/fields ?e]
-                 [?e :field/lang ?lang]]}
+         :where [[?e :field/lang ?lang]
+                 [?e0 :post/fields ?e]]}
        [::bread/data :post-with-content :db/id]
        :fr]}]
     [#{:post/fields :taxon/fields :user/fields}
@@ -241,8 +241,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
-         :where [[?e0 :post/fields ?e]
-                 [?e :field/lang ?lang]]}
+         :where [[?e :field/lang ?lang]
+                 [?e0 :post/fields ?e]]}
        [::bread/data :post :db/id]
        :ru]}]
     [#{:post/fields :taxon/fields :user/fields}
@@ -271,8 +271,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
-         :where [[?e0 :taxon/fields ?e]
-                 [?e :field/lang ?lang]]}
+         :where [[?e :field/lang ?lang]
+                 [?e0 :taxon/fields ?e]]}
        [::bread/data :taxon :db/id]
        :es]}]
     [#{:post/fields :taxon/fields :user/fields}
@@ -309,9 +309,9 @@
          :in [$ ?e1 ?lang]
          :where [;; Go through the :post/taxons relationship to get to the
                  ;; :taxon/fields content.
-                 [?e1 :post/taxons ?e0]
+                 [?e :field/lang ?lang]
                  [?e0 :taxon/fields ?e]
-                 [?e :field/lang ?lang]]}
+                 [?e1 :post/taxons ?e0]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}
@@ -321,8 +321,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
-         :where [[?e0 :post/fields ?e]
-                 [?e :field/lang ?lang]]}
+         :where [[?e :field/lang ?lang]
+                 [?e0 :post/fields ?e]]}
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}]
     [#{:post/fields :taxon/fields :user/fields}
@@ -366,9 +366,9 @@
          :in [$ ?e1 ?lang]
          :where [;; Go through the :post/taxons relationship to get to the
                  ;; :taxon/fields content.
-                 [?e1 :post/taxons ?e0]
+                 [?e :field/lang ?lang]
                  [?e0 :taxon/fields ?e]
-                 [?e :field/lang ?lang]]}
+                 [?e1 :post/taxons ?e0]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}
@@ -378,8 +378,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?e0 ?lang]
-         :where [[?e0 :post/fields ?e]
-                 [?e :field/lang ?lang]]}
+         :where [[?e :field/lang ?lang]
+                 [?e0 :post/fields ?e]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}]
     [#{:post/fields :taxon/fields :user/fields}
@@ -432,9 +432,9 @@
                  ;; :taxon/fields content. In this case we also need to
                  ;; recognize that the :post/_taxons attr is an inverse
                  ;; relationship, and reverse it back the :where clause.
-                 [?e0 :post/taxons ?e1]
+                 [?e :field/lang ?lang]
                  [?e0 :post/fields ?e]
-                 [?e :field/lang ?lang]]}
+                 [?e0 :post/taxons ?e1]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :nested-taxon :db/id]
        :fr]}]

@@ -112,27 +112,23 @@
   (reverse-relation :post/_taxons))
 
 (defn- construct-fields-query [lang orig-query k spec path]
-  (let [rel (last path)
-        spec (get spec rel)
-        depth (dec (count path))
-        ;; TODO eliminate this reverse...
-        ;; We don't actually need this reverse here, it's just what the tests
-        ;; expect and it's a very surgical procedure to change that.
-        left-syms (reverse (cons '?e (take depth (syms "?e"))))
-        where-clause
-        (conj
-          (mapv (fn [s1 k s2]
-                  (if (relation-reversed? k)
-                    [s2 (reverse-relation k) s1]
-                    [s1 k s2]))
-                left-syms (rest path) (rest left-syms))
-          '[?e :field/lang ?lang])]
+  (let [fields-pull (cons :db/id (get spec (last path)))
+        rels (cons :field/lang (reverse (rest path)))
+        depth (dec (count rels))
+        left-syms (cons '?e (take depth (syms "?e")))
+        right-syms (cons '?lang (butlast left-syms))
+        input-sym (last left-syms)
+        where-clause (map (fn [s k s']
+                            (if (relation-reversed? k)
+                              [s' (reverse-relation k) s]
+                              [s k s']))
+                          left-syms rels right-syms)]
     {:query/name ::store/query
      :query/db (:query/db orig-query)
      :query/key path
      :query/args
-     [{:find [(list 'pull '?e (cons :db/id spec))]
-       :in ['$ (first left-syms) '?lang]
+     [{:find [(list 'pull '?e fields-pull)]
+       :in ['$ input-sym '?lang]
        :where where-clause}
       [::bread/data k :db/id]
       lang]}))
