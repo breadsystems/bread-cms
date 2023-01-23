@@ -182,7 +182,7 @@
                    (lang req)]})
       (query/add {:query/name ::bread/value
                   :query/key :lang
-                  :value (lang req)})))
+                  :query/value (lang req)})))
 
 (defn plugin
   ([]

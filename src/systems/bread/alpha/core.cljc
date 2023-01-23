@@ -151,7 +151,7 @@
 
 (defmethod query ::value
   return-value
-  [{:keys [value]} _]
+  [{:query/keys [value]} _]
   "Pass-through query that simply returns the value given by :query/value."
   value)
 

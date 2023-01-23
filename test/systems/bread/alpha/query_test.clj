@@ -22,22 +22,22 @@
      :not-found? false}
     [{:query/key :my/result
       :query/name ::bread/value
-      :value "the result"}]
+      :query/value "the result"}]
 
     {:my/result "the result"
      :not-found? false}
     [{:query/key :my/result
       :query/name ::bread/value
-      :value "the result"}]
+      :query/value "the result"}]
 
     {:my/map {:my/result "the result"}
      :not-found? false}
     [{:query/key :my/map
       :query/name ::bread/value
-      :value {}}
+      :query/value {}}
      {:query/key [:my/map :my/result]
       :query/name ::bread/value
-      :value "the result"}]))
+      :query/value "the result"}]))
 
 (deftest test-populate-in
   (are
