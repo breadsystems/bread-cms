@@ -176,10 +176,9 @@
   [req _ [params]]
   (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
-(defmethod bread/action ::add-queries
+(defmethod bread/action ::add-strings-query
   [req _ _]
-  (-> req
-      (query/add {:query/name ::store/query
+  (query/add req {:query/name ::store/query
                   :query/key :i18n
                   :query/into {}
                   :query/db (store/datastore req)
@@ -189,19 +188,25 @@
                      :where [[?e :i18n/key ?key]
                              [?e :i18n/string ?string]
                              [?e :i18n/lang ?lang]]}
-                   (lang req)]})
-      (query/add {:query/name ::bread/value
+                   (lang req)]}))
+
+(defmethod bread/action ::add-lang-query
+  [req _ _]
+  (query/add req {:query/name ::bread/value
                   :query/key :lang
-                  :query/value (lang req)})))
+                  :query/value (lang req)}))
 
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang supported-langs db-attrs]
+  ([{:keys [lang-param fallback-lang supported-langs db-attrs
+            query-strings? query-lang?]
      :or {lang-param :lang
           fallback-lang :en
           supported-langs #{:en}
-          db-attrs #{:post/fields :taxon/fields :user/fields}}}]
+          db-attrs #{:post/fields :taxon/fields :user/fields}
+          query-strings? true
+          query-lang? true}}]
    {:config
     {:i18n/lang-param lang-param
      :i18n/fallback-lang fallback-lang
@@ -215,5 +220,11 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     [{:action/name ::add-queries
-       :action/description "Add I18n queries"}]}}))
+     (filterv
+       identity
+       [(when query-strings?
+          {:action/name ::add-strings-query
+           :action/description "Add global strings query"})
+        (when query-lang?
+          {:action/name ::add-lang-query
+           :action/description "Add lang value query"})])}}))
