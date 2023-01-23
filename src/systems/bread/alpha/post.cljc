@@ -76,9 +76,6 @@
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [params (:route/params dispatcher)
-        ;; TODO call (i18n/lang req)
-        lang (keyword (:lang params))
-        translatable-attrs #{:post/fields}
         page-args
         (-> (pull-query dispatcher)
             (update-in [0 :find] conj '.) ;; Query for a single post.
@@ -89,5 +86,4 @@
                     :query/key (or (:dispatcher/key dispatcher) :post)
                     :query/db (store/datastore req)
                     :query/args page-args}]
-    {:queries (i18n/internationalize-query
-                translatable-attrs page-query lang)}))
+    {:queries (bread/hook req ::i18n/queries page-query)}))

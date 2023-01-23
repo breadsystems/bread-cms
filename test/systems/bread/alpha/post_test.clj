@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -61,6 +62,8 @@
 (deftest test-dispatch-post-queries
   (let [db ::FAKEDB
         app (plugins->loaded [(datastore->plugin db)
+                              (i18n/plugin {:query-strings? false
+                                            :query-lang? false})
                               (dispatcher/plugin)])
         ->app (fn [dispatcher]
                 (assoc app ::bread/dispatcher dispatcher))]
