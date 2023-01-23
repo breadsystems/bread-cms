@@ -73,7 +73,7 @@
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug :taxon/fields]) .]
            :in [$ % ?status ?taxonomy ?slug]
            :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]

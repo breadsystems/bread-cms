@@ -85,14 +85,19 @@
     #{:taxon/fields} :x
     [:taxon/slug {:taxon/fields [:field/key :field/content]}]))
 
-(defn- remove-bindings [[_ sym spec] rm]
-  (let [pred (complement (set rm))]
-    (list 'pull sym (walk/postwalk (fn [x]
-                                     (if (and (sequential? x)
-                                              (not (map-entry? x)))
-                                       (filterv pred x)
-                                       x))
-                                   spec))))
+(defn- replace-bindings [[_ sym spec] bindings]
+  (let [pred (set bindings)]
+    (list 'pull sym
+          (walk/postwalk
+            (fn [x]
+              ;; If the current node is a binding map matching one of our
+              ;; field-bindings, replace it with its sole key. We do this so
+              ;; we have a :db/id in the query results to walk over and
+              ;; replace with the full result later.
+              (if-let [binding-map (pred x)]
+                (first (keys binding-map))
+                x))
+            spec))))
 
 (defn- syms
   ([prefix]
@@ -147,9 +152,9 @@
     (if (seq translatables)
       (vec
         (concat
-          (let [bindings-to-rm (map first translatables)
-                pull (-> args first :find first (remove-bindings
-                                                  bindings-to-rm))]
+          (let [bindings (map first translatables)
+                pull (-> args first :find first (replace-bindings
+                                                  bindings))]
             [(update query :query/args
                      #(-> % vec (assoc-in [0 :find 0] pull)))])
           (map (fn [[spec path]]

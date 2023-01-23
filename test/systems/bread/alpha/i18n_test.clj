@@ -199,7 +199,7 @@
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug]) .]
+      ['{:find [(pull ?e [:db/id :post/slug :post/fields]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
@@ -231,7 +231,7 @@
       :query/key :post
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug]) .]
+      ['{:find [(pull ?e [:db/id :post/slug :post/fields]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
@@ -261,7 +261,7 @@
       :query/key :taxon
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+      ['{:find [(pull ?e [:db/id :taxon/slug :taxon/fields]) .]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
@@ -293,8 +293,10 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
+                          :post/fields
                           {:post/taxons [:taxon/slug
-                                         :taxon/taxonomy]}]) .]
+                                         :taxon/taxonomy
+                                         :taxon/fields]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}
@@ -350,8 +352,10 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
+                          :post/fields
                           {:post/taxons [:taxon/slug
-                                         :taxon/taxonomy]}]) .]
+                                         :taxon/taxonomy
+                                         :taxon/fields]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}
@@ -407,7 +411,7 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :taxon/slug
-                          {:post/_taxons [:post/slug]}]) .]
+                          {:post/_taxons [:post/slug :post/fields]}]) .]
          :in [$ % ?status ?type ?taxonomy ?slug]
          :where [[?e :taxon/slug ?slug]
                  [?e0 :post/status ?status]
