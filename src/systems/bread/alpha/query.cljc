@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.query
   (:require
-    [clojure.spec.alpha :as s]
+    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]))
 
 (defn- keyword-namespace [x]
@@ -17,8 +17,39 @@
     (get-in m (butlast k)) (assoc-in m k v)
     :else m))
 
+(defn- entity? [x]
+  (and (map? x) ((set (keys x)) :db/id)))
+
+(defn populate-in [m k v]
+  (cond
+    (not (sequential? k)) (assoc m k v)
+    (get-in m (or (butlast k) k))
+    (update-in
+      m (or (butlast k) k)
+      (fn [x]
+        (if (sequential? x)
+          (let [v (map #(if (sequential? %) (first %) %) v)
+                by-id (into {} (map (juxt :db/id identity) v))]
+            (when (= k [:def])
+              (prn k x))
+            (walk/postwalk (fn [node]
+                             (if (entity? node)
+                               (get by-id (:db/id node))
+                               node))
+                           x))
+          (assoc x (last k) v))))
+    :else m))
+
+(comment
+  (entity? nil)
+  (entity? {})
+  (entity? {:db/id 123})
+
+  (butlast [:x])
+  (populate-in {} [:x] :y))
+
 (defn- expand-query [data query]
-  (assoc-at data (:query/key query) (bread/query query data)))
+  (populate-in data (:query/key query) (bread/query query data)))
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
@@ -35,10 +66,9 @@
 (defn add
   "Add query to the vector of queries to be run."
   [req query]
-  ;; TODO data-orient queries themselves here
   (update req ::bread/queries
           (fn [queries]
-            (vec (conj (vec queries) query)))))
+            (conj (vec queries) query))))
 
 (defmethod bread/action ::add
   [req {:keys [query]} _]

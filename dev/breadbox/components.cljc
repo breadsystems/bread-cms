@@ -10,7 +10,8 @@
   {:content-path [:main-content]}
   [:html {:lang lang}
    [:head
-    [:title {:breadbox i18n}]]
+    [:title (:breadbox i18n)]
+    [:meta {:charset :utf-8}]]
    [:body
     [:header
      (main-nav (:main-nav menus))]

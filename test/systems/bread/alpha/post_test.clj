@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -61,6 +62,8 @@
 (deftest test-dispatch-post-queries
   (let [db ::FAKEDB
         app (plugins->loaded [(datastore->plugin db)
+                              (i18n/plugin {:query-strings? false
+                                            :query-lang? false})
                               (dispatcher/plugin)])
         ->app (fn [dispatcher]
                 (assoc app ::bread/dispatcher dispatcher))]
@@ -177,7 +180,7 @@
        :route/params {:slugs "one/two/three" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields i18n
+      ;; :post/fields alone only queries for :db/id, not :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
@@ -190,24 +193,14 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}
-       {:query/name ::store/query
-        :query/key [:post :post/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-         [::bread/data :post :db/id]
-         :en]}]
+         :post.status/published]}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :post/fields]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields i18n w/ nested pull clause
+      ;; :post/fields WITHOUT :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
@@ -222,17 +215,7 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}
-       {:query/name ::store/query
-        :query/key [:post :post/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/lang])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-         [::bread/data :post :db/id]
-         :en]}]
+         :post.status/published]}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title {:post/fields [:field/key :field/lang]}]
        :dispatcher/key :post

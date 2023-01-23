@@ -5,8 +5,9 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.dispatcher :as dispatcher :refer [where pull-query]]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.util.datalog :refer [where pull-query]]))
 
 (defn- syms
   ([prefix]
@@ -66,57 +67,23 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
-(defn- map-with-keys [ks m]
-  (when
-    (and (map? m) (some ks (keys m)))
-    m))
-
 (defn compact-fields [post]
   (update post :post/fields field/compact))
 
+(defn- pull-spec? [arg]
+  (and (list? arg) (= 'pull (first arg))))
+
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
-  (let [{k :dispatcher/key params :route/params
-         :dispatcher/keys [ancestral? pull]} dispatcher
-        k (or k :post)
-        db (store/datastore req)
-
+  (let [params (:route/params dispatcher)
         page-args
         (-> (pull-query dispatcher)
-            ;; TODO handle this in pull-query?
             (update-in [0 :find] conj '.) ;; Query for a single post.
             (ancestralize (string/split (:slugs params "") #"/"))
             (where [['?type :post/type :post.type/page]
                     ['?status :post/status :post.status/published]]))
-
-        ;; Find any appearances of :post/fields in the query. If it appears as
-        ;; a map key, use the corresponding value as our pull expr. If it's a
-        ;; a keyword, query for a sensible default. Always include :db/id in
-        ;; the queried attrs.
-        fields-args
-        (when-let [fields-binding
-                   (first (keep
-                            (some-fn
-                              #{:post/fields}
-                              (partial map-with-keys #{:post/fields}))
-                            pull))]
-          (let [field-keys (or (:post/fields fields-binding)
-                               [:field/key :field/content])]
-            (-> (dispatcher/empty-query)
-                (assoc-in [0 :find]
-                          [(list 'pull '?e (cons :db/id field-keys))])
-                (where [['?p :post/fields '?e [::bread/data k :db/id]]
-                        ['?lang :field/lang (keyword (:lang params))]]))))]
-    {:queries (if fields-args
-                [{:query/name ::store/query
-                  :query/key k
-                  :query/db db
-                  :query/args page-args}
-                 {:query/name ::store/query
-                  :query/key [k :post/fields]
-                  :query/db db
-                  :query/args fields-args}]
-                [{:query/name ::store/query
-                  :query/key k
-                  :query/db db
-                  :query/args page-args}])}))
+        page-query {:query/name ::store/query
+                    :query/key (or (:dispatcher/key dispatcher) :post)
+                    :query/db (store/datastore req)
+                    :query/args page-args}]
+    {:queries (bread/hook req ::i18n/queries page-query)}))

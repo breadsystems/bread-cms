@@ -8,11 +8,6 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.datastore :as store]))
 
-(defn empty-query []
-  [{:find []
-    :in ['$]
-    :where []}])
-
 (defn query-key [dispatcher]
   "Get from the component layer the key at which to store the dispatchd query
   within the ::bread/queries map"
@@ -24,42 +19,11 @@
   (let [schema (component/query (:dispatcher/component dispatcher))]
     (list 'pull '?e schema)))
 
-(defn- apply-where
-  ([query sym k v]
-   (-> query
-       (update-in [0 :where] conj ['?e k sym])
-       (update-in [0 :in] conj sym)
-       (conj v)))
-  ([query sym k input-sym v]
-   (-> query
-       (update-in [0 :where] conj [sym k input-sym])
-       (update-in [0 :in] conj sym)
-       (conj v))))
-
 (defn pull-spec
   "Gets the pull spec from the given dispatcher. Adds :db/id to the list
   of fields to return if it is not already included."
   [{:dispatcher/keys [pull]}]
   (vec (if (some #{:db/id} pull) pull (cons :db/id pull))))
-
-(defn pull-query
-  "Get a basic query with a (pull ...) form in the :find clause"
-  [{:dispatcher/keys [pull]}]
-  (let [pulling-eid? (some #{:db/id} pull)
-        pull-expr (if pulling-eid? pull (cons :db/id pull))]
-    (update-in
-      (empty-query)
-      [0 :find]
-      conj
-      (list 'pull '?e pull-expr))))
-
-;; TODO provide a slightly higher-level query helper API with simple maps
-(defn where [query constraints]
-  (reduce
-    (fn [query params]
-      (apply apply-where query params))
-    query
-    constraints))
 
 (defmulti dispatch
   (fn [req]

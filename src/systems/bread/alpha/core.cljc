@@ -137,6 +137,12 @@
 (defmulti action (fn [_app hook _args]
                    (:action/name hook)))
 
+(defmethod action ::value
+  return-value
+  [_ {:action/keys [value]} _]
+  "Pass-through action that simply returns the value given by :action/value."
+  value)
+
 (defmulti effect (fn [effect _data]
                    (:effect/name effect)))
 
@@ -145,7 +151,7 @@
 
 (defmethod query ::value
   return-value
-  [{:keys [value]} _]
+  [{:query/keys [value]} _]
   "Pass-through query that simply returns the value given by :query/value."
   value)
 
@@ -271,20 +277,26 @@
   is supported, :plugins, a sequence of plugins to load."
   {:arglist '([] [opts])}
   ([{:keys [plugins]}]
-   (-> {::plugins (or plugins [])
-        ::hooks   {::load-plugins
-                   [{:action/name ::load-plugins
-                     :action/description
-                     "Load hooks declared in all plugins"}]
-                   ::effects!
-                   [{:action/name ::effects!
-                     :action/description
-                     "Do side effects"}]}
-        ::queries []
-        ::config  {}
-        ::data    {}}))
+   (with-meta
+     {::plugins (or plugins [])
+      ::hooks   {::load-plugins
+                 [{:action/name ::load-plugins
+                   :action/description
+                   "Load hooks declared in all plugins"}]
+                 ::effects!
+                 [{:action/name ::effects!
+                   :action/description
+                   "Do side effects"}]}
+      ::queries []
+      ::config  {}
+      ::data    {}}
+     {:type ::app}))
   ([]
    (app {})))
+
+(defmethod print-method ::app
+  [app ^java.io.Writer writer]
+  (.write writer (str "#app[" (hash app) "]")))
 
 (defn load-app
   "Loads the given app by calling bootstrap, load-plugins, and init hooks."

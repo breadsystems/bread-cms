@@ -242,16 +242,18 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hooks menus] global-menu-opts :global-menus}]
-   (let [dispatch-hooks
-         (concat [{:action/name ::add-global-menus-query
-                   :action/description
-                   "Add a query to fetch global menus"
-                   :opts global-menu-opts}]
-                 (mapv (fn [opts]
-                         {:action/name ::add
-                          :action/description
-                          "Add a menu with the given opts"
-                          :opts opts}) menus))]
-     {:hooks
-      (merge-with conj {::bread/dispatch dispatch-hooks} hooks)})))
+  ([{:keys [hooks menus] global-menu-opts :global-menus :as opts}]
+   (if (and opts (seq opts))
+     (let [dispatch-hooks
+           (concat [{:action/name ::add-global-menus-query
+                     :action/description
+                     "Add a query to fetch global menus"
+                     :opts global-menu-opts}]
+                   (mapv (fn [opts]
+                           {:action/name ::add
+                            :action/description
+                            "Add a menu with the given opts"
+                            :opts opts}) menus))]
+       {:hooks
+        (merge-with conj {::bread/dispatch dispatch-hooks} hooks)})
+     {:hooks []})))

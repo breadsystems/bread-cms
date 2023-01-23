@@ -11,9 +11,9 @@
 
 (def post-taxonomized-rule
   '[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-    [?post :post/taxons ?t]
-    [?t :taxon/taxonomy ?taxonomy]
-    [?t :taxon/slug ?taxon-slug]])
+    [?post :post/taxons ?e0]
+    [?e0 :taxon/taxonomy ?taxonomy]
+    [?e0 :taxon/slug ?taxon-slug]])
 
 (defmethod bread/query ::compact
   [{k :query/key} data]
@@ -34,18 +34,7 @@
         dispatcher
         db (store/datastore req)
         pull-spec (dispatcher/pull-spec dispatcher)
-        ;; If we're querying for fields, we'll want to run a special query
-        ;; to correctly handle i18n.
-        fields-binding (datalog/attr-binding :taxon/fields pull-spec)
-        ;; Don't query for fields in initial taxon query, it won't be properly
-        ;; internationalized anyway.
-        pull-spec (if fields-binding
-                    (filter #(not= fields-binding %) pull-spec)
-                    pull-spec)
-        taxon-inputs (filter identity ['$ '%
-                                       (when post-status '?status)
-                                       (when post-type '?type)
-                                       '?taxonomy '?slug])
+        lang (keyword (:lang params))
         taxon-query
         {:query/name ::store/query
          :query/key k
@@ -53,40 +42,30 @@
          :query/args
          (filter
            identity
-           [{:find [(list 'pull '?t pull-spec) '.]
-             :in taxon-inputs
+           [{:find [(list 'pull '?e0 pull-spec) '.]
+             :in (filter identity ['$ '%
+                                   (when post-status '?status)
+                                   (when post-type '?type)
+                                   '?taxonomy '?slug])
              :where (filter
                       identity
-                      ['[?t :taxon/slug ?slug]
+                      ['[?e0 :taxon/slug ?slug]
                        (when post-status
                          '[?p :post/status ?status])
                        (when post-type
                          '[?p :post/type ?type])
                        '(post-taxonomized ?p ?taxonomy ?slug)])}
             [post-taxonomized-rule]
-            post-status
-            post-type
+            post-status ;; possibly nil
+            post-type ;; possibly nil
             taxonomy
             (:slug params)])}
-        fields-query
-        (when fields-binding
-          (let [field-keys (or (:taxon/fields fields-binding)
-                               [:field/key :field/content])]
-            {:query/name ::store/query
-             :query/key [k :taxon/fields]
-             :query/db db
-             :query/args
-             [{:find [(list 'pull '?f (cons :db/id field-keys))]
-               :in '[$ ?t ?lang]
-               :where '[[?t :taxon/fields ?f]
-                        [?f :field/lang ?lang]]}
-              [::bread/data k :db/id]
-              ;; TODO i18n/lang
-              (keyword (:lang params))]}))
         compact-query {:query/name ::compact :query/key k}]
-    {:queries (if fields-query
-                [taxon-query fields-query compact-query]
-                [taxon-query compact-query])}))
+    {:queries (conj (i18n/internationalize-query
+                      ;; TODO make this a hook!
+                      #{:post/fields :taxon/fields :user/fields}
+                      taxon-query lang)
+                    compact-query)}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]

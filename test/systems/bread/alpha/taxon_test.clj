@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -11,6 +12,8 @@
 (deftest test-dispatch-taxon-queries
   (let [db ::FAKEDB
         app (plugins->loaded [(datastore->plugin db)
+                              (i18n/plugin {:query-strings? false
+                                            :query-lang? false})
                               (dispatcher/plugin)])
         ->app (fn [dispatcher]
                 (assoc app ::bread/dispatcher dispatcher))]
@@ -23,14 +26,14 @@
                    ::bread/queries))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; No field I18n.
+      ;; Not querying for any translatable content.
       [{:query/name ::store/query
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -45,37 +48,26 @@
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
 
-      ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; Query includes field I18n!
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag
       [{:query/name ::store/query
-        :query/key :taxon
+        :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :post.status/published
-         :taxon.taxonomy/category
+         :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
-        :query/key [:taxon :taxon/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
-           :in [$ ?t ?lang]
-           :where [[?t :taxon/fields ?f]
-                   [?f :field/lang ?lang]]}
-         [::bread/data :taxon :db/id]
-         :en]}
        {:query/name ::taxon/compact
-        :query/key :taxon}]
-      {:dispatcher/type :dispatcher.type/taxon
-       :dispatcher/pull [:taxon/slug :taxon/fields]
-       :dispatcher/key :taxon
-       :taxon/taxonomy :taxon.taxonomy/category
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
@@ -84,9 +76,9 @@
         :query/key :taxon
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/slug :taxon/fields]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -97,17 +89,18 @@
         :query/key [:taxon :taxon/fields]
         :query/db db
         :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content :field/lang])]
-           :in [$ ?t ?lang]
-           :where [[?t :taxon/fields ?f]
-                   [?f :field/lang ?lang]]}
+        ['{:find [(pull ?e [:db/id :field/key :field/content])]
+           :in [$ ?e0 ?lang]
+           :where [[?e :field/lang ?lang]
+                   [?e0 :taxon/fields ?e]]}
          [::bread/data :taxon :db/id]
          :en]}
        {:query/name ::taxon/compact
         :query/key :taxon}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
-                         {:taxon/fields [:field/key :field/content :field/lang]}]
+                         {:taxon/fields [:field/key
+                                         :field/content]}]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
@@ -118,9 +111,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?type ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    [?p :post/type ?type]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
@@ -143,9 +136,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
@@ -166,9 +159,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :taxon.taxonomy/tag
@@ -187,9 +180,9 @@
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :taxon.taxonomy/tag
@@ -202,16 +195,16 @@
        :post/status false ; same as explicit nil.
        :route/params {:lang "en" :slug "some-tag"}}
 
-      #_#_
       ;; {:uri "/en/tag/some-tag"}
       ;; TODO Dynamic params from request...
+      #_#_
       [{:query/name ::store/query
         :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?type ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
+           :where [[?e0 :taxon/slug ?slug]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :post.status/draft ; populated from req
@@ -227,28 +220,6 @@
                            :post/type :type}
        :route/params {:lang "en" :slug "some-tag"
                       :type "article" :status "draft"}}
-
-      ;; {:uri "/en/tag/some-tag"}
-      ;; :dispatcher.type/tag
-      [{:query/name ::store/query
-        :query/key :tag
-        :query/db db
-        :query/args
-        ['{:find [(pull ?t [:db/id :taxon/whatever]) .]
-           :in [$ % ?status ?taxonomy ?slug]
-           :where [[?t :taxon/slug ?slug]
-                   [?p :post/status ?status]
-                   (post-taxonomized ?p ?taxonomy ?slug)]}
-         [taxon/post-taxonomized-rule]
-         :post.status/published
-         :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
-      {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [:taxon/whatever]
-       :dispatcher/key :tag
-       :route/params {:lang "en" :slug "some-tag"}}
 
       )))
 

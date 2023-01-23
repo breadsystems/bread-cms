@@ -91,6 +91,13 @@
               {::bread/precedence 0 ::bread/f inc}]
              (bread/hooks-for app :bread/x))))))
 
+(deftest test-value-action
+
+  (testing "it returns the value at :action/value"
+    (let [app {::bread/hooks {:my/action [{:action/name ::bread/value
+                                           :action/value "the value"}]}}]
+      (is (= "the value" (bread/hook app :my/action))))))
+
 (deftest test-add-effect
 
   (testing "it adds the given Effect to ::effects"

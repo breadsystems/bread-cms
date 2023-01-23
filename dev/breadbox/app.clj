@@ -169,6 +169,7 @@
                    (defaults/app
                      {:datastore $config
                       :routes {:router $router}
+                      :i18n {:supported-langs #{:en :fr}}
                       :navigation
                       {:menus [{:key :main-nav
                                 :type :posts
@@ -266,6 +267,12 @@
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
+  (as-> $req $
+    (bread/dispatch $router $)
+    (bread/hook $ ::bread/dispatch)
+    (bread/hook $ ::bread/expand)
+    (bread/hook $ ::bread/render)
+    (select-keys $ [:status :body :headers]))
 
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
@@ -282,23 +289,20 @@
      :taxon.taxonomy/category
      "my-cat")
 
-  ;; TODO generic query i18n
-  ;; https://github.com/breadsystems/bread-cms/issues/48
+  ;; Lookup translatable entity fields
+  (q '[:find ?attr
+       :where [?e :db/ident ?attr] [?e :i18n/translatable? true]])
+
+  ;; Wildcard query for post/fields by post slug
   (q '{:find
-       [(pull ?e [:db/id :taxon/slug
-                  {:taxon/fields [:field/key :field/content]}])],
-       :in [$ % ?status ?taxonomy ?slug],
+       [(pull ?f [:db/id *])],
+       :in [$ ?slug ?lang],
        :where
-       [[?e :taxon/slug ?slug]
-        [?p :post/status ?status]
-        (post-taxonomized ?p ?taxonomy ?slug)]}
-     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-        [?post :post/taxons ?t]
-        [?t :taxon/taxonomy ?taxonomy]
-        [?t :taxon/slug ?taxon-slug]]]
-     :post.status/published
-     :taxon.taxonomy/category
-     "my-cat")
+       [[?p :post/slug ?slug]
+        [?p :post/fields ?f]
+        [?f :field/lang ?lang]]}
+     "child-page"
+     :en)
 
   ;; Retractions!
   (def child-page
@@ -423,6 +427,7 @@
   (k/run 'systems.bread.alpha.post-test)
   (k/run 'systems.bread.alpha.i18n-test)
   (k/run 'systems.bread.alpha.install-test)
+  (k/run 'systems.bread.alpha.taxon-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)
