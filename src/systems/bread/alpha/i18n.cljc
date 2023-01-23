@@ -20,7 +20,7 @@
   [req]
   (let [params (route/params req (route/match req))
         lang-param (bread/config req :i18n/lang-param)
-        supported ((supported-langs req) (keyword (lang-param params)))
+        supported (get (supported-langs req) (keyword (lang-param params)))
         fallback (bread/config req :i18n/fallback-lang)
         lang (or supported fallback)]
     (bread/hook req :hook/lang lang)))
