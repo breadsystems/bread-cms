@@ -145,14 +145,16 @@
         pull (some-> args first :find first rest second)
         translatables (translatable-paths attrs k pull)]
     (if (seq translatables)
-      (concat
-        (let [bindings-to-rm (map first translatables)
-              pull (-> args first :find first (remove-bindings
-                                                bindings-to-rm))]
-          [(update query :query/args #(-> % vec (assoc-in [0 :find 0] pull)))])
-        (map (fn [[spec path]]
-               (construct-fields-query lang query k spec path))
-             translatables))
+      (vec
+        (concat
+          (let [bindings-to-rm (map first translatables)
+                pull (-> args first :find first (remove-bindings
+                                                  bindings-to-rm))]
+            [(update query :query/args
+                     #(-> % vec (assoc-in [0 :find 0] pull)))])
+          (map (fn [[spec path]]
+                 (construct-fields-query lang query k spec path))
+               translatables)))
       [query])))
 
 (defmethod bread/action ::path-params

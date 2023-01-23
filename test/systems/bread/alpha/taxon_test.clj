@@ -23,7 +23,7 @@
                    ::bread/queries))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; No field I18n.
+      ;; Not querying for any translatable content.
       [{:query/name ::store/query
         :query/key :taxon
         :query/db db
@@ -45,37 +45,26 @@
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
 
-      ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; Query includes field I18n!
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :dispatcher.type/tag
       [{:query/name ::store/query
-        :query/key :taxon
+        :query/key :tag
         :query/db db
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ % ?status ?taxonomy ?slug]
            :where [[?e0 :taxon/slug ?slug]
                    [?p :post/status ?status]
                    (post-taxonomized ?p ?taxonomy ?slug)]}
          [taxon/post-taxonomized-rule]
          :post.status/published
-         :taxon.taxonomy/category
+         :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
-        :query/key [:taxon :taxon/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e0 ?lang]
-           :where [[?e0 :taxon/fields ?e]
-                   [?e :field/lang ?lang]]}
-         [::bread/data :taxon :db/id]
-         :en]}
        {:query/name ::taxon/compact
-        :query/key :taxon}]
-      {:dispatcher/type :dispatcher.type/taxon
-       :dispatcher/pull [:taxon/slug :taxon/fields]
-       :dispatcher/key :taxon
-       :taxon/taxonomy :taxon.taxonomy/category
+        :query/key :tag}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [:taxon/whatever]
+       :dispatcher/key :tag
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
@@ -97,17 +86,18 @@
         :query/key [:taxon :taxon/fields]
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content :field/lang])]
+        ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e0 ?lang]
-           :where [[?e0 :taxon/fields ?e]
-                   [?e :field/lang ?lang]]}
+           :where [[?e :field/lang ?lang]
+                   [?e0 :taxon/fields ?e]]}
          [::bread/data :taxon :db/id]
          :en]}
        {:query/name ::taxon/compact
         :query/key :taxon}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
-                         {:taxon/fields [:field/key :field/content :field/lang]}]
+                         {:taxon/fields [:field/key
+                                         :field/content]}]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
@@ -202,9 +192,9 @@
        :post/status false ; same as explicit nil.
        :route/params {:lang "en" :slug "some-tag"}}
 
-      #_#_
       ;; {:uri "/en/tag/some-tag"}
       ;; TODO Dynamic params from request...
+      #_#_
       [{:query/name ::store/query
         :query/key :tag
         :query/db db
@@ -227,28 +217,6 @@
                            :post/type :type}
        :route/params {:lang "en" :slug "some-tag"
                       :type "article" :status "draft"}}
-
-      ;; {:uri "/en/tag/some-tag"}
-      ;; :dispatcher.type/tag
-      [{:query/name ::store/query
-        :query/key :tag
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
-           :in [$ % ?status ?taxonomy ?slug]
-           :where [[?e0 :taxon/slug ?slug]
-                   [?p :post/status ?status]
-                   (post-taxonomized ?p ?taxonomy ?slug)]}
-         [taxon/post-taxonomized-rule]
-         :post.status/published
-         :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
-      {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [:taxon/whatever]
-       :dispatcher/key :tag
-       :route/params {:lang "en" :slug "some-tag"}}
 
       )))
 
