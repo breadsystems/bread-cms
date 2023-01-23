@@ -267,6 +267,12 @@
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
+  (as-> $req $
+    (bread/dispatch $router $)
+    (bread/hook $ ::bread/dispatch)
+    (bread/hook $ ::bread/expand)
+    (bread/hook $ ::bread/render)
+    (select-keys $ [:status :body :headers]))
 
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
