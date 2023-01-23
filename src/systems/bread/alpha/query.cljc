@@ -66,10 +66,9 @@
 (defn add
   "Add query to the vector of queries to be run."
   [req query]
-  ;; TODO data-orient queries themselves here
   (update req ::bread/queries
           (fn [queries]
-            (vec (conj (vec queries) query)))))
+            (conj (vec queries) query))))
 
 (defmethod bread/action ::add
   [req {:keys [query]} _]
