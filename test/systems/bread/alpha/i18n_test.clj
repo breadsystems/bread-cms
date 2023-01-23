@@ -148,7 +148,16 @@
 (deftest test-internationalize-query
   (are
     [queries args]
-    (= queries (apply i18n/internationalize-query args))
+    (= queries (let [[attrs query lang] args
+                     app (plugins->loaded
+                           [(i18n/plugin {:supported-langs
+                                          #{:en :fr :ru :es :de}
+                                          :db-attrs
+                                          attrs})
+                            {:hooks
+                             {:hook/lang [{:action/name ::bread/value
+                                           :action/value lang}]}}])]
+                 (bread/hook app ::i18n/queries query)))
 
     ;; Without :field/content
     [{:query/name ::store/query

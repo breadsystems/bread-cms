@@ -162,6 +162,16 @@
                translatables)))
       [query])))
 
+(defmethod bread/action ::queries
+  i18n-queries
+  [req _ [query]]
+  "Internationalizes the given query, returning a vector of queries for
+  translated content (i.e. :field/content in the appropriate lang).
+  If no translation is needed, returns a length-1 vector containing only the
+  original query."
+  (let [attrs (bread/config req :i18n/db-attrs)]
+    (internationalize-query attrs query (lang req))))
+
 (defmethod bread/action ::path-params
   [req _ [params]]
   (assoc params (bread/config req :i18n/lang-param) (lang req)))
@@ -187,14 +197,21 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang supported-langs]
-     :or {lang-param :lang fallback-lang :en supported-langs #{:en}}}]
+  ([{:keys [lang-param fallback-lang supported-langs db-attrs]
+     :or {lang-param :lang
+          fallback-lang :en
+          supported-langs #{:en}
+          db-attrs #{:post/fields :taxon/fields :user/fields}}}]
    {:config
     {:i18n/lang-param lang-param
      :i18n/fallback-lang fallback-lang
-     :i18n/supported-langs supported-langs}
+     :i18n/supported-langs supported-langs
+     :i18n/db-attrs db-attrs}
     :hooks
-    {:hook/path-params
+    {::queries
+     [{:action/name ::queries
+       :action/description "Internationalize a query"}]
+     :hook/path-params
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
