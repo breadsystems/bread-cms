@@ -137,6 +137,12 @@
 (defmulti action (fn [_app hook _args]
                    (:action/name hook)))
 
+(defmethod action ::value
+  return-value
+  [_ {:action/keys [value]} _]
+  "Pass-through action that simply returns the value given by :action/value."
+  value)
+
 (defmulti effect (fn [effect _data]
                    (:effect/name effect)))
 
