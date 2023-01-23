@@ -170,6 +170,7 @@
                      {:datastore $config
                       :routes {:router $router}
                       :navigation
+                      {} #_
                       {:menus [{:key :main-nav
                                 :type :posts
                                 :post/type :post.type/page}
