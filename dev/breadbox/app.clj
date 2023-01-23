@@ -427,6 +427,7 @@
   (k/run 'systems.bread.alpha.post-test)
   (k/run 'systems.bread.alpha.i18n-test)
   (k/run 'systems.bread.alpha.install-test)
+  (k/run 'systems.bread.alpha.taxon-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)
