@@ -154,6 +154,7 @@
                                           #{:en :fr :ru :es :de}
                                           :db-attrs
                                           attrs})
+                            ;; Set up an ad-hoc plugin to hard-code lang.
                             {:hooks
                              {:hook/lang [{:action/name ::bread/value
                                            :action/value lang}]}}])]
