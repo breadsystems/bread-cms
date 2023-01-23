@@ -169,8 +169,8 @@
                    (defaults/app
                      {:datastore $config
                       :routes {:router $router}
+                      :i18n {:supported-langs #{:en :fr}}
                       :navigation
-                      {} #_
                       {:menus [{:key :main-nav
                                 :type :posts
                                 :post/type :post.type/page}
