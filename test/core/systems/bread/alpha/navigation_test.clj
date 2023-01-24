@@ -35,9 +35,9 @@
         :query/key [:menus :main-nav]
         :query/db db
         :query/args
-        ['{:find (pull ?e [;; Post menus don't store their own data in the db:
-                           ;; instead, they follow the post hierarchy itself.
-                           :db/id {:post/children [*]}])
+        ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
+                            ;; instead, they follow the post hierarchy itself.
+                            :db/id {:post/children [*]}])]
            :in [$ ?type [?status ...]]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
@@ -57,7 +57,7 @@
         :query/key [:menus :main-nav]
         :query/db db
         :query/args
-        ['{:find (pull ?e [:db/id {:post/children [*]}])
+        ['{:find [(pull ?e [:db/id {:post/children [*]}])]
            :in [$ ?type [?status ...]]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
@@ -78,7 +78,7 @@
         :query/key [:menus :pages-nav]
         :query/db db
         :query/args
-        ['{:find (pull ?e [:db/id {:post/children [*]}])
+        ['{:find [(pull ?e [:db/id {:post/children [*]}])]
            :in [$ ?type [?status ...]]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]

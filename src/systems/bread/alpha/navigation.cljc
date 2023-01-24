@@ -253,8 +253,8 @@
               :query/db (store/datastore req)
               :query/key [:menus k]
               :query/args
-              ['{:find (pull ?e [:db/id
-                                 {:post/children [*]}])
+              ['{:find [(pull ?e [:db/id
+                                  {:post/children [*]}])]
                  :in [$ ?type [?status ...]]
                  :where [[?e :post/type ?type]
                          [?e :post/status ?status]
