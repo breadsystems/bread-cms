@@ -248,22 +248,23 @@
   add-menu-query?type=posts
   [req {k :menu/key post-type :post/type status :post/status
         :or {status :post.status/published}}]
-  (query/add req
-             {:query/name ::store/query
-              :query/db (store/datastore req)
-              :query/key [:menus k]
-              :query/args
-              ['{:find [(pull ?e [:db/id
-                                  {:post/children [*]}])]
-                 :in [$ ?type [?status ...]]
-                 :where [[?e :post/type ?type]
-                         [?e :post/status ?status]
-                         ;; Query only for top-level posts.
-                         (not-join [?e] [?parent :post/children ?e])]}
-               post-type
-               (if (coll? status) (set status) #{status})]}
-             {:query/name ::expand-entities
-              :query/key [:menus k]}))
+  (let [menus-key (bread/config req :navigation/menus-key)]
+    (query/add req
+               {:query/name ::store/query
+                :query/db (store/datastore req)
+                :query/key [menus-key k]
+                :query/args
+                ['{:find [(pull ?e [:db/id
+                                    {:post/children [*]}])]
+                   :in [$ ?type [?status ...]]
+                   :where [[?e :post/type ?type]
+                           [?e :post/status ?status]
+                           ;; Query only for top-level posts.
+                           (not-join [?e] [?parent :post/children ?e])]}
+                 post-type
+                 (if (coll? status) (set status) #{status})]}
+               {:query/name ::expand-entities
+                :query/key [menus-key k]})))
 
 (defmethod add-menu-query :menu.type/pages
   add-menu-query?type=pages

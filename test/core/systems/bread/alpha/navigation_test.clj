@@ -75,7 +75,7 @@
 
       ;; Page type composes with status and other options.
       [{:query/name ::store/query
-        :query/key [:menus :pages-nav]
+        :query/key [:custom-menu-key :pages-nav]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id {:post/children [*]}])]
@@ -86,12 +86,13 @@
          :post.type/page
          #{:post.status/a :post.status/b}]}
        {:query/name ::navigation/expand-entities
-        :query/key [:menus :pages-nav]}]
+        :query/key [:custom-menu-key :pages-nav]}]
       {:menus
        [{:menu/key :pages-nav
          :menu/type :menu.type/pages
          :post/status [:post.status/a :post.status/b]}]
-       :global-menus false}
+       :global-menus false
+       :menus-key :custom-menu-key}
 
       )))
 
