@@ -235,7 +235,7 @@
                        (comp (partial sort-by :action/priority) concat)
                        (filter identity actions)))
           (add-effects [app effects]
-            (update app ::effects concat effects))]
+            (update app ::effects concat (filter identity effects)))]
     (as-> effects $
       (add-effects app $)
       (configure $ config)

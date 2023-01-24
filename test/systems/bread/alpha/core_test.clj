@@ -88,6 +88,11 @@
                                 [nil false {:action/name :a}]}}])]
     (is (= [{:action/name :a}] (get-in app [::bread/hooks :hook/a])))))
 
+(deftest test-load-plugins-filters-out-empty-effects
+  (let [app (plugins->loaded [{:effects
+                               [nil {:effect/name :xyz} false nil]}])]
+    (is (= [{:effect/name :xyz}] (::bread/effects app)))))
+
 (deftest test-hooks-for
 
   (testing "it returns data for a specific hook"
