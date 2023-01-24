@@ -241,28 +241,53 @@
 
 ;; TODO delete above
 
+(defmethod bread/query ::expand-entities
+  expand-entities-action
+  [])
+
 (defmulti add-menu-query (fn [_req opts]
                            (:menu/type opts)))
 
 (defmethod add-menu-query :menu.type/posts
   add-menu-query?type=posts
-  [req {k :menu/key post-type :post/type status :post/status
-        :or {status :post.status/published}}]
-  (let [menus-key (bread/config req :navigation/menus-key)]
+  [req {k :menu/key
+        post-type :post/type
+        status :post/status
+        field-keys :post/fields
+        :or {status :post.status/published
+             field-keys :title}}]
+  (let [db (store/datastore req)
+        menus-key (bread/config req :navigation/menus-key)
+        statuses (if (coll? status) (set status) #{status})
+        field-keys (if (coll? field-keys) (set field-keys) #{field-keys})]
     (query/add req
                {:query/name ::store/query
-                :query/db (store/datastore req)
+                :query/db db
                 :query/key [menus-key k]
                 :query/args
-                ['{:find [(pull ?e [:db/id
-                                    {:post/children [*]}])]
+                ['{:find [(pull ?e [:db/id {:post/children [*]}])]
                    :in [$ ?type [?status ...]]
                    :where [[?e :post/type ?type]
                            [?e :post/status ?status]
                            ;; Query only for top-level posts.
                            (not-join [?e] [?parent :post/children ?e])]}
                  post-type
-                 (if (coll? status) (set status) #{status})]}
+                 statuses]}
+               {:query/name ::store/query
+                :query/db db
+                :query/key [:navigation/i18n k]
+                :query/args
+                ['{:find [(pull ?f [:db/id :field/key :field/content])]
+                   :in [$ ?type [?status ...] [?field-key ...] ?lang]
+                   :where [[?e :post/type ?type]
+                           [?e :post/status ?status]
+                           [?e :post/fields ?f]
+                           [?f :field/key ?field-key]
+                           [?f :field/lang ?lang]]}
+                 post-type
+                 statuses
+                 field-keys
+                 (i18n/lang req)]}
                {:query/name ::expand-entities
                 :query/key [menus-key k]})))
 

@@ -44,6 +44,21 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          :post.type/page
          #{:post.status/published}]}
+       {:query/name ::store/query
+        :query/key [:navigation/i18n :main-nav]
+        :query/db db
+        :query/args
+        ['{:find [(pull ?f [:db/id :field/key :field/content])]
+           :in [$ ?type [?status ...] [?field-key ...] ?lang]
+           :where [[?e :post/type ?type]
+                   [?e :post/status ?status]
+                   [?e :post/fields ?f]
+                   [?f :field/key ?field-key]
+                   [?f :field/lang ?lang]]}
+         :post.type/page
+         #{:post.status/published}
+         #{:title}
+         :en]}
        {:query/name ::navigation/expand-entities
         :query/key [:menus :main-nav]}]
       {:menus
@@ -52,9 +67,47 @@
          :post/type :post.type/page}]
        :global-menus false}
 
-      ;; Querying for custom post statuses
+      ;; Support custom post status, post type, and field keys.
       [{:query/name ::store/query
-        :query/key [:menus :main-nav]
+        :query/key [:custom-menu-key :main-nav]
+        :query/db db
+        :query/args
+        ['{:find [(pull ?e [:db/id {:post/children [*]}])]
+           :in [$ ?type [?status ...]]
+           :where [[?e :post/type ?type]
+                   [?e :post/status ?status]
+                   (not-join [?e] [?parent :post/children ?e])]}
+         :post.type/article
+         #{:post.status/x :post.status/y}]}
+       {:query/name ::store/query
+        :query/key [:navigation/i18n :main-nav]
+        :query/db db
+        :query/args
+        ['{:find [(pull ?f [:db/id :field/key :field/content])]
+           :in [$ ?type [?status ...] [?field-key ...] ?lang]
+           :where [[?e :post/type ?type]
+                   [?e :post/status ?status]
+                   [?e :post/fields ?f]
+                   [?f :field/key ?field-key]
+                   [?f :field/lang ?lang]]}
+         :post.type/article
+         #{:post.status/x :post.status/y}
+         #{:custom :other}
+         :en]}
+       {:query/name ::navigation/expand-entities
+        :query/key [:custom-menu-key :main-nav]}]
+      {:menus
+       [{:menu/key :main-nav
+         :menu/type :menu.type/posts
+         :post/type :post.type/article
+         :post/status [:post.status/x :post.status/y]
+         :post/fields [:custom :other]}]
+       :global-menus false
+       :menus-key :custom-menu-key}
+
+      ;; Page type composes with status and other options.
+      [{:query/name ::store/query
+        :query/key [:custom-menu-key :main-nav]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id {:post/children [*]}])]
@@ -64,33 +117,28 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          :post.type/page
          #{:post.status/x :post.status/y}]}
-       {:query/name ::navigation/expand-entities
-        :query/key [:menus :main-nav]}]
-      {:menus
-       [{:menu/key :main-nav
-         :menu/type :menu.type/posts
-         :post/type :post.type/page
-         :post/status [:post.status/x :post.status/y]}]
-       :global-menus false}
-
-      ;; Page type composes with status and other options.
-      [{:query/name ::store/query
-        :query/key [:custom-menu-key :pages-nav]
+       {:query/name ::store/query
+        :query/key [:navigation/i18n :main-nav]
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id {:post/children [*]}])]
-           :in [$ ?type [?status ...]]
+        ['{:find [(pull ?f [:db/id :field/key :field/content])]
+           :in [$ ?type [?status ...] [?field-key ...] ?lang]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
-                   (not-join [?e] [?parent :post/children ?e])]}
+                   [?e :post/fields ?f]
+                   [?f :field/key ?field-key]
+                   [?f :field/lang ?lang]]}
          :post.type/page
-         #{:post.status/a :post.status/b}]}
+         #{:post.status/x :post.status/y}
+         #{:custom :other}
+         :en]}
        {:query/name ::navigation/expand-entities
-        :query/key [:custom-menu-key :pages-nav]}]
+        :query/key [:custom-menu-key :main-nav]}]
       {:menus
-       [{:menu/key :pages-nav
+       [{:menu/key :main-nav
          :menu/type :menu.type/pages
-         :post/status [:post.status/a :post.status/b]}]
+         :post/status [:post.status/x :post.status/y]
+         :post/fields [:custom :other]}]
        :global-menus false
        :menus-key :custom-menu-key}
 
