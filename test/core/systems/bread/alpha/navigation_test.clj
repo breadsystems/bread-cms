@@ -158,21 +158,70 @@
   (are
     [menus unmerged]
     (= menus (-> (bread/query
-                  {:query/name ::navigation/merge-post-menu-items
-                   :query/key [:menus :main-nav]}
-                  unmerged)))
+                   {:query/name ::navigation/merge-post-menu-items
+                    :query/key [:menus :main-nav]}
+                   unmerged)))
 
+    ;; non-recursive case
     {:menu/type :menu.type/posts
      :post/type :post.type/page
-     ;; TODO children
      :items [{:entity {:db/id 1
                        :post/slug "parent-page"
                        :post/fields {:one "eleven"
-                                     :two "twelve"}}}
+                                     :two "twelve"}}
+              :children []}
+             {:entity {:db/id 2
+                       :post/slug ""
+                       :post/fields {;; Handle missing fields gracefully.
+                                     :two "twenty-two"}}
+              :children []}]}
+    {:menus
+     {:main-nav
+      {:menu/type :menu.type/posts
+       :post/type :post.type/page
+       :items [[{:db/id 1
+                 :post/slug "parent-page"
+                 :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]}]
+               [{:db/id 2
+                 :post/slug ""
+                 :post/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
+     :navigation/i18n
+     {:main-nav
+      [[{:db/id 11 :field/key :one :field/content "\"eleven\""}]
+       [{:db/id 12 :field/key :two :field/content "\"twelve\""}]
+       [{:db/id 22 :field/key :two :field/content "\"twenty-two\""}]]}}
+
+    ;; recursive case (with children)
+    {:menu/type :menu.type/posts
+     :post/type :post.type/page
+     :items [{:entity {:db/id 1
+                       :post/slug "parent-page"
+                       :post/fields {:one "eleven"
+                                     :two "twelve"}}
+              :children [{:entity {:db/id 3
+                                   :post/slug "child-page"
+                                   :post/fields {:one "thirty-one"
+                                                 :two "thirty-two"}}
+                          :children []}
+                         {:entity {:db/id 4
+                                   :post/slug "another-kid"
+                                   :post/fields {:one "forty-one"
+                                                 :two "forty-two"}}
+                          :children [{:entity {:db/id 5
+                                               :post/slug "grandchild"
+                                               :post/fields {:one "fifty-one"
+                                                             :two "fifty-two"}}
+                                      :children []}
+                                     {:entity {:db/id 6
+                                               :post/slug "another-grandchild"
+                                               :post/fields {:one "sixty-one"
+                                                             :two "sixty-two"}}
+                                      :children []}]}]}
              {:entity {:db/id 2
                        :post/slug ""
                        :post/fields {:one "twenty-one"
-                                     :two "twenty-two"}}}]}
+                                     :two "twenty-two"}}
+              :children []}]}
     {:menus
      {:main-nav
       {:menu/type :menu.type/posts
@@ -180,21 +229,20 @@
        :items [[{:db/id 1
                  :post/slug "parent-page"
                  :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]
-                 #_#_
-                :post/children
-                [{:db/id 3
-                  :post/slug "child-page"
-                  :post/fields [{:db/id 31} {:db/id 32} {:db/id 33}]}
-                 {:db/id 4
-                  :post/slug "another-kid"
-                  :post/fields [{:db/id 41} {:db/id 42} {:db/id 43}]
-                  :post/children
-                  [{:db/id 5
-                    :post/slug "grandchild"
-                    :post/fields [{:db/id 51} {:db/id 52} {:db/id 53}]}
-                   {:db/id 6
-                    :post/slug "another-grandchild"
-                    :post/fields [{:db/id 61} {:db/id 62} {:db/id 63}]}]}]}]
+                 :post/children
+                 [{:db/id 3
+                   :post/slug "child-page"
+                   :post/fields [{:db/id 31} {:db/id 32} {:db/id 33}]}
+                  {:db/id 4
+                   :post/slug "another-kid"
+                   :post/fields [{:db/id 41} {:db/id 42} {:db/id 43}]
+                   :post/children
+                   [{:db/id 5
+                     :post/slug "grandchild"
+                     :post/fields [{:db/id 51} {:db/id 52} {:db/id 53}]}
+                    {:db/id 6
+                     :post/slug "another-grandchild"
+                     :post/fields [{:db/id 61} {:db/id 62} {:db/id 63}]}]}]}]
                [{:db/id 2
                  :post/slug ""
                  :post/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
@@ -212,7 +260,6 @@
        [{:db/id 52 :field/key :two :field/content "\"fifty-two\""}]
        [{:db/id 61 :field/key :one :field/content "\"sixty-one\""}]
        [{:db/id 62 :field/key :two :field/content "\"sixty-two\""}]]}}
-
 
     ))
 
