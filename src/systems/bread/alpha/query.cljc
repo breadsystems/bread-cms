@@ -38,7 +38,8 @@
                                node))
                            x))
           (assoc x (last k) v))))
-    :else m))
+    (false? (get-in m (or (butlast k) k))) m
+    :else (assoc-in m k v)))
 
 (comment
   (entity? nil)
@@ -53,7 +54,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (assoc data :not-found? (nil? (get-at data k)))
+    (assoc data :not-found? (not (get-at data k)))
     data))
 
 (defmethod bread/action ::expand-queries
@@ -65,10 +66,10 @@
 
 (defn add
   "Add query to the vector of queries to be run."
-  [req query]
+  [req & queries]
   (update req ::bread/queries
-          (fn [queries]
-            (conj (vec queries) query))))
+          (fn [current-queries]
+            (apply conj (vec current-queries) queries))))
 
 (defmethod bread/action ::add
   [req {:keys [query]} _]

@@ -68,7 +68,9 @@
     (assoc post :post/fields fields)))
 
 (defn compact-fields [post]
-  (update post :post/fields field/compact))
+  (if post
+    (update post :post/fields field/compact)
+    post))
 
 (defn- pull-spec? [arg]
   (and (list? arg) (= 'pull (first arg))))
