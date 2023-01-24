@@ -9,7 +9,7 @@
     [systems.bread.alpha.test-helpers :refer [datastore->plugin
                                               plugins->loaded]]))
 
-(deftest test-location-menu-queries
+(deftest test-post-menu-queries
   (let [db ::FAKEDB]
     (are
       [data navigation-config]
@@ -140,9 +140,7 @@
          :post/status [:post.status/x :post.status/y]
          :post/fields [:custom :other]}]
        :global-menus false
-       :menus-key :custom-menu-key}
-
-      )))
+       :menus-key :custom-menu-key})))
 
 (comment
   (require '[kaocha.repl :as k])
