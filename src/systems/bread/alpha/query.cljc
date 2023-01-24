@@ -38,7 +38,8 @@
                                node))
                            x))
           (assoc x (last k) v))))
-    :else m))
+    (false? (get-in m (or (butlast k) k))) m
+    :else (assoc-in m k v)))
 
 (comment
   (entity? nil)
@@ -53,7 +54,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
-    (assoc data :not-found? (nil? (get-at data k)))
+    (assoc data :not-found? (not (get-at data k)))
     data))
 
 (defmethod bread/action ::expand-queries

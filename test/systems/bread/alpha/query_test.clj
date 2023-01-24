@@ -5,9 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-;; TODO what is this even testing??
 (deftest test-query-expand
-
   (are
     [data queries]
     (= data (-> (plugins->loaded [(query/plugin)])
@@ -17,6 +15,18 @@
                         :dispatcher/key (:query/key (first queries))})
                 (bread/hook ::bread/expand)
                 ::bread/data))
+
+    {:my/result false
+     :not-found? true}
+    [{:query/key :my/result
+      :query/name ::bread/value
+      :query/value false}]
+
+    {:my/result {:nested false}
+     :not-found? true}
+    [{:query/key [:my/result :nested]
+      :query/name ::bread/value
+      :query/value false}]
 
     {:my/result "the result"
      :not-found? false}
@@ -50,9 +60,20 @@
     {:a :b :x :y}
     [{:a :b} :x :y]
 
-    ;; Non-existent paths DO NOT get updated.
-    {:a :b}
+    {:a :b :def :xyz}
     [{:a :b} [:def] :xyz]
+
+    ;; Don't overwrite false values...
+    {:a :b :x false}
+    [{:a :b :x false} [:x :y] :xyz]
+
+    ;; ...at any level.
+    {:a :b :x {:y false}}
+    [{:a :b :x {:y false}} [:x :y :z] :xyz]
+
+    ;; And I mean ANY LEVEL.
+    {:a :b :x {:y {:z false}}}
+    [{:a :b :x {:y {:z false}}} [:x :y :z :a] :xyz]
 
     {:a {:b {:c :d}}}
     [{:a {:b {}}} [:a :b] {:c :d}]
