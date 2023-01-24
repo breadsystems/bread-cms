@@ -66,10 +66,10 @@
 
 (defn add
   "Add query to the vector of queries to be run."
-  [req query]
+  [req & queries]
   (update req ::bread/queries
-          (fn [queries]
-            (conj (vec queries) query))))
+          (fn [current-queries]
+            (apply conj (vec current-queries) queries))))
 
 (defmethod bread/action ::add
   [req {:keys [query]} _]
