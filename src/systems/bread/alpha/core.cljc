@@ -233,7 +233,7 @@
           (append-hook [app [hook actions]]
             (update-in app [::hooks hook]
                        (comp (partial sort-by :action/priority) concat)
-                       actions))
+                       (filter identity actions)))
           (add-effects [app effects]
             (update app ::effects concat effects))]
     (as-> effects $
