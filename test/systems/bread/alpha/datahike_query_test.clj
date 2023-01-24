@@ -68,7 +68,7 @@
                   ::bread/data))
 
        ;; Querying for a non-existent post
-       {:post nil
+       {:post false
         :not-found? true}
        [{:query/name ::store/query
          :query/key :post
@@ -81,8 +81,7 @@
           "non-existent-slug"]}]
 
        ;; Querying for a non-existent post and its fields
-       {:post nil
-        :post/fields nil
+       {:post false
         :not-found? true}
        [{:query/name ::store/query
          :query/key :post
@@ -93,7 +92,7 @@
             :in [$ ?slug]
             :where [[?e :post/slug ?slug]]}
           "non-existent-slug"]}
-        {:query/key :post/fields
+        {:query/key [:post :post/fields]
          :query/name ::store/query
          :query/db db
          :query/args
