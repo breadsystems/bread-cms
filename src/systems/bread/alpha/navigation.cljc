@@ -261,9 +261,13 @@
         statuses (if (coll? status) (set status) #{status})
         field-keys (if (coll? field-keys) (set field-keys) #{field-keys})]
     (query/add req
+               {:query/name ::bread/value
+                :query/key [menus-key k]
+                :query/value {:menu/type :menu.type/posts
+                              :post/type post-type}}
                {:query/name ::store/query
                 :query/db db
-                :query/key [menus-key k]
+                :query/key [menus-key k :items]
                 :query/args
                 ['{:find [(pull ?e [:db/id {:post/children [*]}])]
                    :in [$ ?type [?status ...]]
@@ -288,8 +292,8 @@
                  statuses
                  field-keys
                  (i18n/lang req)]}
-               {:query/name ::expand-entities
-                :query/key [menus-key k]})))
+               {:query/name ::merge-post-menu-items
+                :query/key [menus-key k :items]})))
 
 (defmethod add-menu-query :menu.type/pages
   add-menu-query?type=pages

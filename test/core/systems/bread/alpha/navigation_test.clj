@@ -1,7 +1,7 @@
 ;; Test navigation API at the datastore -> ::bread/data level.
 (ns systems.bread.alpha.navigation-test
   (:require
-    [clojure.test :refer [deftest is are]]
+    [clojure.test :refer [deftest are]]
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
@@ -31,8 +31,12 @@
       [] nil
       [] {:global-menus false}
 
-      [{:query/name ::store/query
+      [{:query/name ::bread/value
         :query/key [:menus :main-nav]
+        :query/value {:menu/type :menu.type/posts
+                      :post/type :post.type/page}}
+       {:query/name ::store/query
+        :query/key [:menus :main-nav :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
@@ -59,8 +63,8 @@
          #{:post.status/published}
          #{:title}
          :en]}
-       {:query/name ::navigation/expand-entities
-        :query/key [:menus :main-nav]}]
+       {:query/name ::navigation/merge-post-menu-items
+        :query/key [:menus :main-nav :items]}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/posts
@@ -68,8 +72,12 @@
        :global-menus false}
 
       ;; Support custom post status, post type, and field keys.
-      [{:query/name ::store/query
+      [{:query/name ::bread/value
         :query/key [:custom-menu-key :main-nav]
+        :query/value {:menu/type :menu.type/posts
+                      :post/type :post.type/article}}
+       {:query/name ::store/query
+        :query/key [:custom-menu-key :main-nav :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id {:post/children [*]}])]
@@ -94,8 +102,8 @@
          #{:post.status/x :post.status/y}
          #{:custom :other}
          :en]}
-       {:query/name ::navigation/expand-entities
-        :query/key [:custom-menu-key :main-nav]}]
+       {:query/name ::navigation/merge-post-menu-items
+        :query/key [:custom-menu-key :main-nav :items]}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/posts
@@ -106,8 +114,12 @@
        :menus-key :custom-menu-key}
 
       ;; Page type composes with status and other options.
-      [{:query/name ::store/query
+      [{:query/name ::bread/value
         :query/key [:custom-menu-key :main-nav]
+        :query/value {:menu/type :menu.type/posts
+                      :post/type :post.type/page}}
+       {:query/name ::store/query
+        :query/key [:custom-menu-key :main-nav :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id {:post/children [*]}])]
@@ -132,8 +144,8 @@
          #{:post.status/x :post.status/y}
          #{:custom :other}
          :en]}
-       {:query/name ::navigation/expand-entities
-        :query/key [:custom-menu-key :main-nav]}]
+       {:query/name ::navigation/merge-post-menu-items
+        :query/key [:custom-menu-key :main-nav :items]}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/pages
