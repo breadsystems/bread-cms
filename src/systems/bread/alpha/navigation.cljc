@@ -239,10 +239,62 @@
   [req {:keys [opts]} _]
   (add-menu req opts))
 
+;; TODO delete above
+
+(defmulti add-menu-query (fn [_req opts]
+                           (:menu/type opts)))
+
+(defmethod add-menu-query :menu.type/posts
+  add-menu-query?type=posts
+  [req {k :menu/key post-type :post/type status :post/status
+        :or {status :post.status/published}}]
+  (query/add req
+             {:query/name ::store/query
+              :query/db (store/datastore req)
+              :query/key [:menus k]
+              :query/args
+              ['{:find (pull ?e [:db/id
+                                 {:post/children [*]}])
+                 :in [$ ?type [?status ...]]
+                 :where [[?e :post/type ?type]
+                         [?e :post/status ?status]
+                         ;; Query only for top-level posts.
+                         (not-join [?e] [?parent :post/children ?e])]}
+               post-type
+               (if (coll? status) (set status) #{status})]}
+             {:query/name ::expand-entities
+              :query/key [:menus k]}))
+
+(defmethod add-menu-query :menu.type/pages
+  add-menu-query?type=pages
+  [req opts]
+  "Convenience posts menu type specifically for posts of type page."
+  (add-menu-query req (assoc opts
+                             :menu/type :menu.type/posts
+                             :post/type :post.type/page)))
+
+(defmethod bread/action ::add-menu-query
+  add-menu-query-action
+  [req {:keys [opts]} _]
+  (add-menu-query req opts))
+
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hooks menus] global-menu-opts :global-menus :as opts}]
+  ([{:keys [hooks menus menus-key] global-menu-opts :global-menus :as opts}]
+   (if opts
+     {:config
+      {:navigation/menus-key (or menus-key :menus)}
+      :hooks
+      {::bread/dispatch
+       (mapv (fn [menu-opts]
+               {:action/name ::add-menu-query
+                :action/description
+                "Add a query to fetch the menu with the given opts"
+                :opts menu-opts})
+             menus)}}
+     {:hooks {}})
+   #_
    (if (and opts (seq opts))
      (let [dispatch-hooks
            (concat [{:action/name ::add-global-menus-query
