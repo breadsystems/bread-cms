@@ -241,17 +241,21 @@
 
 ;; TODO delete above
 
-(defn- walk-post-menu-items [items field-kvs]
-  (map (fn [item]
-         {:entity
-          (update
-            item :post/fields
-            (fn [fields]
-              (into {} (map (fn [{id :db/id}]
-                              (let [[k v] (get field-kvs id)]
-                                (when v [k (edn/read-string v)])))
-                            fields))))})
-       items))
+(defn- walk-post-menu-items [posts field-kvs]
+  (map (fn [{:post/keys [children] :as post}]
+         (let [entity
+               (-> (dissoc post :post/children)
+                   (update
+                     :post/fields
+                     (fn [fields]
+                       (into {} (map (fn [{id :db/id}]
+                                       (let [[k v] (get field-kvs id)]
+                                         (when v [k (edn/read-string v)])))
+                                     fields)))))
+               children (walk-post-menu-items children field-kvs)]
+           {:entity entity
+            :children children}))
+       posts))
 
 (defn- index-entity-fields [fields]
   (into {} (map (comp
