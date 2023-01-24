@@ -12,25 +12,24 @@
 (deftest test-location-menu-queries
   (let [db ::FAKEDB]
     (are
-      [data args]
-      (= data (let [[lang navigation-config] args]
-                (-> (plugins->loaded [(datastore->plugin db)
-                                      (i18n/plugin {:query-strings? false
-                                                    :query-lang? false})
-                                      (navigation/plugin navigation-config)])
-                    ;; Navigation plugin declares the only ::bread/dispatch
-                    ;; handlers we care about, we don't need a specific
-                    ;; dispatcher here. Dispatchers are normally responsible
-                    ;; for fetching things like posts based on the current
-                    ;; route. Menus, on the other hand, generally don't change
-                    ;; much between routes.
-                    (bread/hook ::bread/dispatch)
-                    ::bread/queries)))
+      [data navigation-config]
+      (= data (-> (plugins->loaded [(datastore->plugin db)
+                                    (i18n/plugin {:query-strings? false
+                                                  :query-lang? false})
+                                    (navigation/plugin navigation-config)])
+                  ;; Navigation plugin declares the only ::bread/dispatch
+                  ;; handlers we care about, we don't need a specific
+                  ;; dispatcher here. Dispatchers are normally responsible
+                  ;; for fetching things like posts based on the current
+                  ;; route. Menus, on the other hand, generally don't change
+                  ;; much between routes.
+                  (bread/hook ::bread/dispatch)
+                  ::bread/queries))
 
       ;; Support disabling navigation completely.
-      [] [:whatever false]
-      [] [:whatever nil]
-      [] [:whatever {:global-menus false}]
+      [] false
+      [] nil
+      [] {:global-menus false}
 
       [{:query/name ::store/query
         :query/key [:menus :main-nav]
@@ -47,12 +46,11 @@
          #{:post.status/published}]}
        {:query/name ::navigation/expand-entities
         :query/key [:menus :main-nav]}]
-      [:en
-       {:menus
-        [{:menu/key :main-nav
-          :menu/type :menu.type/posts
-          :post/type :post.type/page}]
-        :global-menus false}]
+      {:menus
+       [{:menu/key :main-nav
+         :menu/type :menu.type/posts
+         :post/type :post.type/page}]
+       :global-menus false}
 
       ;; Querying for custom post statuses
       [{:query/name ::store/query
@@ -68,15 +66,14 @@
          #{:post.status/x :post.status/y}]}
        {:query/name ::navigation/expand-entities
         :query/key [:menus :main-nav]}]
-      [:en
-       {:menus
-        [{:menu/key :main-nav
-          :menu/type :menu.type/posts
-          :post/type :post.type/page
-          :post/status [:post.status/x :post.status/y]}]
-        :global-menus false}]
+      {:menus
+       [{:menu/key :main-nav
+         :menu/type :menu.type/posts
+         :post/type :post.type/page
+         :post/status [:post.status/x :post.status/y]}]
+       :global-menus false}
 
-      ;; Page type composes with status and other options
+      ;; Page type composes with status and other options.
       [{:query/name ::store/query
         :query/key [:menus :pages-nav]
         :query/db db
@@ -90,12 +87,11 @@
          #{:post.status/a :post.status/b}]}
        {:query/name ::navigation/expand-entities
         :query/key [:menus :pages-nav]}]
-      [:en
-       {:menus
-        [{:menu/key :pages-nav
-          :menu/type :menu.type/pages
-          :post/status [:post.status/a :post.status/b]}]
-        :global-menus false}]
+      {:menus
+       [{:menu/key :pages-nav
+         :menu/type :menu.type/pages
+         :post/status [:post.status/a :post.status/b]}]
+       :global-menus false}
 
       )))
 
