@@ -241,9 +241,44 @@
 
 ;; TODO delete above
 
-(defmethod bread/query ::expand-entities
-  expand-entities-action
-  [])
+(defn- walk-post-menu-items [items field-kvs]
+  (map (fn [item]
+         {:entity
+          (update
+            item :post/fields
+            (fn [fields]
+              (into {} (map (fn [{id :db/id}]
+                              (let [[k v] (get field-kvs id)]
+                                (when v [k (edn/read-string v)])))
+                            fields))))})
+       items))
+
+(defn- index-entity-fields [fields]
+  (into {} (map (comp
+                  (juxt :db/id (juxt :field/key :field/content))
+                  first)
+                fields)))
+
+(comment
+  (walk-post-menu-items
+    [{:db/id 123
+      :post/slug "parent"
+      :post/fields [{:db/id 1} {:db/id 2} {:db/id 3}]}
+     {:db/id 456
+       :post/slug "parent"
+       :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]}]
+    (index-entity-fields
+      [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
+       [{:db/id 2 :field/key :b :field/content (prn-str "B")}]])))
+
+(defmethod bread/query ::merge-post-menu-items
+  merge-post-menu-items
+  [{qk :query/key} {:navigation/keys [i18n] :as data}]
+  (let [menu-key (second qk)
+        menu (get-in data qk)
+        items (map first (:items menu))
+        field-kvs (index-entity-fields (get i18n menu-key))]
+    (assoc menu :items (walk-post-menu-items items field-kvs))))
 
 (defmulti add-menu-query (fn [_req opts]
                            (:menu/type opts)))
