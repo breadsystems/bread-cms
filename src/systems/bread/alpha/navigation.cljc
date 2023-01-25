@@ -241,9 +241,9 @@
 
 ;; TODO delete above
 
-(defn- walk-post-menu-items [posts field-kvs]
-  (map (fn [{:post/keys [children] :as post}]
-         (let [entity
+(defn- walk-post-menu-items [posts {tk :field/title-field :as field-kvs}]
+  (map (fn [{:post/keys [children fields] :as post}]
+         (let [post
                (-> (dissoc post :post/children)
                    (update
                      :post/fields
@@ -252,8 +252,10 @@
                                        (let [[k v] (get field-kvs id)]
                                          (when v [k (edn/read-string v)])))
                                      fields)))))
+               title (tk (:post/fields post))
                children (walk-post-menu-items children field-kvs)]
-           {:entity entity
+           {:title title
+            :entity post
             :children children}))
        posts))
 
@@ -280,8 +282,10 @@
   [{qk :query/key} {:navigation/keys [i18n] :as data}]
   (let [menu-key (second qk)
         menu (get-in data qk)
+        title-field (or (:title-field menu) :title)
         items (map first (:items menu))
-        field-kvs (index-entity-fields (get i18n menu-key))]
+        field-kvs (assoc (index-entity-fields (get i18n menu-key))
+                         :field/title-field title-field)]
     (assoc menu :items (walk-post-menu-items items field-kvs))))
 
 (defmulti add-menu-query (fn [_req opts]

@@ -162,15 +162,47 @@
                     :query/key [:menus :main-nav]}
                    unmerged)))
 
+    ;; simple case, default title field
+    {:menu/type :menu.type/posts
+     :post/type :post.type/page
+     :items [{:title "eleven"
+              :entity {:db/id 1
+                       :post/slug "parent-page"
+                       :post/fields {:title "eleven"}}
+              :children []}
+             {:title "twenty-two"
+              :entity {:db/id 2
+                       :post/slug ""
+                       :post/fields {:title "twenty-two"}}
+              :children []}]}
+    {:menus
+     {:main-nav
+      {:menu/type :menu.type/posts
+       :post/type :post.type/page
+       :items [[{:db/id 1
+                 :post/slug "parent-page"
+                 :post/fields [{:db/id 11}]}]
+               [{:db/id 2
+                 :post/slug ""
+                 :post/fields [{:db/id 22}]}]]}}
+     :navigation/i18n
+     {:main-nav
+      [[{:db/id 11 :field/key :title :field/content "\"eleven\""}]
+       [{:db/id 22 :field/key :title :field/content "\"twenty-two\""}]]}}
+
     ;; non-recursive case
     {:menu/type :menu.type/posts
      :post/type :post.type/page
-     :items [{:entity {:db/id 1
+     :title-field :one
+     :items [{:title "eleven"
+              :entity {:db/id 1
                        :post/slug "parent-page"
                        :post/fields {:one "eleven"
                                      :two "twelve"}}
               :children []}
-             {:entity {:db/id 2
+             {;; NOTE: :one is missing from this post's fields.
+              :title nil
+              :entity {:db/id 2
                        :post/slug ""
                        :post/fields {;; Handle missing fields gracefully.
                                      :two "twenty-two"}}
@@ -179,6 +211,7 @@
      {:main-nav
       {:menu/type :menu.type/posts
        :post/type :post.type/page
+       :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
                  :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]}]
@@ -194,30 +227,37 @@
     ;; recursive case (with children)
     {:menu/type :menu.type/posts
      :post/type :post.type/page
-     :items [{:entity {:db/id 1
+     :title-field :one
+     :items [{:title "eleven"
+              :entity {:db/id 1
                        :post/slug "parent-page"
                        :post/fields {:one "eleven"
                                      :two "twelve"}}
-              :children [{:entity {:db/id 3
+              :children [{:title "thirty-one"
+                          :entity {:db/id 3
                                    :post/slug "child-page"
                                    :post/fields {:one "thirty-one"
                                                  :two "thirty-two"}}
                           :children []}
-                         {:entity {:db/id 4
+                         {:title "forty-one"
+                          :entity {:db/id 4
                                    :post/slug "another-kid"
                                    :post/fields {:one "forty-one"
                                                  :two "forty-two"}}
-                          :children [{:entity {:db/id 5
+                          :children [{:title "fifty-one"
+                                      :entity {:db/id 5
                                                :post/slug "grandchild"
                                                :post/fields {:one "fifty-one"
                                                              :two "fifty-two"}}
                                       :children []}
-                                     {:entity {:db/id 6
+                                     {:title "sixty-one"
+                                      :entity {:db/id 6
                                                :post/slug "another-grandchild"
                                                :post/fields {:one "sixty-one"
                                                              :two "sixty-two"}}
                                       :children []}]}]}
-             {:entity {:db/id 2
+             {:title "twenty-one"
+              :entity {:db/id 2
                        :post/slug ""
                        :post/fields {:one "twenty-one"
                                      :two "twenty-two"}}
@@ -226,6 +266,7 @@
      {:main-nav
       {:menu/type :menu.type/posts
        :post/type :post.type/page
+       :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
                  :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]
