@@ -241,7 +241,7 @@
 
 ;; TODO delete above
 
-(defn- walk-post-menu-items [posts {tk :field/title-field :as field-kvs}]
+(defn- walk-post-menu-items [posts {tk :title-field :as field-kvs}]
   (map (fn [{:post/keys [children fields] :as post}]
          (let [post
                (-> (dissoc post :post/children)
@@ -271,22 +271,24 @@
       :post/slug "parent"
       :post/fields [{:db/id 1} {:db/id 2} {:db/id 3}]}
      {:db/id 456
-       :post/slug "parent"
-       :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]}]
-    (index-entity-fields
-      [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
-       [{:db/id 2 :field/key :b :field/content (prn-str "B")}]])))
+      :post/slug "parent"
+      :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]}]
+    (assoc
+      (index-entity-fields
+        [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
+         [{:db/id 2 :field/key :b :field/content (prn-str "B")}]])
+      :title-field :a)))
 
 (defmethod bread/query ::merge-post-menu-items
   merge-post-menu-items
   [{qk :query/key} {:navigation/keys [i18n] :as data}]
   (let [menu-key (second qk)
-        menu (get-in data qk)
+        menu (get-in data (butlast qk))
         title-field (or (:title-field menu) :title)
         items (map first (:items menu))
         field-kvs (assoc (index-entity-fields (get i18n menu-key))
-                         :field/title-field title-field)]
-    (assoc menu :items (walk-post-menu-items items field-kvs))))
+                         :title-field title-field)]
+    (walk-post-menu-items items field-kvs)))
 
 (defmulti add-menu-query (fn [_req opts]
                            (:menu/type opts)))
@@ -312,7 +314,7 @@
                 :query/db db
                 :query/key [menus-key k :items]
                 :query/args
-                ['{:find [(pull ?e [:db/id {:post/children [*]}])]
+                ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
                    :in [$ ?type [?status ...]]
                    :where [[?e :post/type ?type]
                            [?e :post/status ?status]
