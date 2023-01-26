@@ -61,6 +61,39 @@
 (comment
   (macroexpand '(use-db :each {:my :config})))
 
+(defn map->router [routes]
+  "Takes a map m like:
+
+  {\"/first/route\"
+   {:bread/dispatcher :dispatcher.type/first
+    :bread/component 'first-component
+    :route/params ...}
+   \"/second/route\"
+   {:bread/dispatcher :dispatcher.type/second
+    :bread/component 'second-component
+    :route/params ...}}
+
+  and returns a router that does a simple (get m (:uri req))
+  to get the matched route."
+  (reify bread/Router
+    (bread/path [_ route-name _]
+      (reduce (fn [_ [path route]]
+                (when (= route-name (:name route))
+                  (reduced path)))
+              nil routes))
+    (bread/match [_ req]
+      (get routes (:uri req)))
+    (bread/params [_ match]
+      (:route/params match))
+    (bread/dispatcher [_ match]
+      (:bread/dispatcher match))
+    (bread/component [_ match]
+      (:bread/component match))
+    (bread/not-found-component [_ match]
+      (:bread/not-found-component match))
+    (bread/dispatch [router req]
+      (assoc req ::bread/dispatcher (route/dispatcher req)))))
+
 (defn map->route-plugin [routes]
   "Takes a map m like:
 
@@ -74,14 +107,11 @@
     :route/params ...}}
 
   and returns a plugin that does a simple (get m (:uri req))
-  to get the matched route. Reifies a Router instance internally
-  to pass to route/plugin."
-  (let [router (reify bread/Router
-                 (bread/match [_ req]
-                   (get routes (:uri req)))
-                 (bread/params [_ match]
-                   (:route/params match))
-                 (bread/dispatcher [_ match]
-                   (assoc (:bread/dispatcher match)
-                          :dispatcher/component (:bread/component match))))]
-    (route/plugin {:router router})))
+  to get the matched route. Reifies a Router instance internally using
+  map->router to pass to route/plugin."
+  (route/plugin {:router (map->router routes)}))
+
+(comment
+  (def $router (map->router {"/one" {:name :one}
+                             "/two" {:name :two}}))
+  (bread/path $router :one {}))
