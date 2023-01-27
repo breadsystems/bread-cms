@@ -241,7 +241,13 @@
 
 ;; TODO delete above
 
-(defn- walk-post-menu-items [posts {tk :title-field :as field-kvs}]
+(defn- walk-post-menu-items [posts {:keys [title-field
+                                           field-kvs
+                                           router
+                                           route-name
+                                           lang
+                                           ancestry]
+                                    :as context}]
   (map (fn [{:post/keys [children fields] :as post}]
          (let [post
                (-> (dissoc post :post/children)
@@ -252,11 +258,23 @@
                                        (let [[k v] (get field-kvs id)]
                                          (when v [k (edn/read-string v)])))
                                      fields)))))
-               title (tk (:post/fields post))
-               children (walk-post-menu-items children field-kvs)]
+               title (title-field (:post/fields post))
+               ancestry (conj ancestry (:post/slug post))
+               context (assoc context :ancestry ancestry)
+               children (walk-post-menu-items children context)
+               slugs (string/join "/" ancestry)]
+           (def router router)
+           (def lang lang)
+           (def slugs slugs)
+           (let [routes {:the-route-name [:lang :slugs]}
+                 nm :the-route-name]
+             (string/join "/" (map {:lang lang :slugs slugs} (nm routes))))
            {:title title
             :entity post
-            :children children}))
+            :children children
+            ;; TODO generalize computing what params to pass...
+            :url (bread/path router route-name {:lang lang
+                                                :slugs slugs})}))
        posts))
 
 (defn- index-entity-fields [fields]
@@ -273,35 +291,55 @@
      {:db/id 456
       :post/slug "parent"
       :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]}]
-    (assoc
-      (index-entity-fields
-        [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
-         [{:db/id 2 :field/key :b :field/content (prn-str "B")}]])
-      :title-field :a)))
+    {:field-kvs
+     (index-entity-fields
+       [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
+        [{:db/id 2 :field/key :b :field/content (prn-str "B")}]])
+     :title-field :a
+     :router (reify bread/Router
+               (bread/path [_ _ _] "/url"))
+     :route/name :the-route-name}))
 
 (defmethod bread/query ::merge-post-menu-items
   merge-post-menu-items
-  [{qk :query/key} {:navigation/keys [i18n] :as data}]
+  [{qk :query/key
+    route-name :route/name
+    router :router
+    lang :lang}
+   {:navigation/keys [i18n] :as data}]
   (let [menu-key (second qk)
         menu (get-in data (butlast qk))
         title-field (or (:title-field menu) :title)
         items (map first (:items menu))
         field-kvs (assoc (index-entity-fields (get i18n menu-key))
-                         :title-field title-field)]
-    (walk-post-menu-items items field-kvs)))
+                         :title-field title-field)
+        context {:field-kvs (index-entity-fields (get i18n menu-key))
+                 :title-field title-field
+                 :router router
+                 :route-name route-name
+                 :lang lang
+                 :ancestry []}]
+    (walk-post-menu-items items context)))
 
 (defmulti add-menu-query (fn [_req opts]
                            (:menu/type opts)))
 
+(defmethod add-menu-query :menu.type/location
+  add-menu-query?type=location
+  [req {k :menu/key
+        }])
+
 (defmethod add-menu-query :menu.type/posts
   add-menu-query?type=posts
   [req {k :menu/key
+        route-name :route/name
         post-type :post/type
         status :post/status
         field-keys :post/fields
         :or {status :post.status/published
              field-keys :title}}]
-  (let [db (store/datastore req)
+  (let [router (route/router req)
+        db (store/datastore req)
         menus-key (bread/config req :navigation/menus-key)
         statuses (if (coll? status) (set status) #{status})
         field-keys (if (coll? field-keys) (set field-keys) #{field-keys})]
@@ -338,7 +376,10 @@
                  field-keys
                  (i18n/lang req)]}
                {:query/name ::merge-post-menu-items
-                :query/key [menus-key k :items]})))
+                :query/key [menus-key k :items]
+                :route/name route-name
+                :router router
+                :lang (i18n/lang req)})))
 
 (defmethod add-menu-query :menu.type/pages
   add-menu-query?type=pages
