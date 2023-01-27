@@ -43,6 +43,7 @@
                    ;; TODO specify which route name to use dynamically
                    ;; based on :post/type?
                    ;; TODO also figure out how to walk other kinds of entities.
+                   #_#_
                    :url (route/path req ancestry :bread.route/page)
                    :children (walk-items req by-id subtree ancestry))))
         (sort-by :menu.item/order items)))
@@ -286,11 +287,14 @@
 (comment
   (walk-post-menu-items
     [{:db/id 123
-      :post/slug "parent"
+      :post/slug "mom"
       :post/fields [{:db/id 1} {:db/id 2} {:db/id 3}]}
      {:db/id 456
-      :post/slug "parent"
-      :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]}]
+      :post/slug "dad"
+      :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]
+      :post/children [{:db/id 789
+                       :post/slug "child"
+                       :post/fields [{:db/id 7}]}]}]
     {:field-kvs
      (index-entity-fields
        [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]

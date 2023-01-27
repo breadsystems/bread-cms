@@ -5,13 +5,6 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]))
 
-;; TODO opts
-(defn path [req path route-name]
-  (let [path (if (sequential? path) (string/join "/" path) path)
-        ;; TODO get :slugs from opts
-        params (bread/hook req :hook/path-params {:slugs path} route-name)]
-    (bread/hook req ::path path route-name params)))
-
 (defn match [req]
   (bread/hook req ::match))
 
