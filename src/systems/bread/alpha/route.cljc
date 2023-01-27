@@ -72,9 +72,15 @@
   [req _ _]
   (assoc req ::bread/dispatcher (dispatcher req)))
 
+(defn router [app]
+  "Returns the Router configured for the given app"
+  (bread/hook app ::router))
+
 (defn plugin [{:keys [router]}]
   {:hooks
-   {::path
+   {::router
+    [{:action/name ::bread/value :action/value router}]
+    ::path
     [{:action/name ::path :router router}]
     ::match
     [{:action/name ::match :router router}]
