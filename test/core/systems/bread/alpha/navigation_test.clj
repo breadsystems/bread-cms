@@ -2,21 +2,28 @@
 (ns systems.bread.alpha.navigation-test
   (:require
     [clojure.test :refer [deftest are]]
+    [clojure.string :as string]
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [datastore->plugin
-                                              plugins->loaded]]))
+                                              plugins->loaded
+                                              map->router]]))
 
 (deftest test-post-menu-queries
-  (let [db ::FAKEDB]
+  (let [db ::FAKEDB
+        router (reify bread/Router
+                 (bread/match [_ _])
+                 (bread/params [_ _]))]
     (are
       [data navigation-config]
       (= data (-> (plugins->loaded [(datastore->plugin db)
                                     (i18n/plugin {:query-strings? false
                                                   :query-lang? false})
-                                    (navigation/plugin navigation-config)])
+                                    (navigation/plugin navigation-config)
+                                    (route/plugin {:router router})])
                   ;; Navigation plugin declares the only ::bread/dispatch
                   ;; handlers we care about, we don't need a specific
                   ;; dispatcher here. Dispatchers are normally responsible
@@ -64,11 +71,15 @@
          #{:title}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:menus :main-nav :items]}]
+        :query/key [:menus :main-nav :items]
+        :route/name :bread.route/page
+        :router router
+        :lang :en}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/posts
-         :post/type :post.type/page}]
+         :post/type :post.type/page
+         :route/name :bread.route/page}]
        :global-menus false}
 
       ;; Support custom post status, post type, and field keys.
@@ -103,13 +114,17 @@
          #{:custom :other}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:custom-menu-key :main-nav :items]}]
+        :query/key [:custom-menu-key :main-nav :items]
+        :route/name :bread.route/page
+        :router router
+        :lang :en}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/posts
          :post/type :post.type/article
          :post/status [:post.status/x :post.status/y]
-         :post/fields [:custom :other]}]
+         :post/fields [:custom :other]
+         :route/name :bread.route/page}]
        :global-menus false
        :menus-key :custom-menu-key}
 
@@ -145,30 +160,56 @@
          #{:custom :other}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:custom-menu-key :main-nav :items]}]
+        :query/key [:custom-menu-key :main-nav :items]
+        :route/name :bread.route/page
+        :router router
+        :lang :en}]
       {:menus
        [{:menu/key :main-nav
          :menu/type :menu.type/pages
          :post/status [:post.status/x :post.status/y]
-         :post/fields [:custom :other]}]
+         :post/fields [:custom :other]
+         :route/name :bread.route/page}]
        :global-menus false
        :menus-key :custom-menu-key})))
 
 (deftest test-merge-post-menu-items
   (are
     [menus unmerged]
-    (= menus (-> (bread/query
-                   {:query/name ::navigation/merge-post-menu-items
-                    :query/key [:menus :main-nav :items]}
-                   unmerged)))
+    (= menus
+       (-> (bread/query
+             {:query/name ::navigation/merge-post-menu-items
+              :query/key [:menus :main-nav :items]
+              :route/name :the-route-name
+              :router
+              (let [routes {:the-route-name [:lang :slugs]}]
+                (reify bread/Router
+                  (bread/path [_ nm params]
+                    ;; Verify that the merge-post-menu-items
+                    ;; query is passing the right route name to
+                    ;; the router to generate the URL. Example:
+                    ;; (bread/path r :the-route-name {:lang :en :slugs "abc"})
+                    ;; -> "/en/abc"
+                    (str "/" (string/join
+                               "/"
+                               (filter
+                                 (complement empty?)
+                                 (map (comp name params) (nm routes))))))
+                  (bread/match [_ _])
+                  (bread/params [_ _]
+                    (:test/params unmerged))))
+              :lang :en}
+             unmerged)))
 
     ;; simple case, default title field
     [{:title "eleven"
+      :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
                :post/fields {:title "eleven"}}
       :children []}
      {:title "twenty-two"
+      :url "/en"
       :entity {:db/id 2
                :post/slug ""
                :post/fields {:title "twenty-two"}}
@@ -177,6 +218,7 @@
      {:main-nav
       {:menu/type :menu.type/posts
        :post/type :post.type/page
+       :route/name :bread.route/page
        :items [[{:db/id 1
                  :post/slug "parent-page"
                  :post/fields [{:db/id 11}]}]
@@ -190,6 +232,7 @@
 
     ;; non-recursive case
     [{:title "eleven"
+      :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
                :post/fields {:one "eleven"
@@ -197,6 +240,7 @@
       :children []}
      {;; NOTE: :one is missing from this post's fields.
       :title nil
+      :url "/en"
       :entity {:db/id 2
                :post/slug ""
                :post/fields {;; Handle missing fields gracefully.
@@ -206,6 +250,7 @@
      {:main-nav
       {:menu/type :menu.type/posts
        :post/type :post.type/page
+       :route/name :bread.route/page
        :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
@@ -221,34 +266,40 @@
 
     ;; recursive case (with children)
     [{:title "eleven"
+      :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
                :post/fields {:one "eleven"
                              :two "twelve"}}
       :children [{:title "thirty-one"
+                  :url "/en/parent-page/child-page"
                   :entity {:db/id 3
                            :post/slug "child-page"
                            :post/fields {:one "thirty-one"
                                          :two "thirty-two"}}
                   :children []}
                  {:title "forty-one"
+                  :url "/en/parent-page/another-kid"
                   :entity {:db/id 4
                            :post/slug "another-kid"
                            :post/fields {:one "forty-one"
                                          :two "forty-two"}}
                   :children [{:title "fifty-one"
+                              :url "/en/parent-page/another-kid/grandchild"
                               :entity {:db/id 5
                                        :post/slug "grandchild"
                                        :post/fields {:one "fifty-one"
                                                      :two "fifty-two"}}
                               :children []}
                              {:title "sixty-one"
+                              :url "/en/parent-page/another-kid/another-grandchild"
                               :entity {:db/id 6
                                        :post/slug "another-grandchild"
                                        :post/fields {:one "sixty-one"
                                                      :two "sixty-two"}}
                               :children []}]}]}
      {:title "twenty-one"
+      :url "/en"
       :entity {:db/id 2
                :post/slug ""
                :post/fields {:one "twenty-one"
@@ -258,6 +309,7 @@
      {:main-nav
       {:menu/type :menu.type/posts
        :post/type :post.type/page
+       :route/name :bread.route/page
        :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
@@ -292,9 +344,7 @@
        [{:db/id 51 :field/key :one :field/content "\"fifty-one\""}]
        [{:db/id 52 :field/key :two :field/content "\"fifty-two\""}]
        [{:db/id 61 :field/key :one :field/content "\"sixty-one\""}]
-       [{:db/id 62 :field/key :two :field/content "\"sixty-two\""}]]}}
-
-    ))
+       [{:db/id 62 :field/key :two :field/content "\"sixty-two\""}]]}}))
 
 (comment
   (require '[kaocha.repl :as k])
