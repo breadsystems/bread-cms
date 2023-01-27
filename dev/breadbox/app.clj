@@ -111,6 +111,9 @@
   (reitit/match-by-path $router "/en/one/two")
   (reitit/match-by-name $router :bread.route/page {:lang :en
                                                    :slugs "one/two"})
+  (reitit/match->path
+    (reitit/match-by-name $router :bread.route/page {:lang :en
+                                                     :slugs "one/two"}))
   (route/path $res "one/two" :bread.route/page)
   (bread/hook $res :hook/path-params {:slugs "one/two"} :bread.route/page)
 
@@ -173,11 +176,13 @@
                       :routes {:router $router}
                       :i18n {:supported-langs #{:en :fr}}
                       :navigation
-                      {:menus [{:key :main-nav
-                                :type :posts
-                                :post/type :post.type/page}
-                               {:key :footer-nav
-                                :type :location
+                      {:menus [{:menu/key :main-nav
+                                :menu/type :menu.type/pages
+                                ;; Tell Router how to generate URLs for pages.
+                                ;; TODO generalize this at the router level
+                                :route/name :bread.route/page}
+                               {:menu/key :footer-nav
+                                :menu/type :menu.type/location
                                 :location :footer-nav}]
                        :global-menus false
                        :hooks
@@ -301,6 +306,35 @@
      :post.status/published
      :taxon.taxonomy/category
      "my-cat")
+
+  ;; Query recursively for all (top-level) posts and their children
+  (q '{:find [(pull ?e [:db/id * {:post/children [*]}])]
+       :in [$ ?type [?status ...]]
+       :where [[?e :post/type ?type]
+               [?e :post/status ?status]
+               ;; Query only for top-level posts.
+               (not-join [?e] [?parent :post/children ?e])]}
+     :post.type/page
+     [:post.status/published])
+  (q '{:find [(pull ?f [:db/id :field/key :field/content])]
+       :in [$ ?type [?status ...] [?field-key ...] ?lang]
+       :where [[?e :post/fields ?f]
+               [?f :field/key ?field-key]
+               [?f :field/lang ?lang]
+               [?e :post/type ?type]
+               [?e :post/status ?status]]}
+     :post.type/page
+     [:post.status/published]
+     [:title :simple]
+     :fr)
+
+  (q '{:find [(pull ?e [:db/id
+                        {:menu.item/entity [:db/id
+                                            :post/status
+                                            :post/type
+                                            {:post/fields [:field/key
+                                                           :field/content]}]}])]
+       :where [[?e :menu.item/entity]]})
 
   ;; Lookup translatable entity fields
   (q '[:find ?attr
