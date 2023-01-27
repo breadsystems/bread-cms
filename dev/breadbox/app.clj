@@ -114,7 +114,6 @@
   (reitit/match->path
     (reitit/match-by-name $router :bread.route/page {:lang :en
                                                      :slugs "one/two"}))
-  (route/path $res "one/two" :bread.route/page)
   (bread/hook $res :hook/path-params {:slugs "one/two"} :bread.route/page)
 
   (i18n/t (assoc @app :uri "/en/") :not-found)
