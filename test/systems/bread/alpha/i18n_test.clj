@@ -140,9 +140,11 @@
       {} {:fallback-lang :de}
 
       ;; Support disabling fallback lang.
-      #_#_
-      {} {:fallback-lang nil}
-      {} {:fallback-lang false})))
+      {} {:fallback-lang false}
+
+      ;; NOTE: when fallback lang is nil, bread/query gets a nil result for the
+      ;; strings query, and therefore sets :i18n to false.
+      false {:fallback-lang nil})))
 
 (deftest ^:kaocha/skip test-lang-param-config)
 
