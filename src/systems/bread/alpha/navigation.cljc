@@ -264,12 +264,6 @@
                context (assoc context :ancestry ancestry)
                children (walk-post-menu-items children context)
                slugs (string/join "/" ancestry)]
-           (def router router)
-           (def lang lang)
-           (def slugs slugs)
-           (let [routes {:the-route-name [:lang :slugs]}
-                 nm :the-route-name]
-             (string/join "/" (map {:lang lang :slugs slugs} (nm routes))))
            {:title title
             :entity post
             :children children
