@@ -175,7 +175,7 @@
 
 (deftest test-merge-post-menu-items
   (are
-    [menus unmerged]
+    [menus menu-data]
     (= menus
        (-> (bread/query
              {:query/name ::navigation/merge-post-menu-items
@@ -194,12 +194,9 @@
                                "/"
                                (filter
                                  (complement empty?)
-                                 (map (comp name params) (nm routes))))))
-                  (bread/match [_ _])
-                  (bread/params [_ _]
-                    (:test/params unmerged))))
+                                 (map (comp name params) (nm routes))))))))
               :lang :en}
-             unmerged)))
+             menu-data)))
 
     ;; simple case, default title field
     [{:title "eleven"
