@@ -61,10 +61,7 @@
             taxonomy
             (:slug params)])}
         compact-query {:query/name ::compact :query/key k}]
-    {:queries (conj (i18n/internationalize-query
-                      ;; TODO make this a hook!
-                      #{:post/fields :taxon/fields :user/fields}
-                      taxon-query lang)
+    {:queries (conj (bread/hook req ::i18n/queries taxon-query)
                     compact-query)}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
