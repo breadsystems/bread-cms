@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.util.datalog
   "Database helper utilities."
   (:require
+    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -46,6 +47,60 @@
       (when (and (= search-key k)
                  (some #{:field/content '*} v))
         field))))
+
+(defn- get-binding [search data]
+  (let [field (search data)]
+    (cond
+      field [field []]
+      (seqable? data) (some (fn [[k v]]
+                              (when-let [[field path]
+                                         (get-binding search v)]
+
+                                [field (cons k path)]))
+                            (if (map? data)
+                              data (map-indexed vector data))))))
+
+(defn- replace-bindings [[_ sym spec] bindings]
+  (let [pred (set bindings)]
+    (list 'pull sym
+          (walk/postwalk
+            (fn [x]
+              ;; If the current node is a binding map matching one of our
+              ;; field-bindings, replace it with its sole key. We do this so
+              ;; we have a :db/id in the query results to walk over and
+              ;; replace with the full result later.
+              (if-let [binding-map (pred x)]
+                (first (keys binding-map))
+                x))
+            spec))))
+
+(defn binding-pairs [ks qk data]
+  (reduce (fn [paths search-key]
+            (let [search (partial attr-binding search-key)
+                  [field-binding path] (get-binding search data)]
+              (if field-binding
+                (conj paths [field-binding
+                             (concat [qk]
+                                     (filterv keyword? path)
+                                     [search-key])])
+                paths)))
+          [] ks))
+
+(defn restructure [query pairs f]
+  (if (seq pairs)
+    (vec (concat
+           (let [bindings (map first pairs)
+                 pull (-> query :query/args first :find first (replace-bindings
+                                                                bindings))]
+             [(update query :query/args
+                      #(-> % vec (assoc-in [0 :find 0] pull)))])
+           (map #(apply f %) pairs)))
+    [query]))
+
+(defn extract-pull [{:query/keys [args]}]
+  ;; {:find [(pull ?e _____)]}
+  ;;                  ^^^^^ this
+  (-> args first :find first rest second))
 
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})

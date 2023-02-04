@@ -1,12 +1,11 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.string :as string]
-    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.util.datalog :as datalog]))
+    [systems.bread.alpha.util.datalog :as d]))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
@@ -53,51 +52,13 @@
   {:pre [(keyword? k)]}
   (k (strings app)))
 
-(defn- get-binding [search data]
-  (let [field (search data)]
-    (cond
-      field [field []]
-      (seqable? data) (some (fn [[k v]]
-                              (when-let [[field path]
-                                         (get-binding search v)]
-
-                                [field (cons k path)]))
-                            (if (map? data)
-                              data (map-indexed vector data))))))
-
-(defn translatable-paths [ks qk data]
-  (reduce (fn [paths search-key]
-            (let [search (partial datalog/attr-binding search-key)
-                  [field-binding path] (get-binding search data)]
-              (if field-binding
-                (conj paths [field-binding
-                             (concat [qk]
-                                     (filterv keyword? path)
-                                     [search-key])])
-                paths)))
-          [] ks))
-
 (comment
-  (translatable-paths
+  (d/binding-pairs
     #{:post/fields :taxon/fields} :post
     [:db/id :post/slug {:post/fields [:field/content]}])
-  (translatable-paths
+  (d/binding-pairs
     #{:taxon/fields} :x
     [:taxon/slug {:taxon/fields [:field/key :field/content]}]))
-
-(defn- replace-bindings [[_ sym spec] bindings]
-  (let [pred (set bindings)]
-    (list 'pull sym
-          (walk/postwalk
-            (fn [x]
-              ;; If the current node is a binding map matching one of our
-              ;; field-bindings, replace it with its sole key. We do this so
-              ;; we have a :db/id in the query results to walk over and
-              ;; replace with the full result later.
-              (if-let [binding-map (pred x)]
-                (first (keys binding-map))
-                x))
-            spec))))
 
 (defn- syms
   ([prefix]
@@ -139,22 +100,6 @@
       [::bread/data k :db/id]
       lang]}))
 
-(defn- restructure [query pairs f]
-  (if (seq pairs)
-    (vec (concat
-           (let [bindings (map first pairs)
-                 pull (-> query :query/args first :find first (replace-bindings
-                                                                bindings))]
-             [(update query :query/args
-                      #(-> % vec (assoc-in [0 :find 0] pull)))])
-           (map #(apply f %) pairs)))
-    [query]))
-
-(defn- extract-pull [{:query/keys [args]}]
-  ;; {:find [(pull ?e _____)]}
-  ;;                  ^^^^^ this
-  (-> args first :find first rest second))
-
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [{k :query/key :as query}]]
@@ -163,10 +108,10 @@
   If no translation is needed, returns a length-1 vector containing only the
   original query."
   (let [attrs (bread/config req :i18n/db-attrs)
-        translatable-pairs (translatable-paths attrs k (extract-pull query))
+        translatable-pairs (d/binding-pairs attrs k (d/extract-pull query))
         req-lang (lang req)
         f (partial construct-fields-query req-lang query k)]
-    (restructure query translatable-pairs f)))
+    (d/restructure query translatable-pairs f)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
