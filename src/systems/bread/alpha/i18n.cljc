@@ -122,6 +122,7 @@
         depth (dec (count rels))
         left-syms (cons '?e (take depth (syms "?e")))
         right-syms (cons '?lang (butlast left-syms))
+        ;; TODO support specifying :field/key's to filter by...
         input-sym (last left-syms)
         where-clause (map (fn [s k s']
                             (if (relation-reversed? k)
@@ -138,39 +139,34 @@
       [::bread/data k :db/id]
       lang]}))
 
-(defn internationalize-query
-  "Takes a Bread query and separates out any translatable fields into their
-  own subsequent queries, returning the entire sequence of one or more queries.
-  The underlying Datalog query must be a map (i.e. with :find as a key) and
-  must contain a pull as the first item in its :find clause."
-  [attrs query lang]
-  (let [{:query/keys [args db] k :query/key} query
-        ;; {:find [(pull ?e _____)]}
-        ;;        this here ^^^^^
-        pull (some-> args first :find first rest second)
-        translatables (translatable-paths attrs k pull)]
-    (if (seq translatables)
-      (vec
-        (concat
-          (let [bindings (map first translatables)
-                pull (-> args first :find first (replace-bindings
-                                                  bindings))]
-            [(update query :query/args
-                     #(-> % vec (assoc-in [0 :find 0] pull)))])
-          (map (fn [[spec path]]
-                 (construct-fields-query lang query k spec path))
-               translatables)))
-      [query])))
+(defn- restructure [query pairs f]
+  (if (seq pairs)
+    (vec (concat
+           (let [bindings (map first pairs)
+                 pull (-> query :query/args first :find first (replace-bindings
+                                                                bindings))]
+             [(update query :query/args
+                      #(-> % vec (assoc-in [0 :find 0] pull)))])
+           (map #(apply f %) pairs)))
+    [query]))
+
+(defn- extract-pull [{:query/keys [args]}]
+  ;; {:find [(pull ?e _____)]}
+  ;;                  ^^^^^ this
+  (-> args first :find first rest second))
 
 (defmethod bread/action ::queries
   i18n-queries
-  [req _ [query]]
+  [req _ [{k :query/key :as query}]]
   "Internationalizes the given query, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [attrs (bread/config req :i18n/db-attrs)]
-    (internationalize-query attrs query (lang req))))
+  (let [attrs (bread/config req :i18n/db-attrs)
+        translatable-pairs (translatable-paths attrs k (extract-pull query))
+        req-lang (lang req)
+        f (partial construct-fields-query req-lang query k)]
+    (restructure query translatable-pairs f)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
