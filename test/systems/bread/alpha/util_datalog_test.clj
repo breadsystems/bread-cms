@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer [deftest are is]]
     [systems.bread.alpha.util.datalog :as d]
+    [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]))
 
 (deftest test-reverse-relation
@@ -36,6 +37,40 @@
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b #(= % {:a/b [:db/id]})} :query-key [:db/id {:a/b [:db/id]}]]))
 
+(deftest test-restructure
+  (are
+    [queries args]
+    (= queries (apply d/restructure args))
+
+    [{}]
+    [{} nil #()]
+
+    [{}]
+    [{} {} #()]
+
+    [{}]
+    [{} [] #()]
+
+    [{:query/args ['{:find [(pull ?e [:db/id])]}]}]
+    [{:query/args ['{:find [(pull ?e [:db/id])]}]}
+     {} #()]
+
+    [{:query/args ['{:find [(pull ?e [:db/id :a/b])]}]
+      :query/key :the-key}
+     {:query/args ['{:find [(pull ?e [:b/c :b/d])]}]
+      :query/key [:the-key :a/b]}]
+    [{:query/args ['{:find [(pull ?e [:db/id {:a/b [:b/c :b/d]}])]}]
+      :query/key :the-key}
+     [[{:a/b [:b/c :b/d]} [:the-key :a/b]]]
+     (fn construct-ab-query [{k :query/key :as query} spec path]
+       (let [new-spec (get spec (last path))]
+         {:query/args [{:find [(list 'pull '?e new-spec)]}]
+          :query/key path}))]
+
+    ;;
+    ))
+
 (comment
+
   (require '[kaocha.repl :as k])
   (k/run))
