@@ -4,6 +4,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.internal.query-inference :as i]
     [systems.bread.alpha.util.datalog :as d]))
 
 (defn supported-langs
@@ -95,7 +96,7 @@
   (let [attrs (bread/config req :i18n/db-attrs)
         translatable-searches (zipmap attrs (repeat field-content-binding?))
         construct-query (partial construct-fields-query (lang req))]
-    (d/infer query translatable-searches construct-query)))
+    (i/infer query translatable-searches construct-query)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
