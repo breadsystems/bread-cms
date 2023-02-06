@@ -37,8 +37,8 @@
          :where ['[?post :post/taxons ?taxon]
                  (when t '[?post :post/type ?type])
                  (when status '[?post :post/status ?status])]}
-        (when t t) (when status status)
-        [::bread/data (first path) :db/id]])}))
+        [::bread/data (first path) :db/id]
+        (when t t) (when status status)])}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]

@@ -140,9 +140,9 @@
            :where [[?post :post/taxons ?taxon]
                    [?post :post/type ?type]
                    [?post :post/status ?status]]}
+         [::bread/data :tag :db/id]
          :post.type/page
-         :post.status/published
-         [::bread/data :tag :db/id]]}
+         :post.status/published]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons :post/fields]
         :query/db db
@@ -185,9 +185,9 @@
            :where [[?post :post/taxons ?taxon]
                    [?post :post/type ?type]
                    [?post :post/status ?status]]}
+         [::bread/data :tag :db/id]
          :post.type/article
-         :post.status/draft
-         [::bread/data :tag :db/id]]}
+         :post.status/draft]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons :post/fields]
         :query/db db
