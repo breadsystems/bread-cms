@@ -91,7 +91,7 @@
                 paths)))
           [] ks))
 
-(defn restructure [query pairs f]
+(defn infer [query pairs f]
   (if (seq pairs)
     (vec (concat
            (let [bindings (map first pairs)

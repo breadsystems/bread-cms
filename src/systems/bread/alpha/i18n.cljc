@@ -110,7 +110,7 @@
           (zipmap attrs (repeat field-content-binding?))
           k (d/extract-pull query))
         construct-query (partial construct-fields-query (lang req))]
-    (d/restructure query translatable-pairs construct-query)))
+    (d/infer query translatable-pairs construct-query)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]

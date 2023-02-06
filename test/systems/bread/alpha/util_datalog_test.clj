@@ -37,10 +37,10 @@
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b #(= % {:a/b [:db/id]})} :query-key [:db/id {:a/b [:db/id]}]]))
 
-(deftest test-restructure
+(deftest test-infer
   (are
     [queries args]
-    (= queries (apply d/restructure args))
+    (= queries (apply d/infer args))
 
     [{}]
     [{} nil #()]
