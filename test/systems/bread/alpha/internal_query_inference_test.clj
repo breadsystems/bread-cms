@@ -34,6 +34,18 @@
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b any?} :query-key [:db/id {:a/b [:db/id]}]]
 
+    [[{:a/b [:b/x :b/y]} [:nested :key :a/b]]
+     [{:c/d [:d/x :d/y]} [:nested :key :c/d]]]
+    [[:a/b :c/d] [:nested :key] [:db/id
+                                 {:a/b [:b/x :b/y]}
+                                 {:c/d [:d/x :d/y]}]]
+
+    [[{:a/b [:b/x :b/y]} [:query-key :a/b]]
+     [{:c/d [:d/x :d/y]} [:query-key :c/d]]]
+    [{:a/b any? :c/d any?} :query-key [:db/id
+                                       {:a/b [:b/x :b/y]}
+                                       {:c/d [:d/x :d/y]}]]
+
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b #(= % {:a/b [:db/id]})} :query-key [:db/id {:a/b [:db/id]}]]))
 
