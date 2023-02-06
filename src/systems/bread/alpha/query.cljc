@@ -30,8 +30,6 @@
         (if (sequential? x)
           (let [v (map #(if (sequential? %) (first %) %) v)
                 by-id (into {} (map (juxt :db/id identity) v))]
-            (when (= k [:def])
-              (prn k x))
             (walk/postwalk (fn [node]
                              (if (entity? node)
                                (get by-id (:db/id node))
