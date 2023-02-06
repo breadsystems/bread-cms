@@ -58,7 +58,7 @@
   ([prefix start]
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
-(defn- construct-fields-query [lang orig-query spec path]
+(defn- construct-fields-query [lang {k :query/key :as orig-query} spec path]
   (let [fields-pull (cons :db/id (get spec (last path)))
         rels (cons :field/lang (reverse (rest path)))
         depth (dec (count rels))
@@ -70,7 +70,10 @@
                             (if (d/relation-reversed? k)
                               [s' (d/reverse-relation k) s]
                               [s k s']))
-                          left-syms rels right-syms)]
+                          left-syms rels right-syms)
+        id-path (if (sequential? k)
+                  (concat [::bread/data] k [:db/id])
+                  [::bread/data k :db/id])]
     {:query/name ::store/query
      :query/db (:query/db orig-query)
      :query/key path
@@ -78,7 +81,7 @@
      [{:find [(list 'pull '?e fields-pull)]
        :in ['$ input-sym '?lang]
        :where where-clause}
-      [::bread/data (:query/key orig-query) :db/id]
+      id-path
       lang]}))
 
 (defn- field-content-binding? [binding-map]
