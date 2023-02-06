@@ -23,10 +23,16 @@
     [[] :query-key []]
 
     []
+    [{} :query-key []]
+
+    []
     [[:a/b :c/d] :query-key [:db/id]]
 
     []
     [[:a/b :c/d] :query-key [:db/id {:x/y [:db/id]}]]
+
+    []
+    [{:a/b any? :c/d any?} :query-key [:db/id {:x/y [:db/id]}]]
 
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [[:a/b :c/d] :query-key [:db/id {:a/b [:db/id]}]]

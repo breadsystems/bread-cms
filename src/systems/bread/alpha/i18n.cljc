@@ -51,14 +51,6 @@
   {:pre [(keyword? k)]}
   (k (strings app)))
 
-(comment
-  (d/binding-pairs
-    #{:post/fields :taxon/fields} :post
-    [:db/id :post/slug {:post/fields [:field/content]}])
-  (d/binding-pairs
-    #{:taxon/fields} :x
-    [:taxon/slug {:taxon/fields [:field/key :field/content]}]))
-
 (defn- syms
   ([prefix]
    (syms prefix 0))
