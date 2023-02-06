@@ -61,7 +61,7 @@
             taxonomy
             (:slug params)])}
         compact-query {:query/name ::compact :query/key k}]
-    {:queries (conj (bread/hook req ::i18n/queries taxon-query)
+    {:queries (conj (bread/hook req ::i18n/queries [taxon-query])
                     compact-query)}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag

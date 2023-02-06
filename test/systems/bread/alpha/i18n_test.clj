@@ -161,7 +161,7 @@
                             {:hooks
                              {:hook/lang [{:action/name ::bread/value
                                            :action/value lang}]}}])]
-                 (bread/hook app ::i18n/queries query)))
+                 (bread/hook app ::i18n/queries [query])))
 
     ;; Without :field/content
     [{:query/name ::store/query

@@ -61,15 +61,20 @@
                   paths)))
             [] ks)))
 
-(defn infer [{k :query/key :as query} binding-searches f]
+(defn- infer-single [{k :query/key :as query} binding-searches f]
   (let [pull (extract-pull query)
         pairs (binding-pairs binding-searches k pull)]
     (if (seq pairs)
       (vec (concat
              (let [bindings (map first pairs)
-                   pull (-> query :query/args first :find first (replace-bindings
-                                                                  bindings))]
+                   pull (-> query :query/args first :find first
+                            (replace-bindings bindings))]
                [(update query :query/args
                         #(-> % vec (assoc-in [0 :find 0] pull)))])
              (map #(apply f query %) pairs)))
       [query])))
+
+(defn infer [queries binding-searches f]
+  (reduce (fn [queries query]
+            (apply conj queries (infer-single query binding-searches f)))
+          [] queries))

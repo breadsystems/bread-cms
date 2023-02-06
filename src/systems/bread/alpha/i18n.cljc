@@ -88,7 +88,7 @@
 
 (defmethod bread/action ::queries
   i18n-queries
-  [req _ [{k :query/key :as query}]]
+  [req _ [queries]]
   "Internationalizes the given query, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
@@ -96,7 +96,7 @@
   (let [attrs (bread/config req :i18n/db-attrs)
         translatable-searches (zipmap attrs (repeat field-content-binding?))
         construct-query (partial construct-fields-query (lang req))]
-    (i/infer query translatable-searches construct-query)))
+    (i/infer queries translatable-searches construct-query)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
@@ -141,7 +141,7 @@
     :hooks
     {::queries
      [{:action/name ::queries
-       :action/description "Internationalize a query"}]
+       :action/description "Internationalize the given queries"}]
      :hook/path-params
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
