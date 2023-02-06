@@ -99,7 +99,7 @@
                                                                 bindings))]
              [(update query :query/args
                       #(-> % vec (assoc-in [0 :find 0] pull)))])
-           (map #(apply f %) pairs)))
+           (map #(apply f query %) pairs)))
     [query]))
 
 (defn extract-pull [{:query/keys [args]}]

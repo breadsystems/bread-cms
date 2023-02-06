@@ -69,7 +69,7 @@
   (take 3 (syms "?e"))
   (reverse-relation :post/_taxons))
 
-(defn- construct-fields-query [lang orig-query k spec path]
+(defn- construct-fields-query [lang orig-query spec path]
   (let [fields-pull (cons :db/id (get spec (last path)))
         rels (cons :field/lang (reverse (rest path)))
         depth (dec (count rels))
@@ -89,7 +89,7 @@
      [{:find [(list 'pull '?e fields-pull)]
        :in ['$ input-sym '?lang]
        :where where-clause}
-      [::bread/data k :db/id]
+      [::bread/data (:query/key orig-query) :db/id]
       lang]}))
 
 (defn- field-content-binding? [binding-map]
@@ -105,11 +105,12 @@
   If no translation is needed, returns a length-1 vector containing only the
   original query."
   (let [attrs (bread/config req :i18n/db-attrs)
-        pairs (zipmap attrs (repeat field-content-binding?))
-        translatable-pairs (d/binding-pairs pairs k (d/extract-pull query))
-        req-lang (lang req)
-        f (partial construct-fields-query req-lang query k)]
-    (d/restructure query translatable-pairs f)))
+        translatable-pairs
+        (d/binding-pairs
+          (zipmap attrs (repeat field-content-binding?))
+          k (d/extract-pull query))
+        construct-query (partial construct-fields-query (lang req))]
+    (d/restructure query translatable-pairs construct-query)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
