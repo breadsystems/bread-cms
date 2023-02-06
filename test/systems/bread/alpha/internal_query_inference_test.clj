@@ -46,6 +46,11 @@
                                        {:a/b [:b/x :b/y]}
                                        {:c/d [:d/x :d/y]}]]
 
+    [[{:a/b [:b/x :b/y {:b/c [:c/d]}]} [:query-key :a/b]]
+     [{:b/c [:c/d]} [:query-key :a/b :b/c]]]
+    [{:a/b any? :b/c any?} :query-key [:db/id
+                                       {:a/b [:b/x :b/y {:b/c [:c/d]}]}]]
+
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b #(= % {:a/b [:db/id]})} :query-key [:db/id {:a/b [:db/id]}]]))
 
