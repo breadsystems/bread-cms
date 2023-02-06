@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.i18n
   (:require
-    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
@@ -66,13 +65,6 @@
   ([prefix start]
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
-(defn- relation-reversed? [k]
-  (string/starts-with? (name k) "_"))
-
-(defn- reverse-relation [k]
-  (let [[kns kname] ((juxt namespace name) k)]
-    (keyword (string/join "/" [kns (subs kname 1)]))))
-
 (comment
   (take 3 (syms "?e"))
   (reverse-relation :post/_taxons))
@@ -86,8 +78,8 @@
         ;; TODO support specifying :field/key's to filter by...
         input-sym (last left-syms)
         where-clause (map (fn [s k s']
-                            (if (relation-reversed? k)
-                              [s' (reverse-relation k) s]
+                            (if (d/relation-reversed? k)
+                              [s' (d/reverse-relation k) s]
                               [s k s']))
                           left-syms rels right-syms)]
     {:query/name ::store/query

@@ -2,6 +2,7 @@
   "Database helper utilities."
   (:require
     [clojure.walk :as walk]
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -101,6 +102,15 @@
   ;; {:find [(pull ?e _____)]}
   ;;                  ^^^^^ this
   (-> args first :find first rest second))
+
+(defn relation-reversed? [k]
+  (string/starts-with? (name k) "_"))
+
+(defn reverse-relation [k]
+  (let [[kns kname] ((juxt namespace name) k)
+        reversed? (string/starts-with? kname "_")]
+    (keyword (string/join "/" [kns (if reversed?
+                                     (subs kname 1) (str "_" kname))]))))
 
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})
