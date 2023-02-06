@@ -9,11 +9,6 @@
   (is (= :a/b (d/reverse-relation :a/_b)))
   (is (= :a/_b (d/reverse-relation :a/b))))
 
-(deftest test-extract-pull
-  (is (= [:db/id :post/slug]
-         (d/extract-pull
-           {:query/args [{:find ['(pull ?e [:db/id :post/slug])]}]}))))
-
 (deftest test-binding-pairs
   (are
     [pairs args]
@@ -54,9 +49,6 @@
     [{}]
     [{} {} #()]
 
-    [{}]
-    [{} [] #()]
-
     [{:query/args ['{:find [(pull ?e [:db/id])]}]}]
     [{:query/args ['{:find [(pull ?e [:db/id])]}]}
      {} #()]
@@ -67,7 +59,7 @@
       :query/key [:the-key :a/b]}]
     [{:query/args ['{:find [(pull ?e [:db/id {:a/b [:b/c :b/d]}])]}]
       :query/key :the-key}
-     [[{:a/b [:b/c :b/d]} [:the-key :a/b]]]
+     [:a/b]
      (fn construct-ab-query [{k :query/key :as query} spec path]
        (let [new-spec (get spec (last path))]
          {:query/args [{:find [(list 'pull '?e new-spec)]}]

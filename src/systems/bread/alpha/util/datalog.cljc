@@ -91,21 +91,23 @@
                 paths)))
           [] ks))
 
-(defn infer [query pairs f]
-  (if (seq pairs)
-    (vec (concat
-           (let [bindings (map first pairs)
-                 pull (-> query :query/args first :find first (replace-bindings
-                                                                bindings))]
-             [(update query :query/args
-                      #(-> % vec (assoc-in [0 :find 0] pull)))])
-           (map #(apply f query %) pairs)))
-    [query]))
-
-(defn extract-pull [{:query/keys [args]}]
+(defn- extract-pull [{:query/keys [args]}]
   ;; {:find [(pull ?e _____)]}
   ;;                  ^^^^^ this
   (-> args first :find first rest second))
+
+(defn infer [{k :query/key :as query} binding-searches f]
+  (let [pull (extract-pull query)
+        pairs (binding-pairs binding-searches k pull)]
+    (if (seq pairs)
+      (vec (concat
+             (let [bindings (map first pairs)
+                   pull (-> query :query/args first :find first (replace-bindings
+                                                                  bindings))]
+               [(update query :query/args
+                        #(-> % vec (assoc-in [0 :find 0] pull)))])
+             (map #(apply f query %) pairs)))
+      [query])))
 
 (defn relation-reversed? [k]
   (string/starts-with? (name k) "_"))

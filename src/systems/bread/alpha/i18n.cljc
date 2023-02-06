@@ -97,12 +97,9 @@
   If no translation is needed, returns a length-1 vector containing only the
   original query."
   (let [attrs (bread/config req :i18n/db-attrs)
-        translatable-pairs
-        (d/binding-pairs
-          (zipmap attrs (repeat field-content-binding?))
-          k (d/extract-pull query))
+        translatable-searches (zipmap attrs (repeat field-content-binding?))
         construct-query (partial construct-fields-query (lang req))]
-    (d/infer query translatable-pairs construct-query)))
+    (d/infer query translatable-searches construct-query)))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
