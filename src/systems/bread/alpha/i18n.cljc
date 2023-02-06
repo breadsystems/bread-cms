@@ -92,6 +92,11 @@
       [::bread/data k :db/id]
       lang]}))
 
+(defn- field-content-binding? [binding-map]
+  (let [k (first (keys binding-map))
+        v (get binding-map k)]
+    (some #{:field/content '*} v)))
+
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [{k :query/key :as query}]]
@@ -100,7 +105,8 @@
   If no translation is needed, returns a length-1 vector containing only the
   original query."
   (let [attrs (bread/config req :i18n/db-attrs)
-        translatable-pairs (d/binding-pairs attrs k (d/extract-pull query))
+        pairs (zipmap attrs (repeat field-content-binding?))
+        translatable-pairs (d/binding-pairs pairs k (d/extract-pull query))
         req-lang (lang req)
         f (partial construct-fields-query req-lang query k)]
     (d/restructure query translatable-pairs f)))

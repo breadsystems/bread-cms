@@ -39,14 +39,15 @@
     query
     constraints))
 
-(defn attr-binding [search-key field]
+(defn- attr-binding [search-key field]
   (when (map? field)
     (let [k (first (keys field))
-          v (get field k)]
+          ;; Support search-key being a MapEntry (or any sequence)
+          [search-key pred]
+          (if (sequential? search-key) search-key [search-key any?])]
       ;; Check for a matching key pointing to EITHER explicit :field/content
       ;; OR a wildcard.
-      (when (and (= search-key k)
-                 (some #{:field/content '*} v))
+      (when (and (= search-key k) (pred field))
         field))))
 
 (defn- get-binding [search data]
@@ -75,10 +76,13 @@
                 x))
             spec))))
 
-(defn binding-pairs [ks qk data]
+(defn binding-pairs [ks qk spec]
   (reduce (fn [paths search-key]
             (let [search (partial attr-binding search-key)
-                  [field-binding path] (get-binding search data)]
+                  search-key (if (sequential? search-key)
+                               (first search-key)
+                               search-key)
+                  [field-binding path] (get-binding search spec)]
               (if field-binding
                 (conj paths [field-binding
                              (concat [qk]
