@@ -57,10 +57,6 @@
   ([prefix start]
    (for [n (range)] (symbol (str prefix (+ start n))))))
 
-(comment
-  (take 3 (syms "?e"))
-  (reverse-relation :post/_taxons))
-
 (defn- construct-fields-query [lang orig-query spec path]
   (let [fields-pull (cons :db/id (get spec (last path)))
         rels (cons :field/lang (reverse (rest path)))

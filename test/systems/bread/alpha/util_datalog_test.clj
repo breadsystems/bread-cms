@@ -32,6 +32,9 @@
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [[:a/b :c/d] :query-key [:db/id {:a/b [:db/id]}]]
 
+    [[{:a/b [:db/id]} [:nested :key :a/b]]]
+    [[:a/b :c/d] [:nested :key] [:db/id {:a/b [:db/id]}]]
+
     [[{:a/b [:db/id]} [:query-key :a/b]]]
     [{:a/b any?} :query-key [:db/id {:a/b [:db/id]}]]
 

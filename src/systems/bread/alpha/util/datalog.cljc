@@ -77,19 +77,20 @@
             spec))))
 
 (defn binding-pairs [ks qk spec]
-  (reduce (fn [paths search-key]
-            (let [search (partial attr-binding search-key)
-                  search-key (if (sequential? search-key)
-                               (first search-key)
-                               search-key)
-                  [field-binding path] (get-binding search spec)]
-              (if field-binding
-                (conj paths [field-binding
-                             (concat [qk]
-                                     (filterv keyword? path)
-                                     [search-key])])
-                paths)))
-          [] ks))
+  (let [qk (if (sequential? qk) qk [qk])]
+    (reduce (fn [paths search-key]
+              (let [search (partial attr-binding search-key)
+                    search-key (if (sequential? search-key)
+                                 (first search-key)
+                                 search-key)
+                    [field-binding path] (get-binding search spec)]
+                (if field-binding
+                  (conj paths [field-binding
+                               (concat qk
+                                       (filterv keyword? path)
+                                       [search-key])])
+                  paths)))
+            [] ks)))
 
 (defn- extract-pull [{:query/keys [args]}]
   ;; {:find [(pull ?e _____)]}
