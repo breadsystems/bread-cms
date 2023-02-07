@@ -78,12 +78,12 @@
     {:a {:b {:c :d}}}
     [{:a {:b {}}} [:a :b] {:c :d}]
 
-    {:posts [{:post/fields [ {:db/id 123
-                            :field/key :one
-                            :field/content "one"}]}
-             {:post/fields [ {:db/id 456
-                            :field/key :two
-                            :field/content "two"}]}]}
+    {:posts [{:post/fields [{:db/id 123
+                             :field/key :one
+                             :field/content "one"}]}
+             {:post/fields [{:db/id 456
+                             :field/key :two
+                             :field/content "two"}]}]}
     [{:posts [{:post/fields [{:db/id 123}]}
               {:post/fields [{:db/id 456}]}]}
      [:posts :post/fields]
@@ -93,6 +93,30 @@
       {:db/id 456
        :field/key :two
        :field/content "two"}]]
+
+    {:posts [{:post/fields [nil]}
+             {:post/fields [nil]}]}
+    [{:posts [{:post/fields [{:db/id 123}]}
+              {:post/fields [{:db/id 456}]}]}
+     [:posts :post/fields]
+     []]
+
+    ;; Value being overwritten at k maybe be sequential, but v may be falsey.
+    ;; In this case, we just want to short-circuit and keep whatever is there.
+    {:posts [{:db/id 1 :post/fields [{:db/id 123}]}
+             {:db/id 2 :post/fields [{:db/id 456}]}]}
+    [{:posts [{:db/id 1 :post/fields [{:db/id 123}]}
+              {:db/id 2 :post/fields [{:db/id 456}]}]}
+     [:posts :post/fields]
+     false]
+
+    ;; Ditto above.
+    {:posts [{:db/id 1 :post/fields [{:db/id 123}]}
+             {:db/id 2 :post/fields [{:db/id 456}]}]}
+    [{:posts [{:db/id 1 :post/fields [{:db/id 123}]}
+              {:db/id 2 :post/fields [{:db/id 456}]}]}
+     [:posts :post/fields]
+     nil]
 
     ))
 
