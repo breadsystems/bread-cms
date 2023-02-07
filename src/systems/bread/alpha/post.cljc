@@ -69,7 +69,8 @@
 
 (defn compact-fields [post]
   (if post
-    (update post :post/fields field/compact)
+    (let [post (if (sequential? post) (first post) post)]
+      (update post :post/fields field/compact))
     post))
 
 (defn- pull-spec? [arg]
