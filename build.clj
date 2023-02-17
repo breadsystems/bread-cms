@@ -3,11 +3,13 @@
     [clojure.tools.build.api :as b]
     [deps-deploy.deps-deploy :as dd]))
 
+(def minor-version "0.6")
+
 (def lib 'systems.bread/bread-core)
-(def version (format "0.5.%s" (b/git-count-revs nil)))
+(def patch-version (format "%s.%s" minor-version (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
-(def jar-file (format "target/%s-%s.jar" (name lib) version))
+(def jar-file (format "target/%s-%s.jar" (name lib) patch-version))
 
 (defn clean [_]
   (b/delete {:path "target"}))
@@ -15,7 +17,7 @@
 (defn jar [_]
   (b/write-pom {:class-dir class-dir
                 :lib lib
-                :version version
+                :version patch-version
                 :basis basis
                 :src-dirs ["src"]})
   (b/copy-dir {:src-dirs ["src"]
