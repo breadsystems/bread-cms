@@ -38,8 +38,8 @@
   {:extra-paths ["plugins" "resources"]
    :extra-deps
    {http-kit/http-kit           {:mvn/version "2.3.0"}
-    io.replikativ/datahike      {:mvn/version "0.3.6"} ;; TODO upgrade
-    io.replikativ/datahike-jdbc {:mvn/version "0.1.2-SNAPSHOT"}
+    io.replikativ/datahike      {:mvn/version "0.6.1531"}
+    io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
     juxt/dirwatch               {:mvn/version "0.2.5"}
     markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
     metosin/reitit              {:mvn/version "0.5.17"}

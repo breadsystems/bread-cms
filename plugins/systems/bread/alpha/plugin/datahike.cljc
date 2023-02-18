@@ -172,11 +172,11 @@
   (transact [conn tx]
     (d/transact conn tx)))
 
+#_ ;; FIXME
 (extend-type datahike.db.AsOfDB
   Datafiable
   (datafy [db]
     {:type 'datahike.db.AsOfDB
-     ;; TODO maybe get this upstream?
      :max-tx (db/-max-tx db)
      :max-eid (db/-max-eid db)}))
 
