@@ -115,7 +115,7 @@ Bread's high-level feature set:
                         :bread/component article-component}]]))
 
 (def handler
-  (bread/load-handler (defaults/app {:router router}})
+  (bread/load-handler (defaults/app {:router router})))
 
 (handler {:uri "/en/"})
 ;; => [:html {:lang "en"}
