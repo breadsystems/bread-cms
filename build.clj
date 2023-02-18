@@ -14,6 +14,11 @@
 (defn clean [_]
   (b/delete {:path "target"}))
 
+(defn tag [_]
+  (print (str "v" patch-version)))
+
+;; TODO parameterize to build CMS & plugins.
+;; This only builds core for now.
 (defn jar [_]
   (b/write-pom {:class-dir class-dir
                 :lib lib

@@ -1,12 +1,18 @@
 # BreadCMS
 
-<p style="font-weight:700;color:#800">WORK IN PROGRESS. Code is pre-alpha status. A lot of this does not work yet.</p>
+<p align="center">
+  <img alt="Build status" src="https://github.com/breadsystems/bread-cms/actions/workflows/test.yml/badge.svg" />
+  <a href="https://clojars.org/systems.bread/bread-core"><img alt="Clojars Project" src="https://img.shields.io/clojars/v/systems.bread/bread-core.svg" /></a>
+</p>
 
-<blockquote style="text-align:center">After bread has been secured, leisure is the supreme aim.
-<p>— Pyotr Kropotkin</p>
-</blockquote>
+<p align="center">
+  <i>After bread has been secured, leisure is the supreme aim.</i><br>
+  — Pyotr Kropotkin
+</p>
 
-Liberate your content!
+<p align="center">
+  <strong>WORK IN PROGRESS. Code is pre-alpha status. A lot of this does not work yet.</strong>
+</p>
 
 ## Goals
 

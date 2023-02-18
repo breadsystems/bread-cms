@@ -1,0 +1,32 @@
+name: tests
+run-name: Run unit tests
+on: [push, pull_request]
+jobs:
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Install Clojure tools
+        uses: DeLaGuardo/setup-clojure@10.1
+        with:
+          cli: 1.11.1.1224
+
+      - name: Cache Clojure deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          key: cljdeps-${{ hashFiles('deps.edn') }}
+
+      - name: Run tests
+        run: bin/run-tests
