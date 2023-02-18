@@ -1,5 +1,5 @@
 name: release
-run-name: Build a release
+run-name: Build and deploy a release
 on:
   pull_request:
     types:
@@ -56,6 +56,4 @@ jobs:
         env:
           CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
           CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
-        run: |
-          clojure -T:build jar
-          clojure -T:build deploy
+        run: bin/deploy
