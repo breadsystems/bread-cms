@@ -1,13 +1,9 @@
 name: release
 run-name: Build and deploy a release
-on:
-  pull_request:
-    types:
-      - closed
+on: push
 
 jobs:
   build-release:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
