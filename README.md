@@ -16,7 +16,7 @@ Bread aims to be three things:
 2. A small set of plugins that compose to create a CMS with sensible defaults
 3. A binary (jar and native) that ships with the basic Bread CMS install
 
-Bread's high-level feature set:
+Bread's (planned) high-level feature set:
 
 * Next-level user experience for editing content. *Design-aware editing. No separate backend UI.*
 * Collaborative editing
