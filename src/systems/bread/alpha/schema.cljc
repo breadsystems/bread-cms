@@ -381,7 +381,7 @@
      comments
      users]
     {:type :bread/schema
-     :bread/schema ::bread/core}))
+     :bread/schema ::core}))
 
 ;; TODO move this into tooling
 (defmethod print-method :bread/schema [schema writer]
