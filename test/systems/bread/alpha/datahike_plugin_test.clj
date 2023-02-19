@@ -4,7 +4,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.plugin.datahike :as plugin]
-    [systems.bread.alpha.test-helpers :as h]))
+    [systems.bread.alpha.test-helpers :as h :refer [datastore-config->loaded
+                                                    plugins->loaded]]))
 
 
 (let [config {:datastore/type :datahike
@@ -37,8 +38,11 @@
         (is (instance? datahike.db.DB (bread/hook app :hook/datastore)))))
 
     (testing "db-tx honors as-of-param"
-      (let [handler (->handler config)
-            response (handler {:uri "/" :params {:as-of "54321"}})]
+      (let [app (datastore-config->loaded config)
+            db (store/datastore app)
+            handler (bread/handler app)
+            max-tx (store/max-tx app)
+            response (handler {:uri "/" :params {:as-of (dec max-tx)}})]
         (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
     (testing "db-tx gracefully handles non-numeric strings"
@@ -78,3 +82,7 @@
             config (assoc config :datastore/req->timepoint ->timepoint)
             app (h/plugins->loaded [(store/plugin config)])]
         (is (instance? datahike.db.AsOfDB (store/datastore app)))))))
+
+(comment
+  (require '[kaocha.repl :as k])
+  (k/run *ns*))
