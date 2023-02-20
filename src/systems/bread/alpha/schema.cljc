@@ -46,13 +46,21 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
+     ;; TODO remove this in favor of generic :i18n/fields
      {:db/ident :i18n/translatable?
       :db/doc "Whether the given attr is translatable."
       :db/valueType :db.type/boolean
       :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :i18n/fields
+      :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
       :attr/migration "migration.i18n"}]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
+
+;; TODO metadata
 
 (def
   ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
@@ -79,6 +87,7 @@
       :db/index true
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
+     ;; TODO remove
      {:db/ident :post/fields
       :db/doc "Zero or more translatable post content fields"
       :db/valueType :db.type/ref
@@ -160,6 +169,7 @@
       :db/index true
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.taxons"}
+     ;; TODO remove
      {:db/ident :taxon/fields
       :db/doc "Zero or more translatable fields for this taxon."
       :db/valueType :db.type/ref
@@ -333,6 +343,7 @@
       :db/unique :db.unique/value
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     ;; TODO remove
      {:db/ident :user/fields
       :db/doc "Zero or more translatable user content fields"
       :db/valueType :db.type/ref
