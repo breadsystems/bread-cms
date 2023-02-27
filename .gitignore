@@ -11,6 +11,7 @@ inputFiles.lst
 /classes
 *.cgi
 *.build_artifacts.txt
+/bread
 /ref
 /dist
 *.local.edn

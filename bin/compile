@@ -13,7 +13,7 @@ clojure -M:cms -e "(compile 'systems.bread.alpha.cgi)"
 
 "$GRAALVM_HOME/bin/native-image" \
   -cp "$(clojure -Spath)":classes \
-  -H:Name=bread.cgi \
+  -H:Name=bread \
   -H:+ReportExceptionStackTraces \
   --initialize-at-build-time \
   --verbose \
