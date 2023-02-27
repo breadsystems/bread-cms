@@ -40,7 +40,7 @@
   ;; you do so below in that dep's standalone alias.
   :cms
   {:extra-paths ["main" "resources"
-                 "plugins/datahike" #_"plugins/reitit" "plugins/rum"]
+                 "plugins/datahike" "plugins/bidi" "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
                 http-kit/http-kit           {:mvn/version "2.3.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
@@ -48,7 +48,7 @@
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
                 mount/mount                 {:mvn/version "0.1.16"} ;; TODO rm
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
-                ;metosin/reitit              {:mvn/version "0.6.0"}
+                bidi/bidi                   {:mvn/version "2.1.6"}
                 ring/ring                   {:mvn/version "1.9.5"}
                 rum/rum                     {:mvn/version "0.12.10"}}}
 
