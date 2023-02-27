@@ -10,7 +10,7 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread])
   (:import
-    [java.lang Exception])
+    [java.lang Throwable])
   (:gen-class))
 
 (def router
@@ -74,7 +74,7 @@
       (println)
       (println body)
       (System/exit 0))
-    (catch Exception e
+    (catch Throwable e
       (println "status: 500 Internal Server Error")
       (println "content-type: text/plain")
       (println)
