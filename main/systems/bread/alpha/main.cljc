@@ -57,6 +57,7 @@
 
 (defn run-as-cgi [_]
   (try
+    ;; TODO this is pretty jank, update to parse HTTP requests properly
     (let [[uri & _] (clojure.string/split (System/getenv "REQUEST_URI") #"\?")
           req {:uri uri
                :query-string (System/getenv "QUERY_STRING")
@@ -85,7 +86,6 @@
   (-main))
 
 (defn -main [& args]
-  ;; TODO this is pretty jank, update to parse HTTP requests properly
   (let [{:keys [options errors] :as cli-env} (cli/parse-opts args cli-options)
         {:keys [help port file config cgi]} options
         cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))]
