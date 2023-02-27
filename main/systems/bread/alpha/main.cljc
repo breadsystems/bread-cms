@@ -6,16 +6,28 @@
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
     [integrant.core :as ig]
+    [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread])
   (:import
     [java.lang Exception])
   (:gen-class))
 
-(defn handler [_]
-  {:status 200
-   :headers {"content-type" "text/html"}
-   :body "<h1>Hello, Bread!</h1>"})
+(def router
+  (router/router
+    ["/" {[:lang] {"" :index
+                   ["/" :post/slug] :page}}]
+    {:index
+     {:dispatcher/type :home}
+     :page
+     {:dispatcher/type :dispatcher.type/page}}))
+
+(defn handler [req]
+  (let [match (bread/match router req)]
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :body (prn-str {:dispatcher (bread/dispatcher router match)
+                     :params (bread/params router match)})}))
 
 (def status-mappings
   {200 "OK"

@@ -5,7 +5,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
-    ;;[systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.plugin.bidi]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]

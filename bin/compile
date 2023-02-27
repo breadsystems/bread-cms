@@ -20,5 +20,6 @@ clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
   --no-fallback \
   --no-server \
   --static \
+  --enable-url-protocols=http \
   "-J-Xmx3g" \
   systems.bread.alpha.main
