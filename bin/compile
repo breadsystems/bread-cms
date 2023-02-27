@@ -7,7 +7,7 @@ fi
 
 rm -rf classes/*
 
-clojure -M:cms -e "(compile 'systems.bread.alpha.cgi)"
+clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
 
 "$GRAALVM_HOME/bin/gu" install native-image
 
@@ -21,4 +21,4 @@ clojure -M:cms -e "(compile 'systems.bread.alpha.cgi)"
   --no-server \
   --static \
   "-J-Xmx3g" \
-  systems.bread.alpha.cgi
+  systems.bread.alpha.main
