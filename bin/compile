@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [[ -z "$GRAALVM_HOME" ]] ; then
+  echo "Please set \$GRAALVM_HOME"
+  exit 1
+fi
+
+rm -rf classes/*
+
+clojure -M:cms -e "(compile 'systems.bread.alpha.cgi)"
+
+"$GRAALVM_HOME/bin/gu" install native-image
+
+"$GRAALVM_HOME/bin/native-image" \
+  -cp "$(clojure -Spath)":classes \
+  -H:Name=bread.cgi \
+  -H:+ReportExceptionStackTraces \
+  --initialize-at-build-time \
+  --verbose \
+  --no-fallback \
+  --no-server \
+  --static \
+  "-J-Xmx3g" \
+  systems.bread.alpha.cgi

@@ -8,6 +8,9 @@
 pom.properties
 inputFiles.lst
 /target
+/classes
+*.cgi
+*.build_artifacts.txt
 /ref
 /dist
 *.local.edn
