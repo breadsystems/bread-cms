@@ -26,7 +26,7 @@
    :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
     org.clojure/clojurescript                       {:mvn/version "1.11.4"}
-    http-kit/http-kit                               {:mvn/version "2.3.0"}
+    http-kit/http-kit                               {:mvn/version "2.6.0"}
     juji/editscript                                 {:mvn/version "0.5.8"}
     rum/rum                                         {:mvn/version "0.12.6"}
     thheller/shadow-cljs                            {:mvn/version "2.16.8"}}}
@@ -42,7 +42,7 @@
   {:extra-paths ["main" "resources"
                  "plugins/datahike" "plugins/bidi" "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
-                http-kit/http-kit           {:mvn/version "2.3.0"}
+                http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
