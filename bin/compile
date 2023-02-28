@@ -15,6 +15,7 @@ clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
   -cp "$(clojure -Spath)":classes \
   -H:Name=bread \
   -H:+ReportExceptionStackTraces \
+  -H:+PrintClassInitialization \
   --initialize-at-build-time \
   --verbose \
   --no-fallback \
