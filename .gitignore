@@ -9,6 +9,7 @@ pom.properties
 inputFiles.lst
 /target
 /classes
+/reports
 *.cgi
 *.build_artifacts.txt
 /bread
