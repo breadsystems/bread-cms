@@ -1,0 +1,5 @@
+{:http {:port #long #or [#env PORT 1312]}
+ #_#_
+ :git-rev #sh ["git" "rev-parse" "--short" "HEAD"]
+ #_#_
+ :bread-version #sh ["clojure" "-T:build" "tag"]}

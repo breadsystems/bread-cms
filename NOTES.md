@@ -1,3 +1,7 @@
+# bread.main
+
+CGI mode is enabled by default when the `GATEWAY_INTERFACE` env var is detected, or if the `--cgi` flag is passed explicitly. Maybe make a `--no-cgi` flag to disable when env var present?
+
 # HTML Cache Logic
 
 For a given set of txs, get the concrete routes that need to be updated on the static frontend.

@@ -90,8 +90,6 @@
 ;; Helper functions for generating and working with app data directly.
 ;;
 
-(declare hook)
-
 (defn response
   "Returns a response with the current app (req) merged into raw map,
   preserving any hooks/config added to req."

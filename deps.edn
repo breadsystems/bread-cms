@@ -12,51 +12,71 @@
     org.clojure/clojurescript                       {:mvn/version "1.11.4"}
     org.clojure/core.async                          {:mvn/version "1.5.648"}
     thheller/shadow-cljs                            {:mvn/version "2.16.8"}
+    ;; TODO rm
     yogthos/config                                  {:mvn/version "1.2.0"}}}
 
-  ;; REPL must be separate from dev for
-  ;; `shadow-cljs -A:dev ...` to work - otherwise Cider complains
-  ;; about not being able to find the shadow cli namespace.
-  :repl
-  {:extra-deps {cider/cider-nrepl   {:mvn/version "0.26.0"}
-                clj-kondo/clj-kondo {:mvn/version "2021.06.01"}
-                nrepl/nrepl         {:mvn/version "0.8.3"}}
-   :main-opts ["-m" "nrepl.cmdline"
-               "--middleware" "[cider.nrepl/cider-middleware]"]}
+  :build
+  {:deps
+   {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}
+    slipset/deps-deploy           {:mvn/version "0.2.0"}}
+   :ns-default build}
 
   :tools
   {:extra-paths ["tools"]
    :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
     org.clojure/clojurescript                       {:mvn/version "1.11.4"}
-    http-kit/http-kit                               {:mvn/version "2.3.0"}
+    http-kit/http-kit                               {:mvn/version "2.6.0"}
     juji/editscript                                 {:mvn/version "0.5.8"}
     rum/rum                                         {:mvn/version "0.12.6"}
     thheller/shadow-cljs                            {:mvn/version "2.16.8"}}}
 
+  ;; Entrypoint for the Bread CMS binary. To run the basic Bread install
+  ;; on the JVM, do:
+  ;;
+  ;; clojure -M:cms systems.bread.alpha.main
+  ;;
+  ;; NOTE: if you upgrade any of the dependencies here, e.g. reitit, make sure
+  ;; you do so below in that dep's standalone alias.
   :cms
-  {:extra-paths ["plugins" "resources"]
-   :extra-deps
-   {http-kit/http-kit           {:mvn/version "2.3.0"}
-    io.replikativ/datahike      {:mvn/version "0.6.1531"}
-    io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
-    juxt/dirwatch               {:mvn/version "0.2.5"}
-    markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
-    metosin/reitit              {:mvn/version "0.5.17"}
-    mount/mount                 {:mvn/version "0.1.16"}
-    ring/ring                   {:mvn/version "1.9.5"}
-    rum/rum                     {:mvn/version "0.12.8"}}}
+  {:extra-paths ["main" "resources"
+                 "plugins/datahike" "plugins/bidi" "plugins/rum"]
+   :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
+                http-kit/http-kit           {:mvn/version "2.6.0"}
+                integrant/integrant         {:mvn/version "0.8.0"}
+                io.replikativ/datahike      {:mvn/version "0.6.1531"}
+                io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
+                mount/mount                 {:mvn/version "0.1.16"} ;; TODO rm
+                org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
+                bidi/bidi                   {:mvn/version "2.1.6"}
+                ring/ring                   {:mvn/version "1.9.5"}
+                rum/rum                     {:mvn/version "0.12.10"}}}
 
-  ;; Extra deps for testing supported libraries not shipped with the
-  ;; CMS build directly.
-  :extra
-  {:extra-deps {bidi/bidi {:mvn/version "2.1.6"}}}
+  :bidi
+  {:extra-paths ["plugins/bidi"]
+   :extra-deps {bidi/bidi {:mvn/version "2.1.6"}}}
 
-  :app
-  {:main-opts ["-m" "breadbox.app"]}
+  :datahike
+  {:extra-paths  ["plugins/datahike"]
+   :extra-deps {io.replikativ/datahike {:mvn/version "0.6.1531"}}}
 
-  :build
-  {:deps
-   {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}
-    slipset/deps-deploy           {:mvn/version "0.2.0"}}
-   :ns-default build}}}
+  :garden
+  {:extra-paths ["plugins/garden"]
+   :extra-deps {garden/garden {:mvn/version "1.3.10"}}}
+
+  :markdown
+  {:extra-paths ["plugins/markdown"]
+   :extra-deps {juxt/dirwatch             {:mvn/version "0.2.5"}
+                markdown-clj/markdown-clj {:mvn/version "1.10.5"}}}
+
+  :reitit
+  {:extra-paths ["plugins/reitit"]
+   :extra-deps {metosin/reitit {:mvn/version "0.6.0"}}}
+
+  :rum
+  {:extra-paths ["plugins/rum"]
+   :extra-deps {rum/rum {:mvn/version "0.12.10"}}}
+
+  :selmer
+  {:extra-paths ["plugins/selmer"]
+   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}}

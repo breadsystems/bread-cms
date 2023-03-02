@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+if [[ -z "$GRAALVM_HOME" ]] ; then
+  echo "Please set \$GRAALVM_HOME"
+  exit 1
+fi
+
+rm -rf classes/*
+rm -rf target/*
+
+clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
+
+if [[ $? -ne 0 ]] ; then
+  echo 'Error compiling systems.bread.alpha.main, aborting'
+  exit 1
+fi
+
+"$GRAALVM_HOME/bin/gu" install native-image
+
+"$GRAALVM_HOME/bin/native-image" \
+  -cp "$(clojure -Spath -M:cms)":classes \
+  -H:Name=bread \
+  -H:+ReportExceptionStackTraces \
+  -H:+PrintClassInitialization \
+  --initialize-at-build-time \
+  --enable-url-protocols=http,https \
+  --verbose \
+  --no-fallback \
+  --no-server \
+  --static \
+  "-J-Xmx3g" \
+  systems.bread.alpha.main
