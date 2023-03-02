@@ -6,6 +6,7 @@ if [[ -z "$GRAALVM_HOME" ]] ; then
 fi
 
 rm -rf classes/*
+rm -rf target/*
 
 clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
 
@@ -17,15 +18,15 @@ fi
 "$GRAALVM_HOME/bin/gu" install native-image
 
 "$GRAALVM_HOME/bin/native-image" \
-  -cp "$(clojure -Spath)":classes \
+  -cp "$(clojure -Spath -M:cms)":classes \
   -H:Name=bread \
   -H:+ReportExceptionStackTraces \
   -H:+PrintClassInitialization \
   --initialize-at-build-time \
+  --enable-url-protocols=http,https \
   --verbose \
   --no-fallback \
   --no-server \
   --static \
-  --enable-url-protocols=http \
   "-J-Xmx3g" \
   systems.bread.alpha.main
