@@ -108,7 +108,8 @@
   (http/run-server #'handler {:port port}))
 
 (defmethod ig/halt-key! :http [_ stop-server]
-  @(stop-server :timeout 100))
+  (when-let [prom (stop-server :timeout 100)]
+    @prom))
 
 (defn restart! [config]
   (stop!)
