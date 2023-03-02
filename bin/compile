@@ -9,6 +9,11 @@ rm -rf classes/*
 
 clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
 
+if [[ $? -ne 0 ]] ; then
+  echo 'Error compiling systems.bread.alpha.main, aborting'
+  exit 1
+fi
+
 "$GRAALVM_HOME/bin/gu" install native-image
 
 "$GRAALVM_HOME/bin/native-image" \
