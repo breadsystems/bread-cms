@@ -45,7 +45,7 @@
    ["-c" "--config EDN"
     "Full configuration data as EDN. Causes other args to be ignored."
     :parse-fn edn/read-string]
-   ["-G" "--cgi"
+   ["-g" "--cgi"
     "Run Bread as a CGI script"
     :default false]])
 
