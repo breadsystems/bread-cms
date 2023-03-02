@@ -54,7 +54,7 @@
 (defn show-help [{:keys [summary]}]
   (println summary))
 
-(defn show-error-message [{:keys [errors]}]
+(defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
 
 (defn run-as-cgi [_]
@@ -123,6 +123,13 @@
         {:keys [help port file config cgi]} options
         cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))]
     (cond
+      errors (show-errors cli-env)
       help (show-help cli-env)
       cgi (run-as-cgi cli-env)
-      config (start! config))))
+      config (start! config)
+      file (if-not (.exists (io/file file))
+             (show-errors {:errors [(str "No such file: " file)]})
+             (let [config (-> file aero/read-config
+                              (update-in [:http :port] #(if port port %)))]
+               (start! config)))
+      :else (show-help cli-env))))
