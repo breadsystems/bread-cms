@@ -6,11 +6,13 @@
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
     [integrant.core :as ig]
+    [org.httpkit.server :as http]
     [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread])
   (:import
-    [java.lang Throwable])
+    [java.lang Throwable]
+    [java.time LocalDateTime])
   (:gen-class))
 
 (def router
@@ -82,7 +84,38 @@
       (println (.getStackTrace e))
       (System/exit 1))))
 
+(defonce system (atom nil))
+
+(defn start! [config]
+  (let [config (assoc config
+                      :config config
+                      :started-at "This will be initialized by Integrant...")]
+    (reset! system (ig/init config))))
+
+(defn stop! []
+  (when-let [sys @system]
+    (ig/halt! sys)
+    (reset! system nil)))
+
+(defmethod ig/init-key :config [_ config]
+  config)
+
+(defmethod ig/init-key :started-at [_ local-datetime]
+  (LocalDateTime/now))
+
+(defmethod ig/init-key :http [_ {:keys [port]}]
+  (println "Starting HTTP server on port" port)
+  (http/run-server #'handler {:port port}))
+
+(defmethod ig/halt-key! :http [_ stop-server]
+  @(stop-server :timeout 100))
+
+(defn restart! [config]
+  (stop!)
+  (start! config))
+
 (comment
+  (restart! {:http {:port 1312}})
   (-main))
 
 (defn -main [& args]
@@ -91,4 +124,5 @@
         cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))]
     (cond
       help (show-help cli-env)
-      cgi (run-as-cgi cli-env))))
+      cgi (run-as-cgi cli-env)
+      config (start! config))))
