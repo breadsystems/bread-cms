@@ -8,7 +8,7 @@
 pom.properties
 inputFiles.lst
 /target
-/classes
+/classes/*
 /reports
 *.cgi
 *.build_artifacts.txt
