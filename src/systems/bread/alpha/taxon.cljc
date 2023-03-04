@@ -29,6 +29,7 @@
         pull (if (some #{:db/id} pull) pull (cons :db/id pull))]
     {:query/name ::store/query
      :query/key path
+     :query/f first
      :query/db (:query/db taxon-query)
      :query/args
      (coalesce-query

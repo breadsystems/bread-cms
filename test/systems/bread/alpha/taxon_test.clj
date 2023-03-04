@@ -133,6 +133,7 @@
          "some-tag"]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons]
+        :query/f first
         :query/db db
         :query/args
         ['{:find [(pull ?post [:db/id :post/fields])]
@@ -178,6 +179,7 @@
          "some-tag"]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons]
+        :query/f first
         :query/db db
         :query/args
         ['{:find [(pull ?post [:db/id :post/fields])]
@@ -225,6 +227,7 @@
          "some-tag"]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons]
+        :query/f first
         :query/db db
         :query/args
         ['{:find [(pull ?post [:db/id :post/fields])]
@@ -268,6 +271,7 @@
          "some-tag"]}
        {:query/name ::store/query
         :query/key [:tag :post/_taxons]
+        :query/f first
         :query/db db
         :query/args
         ['{:find [(pull ?post [:db/id :post/fields])]

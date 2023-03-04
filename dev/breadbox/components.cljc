@@ -55,7 +55,7 @@
    :key :taxon}
   (let [{:taxon/keys [slug fields posts]} taxon]
     [:<>
-     [:h1 (:title fields)]
+     [:h1 (count posts) " posts in " (:title fields)]
      [:div [:code slug]]
      (map
        (fn [{:post/keys [slug fields]}]

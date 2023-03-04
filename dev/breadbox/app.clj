@@ -173,6 +173,7 @@
                       :routes {:router $router}
                       :i18n {:supported-langs #{:en :fr}}
                       :navigation
+                      false #_
                       {:menus [{:key :main-nav
                                 :type :posts
                                 :post/type :post.type/page}
@@ -280,6 +281,29 @@
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
+
+  (defn getq [n]
+    (as-> $req $
+      (bread/dispatch $router $)
+      (bread/hook $ ::bread/dispatch)
+      (::bread/queries $)
+      (vec $)
+      (get $ n)))
+  (defn dataq [n]
+    (as-> $req $
+      (bread/dispatch $router $)
+      (bread/hook $ ::bread/dispatch)
+      (update $ ::bread/queries vec)
+      (update $ ::bread/queries subvec 5 n)
+      (update $ ::bread/data select-keys [:taxon])
+      (bread/hook $ ::bread/expand)
+      (::bread/data $)))
+  (getq 7)
+  (getq 8)
+  (getq 9)
+  (dataq 8)
+  (dataq 8)
+  (dataq 9)
   (as-> $req $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
@@ -290,17 +314,38 @@
   (defn q [query & args]
     (apply store/q (store/datastore $req) query args))
 
-  (q '{:find [(pull ?e [:db/id :post/slug])],
-       :in [$ % ?status ?taxonomy ?slug],
+  (q '{:find [(pull ?post [:db/id
+                           :post/slug
+                           :post/status
+                           :post/type
+                           :post/fields])],
+       :in [$ ?taxon ?type ?status],
+       :where
+       [[?post :post/taxons ?taxon]
+        [?post :post/type ?type]
+        [?post :post/status ?status]]}
+     72
+     :post.type/page
+     :post.status/published)
+
+  (q '{:find [?t (pull ?e [:db/id :post/slug])],
+       :in [$ ?status ?taxonomy ?slug],
        :where [[?e :post/status ?status]
-               (post-taxonomized ?e ?taxonomy ?slug)]}
-     '[[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-        [?post :post/taxons ?t]
-        [?t :taxon/taxonomy ?taxonomy]
-        [?t :taxon/slug ?taxon-slug]]]
+               [?e :post/taxons ?t]
+               [?t :taxon/slug ?slug]
+               [?t :taxon/taxonomy ?taxonomy]]}
      :post.status/published
      :taxon.taxonomy/category
      "my-cat")
+
+  (q '{:find [(pull ?e (:db/id :field/key :field/content))],
+        :in [$ ?e1 ?lang],
+        :where
+        ([?e :field/lang ?lang]
+         [?e0 :post/fields ?e]
+         [?e0 :post/taxons ?e1])}
+      72
+      :en)
 
   ;; Lookup translatable entity fields
   (q '[:find ?attr

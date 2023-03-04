@@ -3,7 +3,9 @@
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.schema :as schema]))
+    [systems.bread.alpha.schema :as schema])
+  (:import
+    [clojure.lang ExceptionInfo]))
 
 (defmulti connect! :datastore/type)
 (defmulti create-database! (fn [config & _]
@@ -120,24 +122,50 @@
 (defn- data-path? [x]
   (and (sequential? x) (= ::bread/data (first x))))
 
+(defn- get-at [data path]
+  (let [v (get-in data (butlast path))]
+    (if (sequential? v)
+      (map (last path) v)
+      (get-in data path))))
+
 (defmethod bread/query ::query
   query-db
-  [{:query/keys [db args] :as query} data]
+  [{:query/keys [db args f] :as query} data]
   "Run the given query against db. If :query/into is present, returns
   (into into-val query-result)."
-  (let [args (map (fn [arg]
-                    (if (data-path? arg)
-                      (get-in data (rest arg))
-                      arg))
+  (let [[datalog-query & args] args
+        args (mapv (fn [arg]
+                     (if (data-path? arg)
+                       (get-at data (rest arg))
+                       arg))
                   args)
+        datalog-query
+        (update
+          datalog-query :in
+          (fn [inputs]
+            (cons (first inputs)
+                  (map-indexed (fn [idx input]
+                                 (let [arg (get args idx)]
+                                   (if (and (sequential? arg)
+                                            (symbol? input)
+                                            (not= '% input))
+                                     [input '...]
+                                     input)))
+                               (rest inputs)))))
+        _ (prn (apply list 'q datalog-query args))
         result (when (every? some? args)
-                 (apply q db args))
+                 (try
+                   (apply q db datalog-query args)
+                   (catch ExceptionInfo e
+                     nil)))
         ;; If nothing is found, set explicit false so we don't try to write
         ;; nested data to the query key (e.g. at [:post :post/fields]).
         result (or result false)]
-    (if (and (:query/into query) (seqable? result))
+    (cond
+      (fn? f) (f result)
+      (and (:query/into query) (seqable? result))
       (into (:query/into query) result)
-      result)))
+      :else result)))
 
 (defn migration-key [migration]
   (reduce (fn [_ {k :migration/key}]
