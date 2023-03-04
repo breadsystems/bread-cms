@@ -19,6 +19,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
+    #_
     [systems.bread.alpha.plugin.static-backend :as static-be]
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.post :as post]
@@ -31,7 +32,6 @@
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [systems.bread.alpha.tools.pprint]
-    [markdown.core :as md]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -85,6 +85,7 @@
             :bread/cache
             {:param->attr {:lang :field/lang}
              :pull [{:post/fields [:lang]}]}}]
+      #_
       ["/static/:slug/" {:bread/dispatcher :dispatcher.type/static
                          :bread/component c/static-page
                          :bread/watch-static {:dir "dev/content"
@@ -236,6 +237,7 @@
                              (throw (ex-info "OH NOEZ"
                                              {:something :bad})))))
 
+                       #_
                        (static-be/plugin)]})))
   :stop (do
           (bread/shutdown @app)
@@ -395,6 +397,7 @@
 
 (defonce stop-watch (atom nil))
 
+#_
 (defstate watch-static-files
   :start
   (do
