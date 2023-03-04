@@ -369,7 +369,7 @@
 
 (defn start! []
   ;; TODO config
-  (let [port (Integer. (or (System/getenv "HTTP_PORT") 1312))]
+  (let [port (Integer. (or (System/getenv "HTTP_PORT") 1313))]
     (println (str "Running Breadbox server at localhost:" port))
     (as-> (wrap-reload #'handler) $
       ;; TODO get these ports from mounted state
