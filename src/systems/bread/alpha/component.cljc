@@ -67,9 +67,7 @@
   (:content-path (meta component) [:content]))
 
 (defn req->component [{::bread/keys [data dispatcher] :as res}]
-  (bread/hook res :hook/component (if (:not-found? data)
-                                    (:dispatcher/not-found-component dispatcher)
-                                    (:dispatcher/component dispatcher))))
+  (bread/hook res :hook/component (:dispatcher/component dispatcher)))
 
 (defn- render-parent [component data content]
   (loop [component component

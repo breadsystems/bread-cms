@@ -68,8 +68,8 @@
   (bread/dispatcher router match))
 
 (defmethod bread/action ::component
-  [_ {:keys [router]} [match]]
-  (bread/component router match))
+  [_ _ [match]]
+  (:bread/component match))
 
 (defmethod bread/action ::not-found-component
   [req {:keys [router]} [match]]
