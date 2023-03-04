@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.route-test
   (:require
     [clojure.test :refer [deftest are is testing]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
@@ -208,4 +207,5 @@
     ))
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))
