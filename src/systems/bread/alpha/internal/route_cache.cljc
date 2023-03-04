@@ -84,8 +84,8 @@
                          normalized datoms)))))
 
 (defn- eid [req router mapping tx]
-  (as-> router $
-    (bread/component $ (bread/match router req))
+  ;; TODO might have broken during the Great Component Refactor... :shrug:
+  (as-> (component/match req) $
     (component/query $)
     (affecting-attrs $ mapping)
     (datoms-with-attrs $ tx)

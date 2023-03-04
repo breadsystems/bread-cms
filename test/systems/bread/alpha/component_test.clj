@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.component-test
   (:require
     [clojure.test :refer [deftest are is testing]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
@@ -9,10 +8,6 @@
 (defc paragraph [{:keys [content]}]
   {}
   [:p content])
-
-(defc not-found-page [_]
-  {}
-  [:div "404 Not Found"])
 
 (defc grandparent [{:keys [content]}]
   {}
@@ -46,14 +41,6 @@
     {::bread/data {:content "the content"}
      ::bread/dispatcher {:dispatcher/component paragraph}}
 
-    ;; 404 Not Found
-    ;; dispatcher/expander are responsible for setting up this data
-    [:div "404 Not Found"]
-    {::bread/data {:content nil
-                   :not-found? true}
-     ::bread/dispatcher {:dispatcher/component paragraph
-                         :dispatcher/not-found-component not-found-page}}
-
     ;; With :extends - parent <- child
     [:div.parent [:div.child "child content"] [:div.extra "extra content"]]
     {::bread/data {:content "child content"
@@ -76,7 +63,7 @@
     ;; With plugins filtering the component
     [:div.plugin "filtered content"]
     (assoc (plugins->loaded [{:hooks
-                              {:hook/component
+                              {::component/match
                                [{:action/name ::filtered
                                  :component filtered}]}}])
            ::bread/data {:content "content"})))
@@ -111,4 +98,5 @@
          (component/query next-level))))
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))

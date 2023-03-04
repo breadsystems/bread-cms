@@ -3,10 +3,9 @@
   systems.bread.alpha.app-test
   (:require
     [clojure.test :refer [are deftest is testing]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.post :as post]
@@ -86,26 +85,37 @@
 
 (use-datastore :each config)
 
-(component/defc home [{:keys [post]}]
+(defc layout [{:keys [content not-found? i18n]}]
+  {}
+  [:body
+   (if not-found?
+     [:main
+      (:not-found i18n)]
+     content)])
+
+(defc home [{:keys [post]}]
   {:query [{:post/fields [:field/key :field/content]}]
-   :key :post}
+   :key :post
+   :extends layout}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
-(component/defc page [{:keys [post]}]
+(defc page [{:keys [post]}]
   {:query [{:post/fields [:field/key :field/content]}]
-   :key :post}
+   :key :post
+   :extends layout}
   (let [post (post/compact-fields post)
         {:keys [title simple]} (:post/fields post)]
     [:main.interior-page
      [:h1 title]
      [:p (:hello simple)]]))
 
-(component/defc not-found [{:keys [i18n]}]
+(defc not-found [{:keys [i18n]}]
   {}
+  (prn 'YES 'NOT)
   [:main (:not-found i18n)])
 
 (deftest test-app-lifecycle
@@ -115,34 +125,40 @@
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component home}
+                   :bread/component home
                    :route/params {:lang "en"}}
                   "/fr"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component home}
+                   :bread/component home
                    :route/params {:lang "fr"}}
                   "/en/parent-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
+                   :bread/component page
                    :route/params {:lang "en"
                                   :slugs "parent-page"}}
                   "/en/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
+                   :bread/component page
                    :route/params {:lang "en"
                                   :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
+                   :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
+                   :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
@@ -150,6 +166,7 @@
                                       :dispatcher/key :post
                                       :dispatcher/component page
                                       :dispatcher/not-found-component not-found}
+                   :bread/component page
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
@@ -157,6 +174,7 @@
                                       :dispatcher/key :post
                                       :dispatcher/component page
                                       :dispatcher/not-found-component not-found}
+                   :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router
@@ -165,13 +183,7 @@
                    (bread/params [router match]
                      (:route/params match))
                    (bread/dispatcher [router match]
-                     (:bread/dispatcher match))
-                   (bread/component [_ match]
-                     (:dispatcher/component (:bread/dispatcher match)))
-                   (bread/not-found-component [router match]
-                     (:dispatcher/not-found-component (:bread/dispatcher match)))
-                   (bread/dispatch [router req]
-                     (assoc req ::bread/dispatcher (route/dispatcher req))))
+                     (:bread/dispatcher match)))
           app (defaults/app {:datastore config
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}})
@@ -181,50 +193,57 @@
         (= expected (select-keys res [:body]))
 
         {:body
-         [:main
-          [:h1 "Home Page"]
-          [:p "Hi!"]]}
+         [:body [:main
+                 [:h1 "Home Page"]
+                 [:p "Hi!"]]]}
         (handler {:uri "/en"})
 
         {:body
-         [:main
-          [:h1 "Page D'Accueil"]
-          [:p "Allo!"]]}
+         [:body [:main
+                 [:h1 "Page D'Accueil"]
+                 [:p "Allo!"]]]}
         (handler {:uri "/fr"})
 
         {:body
-         [:main.interior-page
-          [:h1 "Parent Page"]
-          [:p "Hello from parent"]]}
+         [:body
+          [:main.interior-page
+           [:h1 "Parent Page"]
+           [:p "Hello from parent"]]]}
         (handler {:uri "/en/parent-page"})
 
         {:body
-         [:main.interior-page
-          [:h1 "La Page Parent"]
-          [:p "Bonjour de parent"]]}
+         [:body
+          [:main.interior-page
+           [:h1 "La Page Parent"]
+           [:p "Bonjour de parent"]]]}
         (handler {:uri "/fr/parent-page"})
 
         {:body
-         [:main.interior-page
-          [:h1 "Child Page"]
-          [:p "Hello from child"]]}
+         [:body
+          [:main.interior-page
+           [:h1 "Child Page"]
+           [:p "Hello from child"]]]}
         (handler {:uri "/en/parent-page/child-page"})
 
         {:body
-         [:main.interior-page
-          [:h1 "La Page Enfant"]
-          [:p "Bonjour d'enfant"]]}
+         [:body
+          [:main.interior-page
+           [:h1 "La Page Enfant"]
+           [:p "Bonjour d'enfant"]]]}
         (handler {:uri "/fr/parent-page/child-page"})
 
         {:body
-         [:main "404 Not Found"]}
+         [:body
+          [:main "404 Not Found"]]}
         (handler {:uri "/en/404"})
 
         {:body
-         [:main "404 Pas Trouvé"]}
+         [:body
+          [:main "404 Pas Trouvé"]]}
         (handler {:uri "/fr/404"})
 
         ))))
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))

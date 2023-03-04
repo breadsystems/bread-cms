@@ -23,13 +23,9 @@
 (defprotocol Router
   :extend-via-metadata true
   (path [this route-name params])
-  (dispatch [this req])
   (match [this req])
   (params [this match])
-  (dispatcher [this match])
-  ;; TODO redesign component matching
-  (component [this match])
-  (not-found-component [this match]))
+  (dispatcher [this match]))
 
 (defprotocol WatchableRoute
   :extend-via-metadata true

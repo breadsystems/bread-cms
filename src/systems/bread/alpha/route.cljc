@@ -27,8 +27,6 @@
         match (match req)
         declared (bread/hook req ::dispatcher match)
         component (bread/hook req ::component match)
-        not-found-component
-        (bread/hook req ::not-found-component match)
         {:dispatcher/keys [defaults?]} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
                        :dispatcher.type/page :dispatcher.type/page}
@@ -50,7 +48,6 @@
                          :route/match match
                          :route/params (params req match)
                          :dispatcher/component component
-                         :dispatcher/not-found-component not-found-component
                          :dispatcher/key (component/query-key component)
                          :dispatcher/pull (component/query component))]
     (bread/hook req :hook/dispatcher dispatcher')))
@@ -68,20 +65,16 @@
   (bread/dispatcher router match))
 
 (defmethod bread/action ::component
-  [_ {:keys [router]} [match]]
-  (bread/component router match))
-
-(defmethod bread/action ::not-found-component
-  [req {:keys [router]} [match]]
-  (bread/not-found-component router match))
+  [_ _ [match]]
+  (:bread/component match))
 
 (defmethod bread/action ::params
   [_ {:keys [router]} [match]]
   (bread/params router match))
 
 (defmethod bread/action ::dispatch
-  [req {:keys [router]} _]
-  (bread/dispatch router req))
+  [req _ _]
+  (assoc req ::bread/dispatcher (dispatcher req)))
 
 (defn plugin [{:keys [router]}]
   {:hooks
@@ -93,8 +86,6 @@
     [{:action/name ::dispatcher :router router}]
     ::component
     [{:action/name ::component :router router}]
-    ::not-found-component
-    [{:action/name ::not-found-component :router router}]
     ::params
     [{:action/name ::params :router router}]
     ::bread/route

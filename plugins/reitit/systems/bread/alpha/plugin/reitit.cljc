@@ -35,24 +35,12 @@
               :path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
-  ;; If the matched result is a handler (fn), set it as the dispatcher directly.
-  ;; This lets users opt in or out of Bread's routing on a per-route basis.
-  ;; TODO dispatch moves up out of Router protocol;
-  ;; dispatcher returns dispatcher data from the matched route.
-  (bread/dispatch [router req]
-    (let [dispatcher (route/dispatcher req)
-          result (:result (:route/match dispatcher))]
-      (assoc req ::bread/dispatcher (if (fn? result) result dispatcher))))
   (bread/match [router req]
     (reitit/match-by-path router (:uri req)))
   (bread/params [router match]
     (:path-params match))
   (bread/dispatcher [router match]
-    (:bread/dispatcher (:data match)))
-  (bread/component [router match]
-    (:bread/component (:data match)))
-  (bread/not-found-component [router match]
-    (:bread/not-found-component (:data match))))
+    (:bread/dispatcher (:data match))))
 
 (extend-protocol RoutesCollection
   reitit.core.Router
