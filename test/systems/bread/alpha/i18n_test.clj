@@ -140,6 +140,7 @@
       {} {:fallback-lang :de}
 
       ;; Support disabling fallback lang.
+      #_#_
       {} {:fallback-lang nil}
       {} {:fallback-lang false})))
 
