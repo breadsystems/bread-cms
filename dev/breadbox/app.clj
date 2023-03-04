@@ -32,6 +32,7 @@
     [systems.bread.alpha.tools.debug.core :as debug]
     [systems.bread.alpha.tools.debug.middleware :as mid]
     [systems.bread.alpha.tools.pprint]
+    [systems.bread.alpha.test-helpers]
     [mount.core :as mount :refer [defstate]]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -434,11 +435,13 @@
 (comment
   (k/run :unit)
   (k/run 'systems.bread.alpha.app-test)
+  (k/run 'systems.bread.alpha.route-test)
   (k/run 'systems.bread.alpha.query-test)
   (k/run 'systems.bread.alpha.post-test)
   (k/run 'systems.bread.alpha.i18n-test)
   (k/run 'systems.bread.alpha.install-test)
   (k/run 'systems.bread.alpha.taxon-test)
+  (k/run 'systems.bread.alpha.navigation-test)
 
   bread/*profile-hooks*
   (alter-var-root #'bread/*profile-hooks* not)
