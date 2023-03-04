@@ -80,8 +80,8 @@
   (bread/params router match))
 
 (defmethod bread/action ::dispatch
-  [req {:keys [router]} _]
-  (bread/dispatch router req))
+  [req _ _]
+  (assoc req ::bread/dispatcher (dispatcher req)))
 
 (defn plugin [{:keys [router]}]
   {:hooks

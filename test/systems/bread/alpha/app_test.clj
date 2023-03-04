@@ -169,9 +169,7 @@
                    (bread/component [_ match]
                      (:dispatcher/component (:bread/dispatcher match)))
                    (bread/not-found-component [router match]
-                     (:dispatcher/not-found-component (:bread/dispatcher match)))
-                   (bread/dispatch [router req]
-                     (assoc req ::bread/dispatcher (route/dispatcher req))))
+                     (:dispatcher/not-found-component (:bread/dispatcher match))))
           app (defaults/app {:datastore config
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}})

@@ -85,7 +85,5 @@
                  (bread/component [_ match]
                    (:bread/component match))
                  (bread/not-found-component [_ match]
-                   (:bread/not-found-component match))
-                 (bread/dispatch [router req]
-                   (assoc req ::bread/dispatcher (route/dispatcher req))))]
+                   (:bread/not-found-component match)))]
     (route/plugin {:router router})))

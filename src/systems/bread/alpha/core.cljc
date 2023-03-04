@@ -23,7 +23,6 @@
 (defprotocol Router
   :extend-via-metadata true
   (path [this route-name params])
-  (dispatch [this req])
   (match [this req])
   (params [this match])
   (dispatcher [this match])
