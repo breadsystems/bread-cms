@@ -40,11 +40,7 @@
   (bread/params [router match]
     (:path-params match))
   (bread/dispatcher [router match]
-    (:bread/dispatcher (:data match)))
-  (bread/component [router match]
-    (:bread/component (:data match)))
-  (bread/not-found-component [router match]
-    (:bread/not-found-component (:data match))))
+    (:bread/dispatcher (:data match))))
 
 (extend-protocol RoutesCollection
   reitit.core.Router

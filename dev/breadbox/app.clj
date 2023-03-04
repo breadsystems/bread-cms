@@ -256,7 +256,7 @@
     (slurp "resources/public/en/parent-page/index.html"))
 
   ;; Test out the whole Bread request lifecycle!
-  (def $req (merge {:uri "/en/cat/my-cat/"} @app))
+  (def $req (assoc @app :uri "/en/cat/my-cat/"))
   (route/params $req (route/match $req))
   (bread/match $router $req)
   (route/dispatcher $req)
@@ -268,6 +268,11 @@
     (bread/hook $ ::bread/dispatch)
     (::bread/queries $))
   (as-> $req $
+    (bread/hook $ ::bread/route)
+    (bread/hook $ ::bread/dispatch)
+    (bread/hook $ ::bread/expand)
+    (::bread/data $))
+  (as-> (assoc @app :uri "/en/404") $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)

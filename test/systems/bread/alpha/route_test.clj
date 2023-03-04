@@ -44,7 +44,6 @@
                 "/en/not-found"
                 {:bread/dispatcher {:dispatcher/type :whatevs}
                  :bread/component 'page
-                 :bread/not-found-component 'not-found
                  :route/params {:lang "en"
                                 :slug "not-found"}}
                 "/overridden"
@@ -71,7 +70,6 @@
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? true
           :dispatcher/component nil
-          :dispatcher/not-found-component nil
           :dispatcher/key nil
           :dispatcher/pull nil
           :post/type :post.type/page
@@ -82,7 +80,6 @@
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? true
           :dispatcher/component 'home
-          :dispatcher/not-found-component nil
           :dispatcher/key :home
           :dispatcher/pull [:db/id :home/slug]
           :post/type :post.type/page
@@ -96,7 +93,6 @@
           :dispatcher/i18n? true
           :post/type :post.type/page
           :dispatcher/component 'page
-          :dispatcher/not-found-component nil
           :dispatcher/key :page
           :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en" :slug "keyword"}
@@ -109,7 +105,6 @@
           :dispatcher/i18n? true
           :post/type :post.type/page
           :dispatcher/component 'page
-          :dispatcher/not-found-component nil
           :dispatcher/key :page
           :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en"
@@ -123,7 +118,6 @@
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? true
           :dispatcher/component 'page
-          :dispatcher/not-found-component nil
           :dispatcher/key :page
           :dispatcher/pull [:db/id :page/slug]
           :post/type :post.type/page
@@ -138,7 +132,6 @@
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? false
           :dispatcher/component 'page
-          :dispatcher/not-found-component nil
           :dispatcher/key :page
           :dispatcher/pull [:db/id :page/slug]
           :post/type :post.type/page
@@ -151,7 +144,6 @@
          {:dispatcher/type :whatevs
           :dispatcher/defaults? false
           :dispatcher/component 'page
-          :dispatcher/not-found-component nil
           :dispatcher/key :page
           :dispatcher/pull [:db/id :page/slug]
           :route/params {:lang "en"
@@ -166,7 +158,6 @@
          {:dispatcher/type :whatevs
           :dispatcher/i18n? true
           :dispatcher/component 'page
-          :dispatcher/not-found-component 'not-found
           :dispatcher/key :page
           :post/type :post.type/page
           :dispatcher/pull [:db/id :page/slug]
@@ -174,7 +165,6 @@
                          :slug "not-found"}
           :route/match {:bread/dispatcher {:dispatcher/type :whatevs}
                         :bread/component 'page
-                        :bread/not-found-component 'not-found
                         :route/params {:lang "en"
                                        :slug "not-found"}}}
          "/en/not-found"
@@ -182,7 +172,6 @@
          {:dispatcher/type :whatevs
           :dispatcher/i18n? true
           :dispatcher/component nil
-          :dispatcher/not-found-component nil
           :dispatcher/key nil
           :dispatcher/pull nil
           :post/type :post.type/page
