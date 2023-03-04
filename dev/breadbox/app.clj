@@ -95,7 +95,7 @@
       ["/cat/:slug/" {:bread/dispatcher {:dispatcher/type :dispatcher.type/taxon
                                          :taxon/taxonomy :taxon.taxonomy/category
                                          :dispatcher/key :posts}
-                     :bread/component c/category-page}]
+                      :bread/component c/category-page}]
       ["/*slugs" {:name :bread.route/page
                   :bread/dispatcher :dispatcher.type/page
                   :bread/component c/page
@@ -257,7 +257,9 @@
     (slurp "resources/public/en/parent-page/index.html"))
 
   ;; Test out the whole Bread request lifecycle!
-  (def $req (assoc @app :uri "/en/cat/my-cat/"))
+  (defn ->req [& args]
+    (apply assoc @app args))
+  (def $req (->req :uri "/en/cat/my-cat/"))
   (route/params $req (route/match $req))
   (bread/match $router $req)
   (route/dispatcher $req)
@@ -268,12 +270,12 @@
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (::bread/queries $))
-  (as-> $req $
+  (as-> (->req :uri "/en/parent-page/") $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
-  (as-> (assoc @app :uri "/en/404") $
+  (as-> (->req :uri "/en/404") $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
