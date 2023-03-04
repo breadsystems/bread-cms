@@ -12,7 +12,8 @@
     org.clojure/clojurescript                       {:mvn/version "1.11.4"}
     org.clojure/core.async                          {:mvn/version "1.5.648"}
     thheller/shadow-cljs                            {:mvn/version "2.16.8"}
-    ;; TODO rm
+    ;; TODO rm...
+    mount/mount                                     {:mvn/version "0.1.16"}
     yogthos/config                                  {:mvn/version "1.2.0"}}}
 
   :build
@@ -46,7 +47,6 @@
                 integrant/integrant         {:mvn/version "0.8.0"}
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
-                mount/mount                 {:mvn/version "0.1.16"} ;; TODO rm
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
                 bidi/bidi                   {:mvn/version "2.1.6"}
                 ring/ring                   {:mvn/version "1.9.5"}
