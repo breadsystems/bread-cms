@@ -1,6 +1,6 @@
 name: release
 run-name: Build and deploy a release
-on: push
+on:
   pull_request:
     types:
       - closed
