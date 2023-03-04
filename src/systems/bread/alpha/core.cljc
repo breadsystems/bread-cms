@@ -24,7 +24,6 @@
   :extend-via-metadata true
   (path [this route-name params])
   (dispatch [this req])
-  (routes [this])
   (match [this req])
   (params [this match])
   (dispatcher [this match])
@@ -35,6 +34,10 @@
 (defprotocol WatchableRoute
   :extend-via-metadata true
   (watch-config [this]))
+
+(defprotocol RoutesCollection
+  :extend-via-metadata true
+  (routes [this]))
 
 
 
