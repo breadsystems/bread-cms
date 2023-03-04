@@ -5,7 +5,7 @@
 
  :aliases
  {:dev
-  {:extra-paths ["dev"]
+  {:extra-paths ["dev" "test"]
    :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
     lambdaisland/kaocha                             {:mvn/version "1.64.1010"}
