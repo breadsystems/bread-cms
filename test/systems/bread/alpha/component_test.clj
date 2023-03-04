@@ -10,10 +10,6 @@
   {}
   [:p content])
 
-(defc not-found-page [_]
-  {}
-  [:div "404 Not Found"])
-
 (defc grandparent [{:keys [content]}]
   {}
   [:main content])
@@ -45,14 +41,6 @@
     [:p "the content"]
     {::bread/data {:content "the content"}
      ::bread/dispatcher {:dispatcher/component paragraph}}
-
-    ;; 404 Not Found
-    ;; dispatcher/expander are responsible for setting up this data
-    [:div "404 Not Found"]
-    {::bread/data {:content nil
-                   :not-found? true}
-     ::bread/dispatcher {:dispatcher/component paragraph
-                         :dispatcher/not-found-component not-found-page}}
 
     ;; With :extends - parent <- child
     [:div.parent [:div.child "child content"] [:div.extra "extra content"]]
