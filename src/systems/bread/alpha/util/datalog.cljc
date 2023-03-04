@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.util.datalog
   "Database helper utilities."
   (:require
+    [clojure.walk :as walk]
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]))
 
@@ -37,23 +39,14 @@
     query
     constraints))
 
-(defn attr-binding*
-  "Parses pull-expr for attr, returning the attr if found as it appears in
-  pull-expr (i.e. as a keyword or a map)"
-  [attr pull-expr]
-  (let [attrs #{attr}
-        map-with-keys (fn [ks x] (when (and (map? x) (some ks (keys x))) x))]
-    (first (keep (some-fn attrs (partial map-with-keys attrs)) pull-expr))))
+(defn relation-reversed? [k]
+  (string/starts-with? (name k) "_"))
 
-(defn attr-binding [search-key field]
-  (when (map? field)
-    (let [k (first (keys field))
-          v (get field k)]
-      ;; Check for a matching key pointing to EITHER explicit :field/content
-      ;; OR a wildcard.
-      (when (and (= search-key k)
-                 (some #{:field/content '*} v))
-        field))))
+(defn reverse-relation [k]
+  (let [[kns kname] ((juxt namespace name) k)
+        reversed? (string/starts-with? kname "_")]
+    (keyword (string/join "/" [kns (if reversed?
+                                     (subs kname 1) (str "_" kname))]))))
 
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})

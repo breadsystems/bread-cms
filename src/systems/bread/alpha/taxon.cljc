@@ -7,13 +7,7 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.util.datalog :as datalog]))
-
-(def post-taxonomized-rule
-  '[(post-taxonomized ?post ?taxonomy ?taxon-slug)
-    [?post :post/taxons ?e0]
-    [?e0 :taxon/taxonomy ?taxonomy]
-    [?e0 :taxon/slug ?taxon-slug]])
+    [systems.bread.alpha.internal.query-inference :as i]))
 
 (defmethod bread/query ::compact
   [{k :query/key} data]
@@ -23,6 +17,29 @@
       (update :post/_taxons #(map post/compact-fields %))
       (rename-keys {:post/_taxons :taxon/posts})))
 
+;; TODO datalog-pull ...?
+(defn- coalesce-query [query]
+  (as-> query $
+    (update-in $ [0 :in] (partial filterv identity))
+    (update-in $ [0 :where] (partial filterv identity))
+    (filterv identity $)))
+
+(defn- posts-query [t status taxon-query spec path]
+  (let [pull (get spec (last path))
+        pull (if (some #{:db/id} pull) pull (cons :db/id pull))]
+    {:query/name ::store/query
+     :query/key path
+     :query/db (:query/db taxon-query)
+     :query/args
+     (coalesce-query
+       [{:find [(list 'pull '?post pull)]
+         :in ['$ '?taxon (when t '?type) (when status '?status)]
+         :where ['[?post :post/taxons ?taxon]
+                 (when t '[?post :post/type ?type])
+                 (when status '[?post :post/status ?status])]}
+        [::bread/data (first path) :db/id]
+        (when t t) (when status status)])}))
+
 (defmethod dispatcher/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key
@@ -30,41 +47,26 @@
          taxonomy :taxon/taxonomy
          post-type :post/type
          post-status :post/status
-         :or {post-status :post.status/published}}
+         :or {post-type :post.type/page
+              post-status :post.status/published}}
         dispatcher
         db (store/datastore req)
         pull-spec (dispatcher/pull-spec dispatcher)
-        lang (keyword (:lang params))
-        taxon-query
-        {:query/name ::store/query
-         :query/key k
-         :query/db db
-         :query/args
-         (filter
-           identity
-           [{:find [(list 'pull '?e0 pull-spec) '.]
-             :in (filter identity ['$ '%
-                                   (when post-status '?status)
-                                   (when post-type '?type)
-                                   '?taxonomy '?slug])
-             :where (filter
-                      identity
-                      ['[?e0 :taxon/slug ?slug]
-                       (when post-status
-                         '[?p :post/status ?status])
-                       (when post-type
-                         '[?p :post/type ?type])
-                       '(post-taxonomized ?p ?taxonomy ?slug)])}
-            [post-taxonomized-rule]
-            post-status ;; possibly nil
-            post-type ;; possibly nil
-            taxonomy
-            (:slug params)])}
+        taxon-query {:query/name ::store/query
+                     :query/key k
+                     :query/db db
+                     :query/args
+                     [{:find [(list 'pull '?e0 pull-spec) '.]
+                       :in '[$ ?taxonomy ?slug]
+                       :where '[[?e0 :taxon/taxonomy ?taxonomy]
+                                [?e0 :taxon/slug ?slug]]}
+                      taxonomy
+                      (:slug params)]}
+        taxon-queries (i/infer
+                        [taxon-query] [:post/_taxons]
+                        (partial posts-query post-type post-status))
         compact-query {:query/name ::compact :query/key k}]
-    {:queries (conj (i18n/internationalize-query
-                      ;; TODO make this a hook!
-                      #{:post/fields :taxon/fields :user/fields}
-                      taxon-query lang)
+    {:queries (conj (bread/hook req ::i18n/queries taxon-queries)
                     compact-query)}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag

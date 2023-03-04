@@ -26,18 +26,20 @@
     (get-in m (or (butlast k) k))
     (update-in
       m (or (butlast k) k)
-      (fn [x]
-        (if (sequential? x)
+      (fn [current]
+        (cond
+          (and (sequential? current) (sequential? v))
           (let [v (map #(if (sequential? %) (first %) %) v)
                 by-id (into {} (map (juxt :db/id identity) v))]
-            (when (= k [:def])
-              (prn k x))
             (walk/postwalk (fn [node]
                              (if (entity? node)
                                (get by-id (:db/id node))
                                node))
-                           x))
-          (assoc x (last k) v))))
+                           current))
+          ;; If current is sequential but v isn't, the query returned
+          ;; something we can't use. Bail.
+          (sequential? current) current
+          :else (assoc current (last k) v))))
     (false? (get-in m (or (butlast k) k))) m
     :else (assoc-in m k v)))
 
