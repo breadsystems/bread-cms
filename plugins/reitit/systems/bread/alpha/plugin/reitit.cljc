@@ -3,7 +3,7 @@
     [clojure.core.protocols :refer [Datafiable datafy]]
     [clojure.string :as string]
     [reitit.core :as reitit]
-    [systems.bread.alpha.core :as bread :refer [Router]]
+    [systems.bread.alpha.core :as bread :refer [Router RoutesCollection]]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route])
@@ -26,14 +26,6 @@
 
 (extend-protocol Router
   reitit.core.Router
-  (bread/routes [router]
-    (map
-      #(with-meta % {`bread/watch-config
-                     (fn [[_ {config :bread/watch-static}]]
-                       (when config
-                         (let [{:keys [ext] :or {ext ".md"}} config]
-                           (assoc config :ext ext))))})
-      (reitit/compiled-routes router)))
   ;; TODO route-name
   (bread/path [router route-name params]
     (let [;; Dash-encode all string params
@@ -61,3 +53,14 @@
     (:bread/component (:data match)))
   (bread/not-found-component [router match]
     (:bread/not-found-component (:data match))))
+
+(extend-protocol RoutesCollection
+  reitit.core.Router
+  (bread/routes [router]
+    (map
+      #(with-meta % {`bread/watch-config
+                     (fn [[_ {config :bread/watch-static}]]
+                       (when config
+                         (let [{:keys [ext] :or {ext ".md"}} config]
+                           (assoc config :ext ext))))})
+      (reitit/compiled-routes router))))
