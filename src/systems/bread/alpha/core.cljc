@@ -68,17 +68,6 @@
 (defn profile> [t e]
   (tap> {::profile.type t ::profile e}))
 
-(defn- profile-hook [hook app action args result]
-  ;; TODO fix this
-  (when *profile-hooks*
-    (profile> :profile.type/hook {:hook hook
-                                  :app app
-                                  :action action
-                                  :args args
-                                  :result result
-                                  ;; TODO CLJS
-                                  :millis (.getTime (Date.))})))
-
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
   ;;    APP HELPER FUNCTIONS    ;;
@@ -209,7 +198,14 @@
 (defmacro ^:private try-action [hook app current-action args]
   `(try
      (let [result# (action ~app ~current-action ~args)]
-       (profile-hook ~hook ~app ~current-action ~args result#)
+       (when *profile-hooks*
+         (profile> :profile.type/hook {:hook ~hook
+                                       :app ~app
+                                       :action ~current-action
+                                       :args ~args
+                                       :result result#
+                                       ;; TODO CLJS
+                                       :millis (.getTime (Date.))}))
        result#)
      (catch java.lang.Throwable e#
        ;; If bread core threw this exception, don't wrap it.
