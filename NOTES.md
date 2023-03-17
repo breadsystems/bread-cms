@@ -1,8 +1,12 @@
-# bread.main
+# BREAD NOTES
+
+Notes on potential ideas for Bread. Almost all of this is entirely hypothetical, likely out of date, and almost certainly wrong.
+
+## bread.main
 
 CGI mode is enabled by default when the `GATEWAY_INTERFACE` env var is detected, or if the `--cgi` flag is passed explicitly. Maybe make a `--no-cgi` flag to disable when env var present?
 
-# HTML Cache Logic
+## HTML Cache Logic
 
 For a given set of txs, get the concrete routes that need to be updated on the static frontend.
 
@@ -92,7 +96,7 @@ From here, we have everything we need to simply iterate over our sequence of per
   (bread/handler (assoc res :uri uri ::internal? true)))
 ```
 
-# SITEMAP BRAIN DUMP
+## SITEMAP BRAIN DUMP
 
 This section predates the `cache` implementation.
 
@@ -106,11 +110,11 @@ This section predates the `cache` implementation.
   query back to the route(s) that executes it is something we have to deduce
   at runtime.
 
-## The Main Question
+### The Main Question
 
 How does the caching layer know which files to update when data changes?
 
-## Open Questions
+### Open Questions
 
 * How do we compute the sitemap in the first place?
 * What structure should our sitemap -> routes -> queries -> attributes
@@ -118,7 +122,7 @@ How does the caching layer know which files to update when data changes?
 * Which namespace is responsible for the initial computation?
 * What happens when code changes? Is the whole thing recomputed? (probably)
 
-## THE REAL GOAL
+### THE REAL GOAL
 
 The holy grail is to be able to do our "backpropagation" in constant time:
 
@@ -141,3 +145,34 @@ Something like:
 
 This lets us take an ident like `[:db/id 2]` and follow it via a simple
 `(get-in ...)` to the set of sitemap indices - the nodes to recompile.
+
+## Themes
+
+A theme is a plugin that defines the visual elements (among other things) of a given Bread application. This can be colors, arbitrary styles, even custom components.
+
+Themes are typically built on top of the Bread Pattern Library. That means they use a pre-defined set of components from the standard Pattern Library, extending and customizing them as necessary.
+
+```clojure
+(def hue-primary 262)
+
+(def my-theme
+  {:config
+   {:color/highlight (css/hsl hue-primary 94 82)
+    :color/background-dark (css/hsl hue-primary 10 10)
+    :color/test-main (css/hsl hue-primary 95 98)
+    :color/text-muted (css/hsl hue-primary 13 95)}})
+```
+
+There are helpers for managing CSS colors (and other aspects of style?):
+
+```
+(require '[systems.bread.alpha.util.css as css])
+
+(css/darken (css/hsl 262 95 98) 50)
+;; #hsl [262 95 48]
+
+(css/lighten (css/hsl 262 95 75) 25)
+;; #hsl [262 95 100]
+```
+
+Similar feature set to Sass's [color API](https://sass-lang.com/documentation/modules/color).
