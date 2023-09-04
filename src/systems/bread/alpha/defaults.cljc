@@ -21,6 +21,34 @@
                       (when (:c config) :c)
                       (when (not (false? (:d config))) :d)])))
 
+(defmacro ^:private when-keys [m & kv-pairs]
+  (map (fn [[k v]]
+         `(when (not (false? ~k)) ~v))
+       (partition 2 kv-pairs)))
+
+(comment
+  (macroexpand '(when-keys {:x false
+                            :y {:yes :YES}
+                            :t true
+                            :foo nil}
+                           x (api/plugin x)
+                           y (api/plugin y)
+                           t (api/plugin t)
+                           foo (api/plugin foo))))
+
+(defmethod bread/action ::request-data
+  [req _ _]
+  (assoc req ::bread/data (select-keys req [:uri
+                                            :query-string
+                                            :remote-addr
+                                            :headers
+                                            :server-port
+                                            :server-name
+                                            :content-length
+                                            :content-type
+                                            :scheme
+                                            :request-method])))
+
 (defn plugins [{:keys [datastore
                        routes
                        i18n
@@ -29,11 +57,14 @@
                        plugins]}]
   (let [router (:router routes)
         configured-plugins
-        [(store/plugin datastore)
-         (route/plugin routes)
-         (i18n/plugin i18n)
-         (nav/plugin navigation)
-         (dispatcher/plugin)
+        [{:hooks
+          {::bread/expand
+           [{:action/name ::request-data
+             :action/description "Include standard request data"}]}}
+         (when (not (false? datastore)) (store/plugin datastore))
+         (when (not (false? routes)) (route/plugin routes))
+         (when (not (false? i18n)) (i18n/plugin i18n))
+         (when (not (false? navigation)) (nav/plugin navigation))
          (query/plugin)
          (component/plugin)
          (when (not (false? cache))
