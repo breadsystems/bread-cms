@@ -40,7 +40,7 @@
   ;; NOTE: if you upgrade any of the dependencies here, e.g. reitit, make sure
   ;; you do so below in that dep's standalone alias.
   :cms
-  {:extra-paths ["main" "resources"
+  {:extra-paths ["cms" "resources"
                  "plugins/datahike" "plugins/bidi" "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
