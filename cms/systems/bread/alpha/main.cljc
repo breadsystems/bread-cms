@@ -146,6 +146,16 @@
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/load-handler app))
 
+(defmethod aero/reader 'ig/ref [_ _ value]
+  (ig/ref value))
+
+;; TODO do this in not a jank way...
+(defmethod aero/reader 'router [_ _ args]
+  (apply router/router args))
+
+(defmethod aero/reader 'var [_ _ sym]
+  (resolve sym))
+
 (defn restart! [config]
   (stop!)
   (start! config))
@@ -154,15 +164,7 @@
   (deref system)
   (:http @system)
   (:bread/app @system)
-  (restart! {:http {:port 1312
-                    :handler (ig/ref :bread/handler)}
-             :bread/app {;; TODO
-                         :datastore false
-                         :i18n false
-                         :routes {:router router}
-                         :auth {:session/backend :atom}
-                         :plugins []}
-             :bread/handler (ig/ref :bread/app)})
+  (restart! (-> "dev/cms.edn" aero/read-config))
 
   (defn- response [res]
     (select-keys res [:status :headers :body]))

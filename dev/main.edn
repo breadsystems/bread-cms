@@ -1,0 +1,21 @@
+{:http {:port 1312
+        :handler #ig/ref :bread/handler}
+ :bread/handler #ig/ref :bread/app
+ :bread/app {:datastore false
+             :i18n false
+             :routes
+             {:router #router
+              [["/" {"login" :login
+                     [:lang] {"" :index
+                              ["/" :post/slug] :page}}]
+               ;; TODO :dispatcher.type/ => ::bread/
+               {:index
+                {:dispatcher/type :dispatcher.type/page
+                 :dispatcher/component #var home}
+                :page
+                {:dispatcher/type :dispatcher.type/page
+                 :dispatcher/component #var interior-page}
+                :login
+                {:dispatcher/type :systems.bread.alpha.plugin.auth/login
+                 :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]}
+             :plugins []}}
