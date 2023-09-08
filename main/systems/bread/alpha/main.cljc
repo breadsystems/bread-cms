@@ -9,27 +9,36 @@
     [org.httpkit.server :as http]
     [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.core :as bread])
+    [systems.bread.alpha.core :as bread]
+    ;; TODO load components dynamicaly using sci
+    [systems.bread.alpha.component :refer [defc]])
   (:import
     [java.lang Throwable]
     [java.time LocalDateTime])
   (:gen-class))
 
+(defc login-page
+  [_]
+  {}
+  [:html {:lang "en"}
+   [:head
+    [:meta {:content-type "utf-8"}]
+    [:title "Login | BreadCMS"]]
+   [:body
+    [:h1 "Hi!"]]])
+
 (def router
   (router/router
-    ["/" {[:lang] {"" :index
+    ["/" {"login" :login
+          [:lang] {"" :index
                    ["/" :post/slug] :page}}]
     {:index
      {:dispatcher/type :home}
      :page
-     {:dispatcher/type :dispatcher.type/page}}))
-
-(defn handler [req]
-  (let [match (bread/match router req)]
-    {:status 200
-     :headers {"content-type" "text/html"}
-     :body (prn-str {:dispatcher (bread/dispatcher router match)
-                     :params (bread/params router match)})}))
+     {:dispatcher/type :dispatcher.type/page}
+     :login
+     {:dispatcher/type :login
+      :dispatcher/component login-page}}))
 
 (def status-mappings
   {200 "OK"
@@ -88,7 +97,7 @@
 
 (defn start! [config]
   (let [config (assoc config
-                      :config config
+                      :initial-config config
                       :started-at "This will be initialized by Integrant...")]
     (reset! system (ig/init config))))
 
@@ -97,26 +106,50 @@
     (ig/halt! sys)
     (reset! system nil)))
 
-(defmethod ig/init-key :config [_ config]
+(defmethod ig/init-key :initial-config [_ config]
   config)
 
 (defmethod ig/init-key :started-at [_ local-datetime]
   (LocalDateTime/now))
 
-(defmethod ig/init-key :http [_ {:keys [port]}]
+(defmethod ig/init-key :http [_ {:keys [port handler]}]
   (println "Starting HTTP server on port" port)
-  (http/run-server #'handler {:port port}))
+  (http/run-server handler {:port port}))
 
 (defmethod ig/halt-key! :http [_ stop-server]
   (when-let [prom (stop-server :timeout 100)]
     @prom))
+
+(defmethod ig/init-key :bread/app [_ app-config]
+  (defaults/app app-config))
+
+(defmethod ig/halt-key! :bread/app [_ app]
+  (bread/shutdown app))
+
+(defmethod ig/init-key :bread/handler [_ app]
+  (bread/load-handler app))
 
 (defn restart! [config]
   (stop!)
   (start! config))
 
 (comment
-  (restart! {:http {:port 1312}})
+  (deref system)
+  (:http @system)
+  (:bread/app @system)
+  ((:bread/handler @system) {:uri "/"})
+  (restart! {:http {:port 1312
+                    :handler (ig/ref :bread/handler)}
+             :bread/app {:datastore false
+                         :i18n false
+                         :routes {:router router}
+                         :plugins [#_{:hooks
+                                    {::bread/render
+                                     [{:action/name ::bread/value
+                                       :action/value {:status 200
+                                                      :headers {}
+                                                      :body "Hi"}}]}}]}
+             :bread/handler (ig/ref :bread/app)})
   (-main))
 
 (defn -main [& args]
