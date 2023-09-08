@@ -21,21 +21,6 @@
                       (when (:c config) :c)
                       (when (not (false? (:d config))) :d)])))
 
-(defmacro ^:private when-keys [m & kv-pairs]
-  (map (fn [[k v]]
-         `(when (not (false? ~k)) ~v))
-       (partition 2 kv-pairs)))
-
-(comment
-  (macroexpand '(when-keys {:x false
-                            :y {:yes :YES}
-                            :t true
-                            :foo nil}
-                           x (api/plugin x)
-                           y (api/plugin y)
-                           t (api/plugin t)
-                           foo (api/plugin foo))))
-
 (defmethod bread/action ::request-data
   [req _ _]
   (update req ::bread/data merge (select-keys req [:uri
