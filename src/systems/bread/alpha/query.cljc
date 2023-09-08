@@ -63,6 +63,7 @@
 (defmethod bread/action ::expand-queries
   [{::bread/keys [dispatcher queries data] :as req} _ _]
   (->> queries
+       (filter identity)
        (reduce expand-query data)
        (expand-not-found dispatcher)
        (assoc req ::bread/data)))

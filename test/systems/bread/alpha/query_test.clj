@@ -16,6 +16,11 @@
                 (bread/hook ::bread/expand)
                 ::bread/data))
 
+    {} []
+    {} [nil]
+    {} [nil nil]
+    {} [nil false]
+
     {:my/result false
      :not-found? true}
     [{:query/key :my/result
