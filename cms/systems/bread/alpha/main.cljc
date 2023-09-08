@@ -77,16 +77,14 @@
 (defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
 
-(defn run-as-cgi [_]
+(defn run-as-cgi [{:keys [options]}]
   (try
     ;; TODO this is pretty jank, update to parse HTTP requests properly
-    (let [[uri & _] (clojure.string/split (System/getenv "REQUEST_URI") #"\?")
-          handler (fn [req]
-                    (let [match (bread/match router req)]
-                      {:status 200
-                       :headers {"content-type" "text/html"}
-                       :body (prn-str {:dispatcher (bread/dispatcher router match)
-                                       :params (bread/params router match)})}))
+    (let [[uri & _] (some-> (System/getenv "REQUEST_URI")
+                            (clojure.string/split #"\?"))
+          config (aero/read-config (:file options))
+          system (ig/init config)
+          handler (:bread/handler system)
           req {:uri uri
                :query-string (System/getenv "QUERY_STRING")
                :remote-addr (System/getenv "REMOTE_ADDR")
