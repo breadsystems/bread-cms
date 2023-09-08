@@ -10,7 +10,8 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.component :as component]))
+    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.plugin.auth :as auth]))
 
 (comment
   (let [config {:a true :b false}]
@@ -40,7 +41,8 @@
                        navigation
                        cache
                        plugins
-                       renderer]}]
+                       renderer
+                       auth]}]
   (let [router (:router routes)
         configured-plugins
         [(dispatcher/plugin)
@@ -58,8 +60,8 @@
            (cache/plugin (or cache {:router router
                                     :cache/strategy :html})))
          ;; TODO refine default rendering options...
-         (when (not (false? renderer))
-           (rum/plugin))]]
+         (when (not (false? renderer)) (rum/plugin))
+         (when (not (false? auth)) (auth/plugin auth))]]
     (concat
       (filter identity configured-plugins)
       plugins)))

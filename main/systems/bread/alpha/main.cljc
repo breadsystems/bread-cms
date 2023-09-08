@@ -7,38 +7,49 @@
     [aero.core :as aero]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
+    [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     ;; TODO load components dynamicaly using sci
+    ;; TODO ring middlewares
     [systems.bread.alpha.component :refer [defc]])
   (:import
     [java.lang Throwable]
     [java.time LocalDateTime])
   (:gen-class))
 
-(defc login-page
+(defc home-page
   [_]
   {}
   [:html {:lang "en"}
    [:head
     [:meta {:content-type "utf-8"}]
-    [:title "Login | BreadCMS"]]
+    [:title "Home | BreadCMS"]]
    [:body
-    [:h1 "Hi!"]]])
+    [:h1 "This is the home page!"]]])
+
+(defc interior-page
+  [data]
+  {}
+  [:pre (prn-str data)])
 
 (def router
   (router/router
     ["/" {"login" :login
           [:lang] {"" :index
                    ["/" :post/slug] :page}}]
+    ;; TODO :dispatcher.type/ => ::bread/
     {:index
-     {:dispatcher/type :home}
+     {:dispatcher/type :dispatcher.type/page
+      :dispatcher/component #'home-page}
      :page
-     {:dispatcher/type :dispatcher.type/page}
+     {:dispatcher/type :dispatcher.type/page
+      :dispatcher/component #'interior-page}
      :login
-     {:dispatcher/type :login
-      :dispatcher/component login-page}}))
+     {:dispatcher/type ::auth/login
+      :dispatcher/component #'auth/login-page}}))
 
 (def status-mappings
   {200 "OK"
@@ -70,6 +81,12 @@
   (try
     ;; TODO this is pretty jank, update to parse HTTP requests properly
     (let [[uri & _] (clojure.string/split (System/getenv "REQUEST_URI") #"\?")
+          handler (fn [req]
+                    (let [match (bread/match router req)]
+                      {:status 200
+                       :headers {"content-type" "text/html"}
+                       :body (prn-str {:dispatcher (bread/dispatcher router match)
+                                       :params (bread/params router match)})}))
           req {:uri uri
                :query-string (System/getenv "QUERY_STRING")
                :remote-addr (System/getenv "REMOTE_ADDR")
@@ -137,19 +154,23 @@
   (deref system)
   (:http @system)
   (:bread/app @system)
-  ((:bread/handler @system) {:uri "/"})
   (restart! {:http {:port 1312
                     :handler (ig/ref :bread/handler)}
-             :bread/app {:datastore false
+             :bread/app {;; TODO
+                         :datastore false
                          :i18n false
                          :routes {:router router}
-                         :plugins [#_{:hooks
-                                    {::bread/render
-                                     [{:action/name ::bread/value
-                                       :action/value {:status 200
-                                                      :headers {}
-                                                      :body "Hi"}}]}}]}
+                         :auth {:session/backend :atom}
+                         :plugins []}
              :bread/handler (ig/ref :bread/app)})
+
+  (defn- response [res]
+    (select-keys res [:status :headers :body]))
+
+  (response ((:bread/handler @system) {:uri ""}))
+  (response ((:bread/handler @system) {:uri "/login"}))
+  (response ((:bread/handler @system) {:uri "/en/page"}))
+
   (-main))
 
 (defn -main [& args]
