@@ -38,16 +38,16 @@
 
 (defmethod bread/action ::request-data
   [req _ _]
-  (assoc req ::bread/data (select-keys req [:uri
-                                            :query-string
-                                            :remote-addr
-                                            :headers
-                                            :server-port
-                                            :server-name
-                                            :content-length
-                                            :content-type
-                                            :scheme
-                                            :request-method])))
+  (update req ::bread/data merge (select-keys req [:uri
+                                                   :query-string
+                                                   :remote-addr
+                                                   :headers
+                                                   :server-port
+                                                   :server-name
+                                                   :content-length
+                                                   :content-type
+                                                   :scheme
+                                                   :request-method])))
 
 (defn plugins [{:keys [datastore
                        routes
