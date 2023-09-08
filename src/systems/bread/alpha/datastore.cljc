@@ -197,31 +197,32 @@
   instead."
   [config]
   ;; TODO make these simple keys
-  (let [{:datastore/keys [as-of-format
-                          as-of-param
-                          req->datastore
-                          req->timepoint
-                          initial-txns
-                          migrations]
-         :or {as-of-param :as-of
-              as-of-format "yyyy-MM-dd HH:mm:ss z"
-              req->timepoint db-tx
-              migrations schema/initial}} config
-        connection (try
-                     (connect! config)
-                     (catch clojure.lang.ExceptionInfo e
-                       (when-not (= :db-does-not-exist (:type (ex-data e)))
-                         (throw e))))]
-    {:config
-     {:datastore/config config
-      :datastore/connection connection
-      :datastore/as-of-param as-of-param
-      :datastore/as-of-format as-of-format}
-     :hooks
-     {::bread/init
-      [{:action/name ::migrate :migrations migrations}
-       {:action/name ::transact-initial :txs initial-txns}]
-      :hook/datastore.req->timepoint
-      [{:action/name ::timepoint :req->timepoint req->timepoint}]
-      :hook/datastore
-      [{:action/name ::datastore :req->datastore req->datastore}]}}))
+  (when config
+    (let [{:datastore/keys [as-of-format
+                            as-of-param
+                            req->datastore
+                            req->timepoint
+                            initial-txns
+                            migrations]
+           :or {as-of-param :as-of
+                as-of-format "yyyy-MM-dd HH:mm:ss z"
+                req->timepoint db-tx
+                migrations schema/initial}} config
+          connection (try
+                       (connect! config)
+                       (catch clojure.lang.ExceptionInfo e
+                         (when-not (= :db-does-not-exist (:type (ex-data e)))
+                           (throw e))))]
+      {:config
+       {:datastore/config config
+        :datastore/connection connection
+        :datastore/as-of-param as-of-param
+        :datastore/as-of-format as-of-format}
+       :hooks
+       {::bread/init
+        [{:action/name ::migrate :migrations migrations}
+         {:action/name ::transact-initial :txs initial-txns}]
+        :hook/datastore.req->timepoint
+        [{:action/name ::timepoint :req->timepoint req->timepoint}]
+        :hook/datastore
+        [{:action/name ::datastore :req->datastore req->datastore}]}})))

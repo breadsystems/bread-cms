@@ -301,14 +301,14 @@
 
 (defn shutdown
   "Shuts down the app, removing all ::systems.bread* keys.
-  Runs the :hook/shutdown hook, which is useful e.g. for unmounting long-lived
+  Runs the ::shutdown hook, which is useful e.g. for unmounting long-lived
   application state."
   [app]
   (letfn [(bread-key? [k]
             (and (keyword? k)
                  (string/starts-with?
                    (str (namespace k)) "systems.bread")))]
-    (apply dissoc (hook app :hook/shutdown) (filter bread-key? (keys app)))))
+    (apply dissoc (hook app ::shutdown) (filter bread-key? (keys app)))))
 
 (defn handler
   "Returns a handler function that takes a Ring request and threads it

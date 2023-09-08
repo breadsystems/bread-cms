@@ -26,7 +26,7 @@
                  :post/type :post.type/page}
         match (match req)
         declared (bread/hook req ::dispatcher match)
-        component (bread/hook req ::component match)
+        component (bread/hook req ::component (:dispatcher/component declared))
         {:dispatcher/keys [defaults?]} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
                        :dispatcher.type/page :dispatcher.type/page}
@@ -84,9 +84,9 @@
     [{:action/name ::match :router router}]
     ::dispatcher
     [{:action/name ::dispatcher :router router}]
-    ::component
-    [{:action/name ::component :router router}]
     ::params
     [{:action/name ::params :router router}]
     ::bread/route
-    [{:action/name ::dispatch :router router}]}})
+    [{:action/name ::dispatch :router router}]
+    ::router
+    [{:action/name ::bread/value :action/value router}]}})

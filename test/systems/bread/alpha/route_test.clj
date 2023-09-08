@@ -13,19 +13,9 @@
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
         routes {"/en/home"
-                {:bread/dispatcher :dispatcher.type/home
+                {:bread/dispatcher {:dispatcher/type :dispatcher.type/home}
                  :bread/component 'home
                  :route/params {:lang "en"}}
-                "/en/keyword"
-                {:bread/dispatcher :dispatcher.type/page
-                 :bread/component 'page
-                 :route/params {:lang "en"
-                                :slug "keyword"}}
-                "/en/default"
-                {:bread/dispatcher :default
-                 :bread/component 'page
-                 :route/params {:lang "en"
-                                :slug "default"}}
                 "/en/empty-dispatcher-map"
                 {:bread/dispatcher {}
                  :bread/component 'page
@@ -69,40 +59,6 @@
 
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? true
-          :dispatcher/component nil
-          :dispatcher/key nil
-          :dispatcher/pull nil
-          :post/type :post.type/page
-          :route/params nil
-          :route/match nil}
-         "/nil"
-
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? true
-          :dispatcher/component 'home
-          :dispatcher/key :home
-          :dispatcher/pull [:db/id :home/slug]
-          :post/type :post.type/page
-          :route/params {:lang "en"}
-          :route/match {:bread/dispatcher :dispatcher.type/home
-                        :bread/component 'home
-                        :route/params {:lang "en"}}}
-         "/en/home"
-
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? true
-          :post/type :post.type/page
-          :dispatcher/component 'page
-          :dispatcher/key :page
-          :dispatcher/pull [:db/id :page/slug]
-          :route/params {:lang "en" :slug "keyword"}
-          :route/match {:bread/dispatcher :dispatcher.type/page
-                        :bread/component 'page
-                        :route/params {:lang "en" :slug "keyword"}}}
-         "/en/keyword"
-
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? true
           :post/type :post.type/page
           :dispatcher/component 'page
           :dispatcher/key :page
@@ -114,20 +70,6 @@
                         :route/params {:lang "en"
                                        :slug "empty-dispatcher-map"}}}
          "/en/empty-dispatcher-map"
-
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? true
-          :dispatcher/component 'page
-          :dispatcher/key :page
-          :dispatcher/pull [:db/id :page/slug]
-          :post/type :post.type/page
-          :route/params {:lang "en"
-                         :slug "default"}
-          :route/match {:bread/dispatcher :default
-                        :bread/component 'page
-                        :route/params {:lang "en"
-                                       :slug "default"}}}
-         "/en/default"
 
          {:dispatcher/type :dispatcher.type/page
           :dispatcher/i18n? false

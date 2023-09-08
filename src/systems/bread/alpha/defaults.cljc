@@ -39,7 +39,8 @@
                        i18n
                        navigation
                        cache
-                       plugins]}]
+                       plugins
+                       renderer]}]
   (let [router (:router routes)
         configured-plugins
         [(dispatcher/plugin)
@@ -55,7 +56,10 @@
          (component/plugin)
          (when (not (false? cache))
            (cache/plugin (or cache {:router router
-                                    :cache/strategy :html})))]]
+                                    :cache/strategy :html})))
+         ;; TODO refine default rendering options...
+         (when (not (false? renderer))
+           (rum/plugin))]]
     (concat
       (filter identity configured-plugins)
       plugins)))

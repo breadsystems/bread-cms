@@ -81,5 +81,6 @@
                  (bread/params [_ match]
                    (:route/params match))
                  (bread/dispatcher [_ match]
-                   (:bread/dispatcher match)))]
+                   (assoc (:bread/dispatcher match)
+                          :dispatcher/component (:bread/component match))))]
     (route/plugin {:router router})))
