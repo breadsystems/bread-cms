@@ -186,7 +186,8 @@
                      (:bread/dispatcher match)))
           app (defaults/app {:datastore config
                              :routes {:router router}
-                             :i18n {:supported-langs #{:en :fr}}})
+                             :i18n {:supported-langs #{:en :fr}}
+                             :renderer false})
           handler (bread/load-handler app)]
       (are
         [expected res]
