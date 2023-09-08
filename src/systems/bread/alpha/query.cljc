@@ -49,7 +49,8 @@
   (entity? {:db/id 123})
 
   (butlast [:x])
-  (populate-in {} [:x] :y))
+  (populate-in {} [:x] :y)
+  (populate-in {:a :A} [:x] :y))
 
 (defn- expand-query [data query]
   (populate-in data (:query/key query) (bread/query query data)))
@@ -60,9 +61,10 @@
     data))
 
 (defmethod bread/action ::expand-queries
-  [{::bread/keys [dispatcher queries] :as req} _ _]
+  [{::bread/keys [dispatcher queries data] :as req} _ _]
   (->> queries
-       (reduce expand-query {})
+       (filter identity)
+       (reduce expand-query data)
        (expand-not-found dispatcher)
        (assoc req ::bread/data)))
 

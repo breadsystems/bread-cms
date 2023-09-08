@@ -39,6 +39,7 @@
     ;; Short-circuit the rest of the lifecycle.
     (dispatcher req)
     (let [{:keys [queries data effects hooks]} (dispatch req)
+          ;; TODO short-circuit here if we got a response...?
           hooks (filter (comp seq val) hooks)]
       (-> req
           (update ::bread/data merge data)
