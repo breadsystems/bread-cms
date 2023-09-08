@@ -57,7 +57,8 @@
                        plugins]}]
   (let [router (:router routes)
         configured-plugins
-        [{:hooks
+        [(dispatcher/plugin)
+         {:hooks
           {::bread/expand
            [{:action/name ::request-data
              :action/description "Include standard request data"}]}}
