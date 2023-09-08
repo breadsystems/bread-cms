@@ -24,7 +24,6 @@
   (let [default {:dispatcher/i18n? true
                  :dispatcher/type :dispatcher.type/page
                  :post/type :post.type/page}
-        router (bread/hook req ::router)
         match (match req)
         declared (bread/hook req ::dispatcher match)
         component (bread/hook req ::component (:dispatcher/component declared))
@@ -67,7 +66,6 @@
 
 (defmethod bread/action ::component
   [_ _ [match]]
-  (prn 'action/component match)
   (:bread/component match))
 
 (defmethod bread/action ::params
