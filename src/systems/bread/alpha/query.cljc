@@ -57,6 +57,7 @@
 
 (defn- expand-not-found [dispatcher data]
   (if-let [k (:dispatcher/key dispatcher)]
+    ;; TODO expose this as a hook
     (assoc data :not-found? (not (get-at data k)))
     data))
 

@@ -40,12 +40,15 @@
                        i18n
                        navigation
                        cache
-                       plugins
+                       components
                        renderer
-                       auth]}]
+                       auth
+                       plugins]}]
   (let [router (:router routes)
         configured-plugins
         [(dispatcher/plugin)
+         (query/plugin)
+         (component/plugin components)
          {:hooks
           {::bread/expand
            [{:action/name ::request-data
@@ -54,8 +57,6 @@
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))
-         (query/plugin)
-         (component/plugin)
          (when (not (false? cache))
            (cache/plugin (or cache {:router router
                                     :cache/strategy :html})))

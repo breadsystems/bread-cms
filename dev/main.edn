@@ -3,8 +3,8 @@
  :bread/handler #ig/ref :bread/app
  :bread/app {:datastore #ig/ref :bread/datastore
              :i18n false
-             :routes
-             {:router #ig/ref :bread/router}
+             :routes {:router #ig/ref :bread/router}
+             :components {:not-found #var not-found}
              :plugins []}
  :bread/datastore {:datastore/type :datahike
                    :store {:backend :mem

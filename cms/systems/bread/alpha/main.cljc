@@ -21,10 +21,16 @@
     [java.time LocalDateTime])
   (:gen-class))
 
+(defc not-found
+  [{:keys [lang]}]
+  {}
+  [:html {:lang lang}
+   [:p "404"]])
+
 (defc home-page
-  [_]
+  [{:keys [lang]}]
   {:key :post}
-  [:html {:lang "en"}
+  [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
     [:title "Home | BreadCMS"]]
