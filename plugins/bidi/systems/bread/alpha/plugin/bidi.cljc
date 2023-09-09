@@ -9,7 +9,9 @@
     (let [params (interleave (keys params) (vals params))]
       (apply bidi/path-for routes route-name params)))
   (bread/match [this req]
-    (bidi/match-route routes (:uri req)))
+    (let [ks (filter (complement namespace) (keys req))
+          options (interleave ks (map req ks))]
+      (apply bidi/match-route routes (:uri req) options)))
   (bread/dispatcher [this match]
     (get dispatchers (:handler match)))
   (bread/params [this match]
