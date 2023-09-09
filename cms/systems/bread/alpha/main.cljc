@@ -15,7 +15,8 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.bidi :as router])
+    [systems.bread.alpha.plugin.bidi :as router]
+    [systems.bread.alpha.plugin.datahike])
   (:import
     [java.lang Throwable]
     [java.time LocalDateTime])
