@@ -1,11 +1,17 @@
 {:http {:port 1312
         :handler #ig/ref :bread/handler}
  :bread/handler #ig/ref :bread/app
- :bread/app {:datastore false
+ :bread/app {:datastore #ig/ref :bread/datastore
              :i18n false
              :routes
              {:router #ig/ref :bread/router}
              :plugins []}
+ :bread/datastore {:datastore/type :datahike
+                   :store {:backend :mem
+                           :id "bread-db"}
+                   :datastore/migrations #deref #var systems.bread.alpha.schema/initial
+                   ;; TODO
+                   :datastore/initial-txns []}
  :bread/router
  #router
  [["/" {"login"

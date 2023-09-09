@@ -7,14 +7,15 @@
     [aero.core :as aero]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.bidi :as router]
-    [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.dispatcher :as dispatcher]
-    ;; TODO load components dynamicaly using sci
     ;; TODO ring middlewares
-    [systems.bread.alpha.component :refer [defc]])
+    [systems.bread.alpha.core :as bread]
+    ;; TODO load components dynamicaly using sci
+    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.bidi :as router])
   (:import
     [java.lang Throwable]
     [java.time LocalDateTime])
@@ -119,6 +120,10 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
+(defmethod ig/init-key :bread/datastore [_ db-config]
+  (store/create-database! db-config)
+  (assoc db-config :datastore/connection (store/connect! db-config)))
+
 (defmethod ig/init-key :bread/router [_ router]
   router)
 
@@ -140,6 +145,9 @@
 (defmethod aero/reader 'var [_ _ sym]
   (resolve sym))
 
+(defmethod aero/reader 'deref [_ _ v]
+  (deref v))
+
 (defn restart! [config]
   (stop!)
   (start! config))
@@ -149,6 +157,7 @@
   (:http @system)
   (:bread/app @system)
   (:bread/router @system)
+  (:bread/datastore @system)
   (restart! (-> "dev/main.edn" aero/read-config))
 
   (defn- response [res]
@@ -161,7 +170,7 @@
   (bread/match (:bread/router @system) {:uri "/login"
                                         :request-method :post})
 
-  (response ((:bread/handler @system) {:uri ""}))
+  (response ((:bread/handler @system) {:uri "/en"}))
   (response ((:bread/handler @system) {:uri "/login"}))
   (response ((:bread/handler @system) {:uri "/en/page"}))
 
