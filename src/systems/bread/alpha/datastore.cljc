@@ -8,6 +8,7 @@
 (defmulti connect! :datastore/type)
 (defmulti create-database! (fn [config & _]
                              (:datastore/type config)))
+;; TODO is this fn needed?
 (defmulti install! (fn [config & _]
                      (:datastore/type config)))
 (defmulti installed? :datastore/type)
@@ -198,7 +199,8 @@
   [config]
   ;; TODO make these simple keys
   (when config
-    (let [{:datastore/keys [as-of-format
+    (let [{:datastore/keys [connection
+                            as-of-format
                             as-of-param
                             req->datastore
                             req->timepoint
@@ -207,12 +209,13 @@
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z"
                 req->timepoint db-tx
-                migrations schema/initial}} config
-          connection (try
-                       (connect! config)
-                       (catch clojure.lang.ExceptionInfo e
-                         (when-not (= :db-does-not-exist (:type (ex-data e)))
-                           (throw e))))]
+                migrations schema/initial
+                connection
+                (try
+                  (connect! config)
+                  (catch clojure.lang.ExceptionInfo e
+                    (when-not (= :db-does-not-exist (:type (ex-data e)))
+                      (throw e))))}} config]
       {:config
        {:datastore/config config
         :datastore/connection connection

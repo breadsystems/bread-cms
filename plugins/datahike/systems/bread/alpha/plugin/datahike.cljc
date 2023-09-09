@@ -242,6 +242,7 @@
           (d/delete-database config)
           (d/create-database config))))))
 
+;; TODO rm?
 (defmethod store/install! :datahike [config & [{:keys [force?]}]]
   (store/create-database! config {:force? force?}))
 
