@@ -55,19 +55,20 @@
 (defn- expand-query [data query]
   (populate-in data (:query/key query) (bread/query query data)))
 
-(defn- expand-not-found [dispatcher data]
-  (if-let [k (:dispatcher/key dispatcher)]
-    ;; TODO expose this as a hook
-    (assoc data :not-found? (not (get-at data k)))
-    data))
-
 (defmethod bread/action ::expand-queries
   [{::bread/keys [dispatcher queries data] :as req} _ _]
   (->> queries
        (filter identity)
        (reduce expand-query data)
-       (expand-not-found dispatcher)
        (assoc req ::bread/data)))
+
+(defmethod bread/action ::expand-not-found
+  [{::bread/keys [dispatcher data] :as req} _ _]
+  (let [k (:dispatcher/key dispatcher)
+        not-found? (and k (not (get-at data k)))]
+    (assoc-in req [::bread/data :not-found?]
+              (bread/hook req ::not-found? not-found?)))
+  )
 
 (defn add
   "Add query to the vector of queries to be run."
@@ -85,4 +86,7 @@
    {::bread/expand
     [{:action/name ::expand-queries
       :action/description
-      "Expand ::bread/queries into their respective results"}]}})
+      "Expand ::bread/queries into their respective results"}
+     {:action/name ::expand-not-found
+      :action/description
+      "Record whether the main content was found"}]}})
