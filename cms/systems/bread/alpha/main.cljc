@@ -135,6 +135,9 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
+(defmethod ig/init-key :bread/router [_ router]
+  router)
+
 (defmethod ig/init-key :bread/app [_ app-config]
   (defaults/app app-config))
 
@@ -147,7 +150,6 @@
 (defmethod aero/reader 'ig/ref [_ _ value]
   (ig/ref value))
 
-;; TODO do this in not a jank way...
 (defmethod aero/reader 'router [_ _ args]
   (apply router/router args))
 
@@ -162,10 +164,18 @@
   (deref system)
   (:http @system)
   (:bread/app @system)
-  (restart! (-> "dev/cms.edn" aero/read-config))
+  (:bread/router @system)
+  (restart! (-> "dev/main.edn" aero/read-config))
 
   (defn- response [res]
     (select-keys res [:status :headers :body]))
+
+  (bread/match (:bread/router @system) {:uri "/en"
+                                        :request-method :get})
+  (bread/match (:bread/router @system) {:uri "/login"
+                                        :request-method :get})
+  (bread/match (:bread/router @system) {:uri "/login"
+                                        :request-method :post})
 
   (response ((:bread/handler @system) {:uri ""}))
   (response ((:bread/handler @system) {:uri "/login"}))
