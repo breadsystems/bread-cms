@@ -22,7 +22,7 @@
   ;; TODO :dispatcher.type/ => ::bread/
   {:index
    {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var home}
+    :dispatcher/component #var home-page}
    :page
    {:dispatcher/type :dispatcher.type/page
     :dispatcher/component #var interior-page}

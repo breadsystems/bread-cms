@@ -23,7 +23,7 @@
 
 (defc home-page
   [_]
-  {}
+  {:key :post}
   [:html {:lang "en"}
    [:head
     [:meta {:content-type "utf-8"}]
