@@ -35,22 +35,6 @@
   {}
   [:pre (prn-str data)])
 
-(def router
-  (router/router
-    ["/" {"login" :login
-          [:lang] {"" :index
-                   ["/" :post/slug] :page}}]
-    ;; TODO :dispatcher.type/ => ::bread/
-    {:index
-     {:dispatcher/type :dispatcher.type/page
-      :dispatcher/component #'home-page}
-     :page
-     {:dispatcher/type :dispatcher.type/page
-      :dispatcher/component #'interior-page}
-     :login
-     {:dispatcher/type ::auth/login
-      :dispatcher/component #'auth/login-page}}))
-
 (def status-mappings
   {200 "OK"
    400 "Bad Request"
