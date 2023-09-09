@@ -143,7 +143,10 @@
   (apply router/router args))
 
 (defmethod aero/reader 'var [_ _ sym]
-  (resolve sym))
+  (let [var* (resolve sym)]
+    (when-not (var? var*)
+      (throw (ex-info (str sym " does not resolve to a var") {:symbol sym})))
+    var*))
 
 (defmethod aero/reader 'deref [_ _ v]
   (deref v))
