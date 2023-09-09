@@ -129,13 +129,13 @@
   router)
 
 (defmethod ig/init-key :bread/app [_ app-config]
-  (defaults/app app-config))
+  (bread/load-app (defaults/app app-config)))
 
 (defmethod ig/halt-key! :bread/app [_ app]
   (bread/shutdown app))
 
 (defmethod ig/init-key :bread/handler [_ app]
-  (bread/load-handler app))
+  (bread/handler app))
 
 (defmethod aero/reader 'ig/ref [_ _ value]
   (ig/ref value))
