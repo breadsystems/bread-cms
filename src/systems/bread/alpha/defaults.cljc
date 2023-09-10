@@ -22,6 +22,68 @@
                       (when (:c config) :c)
                       (when (not (false? (:d config))) :d)])))
 
+(def initial-data
+  [{:db/id "page.home"
+    :post/type :post.type/page
+    :post/slug ""
+    :post/status :post.status/published
+    :post/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/content (prn-str "The Title")}
+      {:field/key :title
+       :field/lang :fr
+       :field/content (prn-str "Le Titre")}}}
+   {:db/id "page.child"
+    :post/type :post.type/page
+    :post/slug "child-page"
+    :post/status :post.status/published
+    :post/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/content (prn-str "Child")}
+      {:field/key :title
+       :field/lang :fr
+       :field/content (prn-str "Enfant")}}}
+   {:db/id "page.sister"
+    :post/type :post.type/page
+    :post/slug "sister-page"
+    :post/status :post.status/draft
+    :post/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/content (prn-str "Sister")}
+      {:field/key :title
+       :field/lang :fr
+       :field/content (prn-str "Soeur")}}}
+   {:db/id "page.parent"
+    :post/type :post.type/page
+    :post/slug "parent-page"
+    :post/children ["page.child"]
+    :post/status :post.status/published
+    :post/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/content (prn-str "Parent Page")}
+      {:field/key :title
+       :field/lang :fr
+       :field/content (prn-str "La Page Parent")}}}
+
+   ;; Site-wide translations
+   #:i18n{:lang :en
+          :key :not-found
+          :string "404 Not Found"}
+   #:i18n{:lang :fr
+          :key :not-found
+          :string "404 Pas Trouvé"}
+   #:i18n{:lang :fr
+          :key :breadbox
+          :string "Boite à pain"}
+   #:i18n{:lang :en
+          :key :breadbox
+          :string "Breadbox"}
+   ])
+
 (defmethod bread/action ::request-data
   [req _ _]
   (update req ::bread/data merge (select-keys req [:uri
