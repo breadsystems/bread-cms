@@ -310,7 +310,7 @@
                                :bread.migration/posts}}))
 
 (def
-  ^{:doc "Schema for users and roles."}
+  ^{:doc "Schema for users, roles, and sessions."}
   users
   (with-meta
     [{:db/id  "migration.users"
@@ -372,6 +372,24 @@
       :attr/migration "migration.users"}
      {:db/ident :ability/name
       :db/doc "The human-readable name for an ability"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+
+     ;; Sessions
+     {:db/ident :session/uuid
+      :db/doc "Session identifier."
+      :db/valueType :db.type/uuid
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :session/user
+      :db/doc "The user this session belongs to."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :session/data
+      :db/doc "Arbitrary session data."
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}]
