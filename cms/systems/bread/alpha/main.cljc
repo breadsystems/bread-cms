@@ -205,6 +205,75 @@
     (bread/hook $ ::bread/render)
     (select-keys $ [:status :body :headers]))
 
+  ;; SITEMAP DESIGN
+
+  ;; OK, algorithm time.
+  ;; We can query for every :db/ident in the database:
+  (require '[systems.bread.alpha.util.datalog :as datalog])
+  (def idents
+    (map :db/ident (datalog/attrs (store/datastore (->app $req)))))
+
+  ;; Now we can scan a given route for db idents...
+  (def route
+    ;; TODO where to map :lang -> :field/lang
+    ["/" :field/lang :post/slug])
+  (def route-idents
+    (filter (set idents) route))
+
+  ;; Before the next step, we query for all refs in the db:
+  (def refs
+    (datalog/attrs-by-type (store/datastore (->app $req)) :db.type/ref))
+  ;; And, while we're at it, define a query helper:
+  (defn q [& args]
+    (apply
+      store/q
+      (store/datastore (->app $req))
+      args))
+
+  ;; One more thing: we need to keep track of the attrs we've seen so far:
+  (def seen
+    #{:field/lang})
+
+  ;; Now, query the db for all entities in the db with refs
+  ;; to entities with the first attr:
+  (defn adjacent-attrs [ident ref-attrs]
+    (reduce (fn [m ref-attr]
+              (let [entities
+                    (map first
+                         (q '{:find [(pull ?e [*])]
+                              :in [$ ?ident ?ref]
+                              :where [[?referenced ?ident]
+                                      [?e ?ref ?referenced]]}
+                            ident
+                            ref-attr
+                            ))]
+                (if (seq entities)
+                  (assoc m ref-attr (set (flatten (map keys entities))))
+                  m)))
+            {} ref-attrs))
+  (def adjacents
+    (adjacent-attrs (first route-idents) refs))
+
+  ;; Next, gather up all attrs (not including) ones we've already seen in the
+  ;; entities we just queried:
+  (defn find-path [entities seen next-attr]
+    (reduce (fn [path [ref-attr attrs]]
+              (when (contains? attrs next-attr)
+                (reduced [ref-attr next-attr])))
+            [] entities))
+  (def path
+    (find-path adjacents seen :post/slug))
+  (def full-path
+    (vec (concat [:field/lang] path)))
+
+  ;; We've now found the path between :field/lang and :post/slug, the only two
+  ;; attrs in our route definition. So, we can stop looking in this case. But,
+  ;; if there were more attrs in the route or if we hadn't found it, we could
+  ;; simply add the adjacent attrs we just found to seen, and explore each of
+  ;; those (via references) recursively...
+
+  ;; /experiment
+
   (-main))
 
 (defn -main [& args]
