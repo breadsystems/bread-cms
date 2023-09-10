@@ -183,22 +183,22 @@
   (response ((:bread/handler @system) {:uri "/login"}))
   (response ((:bread/handler @system) {:uri "/en/page"}))
 
-  (defn ->req [& {:as opts}]
-    (when-let [app (:bread/app @system)] (merge app opts)))
-  (def $req (->req :uri "/en"))
-  (as-> $req $
+  (defn ->app [req]
+    (when-let [app (:bread/app @system)] (merge app req)))
+  (def $req {:uri "/en"})
+  (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (::bread/dispatcher $))
-  (as-> $req $
+  (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (::bread/queries $))
-  (as-> $req $
+  (as-> (->app  $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
-  (as-> $req $
+  (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
     (bread/hook $ ::bread/expand)
