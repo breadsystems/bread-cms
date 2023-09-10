@@ -67,8 +67,7 @@
   (let [k (:dispatcher/key dispatcher)
         not-found? (and k (not (get-at data k)))]
     (assoc-in req [::bread/data :not-found?]
-              (bread/hook req ::not-found? not-found?)))
-  )
+              (bread/hook req ::not-found? not-found?))))
 
 (defn add
   "Add query to the vector of queries to be run."

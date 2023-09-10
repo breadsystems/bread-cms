@@ -16,10 +16,10 @@
                 (bread/hook ::bread/expand)
                 ::bread/data))
 
-    {} []
-    {} [nil]
-    {} [nil nil]
-    {} [nil false]
+    {:not-found? nil} []
+    {:not-found? nil} [nil]
+    {:not-found? nil} [nil nil]
+    {:not-found? nil} [nil false]
 
     {:my/result false
      :not-found? true}

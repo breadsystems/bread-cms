@@ -85,13 +85,10 @@
 
 (use-datastore :each config)
 
-(defc layout [{:keys [content not-found? i18n]}]
+(defc layout [{:keys [content]}]
   {}
   [:body
-   (if not-found?
-     [:main
-      (:not-found i18n)]
-     content)])
+   content])
 
 (defc home [{:keys [post]}]
   {:query [{:post/fields [:field/key :field/content]}]
@@ -114,8 +111,7 @@
      [:p (:hello simple)]]))
 
 (defc not-found [{:keys [i18n]}]
-  {}
-  (prn 'YES 'NOT)
+  {:extends layout}
   [:main (:not-found i18n)])
 
 (deftest test-app-lifecycle
@@ -164,16 +160,14 @@
                   "/en/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page
-                                      :dispatcher/not-found-component not-found}
+                                      :dispatcher/component page}
                    :bread/component page
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page
-                                      :dispatcher/not-found-component not-found}
+                                      :dispatcher/component page}
                    :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
@@ -185,6 +179,7 @@
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
           app (defaults/app {:datastore config
+                             :components {:not-found not-found}
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}
                              :renderer false})
