@@ -15,27 +15,35 @@
 (defc login-page
   [{:keys [session] :as data}]
   {}
-  [:html {:lang "en"}
-   [:head
-    [:meta {:content-type "utf-8"}]
-    [:title "Login | BreadCMS"]
-    #_ ;; TODO styles lol
-    [:link {:href "/css/style.css" :rel :stylesheet}]]
-   [:body
-    [:h1 "Login"]
-    [:h2 (:user/name (:user session))]
-    [:form {:name :bread-login :method :post}
-     [:div
-      [:label {:for :user}
-       "Username"]
-      [:input {:id :user :type :text :name :username}]]
-     [:div
-      [:label {:for :password}
-       "Password"]
-      [:input {:id :password :type :password :name :password}]]
-     [:div
-      [:button {:type :submit}
-       "Login"]]]]])
+  (let [user (:user session)]
+    [:html {:lang "en"}
+     [:head
+      [:meta {:content-type "utf-8"}]
+      [:title "Login | BreadCMS"]
+      #_ ;; TODO styles lol
+      [:link {:href "/css/style.css" :rel :stylesheet}]]
+     [:body
+      (if user
+        [:main
+         [:h2 "Welcome, " (:user/username (:user session))]
+         [:form {:name :bread-logout :method :post}
+          [:div
+           [:button {:type :submit :name :submit :value "logout"}
+            "Logout"]]]]
+        [:main
+         [:h1 "Login"]
+         [:form {:name :bread-login :method :post}
+          [:div
+           [:label {:for :user}
+            "Username"]
+           [:input {:id :user :type :text :name :username}]]
+          [:div
+           [:label {:for :password}
+            "Password"]
+           [:input {:id :password :type :password :name :password}]]
+          [:div
+           [:button {:type :submit}
+            "Login"]]]])]]))
 
 (defmethod bread/action ::set-session
   [{{{:keys [valid user]} :auth/result} ::bread/data :keys [session] :as res}
@@ -51,12 +59,7 @@
     (cond-> res
       true (assoc :session session :status (if succeeded? 302 401))
       ;; TODO make redirect configurable
-      succeeded? (assoc-in [:headers "Location"] "/"))))
-
-;; TODO do we really need a separate dispatcher??
-(defmethod dispatcher/dispatch ::login-page
-  [{:keys [params]}]
-  {})
+      succeeded? (assoc-in [:headers "Location"] "/login"))))
 
 (defmethod bread/query ::authenticate
   [{:keys [plaintext-password]} {:auth/keys [user]}]
@@ -71,32 +74,47 @@
         (assoc result :user (dissoc user :user/password))
         result))))
 
+(defmethod bread/action ::logout [res _ _]
+  (-> res
+      (assoc :session nil :status 302)
+      ;; TODO configure redirect
+      (assoc-in [:headers "Location"] "/login")))
+
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method] :as req}]
-  ;; TODO figure out how to do this at the routing level w/ Bidi
-  {:queries
-   [{:query/name ::store/query
-     :query/key :auth/user
-     :query/db (store/datastore req)
-     :query/args
-     ['{:find [(pull ?e [:db/id
-                         :user/username
-                         :user/email
-                         :user/password
-                         :user/name
-                         :user/lang
-                         :user/slug]) .]
-        :in [$ ?username]
-        :where [[?e :user/username ?username]]}
-      (:username params)]}
-    {:query/name ::authenticate
-     :query/key :auth/result
-     :plaintext-password (:password params)}]
-   :hooks
-   {::bread/response
-    [{:action/name ::set-session
-      :action/description "Set :session in Ring response."
-      :count-failed-logins? (bread/config req :auth/count-failed-logins?)}]}})
+  (cond
+    (and (= :post request-method) (= "logout" (:submit params)))
+    {:hooks
+     {::bread/response
+      [{:action/name ::logout
+        :action/description "Unset :session in Ring response."}]}}
+
+    (and (= :post request-method))
+    {:queries
+     [{:query/name ::store/query
+       :query/key :auth/user
+       :query/db (store/datastore req)
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :user/username
+                           :user/email
+                           :user/password
+                           :user/name
+                           :user/lang
+                           :user/slug]) .]
+          :in [$ ?username]
+          :where [[?e :user/username ?username]]}
+        (:username params)]}
+      {:query/name ::authenticate
+       :query/key :auth/result
+       :plaintext-password (:password params)}]
+     :hooks
+     {::bread/response
+      [{:action/name ::set-session
+        :action/description "Set :session in Ring response."
+        :count-failed-logins? (bread/config req :auth/count-failed-logins?)}]}}
+
+    :default {}))
 
 (defn plugin
   ([]

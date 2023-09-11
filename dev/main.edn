@@ -21,14 +21,13 @@
   :datastore/initial-txns
   #concat [#deref #var systems.bread.alpha.defaults/initial-data
            [{:user/username "coby"
+             :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
              :user/lang :en-US}]]}
  :bread/router
  #router
- [["/" {"login"
-        {:get :login-page
-         :post :login}
+ [["/" {"login" :login
         [:lang] {"" :index
                  ["/" :post/slug] :page}}]
   ;; TODO :dispatcher.type/ => ::bread/
@@ -40,7 +39,4 @@
     :dispatcher/component #var interior-page}
    :login
    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
-    :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}
-   :login-page
-   {:dispatcher/type :systems.bread.alpha.plugin.auth/login-page
     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]}
