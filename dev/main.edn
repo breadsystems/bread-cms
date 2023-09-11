@@ -22,7 +22,8 @@
   #concat [#deref #var systems.bread.alpha.defaults/initial-data
            [{:user/username "coby"
              :user/email "coby@bread.systems"
-             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]}]]}
+             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             :user/lang :en-US}]]}
  :bread/router
  #router
  [["/" {"login"

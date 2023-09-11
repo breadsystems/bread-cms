@@ -50,6 +50,7 @@
                   succeeded? {:user user})]
     (cond-> res
       true (assoc :session session :status (if succeeded? 302 401))
+      ;; TODO make redirect configurable
       succeeded? (assoc-in [:headers "Location"] "/"))))
 
 ;; TODO do we really need a separate dispatcher??
@@ -83,6 +84,7 @@
                          :user/email
                          :user/password
                          :user/name
+                         :user/lang
                          :user/slug]) .]
         :in [$ ?username]
         :where [[?e :user/username ?username]]}
