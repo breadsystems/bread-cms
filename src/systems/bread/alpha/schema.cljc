@@ -344,6 +344,12 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/lang
+      :db/doc "The user's preferred language, as a keyword"
+      :db/valueType :db.type/keyword
+      :db/unique :db.unique/value
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/slug
       :db/doc "The user's slugified name for use in URLs"
       :db/valueType :db.type/string
