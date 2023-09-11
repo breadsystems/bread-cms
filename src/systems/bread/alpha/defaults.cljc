@@ -119,15 +119,6 @@
         [(dispatcher/plugin)
          (query/plugin)
          (component/plugin components)
-         {:hooks
-          {::bread/expand
-           [{:action/name ::request-data
-             :action/description "Include standard request data"}]}}
-         {:hooks
-          {::bread/response
-           [{:action/name ::response
-             :action/description "Sensible defaults for Ring responses"
-             :default-content-type default-content-type}]}}
          (when (not (false? datastore)) (store/plugin datastore))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
@@ -137,7 +128,15 @@
                                     :cache/strategy :html})))
          ;; TODO refine default rendering options...
          (when (not (false? renderer)) (rum/plugin))
-         (when (not (false? auth)) (auth/plugin auth))]]
+         (when (not (false? auth)) (auth/plugin auth))
+         {:hooks
+          {::bread/expand
+           [{:action/name ::request-data
+             :action/description "Include standard request data"}]
+           ::bread/response
+           [{:action/name ::response
+             :action/description "Sensible defaults for Ring responses"
+             :default-content-type default-content-type}]}}]]
     (concat
       (filter identity configured-plugins)
       plugins)))
