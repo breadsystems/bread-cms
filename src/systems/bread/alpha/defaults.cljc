@@ -86,16 +86,21 @@
 
 (defmethod bread/action ::request-data
   [req _ _]
-  (update req ::bread/data merge (select-keys req [:uri
-                                                   :query-string
-                                                   :remote-addr
-                                                   :headers
-                                                   :server-port
-                                                   :server-name
-                                                   :content-length
-                                                   :content-type
-                                                   :scheme
-                                                   :request-method])))
+  (let [req-keys [:uri
+                  :query-string
+                  :remote-addr
+                  :headers
+                  :server-port
+                  :server-name
+                  :content-length
+                  :content-type
+                  :scheme
+                  :request-method]]
+    (as-> req $
+        (update $ ::bread/data merge (select-keys req req-keys))
+        ;; Reset headers - we're working on a response now.
+        (apply dissoc $ req-keys)
+        (assoc $ :headers {}))))
 
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]

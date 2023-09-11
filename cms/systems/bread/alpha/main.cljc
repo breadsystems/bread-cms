@@ -197,7 +197,7 @@
   (restart! (-> "dev/main.edn" aero/read-config))
 
   (defn- response [res]
-    (select-keys res [:status :headers :body]))
+    (select-keys res [:status :headers :body :session]))
 
   (bread/match (:bread/router @system) {:uri "/en"
                                         :request-method :get})
@@ -208,6 +208,10 @@
 
   (response ((:bread/handler @system) {:uri "/en"}))
   (response ((:bread/handler @system) {:uri "/login"}))
+  (response ((:bread/handler @system) {:uri "/login"
+                                       :request-method :post
+                                       :params {:username "coby"
+                                                :password "hello"}}))
   (response ((:bread/handler @system) {:uri "/en/page"}))
 
   (defn ->app [req]

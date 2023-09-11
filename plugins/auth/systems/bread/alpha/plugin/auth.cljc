@@ -11,7 +11,7 @@
   (hashers/derive pw {:alg algo}))
 
 (defc login-page
-  [{:auth/keys [i18n] :keys [session]}]
+  [{:keys [session] :as data}]
   {}
   [:html {:lang "en"}
    [:head
@@ -20,13 +20,13 @@
     #_ ;; TODO styles lol
     [:link {:href "/css/style.css" :rel :stylesheet}]]
    [:body
-    [:h1 (:auth/hello i18n)]
-    [:h2 (:user/name session)]
+    [:h1 "Login"]
+    [:h2 (:user/name (:user session))]
     [:form {:name :bread-login :method :post}
      [:div
       [:label {:for :user}
-       "Username/email"]
-      [:input {:id :user :type :email :name :user}]]
+       "Username"]
+      [:input {:id :user :type :text :name :username}]]
      [:div
       [:label {:for :password}
        "Password"]
@@ -35,58 +35,72 @@
       [:button {:type :submit}
        "Login"]]]]])
 
-(defonce ^:private session-store (atom {}))
+(defmethod bread/action ::set-session
+  [{{{:keys [valid user]} :auth/result} ::bread/data :keys [session] :as res}
+   {:keys [count-failed-logins?]} _]
+  (let [succeeded? (and valid user)
+        session (cond
+                  (and count-failed-logins? (not succeeded?))
+                  (-> {:failed-attempt-count 0}
+                      (merge session)
+                      (update :failed-attempt-count inc))
+                  (not succeeded?) (merge {} session)
+                  succeeded? {:user user})]
+    (cond-> res
+      true (assoc :session session :status (if succeeded? 302 401))
+      succeeded? (assoc-in [:headers "Location"] "/"))))
 
-(defmethod bread/effect ::create-session
-  [effect {:keys [session]}]
-  (swap! session-store assoc (:session/key session) session))
+;; TODO do we really need a separate dispatcher??
+(defmethod dispatcher/dispatch ::login-page
+  [{:keys [params]}]
+  {})
 
-(defmethod bread/query ::session
-  [query _]
-  (get @session-store (:session/key query)))
-
-(comment
-  (deref session-store)
-  (reset! session-store {}))
+(defmethod bread/query ::authenticate
+  [{:keys [plaintext-password]} {:auth/keys [user]}]
+  (if-not user
+    {:valid false :update :false}
+    (let [encrypted (or (:user/password user) "")
+          result (try
+                   (hashers/verify plaintext-password encrypted)
+                   (catch clojure.lang.ExceptionInfo e
+                     {:valid false :update false}))]
+      (if (:valid result)
+        (assoc result :user (dissoc user :user/password))
+        result))))
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method] :as req}]
   ;; TODO figure out how to do this at the routing level w/ Bidi
-  (if (= :post request-method)
-    {:data {:auth/i18n (bread/config req :auth/i18n)}
-     :queries [{:query/name ::bread/value
-                :query/key :session
-                :query/value {:session/key "asdfqwerty"
-                              :db/id 123456
-                              :user/name "Coby"
-                              :user/email "coby@bread.systems"
-                              :user/slug "coby"}}]
-     #_#_
-     :queries
-     [{:query/name ::store/query
-       :query/key :session
-       :query/db (store/datastore req)
-       :query/args
-       ['{:find [(pull ?e [:db/id :user/name :user/email :user/slug])]
-          :in [$ ?email ?password]
-          :where [[?e :user/email ?email]
-                  [?e :user/password ?password]]}
-        (:email params)
-        ;; TODO buddy hash
-        (hash (:password params))]}]
-     :effects
-     [{:effect/name ::create-session}]}
-    {:data {:auth/i18n (bread/config req :auth/i18n)}
-     :queries
-     [{:query/name ::session
-       :query/key :session
-       :session/key "asdfqwerty"}]}))
+  {:queries
+   [{:query/name ::store/query
+     :query/key :auth/user
+     :query/db (store/datastore req)
+     :query/args
+     ['{:find [(pull ?e [:db/id
+                         :user/username
+                         :user/email
+                         :user/password
+                         :user/name
+                         :user/slug]) .]
+        :in [$ ?username]
+        :where [[?e :user/username ?username]]}
+      (:username params)]}
+    {:query/name ::authenticate
+     :query/key :auth/result
+     :plaintext-password (:password params)}]
+   :hooks
+   {::bread/response
+    [{:action/name ::set-session
+      :action/description "Set :session in Ring response."
+      :count-failed-logins? (bread/config req :auth/count-failed-logins?)}]}})
 
 (defn plugin
   ([]
    (plugin {}))
-  ([{:session/keys [backend]
-     :or {backend :db}}]
+  ([{:keys [session-backend hash-algorithm count-failed-logins?]
+     :or {session-backend :db
+          hash-algorithm :bcrypt+blake2b-512
+          count-failed-logins? true}}]
    {:config
-    {:auth/i18n
-     {:auth/hello "Hello!"}}}))
+    {:auth/hash-algorithm hash-algorithm
+     :auth/count-failed-logins? count-failed-logins?}}))
