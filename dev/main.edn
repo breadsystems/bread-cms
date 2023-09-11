@@ -2,6 +2,7 @@
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
  :ring/wrap-defaults {:ring-defaults :site-defaults
+                      [:session :store] :memory-store
                       [:security :anti-forgery] false}
  :bread/handler #ig/ref :bread/app
  :bread/app

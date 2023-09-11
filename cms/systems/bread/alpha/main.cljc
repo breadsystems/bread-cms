@@ -132,10 +132,15 @@
                          :secure-api-defaults ring/secure-api-defaults
                          :secure-site-defaults ring/secure-api-defaults}
         k (if (keyword? value) value (get value :ring-defaults))
-        defaults (get default-configs k)]
-    (if (map? value)
-      (reduce #(assoc-in %1 (key %2) (val %2))
-              defaults (dissoc value :ring-defaults))
+        defaults (get default-configs k)
+        defaults (if (map? value)
+                   (reduce #(assoc-in %1 (key %2) (val %2))
+                           defaults (dissoc value :ring-defaults))
+                   defaults)]
+    ;; For Bread, the default session store is the database. But we want to
+    ;; support using Ring's default in-memory store, as well.
+    (if (= :memory-store (get-in defaults [:session :store]))
+      (update defaults :session dissoc :store)
       defaults)))
 
 (defmethod ig/halt-key! :http [_ stop-server]
