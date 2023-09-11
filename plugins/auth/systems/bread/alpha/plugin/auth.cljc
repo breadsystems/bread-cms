@@ -2,6 +2,7 @@
   (:require
     [aero.core :as aero]
     [buddy.hashers :as hashers]
+    [clj-totp.core :as totp]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
@@ -9,6 +10,11 @@
   #_
   (:import
     [ring.middleware.session.store SessionStore]))
+
+(comment
+  (def totp-spec
+    (totp/generate-key "Coby Tamayo" "coby@tamayo.email"))
+  (totp/valid-code? (:secret-key totp-spec) 365764))
 
 (defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
   (hashers/derive pw {:alg algo}))
