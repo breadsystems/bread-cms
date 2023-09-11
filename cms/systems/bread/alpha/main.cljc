@@ -126,12 +126,17 @@
                   handler)]
     (http/run-server handler {:port port})))
 
-(defmethod ig/init-key :ring/wrap-defaults [_ k]
-  (get {:api-defaults ring/api-defaults
-        :site-defaults ring/site-defaults
-        :secure-api-defaults ring/secure-api-defaults
-        :secure-site-defaults ring/secure-api-defaults}
-       k))
+(defmethod ig/init-key :ring/wrap-defaults [_ value]
+  (let [default-configs {:api-defaults ring/api-defaults
+                         :site-defaults ring/site-defaults
+                         :secure-api-defaults ring/secure-api-defaults
+                         :secure-site-defaults ring/secure-api-defaults}
+        k (if (keyword? value) value (get value :ring-defaults))
+        defaults (get default-configs k)]
+    (if (map? value)
+      (reduce #(assoc-in %1 (key %2) (val %2))
+              defaults (dissoc value :ring-defaults))
+      defaults)))
 
 (defmethod ig/halt-key! :http [_ stop-server]
   (when-let [prom (stop-server :timeout 100)]

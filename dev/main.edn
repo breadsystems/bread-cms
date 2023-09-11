@@ -1,7 +1,8 @@
 {:http {:port 1312
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
- :ring/wrap-defaults :site-defaults
+ :ring/wrap-defaults {:ring-defaults :site-defaults
+                      [:security :anti-forgery] false}
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:datastore #ig/ref :bread/datastore
