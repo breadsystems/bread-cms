@@ -142,9 +142,16 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defmethod ig/init-key :bread/datastore [_ db-config]
-  (store/create-database! db-config)
+(defmethod ig/init-key :bread/datastore
+  [_ {:keys [recreate? force?] :as db-config}]
+  ;; TODO call datahike API directly
+  (store/create-database! db-config {:force? force?})
   (assoc db-config :datastore/connection (store/connect! db-config)))
+
+(defmethod ig/halt-key! :bread/datastore
+  [_ {:keys [recreate?] :as db-config}]
+  ;; TODO call datahike API directly
+  (when recreate? (store/delete-database! db-config)))
 
 (defmethod ig/init-key :bread/router [_ router]
   router)

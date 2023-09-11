@@ -14,6 +14,8 @@
  {:datastore/type :datahike
   :store {:backend :mem
           :id "bread-db"}
+  :recreate? true
+  :force? true
   :datastore/migrations #deref #var systems.bread.alpha.schema/initial
   :datastore/initial-txns #deref #var systems.bread.alpha.defaults/initial-data}
  :bread/router
