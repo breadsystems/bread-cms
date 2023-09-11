@@ -1,9 +1,14 @@
 (ns systems.bread.alpha.plugin.auth
   (:require
+    [aero.core :as aero]
+    [buddy.hashers :as hashers]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.core :as bread]))
+
+(defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
+  (hashers/derive pw {:alg algo}))
 
 (defc login-page
   [{:auth/keys [i18n] :keys [session]}]

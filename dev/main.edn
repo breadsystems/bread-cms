@@ -17,7 +17,11 @@
   :recreate? true
   :force? true
   :datastore/migrations #deref #var systems.bread.alpha.schema/initial
-  :datastore/initial-txns #deref #var systems.bread.alpha.defaults/initial-data}
+  :datastore/initial-txns
+  #concat [#deref #var systems.bread.alpha.defaults/initial-data
+           [{:user/username "coby"
+             :user/email "coby@bread.systems"
+             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]}]]}
  :bread/router
  #router
  [["/" {"login"
