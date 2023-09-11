@@ -325,7 +325,14 @@
      {:db/ident :user/email
       :db/doc "User account email"
       :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/many
+      :db/unique :db.unique/value
+      :attr/migration "migration.users"}
+     {:db/ident :user/username
+      :db/doc "Username"
+      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
+      :db/unique :db.unique/identity
       :attr/migration "migration.users"}
      {:db/ident :user/password
       :db/doc "User account password hash"
