@@ -54,6 +54,7 @@
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
                 bidi/bidi                   {:mvn/version "2.1.6"}
                 ring/ring                   {:mvn/version "1.9.5"}
+                ring/ring-defaults          {:mvn/version "0.4.0"}
                 rum/rum                     {:mvn/version "0.12.10"}}}
 
   :auth
