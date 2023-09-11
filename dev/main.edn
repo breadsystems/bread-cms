@@ -1,5 +1,7 @@
 {:http {:port 1312
-        :handler #ig/ref :bread/handler}
+        :handler #ig/ref :bread/handler
+        :wrap-defaults #ig/ref :ring/wrap-defaults}
+ :ring/wrap-defaults :site-defaults
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:datastore #ig/ref :bread/datastore

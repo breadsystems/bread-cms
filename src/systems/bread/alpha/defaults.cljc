@@ -97,6 +97,12 @@
                                                    :scheme
                                                    :request-method])))
 
+(defmethod bread/action ::response
+  [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
+  (-> res
+      (update :status #(or % (if (:not-found? data) 404 200)))
+      (update-in [:headers "content-type"] #(or % default-content-type))))
+
 (defn plugins [{:keys [datastore
                        routes
                        i18n
@@ -107,6 +113,8 @@
                        auth
                        plugins]}]
   (let [router (:router routes)
+        {:keys [default-content-type]
+         :or {default-content-type "text/html"}} renderer
         configured-plugins
         [(dispatcher/plugin)
          (query/plugin)
@@ -115,6 +123,11 @@
           {::bread/expand
            [{:action/name ::request-data
              :action/description "Include standard request data"}]}}
+         {:hooks
+          {::bread/response
+           [{:action/name ::response
+             :action/description "Sensible defaults for Ring responses"
+             :default-content-type default-content-type}]}}
          (when (not (false? datastore)) (store/plugin datastore))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))

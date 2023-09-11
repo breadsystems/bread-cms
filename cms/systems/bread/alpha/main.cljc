@@ -7,6 +7,7 @@
     [aero.core :as aero]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
+    [ring.middleware.defaults :as ring]
     ;; TODO ring middlewares
     [systems.bread.alpha.core :as bread]
     ;; TODO load components dynamicaly using sci
@@ -118,9 +119,19 @@
 (defmethod ig/init-key :started-at [_ local-datetime]
   (LocalDateTime/now))
 
-(defmethod ig/init-key :http [_ {:keys [port handler]}]
+(defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
   (println "Starting HTTP server on port" port)
-  (http/run-server handler {:port port}))
+  (let [handler (if wrap-defaults
+                  (ring/wrap-defaults handler wrap-defaults)
+                  handler)]
+    (http/run-server handler {:port port})))
+
+(defmethod ig/init-key :ring/wrap-defaults [_ k]
+  (get {:api-defaults ring/api-defaults
+        :site-defaults ring/site-defaults
+        :secure-api-defaults ring/secure-api-defaults
+        :secure-site-defaults ring/secure-api-defaults}
+       k))
 
 (defmethod ig/halt-key! :http [_ stop-server]
   (when-let [prom (stop-server :timeout 100)]
@@ -164,6 +175,7 @@
 (comment
   (deref system)
   (:http @system)
+  (:ring/wrap-defaults @system)
   (:bread/app @system)
   (:bread/router @system)
   (:bread/datastore @system)
