@@ -98,6 +98,7 @@
                   :request-method]]
     (as-> req $
         (update $ ::bread/data merge (select-keys req req-keys))
+        (assoc-in $ [::bread/data :session] (:session req))
         ;; Reset headers - we're working on a response now.
         (apply dissoc $ req-keys)
         (assoc $ :headers {}))))
