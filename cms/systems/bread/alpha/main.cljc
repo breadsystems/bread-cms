@@ -180,6 +180,9 @@
 (defmethod aero/reader 'deref [_ _ v]
   (deref v))
 
+(defmethod aero/reader 'concat [_ _ args]
+  (apply concat args))
+
 (defn restart! [config]
   (stop!)
   (start! config))
