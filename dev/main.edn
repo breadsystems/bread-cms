@@ -24,6 +24,7 @@
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             :user/two-factor-key "AWWMEFM4ADBSQRET"
              :user/lang :en-US}]]}
  :bread/router
  #router

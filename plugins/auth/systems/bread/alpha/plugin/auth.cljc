@@ -72,31 +72,28 @@
   [{::bread/keys [data] :keys [session] :as res}
    {:keys [count-failed-logins?]} _]
   (let [{{:keys [valid user]} :auth/result} data
-        ;; TODO
-        user (assoc user :user/two-factor-key (:secret-key totp-spec))
         current-step (:auth/step session)
         two-factor-enabled? (boolean (:user/two-factor-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
-        succeeded? (and valid user)
         session (cond
                   ;; TODO kick them out and lock their account/IP...
-                  (and count-failed-logins? (not succeeded?))
+                  (and count-failed-logins? (not valid))
                   (-> {:failed-attempt-count 0}
                       (merge session)
                       (update :failed-attempt-count inc))
 
-                  (not succeeded?)
+                  (not valid)
                   (merge {} session) ;; create or persist session
 
-                  succeeded? {:user user :auth/step next-step})]
+                  valid {:user user :auth/step next-step})]
     (cond-> res
       true (assoc
              :session session
-             :status (if succeeded? 302 401))
+             :status (if valid 302 401))
       ;; TODO make redirect configurable
-      succeeded? (assoc-in [:headers "Location"] "/login"))))
+      valid (assoc-in [:headers "Location"] "/login"))))
 
 (defmethod bread/query ::authenticate
   [{:keys [plaintext-password]} {:auth/keys [user]}]
@@ -162,6 +159,7 @@
                              :user/username
                              :user/email
                              :user/password
+                             :user/two-factor-key
                              :user/name
                              :user/lang
                              :user/slug]) .]

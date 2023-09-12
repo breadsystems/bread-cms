@@ -339,6 +339,11 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/two-factor-key
+      :db/doc "User's 2FA secret key"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/name
       :db/doc "User name"
       :db/valueType :db.type/string
