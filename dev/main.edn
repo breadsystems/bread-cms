@@ -20,7 +20,7 @@
   :force? true
   :datastore/migrations #deref #var systems.bread.alpha.schema/initial
   :datastore/initial-txns
-  #concat [#deref #var systems.bread.alpha.defaults/initial-data
+  #concat [#deref #var systems.bread.alpha.cms.defaults/initial-data
            [{:user/username "coby"
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
