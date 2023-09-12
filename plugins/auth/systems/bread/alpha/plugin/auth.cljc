@@ -82,11 +82,11 @@
                     :two-factor
                     :logged-in)
         session (cond
-                  ;; TODO kick them out and lock their account/IP...
+                  ;; TODO track this in the db
                   (and max-failed-login-count (not valid))
-                  (-> {:failed-attempt-count 0}
+                  (-> {:failed-login-count 0}
                       (merge session)
-                      (update :failed-attempt-count inc))
+                      (update :failed-login-count inc))
 
                   (not valid)
                   (merge {} session) ;; create or persist session
@@ -128,7 +128,9 @@
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
-  (let [{:auth/keys [step result] :keys [user]} session
+  (let [{:auth/keys [step result]
+         :keys [user failed-login-count]
+         :or {failed-login-count 0}} session
         max-failed-login-count (bread/config req :auth/max-failed-login-count)]
     (cond
       ;; Logout - destroy session
