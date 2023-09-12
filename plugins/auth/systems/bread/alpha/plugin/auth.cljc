@@ -8,7 +8,7 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.core :as bread])
   (:import
-    [java.time LocalDateTime Duration]
+    [java.time LocalDateTime Duration ZoneId]
     #_
     [ring.middleware.session.store SessionStore]))
 
@@ -36,6 +36,10 @@
       [:link {:href "/css/style.css" :rel :stylesheet}]]
      [:body
       (cond
+        (:locked? session)
+        [:main
+         [:h2 "LOCKED"]]
+
         (= :logged-in step)
         [:main
          [:h2 "Welcome, " (:user/username (:user session))]
@@ -75,18 +79,13 @@
 (defmethod bread/action ::set-session
   [{::bread/keys [data] :keys [session] :as res}
    {:keys [max-failed-login-count]} _]
-  (let [{{:keys [valid user]} :auth/result} data
+  (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
         two-factor-enabled? (boolean (:user/two-factor-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
         session (cond
-                  ;; TODO track this in the db
-                  (and max-failed-login-count (not valid))
-                  (-> {:failed-login-count 0}
-                      (merge session)
-                      (update :failed-login-count inc))
 
                   (not valid)
                   (merge {} session) ;; create or persist session
@@ -96,21 +95,41 @@
       true (assoc
              :session session
              :status (if valid 302 401))
+      locked? (assoc-in [:session :locked?] true)
       ;; TODO make redirect configurable
       valid (assoc-in [:headers "Location"] "/login"))))
 
+(defn- account-locked? [now locked-at]
+  (let [locked-at (LocalDateTime/ofInstant
+                    (.toInstant locked-at)
+                    (ZoneId/systemDefault))
+        unlock-at (.plus locked-at (Duration/ofSeconds 3600))]
+    (= -1 (.compareTo now unlock-at))))
+
 (defmethod bread/query ::authenticate
   [{:keys [plaintext-password]} {:auth/keys [user]}]
-  (if-not user
-    {:valid false :update false}
-    (let [encrypted (or (:user/password user) "")
-          result (try
-                   (hashers/verify plaintext-password encrypted)
-                   (catch clojure.lang.ExceptionInfo e
-                     {:valid false :update false}))]
-      (if (:valid result)
-        (assoc result :user (dissoc user :user/password))
-        result))))
+  (let [encrypted (or (:user/password user) "")
+        user (when user (dissoc user :user/password))]
+    (cond
+      (not user) {:valid false :update false}
+
+      ;; Don't bother authenticating if the account is locked.
+      (and (:user/locked-at user)
+           (account-locked? (LocalDateTime/now) (:user/locked-at user)))
+      {:valid false :locked? true :user user}
+
+      :default
+      (let [result (try
+                     (hashers/verify plaintext-password encrypted)
+                     (catch clojure.lang.ExceptionInfo e
+                       {:valid false :update false}))]
+        (if (:valid result)
+          (assoc result :user user)
+          result)))))
+
+(defmethod bread/query ::scrub
+  [_ {:auth/keys [user]}]
+  (when user (dissoc user :user/password)))
 
 (defmethod bread/query ::authenticate-two-factor
   [{:keys [user two-factor-code]} _]
@@ -130,10 +149,17 @@
   [{:keys [conn max-failed-login-count]} {:auth/keys [user]}]
   (cond
     (not user) nil
+
+    (and (:user/locked-at user)
+         (account-locked? (LocalDateTime/now) (:user/locked-at user)))
+    nil
+
     (>= (:user/failed-login-count user) max-failed-login-count)
     (store/transact conn [{:db/id (:db/id user)
+                           ;; Lock account, but reset attempts.
                            :user/locked-at (java.util.Date.)
                            :user/failed-login-count 0}])
+
     :default
     (let [incremented (inc (:user/failed-login-count user))]
       (store/transact conn [{:db/id (:db/id user)
@@ -190,7 +216,10 @@
           (:username params)]}
         {:query/name ::authenticate
          :query/key :auth/result
-         :plaintext-password (:password params)}]
+         :plaintext-password (:password params)}
+        {:query/name ::scrub
+         :query/key :auth/user
+         :query/description "Scrub password hash from user record"}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
