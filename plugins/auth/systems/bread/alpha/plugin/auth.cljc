@@ -74,7 +74,7 @@
 
 (defmethod bread/action ::set-session
   [{::bread/keys [data] :keys [session] :as res}
-   {:keys [count-failed-logins?]} _]
+   {:keys [max-failed-login-count]} _]
   (let [{{:keys [valid user]} :auth/result} data
         current-step (:auth/step session)
         two-factor-enabled? (boolean (:user/two-factor-key user))
@@ -83,7 +83,7 @@
                     :logged-in)
         session (cond
                   ;; TODO kick them out and lock their account/IP...
-                  (and count-failed-logins? (not valid))
+                  (and max-failed-login-count (not valid))
                   (-> {:failed-attempt-count 0}
                       (merge session)
                       (update :failed-attempt-count inc))
@@ -129,7 +129,7 @@
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step result] :keys [user]} session
-        count-failed-logins? (bread/config req :auth/count-failed-logins?)]
+        max-failed-login-count (bread/config req :auth/max-failed-login-count)]
     (cond
       ;; Logout - destroy session
       (and (= :post request-method) (= "logout" (:submit params)))
@@ -137,6 +137,8 @@
        {::bread/response
         [{:action/name ::logout
           :action/description "Unset :session in Ring response."}]}}
+
+      ;; Locked out
 
       ;; 2FA
       (and (= :post request-method) (= :two-factor step))
@@ -150,7 +152,7 @@
        {::bread/response
         [{:action/name ::set-session
           :action/description "Set :session in Ring response"
-          :count-failed-logins? count-failed-logins?}]}}
+          :max-failed-login-count max-failed-login-count}]}}
 
       ;; Login
       (= :post request-method)
@@ -178,17 +180,17 @@
        {::bread/response
         [{:action/name ::set-session
           :action/description "Set :session in Ring response."
-          :count-failed-logins? count-failed-logins?}]}}
+          :max-failed-login-count max-failed-login-count}]}}
 
       :default {})))
 
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [session-backend hash-algorithm count-failed-logins?]
+  ([{:keys [session-backend hash-algorithm max-failed-login-count]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
-          count-failed-logins? true}}]
+          max-failed-login-count 5}}]
    {:config
     {:auth/hash-algorithm hash-algorithm
-     :auth/count-failed-logins? count-failed-logins?}}))
+     :auth/max-failed-login-count max-failed-login-count}}))
