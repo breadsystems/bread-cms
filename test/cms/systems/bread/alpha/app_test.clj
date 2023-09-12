@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.app-test
   (:require
     [clojure.test :refer [are deftest is testing]]
-    [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.i18n :as i18n]
@@ -11,7 +10,8 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]]))
+    [systems.bread.alpha.test-helpers :refer [use-datastore]]
+    [systems.bread.alpha.cms.defaults :as defaults]))
 
 (def config {:datastore/type :datahike
              :store {:backend :mem

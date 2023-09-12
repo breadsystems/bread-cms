@@ -13,7 +13,7 @@
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.plugin.datahike])

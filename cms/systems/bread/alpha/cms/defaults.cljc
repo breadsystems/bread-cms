@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.defaults
+(ns systems.bread.alpha.cms.defaults
   (:require
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.core :as bread]
