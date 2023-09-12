@@ -72,9 +72,14 @@
   [{::bread/keys [data] :keys [session] :as res}
    {:keys [count-failed-logins?]} _]
   (let [{{:keys [valid user]} :auth/result} data
-        succeeded? (and valid user)
         ;; TODO
         user (assoc user :user/two-factor-key (:secret-key totp-spec))
+        current-step (:auth/step session)
+        two-factor-enabled? (boolean (:user/two-factor-key user))
+        next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
+                    :two-factor
+                    :logged-in)
+        succeeded? (and valid user)
         session (cond
                   ;; TODO kick them out and lock their account/IP...
                   (and count-failed-logins? (not succeeded?))
@@ -85,38 +90,12 @@
                   (not succeeded?)
                   (merge {} session) ;; create or persist session
 
-                  (and succeeded? (:user/two-factor-key user))
-                  {:user user :auth/step :two-factor}
-
-                  succeeded? (doto {:user user :auth/step :logged-in} prn))]
-    (prn succeeded? session)
+                  succeeded? {:user user :auth/step next-step})]
     (cond-> res
       true (assoc
              :session session
              :status (if succeeded? 302 401))
       ;; TODO make redirect configurable
-      succeeded? (assoc-in [:headers "Location"] "/login"))))
-
-(defmethod bread/action ::set-session-two-factor
-  [{::bread/keys [data] :keys [session] :as res}
-   {:keys [count-failed-logins?]} _]
-  (let [{{:keys [valid user]} :auth/result} data
-        succeeded? (and valid user)
-        session (cond
-                  ;; TODO kick them out and lock their account/IP...
-                  (and count-failed-logins? (not succeeded?))
-                  (-> {:failed-attempt-count 0}
-                      (merge session)
-                      (update :failed-attempt-count inc))
-
-                  (not succeeded?)
-                  (merge {} session)
-
-                  succeeded? {:user user :auth/step :logged-in})]
-    (cond-> res
-      true (assoc
-             :session session
-             :status (if succeeded? 302 401))
       succeeded? (assoc-in [:headers "Location"] "/login"))))
 
 (defmethod bread/query ::authenticate
@@ -168,7 +147,7 @@
          :two-factor-code (:two-factor-code params)}]
        :hooks
        {::bread/response
-        [{:action/name ::set-session-two-factor
+        [{:action/name ::set-session
           :action/description "Set :session in Ring response"
           :count-failed-logins? count-failed-logins?}]}}
 
