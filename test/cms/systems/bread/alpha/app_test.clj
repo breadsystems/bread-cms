@@ -1,6 +1,4 @@
-(ns ^{:doc "High-level abstractions for composing a Bread app"
-      :author "Coby Tamayo"}
-  systems.bread.alpha.app-test
+(ns systems.bread.alpha.app-test
   (:require
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.defaults :as defaults]
