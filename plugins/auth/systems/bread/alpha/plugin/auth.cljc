@@ -7,11 +7,15 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.core :as bread])
-  #_
   (:import
+    [java.time LocalDateTime Duration]
+    #_
     [ring.middleware.session.store SessionStore]))
 
 (comment
+  (LocalDateTime/now)
+  (Duration/ofHours 4)
+  (.minus (LocalDateTime/now) (Duration/ofSeconds 3600))
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
@@ -160,6 +164,7 @@
                              :user/email
                              :user/password
                              :user/two-factor-key
+                             :user/locked-at
                              :user/name
                              :user/lang
                              :user/slug]) .]

@@ -344,6 +344,11 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/locked-at
+      :db/doc "When the user's account was locked for security purposes (if at all)"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/name
       :db/doc "User name"
       :db/valueType :db.type/string
