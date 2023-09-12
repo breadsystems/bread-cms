@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.main
+(ns systems.bread.alpha.cms.main
   (:require
     [clojure.edn :as edn]
     [clojure.java.io :as io]

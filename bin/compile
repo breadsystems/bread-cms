@@ -8,10 +8,10 @@ fi
 rm -rf classes/*
 rm -rf target/*
 
-clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
+clojure -M:cms -e "(compile 'systems.bread.alpha.cms.main)"
 
 if [[ $? -ne 0 ]] ; then
-  echo 'Error compiling systems.bread.alpha.main, aborting'
+  echo 'Error compiling systems.bread.alpha.cms.main, aborting'
   exit 1
 fi
 
@@ -29,4 +29,5 @@ fi
   --no-server \
   --static \
   "-J-Xmx3g" \
-  systems.bread.alpha.main
+  --trace-object-instantiation=java.lang.Thread \
+  systems.bread.alpha.cms.main
