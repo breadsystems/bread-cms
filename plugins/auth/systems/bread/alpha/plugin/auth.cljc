@@ -167,10 +167,9 @@
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
-  (let [{:auth/keys [step result]
-         :keys [user failed-login-count]
-         :or {failed-login-count 0}} session
-        max-failed-login-count (bread/config req :auth/max-failed-login-count)]
+  (let [{:auth/keys [step result locked?] :keys [user]} session
+        max-failed-login-count (bread/config req :auth/max-failed-login-count)
+        lock-seconds (bread/config req :auth/lock-seconds)]
     (cond
       ;; Logout - destroy session
       (and (= :post request-method) (= "logout" (:submit params)))
