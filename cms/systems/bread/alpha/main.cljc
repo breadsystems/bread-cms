@@ -170,6 +170,29 @@
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/handler app))
 
+(defn log-hook! [invocation]
+  (let [{:keys [hook action]} invocation]
+    (prn hook (:action/name action))))
+
+(defmethod ig/init-key :bread/profilers [_ profilers]
+  ;; Enable hook profiling.
+  (alter-var-root #'bread/*profile-hooks* (constantly true))
+  (map
+    (fn [{h :hook act :action/name f :f :as profiler}]
+      (let [tap (bread/add-profiler
+                  (fn [{{:keys [action hook] :as invocation} ::bread/profile}]
+                    (if (and (or (nil? (seq h)) ((set h)
+                                                 hook))
+                             (or (nil? (seq act)) ((set act)
+                                                   (:action/name action))))
+                      (f invocation))))]
+        (assoc profiler :tap tap)))
+    profilers))
+
+(defmethod ig/halt-key! :bread/profilers [_ profilers]
+  (doseq [{:keys [tap]} profilers]
+    (remove-tap tap)))
+
 (defmethod aero/reader 'ig/ref [_ _ value]
   (ig/ref value))
 
@@ -199,7 +222,10 @@
   (:bread/app @system)
   (:bread/router @system)
   (:bread/datastore @system)
+  (:bread/profilers @system)
   (restart! (-> "dev/main.edn" aero/read-config))
+
+  (alter-var-root #'bread/*profile-hooks* not)
 
   (defn- response [res]
     (select-keys res [:status :headers :body :session]))
