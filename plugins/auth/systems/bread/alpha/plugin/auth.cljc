@@ -99,15 +99,15 @@
       ;; TODO make redirect configurable
       valid (assoc-in [:headers "Location"] "/login"))))
 
-(defn- account-locked? [now locked-at]
+(defn- account-locked? [now locked-at seconds]
   (let [locked-at (LocalDateTime/ofInstant
                     (.toInstant locked-at)
                     (ZoneId/systemDefault))
-        unlock-at (.plus locked-at (Duration/ofSeconds 3600))]
+        unlock-at (.plus locked-at (Duration/ofSeconds seconds))]
     (= -1 (.compareTo now unlock-at))))
 
 (defmethod bread/query ::authenticate
-  [{:keys [plaintext-password]} {:auth/keys [user]}]
+  [{:keys [plaintext-password lock-seconds]} {:auth/keys [user]}]
   (let [encrypted (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
     (cond
@@ -115,7 +115,10 @@
 
       ;; Don't bother authenticating if the account is locked.
       (and (:user/locked-at user)
-           (account-locked? (LocalDateTime/now) (:user/locked-at user)))
+           (account-locked?
+             (LocalDateTime/now)
+             (:user/locked-at user)
+             lock-seconds))
       {:valid false :locked? true :user user}
 
       :default
@@ -215,6 +218,7 @@
           (:username params)]}
         {:query/name ::authenticate
          :query/key :auth/result
+         :lock-seconds lock-seconds
          :plaintext-password (:password params)}
         {:query/name ::scrub
          :query/key :auth/user
@@ -237,10 +241,12 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [session-backend hash-algorithm max-failed-login-count]
+  ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
-          max-failed-login-count 5}}]
+          max-failed-login-count 5
+          lock-seconds 3600}}]
    {:config
     {:auth/hash-algorithm hash-algorithm
-     :auth/max-failed-login-count max-failed-login-count}}))
+     :auth/max-failed-login-count max-failed-login-count
+     :auth/lock-seconds lock-seconds}}))
