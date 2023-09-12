@@ -25,6 +25,7 @@
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
              :user/two-factor-key "AWWMEFM4ADBSQRET"
+             :user/failed-login-count 0
              :user/lang :en-US}]]}
  :bread/router
  #router

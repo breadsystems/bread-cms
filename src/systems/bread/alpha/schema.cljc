@@ -349,6 +349,11 @@
       :db/valueType :db.type/instant
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/failed-login-count
+      :db/doc "How many times in a row the user has attempted to login"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/name
       :db/doc "User name"
       :db/valueType :db.type/string
