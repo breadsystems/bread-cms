@@ -5,13 +5,13 @@
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
-    [systems.bread.alpha.plugin.bidi]
-    [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.component :as component]
-    [systems.bread.alpha.plugin.auth :as auth]))
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.bidi]
+    [systems.bread.alpha.plugin.rum :as rum]))
 
 (comment
   (let [config {:a true :b false}]
