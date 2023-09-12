@@ -6,16 +6,12 @@
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.core :as bread])
+    [systems.bread.alpha.core :as bread]
+    [ring.middleware.session.store :refer [SessionStore]])
   (:import
-    [java.time LocalDateTime Duration ZoneId]
-    #_
-    [ring.middleware.session.store SessionStore]))
+    [java.time LocalDateTime Duration ZoneId]))
 
 (comment
-  (LocalDateTime/now)
-  (Duration/ofHours 4)
-  (.compareTo (LocalDateTime/now) (.minus (LocalDateTime/now) (Duration/ofSeconds 3600)))
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
