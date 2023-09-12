@@ -126,6 +126,19 @@
       ;; TODO configure redirect
       (assoc-in [:headers "Location"] "/login")))
 
+(defmethod bread/effect ::log-attempt
+  [{:keys [conn max-failed-login-count]} {:auth/keys [user]}]
+  (cond
+    (not user) nil
+    (>= (:user/failed-login-count user) max-failed-login-count)
+    (store/transact conn [{:db/id (:db/id user)
+                           :user/locked-at (java.util.Date.)
+                           :user/failed-login-count 0}])
+    :default
+    (let [incremented (inc (:user/failed-login-count user))]
+      (store/transact conn [{:db/id (:db/id user)
+                             :user/failed-login-count incremented}]))))
+
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step result]
@@ -168,6 +181,7 @@
                              :user/password
                              :user/two-factor-key
                              :user/locked-at
+                             :user/failed-login-count
                              :user/name
                              :user/lang
                              :user/slug]) .]
@@ -177,6 +191,13 @@
         {:query/name ::authenticate
          :query/key :auth/result
          :plaintext-password (:password params)}]
+       :effects
+       [{:effect/name ::log-attempt
+         :effect/description
+         "Record this login attempt, locking account after too many."
+         ;; Get :user from data, since it may not be in session data yet.
+         :max-failed-login-count max-failed-login-count
+         :conn (store/connection req)}]
        :hooks
        {::bread/response
         [{:action/name ::set-session
