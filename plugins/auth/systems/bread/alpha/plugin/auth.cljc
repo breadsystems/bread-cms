@@ -140,8 +140,6 @@
         [{:action/name ::logout
           :action/description "Unset :session in Ring response."}]}}
 
-      ;; Locked out
-
       ;; 2FA
       (and (= :post request-method) (= :two-factor step))
       {:queries
@@ -161,6 +159,7 @@
       {:queries
        [{:query/name ::store/query
          :query/key :auth/user
+         :query/description "Find a user with the given username"
          :query/db (store/datastore req)
          :query/args
          ['{:find [(pull ?e [:db/id
