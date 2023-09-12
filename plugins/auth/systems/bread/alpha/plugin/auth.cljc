@@ -15,7 +15,7 @@
 (comment
   (LocalDateTime/now)
   (Duration/ofHours 4)
-  (.minus (LocalDateTime/now) (Duration/ofSeconds 3600))
+  (.compareTo (LocalDateTime/now) (.minus (LocalDateTime/now) (Duration/ofSeconds 3600)))
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
