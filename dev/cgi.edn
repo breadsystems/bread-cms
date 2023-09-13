@@ -15,10 +15,10 @@
   ;; TODO :dispatcher.type/ => ::bread/
   {:index
    {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var home}
+    :dispatcher/component #var systems.bread.alpha.cms.scratch/home-page}
    :page
    {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var interior-page}
+    :dispatcher/component #var systems.bread.alpha.cms.scratch/interior-page}
    :login
    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}
