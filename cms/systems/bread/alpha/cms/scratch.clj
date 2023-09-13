@@ -10,6 +10,7 @@
     [ring.middleware.defaults :as ring]
     ;; TODO ring middlewares
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.datastore :as store]
@@ -67,6 +68,13 @@
 
 (defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
+
+(defmethod dispatcher/dispatch ::home [_]
+  {:hooks
+   {::bread/render
+    [{:action/name ::bread/value
+      :action/description "Render static home page"
+      :action/value {:status 200 :body "eyyy"}}]}})
 
 (defn run-as-cgi [{:keys [options]}]
   (try

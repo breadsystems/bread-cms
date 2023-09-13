@@ -25,6 +25,7 @@
   [{:dispatcher/keys [pull]}]
   (vec (if (some #{:db/id} pull) pull (cons :db/id pull))))
 
+;; TODO mv to core
 (defmulti dispatch
   (fn [req]
     (get-in req [::bread/dispatcher :dispatcher/type])))
