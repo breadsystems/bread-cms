@@ -1,8 +1,7 @@
 ;; Utilities for reading content from the filesystem
 ;; rather than from the datastore.
-(ns systems.bread.alpha.plugin.static-backend
+(ns systems.bread.alpha.plugin.markdown
   (:require
-    [reitit.core :as reitit] ;; TODO
     [clojure.instant :as instant]
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
