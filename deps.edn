@@ -46,15 +46,15 @@
                  "plugins/datahike"
                  "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
+                bidi/bidi                   {:mvn/version "2.1.6"}
                 buddy/buddy-hashers         {:mvn/version "2.0.167"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
+                clj-totp/clj-totp           {:mvn/version "0.1.0"} ;; TODO replace with one-time?
                 one-time/one-time           {:mvn/version "0.8.0"}
-                clj-totp/clj-totp           {:mvn/version "0.1.0"}
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
-                bidi/bidi                   {:mvn/version "2.1.6"}
                 ring/ring                   {:mvn/version "1.9.5"}
                 ring/ring-defaults          {:mvn/version "0.4.0"}
                 rum/rum                     {:mvn/version "0.12.10"}}}
