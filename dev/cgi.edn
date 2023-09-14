@@ -6,7 +6,12 @@
              :plugins []}
  :bread/router
  #router
- [["/" {"login"
+ [["/:lang"
+   ["/:slug" {:name :home
+              :bread/dispatcher {:dispatcher/type :systems.bread.alpha.cms.scratch/static}
+              :bread/component #var systems.bread.alpha.cms.scratch/home-page}]]
+  #_#_
+  ["/" {"login"
         {:get :login-page
          :post :login}
         [:lang]
@@ -14,7 +19,7 @@
          ["/" :post/slug] :page}}]
   ;; TODO :dispatcher.type/ => ::bread/
   {:index
-   {:dispatcher/type :systems.bread.alpha.cms.scratch/home
+   {:dispatcher/type :systems.bread.alpha.cms.scratch/static
     :dispatcher/component #var systems.bread.alpha.cms.scratch/home-page}
    :page
    {:dispatcher/type :dispatcher.type/page

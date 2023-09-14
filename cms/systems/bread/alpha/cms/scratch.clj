@@ -6,8 +6,11 @@
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
     [integrant.core :as ig]
+    [markdown.core :as md]
     [org.httpkit.server :as http]
     [ring.middleware.defaults :as ring]
+    [reitit.core :as reitit]
+    [systems.bread.alpha.plugin.reitit]
     ;; TODO ring middlewares
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -29,14 +32,17 @@
    [:p "404"]])
 
 (defc home-page
-  [{:keys [lang]}]
-  {:key :post}
+  [{:keys [lang page]}]
+  {:key :page}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
-    [:title "Home | BreadCMS"]]
+    [:title (:title page) " | BreadCMS"]]
    [:body
-    [:h1 "This is the home page!"]]])
+    [:h1 (:title page)]
+    [:<>
+     {:dangerouslySetInnerHTML
+              {:__html (:html page)}}]]])
 
 (defc interior-page
   [data]
@@ -69,12 +75,34 @@
 (defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
 
-(defmethod dispatcher/dispatch ::home [_]
-  {:hooks
-   {::bread/render
-    [{:action/name ::bread/value
-      :action/description "Render static home page"
-      :action/value {:status 200 :body "eyyy"}}]}})
+(defmethod bread/query ::markdown [{:keys [root path ext]} _]
+  (let [_ (prn (slurp (str (clojure.string/join "/" (cons root path)) "." ext)))
+        markdown (as-> path $
+                   (cons root $)
+                   (clojure.string/join "/" $)
+                   (str $ "." ext)
+                   (slurp $))
+        {:keys [metadata html]} (md/md-to-html-string-with-meta markdown)]
+    (merge (into {} (map (juxt key (comp first val)) metadata)) {:html html})))
+
+(defmethod dispatcher/dispatch ::static [{:keys [uri]}]
+  (let [path (filter seq (clojure.string/split uri #"/"))]
+    {:queries
+     [{:query/name ::markdown
+       :query/description "Render a static page"
+       :query/key :page
+       :root "dev/content"
+       :ext "md"
+       :path path}]}))
+
+(comment
+  ;(let [{:keys [queries]}
+  ;      (dispatcher/dispatch {::bread/dispatcher {:dispatcher/type ::static}
+  ;                            :uri "/en"})]
+  ;  (bread/hook {::bread/queries queries
+  ;               ::bread/hooks {::bread/expand [{:action/name ::query/expand-queries}]}
+  ;               ::bread/data {}} ::bread/expand))
+  )
 
 (defn run-as-cgi [{:keys [options]}]
   (try
@@ -204,6 +232,8 @@
   (ig/ref value))
 
 (defmethod aero/reader 'router [_ _ args]
+  (apply reitit/router args)
+  #_
   (apply router/router args))
 
 (defmethod aero/reader 'var [_ _ sym]
