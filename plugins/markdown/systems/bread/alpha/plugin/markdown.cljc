@@ -24,8 +24,7 @@
   )
 
 (defn query-fs [data params opts]
-  (let [{:keys [root ext lang-param slug-param parse]}
-        opts
+  (let [{:keys [root ext lang-param slug-param parse]} opts
         sep java.io.File/separator
         path (string/join sep (map params [lang-param slug-param]))
         path (str root sep path ext)
@@ -71,6 +70,11 @@
   (extrapolate-uri [0 "then" 1 "then" 2] "/a/b/c")
 
   (abs-path->uri "/var/www/a/b/c.md" "/var/www" ".md")
+
+  (query-fs {}
+            {:slug "one" :lang "en"}
+            {:root "content" :ext "md" :lang-param :lang :slug-param :slug
+             :parse md/md-to-html-string-with-meta})
   )
 
 (extend-protocol RequestCreator
