@@ -168,17 +168,20 @@
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step result locked?] :keys [user]} session
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
-        lock-seconds (bread/config req :auth/lock-seconds)]
+        lock-seconds (bread/config req :auth/lock-seconds)
+        post? (= :post request-method)
+        logout? (= "logout" (:submit params))
+        two-factor? (= :two-factor step)]
     (cond
       ;; Logout - destroy session
-      (and (= :post request-method) (= "logout" (:submit params)))
+      (and post? logout?)
       {:hooks
        {::bread/response
         [{:action/name ::logout
           :action/description "Unset :session in Ring response."}]}}
 
       ;; 2FA
-      (and (= :post request-method) (= :two-factor step))
+      (and post? two-factor?)
       {:queries
        [{:query/name ::authenticate-two-factor
          :query/key :auth/result
@@ -192,7 +195,7 @@
           :max-failed-login-count max-failed-login-count}]}}
 
       ;; Login
-      (= :post request-method)
+      post?
       {:queries
        [{:query/name ::store/query
          :query/key :auth/user
