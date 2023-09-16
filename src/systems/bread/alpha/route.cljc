@@ -64,10 +64,6 @@
   [_ {:keys [router]} [match]]
   (bread/dispatcher router match))
 
-(defmethod bread/action ::component
-  [_ _ [match]]
-  (:bread/component match))
-
 (defmethod bread/action ::params
   [_ {:keys [router]} [match]]
   (bread/params router match))
