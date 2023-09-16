@@ -74,15 +74,28 @@
 (defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
 
+
+;; TODO extract this to its own plugin
+(defn- filepath [root path ext]
+  (as-> path $
+    (cons root $)
+    (clojure.string/join java.io.File/separator $)
+    (str $ "." ext)))
+
+(defn- load-markdown [file]
+  (try
+    (slurp file)
+    (catch java.io.FileNotFoundException _
+      nil)))
+
 (defmethod bread/query ::markdown [{:keys [root path ext]} _]
-  (let [_ (prn (slurp (str (clojure.string/join "/" (cons root path)) "." ext)))
-        markdown (as-> path $
-                   (cons root $)
-                   (clojure.string/join "/" $)
-                   (str $ "." ext)
-                   (slurp $))
-        {:keys [metadata html]} (md/md-to-html-string-with-meta markdown)]
-    (merge (into {} (map (juxt key (comp first val)) metadata)) {:html html})))
+  (let [filepath (filepath root path ext)
+        markdown (load-markdown filepath)
+        {:keys [metadata html] :as html+}
+        (md/md-to-html-string-with-meta markdown)
+        ;; TODO pass mapped fn in as an opt; configurable *per-route*
+        metadata (into {} (map (juxt key (comp first val)) metadata))]
+    (merge metadata {:html html})))
 
 (defmethod dispatcher/dispatch ::static [{:keys [uri]}]
   (let [path (filter seq (clojure.string/split uri #"/"))]
@@ -257,21 +270,23 @@
   (:bread/router @system)
   (:bread/datastore @system)
   (:bread/profilers @system)
-  (restart! (-> "dev/main.edn" aero/read-config))
+  (restart! (-> "dev/cgi.edn" aero/read-config))
 
   (alter-var-root #'bread/*profile-hooks* not)
 
   (defn- response [res]
     (select-keys res [:status :headers :body :session]))
 
-  (bread/match (:bread/router @system) {:uri "/en"
+  (bread/match (:bread/router @system) {:uri "/en/one"
+                                        :request-method :get})
+  (bread/match (:bread/router @system) {:uri "/en/two"
                                         :request-method :get})
   (bread/match (:bread/router @system) {:uri "/login"
                                         :request-method :get})
   (bread/match (:bread/router @system) {:uri "/login"
                                         :request-method :post})
 
-  (response ((:bread/handler @system) {:uri "/en"}))
+  (response ((:bread/handler @system) {:uri "/en/one"}))
   (response ((:bread/handler @system) {:uri "/login"}))
   (response ((:bread/handler @system) {:uri "/login"
                                        :request-method :post
