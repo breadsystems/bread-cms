@@ -8,8 +8,10 @@
  #router
  [["/:lang"
    ["/:slug" {:name :home
-              :bread/dispatcher {:dispatcher/type :systems.bread.alpha.cms.scratch/static}
-              :bread/component #var systems.bread.alpha.cms.scratch/home-page}]]
+              :bread/dispatcher
+              {:dispatcher/type :systems.bread.alpha.cms.scratch/static
+               :dispatcher/component
+               #var systems.bread.alpha.cms.scratch/home-page}}]]
   #_#_
   ["/" {"login"
         {:get :login-page
