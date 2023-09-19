@@ -31,12 +31,12 @@
    [:p "404"]])
 
 (defc home-page
-  [{:keys [lang page]}]
+  [{:keys [lang page hook]}]
   {:key :page}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
-    [:title (:title page) " | BreadCMS"]]
+    [:title (hook :site/title (str (:title page) " | " "Bread CMS"))]]
    [:body
     [:h1 (:title page)]
     [:<>

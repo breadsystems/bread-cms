@@ -103,6 +103,11 @@
         (apply dissoc $ req-keys)
         (assoc $ :headers {}))))
 
+(defmethod bread/action ::hook-fn
+  [req _ _]
+  (assoc-in req [::bread/data :hook] (fn [h & args]
+                                       (apply bread/hook req h args))))
+
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
   (-> res
@@ -138,7 +143,10 @@
          {:hooks
           {::bread/expand
            [{:action/name ::request-data
-             :action/description "Include standard request data"}]
+             :action/description "Include standard request data"}
+            {:action/name ::hook-fn
+             :action/priority 1000
+             :action/description "Include a hook closure fn in ::bread/data"}]
            ::bread/response
            [{:action/name ::response
              :action/description "Sensible defaults for Ring responses"
