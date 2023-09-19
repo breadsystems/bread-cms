@@ -146,7 +146,8 @@
       (println "status: 500 Internal Server Error")
       (println "content-type: text/plain")
       (println)
-      (println (.getMessage e))
+      (println e)
+      #_
       (println (.getStackTrace e))
       (System/exit 1))))
 
