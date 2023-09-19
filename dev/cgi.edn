@@ -7,28 +7,29 @@
  :bread/router
  #router
  [["/:lang"
-   ["/:slug" {:name :home
-              :bread/dispatcher
-              {:dispatcher/type :systems.bread.alpha.cms.scratch/static
-               :dispatcher/component
-               #var systems.bread.alpha.cms.scratch/home-page}}]]
-  #_#_
-  ["/" {"login"
-        {:get :login-page
-         :post :login}
-        [:lang]
-        {"" :index
-         ["/" :post/slug] :page}}]
-  ;; TODO :dispatcher.type/ => ::bread/
-  {:index
-   {:dispatcher/type :systems.bread.alpha.cms.scratch/static
-    :dispatcher/component #var systems.bread.alpha.cms.scratch/home-page}
-   :page
-   {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var systems.bread.alpha.cms.scratch/interior-page}
-   :login
-   {:dispatcher/type :systems.bread.alpha.plugin.auth/login
-    :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}
-   :login-page
-   {:dispatcher/type :systems.bread.alpha.plugin.auth/login-page
-    :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]}
+   [""
+    {:name :home
+        :bread/dispatcher
+        {:dispatcher/type :systems.bread.alpha.cms.scratch/static
+         :dispatcher/component
+         #var systems.bread.alpha.cms.scratch/home-page}}]
+   ["/articles"
+    {:name :articles
+     :bread/dispatcher
+     {:dispatcher/type :systems.bread.alpha.cms.blog/article
+      ;; TODO article component
+      :dispatcher/component
+      #var systems.bread.alpha.cms.scratch/interior-page}}]
+   ["/article/:slug"
+    {:name :article
+     :bread/dispatcher
+     {:dispatcher/type :systems.bread.alpha.cms.blog/article
+      :dispatcher/component
+      #var systems.bread.alpha.cms.scratch/interior-page}}]
+   ["/:slug"
+    {:name :page
+     :bread/dispatcher
+     {:dispatcher/type :systems.bread.alpha.cms.scratch/static
+      :dispatcher/component
+      #var systems.bread.alpha.cms.scratch/home-page}}]]
+  {:conflicts nil}]}
