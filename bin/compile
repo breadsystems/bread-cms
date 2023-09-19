@@ -22,16 +22,13 @@ case $key in
     -b|--binary)
     BINARY_NAME=$2
     shift # past argument
+    shift # past value
     ;;
     -c|--class)
     JAVA_CLASS=$2
     shift # past argument
+    shift # past value
     ;;
-    #-y|--arg-with-value)
-    #VALARG="$2"
-    #shift # past argument
-    #shift # past value
-    #;;
     *)
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
