@@ -30,6 +30,10 @@
   [:html {:lang lang}
    [:p "404"]])
 
+(defn- dangerous [html]
+  {:dangerouslySetInnerHTML
+   {:__html html}})
+
 (defc home-page
   [{:keys [lang page hook]}]
   {:key :page}
@@ -39,9 +43,8 @@
     [:title (hook :site/title (str (:title page) " | " "Bread CMS"))]]
    [:body
     [:h1 (:title page)]
-    [:<>
-     {:dangerouslySetInnerHTML
-              {:__html (:html page)}}]]])
+    [:main
+     (dangerous (:html page))]]])
 
 (defc interior-page
   [data]
