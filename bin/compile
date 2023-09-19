@@ -71,7 +71,6 @@ main() {
     -H:Name=$BINARY_NAME \
     -H:+ReportExceptionStackTraces \
     -H:+PrintClassInitialization \
-    --initialize-at-build-time \
     --enable-url-protocols=http,https \
     --verbose \
     --no-fallback \
