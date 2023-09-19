@@ -319,6 +319,27 @@
     (bread/hook $ ::bread/render)
     (select-keys $ [:status :body :headers]))
 
+  ;; And, while we're at it, define a query helper:
+  (defn q [& args]
+    (apply
+      store/q
+      (store/datastore (->app $req))
+      args))
+  (store/q (store/datastore (:bread/app @system))
+           '{:find [(pull ?e [*])]
+             :in [$]
+             :where [[?e :user/username "coby"]]})
+  (store/q (store/datastore (:bread/app @system))
+           '{:find [(pull ?e [*])]
+             :in [$]
+             :where [[?e :user/locked-at]]})
+  (store/transact (store/connection (:bread/app @system))
+                  [{:db/foo 85
+                    :user/locked-at (java.util.Date.)}])
+  (store/transact (store/connection (:bread/app @system))
+                  [{:user/username "coby"
+                    :user/locked-at (java.util.Date.)}])
+
   ;; SITEMAP DESIGN
 
   ;; OK, algorithm time.
@@ -337,27 +358,6 @@
   ;; Before the next step, we query for all refs in the db:
   (def refs
     (datalog/attrs-by-type (store/datastore (->app $req)) :db.type/ref))
-  ;; And, while we're at it, define a query helper:
-  (defn q [& args]
-    (apply
-      store/q
-      (store/datastore (->app $req))
-      args))
-  (bread/effect {:effect/name :hi} {})
-  (store/q (store/datastore (:bread/app @system))
-           '{:find [(pull ?e [*])]
-             :in [$]
-             :where [[?e :user/username "coby"]]})
-  (store/q (store/datastore (:bread/app @system))
-           '{:find [(pull ?e [*])]
-             :in [$]
-             :where [[?e :user/locked-at]]})
-  (store/transact (store/connection (:bread/app @system))
-                  [{:db/foo 85
-                    :user/locked-at (java.util.Date.)}])
-  (store/transact (store/connection (:bread/app @system))
-                  [{:user/username "coby"
-                    :user/locked-at (java.util.Date.)}])
 
   ;; One more thing: we need to keep track of the attrs we've seen so far:
   (def seen
