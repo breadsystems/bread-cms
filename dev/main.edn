@@ -44,10 +44,8 @@
    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]
  :bread/profilers
- [{:hook #{:systems.bread.alpha.route/match
-           :systems.bread.alpha.route/dispatcher
-           :systems.bread.alpha.core/dispatch}
-    :action/name #{}
+ [{:hook #{:systems.bread.alpha.core/response}
+    :action/name #{:systems.bread.alpha.cms.defaults/response}
     :f #var systems.bread.alpha.cms.main/log-hook!}
   #_ ;; TODO hook up the debugger:
   {:f systems.bread.alpha.tools.debug.core/profile!}

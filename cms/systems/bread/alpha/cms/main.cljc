@@ -171,8 +171,12 @@
   (bread/handler app))
 
 (defn log-hook! [invocation]
-  (let [{:keys [hook action]} invocation]
-    (prn hook (:action/name action))))
+  (let [{:keys [hook action result]} invocation]
+    (prn (:action/name action) (select-keys result
+                                            [:params
+                                             :headers
+                                             :status
+                                             :session]))))
 
 (defmethod ig/init-key :bread/profilers [_ profilers]
   ;; Enable hook profiling.

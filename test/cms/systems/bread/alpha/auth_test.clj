@@ -25,6 +25,12 @@
    :user/failed-login-count 0
    :user/lang :en-US})
 
+(def douglass
+  {:user/username "douglass"
+   :user/name "Frederick Douglass"
+   :user/failed-login-count 0
+   :user/lang :en-US})
+
 (def config
   {:datastore/type :datahike
    :store {:id "authdb" :backend :mem}
@@ -36,7 +42,10 @@
     ;; NOTE: you wouldn't normally mix and match hashing algorithms like this.
     ;; This is just a way to test configuring :auth/hash-algorithm.
     (assoc crenshaw :user/password (hashers/derive "intersectionz"
-                                                   {:alg :argon2id}))]})
+                                                   {:alg :argon2id}))
+    (assoc douglass
+           :user/password (hashers/derive "liber4tion")
+           :user/two-factor-key "fake")]})
 
 (use-datastore :each config)
 
@@ -63,73 +72,115 @@
                         (assoc :auth auth-config)
                         defaults/app
                         bread/load-app
-                        bread/handler))]
+                        bread/handler))
+        ;; What matters is a combination of view data, session, headers, and
+        ;; status; so get that stuff to evaluate against.
+        ->auth-data (fn [{::bread/keys [data] :keys [headers status session]}]
+                      {::bread/data (select-keys data [:session
+                                                       :auth/result
+                                                       :auth/user])
+                       :session session
+                       :headers headers
+                       :status status})]
     (are
       [expected args]
       (= expected (let [[auth-config req] args
                         handler (->handler auth-config)
-                        data (-> (handler req)
-                                 ::bread/data
-                                 (select-keys [:headers
-                                               :session
-                                               :auth/result
-                                               :auth/user]))]
-                    (if (:auth/user data)
+                        data (-> req handler ->auth-data)]
+                    (if (get-in data [::bread/data :auth/user])
                       (-> data
-                          (update :auth/user dissoc :db/id)
-                          (update-in [:auth/result :user] dissoc :db/id))
+                          ;; TODO yikes
+                          (update-in [:session :user] dissoc :db/id)
+                          (update-in [::bread/data :auth/user] dissoc :db/id)
+                          (update-in [::bread/data :auth/result :user] dissoc :db/id))
                       data)))
 
-      {:session nil}
+      {:status 200
+       :headers {"content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
       [nil {:request-method :get}]
 
-      {:session nil}
+      {:status 200
+       :headers {"content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
       [{} {:request-method :get}]
 
-      {:session nil
-       :auth/result {:update false :valid false}
-       :auth/user nil}
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid false}
+                     :auth/user nil}}
       [{} {:request-method :post}]
 
-      {:session nil
-       :auth/result {:update false :valid false}
-       :auth/user nil}
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid false}
+                     :auth/user nil}}
       [{} {:request-method :post
            :params {:username "no one"}}]
 
-      {:session nil
-       :auth/result {:update false :valid false}
-       :auth/user nil}
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid false}
+                     :auth/user nil}}
       [{} {:request-method :post
            :params {:username "no one" :password nil}}]
 
-      {:session nil
-       :auth/result {:update false :valid false}
-       :auth/user nil}
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid false}
+                     :auth/user nil}}
       [{} {:request-method :post
            :params {:username "no one" :password "nothing"}}]
 
-      {:session nil
-       :auth/result {:update false :valid false :user nil}
-       :auth/user angela}
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user nil}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid false :user nil}
+                     :auth/user angela}}
       [{} {:request-method :post
            :params {:username "angela" :password "wrongpassword"}}]
 
-      {:session nil
-       :auth/result {:update false :valid true :user angela}
-       :auth/user angela}
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:user angela
+                 :auth/step :logged-in}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid true :user angela}
+                     :auth/user angela}}
       [{} {:request-method :post
            :params {:username "angela" :password "abolition4lyfe"}}]
 
-      {:session nil
-       :auth/result {:update false :valid true :user bobby}
-       :auth/user bobby}
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:user bobby
+                 :auth/step :logged-in}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid true :user bobby}
+                     :auth/user bobby}}
       [{} {:request-method :post
            :params {:username "bobby" :password "pantherz"}}]
 
-      {:session nil
-       :auth/result {:update false :valid true :user crenshaw}
-       :auth/user crenshaw}
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:user crenshaw
+                 :auth/step :logged-in}
+       ::bread/data {:session nil
+                     :auth/result {:update false :valid true :user crenshaw}
+                     :auth/user crenshaw}}
       [{:auth/hash-algorithm :argon2id}
        {:request-method :post
         :params {:username "crenshaw" :password "intersectionz"}}]
