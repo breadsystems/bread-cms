@@ -205,6 +205,7 @@
          ['{:find [(pull ?e [:db/id
                              :user/username
                              :user/email
+                             ;; TODO protect pw/key in schema
                              :user/password
                              :user/two-factor-key
                              :user/locked-at
