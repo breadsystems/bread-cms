@@ -273,6 +273,21 @@
                   :auth/step :two-factor}
         :params {:two-factor-code "123456"}}]
 
+      ;; Logout
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session nil
+       ::bread/data {;; ::bread/data still has the old session info,
+                     ;; to be updated after redirect
+                     :session {:user douglass
+                               :auth/step :logged-in}}}
+      [{}
+       {:request-method :post
+        :session {:user douglass
+                  :auth/step :logged-in}
+        :params {:submit "logout"}}]
+
       ;;
       )))
 
