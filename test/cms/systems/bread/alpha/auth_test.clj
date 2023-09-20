@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.auth-test
   (:require
     [buddy.hashers :as hashers]
+    [clj-totp.core :as totp]
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.defaults :as defaults]
@@ -29,7 +30,8 @@
   {:user/username "douglass"
    :user/name "Frederick Douglass"
    :user/failed-login-count 0
-   :user/lang :en-US})
+   :user/lang :en-US
+   :user/two-factor-key "fake"})
 
 (def config
   {:datastore/type :datahike
@@ -43,15 +45,19 @@
     ;; This is just a way to test configuring :auth/hash-algorithm.
     (assoc crenshaw :user/password (hashers/derive "intersectionz"
                                                    {:alg :argon2id}))
-    (assoc douglass
-           :user/password (hashers/derive "liber4tion")
-           :user/two-factor-key "fake")]})
+    (assoc douglass :user/password (hashers/derive "liber4tion"))]})
 
 (use-datastore :each config)
 
 (defmethod bread/action ::route
   [req _ _]
   (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login}))
+
+(defn fake-2fa-validator
+  ([^String _ ^long code]
+   (= 123456 code))
+  ([^String _ ^long code ^long t]
+   (= 123456 code)))
 
 (deftest test-authentication-flow
   (let [route-plugin
@@ -84,17 +90,19 @@
                        :status status})]
     (are
       [expected args]
-      (= expected (let [[auth-config req] args
-                        handler (->handler auth-config)
-                        data (-> req handler ->auth-data)]
-                    (if (get-in data [::bread/data :auth/user])
-                      (-> data
-                          ;; TODO yikes
-                          (update-in [:session :user] dissoc :db/id)
-                          (update-in [::bread/data :auth/user] dissoc :db/id)
-                          (update-in [::bread/data :auth/result :user] dissoc :db/id))
-                      data)))
+      (= expected (with-redefs [totp/valid-code? fake-2fa-validator]
+                    (let [[auth-config req] args
+                          handler (->handler auth-config)
+                          data (-> req handler ->auth-data)]
+                      (if (get-in data [::bread/data :auth/user])
+                        (-> data
+                            ;; TODO yikes
+                            (update-in [:session :user] dissoc :db/id)
+                            (update-in [::bread/data :auth/user] dissoc :db/id)
+                            (update-in [::bread/data :auth/result :user] dissoc :db/id))
+                        data))))
 
+      ;; Requesting the login page.
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
@@ -107,6 +115,7 @@
        ::bread/data {:session nil}}
       [{} {:request-method :get}]
 
+      ;; POST with no data
       {:status 401
        :headers {"content-type" "text/html"}
        :session {}
@@ -115,6 +124,7 @@
                      :auth/user nil}}
       [{} {:request-method :post}]
 
+      ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
        :session {}
@@ -124,6 +134,7 @@
       [{} {:request-method :post
            :params {:username "no one"}}]
 
+      ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
        :session {}
@@ -133,6 +144,7 @@
       [{} {:request-method :post
            :params {:username "no one" :password nil}}]
 
+      ;; POST with bad username AND password
       {:status 401
        :headers {"content-type" "text/html"}
        :session {}
@@ -142,6 +154,7 @@
       [{} {:request-method :post
            :params {:username "no one" :password "nothing"}}]
 
+      ;; POST with bad password
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -151,39 +164,114 @@
       [{} {:request-method :post
            :params {:username "angela" :password "wrongpassword"}}]
 
+      ;; POST with correct password
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
        :session {:user angela
                  :auth/step :logged-in}
-       ::bread/data {:session nil
+       ::bread/data {:session nil ;; populates after redirect
                      :auth/result {:update false :valid true :user angela}
                      :auth/user angela}}
       [{} {:request-method :post
            :params {:username "angela" :password "abolition4lyfe"}}]
 
+      ;; POST with correct password
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
        :session {:user bobby
                  :auth/step :logged-in}
-       ::bread/data {:session nil
+       ::bread/data {:session nil ;; populates after redirect
                      :auth/result {:update false :valid true :user bobby}
                      :auth/user bobby}}
       [{} {:request-method :post
            :params {:username "bobby" :password "pantherz"}}]
 
+      ;; POST with correct password; custom hash algo
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
        :session {:user crenshaw
                  :auth/step :logged-in}
-       ::bread/data {:session nil
+       ::bread/data {:session nil ;; populates after redirect
                      :auth/result {:update false :valid true :user crenshaw}
                      :auth/user crenshaw}}
       [{:auth/hash-algorithm :argon2id}
        {:request-method :post
         :params {:username "crenshaw" :password "intersectionz"}}]
+
+      ;; Successful username/password login requiring 2FA step
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session nil ;; populates after redirect
+                     :auth/result {:update false :valid true :user douglass}
+                     :auth/user douglass}}
+      [{}
+       {:request-method :post
+        :params {:username "douglass" :password "liber4tion"}}]
+
+      ;; 2FA with blank code
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      [{}
+       {:request-method :post
+        :session {:user douglass
+                  :auth/step :two-factor}
+        :params {:two-factor-code ""}}]
+
+      ;; 2FA with invalid code
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      [{}
+       {:request-method :post
+        :session {:user douglass
+                  :auth/step :two-factor}
+        :params {:two-factor-code "wpeovwoeginawge"}}]
+
+      ;; Unsuccessful 2FA
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      [{}
+       {:request-method :post
+        :session {:user douglass
+                  :auth/step :two-factor}
+        :params {:two-factor-code "654321"}}]
+
+      ;; Successful 2FA
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :logged-in}
+       ::bread/data {;; ::bread/data still has the old session info,
+                     ;; to be updated after redirect
+                     :session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid true :user douglass}}}
+      [{}
+       {:request-method :post
+        :session {:user douglass
+                  :auth/step :two-factor}
+        :params {:two-factor-code "123456"}}]
 
       ;;
       )))
