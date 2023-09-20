@@ -19,14 +19,24 @@
    :user/failed-login-count 0
    :user/lang :en-US})
 
+(def crenshaw
+  {:user/username "crenshaw"
+   :user/name "Kimberly Crenshaw"
+   :user/failed-login-count 0
+   :user/lang :en-US})
+
 (def config
   {:datastore/type :datahike
    :store {:id "authdb" :backend :mem}
    :recreate? true
    :force? true
    :datastore/initial-txns
-   [(assoc angela :user/password "abolition4lyfe")
-    (assoc bobby :user/password "pantherz")]})
+   [(assoc angela :user/password (hashers/derive "abolition4lyfe"))
+    (assoc bobby :user/password (hashers/derive "pantherz"))
+    ;; NOTE: you wouldn't normally mix and match hashing algorithms like this.
+    ;; This is just a way to test configuring :auth/hash-algorithm.
+    (assoc crenshaw :user/password (hashers/derive "intersectionz"
+                                                   {:alg :argon2id}))]})
 
 (use-datastore :each config)
 
@@ -58,14 +68,10 @@
       [expected args]
       (= expected (let [[auth-config req] args
                         handler (->handler auth-config)
-                        mock-verify (fn [plaintext encrypted]
-                                      {:update false
-                                       :valid (= plaintext encrypted)})
-                        data (-> (with-redefs
-                                   [hashers/verify mock-verify]
-                                   (handler req))
+                        data (-> (handler req)
                                  ::bread/data
-                                 (select-keys [:session
+                                 (select-keys [:headers
+                                               :session
                                                :auth/result
                                                :auth/user]))]
                     (if (:auth/user data)
@@ -114,6 +120,19 @@
        :auth/user angela}
       [{} {:request-method :post
            :params {:username "angela" :password "abolition4lyfe"}}]
+
+      {:session nil
+       :auth/result {:update false :valid true :user bobby}
+       :auth/user bobby}
+      [{} {:request-method :post
+           :params {:username "bobby" :password "pantherz"}}]
+
+      {:session nil
+       :auth/result {:update false :valid true :user crenshaw}
+       :auth/user crenshaw}
+      [{:auth/hash-algorithm :argon2id}
+       {:request-method :post
+        :params {:username "crenshaw" :password "intersectionz"}}]
 
       ;;
       )))
