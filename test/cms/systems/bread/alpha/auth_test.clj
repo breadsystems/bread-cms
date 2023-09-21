@@ -83,8 +83,7 @@
         ;; status; so get that stuff to evaluate against.
         ->auth-data (fn [{::bread/keys [data] :keys [headers status session]}]
                       {::bread/data (select-keys data [:session
-                                                       :auth/result
-                                                       :auth/user])
+                                                       :auth/result])
                        :session session
                        :headers headers
                        :status status})]
@@ -94,11 +93,10 @@
                     (let [[auth-config req] args
                           handler (->handler auth-config)
                           data (-> req handler ->auth-data)]
-                      (if (get-in data [::bread/data :auth/user])
+                      (if (get-in data [::bread/data :auth/result])
                         (-> data
                             ;; TODO yikes
                             (update-in [:session :user] dissoc :db/id)
-                            (update-in [::bread/data :auth/user] dissoc :db/id)
                             (update-in [::bread/data :session :user] dissoc :db/id)
                             (update-in [::bread/data :auth/result :user] dissoc :db/id))
                         data))))
@@ -119,39 +117,35 @@
       ;; POST with no data
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {}
-       ::bread/data {:session nil
-                     :auth/result {:update false :valid false}
-                     :auth/user nil}}
+       :session {:user nil}
+       ::bread/data {:session {:user nil}
+                     :auth/result {:update false :valid false :user nil}}}
       [{} {:request-method :post}]
 
       ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {}
-       ::bread/data {:session nil
-                     :auth/result {:update false :valid false}
-                     :auth/user nil}}
+       :session {:user nil}
+       ::bread/data {:session {:user nil}
+                     :auth/result {:update false :valid false :user nil}}}
       [{} {:request-method :post
            :params {:username "no one"}}]
 
       ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {}
-       ::bread/data {:session nil
-                     :auth/result {:update false :valid false}
-                     :auth/user nil}}
+       :session {:user nil}
+       ::bread/data {:session {:user nil}
+                     :auth/result {:update false :valid false :user nil}}}
       [{} {:request-method :post
            :params {:username "no one" :password nil}}]
 
       ;; POST with bad username AND password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {}
-       ::bread/data {:session nil
-                     :auth/result {:update false :valid false}
-                     :auth/user nil}}
+       :session {:user nil}
+       ::bread/data {:session {:user nil}
+                     :auth/result {:update false :valid false :user nil}}}
       [{} {:request-method :post
            :params {:username "no one" :password "nothing"}}]
 
@@ -160,8 +154,7 @@
        :headers {"content-type" "text/html"}
        :session {:user nil}
        ::bread/data {:session {:user nil}
-                     :auth/result {:update false :valid false :user nil}
-                     :auth/user angela}}
+                     :auth/result {:update false :valid false :user angela}}}
       [{} {:request-method :post
            :params {:username "angela" :password "wrongpassword"}}]
 
@@ -173,8 +166,7 @@
                  :auth/step :logged-in}
        ::bread/data {:session {:user angela
                                :auth/step :logged-in}
-                     :auth/result {:update false :valid true :user angela}
-                     :auth/user angela}}
+                     :auth/result {:update false :valid true :user angela}}}
       [{} {:request-method :post
            :params {:username "angela" :password "abolition4lyfe"}}]
 
@@ -186,8 +178,7 @@
                  :auth/step :logged-in}
        ::bread/data {:session {:user bobby
                                :auth/step :logged-in}
-                     :auth/result {:update false :valid true :user bobby}
-                     :auth/user bobby}}
+                     :auth/result {:update false :valid true :user bobby}}}
       [{} {:request-method :post
            :params {:username "bobby" :password "pantherz"}}]
 
@@ -199,8 +190,7 @@
                  :auth/step :logged-in}
        ::bread/data {:session {:user crenshaw
                                :auth/step :logged-in}
-                     :auth/result {:update false :valid true :user crenshaw}
-                     :auth/user crenshaw}}
+                     :auth/result {:update false :valid true :user crenshaw}}}
       [{:auth/hash-algorithm :argon2id}
        {:request-method :post
         :params {:username "crenshaw" :password "intersectionz"}}]
@@ -213,8 +203,7 @@
                  :auth/step :two-factor}
        ::bread/data {:session {:user douglass
                                :auth/step :two-factor}
-                     :auth/result {:update false :valid true :user douglass}
-                     :auth/user douglass}}
+                     :auth/result {:update false :valid true :user douglass}}}
       [{}
        {:request-method :post
         :params {:username "douglass" :password "liber4tion"}}]

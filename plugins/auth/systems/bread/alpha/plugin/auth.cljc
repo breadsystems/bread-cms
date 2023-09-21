@@ -106,11 +106,11 @@
     (= -1 (.compareTo now unlock-at))))
 
 (defmethod bread/query ::authenticate
-  [{:keys [plaintext-password lock-seconds]} {:auth/keys [user]}]
+  [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
   (let [encrypted (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
     (cond
-      (not user) {:valid false :update false}
+      (not user) {:valid false :update false :user nil}
 
       ;; Don't bother authenticating if the account is locked.
       (and (:user/locked-at user)
@@ -125,13 +125,7 @@
                      (hashers/verify plaintext-password encrypted)
                      (catch clojure.lang.ExceptionInfo e
                        {:valid false :update false}))]
-        (if (:valid result)
-          (assoc result :user user)
-          result)))))
-
-(defmethod bread/query ::scrub
-  [_ {:auth/keys [user]}]
-  (when user (dissoc user :user/password)))
+        (assoc result :user user)))))
 
 (defmethod bread/query ::authenticate-two-factor
   [{:keys [user two-factor-code]} _]
@@ -149,12 +143,12 @@
       (assoc-in [:headers "Location"] "/login")))
 
 (defmethod bread/effect ::log-attempt
-  [{:keys [conn max-failed-login-count]} {:auth/keys [user]}]
+  [{:keys [conn max-failed-login-count]} {{:keys [user]} :auth/result}]
   (cond
     (not user) nil
 
-    (and (:user/locked-at user)
-         (account-locked? (LocalDateTime/now) (:user/locked-at user)))
+    (and (:user/locked-at user) (account-locked? (LocalDateTime/now)
+                                                 (:user/locked-at user)))
     nil
 
     (>= (:user/failed-login-count user) max-failed-login-count)
@@ -201,7 +195,7 @@
       post?
       {:queries
        [{:query/name ::store/query
-         :query/key :auth/user
+         :query/key :auth/result
          :query/description "Find a user with the given username"
          :query/db (store/datastore req)
          :query/args
@@ -222,10 +216,7 @@
         {:query/name ::authenticate
          :query/key :auth/result
          :lock-seconds lock-seconds
-         :plaintext-password (:password params)}
-        {:query/name ::scrub
-         :query/key :auth/user
-         :query/description "Scrub password hash from user record"}]
+         :plaintext-password (:password params)}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
