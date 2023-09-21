@@ -3,13 +3,37 @@
     [aero.core :as aero]
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
+    [clojure.edn :as edn]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.core :as bread]
-    [ring.middleware.session.store :refer [SessionStore]])
+    [ring.middleware.session.store :as ss :refer [SessionStore]])
   (:import
-    [java.time LocalDateTime Duration ZoneId]))
+    [java.time LocalDateTime Duration ZoneId]
+    [java.util UUID]))
+
+(deftype DatalogSessionStore [conn]
+  SessionStore
+  (ss/delete-session [_ sk]
+    (store/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
+                          [:db/retract [:session/uuid sk] :session/data]])
+    sk)
+  (ss/read-session [_ sk]
+    (let [data (store/q @conn
+                        '{:find [?data .]
+                          :in [$ ?sk]
+                          :where [[?e :session/data ?data]
+                                  [?e :session/uuid ?sk]]}
+                        sk)]
+      (edn/read-string data)))
+  (ss/write-session [_ sk data]
+    (let [sk (or sk (UUID/randomUUID))]
+      (store/transact conn [{:session/uuid sk :session/data (pr-str data)}])
+      sk)))
+
+(defn session-store [conn]
+  (DatalogSessionStore. conn))
 
 (comment
   (def totp-spec

@@ -420,6 +420,7 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/posts}}))

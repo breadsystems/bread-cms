@@ -2,11 +2,17 @@
   (:require
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
-    [clojure.test :refer [deftest are]]
+    [clojure.test :refer [deftest are is testing]]
+    [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.defaults :as defaults]
+    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]]))
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded
+                                              use-datastore]])
+  (:import
+    [java.util UUID]))
 
 (def angela
   {:user/username "angela"
@@ -279,9 +285,58 @@
       ;;
       )))
 
+(deftest test-session-store
+  (let [app (plugins->loaded [(store/plugin config)])
+        conn (store/connection app)
+        session-store (auth/session-store conn)
+        get-session-data (fn [sk]
+                           (store/q @conn
+                                    '{:find [?data .]
+                                      :in [$ ?sk]
+                                      :where [[?e :session/uuid ?sk]
+                                              [?e :session/data ?data]]}
+                                    sk))]
+
+    (testing "write-session"
+      (testing "passing a UUID"
+        (let [sk (ss/write-session session-store (UUID/randomUUID) {:a :b})]
+          (is (uuid? sk))
+          (is (= "{:a :b}" (get-session-data sk)))))
+
+      (testing "passing nil session key"
+        (let [sk (ss/write-session session-store nil {:a :b})]
+          (is (uuid? sk))
+          (is (= "{:a :b}" (get-session-data sk))))))
+
+    (testing "read-session"
+      (let [sk (ss/write-session session-store nil {:a :b})]
+        (is (= {:a :b} (ss/read-session session-store sk)))))
+
+    (testing "delete-session"
+      (let [sk (ss/write-session session-store nil {:a :b})]
+        (ss/delete-session session-store sk)
+        (is (nil? (get-session-data sk)))
+        (is (nil? (ss/read-session session-store sk)))))
+
+    ;;
+    ))
+
 (comment
   (require '[datahike.api :as d])
+  (d/create-database config)
   (d/delete-database config)
+  (require '[systems.bread.alpha.util.datalog :as datalog])
+
+  (def app (plugins->loaded [(store/plugin config)]))
+  (def $conn (store/connection app))
+  (def $store (auth/session-store $conn))
+  (def $uuid (UUID/randomUUID))
+  (satisfies? ss/SessionStore $store)
+  (ss/write-session $store $uuid {:a :b})
+  (datalog/attrs @$conn)
+  (store/q @$conn '{:find [(pull ?e [*]) .]
+                    :in [$ ?sk]
+                    :where [[?e :session/data]]})
 
   (require '[kaocha.repl :as k])
   (k/run))
