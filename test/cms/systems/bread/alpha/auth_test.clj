@@ -303,6 +303,12 @@
           (is (uuid? sk))
           (is (= "{:a :b}" (get-session-data sk)))))
 
+      (testing "passing a UUID-formatted string"
+        (let [uuid (UUID/randomUUID)
+              sk (ss/write-session session-store (str uuid) {:a :b})]
+          (is (uuid? sk))
+          (is (= "{:a :b}" (get-session-data sk)))))
+
       (testing "passing nil session key"
         (let [sk (ss/write-session session-store nil {:a :b})]
           (is (uuid? sk))
@@ -310,13 +316,21 @@
 
     (testing "read-session"
       (let [sk (ss/write-session session-store nil {:a :b})]
-        (is (= {:a :b} (ss/read-session session-store sk)))))
+        (is (= {:a :b} (ss/read-session session-store sk)))
+        (is (= {:a :b} (ss/read-session session-store (str sk))))))
 
     (testing "delete-session"
-      (let [sk (ss/write-session session-store nil {:a :b})]
-        (ss/delete-session session-store sk)
-        (is (nil? (get-session-data sk)))
-        (is (nil? (ss/read-session session-store sk)))))
+      (testing "passing a UUID"
+        (let [sk (ss/write-session session-store nil {:a :b})]
+          (ss/delete-session session-store sk)
+          (is (nil? (get-session-data sk)))
+          (is (nil? (ss/read-session session-store sk)))))
+
+      (testing "passing a UUID-formatted string"
+        (let [sk (ss/write-session session-store nil {:a :b})]
+          (ss/delete-session session-store (str sk))
+          (is (nil? (get-session-data sk)))
+          (is (nil? (ss/read-session session-store sk))))))
 
     ;;
     ))

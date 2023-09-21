@@ -13,14 +13,19 @@
     [java.time LocalDateTime Duration ZoneId]
     [java.util UUID]))
 
+(defn- ->uuid [x]
+  (if (string? x) (UUID/fromString x) x))
+
 (deftype DatalogSessionStore [conn]
   SessionStore
   (ss/delete-session [_ sk]
-    (store/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
-                          [:db/retract [:session/uuid sk] :session/data]])
-    sk)
+    (let [sk (->uuid sk)]
+      (store/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
+                            [:db/retract [:session/uuid sk] :session/data]])
+      sk))
   (ss/read-session [_ sk]
-    (let [data (store/q @conn
+    (let [sk (->uuid sk)
+          data (store/q @conn
                         '{:find [?data .]
                           :in [$ ?sk]
                           :where [[?e :session/data ?data]
@@ -28,7 +33,7 @@
                         sk)]
       (edn/read-string data)))
   (ss/write-session [_ sk data]
-    (let [sk (or sk (UUID/randomUUID))]
+    (let [sk (or (->uuid sk) (UUID/randomUUID))]
       (store/transact conn [{:session/uuid sk :session/data (pr-str data)}])
       sk)))
 
@@ -36,6 +41,8 @@
   (DatalogSessionStore. conn))
 
 (comment
+  (str (UUID/fromString "6713c8ff-cca2-4e28-a2ac-a34f3745487b"))
+  (->uuid nil)
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
