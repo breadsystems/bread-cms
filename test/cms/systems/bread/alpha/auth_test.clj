@@ -99,6 +99,7 @@
                             ;; TODO yikes
                             (update-in [:session :user] dissoc :db/id)
                             (update-in [::bread/data :auth/user] dissoc :db/id)
+                            (update-in [::bread/data :session :user] dissoc :db/id)
                             (update-in [::bread/data :auth/result :user] dissoc :db/id))
                         data))))
 
@@ -158,7 +159,7 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
-       ::bread/data {:session nil
+       ::bread/data {:session {:user nil}
                      :auth/result {:update false :valid false :user nil}
                      :auth/user angela}}
       [{} {:request-method :post
@@ -170,7 +171,8 @@
                  "content-type" "text/html"}
        :session {:user angela
                  :auth/step :logged-in}
-       ::bread/data {:session nil ;; populates after redirect
+       ::bread/data {:session {:user angela
+                               :auth/step :logged-in}
                      :auth/result {:update false :valid true :user angela}
                      :auth/user angela}}
       [{} {:request-method :post
@@ -182,7 +184,8 @@
                  "content-type" "text/html"}
        :session {:user bobby
                  :auth/step :logged-in}
-       ::bread/data {:session nil ;; populates after redirect
+       ::bread/data {:session {:user bobby
+                               :auth/step :logged-in}
                      :auth/result {:update false :valid true :user bobby}
                      :auth/user bobby}}
       [{} {:request-method :post
@@ -194,7 +197,8 @@
                  "content-type" "text/html"}
        :session {:user crenshaw
                  :auth/step :logged-in}
-       ::bread/data {:session nil ;; populates after redirect
+       ::bread/data {:session {:user crenshaw
+                               :auth/step :logged-in}
                      :auth/result {:update false :valid true :user crenshaw}
                      :auth/user crenshaw}}
       [{:auth/hash-algorithm :argon2id}
@@ -207,7 +211,8 @@
                  "content-type" "text/html"}
        :session {:user douglass
                  :auth/step :two-factor}
-       ::bread/data {:session nil ;; populates after redirect
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
                      :auth/result {:update false :valid true :user douglass}
                      :auth/user douglass}}
       [{}
@@ -262,10 +267,8 @@
                  "content-type" "text/html"}
        :session {:user douglass
                  :auth/step :logged-in}
-       ::bread/data {;; ::bread/data still has the old session info,
-                     ;; to be updated after redirect
-                     :session {:user douglass
-                               :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :logged-in}
                      :auth/result {:valid true :user douglass}}}
       [{}
        {:request-method :post
@@ -278,10 +281,7 @@
        :headers {"Location" "/login"
                  "content-type" "text/html"}
        :session nil
-       ::bread/data {;; ::bread/data still has the old session info,
-                     ;; to be updated after redirect
-                     :session {:user douglass
-                               :auth/step :logged-in}}}
+       ::bread/data {:session nil}}
       [{}
        {:request-method :post
         :session {:user douglass

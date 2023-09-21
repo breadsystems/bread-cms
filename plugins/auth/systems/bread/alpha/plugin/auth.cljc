@@ -86,12 +86,15 @@
                   (not valid)
                   (merge {} session) ;; create or persist session
 
-                  valid {:user user :auth/step next-step})]
+                  valid {:user user :auth/step next-step})
+        session (if locked?
+                  (assoc session :locked? true)
+                  session)]
     (cond-> res
       true (assoc
              :session session
              :status (if valid 302 401))
-      locked? (assoc-in [:session :locked?] true)
+      valid (assoc-in [::bread/data :session] session)
       ;; TODO make redirect configurable
       valid (assoc-in [:headers "Location"] "/login"))))
 
@@ -141,6 +144,7 @@
 (defmethod bread/action ::logout [res _ _]
   (-> res
       (assoc :session nil :status 302)
+      (assoc-in [::bread/data :session] nil)
       ;; TODO configure redirect
       (assoc-in [:headers "Location"] "/login")))
 
@@ -166,7 +170,7 @@
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
-  (let [{:auth/keys [step result locked?] :keys [user]} session
+  (let [{:auth/keys [step locked?] :keys [user]} session
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
         lock-seconds (bread/config req :auth/lock-seconds)
         post? (= :post request-method)
@@ -185,11 +189,10 @@
       {:queries
        [{:query/name ::authenticate-two-factor
          :query/key :auth/result
-         :prior-result result
          :user user
          :two-factor-code (:two-factor-code params)}]
        :hooks
-       {::bread/response
+       {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response"
           :max-failed-login-count max-failed-login-count}]}}
@@ -231,7 +234,7 @@
          :max-failed-login-count max-failed-login-count
          :conn (store/connection req)}]
        :hooks
-       {::bread/response
+       {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response."
           :max-failed-login-count max-failed-login-count}]}}
