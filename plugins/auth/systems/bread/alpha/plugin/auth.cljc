@@ -81,22 +81,15 @@
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
-        session (cond
-
-                  (not valid)
-                  (merge {} session) ;; create or persist session
-
-                  valid {:user user :auth/step next-step})
-        session (if locked?
-                  (assoc session :locked? true)
-                  session)]
-    (cond-> res
-      true (assoc
-             :session session
-             :status (if valid 302 401))
-      valid (assoc-in [::bread/data :session] session)
-      ;; TODO make redirect configurable
-      valid (assoc-in [:headers "Location"] "/login"))))
+        session (cond-> nil
+                  valid (assoc :user user :auth/step next-step)
+                  locked? (assoc :locked? true))]
+    (if-not valid
+      (assoc res :status 401)
+      (-> res
+          (assoc :status 302 :session session)
+          (assoc-in [::bread/data :session] session)
+          (assoc-in [:headers "Location"] "/login")))))
 
 (defn- account-locked? [now locked-at seconds]
   (let [locked-at (LocalDateTime/ofInstant

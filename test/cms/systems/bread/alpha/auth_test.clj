@@ -95,7 +95,6 @@
                           data (-> req handler ->auth-data)]
                       (if (get-in data [::bread/data :auth/result])
                         (-> data
-                            ;; TODO yikes
                             (update-in [:session :user] dissoc :db/id)
                             (update-in [::bread/data :session :user] dissoc :db/id)
                             (update-in [::bread/data :auth/result :user] dissoc :db/id))
