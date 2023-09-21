@@ -110,15 +110,6 @@
        :ext "md"
        :path path}]}))
 
-(comment
-  ;(let [{:keys [queries]}
-  ;      (dispatcher/dispatch {::bread/dispatcher {:dispatcher/type ::static}
-  ;                            :uri "/en"})]
-  ;  (bread/hook {::bread/queries queries
-  ;               ::bread/hooks {::bread/expand [{:action/name ::query/expand-queries}]}
-  ;               ::bread/data {}} ::bread/expand))
-  )
-
 (defn run-as-cgi [{:keys [options]}]
   (try
     ;; TODO this is pretty jank, update to parse HTTP requests properly
