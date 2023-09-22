@@ -80,7 +80,7 @@
       :db/unique :db.unique/value
       :attr/migration "migration.users"}
      {:db/ident :user/username
-      :db/doc "Username"
+      :db/doc "Username they use to login"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :db/unique :db.unique/identity
@@ -106,7 +106,7 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
      {:db/ident :user/name
-      :db/doc "User name"
+      :db/doc "User's name"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
