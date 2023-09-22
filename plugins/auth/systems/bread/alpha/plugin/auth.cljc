@@ -8,6 +8,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.internal.time :as t]
     [ring.middleware.session.store :as ss :refer [SessionStore]])
   (:import
     [java.time LocalDateTime Duration ZoneId]
@@ -181,9 +182,9 @@
 
       (>= (:user/failed-login-count user) max-failed-login-count)
       (store/transact conn [(assoc transaction
-                             ;; Lock account, but reset attempts.
-                             :user/locked-at (java.util.Date.)
-                             :user/failed-login-count 0)])
+                                   ;; Lock account, but reset attempts.
+                                   :user/locked-at (t/now)
+                                   :user/failed-login-count 0)])
 
       :default
       (let [incremented (inc (:user/failed-login-count user))]

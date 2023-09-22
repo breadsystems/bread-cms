@@ -7,12 +7,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               use-datastore]])
   (:import
-    [java.util UUID]))
+    [java.util Date UUID]))
 
 (def angela
   {:user/username "angela"
@@ -286,7 +287,8 @@
       )))
 
 (deftest test-log-attempt
-  (let [app (plugins->loaded [(store/plugin config)])
+  (let [!NOW! (Date.)
+        app (plugins->loaded [(store/plugin config)])
         conn (store/connection app)
         get-user (fn [username]
                    (store/q @conn
@@ -304,7 +306,10 @@
                         app (-> app
                                 (bread/add-effect effect)
                                 (assoc ::bread/data {:auth/result result}))]
-                    (bread/hook app ::bread/effects!)
+                    ;; TODO add a step to effect handling so we can
+                    ;; return transactions statelessly
+                    (binding [t/*now* !NOW!]
+                      (bread/hook app ::bread/effects!))
                     (-> result :user :user/username get-user)))
 
       nil [{:conn conn :max-failed-login-count 5}
@@ -318,7 +323,7 @@
       ;; max failed logins
       {:user/username "angela"
        :user/failed-login-count 0
-       :user/locked-at (java.util.Date.)}
+       :user/locked-at !NOW!}
       [;; effect
        {:conn conn :max-failed-login-count 5}
        ;; :auth/result
