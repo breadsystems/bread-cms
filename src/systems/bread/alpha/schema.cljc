@@ -60,7 +60,113 @@
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
 
-;; TODO metadata
+(def
+  ^{:doc "Schema for users, roles, and sessions."}
+  users
+  (with-meta
+    [{:db/id  "migration.users"
+      :migration/key :bread.migration/users
+      :migration/description  "Migration for users and roles schema"}
+     {:db/ident :user/uuid
+      :db/doc "Unique identifier. Distinct from the Datahike entity ID."
+      :db/valueType :db.type/uuid
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/email
+      :db/doc "User account email"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/many
+      :db/unique :db.unique/value
+      :attr/migration "migration.users"}
+     {:db/ident :user/username
+      :db/doc "Username"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :db/unique :db.unique/identity
+      :attr/migration "migration.users"}
+     {:db/ident :user/password
+      :db/doc "User account password hash"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/two-factor-key
+      :db/doc "User's 2FA secret key"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/locked-at
+      :db/doc "When the user's account was locked for security purposes (if at all)"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/failed-login-count
+      :db/doc "How many times in a row the user has attempted to login"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/name
+      :db/doc "User name"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/lang
+      :db/doc "The user's preferred language, as a keyword"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/slug
+      :db/doc "The user's slugified name for use in URLs"
+      :db/valueType :db.type/string
+      :db/unique :db.unique/value
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     ;; TODO remove
+     {:db/ident :user/fields
+      :db/doc "Zero or more translatable user content fields"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :i18n/translatable? true
+      :attr/migration "migration.users"}
+
+     ;; Roles
+     {:db/ident :user/roles
+      :db/doc "User roles. Used for mapping to abilities for authorization"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.users"}
+     {:db/ident :ability/key
+      :db/doc "The keyword identifier for an ability (for role-based authorization)"
+      :db/valueType :db.type/keyword
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :ability/name
+      :db/doc "The human-readable name for an ability"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+
+     ;; Sessions
+     {:db/ident :session/uuid
+      :db/doc "Session identifier."
+      :db/valueType :db.type/uuid
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :session/user
+      :db/doc "The user this session belongs to."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :session/data
+      :db/doc "Arbitrary session data."
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}]
+
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations}}))
 
 (def
   ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
@@ -115,6 +221,13 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
 
+     ;; Authorship of posts
+     {:db/ident :post/authors
+      :db/doc "Zero or more entity IDs of a Post's author(s)"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.posts"}
+
      ;; Fields
      {:db/ident :field/key
       :db/doc "Unique-per-post keyword for this field"
@@ -133,7 +246,8 @@
       :attr/migration "migration.posts"}]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
-                               :bread.migration/i18n}}))
+                               :bread.migration/i18n
+                               :bread.migration/users}}))
 
 (def
   ^{:doc "Schema for taxons, ways of subdividing posts arbitrarily."}
@@ -310,133 +424,17 @@
                                :bread.migration/posts}}))
 
 (def
-  ^{:doc "Schema for users, roles, and sessions."}
-  users
-  (with-meta
-    [{:db/id  "migration.users"
-      :migration/key :bread.migration/users
-      :migration/description  "Migration for users and roles schema"}
-     {:db/ident :user/uuid
-      :db/doc "Unique identifier. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/email
-      :db/doc "User account email"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/many
-      :db/unique :db.unique/value
-      :attr/migration "migration.users"}
-     {:db/ident :user/username
-      :db/doc "Username"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :db/unique :db.unique/identity
-      :attr/migration "migration.users"}
-     {:db/ident :user/password
-      :db/doc "User account password hash"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/two-factor-key
-      :db/doc "User's 2FA secret key"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/locked-at
-      :db/doc "When the user's account was locked for security purposes (if at all)"
-      :db/valueType :db.type/instant
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/failed-login-count
-      :db/doc "How many times in a row the user has attempted to login"
-      :db/valueType :db.type/number
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/name
-      :db/doc "User name"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/lang
-      :db/doc "The user's preferred language, as a keyword"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/slug
-      :db/doc "The user's slugified name for use in URLs"
-      :db/valueType :db.type/string
-      :db/unique :db.unique/value
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     ;; TODO remove
-     {:db/ident :user/fields
-      :db/doc "Zero or more translatable user content fields"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :i18n/translatable? true
-      :attr/migration "migration.users"}
-
-     ;; Authorship of posts
-     {:db/ident :post/authors
-      :db/doc "Zero or more entity IDs of a Post's author(s)"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.users"}
-
-     ;; Roles
-     {:db/ident :user/roles
-      :db/doc "User roles. Used for mapping to abilities for authorization"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.users"}
-     {:db/ident :ability/key
-      :db/doc "The keyword identifier for an ability (for role-based authorization)"
-      :db/valueType :db.type/keyword
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :ability/name
-      :db/doc "The human-readable name for an ability"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-
-     ;; Sessions
-     {:db/ident :session/uuid
-      :db/doc "Session identifier."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :session/user
-      :db/doc "The user this session belongs to."
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :session/data
-      :db/doc "Arbitrary session data."
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}]
-
-    {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations
-                               :bread.migration/posts}}))
-
-(def
   ^{:doc "Standard schema for the Bread CMS database."}
   initial
   (with-meta
     [migrations
      i18n
+     users
      posts
      taxons
      menus
      revisions
-     comments
-     users]
+     comments]
     {:type :bread/schema
      :bread/schema ::core}))
 
