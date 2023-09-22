@@ -11,7 +11,6 @@
     [systems.bread.alpha.internal.time :as t]
     [ring.middleware.session.store :as ss :refer [SessionStore]])
   (:import
-    [java.time LocalDateTime Duration ZoneId]
     [java.util UUID]))
 
 (defn- ->uuid [x]
@@ -124,11 +123,7 @@
           (assoc-in [:headers "Location"] "/login")))))
 
 (defn- account-locked? [now locked-at seconds]
-  (let [locked-at (LocalDateTime/ofInstant
-                    (.toInstant locked-at)
-                    (ZoneId/systemDefault))
-        unlock-at (.plus locked-at (Duration/ofSeconds seconds))]
-    (= -1 (.compareTo now unlock-at))))
+  (< (inst-ms now) (+ (inst-ms locked-at) seconds)))
 
 (defmethod bread/query ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
@@ -139,10 +134,7 @@
 
       ;; Don't bother authenticating if the account is locked.
       (and (:user/locked-at user)
-           (account-locked?
-             (LocalDateTime/now)
-             (:user/locked-at user)
-             lock-seconds))
+           (account-locked? (t/now) (:user/locked-at user) lock-seconds))
       {:valid false :locked? true :user user}
 
       :default
@@ -168,7 +160,8 @@
       (assoc-in [:headers "Location"] "/login")))
 
 (defmethod bread/effect ::log-attempt
-  [{:keys [conn max-failed-login-count]} {{:keys [user valid]} :auth/result}]
+  [{:keys [conn max-failed-login-count lock-seconds]}
+   {{:keys [user valid]} :auth/result}]
   (let [;; Use either identifier
         transaction (if (:db/id user)
                       {:db/id (:db/id user)}
@@ -176,8 +169,8 @@
     (cond
       (not user) nil
 
-      (and (:user/locked-at user) (account-locked? (LocalDateTime/now)
-                                                   (:user/locked-at user)))
+      (and (:user/locked-at user)
+           (account-locked? (t/now) (:user/locked-at user) lock-seconds))
       nil
 
       (>= (:user/failed-login-count user) max-failed-login-count)

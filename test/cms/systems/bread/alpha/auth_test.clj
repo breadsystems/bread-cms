@@ -318,8 +318,6 @@
       ;; valid, 2FA step -> no action
       ;; valid, :logged-in -> reset count
 
-      ;; locked
-
       ;; max failed logins
       {:user/username "angela"
        :user/failed-login-count 0
@@ -330,6 +328,18 @@
        {:valid false
         :user {:user/username "angela"
                :user/failed-login-count 5}}]
+
+      ;; locked
+      {:user/username "angela"
+       :user/failed-login-count 0
+       :user/locked-at !NOW!}
+      [;; effect
+       {:conn conn :max-failed-login-count 5 :lock-seconds 3600}
+       ;; :auth/result
+       {:valid false
+        :user {:user/username "angela"
+               :user/failed-login-count 0
+               :user/locked-at !NOW!}}]
 
       ;; invalid -> increment count
       {:user/username "bobby"
