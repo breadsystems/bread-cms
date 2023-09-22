@@ -161,13 +161,22 @@
 
 (defmethod bread/effect ::log-attempt
   [{:keys [conn max-failed-login-count lock-seconds]}
-   {{:keys [user valid]} :auth/result}]
+   {{:keys [user valid] :as result} :auth/result}]
   (let [;; Use either identifier
         transaction (if (:db/id user)
                       {:db/id (:db/id user)}
                       {:user/username (:user/username user)})]
     (cond
       (not user) nil
+
+      ;; User still needs to verify 2FA, so don't reset the count yet.
+      (and valid (= :two-factor (:auth/step result)))
+      nil
+
+      ;; User successfully logged in; reset count.
+      (and valid (= :logged-in (:auth/step result)))
+      (store/transact conn [(assoc transaction
+                                   :user/failed-login-count 0)])
 
       (and (:user/locked-at user)
            (account-locked? (t/now) (:user/locked-at user) lock-seconds))

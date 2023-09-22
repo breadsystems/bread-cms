@@ -316,7 +316,27 @@
            {:user nil :valid nil}]
 
       ;; valid, 2FA step -> no action
+      {:user/username "douglass"
+       :user/failed-login-count 0}
+      [;; effect
+       {:conn conn :max-failed-login-count 5}
+       ;; :auth/result
+       {:valid true
+        :auth/step :two-factor
+        :debug true
+        :user {;; NOTE: user data isn't checked by auth code here.
+               :user/username "douglass"}}]
+
       ;; valid, :logged-in -> reset count
+      {:user/username "douglass"
+       :user/failed-login-count 0}
+      [;; effect
+       {:conn conn :max-failed-login-count 5}
+       ;; :auth/result
+       {:valid true
+        :auth/step :logged-in
+        :user {:user/username "douglass"
+               :user/failed-login-count 4}}]
 
       ;; max failed logins
       {:user/username "angela"
