@@ -135,6 +135,11 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/many
       :attr/migration "migration.users"}
+     {:db/ident :role/abilities
+      :db/doc "All abilities assigned to a give role"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.users"}
      {:db/ident :ability/key
       :db/doc "The keyword identifier for an ability (for role-based authorization)"
       :db/valueType :db.type/keyword
