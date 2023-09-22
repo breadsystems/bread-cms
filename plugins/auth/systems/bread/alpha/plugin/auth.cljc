@@ -167,24 +167,28 @@
       (assoc-in [:headers "Location"] "/login")))
 
 (defmethod bread/effect ::log-attempt
-  [{:keys [conn max-failed-login-count]} {{:keys [user]} :auth/result}]
-  (cond
-    (not user) nil
+  [{:keys [conn max-failed-login-count]} {{:keys [user valid]} :auth/result}]
+  (let [;; Use either identifier
+        transaction (if (:db/id user)
+                      {:db/id (:db/id user)}
+                      {:user/username (:user/username user)})]
+    (cond
+      (not user) nil
 
-    (and (:user/locked-at user) (account-locked? (LocalDateTime/now)
-                                                 (:user/locked-at user)))
-    nil
+      (and (:user/locked-at user) (account-locked? (LocalDateTime/now)
+                                                   (:user/locked-at user)))
+      nil
 
-    (>= (:user/failed-login-count user) max-failed-login-count)
-    (store/transact conn [{:db/id (:db/id user)
-                           ;; Lock account, but reset attempts.
-                           :user/locked-at (java.util.Date.)
-                           :user/failed-login-count 0}])
+      (>= (:user/failed-login-count user) max-failed-login-count)
+      (store/transact conn [(assoc transaction
+                             ;; Lock account, but reset attempts.
+                             :user/locked-at (java.util.Date.)
+                             :user/failed-login-count 0)])
 
-    :default
-    (let [incremented (inc (:user/failed-login-count user))]
-      (store/transact conn [{:db/id (:db/id user)
-                             :user/failed-login-count incremented}]))))
+      :default
+      (let [incremented (inc (:user/failed-login-count user))]
+        (store/transact conn [(assoc transaction
+                                     :user/failed-login-count incremented)])))))
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]

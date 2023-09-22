@@ -285,6 +285,70 @@
       ;;
       )))
 
+(deftest test-log-attempt
+  (let [app (plugins->loaded [(store/plugin config)])
+        conn (store/connection app)
+        get-user (fn [username]
+                   (store/q @conn
+                            '{:find [(pull ?e [:user/username
+                                               :user/failed-login-count
+                                               :user/locked-at]) .]
+                              :in [$ ?username]
+                              :where [[?e :user/username ?username]]}
+                            (or username "")))]
+    (are
+      [expected args]
+      (= expected (let [[effect-data result] args
+                        effect (assoc effect-data
+                                      :effect/name ::auth/log-attempt)
+                        app (-> app
+                                (bread/add-effect effect)
+                                (assoc ::bread/data {:auth/result result}))]
+                    (bread/hook app ::bread/effects!)
+                    (-> result :user :user/username get-user)))
+
+      nil [{:conn conn :max-failed-login-count 5}
+           {:user nil :valid nil}]
+
+      ;; valid, 2FA step -> no action
+      ;; valid, :logged-in -> reset count
+
+      ;; locked
+
+      ;; max failed logins
+      {:user/username "angela"
+       :user/failed-login-count 0
+       :user/locked-at (java.util.Date.)}
+      [;; effect
+       {:conn conn :max-failed-login-count 5}
+       ;; :auth/result
+       {:valid false
+        :user {:user/username "angela"
+               :user/failed-login-count 5}}]
+
+      ;; invalid -> increment count
+      {:user/username "bobby"
+       :user/failed-login-count 1}
+      [;; effect
+       {:conn conn :max-failed-login-count 5}
+       ;; :auth/result
+       {:valid false
+        :user {:user/username "bobby"
+               :user/failed-login-count 0}}]
+
+      ;; invalid -> increment count
+      {:user/username "crenshaw"
+       :user/failed-login-count 3}
+      [;; effect
+       {:conn conn :max-failed-login-count 5}
+       ;; :auth/result
+       {:valid false
+        :user {:user/username "crenshaw"
+               :user/failed-login-count 2}}]
+
+      ;;
+      )))
+
 (deftest test-session-store
   (let [app (plugins->loaded [(store/plugin config)])
         conn (store/connection app)
