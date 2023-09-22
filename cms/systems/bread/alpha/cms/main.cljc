@@ -126,6 +126,10 @@
                   handler)]
     (http/run-server handler {:port port})))
 
+(defmethod ig/halt-key! :http [_ stop-server]
+  (when-let [prom (stop-server :timeout 100)]
+    @prom))
+
 (defmethod ig/init-key :ring/wrap-defaults [_ value]
   (let [default-configs {:api-defaults ring/api-defaults
                          :site-defaults ring/site-defaults
@@ -137,15 +141,13 @@
                    (reduce #(assoc-in %1 (key %2) (val %2))
                            defaults (dissoc value :ring-defaults))
                    defaults)]
-    ;; For Bread, the default session store is the database. But we want to
-    ;; support using Ring's default in-memory store, as well.
-    (if (= :memory-store (get-in defaults [:session :store]))
-      (update defaults :session dissoc :store)
-      defaults)))
+    defaults))
 
-(defmethod ig/halt-key! :http [_ stop-server]
-  (when-let [prom (stop-server :timeout 100)]
-    @prom))
+(defmethod ig/init-key :ring/session-store
+  [_ {store-type :store/type {conn :datastore/connection} :store/datastore}]
+  ;; TODO extend with a multimethod??
+  (when (= :datalog store-type)
+    (auth/session-store conn)))
 
 (defmethod ig/init-key :bread/datastore
   [_ {:keys [recreate? force?] :as db-config}]
@@ -223,6 +225,7 @@
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
+  (:ring/session-store @system)
   (:bread/app @system)
   (:bread/router @system)
   (:bread/datastore @system)
