@@ -118,20 +118,11 @@
     (ig/halt! sys)
     (reset! system nil)))
 
-(defn get-version [dep]
-  (let [path (str "META-INF/maven/" (or (namespace dep) (name dep))
-                  "/" (name dep) "/pom.properties")
-        props (io/resource path)]
-    (when props
-      (with-open [stream (io/input-stream props)]
-        (let [props (doto (Properties.) (.load stream))]
-          (.getProperty props "version"))))))
-
 (defmethod ig/init-key :initial-config [_ config]
   config)
 
 (defmethod ig/init-key :clojure-version [_ _]
-  (get-version 'org.clojure/clojure))
+  (clojure-version))
 
 (defmethod ig/init-key :started-at [_ _]
   (LocalDateTime/now))
