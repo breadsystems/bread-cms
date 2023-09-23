@@ -48,11 +48,11 @@
            id))
 
 (defmethod bread/action ::query [req {:keys [data-key]} _]
-  (if-let [uid (get-in req [:session :user :db/id])]
+  (if-let [uid (->> req :session :user (bread/hook req ::from-session) :db/id)]
     (as-> uid $
       (fetch req $)
       (assoc $ :user/abilities (abilities $))
-      (assoc-in req [::bread/data data-key] $))
+      (assoc-in req [::bread/data data-key] (bread/hook req ::current $)))
     req))
 
 (defn plugin
@@ -67,7 +67,7 @@
        "Query the current user and put their data in ::bread/data"
        ;; TODO specify pull spec?
        :data-key data-key}]
-     ::can?
+     ::can? ;; TODO implement
      [{:action/name ::can?
        :action/description
        "Determined if the current user has the given ability"}]}}))
