@@ -1,9 +1,8 @@
-(ns systems.bread.alpha.static-backend-testx
+(ns systems.bread.alpha.markdown-test
   (:require
     [clojure.test :refer [are deftest is]]
-    [kaocha.repl :as k]
     [markdown.core :as md]
-    [systems.bread.alpha.plugin.static-backend :as static]))
+    [systems.bread.alpha.plugin.markdown :as markdown]))
 
 (deftest test-query-fs
   (let [mock-fs
@@ -25,7 +24,7 @@
       (are
         [content args]
         (= content (let [[params opts] args]
-                     (static/query-fs {} params (merge default-opts opts))))
+                     (markdown/query-fs {} params (merge default-opts opts))))
 
         {:html "<p>Markdown doc in English under /alt</p>"}
         [{:lang "en" :slug "page"} {:root "alt"}]
@@ -68,8 +67,8 @@
   (are
     [req args]
     (= req (let [[file config] args
-                 creator (static/request-creator config)]
-             (static/create-request creator file config)))
+                 creator (markdown/request-creator config)]
+             (markdown/create-request creator file config)))
 
     {:uri "/en/one"}
     ["/var/www/content/en/one.md" {:dir "/var/www/content"
@@ -110,4 +109,5 @@
     ))
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))

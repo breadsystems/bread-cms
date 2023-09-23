@@ -1,9 +1,6 @@
-(ns ^{:doc "High-level abstractions for composing a Bread app"
-      :author "Coby Tamayo"}
-  systems.bread.alpha.app-test
+(ns systems.bread.alpha.app-test
   (:require
     [clojure.test :refer [are deftest is testing]]
-    [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.i18n :as i18n]
@@ -13,7 +10,8 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]]))
+    [systems.bread.alpha.test-helpers :refer [use-datastore]]
+    [systems.bread.alpha.cms.defaults :as defaults]))
 
 (def config {:datastore/type :datahike
              :store {:backend :mem
@@ -85,13 +83,10 @@
 
 (use-datastore :each config)
 
-(defc layout [{:keys [content not-found? i18n]}]
+(defc layout [{:keys [content]}]
   {}
   [:body
-   (if not-found?
-     [:main
-      (:not-found i18n)]
-     content)])
+   content])
 
 (defc home [{:keys [post]}]
   {:query [{:post/fields [:field/key :field/content]}]
@@ -114,8 +109,7 @@
      [:p (:hello simple)]]))
 
 (defc not-found [{:keys [i18n]}]
-  {}
-  (prn 'YES 'NOT)
+  {:extends layout}
   [:main (:not-found i18n)])
 
 (deftest test-app-lifecycle
@@ -164,16 +158,14 @@
                   "/en/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page
-                                      :dispatcher/not-found-component not-found}
+                                      :dispatcher/component page}
                    :bread/component page
                    :route/params {:lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
                   {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page
-                                      :dispatcher/not-found-component not-found}
+                                      :dispatcher/component page}
                    :bread/component page
                    :route/params {:lang "fr"
                                   :slugs "not-found"}}}
@@ -185,6 +177,7 @@
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
           app (defaults/app {:datastore config
+                             :components {:not-found not-found}
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}
                              :renderer false})

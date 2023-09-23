@@ -26,6 +26,9 @@
 (comment
   (let [m {:a "A" :b "B"}]
     (interleave (keys m) (vals m)))
+  (require '[systems.bread.alpha.component :as c])
+
+  (c/match {::bread/dispatcher {:dispatcher/component :THIS}})
 
   (let [router (BidiRouter. $routes $dispatchers)]
     (for [route ["/en" "/en/abc" "/en/abc/xyz" "/en/blog" "/en/blog/qwerty"]]
@@ -46,7 +49,9 @@
                      ["/" :slug1 "/" :slug2 "/" :slug3] :page
                      }}])
     (def $dispatchers
-      {:index {:dispatcher/type :post.type/article}
-       :page {:dispatcher/type :post.type/page}})
+      {:index {:dispatcher/type :post.type/article
+               :dispatcher/component :INDEX}
+       :page {:dispatcher/type :post.type/page
+              :dispatcher/component :PAGE}})
     (for [route ["/en" "/en/abc" "/en/abc/xyz" "/en/blog" "/en/blog/qwerty"]]
       [route (bidi/match-route $routes route)])))

@@ -1,11 +1,11 @@
 {:paths ["src"]
- :deps {org.clojure/clojure       {:mvn/version "1.10.3"}
+ :deps {org.clojure/clojure       {:mvn/version "1.11.1"}
         org.clojure/core.async    {:mvn/version "1.5.648"}
         org.clojure/tools.logging {:mvn/version "1.1.0"}}
 
  :aliases
  {:dev
-  {:extra-paths ["dev" "test"]
+  {:extra-paths ["dev" "test/core" "test/cms"]
    :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
     lambdaisland/kaocha                             {:mvn/version "1.64.1010"}
@@ -40,17 +40,33 @@
   ;; NOTE: if you upgrade any of the dependencies here, e.g. reitit, make sure
   ;; you do so below in that dep's standalone alias.
   :cms
-  {:extra-paths ["main" "resources"
-                 "plugins/datahike" "plugins/bidi" "plugins/rum"]
+  {:extra-paths ["cms" "resources"
+                 "plugins/auth"
+                 "plugins/bidi"
+                 "plugins/datahike"
+                 "plugins/markdown"
+                 "plugins/reitit"
+                 "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
+                bidi/bidi                   {:mvn/version "2.1.6"}
+                buddy/buddy-hashers         {:mvn/version "2.0.167"}
+                fi.metosin/reitit           {:mvn/version "0.7.0-alpha6"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
+                juxt/dirwatch               {:mvn/version "0.2.5"}
+                markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
+                clj-totp/clj-totp           {:mvn/version "0.1.0"} ;; TODO replace with one-time?
+                one-time/one-time           {:mvn/version "0.8.0"}
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
-                bidi/bidi                   {:mvn/version "2.1.6"}
                 ring/ring                   {:mvn/version "1.9.5"}
+                ring/ring-defaults          {:mvn/version "0.4.0"}
                 rum/rum                     {:mvn/version "0.12.10"}}}
+
+  :auth
+  {:extra-paths ["plugins/auth"]
+   :extra-deps {buddy/buddy-hashers {:mvn/version "2.0.167"}}}
 
   :bidi
   {:extra-paths ["plugins/bidi"]
@@ -79,4 +95,7 @@
 
   :selmer
   {:extra-paths ["plugins/selmer"]
-   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}}
+   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}
+
+ :mvn/repos
+ {"jitpack" {:url "https://jitpack.io"}}}

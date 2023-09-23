@@ -67,7 +67,9 @@
   (:content-path (meta component) [:content]))
 
 (defn match [{::bread/keys [data dispatcher] :as res}]
-  (bread/hook res ::match (:dispatcher/component dispatcher)))
+  (if (:not-found? data)
+    (bread/hook res ::not-found)
+    (bread/hook res ::match (:dispatcher/component dispatcher))))
 
 (defn- render-parent [component data content]
   (loop [component component
@@ -80,6 +82,10 @@
         (recur (component-parent component) data (component data)))
       :else
       content)))
+
+(defmethod bread/action ::not-found
+  [_ {:keys [component]} _]
+  component)
 
 (defmethod bread/action ::render
   [{::bread/keys [data] :as res} _ _]
@@ -94,8 +100,16 @@
                :else nil)]
     (assoc res :body body)))
 
-(defn plugin []
-  {:hooks
-   {::bread/render
-    [{:action/name ::render
-      :action/description "Render the selected component"}]}})
+(defn plugin
+  ([]
+   (plugin {}))
+  ([{:keys [not-found]}]
+   {:hooks
+    {::bread/render
+     [{:action/name ::render
+       :action/description "Render the selected component"}]
+     ::not-found
+     [{:action/name ::not-found
+       :action/description
+       "The component to be rendered when main content is not found"
+       :component not-found}]}}))

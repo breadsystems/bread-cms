@@ -1,32 +1,82 @@
 #!/usr/bin/env bash
 
-if [[ -z "$GRAALVM_HOME" ]] ; then
-  echo "Please set \$GRAALVM_HOME"
-  exit 1
-fi
+usage() {
+  echo 'usage: $(basename $0) [-h|--help]'
+  echo
+  echo '  OPTIONS:'
+  echo
+  echo '  -h|--help show this help text'
+}
 
-rm -rf classes/*
-rm -rf target/*
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
 
-clojure -M:cms -e "(compile 'systems.bread.alpha.main)"
+case $key in
+    -h|--help)
+    # show usage and bail
+    usage
+    exit
+    ;;
+    -b|--binary)
+    BINARY_NAME=$2
+    shift # past argument
+    shift # past value
+    ;;
+    -c|--class)
+    JAVA_CLASS=$2
+    shift # past argument
+    shift # past value
+    ;;
+    *)
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
 
-if [[ $? -ne 0 ]] ; then
-  echo 'Error compiling systems.bread.alpha.main, aborting'
-  exit 1
-fi
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
-"$GRAALVM_HOME/bin/gu" install native-image
 
-"$GRAALVM_HOME/bin/native-image" \
-  -cp "$(clojure -Spath -M:cms)":classes \
-  -H:Name=bread \
-  -H:+ReportExceptionStackTraces \
-  -H:+PrintClassInitialization \
-  --initialize-at-build-time \
-  --enable-url-protocols=http,https \
-  --verbose \
-  --no-fallback \
-  --no-server \
-  --static \
-  "-J-Xmx3g" \
-  systems.bread.alpha.main
+JAVA_CLASS=${JAVA_CLASS:-'systems.bread.alpha.cms.main'}
+BINARY_NAME=${BINARY_NAME:-'bread'}
+
+
+main() {
+  if [[ -z "$GRAALVM_HOME" ]] ; then
+    echo "Please set \$GRAALVM_HOME"
+    exit 1
+  fi
+
+  rm -rf classes/*
+  rm -rf target/*
+
+  echo "compiling ${JAVA_CLASS}"
+  clojure -M:cms -e "(compile '${JAVA_CLASS})"
+
+  if [[ $? -ne 0 ]] ; then
+    echo "Error compiling ${JAVA_CLASS}, aborting"
+    exit 1
+  fi
+
+  "$GRAALVM_HOME/bin/gu" install native-image
+
+  echo "compiling native binary \`${BINARY_NAME}\` from ${JAVA_CLASS}"
+  "$GRAALVM_HOME/bin/native-image" \
+    -cp "$(clojure -Spath -M:cms)":classes \
+    -H:Name=$BINARY_NAME \
+    -H:+ReportExceptionStackTraces \
+    -H:+PrintClassInitialization \
+    --enable-url-protocols=http,https \
+    --verbose \
+    --no-fallback \
+    --no-server \
+    --static \
+    "-J-Xmx3g" \
+    --trace-object-instantiation=java.lang.Thread \
+    $JAVA_CLASS
+}
+
+
+main

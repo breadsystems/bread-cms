@@ -1,0 +1,65 @@
+{:http {:port 1312
+        :handler #ig/ref :bread/handler
+        :wrap-defaults #ig/ref :ring/wrap-defaults}
+ :ring/wrap-defaults {:ring-defaults :site-defaults
+                      [:session :store] #ig/ref :ring/session-store
+                      [:security :anti-forgery] false}
+ :ring/session-store
+ {:store/type :datalog
+  :store/datastore #ig/ref :bread/datastore}
+ :bread/handler #ig/ref :bread/app
+ :bread/app
+ {:datastore #ig/ref :bread/datastore
+  :auth {:lock-seconds 10}
+  :i18n false
+  :routes {:router #ig/ref :bread/router}
+  :components {:not-found #var not-found}
+  :plugins []}
+ :bread/datastore
+ {:datastore/type :datahike
+  :store {:backend :mem
+          :id "bread-db"}
+  :recreate? true
+  :force? true
+  :datastore/migrations #deref #var systems.bread.alpha.schema/initial
+  :datastore/initial-txns
+  #concat [#deref #var systems.bread.alpha.cms.defaults/initial-data
+           [{:user/username "coby"
+             :user/name "Coby Tamayo"
+             :user/email "coby@bread.systems"
+             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             #_#_ ;; Uncomment to enable 2FA
+             :user/two-factor-key "AWWMEFM4ADBSQRET"
+             :user/failed-login-count 0
+             :user/lang :en-US
+             :user/roles
+             #{{:role/key :author
+                :role/abilities
+                #{{:ability/key :publish-posts}
+                  {:ability/key :edit-posts}
+                  {:ability/key :delete-posts}}}}}]]}
+ :bread/router
+ #router
+ [["/" {"login" :login
+        [:lang] {"" :index
+                 ["/" :post/slug] :page}}]
+  ;; TODO :dispatcher.type/ => ::bread/
+  {:index
+   {:dispatcher/type :dispatcher.type/page
+    :dispatcher/component #var home-page}
+   :page
+   {:dispatcher/type :dispatcher.type/page
+    :dispatcher/component #var interior-page}
+   :login
+   {:dispatcher/type :systems.bread.alpha.plugin.auth/login
+    :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]
+ :bread/profilers
+ [#_{:hook #{:systems.bread.alpha.core/response}
+    :action/name #{:systems.bread.alpha.cms.defaults/response}
+    :f #var systems.bread.alpha.cms.main/log-hook!}]
+ #_#_
+ :bread/debugger
+ {:http
+  {:port 1313
+   :docroot "public/debugger"
+   :middleware [#var systems.bread.alpha.cms.main/wrap-debug]}}}

@@ -2,6 +2,14 @@
 
 Notes on potential ideas for Bread. Almost all of this is entirely hypothetical, likely out of date, and almost certainly wrong.
 
+## Progress
+
+- native-image with Markdown: BLOCKED
+- native-image with Datahike: BLOCKED
+- Babashka with Datahike: BLOCKED
+- JVM on Heroku: ???
+- JVM on Fly.io: ???
+
 ## bread.main
 
 CGI mode is enabled by default when the `GATEWAY_INTERFACE` env var is detected, or if the `--cgi` flag is passed explicitly. Maybe make a `--no-cgi` flag to disable when env var present?

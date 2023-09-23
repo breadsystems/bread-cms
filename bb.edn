@@ -1,0 +1,15 @@
+{:tasks
+ {:requires
+  ([babashka.fs :as fs])
+  minor-version "0.6"
+  patch-version
+  {:depends [minor-version]
+   :task (let [rev-count (->> "git rev-list HEAD --count"
+                              (shell {:out :string}) :out clojure.string/trim)]
+           (format "%s.%s" minor-version rev-count))}
+  clean {:depends [-target]
+         :task (do
+                 (fs/delete-tree -target))}
+  -target "target"
+  -class-dir "target/classes"}
+ }
