@@ -9,10 +9,14 @@
                                             (:role/abilities role))))
           {} roles))
 
+(def ^:private abilities* (memoize abilities))
+
 (defn can?
   ([user ability-key]
-   (get (or (:user/abilities user) (abilities user)) ability-key))
-  ([user ability subject]))
+   (get (or (:user/abilities user) (abilities* user)) ability-key))
+  ([user ability subject]
+   ;; TODO extend this with a multimethod or something...
+   ))
 
 (comment
   (def $user
