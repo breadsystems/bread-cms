@@ -40,6 +40,18 @@
                   {:ability/key :delete-posts}}}}}]]}
  :bread/router
  #router
+ #_ ;; TODO fix reitit routes & rm bidi from cms deps
+ [[["/login"
+    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
+     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}]
+   ["/:lang"
+    [""
+     {:dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.main/home-page}]
+    ["/:slug"
+     {:dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.main/home-page}]]]
+  {:conflicts nil}]
  [["/" {"login" :login
         [:lang] {"" :index
                  ["/" :post/slug] :page}}]
