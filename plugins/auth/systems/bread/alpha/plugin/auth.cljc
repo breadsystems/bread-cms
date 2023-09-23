@@ -233,15 +233,11 @@
          :query/args
          ['{:find [(pull ?e [:db/id
                              :user/username
-                             :user/email
                              ;; TODO protect pw/key in schema
                              :user/password
                              :user/two-factor-key
                              :user/locked-at
-                             :user/failed-login-count
-                             :user/name
-                             :user/lang
-                             :user/slug]) .]
+                             :user/failed-login-count]) .]
             :in [$ ?username]
             :where [[?e :user/username ?username]]}
           (:username params)]}

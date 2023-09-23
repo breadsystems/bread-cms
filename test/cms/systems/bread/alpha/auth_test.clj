@@ -17,27 +17,19 @@
 
 (def angela
   {:user/username "angela"
-   :user/name "Angela Y. Davis"
-   :user/failed-login-count 0
-   :user/lang :en-US})
+   :user/failed-login-count 0})
 
 (def bobby
   {:user/username "bobby"
-   :user/name "Bobby Seale"
-   :user/failed-login-count 0
-   :user/lang :en-US})
+   :user/failed-login-count 0})
 
 (def crenshaw
   {:user/username "crenshaw"
-   :user/name "Kimberly Crenshaw"
-   :user/failed-login-count 0
-   :user/lang :en-US})
+   :user/failed-login-count 0})
 
 (def douglass
   {:user/username "douglass"
-   :user/name "Frederick Douglass"
    :user/failed-login-count 0
-   :user/lang :en-US
    :user/two-factor-key "fake"})
 
 (def config
