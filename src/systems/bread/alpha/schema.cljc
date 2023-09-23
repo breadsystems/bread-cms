@@ -132,8 +132,13 @@
      ;; Roles
      {:db/ident :user/roles
       :db/doc "User roles. Used for mapping to abilities for authorization"
-      :db/valueType :db.type/keyword
+      :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
+      :attr/migration "migration.users"}
+     {:db/ident :role/key
+      :db/doc "The machine-readable key for a role"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
      {:db/ident :role/abilities
       :db/doc "All abilities assigned to a give role"
@@ -144,11 +149,6 @@
       :db/doc "The keyword identifier for an ability (for role-based authorization)"
       :db/valueType :db.type/keyword
       :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :ability/name
-      :db/doc "The human-readable name for an ability"
-      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
 
