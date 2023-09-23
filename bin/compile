@@ -69,6 +69,7 @@ main() {
     -H:+ReportExceptionStackTraces \
     -H:+PrintClassInitialization \
     --enable-url-protocols=http,https \
+    --initialize-at-build-time \
     --verbose \
     --no-fallback \
     --no-server \
