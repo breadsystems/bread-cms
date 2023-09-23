@@ -19,8 +19,8 @@
     [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.plugin.datahike])
   (:import
-    [java.lang Throwable]
-    [java.time LocalDateTime])
+    [java.time LocalDateTime]
+    [java.util Properties])
   (:gen-class))
 
 (defc not-found
@@ -107,7 +107,10 @@
 (defn start! [config]
   (let [config (assoc config
                       :initial-config config
-                      :started-at "This will be initialized by Integrant...")]
+                      ;; These will be initialized by Integrant:
+                      ;; TODO bread version
+                      :clojure-version nil
+                      :started-at nil)]
     (reset! system (ig/init config))))
 
 (defn stop! []
@@ -115,10 +118,22 @@
     (ig/halt! sys)
     (reset! system nil)))
 
+(defn get-version [dep]
+  (let [path (str "META-INF/maven/" (or (namespace dep) (name dep))
+                  "/" (name dep) "/pom.properties")
+        props (io/resource path)]
+    (when props
+      (with-open [stream (io/input-stream props)]
+        (let [props (doto (Properties.) (.load stream))]
+          (.getProperty props "version"))))))
+
 (defmethod ig/init-key :initial-config [_ config]
   config)
 
-(defmethod ig/init-key :started-at [_ local-datetime]
+(defmethod ig/init-key :clojure-version [_ _]
+  (get-version 'org.clojure/clojure))
+
+(defmethod ig/init-key :started-at [_ _]
   (LocalDateTime/now))
 
 (defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
