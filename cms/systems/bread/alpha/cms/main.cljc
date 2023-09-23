@@ -13,6 +13,7 @@
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.bidi :as router]
@@ -29,14 +30,15 @@
    [:p "404"]])
 
 (defc home-page
-  [{:keys [lang]}]
+  [{:keys [lang user]}]
   {:key :post}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
     [:title "Home | BreadCMS"]]
    [:body
-    [:h1 "This is the home page!"]]])
+    [:h1 "This is the home page!"]
+    [:pre (pr-str (user/can? user :edit-posts))]]])
 
 (defc interior-page
   [data]
@@ -281,10 +283,17 @@
       args))
 
   (def coby
-    (q '{:find [(pull ?e [*]) .]
-         :in [$ ?e]
-         :where [[?e]]}
-       86))
+    (q '{:find [(pull ?e [:db/id
+                          :user/username
+                          :user/name
+                          :user/email
+                          :user/lang
+                          {:user/roles [:role/key
+                                        {:role/abilities [:ability/key]}]}]) .]
+         :in [$ ?username]
+         :where [[?e :user/username ?username]]}
+       "coby"))
+  (user/can? coby :edit-posts)
   (defn retraction [{e :db/id :as entity}]
     (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
   (retraction coby)

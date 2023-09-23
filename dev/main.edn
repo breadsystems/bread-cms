@@ -28,9 +28,16 @@
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             #_#_ ;; Uncomment to enable 2FA
              :user/two-factor-key "AWWMEFM4ADBSQRET"
              :user/failed-login-count 0
-             :user/lang :en-US}]]}
+             :user/lang :en-US
+             :user/roles
+             #{{:role/key :author
+                :role/abilities
+                #{{:ability/key :publish-posts}
+                  {:ability/key :edit-posts}
+                  {:ability/key :delete-posts}}}}}]]}
  :bread/router
  #router
  [["/" {"login" :login

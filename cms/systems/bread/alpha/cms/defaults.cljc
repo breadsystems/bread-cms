@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.cms.defaults
   (:require
     [systems.bread.alpha.cache :as cache]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.i18n :as i18n]
@@ -8,7 +9,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.user :as user]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.bidi]
     [systems.bread.alpha.plugin.rum :as rum]))
@@ -122,6 +123,7 @@
                        components
                        renderer
                        auth
+                       users
                        plugins]}]
   (let [router (:router routes)
         {:keys [default-content-type]
@@ -140,6 +142,7 @@
          ;; TODO refine default rendering options...
          (when (not (false? renderer)) (rum/plugin))
          (when (not (false? auth)) (auth/plugin auth))
+         (when (not (false? users)) (user/plugin users))
          {:hooks
           {::bread/expand
            [{:action/name ::request-data
