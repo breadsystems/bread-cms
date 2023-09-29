@@ -53,20 +53,6 @@
      {:dispatcher/type :dispatcher.type/page
       :dispatcher/component #var systems.bread.alpha.cms.main/interior-page}]]]
   {:conflicts nil}]
- #_ ;; TODO rm
- [["/" {"login" :login
-        [:lang] {"" :index
-                 ["/" :post/slug] :page}}]
-  ;; TODO :dispatcher.type/ => ::bread/
-  {:index
-   {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var systems.bread.alpha.cms.main/home-page}
-   :page
-   {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var systems.bread.alpha.cms.main/interior-page}
-   :login
-   {:dispatcher/type :systems.bread.alpha.plugin.auth/login
-    :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]
  :bread/profilers
  [#_{:hook #{:systems.bread.alpha.core/response}
      :action/name #{:systems.bread.alpha.cms.defaults/response}

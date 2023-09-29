@@ -11,7 +11,6 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.bidi]
     [systems.bread.alpha.plugin.rum :as rum]))
 
 (comment

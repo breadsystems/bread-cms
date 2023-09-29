@@ -43,13 +43,11 @@
   {:extra-paths ["cms"
                  "resources"
                  "plugins/auth"
-                 "plugins/bidi" ;; TODO rm
                  "plugins/datahike"
                  "plugins/markdown"
                  "plugins/reitit"
                  "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
-                bidi/bidi                   {:mvn/version "2.1.6"} ;; TODO rm
                 buddy/buddy-hashers         {:mvn/version "2.0.167"}
                 fi.metosin/reitit           {:mvn/version "0.7.0-alpha6"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}

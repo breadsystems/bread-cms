@@ -18,8 +18,6 @@
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
-    #_
-    [systems.bread.alpha.plugin.bidi :as router]
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.reitit])
   (:import
