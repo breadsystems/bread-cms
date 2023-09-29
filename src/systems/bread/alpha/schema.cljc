@@ -21,6 +21,7 @@
      {:migration/key :bread.migration/migrations
       :migration/description
       "Minimal schema for safely performing future migrations."}]
+
     {:type :bread/migration
      :migration/dependencies #{}}))
 

@@ -101,7 +101,17 @@
     fields
     (into {} (map field-kv fields))))
 
-(defn compact [{fields :translatable/fields :as entity}]
+(defn compact
+  "Takes an entity with a :translatable/fields attr in raw form (as from a
+  datalog query) and compacts fields into a single map where the keys and
+  values are the :field/key and (EDN-parsed) :field/content, respectively.
+
+  The :translatable/fields attr can take the form of:
+  - a map (this is a noop)
+  - a vector of maps e.g. [{:field/key ... :field/content ...} ...]
+  - a vector of length-1 vectors of maps e.g.
+    [[{:field/key ... :field/content ...}] [...]]"
+  [{fields :translatable/fields :as entity}]
   (if (and entity (seq entity))
     (let [entity (if (sequential? entity) (first entity) entity)]
       (update entity :translatable/fields compact-fields))
@@ -114,10 +124,10 @@
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [attrs (bread/config req :i18n/db-attrs)
-        translatable-searches (zipmap attrs (repeat field-content-binding?))
-        construct-query (partial construct-fields-query (lang req))]
-    (inf/infer queries translatable-searches construct-query)))
+  (inf/infer
+    queries
+    {:translatable/fields field-content-binding?}
+    (partial construct-fields-query (lang req))))
 
 (defmethod bread/action ::path-params
   [req _ [params]]

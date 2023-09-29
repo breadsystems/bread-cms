@@ -515,6 +515,15 @@
                            :content "HTML"}}
     {:db/id 123
      :post/slug "hello"
+     :translatable/fields {:title "The Title"
+                           :content "HTML"}}
+
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {:title "The Title"
+                           :content "HTML"}}
+    {:db/id 123
+     :post/slug "hello"
      :translatable/fields [{:field/key :title
                             :field/content (pr-str "The Title")}
                            {:field/key :content
