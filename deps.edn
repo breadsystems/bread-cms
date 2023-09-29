@@ -58,6 +58,7 @@
                 markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
                 clj-totp/clj-totp           {:mvn/version "0.1.0"} ;; TODO replace with one-time?
                 one-time/one-time           {:mvn/version "0.8.0"}
+                org.babashka/sci            {:mvn/version "0.8.40"}
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
                 ring/ring                   {:mvn/version "1.9.5"}
                 ring/ring-defaults          {:mvn/version "0.4.0"}

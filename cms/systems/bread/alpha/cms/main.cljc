@@ -9,6 +9,7 @@
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
     [ring.middleware.defaults :as ring]
+    [sci.core :as sci]
     ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
@@ -264,8 +265,7 @@
 
   (defn ->app [req]
     (when-let [app (:bread/app @system)] (merge app req)))
-  ;; TODO Reitit plugin is broken, returning :dispatcher.type/page
-  (def $req {:uri "/login"})
+  (def $req {:uri "/en"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (::bread/dispatcher $))
@@ -311,6 +311,29 @@
   (store/transact (store/connection (:bread/app @system))
                   [{:user/username "coby"
                     :user/locked-at (java.util.Date.)}])
+
+  (defn- sci-ns [ns-sym]
+    (let [ns* (sci/create-ns ns-sym)
+          publics (ns-publics ns-sym)]
+      (update-vals publics #(sci/copy-var* % ns*))))
+  (sci-ns 'systems.bread.alpha.component)
+
+  (defn- sci-context [ns-syms]
+    (sci/init {:namespaces (into {} (map (juxt identity sci-ns) ns-syms))}))
+
+  (def $theme-ctx
+    (sci-context ['systems.bread.alpha.component]))
+
+  (sci/eval-string*
+    sci-ctx
+    "(ns my-theme (:require [systems.bread.alpha.component :refer [defc]]))
+    (defc my-page [_]
+      {}
+      [:p \"MY PAGE\"])")
+
+  (sci/eval-string*
+    sci-ctx
+    "(ns my-theme (:require []))")
 
   ;; SITEMAP DESIGN
 
