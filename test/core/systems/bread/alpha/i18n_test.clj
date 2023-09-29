@@ -172,7 +172,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
@@ -183,25 +183,25 @@
        :post.type/page]}
      :whatever]
 
-    ;; With :post/fields, but still without :field/content
+    ;; With :translatable/fields, but still without :field/content
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          {:post/fields [:field/key :field/lang]}]) .]
+                          {:translatable/fields [:field/key :field/lang]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          {:post/fields [:field/key :field/lang]}]) .]
+                          {:translatable/fields [:field/key :field/lang]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
@@ -212,88 +212,88 @@
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug :post/fields]) .]
+      ['{:find [(pull ?e [:db/id :post/slug :translatable/fields]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
      {:query/name ::store/query
-      :query/key [:post-with-content :post/fields]
+      :query/key [:post-with-content :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
-                 [?e0 :post/fields ?e]]}
+                 [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-content :db/id]
        :fr]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          {:post/fields [:field/key :field/content]}]) .]
+                          {:translatable/fields [:field/key :field/content]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
      :fr]
 
-    ;; With :field/content implicity as part of {:post/fields [*]}
+    ;; With :field/content implicity as part of {:translatable/fields [*]}
     [{:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug :post/fields]) .]
+      ['{:find [(pull ?e [:db/id :post/slug :translatable/fields]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
      {:query/name ::store/query
-      :query/key [:post :post/fields]
+      :query/key [:post :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
-                 [?e0 :post/fields ?e]]}
+                 [?e0 :translatable/fields ?e]]}
        [::bread/data :post :db/id]
        :ru]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :post/slug {:post/fields [*]}]) .]
+      ['{:find [(pull ?e [:db/id :post/slug {:translatable/fields [*]}]) .]
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
      :ru]
 
-    ;; With :field/content implicity as part of {:taxon/fields [*]}
+    ;; With :field/content implicity as part of {:translatable/fields [*]}
     [{:query/name ::store/query
       :query/key :taxon
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :taxon/slug :taxon/fields]) .]
+      ['{:find [(pull ?e [:db/id :taxon/slug :translatable/fields]) .]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
      {:query/name ::store/query
-      :query/key [:taxon :taxon/fields]
+      :query/key [:taxon :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
-                 [?e0 :taxon/fields ?e]]}
+                 [?e0 :translatable/fields ?e]]}
        [::bread/data :taxon :db/id]
        :es]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :taxon
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id :taxon/slug {:taxon/fields [*]}]) .]
+      ['{:find [(pull ?e [:db/id :taxon/slug {:translatable/fields [*]}]) .]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
@@ -306,7 +306,7 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          :post/fields
+                          :translatable/fields
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
                                          :taxon/fields]}]) .]
@@ -331,23 +331,23 @@
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}
      {:query/name ::store/query
-      :query/key [:post-with-fields-and-taxons :post/fields]
+      :query/key [:post-with-fields-and-taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
-                 [?e0 :post/fields ?e]]}
+                 [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields :taxon/fields}
      {:query/name ::store/query
       :query/key :post-with-fields-and-taxons
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          {:post/fields [*]}
+                          {:translatable/fields [*]}
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
                                          {:taxon/fields [*]}]}]) .]
@@ -365,7 +365,7 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          :post/fields
+                          :translatable/fields
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
                                          :taxon/fields]}]) .]
@@ -390,23 +390,23 @@
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}
      {:query/name ::store/query
-      :query/key [:post-with-taxons-and-field-content :post/fields]
+      :query/key [:post-with-taxons-and-field-content :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
-                 [?e0 :post/fields ?e]]}
+                 [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields :taxon/fields}
      {:query/name ::store/query
       :query/key :post-with-taxons-and-field-content
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
                           :post/slug
-                          {:post/fields [:field/key :field/content]}
+                          {:translatable/fields [:field/key :field/content]}
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
                                          {:taxon/fields [*]}]}]) .]
@@ -424,7 +424,7 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :taxon/slug
-                          {:post/_taxons [:post/slug :post/fields]}]) .]
+                          {:post/_taxons [:post/slug :translatable/fields]}]) .]
          :in [$ % ?status ?type ?taxonomy ?slug]
          :where [[?e :taxon/slug ?slug]
                  [?e0 :post/status ?status]
@@ -439,23 +439,23 @@
        :taxon.taxonomy/category
        "my-cat"]}
      {:query/name ::store/query
-      :query/key [:nested-taxon :post/_taxons :post/fields]
+      :query/key [:nested-taxon :post/_taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id :field/key :field/content])]
          ;; Post ID gets passed in as ?e1.
          :in [$ ?e1 ?lang]
          :where [;; Go through the :post/taxons relationship to get to the
-                 ;; :taxon/fields content. In this case we also need to
+                 ;; :translatable/fields content. In this case we also need to
                  ;; recognize that the :post/_taxons attr is an inverse
                  ;; relationship, and reverse it back the :where clause.
                  [?e :field/lang ?lang]
-                 [?e0 :post/fields ?e]
+                 [?e0 :translatable/fields ?e]
                  [?e0 :post/taxons ?e1]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :nested-taxon :db/id]
        :fr]}]
-    [#{:post/fields :taxon/fields :user/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query,
       :query/key :nested-taxon,
       :query/db ::FAKEDB,
@@ -464,8 +464,8 @@
          [(pull ?e [:db/id
                     :taxon/slug
                     {:post/_taxons [:post/slug
-                                    {:post/fields [:field/key
-                                                   :field/content]}]}]) .]
+                                    {:translatable/fields [:field/key
+                                                           :field/content]}]}]) .]
          :in [$ % ?status ?type ?taxonomy ?slug]
          :where
          [[?e :taxon/slug ?slug]
