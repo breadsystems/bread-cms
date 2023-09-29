@@ -13,7 +13,7 @@
   :auth {:lock-seconds 10}
   :i18n false
   :routes {:router #ig/ref :bread/router}
-  :components {:not-found #var not-found}
+  :components {:not-found #var systems.bread.alpha.cms.main/not-found}
   :plugins []}
  :bread/datastore
  {:datastore/type :datahike
@@ -58,10 +58,10 @@
   ;; TODO :dispatcher.type/ => ::bread/
   {:index
    {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var home-page}
+    :dispatcher/component #var systems.bread.alpha.cms.main/home-page}
    :page
    {:dispatcher/type :dispatcher.type/page
-    :dispatcher/component #var interior-page}
+    :dispatcher/component #var systems.bread.alpha.cms.main/interior-page}
    :login
    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}}]

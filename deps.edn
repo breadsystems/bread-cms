@@ -35,12 +35,13 @@
   ;; Entrypoint for the Bread CMS binary. To run the basic Bread install
   ;; on the JVM, do:
   ;;
-  ;; clojure -M:cms systems.bread.alpha.main
+  ;; clojure -M:cms -m systems.bread.alpha.cms.main
   ;;
   ;; NOTE: if you upgrade any of the dependencies here, e.g. reitit, make sure
   ;; you do so below in that dep's standalone alias.
   :cms
-  {:extra-paths ["cms" "resources"
+  {:extra-paths ["cms"
+                 "resources"
                  "plugins/auth"
                  "plugins/bidi" ;; TODO rm
                  "plugins/datahike"

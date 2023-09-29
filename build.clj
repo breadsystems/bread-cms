@@ -16,7 +16,6 @@
 (def lib 'systems.bread/bread-core)
 (def patch-version (format "%s.%s" minor-version (b/git-count-revs nil)))
 (def class-dir "target/classes")
-(def basis (b/create-basis {:project "deps.edn"}))
 (def jar-file (format "target/%s-%s.jar" (name lib) patch-version))
 (def uber-file (format "target/bread-%s-standalone.jar" patch-version))
 
@@ -32,7 +31,7 @@
   (b/write-pom {:class-dir class-dir
                 :lib lib
                 :version patch-version
-                :basis basis
+                :basis (b/create-basis {:project "deps.edn"})
                 :src-dirs ["src"]})
   (b/copy-dir {:src-dirs ["src"]
                :target-dir class-dir})
@@ -40,20 +39,23 @@
           :jar-file jar-file}))
 
 (defn uber [_]
+  (println "Cleaning target directory...")
   (clean nil)
-  (b/copy-dir {:src-dirs (concat ["src" "cms" "resources" "classes"] PLUGIN-DIRS)
+  (println "Copying resources...")
+  (b/copy-dir {:src-dirs ["resources"]
                :target-dir class-dir})
-  (binding [*compile-path* class-dir]
-    (compile 'systems.bread.alpha.cms.main))
-  (b/compile-clj {:basis basis
-                  :src-dirs (concat ["src" "cms"] PLUGIN-DIRS)
-                  :class-dir class-dir
-                  #_#_
-                  :ns-compile '[systems.bread.alpha.plugin.datahike]})
-  (b/uber {:class-dir class-dir
-           :uber-file uber-file
-           :basis basis
-           :main 'systems.bread.alpha.cms.main})
+  (let [basis (b/create-basis {:project "deps.edn"
+                               :aliases [:cms]})]
+    (println "Compiling namespaces...")
+    (b/compile-clj {:basis basis
+                    :src-dirs (concat ["src" "cms"] PLUGIN-DIRS)
+                    :class-dir class-dir
+                    :ns-compile '[systems.bread.alpha.cms.main]})
+    (println "Writing uberjar...")
+    (b/uber {:class-dir class-dir
+             :uber-file uber-file
+             :basis basis
+             :main 'systems.bread.alpha.cms.main}))
   (println "Uberjar written to" uber-file))
 
 (defn deploy [_]
