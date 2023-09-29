@@ -3,7 +3,6 @@
     [clojure.set :refer [rename-keys]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.field :as field]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.datastore :as store]
@@ -13,8 +12,8 @@
   [{k :query/key} data]
   (-> data
       (get k)
-      (update :taxon/fields field/compact)
-      (update :post/_taxons #(map post/compact-fields %))
+      (i18n/compact)
+      (update :post/_taxons i18n/compact)
       (rename-keys {:post/_taxons :taxon/posts})))
 
 ;; TODO datalog-pull ...?

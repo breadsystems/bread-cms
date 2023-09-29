@@ -3,7 +3,6 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.field :as field]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -67,12 +66,6 @@
                  {}
                  (map second result))]
     (assoc post :post/fields fields)))
-
-(defn compact-fields [post]
-  (if post
-    (let [post (if (sequential? post) (first post) post)]
-      (update post :translatable/fields field/compact))
-    post))
 
 (defmethod bread/query ::compact-fields [{k :query/key} data]
   (-> data (query/get-at k) i18n/compact))

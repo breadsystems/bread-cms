@@ -92,7 +92,7 @@
   {:query [{:translatable/fields [:field/key :field/content]}]
    :key :post
    :extends layout}
-  (let [post (post/compact-fields post)
+  (let [post (i18n/compact post)
         {:keys [title simple]} (:translatable/fields post)]
     [:main
      [:h1 title]
@@ -102,8 +102,7 @@
   {:query [{:translatable/fields [:field/key :field/content]}]
    :key :post
    :extends layout}
-  (let [post (post/compact-fields post)
-        {:keys [title simple]} (:translatable/fields post)]
+  (let [{:keys [title simple]} (:translatable/fields post)]
     [:main.interior-page
      [:h1 title]
      [:p (:hello simple)]]))
