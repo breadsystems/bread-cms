@@ -7,8 +7,10 @@
     [aero.core :as aero]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
+    [reitit.core :as reitit]
     [ring.middleware.defaults :as ring]
     ;; TODO ring middlewares
+
     [systems.bread.alpha.core :as bread]
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
@@ -16,8 +18,10 @@
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
+    #_
     [systems.bread.alpha.plugin.bidi :as router]
-    [systems.bread.alpha.plugin.datahike])
+    [systems.bread.alpha.plugin.datahike]
+    [systems.bread.alpha.plugin.reitit])
   (:import
     [java.time LocalDateTime]
     [java.util Properties])
@@ -211,7 +215,7 @@
   (ig/ref value))
 
 (defmethod aero/reader 'router [_ _ args]
-  (apply router/router args))
+  (apply reitit/router args))
 
 (defmethod aero/reader 'var [_ _ sym]
   (let [var* (resolve sym)]
@@ -262,7 +266,8 @@
 
   (defn ->app [req]
     (when-let [app (:bread/app @system)] (merge app req)))
-  (def $req {:uri "/en"})
+  ;; TODO Reitit plugin is broken, returning :dispatcher.type/page
+  (def $req {:uri "/login"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (::bread/dispatcher $))

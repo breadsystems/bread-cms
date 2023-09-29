@@ -1,3 +1,4 @@
+;; TODO write tests for this ns
 (ns systems.bread.alpha.plugin.reitit
   (:require
     [clojure.core.protocols :refer [Datafiable datafy]]
@@ -40,7 +41,7 @@
   (bread/params [router match]
     (:path-params match))
   (bread/dispatcher [router match]
-    (:bread/dispatcher (:data match))))
+    (:data match)))
 
 (extend-protocol RoutesCollection
   reitit.core.Router
