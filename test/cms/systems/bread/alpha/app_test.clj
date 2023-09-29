@@ -74,12 +74,12 @@
                   :field/lang :fr
                   :field/content
                   (prn-str {:hello "Bonjour d'enfant"})}}}
-              {:i18n/lang :en
-               :i18n/key :not-found
-               :i18n/string "404 Not Found"}
-              {:i18n/lang :fr
-               :i18n/key :not-found
-               :i18n/string "404 Pas Trouvé"}]})
+              {:field/lang :en
+               :field/key :not-found
+               :field/content "404 Not Found"}
+              {:field/lang :fr
+               :field/key :not-found
+               :field/content "404 Pas Trouvé"}]})
 
 (use-datastore :each config)
 

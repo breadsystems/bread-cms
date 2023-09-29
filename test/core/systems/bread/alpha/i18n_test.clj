@@ -15,10 +15,16 @@
                      :id "test-i18n-db"}
              :datastore/initial-txns
              ;; TODO test locales e.g. en-gb
-             [#:i18n{:key :one :string "One" :lang :en}
-              #:i18n{:key :two :string "Two" :lang :en}
-              #:i18n{:key :one :string "Uno" :lang :es}
-              #:i18n{:key :two :string "Dos" :lang :es}]})
+             [{:translatable/fields #{{:field/key :one
+                                       :field/content "Post One"
+                                       :field/lang :en}
+                                      {:field/key :one
+                                       :field/content "Dossss"
+                                       :field/lang :es}}}
+              {:field/key :one :field/content "One" :field/lang :en}
+              {:field/key :two :field/content "Two" :field/lang :en}
+              {:field/key :one :field/content "Uno" :field/lang :es}
+              {:field/key :two :field/content "Dos" :field/lang :es}]})
 
 (use-datastore :each config)
 

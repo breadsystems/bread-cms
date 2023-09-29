@@ -38,11 +38,12 @@
    (strings req (lang req)))
   ([req lang]
    (->> (store/q (store/datastore req)
-                 '{:find [?key ?string]
+                 '{:find [?key ?content]
                    :in [$ ?lang]
-                   :where [[?e :i18n/key ?key]
-                           [?e :i18n/string ?string]
-                           [?e :i18n/lang ?lang]]}
+                   :where [[?e :field/key ?key]
+                           [?e :field/content ?content]
+                           [?e :field/lang ?lang]
+                           (not-join [?e] [_ :translatable/fields ?e])]}
                  lang)
         (into {})
         (bread/hook req ::strings))))
@@ -140,11 +141,12 @@
                   :query/into {}
                   :query/db (store/datastore req)
                   :query/args
-                  ['{:find [?key ?string]
+                  ['{:find [?key ?content]
                      :in [$ ?lang]
-                     :where [[?e :i18n/key ?key]
-                             [?e :i18n/string ?string]
-                             [?e :i18n/lang ?lang]]}
+                     :where [[?e :field/key ?key]
+                             [?e :field/content ?content]
+                             [?e :field/lang ?lang]
+                             (not-join [?e] [_ :translatable/fields ?e])]}
                    (lang req)]}))
 
 (defmethod bread/action ::add-lang-query
