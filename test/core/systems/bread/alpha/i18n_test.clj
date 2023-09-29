@@ -309,23 +309,24 @@
                           :translatable/fields
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
-                                         :taxon/fields]}]) .]
+                                         :translatable/fields]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
+     #_ ;; TODO
      {:query/name ::store/query
-      :query/key [:post-with-fields-and-taxons :post/taxons :taxon/fields]
+      :query/key [:post-with-fields-and-taxons :post/taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          ;; Post ID gets passed in as ?e1.
          :in [$ ?e1 ?lang]
          :where [;; Go through the :post/taxons relationship to get to the
-                 ;; :taxon/fields content.
+                 ;; :translatable/fields content.
                  [?e :field/lang ?lang]
-                 [?e0 :taxon/fields ?e]
+                 [?e0 :translatable/fields ?e]
                  [?e1 :post/taxons ?e0]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-fields-and-taxons :db/id]
@@ -340,7 +341,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}]
-    [#{:translatable/fields :taxon/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post-with-fields-and-taxons
       :query/db ::FAKEDB
@@ -350,7 +351,7 @@
                           {:translatable/fields [*]}
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
-                                         {:taxon/fields [*]}]}]) .]
+                                         {:translatable/fields [*]}]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}
@@ -368,23 +369,24 @@
                           :translatable/fields
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
-                                         :taxon/fields]}]) .]
+                                         {:translatable/fields [*]}]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
+     #_
      {:query/name ::store/query
-      :query/key [:post-with-taxons-and-field-content :post/taxons :taxon/fields]
+      :query/key [:post-with-taxons-and-field-content :post/taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id *])]
          ;; Post ID gets passed in as ?e1.
          :in [$ ?e1 ?lang]
          :where [;; Go through the :post/taxons relationship to get to the
-                 ;; :taxon/fields content.
+                 ;; :translatable/fields content.
                  [?e :field/lang ?lang]
-                 [?e0 :taxon/fields ?e]
+                 [?e0 :translatable/fields ?e]
                  [?e1 :post/taxons ?e0]]}
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-taxons-and-field-content :db/id]
@@ -399,7 +401,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}]
-    [#{:translatable/fields :taxon/fields}
+    [#{:translatable/fields}
      {:query/name ::store/query
       :query/key :post-with-taxons-and-field-content
       :query/db ::FAKEDB
@@ -409,7 +411,7 @@
                           {:translatable/fields [:field/key :field/content]}
                           {:post/taxons [:taxon/slug
                                          :taxon/taxonomy
-                                         {:taxon/fields [*]}]}]) .]
+                                         {:translatable/fields [*]}]}]) .]
          :in [$ ?slug ?type]
          :where [[?e :post/slug ?slug]
                  [?e :post/type ?type]]}

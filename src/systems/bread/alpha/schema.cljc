@@ -31,6 +31,28 @@
     [{:db/id "migration.i18n"
       :migration/key :bread.migration/i18n
       :migration/description "Migration for global translation strings"}
+     {:db/ident :field/key
+      :db/doc "Unique-per-entity keyword for this field"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :field/content
+      :db/doc "Field content as an EDN string"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :field/lang
+      :db/doc "Language this field is written in"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
+     {:db/ident :translatable/fields
+      :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.i18n"}
+
+     ;; TODO these are redundant, consolidate...
      {:db/ident :i18n/key
       :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
       :db/valueType :db.type/keyword
@@ -46,17 +68,7 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
-     ;; TODO remove this in favor of generic :i18n/fields
-     {:db/ident :i18n/translatable?
-      :db/doc "Whether the given attr is translatable."
-      :db/valueType :db.type/boolean
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     {:db/ident :i18n/fields
-      :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.i18n"}]
+     ]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
 
@@ -126,7 +138,6 @@
       :db/doc "Zero or more translatable user content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :i18n/translatable? true
       :attr/migration "migration.users"}
 
      ;; Roles
@@ -203,7 +214,6 @@
       :db/doc "Zero or more translatable post content fields"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :i18n/translatable? true
       :attr/migration "migration.posts"}
      {:db/ident :post/children
       :db/doc "Entity IDs of child posts, if any"
@@ -231,24 +241,8 @@
       :db/doc "Zero or more entity IDs of a Post's author(s)"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.posts"}
-
-     ;; Fields
-     {:db/ident :field/key
-      :db/doc "Unique-per-post keyword for this field"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
-     {:db/ident :field/content
-      :db/doc "Field content as an EDN string"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
-     {:db/ident :field/lang
-      :db/doc "Language this field is written in"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/i18n
@@ -293,7 +287,6 @@
       :db/doc "Zero or more translatable fields for this taxon."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :i18n/translatable? true
       :attr/migration "migration.taxons"}]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations

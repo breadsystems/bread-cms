@@ -99,6 +99,7 @@
   (let [attrs (bread/config req :i18n/db-attrs)
         translatable-searches (zipmap attrs (repeat field-content-binding?))
         construct-query (partial construct-fields-query (lang req))]
+    (prn attrs translatable-searches)
     (inf/infer queries translatable-searches construct-query)))
 
 (defmethod bread/action ::path-params
@@ -133,7 +134,7 @@
      :or {lang-param :lang
           fallback-lang :en
           supported-langs #{:en}
-          db-attrs #{:post/fields :taxon/fields :user/fields}
+          db-attrs #{:translatable/fields}
           query-strings? true
           query-lang? true}}]
    {:config

@@ -22,7 +22,7 @@
                :post/type :post.type/page
                :post/slug ""
                :post/status :post.status/published
-               :post/fields
+               :translatable/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/content (prn-str "Home Page")}
@@ -40,7 +40,7 @@
                :post/slug "parent-page"
                :post/status :post.status/published
                :post/children ["page.child"]
-               :post/fields
+               :translatable/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/content (prn-str "Parent Page")}
@@ -59,7 +59,7 @@
                :post/type :post.type/page
                :post/slug "child-page"
                :post/status :post.status/published
-               :post/fields
+               :translatable/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/content (prn-str "Child Page")}
@@ -89,21 +89,21 @@
    content])
 
 (defc home [{:keys [post]}]
-  {:query [{:post/fields [:field/key :field/content]}]
+  {:query [{:translatable/fields [:field/key :field/content]}]
    :key :post
    :extends layout}
   (let [post (post/compact-fields post)
-        {:keys [title simple]} (:post/fields post)]
+        {:keys [title simple]} (:translatable/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
 (defc page [{:keys [post]}]
-  {:query [{:post/fields [:field/key :field/content]}]
+  {:query [{:translatable/fields [:field/key :field/content]}]
    :key :post
    :extends layout}
   (let [post (post/compact-fields post)
-        {:keys [title simple]} (:post/fields post)]
+        {:keys [title simple]} (:translatable/fields post)]
     [:main.interior-page
      [:h1 title]
      [:p (:hello simple)]]))

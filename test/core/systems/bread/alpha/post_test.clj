@@ -200,12 +200,12 @@
        :route/params {:slugs "one/two/three" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields alone only queries for :db/id, not :field/content
+      ;; :translatable/fields alone only queries for :db/id, not :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :post/title :post/fields]) .]
+        ['{:find [(pull ?e [:db/id :post/title :translatable/fields]) .]
            :in [$ % ?slug_0 ?type ?status]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
@@ -219,17 +219,17 @@
         :query/description
         "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull [:post/title :post/fields]
+       :dispatcher/pull [:post/title :translatable/fields]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields WITHOUT :field/content
+      ;; :translatable/fields WITHOUT :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :post/title {:post/fields
+        ['{:find [(pull ?e [:db/id :post/title {:translatable/fields
                                                 [:field/key
                                                  :field/lang]}]) .]
            :in [$ % ?slug_0 ?type ?status]
@@ -245,7 +245,7 @@
         :query/description
         "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull [:post/title {:post/fields [:field/key :field/lang]}]
+       :dispatcher/pull [:post/title {:translatable/fields [:field/key :field/lang]}]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 

@@ -71,7 +71,7 @@
 (defn compact-fields [post]
   (if post
     (let [post (if (sequential? post) (first post) post)]
-      (update post :post/fields field/compact))
+      (update post :translatable/fields field/compact))
     post))
 
 (defmethod bread/query ::compact-fields [{k :query/key} data]
