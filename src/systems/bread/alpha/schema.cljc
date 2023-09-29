@@ -51,25 +51,8 @@
       :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.i18n"}
+      :attr/migration "migration.i18n"}]
 
-     ;; TODO these are redundant, consolidate...
-     {:db/ident :i18n/key
-      :db/doc "The dot-separated path through the (post field, or other) data to the string localized string."
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     {:db/ident :i18n/lang
-      :db/doc "The ISO 639-1 language name as keyword, with optional localization suffix."
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     {:db/ident :i18n/string
-      :db/doc "The value of the string itself, specific to a given path/lang combination."
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
-     ]
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
 
@@ -133,12 +116,6 @@
       :db/valueType :db.type/string
       :db/unique :db.unique/value
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     ;; TODO remove
-     {:db/ident :user/fields
-      :db/doc "Zero or more translatable user content fields"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
       :attr/migration "migration.users"}
 
      ;; Roles
@@ -210,12 +187,6 @@
       :db/index true
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
-     ;; TODO remove
-     {:db/ident :post/fields
-      :db/doc "Zero or more translatable post content fields"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.posts"}
      {:db/ident :post/children
       :db/doc "Entity IDs of child posts, if any"
       :db/valueType :db.type/ref
@@ -282,13 +253,8 @@
       :db/valueType :db.type/string
       :db/index true
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.taxons"}
-     ;; TODO remove
-     {:db/ident :taxon/fields
-      :db/doc "Zero or more translatable fields for this taxon."
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
       :attr/migration "migration.taxons"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/i18n
@@ -306,12 +272,6 @@
       :db/valueType :db.type/long
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.revisions"}
-     ;; TODO track just diffs - are diffs their own db entities??
-     {:db/ident :revision/fields
-      :db/doc "EDN-serialized post fields as they exist as of this revision"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.revisions"}
      {:db/ident :revision/note
       :db/doc "A note about what was changed as part of this revision"
       :db/valueType :db.type/string
@@ -322,6 +282,7 @@
       :db/valueType :db.type/instant
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.revisions"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/posts}}))
@@ -371,6 +332,7 @@
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :attr/migration "migration.menus"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/posts}}))
@@ -418,6 +380,7 @@
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.comments"}]
+
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/posts}}))
