@@ -40,7 +40,7 @@
                   {:ability/key :delete-posts}}}}}
             ]]}
  :bread/router
- #router
+ #reitit/router
  [["/"
    ["login"
     {:dispatcher/type :systems.bread.alpha.plugin.auth/login

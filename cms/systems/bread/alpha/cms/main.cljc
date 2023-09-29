@@ -214,7 +214,7 @@
 (defmethod aero/reader 'ig/ref [_ _ value]
   (ig/ref value))
 
-(defmethod aero/reader 'router [_ _ args]
+(defmethod aero/reader 'reitit/router [_ _ args]
   (apply reitit/router args))
 
 (defmethod aero/reader 'var [_ _ sym]
