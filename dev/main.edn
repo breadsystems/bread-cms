@@ -11,7 +11,7 @@
  :bread/app
  {:datastore #ig/ref :bread/datastore
   :auth {:lock-seconds 10}
-  :i18n false
+  :i18n true
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.main/not-found}
   :plugins []}

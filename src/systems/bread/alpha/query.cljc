@@ -8,10 +8,10 @@
     nil
     (keyword (namespace x))))
 
-(defn- get-at [m k]
+(defn get-at [m k]
   ((if (sequential? k) get-in get) m k))
 
-(defn- assoc-at [m k v]
+(defn assoc-at [m k v]
   (cond
     (not (sequential? k)) (assoc m k v)
     (get-in m (butlast k)) (assoc-in m k v)

@@ -33,19 +33,21 @@
    [:p "404"]])
 
 (defc home-page
-  [{:keys [lang user]}]
-  {:key :post}
+  [{:keys [lang user post]}]
+  {:key :post
+   :query [{:post/fields ['*]}]}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
     [:title "Home | BreadCMS"]]
    [:body
-    [:h1 "This is the home page!"]
+    [:h1 (:title (:post/fields post))]
+    [:pre (pr-str post)]
     [:pre (pr-str (user/can? user :edit-posts))]]])
 
 (defc interior-page
   [data]
-  {}
+  {:key :post}
   [:pre (prn-str data)])
 
 (def status-mappings

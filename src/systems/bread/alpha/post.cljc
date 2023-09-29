@@ -7,6 +7,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.query :as query]
     [systems.bread.alpha.util.datalog :refer [where pull-query]]))
 
 (defn- syms
@@ -73,8 +74,8 @@
       (update post :post/fields field/compact))
     post))
 
-(defn- pull-spec? [arg]
-  (and (list? arg) (= 'pull (first arg))))
+(defmethod bread/query ::compact-fields [{k :query/key} data]
+  (-> data (query/get-at k) compact-fields))
 
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
@@ -85,8 +86,16 @@
             (ancestralize (string/split (:slugs params "") #"/"))
             (where [['?type :post/type :post.type/page]
                     ['?status :post/status :post.status/published]]))
+        query-key (or (:dispatcher/key dispatcher) :post)
+        ;; TODO query description
         page-query {:query/name ::store/query
-                    :query/key (or (:dispatcher/key dispatcher) :post)
+                    :query/key query-key
                     :query/db (store/datastore req)
-                    :query/args page-args}]
-    {:queries (bread/hook req ::i18n/queries [page-query])}))
+                    :query/args page-args}
+        ;; TODO move this to i18n
+        queries (conj (bread/hook req ::i18n/queries [page-query])
+                      {:query/name ::compact-fields
+                       :query/key query-key
+                       :query/description
+                       "Compact :translatable/fields into a more usable shape."})]
+    {:queries queries}))
