@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.i18n
   (:require
+    [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store]
     [systems.bread.alpha.route :as route]
@@ -89,6 +90,23 @@
         v (get binding-map k)]
     (some #{:field/content '*} v)))
 
+(defn- field-kv [field]
+  (let [field (if (sequential? field) (first field) field)
+        {k :field/key content :field/content} field]
+    ;; TODO :field/format ?
+    (when k [k (edn/read-string content)])))
+
+(defn- compact-fields [fields]
+  (if (map? fields)
+    fields
+    (into {} (map field-kv fields))))
+
+(defn compact [{fields :translatable/fields :as entity}]
+  (if (and entity (seq entity))
+    (let [entity (if (sequential? entity) (first entity) entity)]
+      (update entity :translatable/fields compact-fields))
+    entity))
+
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [queries]]
@@ -99,7 +117,6 @@
   (let [attrs (bread/config req :i18n/db-attrs)
         translatable-searches (zipmap attrs (repeat field-content-binding?))
         construct-query (partial construct-fields-query (lang req))]
-    (prn attrs translatable-searches)
     (inf/infer queries translatable-searches construct-query)))
 
 (defmethod bread/action ::path-params

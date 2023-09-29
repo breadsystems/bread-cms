@@ -75,7 +75,7 @@
     post))
 
 (defmethod bread/query ::compact-fields [{k :query/key} data]
-  (-> data (query/get-at k) compact-fields))
+  (-> data (query/get-at k) i18n/compact))
 
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]

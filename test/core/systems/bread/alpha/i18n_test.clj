@@ -484,6 +484,67 @@
        "my-cat"]}
      :fr]
 
+    ;;
+    ))
+
+(deftest test-compact
+  (are
+    [expected entity]
+    (= expected (i18n/compact entity))
+
+    nil nil
+    {} {}
+
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {}}
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields []}
+
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {}}
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields #{}}
+
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {:title "The Title"
+                           :content "HTML"}}
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields [{:field/key :title
+                            :field/content (pr-str "The Title")}
+                           {:field/key :content
+                            :field/content (pr-str "HTML")}]}
+
+    ;; Post as vector, field maps
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {:title "The Title"
+                           :content "HTML"}}
+    [{:db/id 123
+      :post/slug "hello"
+      :translatable/fields [{:field/key :title
+                             :field/content (pr-str "The Title")}
+                            {:field/key :content
+                             :field/content (pr-str "HTML")}]}]
+
+    ;; Post as vector, fields as length-1 vectors
+    {:db/id 123
+     :post/slug "hello"
+     :translatable/fields {:title "The Title"
+                           :content "HTML"}}
+    [{:db/id 123
+      :post/slug "hello"
+      :translatable/fields [[{:field/key :title
+                              :field/content (pr-str "The Title")}]
+                            [{:field/key :content
+                              :field/content (pr-str "HTML")}]]}]
+
+    ;;
     ))
 
 (comment
