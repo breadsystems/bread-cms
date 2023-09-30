@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.datastore-txs-test
+(ns systems.bread.alpha.database-txs-test
   (:require
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]

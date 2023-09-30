@@ -1,8 +1,9 @@
 ;; Tests for the low-level functionality of the Datahike datastore integration.
-(ns systems.bread.alpha.datastore-datahike-test
+(ns systems.bread.alpha.database-datahike-test
   (:require
-    [systems.bread.alpha.datastore :as store]
-    [clojure.test :refer [deftest is testing use-fixtures]]))
+    [clojure.test :refer [deftest is testing use-fixtures]]
+    [datahike.db]
+    [systems.bread.alpha.datastore :as store]))
 
 ;; Set up a bunch of boilerplate to share between tests.
 (let [config {:datastore/type :datahike

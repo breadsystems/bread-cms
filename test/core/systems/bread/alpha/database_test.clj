@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.datastore-test
+(ns systems.bread.alpha.database-test
   (:require
     [kaocha.repl :as k]
     [clojure.test :refer [are deftest is testing]]
