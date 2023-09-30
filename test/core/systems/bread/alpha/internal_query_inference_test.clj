@@ -81,9 +81,30 @@
          {:query/args [{:find [(list 'pull '?e new-spec)]}]
           :query/key path}))]
 
+    ;; With multiple, arbitrarily nested instances of attr :a/b
+    [{:query/args ['{:find [(pull ?e [:db/id
+                                      :a/b
+                                      {:e/f [:db/id
+                                             :a/b]}])]}]
+      :query/key :the-key}
+     {:query/args ['{:find [(pull ?e [*])]}]
+      :query/key [:the-key :a/b]}
+     {:query/args ['{:find [(pull ?e [*])]}]
+      :query/key [:the-key :e/f :a/b]}]
+    [[{:query/args ['{:find [(pull ?e [:db/id
+                                       {:a/b [*]}
+                                       {:e/f [:db/id
+                                              {:a/b [*]}]}])]}]
+       :query/key :the-key}]
+     [:a/b]
+     (fn construct-ab-query [{k :query/key :as query} spec path]
+       (let [new-spec (get spec (last path))]
+         {:query/args [{:find [(list 'pull '?e new-spec)]}]
+          :query/key path}))]
+
     ;;
     ))
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))
