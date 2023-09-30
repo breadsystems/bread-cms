@@ -3,7 +3,7 @@
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
     [systems.bread.alpha.query :as query]

@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.test-helpers :refer [datastore-config->loaded
                                               use-datastore]]))
 

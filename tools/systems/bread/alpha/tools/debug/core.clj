@@ -6,7 +6,7 @@
     [clojure.tools.logging :as log]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.tools.protocols]
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import

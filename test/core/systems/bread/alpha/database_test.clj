@@ -3,7 +3,7 @@
     [kaocha.repl :as k]
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]])
   (:import
     [clojure.lang ExceptionInfo]))

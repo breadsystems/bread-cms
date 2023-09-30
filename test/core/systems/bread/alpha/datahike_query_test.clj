@@ -4,7 +4,7 @@
     [kaocha.repl :as k]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded use-datastore]]))
 
 (def config {:datastore/type :datahike

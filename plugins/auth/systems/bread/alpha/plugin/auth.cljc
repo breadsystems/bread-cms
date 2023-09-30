@@ -6,7 +6,7 @@
     [clojure.edn :as edn]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.internal.time :as t]
     [ring.middleware.session.store :as ss :refer [SessionStore]])

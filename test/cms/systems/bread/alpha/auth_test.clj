@@ -6,7 +6,7 @@
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.defaults :as defaults]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]

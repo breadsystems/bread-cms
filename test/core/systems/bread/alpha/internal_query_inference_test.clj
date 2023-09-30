@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [deftest are is]]
     [systems.bread.alpha.internal.query-inference :as i]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.i18n :as i18n]))
 
 (deftest test-binding-pairs

@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.user
   (:require
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as store]))
 
 (defn abilities [{:user/keys [roles]}]
   (reduce (fn [user-abilities role]

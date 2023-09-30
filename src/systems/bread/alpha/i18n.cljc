@@ -2,7 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.internal.query-inference :as inf]

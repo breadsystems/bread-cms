@@ -7,7 +7,7 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as store]))
 
 (defn- collect-item-ids [tree]
   (reduce (fn [ids node]

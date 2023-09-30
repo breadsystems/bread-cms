@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.datastore
+(ns systems.bread.alpha.database
   (:require
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]

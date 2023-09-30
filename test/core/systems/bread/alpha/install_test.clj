@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.install-test
   (:require
    [clojure.test :refer [deftest are is use-fixtures]]
-   [systems.bread.alpha.datastore :as store]
+   [systems.bread.alpha.database :as store]
    [systems.bread.alpha.schema :as schema]
    [systems.bread.alpha.plugin.datahike]
    [systems.bread.alpha.test-helpers :refer [datastore-config->loaded]]))

@@ -3,7 +3,7 @@
     [clojure.string :as string]
     [clojure.test :refer [are deftest is testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]

@@ -16,7 +16,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import

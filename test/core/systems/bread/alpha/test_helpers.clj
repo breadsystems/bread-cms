@@ -4,7 +4,7 @@
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as store]))
 
 (defn plugins->app [plugins]
   (bread/app {:plugins plugins}))

@@ -14,7 +14,7 @@
     [kaocha.repl :as k]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.plugin.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit]

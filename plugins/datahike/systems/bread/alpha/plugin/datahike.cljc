@@ -6,7 +6,7 @@
     [datahike.db :as dhdb]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store])
+    [systems.bread.alpha.database :as store])
   (:import
     [java.lang IllegalArgumentException]
     [java.util UUID]))

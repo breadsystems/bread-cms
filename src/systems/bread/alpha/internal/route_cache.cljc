@@ -3,7 +3,7 @@
     [clojure.string :as string]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.util.datalog :as datalog]))
 
 (defn- get-attr-via [entity [step & steps]]

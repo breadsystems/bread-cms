@@ -3,7 +3,7 @@
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [datastore->plugin

@@ -4,7 +4,7 @@
     [clojure.walk :as walk]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as store]))
 
 ;; TODO replace with datalog-pull
 (defn empty-query []

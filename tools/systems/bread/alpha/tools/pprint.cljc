@@ -3,7 +3,7 @@
     [clojure.string :as string :refer [split starts-with?]]
     [systems.bread.alpha.core :as core]
     [systems.bread.alpha.cache]
-    [systems.bread.alpha.datastore :as store])
+    [systems.bread.alpha.database :as store])
   (:import
     [clojure.lang Keyword]
     [java.io Writer]))
