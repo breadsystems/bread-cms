@@ -11,25 +11,23 @@
 
 (deftest test-connect
 
-  (testing "it gives a friendly error message if you forget :datastore/type"
+  (testing "it gives a friendly error message if you forget :db/type"
     (is (thrown-with-msg?
           ExceptionInfo
-          #"No :datastore/type specified in datastore config!"
-          (store/connect {:datastore/typo :datahike}))))
+          #"No :db/type specified in datastore config!"
+          (store/connect {:db/typo :datahike}))))
 
-  (testing "it gives a friendly error message if you pass a bad :datastore/type"
+  (testing "it gives a friendly error message if you pass a bad :db/type"
     (is (thrown-with-msg?
           ExceptionInfo
-          #"Unknown :datastore/type `:oops`! Did you forget to load a plugin\?"
-          (store/connect {:datastore/type :oops})))))
+          #"Unknown :db/type `:oops`! Did you forget to load a plugin\?"
+          (store/connect {:db/type :oops})))))
 
 (deftest test-add-txs-adds-an-effect
   (let [conn {:fake :db}]
     (are
       [effects args]
-      (= effects (let [app (plugins->loaded
-                             [{:config
-                               {:datastore/connection conn}}])]
+      (= effects (let [app (plugins->loaded [{:config {:db/connection conn}}])]
                    (::bread/effects (apply store/add-txs app args))))
 
       [{:effect/name ::store/transact

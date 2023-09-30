@@ -121,7 +121,7 @@
   ;; TODO support passing a in a fn for filtering request data
   (let [;; TODO parameterize getting IDs
         rid (UUID/randomUUID)
-        as-of-param (bread/config req :datastore/as-of-param)
+        as-of-param (bread/config req :db/as-of-param)
         as-of (or (store/timepoint req) (store/max-tx req))
         req (assoc req
                    :profiler/profiled? true

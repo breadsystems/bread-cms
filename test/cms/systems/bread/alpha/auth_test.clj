@@ -33,11 +33,11 @@
    :user/two-factor-key "fake"})
 
 (def config
-  {:datastore/type :datahike
+  {:db/type :datahike
    :store {:id "authdb" :backend :mem}
    :recreate? true
    :force? true
-   :datastore/initial-txns
+   :db/initial-txns
    [(assoc angela :user/password (hashers/derive "abolition4lyfe"))
     (assoc bobby :user/password (hashers/derive "pantherz"))
     ;; NOTE: you wouldn't normally mix and match hashing algorithms like this.

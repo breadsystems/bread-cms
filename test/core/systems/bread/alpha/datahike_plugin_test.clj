@@ -9,7 +9,7 @@
                                                     plugins->loaded]]))
 
 (def config
-  {:datastore/type :datahike
+  {:db/type :datahike
    :store {:backend :mem
            :id "plugin-db"}})
 
@@ -19,17 +19,17 @@
 
   (testing "it configures as-of-param"
     (let [app ((datastore-config->handler config) {})]
-      (is (= :as-of (bread/config app :datastore/as-of-param)))))
+      (is (= :as-of (bread/config app :db/as-of-param)))))
 
   (testing "it honors custom as-of-param"
     (let [app (datastore-config->loaded
-                (assoc config :datastore/as-of-param :my/param))]
-      (is (= :my/param (bread/config app :datastore/as-of-param)))))
+                (assoc config :db/as-of-param :my/param))]
+      (is (= :my/param (bread/config app :db/as-of-param)))))
 
   (testing "it configures db connection"
     (let [app (datastore-config->loaded config)]
       (is (instance? clojure.lang.Atom
-                     (bread/config app :datastore/connection)))))
+                     (bread/config app :db/connection)))))
 
   (testing ":hook/datastore returns the present snapshot by default"
     (let [app (datastore-config->loaded config)]
@@ -51,7 +51,7 @@
   (testing "db-datetime honors as-of param"
     (let [handler (datastore-config->handler
                     (assoc config
-                           :datastore/req->timepoint store/db-datetime))
+                           :db/req->timepoint store/db-datetime))
           response (handler {:uri "/"
                              ;; pass a literal date here
                              :params {:as-of "2020-01-01 00:00:00 PDT"}})]
@@ -60,8 +60,8 @@
   (testing "db-datetime honors as-of-format config"
     (let [handler (datastore-config->handler
                     (assoc config
-                           :datastore/as-of-format "yyyy-MM-dd"
-                           :datastore/req->timepoint store/db-datetime))
+                           :db/as-of-format "yyyy-MM-dd"
+                           :db/req->timepoint store/db-datetime))
           response (handler {:uri "/"
                              ;; pass a literal date here
                              :params {:as-of "2020-01-01"}})]
@@ -70,14 +70,14 @@
   (testing "db-datetime gracefully handles bad date strings"
     (let [handler (datastore-config->handler
                     (assoc config
-                           :datastore/req->timepoint store/db-datetime))
+                           :db/req->timepoint store/db-datetime))
           response (handler {:uri "/"
                              :params {:as-of "nonsense date string"}})]
       (is (instance? datahike.db.DB (store/datastore response)))))
 
   (testing "it honors a custom :hook/datastore.req->timepoint callback"
     (let [->timepoint (constantly (java.util.Date.))
-          config (assoc config :datastore/req->timepoint ->timepoint)
+          config (assoc config :db/req->timepoint ->timepoint)
           app (plugins->loaded [(store/plugin config)])]
       (is (instance? datahike.db.AsOfDB (store/datastore app))))))
 

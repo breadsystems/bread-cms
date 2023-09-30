@@ -157,7 +157,7 @@
     defaults))
 
 (defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :datastore/connection} :store/datastore}]
+  [_ {store-type :store/type {conn :db/connection} :store/datastore}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
     (auth/session-store conn)))
@@ -166,7 +166,7 @@
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
   (store/create! db-config {:force? force?})
-  (assoc db-config :datastore/connection (store/connect db-config)))
+  (assoc db-config :db/connection (store/connect db-config)))
 
 (defmethod ig/halt-key! :bread/datastore
   [_ {:keys [recreate?] :as db-config}]

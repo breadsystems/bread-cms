@@ -193,7 +193,7 @@
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
   (store/create! db-config {:force? force?})
-  (assoc db-config :datastore/connection (store/connect db-config)))
+  (assoc db-config :db/connection (store/connect db-config)))
 
 (defmethod ig/halt-key! :bread/datastore
   [_ {:keys [recreate?] :as db-config}]

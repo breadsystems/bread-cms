@@ -10,10 +10,10 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               use-datastore]]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem
                      :id "test-i18n-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              ;; TODO test locales e.g. en-gb
              [{:translatable/fields #{{:field/key :one
                                        :field/content "Post One"

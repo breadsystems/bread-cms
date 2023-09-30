@@ -7,9 +7,9 @@
     [systems.bread.alpha.database :as store]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded use-datastore]]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem :id "expand-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              [;; init simplified schema
               {:db/ident :post/slug
                :db/valueType :db.type/string

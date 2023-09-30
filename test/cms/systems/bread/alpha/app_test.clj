@@ -13,10 +13,10 @@
     [systems.bread.alpha.test-helpers :refer [use-datastore]]
     [systems.bread.alpha.cms.defaults :as defaults]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem
                      :id "app-test-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              [;; init post content
               {:db/id "page.home"
                :post/type :post.type/page

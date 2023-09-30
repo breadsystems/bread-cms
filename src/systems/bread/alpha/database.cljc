@@ -5,13 +5,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]))
 
-(defmulti connect :datastore/type)
+(defmulti connect :db/type)
 (defmulti create! (fn [config & _]
-                             (:datastore/type config)))
-(defmulti delete! :datastore/type)
-(defmulti plugin :datastore/type)
+                             (:db/type config)))
+(defmulti delete! :db/type)
+(defmulti plugin :db/type)
 (defmulti max-tx (fn [app]
-                   (:datastore/type (bread/config app :datastore/config))))
+                   (:db/type (bread/config app :db/config))))
 
 (defprotocol TemporalDatabase
   (as-of [store timepoint])
@@ -38,13 +38,13 @@
      [store query a b c d e f g h i j k l m n o p q r])
   (db-with [store timepoint]))
 
-(defmethod connect :default [{:datastore/keys [type] :as config}]
+(defmethod connect :default [{:db/keys [type] :as config}]
   (let [msg (if (nil? type)
-              "No :datastore/type specified in datastore config!"
-              (str "Unknown :datastore/type `" type "`!"
+              "No :db/type specified in datastore config!"
+              (str "Unknown :db/type `" type "`!"
                    " Did you forget to load a plugin?"))]
     (throw (ex-info msg {:config        config
-                         :bread.context :datastore/connect}))))
+                         :bread.context :db/connect}))))
 
 (defprotocol TransactionalDatabaseConnection
   (db [conn])
@@ -52,7 +52,7 @@
 
 (defn connection [app]
   (-> app
-      (bread/config :datastore/connection)
+      (bread/config :db/connection)
       (bread/hook ::connection)))
 
 (defn datastore [app]
@@ -62,9 +62,9 @@
   "Returns the as-of database instant (DateTime) for the given request,
   based on its params."
   [{:keys [params] :as req}]
-  (let [as-of-param (bread/config req :datastore/as-of-param)
+  (let [as-of-param (bread/config req :db/as-of-param)
         as-of (get params as-of-param)
-        fmt (bread/config req :datastore/as-of-format)]
+        fmt (bread/config req :db/as-of-format)]
     (when as-of
       (try
         (.parse (java.text.SimpleDateFormat. fmt) as-of)
@@ -74,7 +74,7 @@
   "Returns the as-of database transaction (integer) for the given request,
   based on its params."
   [{:keys [params] :as req}]
-  (let [as-of-param (bread/config req :datastore/as-of-param)
+  (let [as-of-param (bread/config req :db/as-of-param)
         as-of (get params as-of-param)]
     (when as-of (try
                   (Integer. as-of)
@@ -186,13 +186,13 @@
   [config]
   ;; TODO make these simple keys
   (when config
-    (let [{:datastore/keys [connection
-                            as-of-format
-                            as-of-param
-                            req->datastore
-                            req->timepoint
-                            initial-txns
-                            migrations]
+    (let [{:db/keys [connection
+                     as-of-format
+                     as-of-param
+                     req->datastore
+                     req->timepoint
+                     initial-txns
+                     migrations]
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z"
                 req->timepoint db-tx
@@ -204,10 +204,10 @@
                     (when-not (= :db-does-not-exist (:type (ex-data e)))
                       (throw e))))}} config]
       {:config
-       {:datastore/config config
-        :datastore/connection connection
-        :datastore/as-of-param as-of-param
-        :datastore/as-of-format as-of-format}
+       {:db/config config
+        :db/connection connection
+        :db/as-of-param as-of-param
+        :db/as-of-format as-of-format}
        :hooks
        {::bread/init
         [{:action/name ::migrate :migrations migrations}

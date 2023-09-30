@@ -252,7 +252,7 @@
   "Takes a request and returns a datastore instance, optionally configured
    as a temporal-db (via as-of) or with-db (via db-with)"
   [req]
-  (let [conn (bread/config req :datastore/connection)
+  (let [conn (bread/config req :db/connection)
         timepoint (store/timepoint req)]
     (if timepoint
       (with-meta
@@ -269,5 +269,5 @@
                     :max-eid (:max-eid db)})}))))
 
 (defmethod store/plugin :datahike [config]
-  (let [config (merge {:datastore/req->datastore datastore} config)]
+  (let [config (merge {:db/req->datastore datastore} config)]
     (store/base-plugin config)))

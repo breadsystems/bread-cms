@@ -58,9 +58,9 @@
 
 (defonce app (atom nil))
 
-(def $config {:datastore/type :datahike
+(def $config {:db/type :datahike
               :store (:datahike env)
-              :datastore/initial-txns
+              :db/initial-txns
               data/initial-content})
 
 (defn hello-handler [_]

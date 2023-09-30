@@ -6,7 +6,7 @@
     [systems.bread.alpha.database :as store]))
 
 ;; Set up a bunch of boilerplate to share between tests.
-(let [config {:datastore/type :datahike
+(let [config {:db/type :datahike
               :store {:backend :mem :id "testdb"}
               :initial-tx [{:db/ident :name
                             :db/valueType :db.type/string
