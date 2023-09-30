@@ -175,7 +175,7 @@
   [req {:keys [req->timepoint]} _]
   (req->timepoint req))
 
-(defmethod bread/action ::datastore
+(defmethod bread/action ::db
   [req {:keys [req->datastore]} _]
   (req->datastore req))
 
@@ -215,4 +215,4 @@
         :hook/datastore.req->timepoint
         [{:action/name ::timepoint :req->timepoint req->timepoint}]
         :hook/datastore
-        [{:action/name ::datastore :req->datastore req->datastore}]}})))
+        [{:action/name ::db :req->datastore req->datastore}]}})))

@@ -175,7 +175,7 @@
                      (:route/params match))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
-          app (defaults/app {:datastore config
+          app (defaults/app {:db config
                              :components {:not-found not-found}
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}

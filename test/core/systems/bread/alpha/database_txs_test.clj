@@ -3,7 +3,7 @@
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as store]
-    [systems.bread.alpha.test-helpers :refer [datastore-config->loaded
+    [systems.bread.alpha.test-helpers :refer [db-config->loaded
                                               use-datastore]]))
 
 (def config {:db/type :datahike
@@ -35,7 +35,7 @@
   (testing "it runs zero or more transactions on the database"
     (are [page args]
       (= page (let [[slug txs] args
-                    app (-> (datastore-config->loaded config)
+                    app (-> (db-config->loaded config)
                             (store/add-txs txs))
                     handler (bread/handler app)
                     query

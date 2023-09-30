@@ -169,7 +169,7 @@
   :start (reset! app
                  (bread/load-app
                    (defaults/app
-                     {:datastore $config
+                     {:db $config
                       :routes {:router $router}
                       :i18n {:supported-langs #{:en :fr}}
                       :navigation

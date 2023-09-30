@@ -114,7 +114,7 @@
       (update :status #(or % (if (:not-found? data) 404 200)))
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
-(defn plugins [{:keys [datastore
+(defn plugins [{:keys [db
                        routes
                        i18n
                        navigation
@@ -131,7 +131,7 @@
         [(dispatcher/plugin)
          (query/plugin)
          (component/plugin components)
-         (when (not (false? datastore)) (store/plugin datastore))
+         (when (not (false? db)) (store/plugin db))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))

@@ -4,8 +4,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as store]
     [systems.bread.alpha.plugin.datahike :as plugin]
-    [systems.bread.alpha.test-helpers :as h :refer [datastore-config->loaded
-                                                    datastore-config->handler
+    [systems.bread.alpha.test-helpers :as h :refer [db-config->loaded
+                                                    db-config->handler
                                                     plugins->loaded]]))
 
 (def config
@@ -18,25 +18,25 @@
 (deftest test-datahike-plugin
 
   (testing "it configures as-of-param"
-    (let [app ((datastore-config->handler config) {})]
+    (let [app ((db-config->handler config) {})]
       (is (= :as-of (bread/config app :db/as-of-param)))))
 
   (testing "it honors custom as-of-param"
-    (let [app (datastore-config->loaded
+    (let [app (db-config->loaded
                 (assoc config :db/as-of-param :my/param))]
       (is (= :my/param (bread/config app :db/as-of-param)))))
 
   (testing "it configures db connection"
-    (let [app (datastore-config->loaded config)]
+    (let [app (db-config->loaded config)]
       (is (instance? clojure.lang.Atom
                      (bread/config app :db/connection)))))
 
   (testing ":hook/datastore returns the present snapshot by default"
-    (let [app (datastore-config->loaded config)]
+    (let [app (db-config->loaded config)]
       (is (instance? datahike.db.DB (bread/hook app :hook/datastore)))))
 
   (testing "db-tx honors as-of-param"
-    (let [app (datastore-config->loaded config)
+    (let [app (db-config->loaded config)
           db (store/datastore app)
           handler (bread/handler app)
           max-tx (store/max-tx app)
@@ -44,12 +44,12 @@
       (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
   (testing "db-tx gracefully handles non-numeric strings"
-    (let [handler (datastore-config->handler config)
+    (let [handler (db-config->handler config)
           response (handler {:uri "/" :params {:as-of "garbage"}})]
       (is (instance? datahike.db.DB (store/datastore response)))))
 
   (testing "db-datetime honors as-of param"
-    (let [handler (datastore-config->handler
+    (let [handler (db-config->handler
                     (assoc config
                            :db/req->timepoint store/db-datetime))
           response (handler {:uri "/"
@@ -58,7 +58,7 @@
       (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
   (testing "db-datetime honors as-of-format config"
-    (let [handler (datastore-config->handler
+    (let [handler (db-config->handler
                     (assoc config
                            :db/as-of-format "yyyy-MM-dd"
                            :db/req->timepoint store/db-datetime))
@@ -68,7 +68,7 @@
       (is (instance? datahike.db.AsOfDB (store/datastore response)))))
 
   (testing "db-datetime gracefully handles bad date strings"
-    (let [handler (datastore-config->handler
+    (let [handler (db-config->handler
                     (assoc config
                            :db/req->timepoint store/db-datetime))
           response (handler {:uri "/"

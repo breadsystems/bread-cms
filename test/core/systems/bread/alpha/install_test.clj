@@ -4,7 +4,7 @@
    [systems.bread.alpha.database :as store]
    [systems.bread.alpha.schema :as schema]
    [systems.bread.alpha.plugin.datahike]
-   [systems.bread.alpha.test-helpers :refer [datastore-config->loaded]]))
+   [systems.bread.alpha.test-helpers :refer [db-config->loaded]]))
 
 (defonce config {:db/type :datahike
                  :store {:backend :mem :id "install-db"}})
@@ -24,7 +24,7 @@
                         #{:bread.migration/migrations
                           :bread.migration/posts}})]
     (store/create! config)
-    (datastore-config->loaded (assoc config :db/migrations
+    (db-config->loaded (assoc config :db/migrations
                                      (conj schema/initial my-migration)))
     (are
       [pred migration] (pred (store/migration-ran?
@@ -49,8 +49,8 @@
     (store/create! config)
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Migration has one or more unmet dependencies!"
-                          (datastore-config->loaded config)))
+                          (db-config->loaded config)))
     (is (= #{:UNMET} (try
-                       (datastore-config->loaded config)
+                       (db-config->loaded config)
                        (catch clojure.lang.ExceptionInfo ex
                          (:unmet-deps (ex-data ex))))))))

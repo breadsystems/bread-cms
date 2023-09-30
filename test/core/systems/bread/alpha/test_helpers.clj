@@ -15,26 +15,26 @@
 (defn plugins->handler [plugins]
   (-> plugins plugins->app bread/load-handler))
 
-(defn datastore-config->app [config]
+(defn db-config->app [config]
   (plugins->app [(store/plugin config)]))
 
-(defmethod bread/action ::datastore
+(defmethod bread/action ::db
   [_ {:keys [store]} _]
   store)
 
 (defn datastore->plugin [store]
-  {:hooks {:hook/datastore [{:action/name ::datastore
+  {:hooks {:hook/datastore [{:action/name ::db
                              :action/description "Mock datastore"
                              :store store}]}})
 
 (defn datastore->loaded [store]
   (plugins->loaded [(datastore->plugin store)]))
 
-(defn datastore-config->loaded [config]
-  (-> config datastore-config->app bread/load-app))
+(defn db-config->loaded [config]
+  (-> config db-config->app bread/load-app))
 
-(defn datastore-config->handler [config]
-  (-> config datastore-config->app bread/load-handler))
+(defn db-config->handler [config]
+  (-> config db-config->app bread/load-handler))
 
 (defn distill-hooks
   "Returns a subset of the keys in each hook (map) in (the vector of) hooks.

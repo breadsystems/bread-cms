@@ -65,7 +65,7 @@
           [{:action/name ::route
             :action/description
             "Return a hard-coded dispatcher for testing purposes"}]}}
-        app-config {:datastore config
+        app-config {:db config
                     :plugins [route-plugin]
                     :cache false
                     :navigation false
