@@ -11,7 +11,7 @@
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
-                                              use-datastore]])
+                                              use-db]])
   (:import
     [java.util Date UUID]))
 
@@ -46,7 +46,7 @@
                                                    {:alg :argon2id}))
     (assoc douglass :user/password (hashers/derive "liber4tion"))]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (defmethod bread/action ::route
   [req _ _]

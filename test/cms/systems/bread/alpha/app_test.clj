@@ -10,7 +10,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]]
+    [systems.bread.alpha.test-helpers :refer [use-db]]
     [systems.bread.alpha.cms.defaults :as defaults]))
 
 (def config {:db/type :datahike
@@ -81,7 +81,7 @@
                :field/key :not-found
                :field/content "404 Pas Trouvé"}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (defc layout [{:keys [content]}]
   {}

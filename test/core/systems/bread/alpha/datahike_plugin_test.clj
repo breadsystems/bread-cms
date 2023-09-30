@@ -13,7 +13,7 @@
    :store {:backend :mem
            :id "plugin-db"}})
 
-(h/use-datastore :each config)
+(h/use-db :each config)
 
 (deftest test-datahike-plugin
 

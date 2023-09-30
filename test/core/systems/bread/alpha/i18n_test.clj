@@ -8,7 +8,7 @@
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
-                                              use-datastore]]))
+                                              use-db]]))
 
 (def config {:db/type :datahike
              :store {:backend :mem
@@ -26,7 +26,7 @@
               {:field/key :one :field/content "Uno" :field/lang :es}
               {:field/key :two :field/content "Dos" :field/lang :es}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (defmethod bread/action ::naive-params
   [{:keys [uri] :as req} _ _]

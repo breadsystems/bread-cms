@@ -46,7 +46,7 @@
   ([ks hooks]
    (map #(select-keys % ks) hooks)))
 
-(defmacro use-datastore [freq config]
+(defmacro use-db [freq config]
   `(t/use-fixtures ~freq (fn [f#]
                            (try
                              (store/delete! ~config)
@@ -58,7 +58,7 @@
                            (store/delete! ~config))))
 
 (comment
-  (macroexpand '(use-datastore :each {:my :config})))
+  (macroexpand '(use-db :each {:my :config})))
 
 (defn map->route-plugin [routes]
   "Takes a map m like:

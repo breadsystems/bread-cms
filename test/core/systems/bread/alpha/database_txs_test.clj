@@ -4,7 +4,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as store]
     [systems.bread.alpha.test-helpers :refer [db-config->loaded
-                                              use-datastore]]))
+                                              use-db]]))
 
 (def config {:db/type :datahike
               :store {:backend :mem
@@ -28,7 +28,7 @@
                 :db/valueType :db.type/string
                 :db/cardinality :db.cardinality/one}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (deftest test-add-txs
 
