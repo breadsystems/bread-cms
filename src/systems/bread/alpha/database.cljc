@@ -56,7 +56,7 @@
       (bread/hook ::connection)))
 
 (defn datastore [app]
-  (bread/hook app :hook/datastore))
+  (bread/hook app ::db))
 
 (defn db-datetime
   "Returns the as-of database instant (DateTime) for the given request,
@@ -82,7 +82,7 @@
                     nil)))))
 
 (defn timepoint [req]
-  (bread/hook req :hook/datastore.req->timepoint))
+  (bread/hook req ::timepoint))
 
 (defmethod bread/effect ::transact
   [{:keys [conn txs]} _]
@@ -212,7 +212,7 @@
        {::bread/init
         [{:action/name ::migrate :migrations migrations}
          {:action/name ::transact-initial :txs initial-txns}]
-        :hook/datastore.req->timepoint
+        ::timepoint
         [{:action/name ::timepoint :req->timepoint req->timepoint}]
-        :hook/datastore
+        ::db
         [{:action/name ::db :req->datastore req->datastore}]}})))

@@ -23,9 +23,9 @@
   store)
 
 (defn db->plugin [store]
-  {:hooks {:hook/datastore [{:action/name ::db
-                             :action/description "Mock datastore"
-                             :store store}]}})
+  {:hooks {::store/db [{:action/name ::db
+                        :action/description "Mock datastore"
+                        :store store}]}})
 
 (defn datastore->loaded [store]
   (plugins->loaded [(db->plugin store)]))

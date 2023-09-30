@@ -31,9 +31,9 @@
       (is (instance? clojure.lang.Atom
                      (bread/config app :db/connection)))))
 
-  (testing ":hook/datastore returns the present snapshot by default"
+  (testing "::store/db returns the present snapshot by default"
     (let [app (db-config->loaded config)]
-      (is (instance? datahike.db.DB (bread/hook app :hook/datastore)))))
+      (is (instance? datahike.db.DB (bread/hook app ::store/db)))))
 
   (testing "db-tx honors as-of-param"
     (let [app (db-config->loaded config)
@@ -75,7 +75,7 @@
                              :params {:as-of "nonsense date string"}})]
       (is (instance? datahike.db.DB (store/datastore response)))))
 
-  (testing "it honors a custom :hook/datastore.req->timepoint callback"
+  (testing "it honors a custom ::timepoint callback"
     (let [->timepoint (constantly (java.util.Date.))
           config (assoc config :db/req->timepoint ->timepoint)
           app (plugins->loaded [(store/plugin config)])]
