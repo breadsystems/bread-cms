@@ -3,7 +3,7 @@
   (:require
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
-    [datahike.db :as db]
+    [datahike.db :as dhdb]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.datastore :as store])
@@ -177,8 +177,8 @@
   Datafiable
   (datafy [db]
     {:type 'datahike.db.AsOfDB
-     :max-tx (db/-max-tx db)
-     :max-eid (db/-max-eid db)}))
+     :max-tx (dhdb/-max-tx db)
+     :max-eid (dhdb/-max-eid db)}))
 
 (extend-type datahike.db.DB
   Datafiable
