@@ -9,13 +9,9 @@
 (defmulti create! (fn [config & _]
                              (:datastore/type config)))
 (defmulti delete! :datastore/type)
-(defmulti connection :datastore/type)
 (defmulti plugin :datastore/type)
 (defmulti max-tx (fn [app]
                    (:datastore/type (bread/config app :datastore/config))))
-
-(defmethod connection :default [app]
-  (bread/config app :datastore/connection))
 
 (defprotocol TemporalDatastore
   (as-of [store timepoint])
@@ -53,6 +49,11 @@
 (defprotocol TransactionalDatastoreConnection
   (db [conn])
   (transact [conn txs]))
+
+(defn connection [app]
+  (-> app
+      (bread/config :datastore/connection)
+      (bread/hook ::connection)))
 
 (defn datastore [app]
   (bread/hook app :hook/datastore))
