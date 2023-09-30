@@ -222,7 +222,7 @@
 ;; TransactionalDatastoreConnection protocols
 ;;
 
-(defmethod store/connect! :datahike [config]
+(defmethod store/connect :datahike [config]
   (try
     (d/connect config)
     (catch IllegalArgumentException e
@@ -233,7 +233,7 @@
                        :message   (.getMessage e)
                        :config    config})))))
 
-(defmethod store/create-database! :datahike [config & [{:keys [force?]}]]
+(defmethod store/create! :datahike [config & [{:keys [force?]}]]
   (try
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
@@ -244,9 +244,9 @@
 
 ;; TODO rm?
 (defmethod store/install! :datahike [config & [{:keys [force?]}]]
-  (store/create-database! config {:force? force?}))
+  (store/create! config {:force? force?}))
 
-(defmethod store/delete-database! :datahike [config]
+(defmethod store/delete! :datahike [config]
   (d/delete-database config))
 
 (defmethod store/max-tx :datahike [req]

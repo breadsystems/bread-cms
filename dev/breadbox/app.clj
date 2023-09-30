@@ -149,7 +149,7 @@
   :stop (when (:reinstall-db? env)
           (println "DELETING DEV DATABASE.")
           (try
-            (store/delete-database! $config)
+            (store/delete! $config)
             (catch clojure.lang.ExceptionInfo e
               (println (format "Error deleting database on stop: %s"
                                (ex-message e)))

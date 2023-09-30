@@ -9,19 +9,19 @@
     [clojure.lang ExceptionInfo]))
 
 
-(deftest test-connect!
+(deftest test-connect
 
   (testing "it gives a friendly error message if you forget :datastore/type"
     (is (thrown-with-msg?
           ExceptionInfo
           #"No :datastore/type specified in datastore config!"
-          (store/connect! {:datastore/typo :datahike}))))
+          (store/connect {:datastore/typo :datahike}))))
 
   (testing "it gives a friendly error message if you pass a bad :datastore/type"
     (is (thrown-with-msg?
           ExceptionInfo
           #"Unknown :datastore/type `:oops`! Did you forget to load a plugin\?"
-          (store/connect! {:datastore/type :oops})))))
+          (store/connect {:datastore/type :oops})))))
 
 (deftest test-add-txs-adds-an-effect
   (let [conn {:fake :db}]

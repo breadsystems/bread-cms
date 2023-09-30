@@ -11,9 +11,9 @@
 
 (defn- wrap-db-installation [run]
   ;; Clean up after any bad test runs
-  (store/delete-database! config)
+  (store/delete! config)
   (run)
-  (store/delete-database! config))
+  (store/delete! config))
 
 (use-fixtures :each wrap-db-installation)
 
@@ -25,7 +25,7 @@
   (is (true? (store/installed? config))))
 
 (deftest test-delete-database
-  (store/delete-database! config)
+  (store/delete! config)
   (is (false? (store/installed? config))))
 
 (deftest test-migrations
@@ -39,7 +39,7 @@
                                      (conj schema/initial my-migration)))
     (are
       [pred migration] (pred (store/migration-ran?
-                               (store/db (store/connect! config))
+                               (store/db (store/connect config))
                                migration))
       true? schema/migrations
       true? schema/posts

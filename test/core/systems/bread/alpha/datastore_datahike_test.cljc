@@ -18,11 +18,11 @@
 
       datahike-fixture (fn [f]
                          ;; Clean up after any prior failures, just in case.
-                         (store/delete-database! config)
-                         (store/create-database! config)
+                         (store/delete! config)
+                         (store/create! config)
                          (f)
                          ;; Eagerly clean up after ourselves.
-                         (store/delete-database! config))
+                         (store/delete! config))
 
       angela {:name "Angela" :age 76}
       bobby {:name "Bobby" :age 84}
@@ -31,7 +31,7 @@
                   [?e :name ?n]
                   [?e :age ?a]]
       init-db (fn []
-                (let [conn (store/connect! config)]
+                (let [conn (store/connect config)]
                   (store/transact conn [angela bobby])
                   conn))]
 

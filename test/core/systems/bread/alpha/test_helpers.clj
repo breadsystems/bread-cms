@@ -49,13 +49,13 @@
 (defmacro use-datastore [freq config]
   `(t/use-fixtures ~freq (fn [f#]
                            (try
-                             (store/delete-database! ~config)
+                             (store/delete! ~config)
                              (catch Throwable e#
                                (log/warn (.getMessage e#))))
-                           (store/install! ~config)
-                           (store/connect! ~config)
+                           (store/create! ~config)
+                           (store/connect ~config)
                            (f#)
-                           (store/delete-database! ~config))))
+                           (store/delete! ~config))))
 
 (comment
   (macroexpand '(use-datastore :each {:my :config})))

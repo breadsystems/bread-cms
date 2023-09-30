@@ -5,14 +5,14 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]))
 
-(defmulti connect! :datastore/type)
-(defmulti create-database! (fn [config & _]
+(defmulti connect :datastore/type)
+(defmulti create! (fn [config & _]
                              (:datastore/type config)))
 ;; TODO is this fn needed?
 (defmulti install! (fn [config & _]
                      (:datastore/type config)))
 (defmulti installed? :datastore/type)
-(defmulti delete-database! :datastore/type)
+(defmulti delete! :datastore/type)
 (defmulti connection :datastore/type)
 (defmulti plugin :datastore/type)
 (defmulti max-tx (fn [app]
@@ -46,13 +46,13 @@
      [store query a b c d e f g h i j k l m n o p q r])
   (db-with [store timepoint]))
 
-(defmethod connect! :default [{:datastore/keys [type] :as config}]
+(defmethod connect :default [{:datastore/keys [type] :as config}]
   (let [msg (if (nil? type)
               "No :datastore/type specified in datastore config!"
               (str "Unknown :datastore/type `" type "`!"
                    " Did you forget to load a plugin?"))]
     (throw (ex-info msg {:config        config
-                         :bread.context :datastore/connect!}))))
+                         :bread.context :datastore/connect}))))
 
 (defprotocol TransactionalDatastoreConnection
   (db [conn])
@@ -89,7 +89,7 @@
 
 (defmethod installed? :default [config]
   (try
-    (let [db (-> config connect! db)]
+    (let [db (-> config connect db)]
       (set? (q db '[:find ?e :where [?e :db/ident]])))
     (catch clojure.lang.ExceptionInfo e
       (when-not (#{:db-does-not-exist :backend-does-not-exist}
@@ -212,7 +212,7 @@
                 migrations schema/initial
                 connection
                 (try
-                  (connect! config)
+                  (connect config)
                   (catch clojure.lang.ExceptionInfo e
                     (when-not (= :db-does-not-exist (:type (ex-data e)))
                       (throw e))))}} config]
