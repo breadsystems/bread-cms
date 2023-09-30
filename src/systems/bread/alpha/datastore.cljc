@@ -13,7 +13,7 @@
 (defmulti max-tx (fn [app]
                    (:datastore/type (bread/config app :datastore/config))))
 
-(defprotocol TemporalDatastore
+(defprotocol TemporalDatabase
   (as-of [store timepoint])
   (history [store])
   (pull [store struct lookup-ref])
@@ -46,7 +46,7 @@
     (throw (ex-info msg {:config        config
                          :bread.context :datastore/connect}))))
 
-(defprotocol TransactionalDatastoreConnection
+(defprotocol TransactionalDatabaseConnection
   (db [conn])
   (transact [conn txs]))
 

@@ -28,16 +28,16 @@
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                           ;;
-  ;;    Datastore Protocols    ;;
+  ;;     Database Protocols    ;;
  ;;                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
-;; Implement Bread's core TemporalDatastore and
-;; TransactionalDatastoreConnection protocols
+;; Implement Bread's core TemporalDatabase and
+;; TransactionalDatabaseConnection protocols
 ;;
 
-(extend-protocol store/TemporalDatastore
+(extend-protocol store/TemporalDatabase
   datahike.db.DB
   (as-of [store instant]
     (d/as-of store instant))
@@ -166,7 +166,7 @@
      (d/q query store a b c d e f g h i j k l m n o p r))))
 
 
-(extend-protocol store/TransactionalDatastoreConnection
+(extend-protocol store/TransactionalDatabaseConnection
   clojure.lang.Atom
   (db [conn] (deref conn))
   (transact [conn tx]
@@ -218,8 +218,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
-;; Implement Bread's core TemporalDatastore and
-;; TransactionalDatastoreConnection protocols
+;; Implement Bread's core TemporalDatabase and
+;; TransactionalDatabaseConnection protocols
 ;;
 
 (defmethod store/connect :datahike [config]
