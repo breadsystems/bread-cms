@@ -6,7 +6,7 @@
     [systems.bread.alpha.database :as store]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.test-helpers :refer [datastore->plugin
+    [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 
 (deftest test-create-post-ancestry-rule
@@ -61,7 +61,7 @@
 
 (deftest test-dispatch-post-queries
   (let [db ::FAKEDB
-        app (plugins->loaded [(datastore->plugin db)
+        app (plugins->loaded [(db->plugin db)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
                               (dispatcher/plugin)])
