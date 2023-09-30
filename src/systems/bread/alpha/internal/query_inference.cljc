@@ -104,11 +104,11 @@
       [query])))
 
 (defn infer
-  "Takes a vector queries, a map binding-searches of attr -> detector function,
-  and a query constructor f. Returns an expanded vector of queries. Walks each
-  query in queries, checking for attrs matching any key in binding-searches and
-  applying the corresponding detector function. If detector returns "
-  [queries binding-searches f]
+  "Takes a vector queries, a collection ks of keys to search for, and a query
+  constructor f. Returns an expanded vector of queries. Walks each
+  query in queries, checking for attrs matching any key in ks, and upon
+  detecting any, splits each out into its own query using f to construct it."
+  [queries ks f]
   (reduce (fn [queries query]
-            (apply conj queries (infer-single query binding-searches f)))
+            (apply conj queries (infer-single query ks f)))
           [] queries))
