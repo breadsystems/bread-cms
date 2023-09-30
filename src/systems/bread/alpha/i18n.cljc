@@ -158,19 +158,17 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang supported-langs db-attrs
+  ([{:keys [lang-param fallback-lang supported-langs
             query-strings? query-lang?]
      :or {lang-param :lang
           fallback-lang :en
           supported-langs #{:en}
-          db-attrs #{:translatable/fields}
           query-strings? true
           query-lang? true}}]
    {:config
     {:i18n/lang-param lang-param
      :i18n/fallback-lang fallback-lang
-     :i18n/supported-langs supported-langs
-     :i18n/db-attrs db-attrs}
+     :i18n/supported-langs supported-langs}
     :hooks
     {::queries
      [{:action/name ::queries
