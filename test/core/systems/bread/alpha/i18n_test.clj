@@ -305,9 +305,9 @@
        :taxon.taxonomy/tag]}
      :es]
 
-    ;; With deeply nested, implicit :field/content
+    ;; With deeply nested, mixed implicit & explicit :field/content
     [{:query/name ::store/query
-      :query/key :post-with-fields-and-taxons
+      :query/key :post-with-taxons-and-field-content
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
@@ -321,67 +321,16 @@
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
-     #_ ;; TODO
      {:query/name ::store/query
-      :query/key [:post-with-fields-and-taxons :post/taxons :translatable/fields]
+      :query/key [:post-with-taxons-and-field-content :translatable/fields]
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id *])]
-         ;; Post ID gets passed in as ?e1.
-         :in [$ ?e1 ?lang]
-         :where [;; Go through the :post/taxons relationship to get to the
-                 ;; :translatable/fields content.
-                 [?e :field/lang ?lang]
-                 [?e0 :translatable/fields ?e]
-                 [?e1 :post/taxons ?e0]]}
-       ;; Get the post ID to be passed in from this data path.
-       [::bread/data :post-with-fields-and-taxons :db/id]
-       :de]}
-     {:query/name ::store/query
-      :query/key [:post-with-fields-and-taxons :translatable/fields]
-      :query/db ::FAKEDB
-      :query/args
-      ['{:find [(pull ?e [:db/id *])]
+      ['{:find [(pull ?e [:db/id :field/key :field/content])]
          :in [$ ?e0 ?lang]
          :where [[?e :field/lang ?lang]
                  [?e0 :translatable/fields ?e]]}
-       [::bread/data :post-with-fields-and-taxons :db/id]
-       :de]}]
-    [#{:translatable/fields}
-     {:query/name ::store/query
-      :query/key :post-with-fields-and-taxons
-      :query/db ::FAKEDB
-      :query/args
-      ['{:find [(pull ?e [:db/id
-                          :post/slug
-                          {:translatable/fields [*]}
-                          {:post/taxons [:taxon/slug
-                                         :taxon/taxonomy
-                                         {:translatable/fields [*]}]}]) .]
-         :in [$ ?slug ?type]
-         :where [[?e :post/slug ?slug]
-                 [?e :post/type ?type]]}
-       "my-post"
-       :post.type/page]}
-     :de]
-
-    ;; With deeply nested, mixed implicit & explicit :field/content
-    [{:query/name ::store/query
-      :query/key :post-with-taxons-and-field-content
-      :query/db ::FAKEDB
-      :query/args
-      ['{:find [(pull ?e [:db/id
-                          :post/slug
-                          :translatable/fields
-                          {:post/taxons [:taxon/slug
-                                         :taxon/taxonomy
-                                         {:translatable/fields [*]}]}]) .]
-         :in [$ ?slug ?type]
-         :where [[?e :post/slug ?slug]
-                 [?e :post/type ?type]]}
-       "my-post"
-       :post.type/page]}
-     #_
+       [::bread/data :post-with-taxons-and-field-content :db/id]
+       :en]}
      {:query/name ::store/query
       :query/key [:post-with-taxons-and-field-content :post/taxons :translatable/fields]
       :query/db ::FAKEDB
@@ -395,16 +344,6 @@
                  [?e0 :translatable/fields ?e]
                  [?e1 :post/taxons ?e0]]}
        ;; Get the post ID to be passed in from this data path.
-       [::bread/data :post-with-taxons-and-field-content :db/id]
-       :en]}
-     {:query/name ::store/query
-      :query/key [:post-with-taxons-and-field-content :translatable/fields]
-      :query/db ::FAKEDB
-      :query/args
-      ['{:find [(pull ?e [:db/id :field/key :field/content])]
-         :in [$ ?e0 ?lang]
-         :where [[?e :field/lang ?lang]
-                 [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}]
     [#{:translatable/fields}
@@ -490,6 +429,65 @@
        "my-cat"]}
      :fr]
 
+    ;; With deeply nested, implicit :field/content
+    [{:query/name ::store/query
+      :query/key :post-with-fields-and-taxons
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          :translatable/fields
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy
+                                         :translatable/fields]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     {:query/name ::store/query
+      :query/key [:post-with-fields-and-taxons :translatable/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         :in [$ ?e0 ?lang]
+         :where [[?e :field/lang ?lang]
+                 [?e0 :translatable/fields ?e]]}
+       [::bread/data :post-with-fields-and-taxons :db/id]
+       :de]}
+     {:query/name ::store/query
+      :query/key [:post-with-fields-and-taxons :post/taxons :translatable/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id *])]
+         ;; Post ID gets passed in as ?e1.
+         :in [$ ?e1 ?lang]
+         :where [;; Go through the :post/taxons relationship to get to the
+                 ;; :translatable/fields content.
+                 [?e :field/lang ?lang]
+                 [?e0 :translatable/fields ?e]
+                 [?e1 :post/taxons ?e0]]}
+       ;; Get the post ID to be passed in from this data path.
+       [::bread/data :post-with-fields-and-taxons :db/id]
+       :de]}]
+    [#{:translatable/fields}
+     {:query/name ::store/query
+      :query/key :post-with-fields-and-taxons
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :post/slug
+                          {:translatable/fields [*]}
+                          {:post/taxons [:taxon/slug
+                                         :taxon/taxonomy
+                                         {:translatable/fields [*]}]}]) .]
+         :in [$ ?slug ?type]
+         :where [[?e :post/slug ?slug]
+                 [?e :post/type ?type]]}
+       "my-post"
+       :post.type/page]}
+     :de]
+
     ;;
     ))
 
@@ -564,4 +562,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))
