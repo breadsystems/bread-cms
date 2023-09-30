@@ -141,7 +141,7 @@
   :start (when (:reinstall-db? env)
            (println "REINSTALLING DATABASE.")
            (try
-             (store/install! $config {:force? true})
+             (store/create! $config {:force? true})
              (catch clojure.lang.ExceptionInfo e
                (println (format "Error reinstalling database: %s"
                                 (ex-message e)))

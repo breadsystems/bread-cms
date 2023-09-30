@@ -17,24 +17,13 @@
 
 (use-fixtures :each wrap-db-installation)
 
-(deftest test-uninstalled
-  (is (false? (store/installed? config))))
-
-(deftest test-installation
-  (store/install! config)
-  (is (true? (store/installed? config))))
-
-(deftest test-delete-database
-  (store/delete! config)
-  (is (false? (store/installed? config))))
-
 (deftest test-migrations
   (let [my-migration (with-meta
                        [{:migration/key :my/migration}]
                        {:migration/dependencies
                         #{:bread.migration/migrations
                           :bread.migration/posts}})]
-    (store/install! config)
+    (store/create! config)
     (datastore-config->loaded (assoc config :datastore/migrations
                                      (conj schema/initial my-migration)))
     (are
@@ -57,7 +46,7 @@
                        [{:migration/key :my/migration}]
                        {:migration/dependencies #{:UNMET}})
         config (assoc config :datastore/migrations [my-migration])]
-    (store/install! config)
+    (store/create! config)
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Migration has one or more unmet dependencies!"
                           (datastore-config->loaded config)))

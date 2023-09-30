@@ -8,10 +8,6 @@
 (defmulti connect :datastore/type)
 (defmulti create! (fn [config & _]
                              (:datastore/type config)))
-;; TODO is this fn needed?
-(defmulti install! (fn [config & _]
-                     (:datastore/type config)))
-(defmulti installed? :datastore/type)
 (defmulti delete! :datastore/type)
 (defmulti connection :datastore/type)
 (defmulti plugin :datastore/type)
@@ -86,16 +82,6 @@
 
 (defn timepoint [req]
   (bread/hook req :hook/datastore.req->timepoint))
-
-(defmethod installed? :default [config]
-  (try
-    (let [db (-> config connect db)]
-      (set? (q db '[:find ?e :where [?e :db/ident]])))
-    (catch clojure.lang.ExceptionInfo e
-      (when-not (#{:db-does-not-exist :backend-does-not-exist}
-                  (:type (ex-data e)))
-        (throw e))
-      false)))
 
 (defmethod bread/effect ::transact
   [{:keys [conn txs]} _]
