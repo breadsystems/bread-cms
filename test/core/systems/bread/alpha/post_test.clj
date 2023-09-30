@@ -89,7 +89,11 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        ;; pull and key come from component
        :dispatcher/pull [:post/slug]
@@ -111,7 +115,11 @@
          "one"
          "two"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :custom/key]
        ;; default key -> :post
@@ -132,7 +140,11 @@
          "one"
          "two"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :custom/key]
        :dispatcher/key nil ;; default -> :post
@@ -152,7 +164,11 @@
          "one"
          "two"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :custom/key]
        :dispatcher/key :post
@@ -173,19 +189,23 @@
          "two"
          "three"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :custom/key]
        :dispatcher/key :post
        :route/params {:slugs "one/two/three" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields alone only queries for :db/id, not :field/content
+      ;; :translatable/fields alone only queries for :db/id, not :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :post/title :post/fields]) .]
+        ['{:find [(pull ?e [:db/id :post/title :translatable/fields]) .]
            :in [$ % ?slug_0 ?type ?status]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
@@ -193,19 +213,23 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull [:post/title :post/fields]
+       :dispatcher/pull [:post/title :translatable/fields]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 
       ;; {:uri "/en/simple"}
-      ;; :post/fields WITHOUT :field/content
+      ;; :translatable/fields WITHOUT :field/content
       [{:query/name ::store/query
         :query/key :post
         :query/db db
         :query/args
-        ['{:find [(pull ?e [:db/id :post/title {:post/fields
+        ['{:find [(pull ?e [:db/id :post/title {:translatable/fields
                                                 [:field/key
                                                  :field/lang]}]) .]
            :in [$ % ?slug_0 ?type ?status]
@@ -215,9 +239,13 @@
          [(post/create-post-ancestry-rule 1)]
          "simple"
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull [:post/title {:post/fields [:field/key :field/lang]}]
+       :dispatcher/pull [:post/title {:translatable/fields [:field/key :field/lang]}]
        :dispatcher/key :post
        :route/params {:slugs "simple" :lang "en"}}
 
@@ -236,7 +264,11 @@
          ;; Empty slug!
          ""
          :post.type/page
-         :post.status/published]}]
+         :post.status/published]}
+       {:query/name ::post/compact-fields
+        :query/key :post
+        :query/description
+        "Compact :translatable/fields into a more usable shape."}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull [:post/title :custom/key]
        :dispatcher/key :post

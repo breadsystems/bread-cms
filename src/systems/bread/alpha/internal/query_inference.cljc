@@ -14,18 +14,6 @@
       (when (and (= search-key k) (pred field))
         field))))
 
-(defn- get-binding [search data]
-  (let [field (search data)]
-    (cond
-      field [field []]
-      (seqable? data) (some (fn [[k v]]
-                              (when-let [[field path]
-                                         (get-binding search v)]
-
-                                [field (cons k path)]))
-                            (if (map? data)
-                              data (map-indexed vector data))))))
-
 (defn- replace-bindings [[_ sym spec] bindings]
   (let [pred (set bindings)]
     (list 'pull sym
@@ -45,6 +33,29 @@
   ;;                  ^^^^^ this
   (-> args first :find first rest second))
 
+(defn get-bindings [search node]
+  (let [field (search node)
+        get-pair (fn [[k v]]
+                   (when-let [[field path] (get-bindings search v)]
+                     [field (cons k path)]))]
+    (cond
+      field [field []]
+      (map? node) (mapcat get-pair node)
+      (seqable? node) (mapcat get-pair (map-indexed vector node)))))
+
+(comment
+  (def $spec '[:db/id
+               {:a/b [*]}
+               {:e/f [:db/id
+                      {:a/b [*]}]}])
+  (def $search (partial attr-binding :a/b))
+  ($search {})
+  ($search $spec)
+  ($search {:a/b ['*]})
+  ($search {:a/b [:field/content]})
+
+  (partition 2 (get-bindings $search $spec)))
+
 (defn binding-pairs [ks qk spec]
   (let [qk (if (sequential? qk) qk [qk])]
     (reduce (fn [paths search-key]
@@ -52,14 +63,32 @@
                     search-key (if (sequential? search-key)
                                  (first search-key)
                                  search-key)
-                    [field-binding path] (get-binding search spec)]
-                (if field-binding
-                  (conj paths [field-binding
-                               (concat qk
-                                       (filterv keyword? path)
-                                       [search-key])])
-                  paths)))
+                    bindings (partition 2 (get-bindings search spec))]
+                (reduce (fn [paths [field-binding path]]
+                          (if field-binding
+                            (conj paths [field-binding
+                                         (concat qk
+                                                 (filterv keyword? path)
+                                                 [search-key])])
+                            paths))
+                        paths bindings)))
             [] ks)))
+
+(comment
+  (defn- $binding? [binding-map]
+    (let [k (first (keys binding-map))
+          v (get binding-map k)]
+      (some #{:field/content '*} v)))
+  (def $searches
+    {:translatable/fields $binding?})
+  (def $k :post)
+  (def $pull
+    '[:db/id
+      :post/slug
+      #:translatable{:fields [*]}
+      #:post{:taxons
+             [:taxon/slug :taxon/taxonomy #:translatable{:fields [*]}]}])
+  (binding-pairs $searches $k $pull))
 
 (defn- infer-single [{k :query/key :as query} binding-searches f]
   (let [pull (extract-pull query)
@@ -74,7 +103,12 @@
              (map #(apply f query %) pairs)))
       [query])))
 
-(defn infer [queries binding-searches f]
+(defn infer
+  "Takes a vector queries, a collection ks of keys to search for, and a query
+  constructor f. Returns an expanded vector of queries. Walks each
+  query in queries, checking for attrs matching any key in ks, and upon
+  detecting any, splits each out into its own query using f to construct it."
+  [queries ks f]
   (reduce (fn [queries query]
-            (apply conj queries (infer-single query binding-searches f)))
+            (apply conj queries (infer-single query ks f)))
           [] queries))
