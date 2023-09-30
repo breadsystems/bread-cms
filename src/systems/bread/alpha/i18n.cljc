@@ -177,11 +177,9 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     (filterv
-       identity
-       [(when query-strings?
-          {:action/name ::add-strings-query
-           :action/description "Add global strings query"})
-        (when query-lang?
-          {:action/name ::add-lang-query
-           :action/description "Add lang value query"})])}}))
+     [(when query-strings?
+        {:action/name ::add-strings-query
+         :action/description "Add global strings query"})
+      (when query-lang?
+        {:action/name ::add-lang-query
+         :action/description "Add lang value query"})]}}))
