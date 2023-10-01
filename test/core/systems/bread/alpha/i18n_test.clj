@@ -3,17 +3,17 @@
     [clojure.string :as string]
     [clojure.test :refer [are deftest is testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
-                                              use-datastore]]))
+                                              use-db]]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem
                      :id "test-i18n-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              ;; TODO test locales e.g. en-gb
              [{:translatable/fields #{{:field/key :one
                                        :field/content "Post One"
@@ -26,7 +26,7 @@
               {:field/key :one :field/content "Uno" :field/lang :es}
               {:field/key :two :field/content "Dos" :field/lang :es}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (defmethod bread/action ::naive-params
   [{:keys [uri] :as req} _ _]
@@ -38,7 +38,7 @@
   {:hooks {::route/params [{:action/name ::naive-params}]}})
 
 (defn- load-app [i18n-config]
-  (plugins->loaded [(store/plugin config)
+  (plugins->loaded [(db/plugin config)
                     (i18n/plugin i18n-config)
                     naive-plugin]))
 
@@ -95,7 +95,7 @@
 
 ;; i18n/plugin loads I18n strings for the given language automatically.
 (deftest test-add-i18n-query
-  (let [app (plugins->loaded [(store/plugin config)
+  (let [app (plugins->loaded [(db/plugin config)
                               (i18n/plugin {:supported-langs #{:en :es}})
                               (query/plugin)
                               naive-plugin])]
@@ -124,7 +124,7 @@
 
 (deftest test-fallback
   (let [load-app #(plugins->loaded
-                    [(store/plugin config)
+                    [(db/plugin config)
                      (i18n/plugin (merge {:supported-langs #{:en :es}} %))
                      (query/plugin)
                      naive-plugin])]
@@ -168,7 +168,7 @@
                  (bread/hook app ::i18n/queries [query])))
 
     ;; Without :field/content
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -176,7 +176,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -187,7 +187,7 @@
      :whatever]
 
     ;; With :translatable/fields, but still without :field/content
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -197,7 +197,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -210,7 +210,7 @@
      :whatever]
 
     ;; With :field/content
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
@@ -218,7 +218,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post-with-content :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -228,7 +228,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-content :db/id]
        :fr]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-content
       :query/db ::FAKEDB
       :query/args
@@ -241,7 +241,7 @@
      :fr]
 
     ;; With :field/content implicity as part of {:translatable/fields [*]}
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -249,7 +249,7 @@
          :in [$ ?type]
          :where [[?e :post/type ?type]]}
        :post.type/page]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -259,7 +259,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post :db/id]
        :ru]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post
       :query/db ::FAKEDB
       :query/args
@@ -270,7 +270,7 @@
      :ru]
 
     ;; With :field/content implicity as part of {:translatable/fields [*]}
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :taxon
       :query/db ::FAKEDB
       :query/args
@@ -278,7 +278,7 @@
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:taxon :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -288,7 +288,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :taxon :db/id]
        :es]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :taxon
       :query/db ::FAKEDB
       :query/args
@@ -299,7 +299,7 @@
      :es]
 
     ;; With deeply nested, mixed implicit & explicit :field/content
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-taxons-and-field-content
       :query/db ::FAKEDB
       :query/args
@@ -314,7 +314,7 @@
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post-with-taxons-and-field-content :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -324,7 +324,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post-with-taxons-and-field-content :post/taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -339,7 +339,7 @@
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-taxons-and-field-content :db/id]
        :en]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-taxons-and-field-content
       :query/db ::FAKEDB
       :query/args
@@ -357,7 +357,7 @@
      :en]
 
     ;; With posts nested under a taxon
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :nested-taxon
       :query/db ::FAKEDB
       :query/args
@@ -377,7 +377,7 @@
        :post.type/page
        :taxon.taxonomy/category
        "my-cat"]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:nested-taxon :post/_taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -394,7 +394,7 @@
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :nested-taxon :db/id]
        :fr]}]
-    [{:query/name ::store/query,
+    [{:query/name ::db/query,
       :query/key :nested-taxon,
       :query/db ::FAKEDB,
       :query/args
@@ -421,7 +421,7 @@
      :fr]
 
     ;; With deeply nested, implicit :field/content
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-fields-and-taxons
       :query/db ::FAKEDB
       :query/args
@@ -436,7 +436,7 @@
                  [?e :post/type ?type]]}
        "my-post"
        :post.type/page]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post-with-fields-and-taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -446,7 +446,7 @@
                  [?e0 :translatable/fields ?e]]}
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}
-     {:query/name ::store/query
+     {:query/name ::db/query
       :query/key [:post-with-fields-and-taxons :post/taxons :translatable/fields]
       :query/db ::FAKEDB
       :query/args
@@ -461,7 +461,7 @@
        ;; Get the post ID to be passed in from this data path.
        [::bread/data :post-with-fields-and-taxons :db/id]
        :de]}]
-    [{:query/name ::store/query
+    [{:query/name ::db/query
       :query/key :post-with-fields-and-taxons
       :query/db ::FAKEDB
       :query/args

@@ -3,7 +3,7 @@
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
     [systems.bread.alpha.query :as query]
@@ -27,7 +27,7 @@
     :post/type :post.type/page
     :post/slug ""
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "The Title")}
@@ -38,7 +38,7 @@
     :post/type :post.type/page
     :post/slug "child-page"
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Child")}
@@ -49,7 +49,7 @@
     :post/type :post.type/page
     :post/slug "sister-page"
     :post/status :post.status/draft
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Sister")}
@@ -61,7 +61,7 @@
     :post/slug "parent-page"
     :post/children ["page.child"]
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Parent Page")}
@@ -70,19 +70,12 @@
        :field/content (prn-str "La Page Parent")}}}
 
    ;; Site-wide translations
-   #:i18n{:lang :en
-          :key :not-found
-          :string "404 Not Found"}
-   #:i18n{:lang :fr
-          :key :not-found
-          :string "404 Pas Trouvé"}
-   #:i18n{:lang :fr
-          :key :breadbox
-          :string "Boite à pain"}
-   #:i18n{:lang :en
-          :key :breadbox
-          :string "Breadbox"}
-   ])
+   {:field/lang :en
+    :field/key :not-found
+    :field/content "404 Not Found"}
+   {:field/lang :es
+    :field/key :not-found
+    :field/content "404 Pas Trouvé"}])
 
 (defmethod bread/action ::request-data
   [req _ _]
@@ -114,7 +107,7 @@
       (update :status #(or % (if (:not-found? data) 404 200)))
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
-(defn plugins [{:keys [datastore
+(defn plugins [{:keys [db
                        routes
                        i18n
                        navigation
@@ -131,7 +124,7 @@
         [(dispatcher/plugin)
          (query/plugin)
          (component/plugin components)
-         (when (not (false? datastore)) (store/plugin datastore))
+         (when (not (false? db)) (db/plugin db))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))

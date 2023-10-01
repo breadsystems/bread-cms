@@ -14,7 +14,7 @@
     [kaocha.repl :as k]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.datahike :as dh]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.reitit]
@@ -58,9 +58,9 @@
 
 (defonce app (atom nil))
 
-(def $config {:datastore/type :datahike
+(def $config {:db/type :datahike
               :store (:datahike env)
-              :datastore/initial-txns
+              :db/initial-txns
               data/initial-content})
 
 (defn hello-handler [_]
@@ -141,7 +141,7 @@
   :start (when (:reinstall-db? env)
            (println "REINSTALLING DATABASE.")
            (try
-             (store/install! $config {:force? true})
+             (db/create! $config {:force? true})
              (catch clojure.lang.ExceptionInfo e
                (println (format "Error reinstalling database: %s"
                                 (ex-message e)))
@@ -149,7 +149,7 @@
   :stop (when (:reinstall-db? env)
           (println "DELETING DEV DATABASE.")
           (try
-            (store/delete-database! $config)
+            (db/delete! $config)
             (catch clojure.lang.ExceptionInfo e
               (println (format "Error deleting database on stop: %s"
                                (ex-message e)))
@@ -169,7 +169,7 @@
   :start (reset! app
                  (bread/load-app
                    (defaults/app
-                     {:datastore $config
+                     {:db $config
                       :routes {:router $router}
                       :i18n {:supported-langs #{:en :fr}}
                       :navigation
@@ -215,7 +215,7 @@
                              (if internal?
                                req
                                (let [uniq (str (gensym "new-"))]
-                                 (store/add-txs
+                                 (db/add-txs
                                    req
                                    [{:post/slug uniq
                                      :post/type :post.type/page
@@ -288,7 +288,7 @@
     (select-keys $ [:status :body :headers]))
 
   (defn q [query & args]
-    (apply store/q (store/datastore $req) query args))
+    (apply db/q (db/database $req) query args))
 
   (q '{:find [(pull ?e [:db/id :post/slug])],
        :in [$ % ?status ?taxonomy ?slug],
@@ -339,16 +339,16 @@
               (:db/id child-page)))
   ;; RETRACT child-page
   ;; !!! BE CAREFUL WITH THIS !!!
-  (store/transact
-    (store/connection @app)
+  (db/transact
+    (db/connection @app)
     [[:db/retractEntity 66]])
 
-  (store/installed? $config)
-  (store/migration-keys (store/datastore $req))
-  (store/migration-ran? (store/datastore $req) schema/migrations)
-  (store/migration-ran? (store/datastore $req) schema/posts)
-  (store/migration-ran? (store/datastore $req) schema/i18n)
-  (store/migration-ran? (store/datastore $req) [{:migration/key :x}])
+  (db/installed? $config)
+  (db/migration-keys (db/database $req))
+  (db/migration-ran? (db/database $req) schema/migrations)
+  (db/migration-ran? (db/database $req) schema/posts)
+  (db/migration-ran? (db/database $req) schema/i18n)
+  (db/migration-ran? (db/database $req) [{:migration/key :x}])
 
   ;; Site-wide string in the requested lang
   (i18n/strings $req)

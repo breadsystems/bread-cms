@@ -6,7 +6,7 @@
     [clojure.edn :as edn]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.internal.time :as t]
     [ring.middleware.session.store :as ss :refer [SessionStore]])
@@ -20,12 +20,12 @@
   SessionStore
   (ss/delete-session [_ sk]
     (let [sk (->uuid sk)]
-      (store/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
+      (db/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
                             [:db/retract [:session/uuid sk] :session/data]])
       sk))
   (ss/read-session [_ sk]
     (let [sk (->uuid sk)
-          data (store/q @conn
+          data (db/q @conn
                         '{:find [?data .]
                           :in [$ ?sk]
                           :where [[?e :session/data ?data]
@@ -34,7 +34,7 @@
       (edn/read-string data)))
   (ss/write-session [_ sk data]
     (let [sk (or (->uuid sk) (UUID/randomUUID))]
-      (store/transact conn [{:session/uuid sk :session/data (pr-str data)}])
+      (db/transact conn [{:session/uuid sk :session/data (pr-str data)}])
       sk)))
 
 (defn session-store [conn]
@@ -176,23 +176,23 @@
 
       ;; User successfully logged in; reset count.
       (and valid (= :logged-in (:auth/step result)))
-      (store/transact conn [(assoc transaction
-                                   :user/failed-login-count 0)])
+      (db/transact conn [(assoc transaction
+                                :user/failed-login-count 0)])
 
       (and (:user/locked-at user)
            (account-locked? (t/now) (:user/locked-at user) lock-seconds))
       nil
 
       (>= (:user/failed-login-count user) max-failed-login-count)
-      (store/transact conn [(assoc transaction
-                                   ;; Lock account, but reset attempts.
-                                   :user/locked-at (t/now)
-                                   :user/failed-login-count 0)])
+      (db/transact conn [(assoc transaction
+                                ;; Lock account, but reset attempts.
+                                :user/locked-at (t/now)
+                                :user/failed-login-count 0)])
 
       :default
       (let [incremented (inc (:user/failed-login-count user))]
-        (store/transact conn [(assoc transaction
-                                     :user/failed-login-count incremented)])))))
+        (db/transact conn [(assoc transaction
+                                  :user/failed-login-count incremented)])))))
 
 (defmethod dispatcher/dispatch ::login
   [{:keys [params request-method session] :as req}]
@@ -226,10 +226,10 @@
       ;; Login
       post?
       {:queries
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :auth/result
          :query/description "Find a user with the given username"
-         :query/db (store/datastore req)
+         :query/db (db/database req)
          :query/args
          ['{:find [(pull ?e [:db/id
                              :user/username
@@ -251,7 +251,7 @@
          "Record this login attempt, locking account after too many."
          ;; Get :user from data, since it may not be in session data yet.
          :max-failed-login-count max-failed-login-count
-         :conn (store/connection req)}]
+         :conn (db/connection req)}]
        :hooks
        {::bread/expand
         [{:action/name ::set-session

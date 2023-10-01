@@ -4,7 +4,7 @@
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as db]))
 
 (defn plugins->app [plugins]
   (bread/app {:plugins plugins}))
@@ -15,26 +15,27 @@
 (defn plugins->handler [plugins]
   (-> plugins plugins->app bread/load-handler))
 
-(defn datastore-config->app [config]
-  (plugins->app [(store/plugin config)]))
+(defn db-config->app [config]
+  (plugins->app [(db/plugin config)]))
 
-(defmethod bread/action ::datastore
-  [_ {:keys [store]} _]
-  store)
+(defmethod bread/action ::db
+  [_ {:keys [db]} _]
+  db)
 
-(defn datastore->plugin [store]
-  {:hooks {:hook/datastore [{:action/name ::datastore
-                             :action/description "Mock datastore"
-                             :store store}]}})
+(defn db->plugin [db]
+  {:hooks {::db/db [{:action/name ::db
+                        :action/description "Mock database"
+                        :db db}]}
+   ;; Configure a sensible connection object we can call (db conn) on.
+   :config {:db/connection (reify
+                             db/TransactionalDatabaseConnection
+                             (db/db [_] db))}})
 
-(defn datastore->loaded [store]
-  (plugins->loaded [(datastore->plugin store)]))
+(defn db-config->loaded [config]
+  (-> config db-config->app bread/load-app))
 
-(defn datastore-config->loaded [config]
-  (-> config datastore-config->app bread/load-app))
-
-(defn datastore-config->handler [config]
-  (-> config datastore-config->app bread/load-handler))
+(defn db-config->handler [config]
+  (-> config db-config->app bread/load-handler))
 
 (defn distill-hooks
   "Returns a subset of the keys in each hook (map) in (the vector of) hooks.
@@ -46,19 +47,19 @@
   ([ks hooks]
    (map #(select-keys % ks) hooks)))
 
-(defmacro use-datastore [freq config]
+(defmacro use-db [freq config]
   `(t/use-fixtures ~freq (fn [f#]
                            (try
-                             (store/delete-database! ~config)
+                             (db/delete! ~config)
                              (catch Throwable e#
                                (log/warn (.getMessage e#))))
-                           (store/install! ~config)
-                           (store/connect! ~config)
+                           (db/create! ~config)
+                           (db/connect ~config)
                            (f#)
-                           (store/delete-database! ~config))))
+                           (db/delete! ~config))))
 
 (comment
-  (macroexpand '(use-datastore :each {:my :config})))
+  (macroexpand '(use-db :each {:my :config})))
 
 (defn map->route-plugin [routes]
   "Takes a map m like:

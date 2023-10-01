@@ -2,84 +2,74 @@
   (:require
     [clojure.test :refer :all]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.datahike :as plugin]
-    [systems.bread.alpha.test-helpers :as h :refer [datastore-config->loaded
-                                                    datastore-config->handler
+    [systems.bread.alpha.test-helpers :as h :refer [db-config->loaded
+                                                    db-config->handler
                                                     plugins->loaded]]))
 
 (def config
-  {:datastore/type :datahike
+  {:db/type :datahike
    :store {:backend :mem
            :id "plugin-db"}})
 
-(h/use-datastore :each config)
+(h/use-db :each config)
 
 (deftest test-datahike-plugin
 
-  (testing "it configures as-of-param"
-    (let [app ((datastore-config->handler config) {})]
-      (is (= :as-of (bread/config app :datastore/as-of-param)))))
-
-  (testing "it honors custom as-of-param"
-    (let [app (datastore-config->loaded
-                (assoc config :datastore/as-of-param :my/param))]
-      (is (= :my/param (bread/config app :datastore/as-of-param)))))
+  (testing "it configures a default as-of-param"
+    (let [app ((db-config->handler config) {})]
+      (is (= :as-of (bread/config app :db/as-of-param)))))
 
   (testing "it configures db connection"
-    (let [app (datastore-config->loaded config)]
+    (let [app (db-config->loaded config)]
       (is (instance? clojure.lang.Atom
-                     (bread/config app :datastore/connection)))))
+                     (bread/config app :db/connection)))))
 
-  (testing ":hook/datastore returns the present snapshot by default"
-    (let [app (datastore-config->loaded config)]
-      (is (instance? datahike.db.DB (bread/hook app :hook/datastore)))))
+  (testing "database returns the present snapshot by default"
+    (let [app (db-config->loaded config)]
+      (is (instance? datahike.db.DB (db/database app)))))
 
-  (testing "db-tx honors as-of-param"
-    (let [app (datastore-config->loaded config)
-          db (store/datastore app)
+  (testing "database honors as-of-tx? config"
+    (let [app (db-config->loaded (assoc config :db/as-of-tx? true))
           handler (bread/handler app)
-          max-tx (store/max-tx app)
-          response (handler {:uri "/" :params {:as-of (dec max-tx)}})]
-      (is (instance? datahike.db.AsOfDB (store/datastore response)))))
+          max-tx (:max-tx (db/database app))
+          res (handler {:uri "/" :params {:as-of (dec max-tx)}})]
+      (is (instance? datahike.db.AsOfDB (db/database res)))))
 
-  (testing "db-tx gracefully handles non-numeric strings"
-    (let [handler (datastore-config->handler config)
-          response (handler {:uri "/" :params {:as-of "garbage"}})]
-      (is (instance? datahike.db.DB (store/datastore response)))))
+  (testing "database honors as-of-param"
+    (let [app (db-config->loaded config)
+          handler (bread/handler app)
+          res (handler {:uri "/" :params {:as-of
+                                          "2020-01-01 12:34:56 PDT"}})]
+      (is (instance? datahike.db.AsOfDB (db/database res))))
 
-  (testing "db-datetime honors as-of param"
-    (let [handler (datastore-config->handler
-                    (assoc config
-                           :datastore/req->timepoint store/db-datetime))
-          response (handler {:uri "/"
-                             ;; pass a literal date here
-                             :params {:as-of "2020-01-01 00:00:00 PDT"}})]
-      (is (instance? datahike.db.AsOfDB (store/datastore response)))))
+    (let [app (db-config->loaded (assoc config :db/as-of-param :my-param))
+          handler (bread/handler app)
+          res (handler {:uri "/" :params {:my-param
+                                          "2020-01-01 12:34:56 PDT"}})]
+      (is (instance? datahike.db.AsOfDB (db/database res)))))
 
-  (testing "db-datetime honors as-of-format config"
-    (let [handler (datastore-config->handler
-                    (assoc config
-                           :datastore/as-of-format "yyyy-MM-dd"
-                           :datastore/req->timepoint store/db-datetime))
-          response (handler {:uri "/"
-                             ;; pass a literal date here
-                             :params {:as-of "2020-01-01"}})]
-      (is (instance? datahike.db.AsOfDB (store/datastore response)))))
+  (testing "database gracefully handles non-numeric strings"
+    (let [handler (db-config->handler config)
+          res (handler {:uri "/" :params {:as-of "garbage"}})]
+      (is (instance? datahike.db.DB (db/database res)))))
 
-  (testing "db-datetime gracefully handles bad date strings"
-    (let [handler (datastore-config->handler
-                    (assoc config
-                           :datastore/req->timepoint store/db-datetime))
-          response (handler {:uri "/"
-                             :params {:as-of "nonsense date string"}})]
-      (is (instance? datahike.db.DB (store/datastore response)))))
+  (testing "database calls the ::db/timepoint hook"
+    (let [app (plugins->loaded [(db/plugin config)
+                                {:hooks
+                                 {::db/timepoint
+                                  [{:action/name ::bread/value
+                                    :action/value (java.util.Date.)}]}}])
+          handler (bread/handler app)
+          res (handler {:uri "/"})]
+      (is (instance? datahike.db.AsOfDB (db/database res)))))
 
-  (testing "it honors a custom :hook/datastore.req->timepoint callback"
-    (let [->timepoint (constantly (java.util.Date.))
-          config (assoc config :datastore/req->timepoint ->timepoint)
-          app (plugins->loaded [(store/plugin config)])]
-      (is (instance? datahike.db.AsOfDB (store/datastore app))))))
+  (testing "database honors as-of-format config"
+    (let [handler (db-config->handler
+                    (assoc config :db/as-of-format "yyyy-MM-dd"))
+          res (handler {:uri "/" :params {:as-of "2020-01-01"}})]
+      (is (instance? datahike.db.AsOfDB (db/database res))))))
 
 (comment
   (require '[kaocha.repl :as k])

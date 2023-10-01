@@ -4,19 +4,19 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db] ;; TODO ???
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :refer [use-datastore]]
+    [systems.bread.alpha.test-helpers :refer [use-db]]
     [systems.bread.alpha.cms.defaults :as defaults]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem
                      :id "app-test-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              [;; init post content
               {:db/id "page.home"
                :post/type :post.type/page
@@ -81,7 +81,7 @@
                :field/key :not-found
                :field/content "404 Pas Trouvé"}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (defc layout [{:keys [content]}]
   {}
@@ -175,7 +175,7 @@
                      (:route/params match))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
-          app (defaults/app {:datastore config
+          app (defaults/app {:db config
                              :components {:not-found not-found}
                              :routes {:router router}
                              :i18n {:supported-langs #{:en :fr}}

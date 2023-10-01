@@ -1,19 +1,19 @@
-(ns systems.bread.alpha.datastore-txs-test
+(ns systems.bread.alpha.database-txs-test
   (:require
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.test-helpers :refer [datastore-config->loaded
-                                              use-datastore]]))
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.test-helpers :refer [db-config->loaded
+                                              use-db]]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
               :store {:backend :mem
                       :id "plugin-db"}
               ;; Printing the whole schema slows down results on error/failure,
               ;; so just use the mininum viable post schema for what we need
               ;; to run this test.
               ;; TODO get Kaocha not to print debug logs?
-              :datastore/initial-txns
+              :db/initial-txns
               [{:db/ident :post/slug
                 :db/valueType :db.type/string
                 :db/index true
@@ -28,15 +28,15 @@
                 :db/valueType :db.type/string
                 :db/cardinality :db.cardinality/one}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (deftest test-add-txs
 
   (testing "it runs zero or more transactions on the database"
     (are [page args]
       (= page (let [[slug txs] args
-                    app (-> (datastore-config->loaded config)
-                            (store/add-txs txs))
+                    app (-> (db-config->loaded config)
+                            (db/add-txs txs))
                     handler (bread/handler app)
                     query
                     '{:find
@@ -46,8 +46,8 @@
                                   [:field/key :field/content]}])]
                       :in [$ ?slug]
                       :where [[?e :post/slug ?slug]]}]
-                (-> (store/datastore (handler {:uri "/"}))
-                    (store/q query slug)
+                (-> (db/database (handler {:uri "/"}))
+                    (db/q query slug)
                     ffirst)))
 
       ;; Without fields.

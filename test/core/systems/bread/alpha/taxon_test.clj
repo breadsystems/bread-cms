@@ -3,15 +3,15 @@
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.test-helpers :refer [datastore->plugin
+    [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 
 (deftest test-dispatch-taxon-queries
   (let [db ::FAKEDB
-        app (plugins->loaded [(datastore->plugin db)
+        app (plugins->loaded [(db->plugin db)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
                               (dispatcher/plugin)])
@@ -27,7 +27,7 @@
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :taxon
         :query/db db
         :query/args
@@ -47,7 +47,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -66,7 +66,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post/type and :post/status have no effect without :post/_taxons
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -87,7 +87,7 @@
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Query includes :taxon/field as a map.
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :taxon
         :query/db db
         :query/args
@@ -97,7 +97,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:taxon :translatable/fields]
         :query/db db
         :query/args
@@ -119,7 +119,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Default :post/type and :post/status with :post/_taxons
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -131,7 +131,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons]
         :query/db db
         :query/args
@@ -143,7 +143,7 @@
          [::bread/data :tag :db/id]
          :post.type/page
          :post.status/published]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
         :query/db db
         :query/args
@@ -164,7 +164,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Custom :post/type and :post/status with :post/_taxons
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -176,7 +176,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons]
         :query/db db
         :query/args
@@ -188,7 +188,7 @@
          [::bread/data :tag :db/id]
          :post.type/article
          :post.status/draft]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
         :query/db db
         :query/args
@@ -211,7 +211,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status nil
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -223,7 +223,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons]
         :query/db db
         :query/args
@@ -231,7 +231,7 @@
            :in [$ ?taxon]
            :where [[?post :post/taxons ?taxon]]}
          [::bread/data :tag :db/id]]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
         :query/db db
         :query/args
@@ -254,7 +254,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status false
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args
@@ -266,7 +266,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons]
         :query/db db
         :query/args
@@ -274,7 +274,7 @@
            :in [$ ?taxon]
            :where [[?post :post/taxons ?taxon]]}
          [::bread/data :tag :db/id]]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
         :query/db db
         :query/args
@@ -298,7 +298,7 @@
       ;; {:uri "/en/tag/some-tag"}
       ;; TODO Dynamic params from request...
       #_#_
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :tag
         :query/db db
         :query/args

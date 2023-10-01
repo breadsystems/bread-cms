@@ -4,7 +4,7 @@
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.util.datalog :refer [where pull-query]]))
@@ -81,9 +81,9 @@
                     ['?status :post/status :post.status/published]]))
         query-key (or (:dispatcher/key dispatcher) :post)
         ;; TODO query description
-        page-query {:query/name ::store/query
+        page-query {:query/name ::db/query
                     :query/key query-key
-                    :query/db (store/datastore req)
+                    :query/db (db/database req)
                     :query/args page-args}
         ;; TODO move this to i18n
         queries (conj (bread/hook req ::i18n/queries [page-query])

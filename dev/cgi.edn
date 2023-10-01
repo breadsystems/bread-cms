@@ -1,5 +1,5 @@
 {:bread/handler #ig/ref :bread/app
- :bread/app {:datastore false
+ :bread/app {:db false
              :i18n false
              :routes
              {:router #ig/ref :bread/router}

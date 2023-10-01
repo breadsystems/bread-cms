@@ -1,5 +1,5 @@
 ;; Utilities for reading content from the filesystem
-;; rather than from the datastore.
+;; rather than from the database.
 (ns systems.bread.alpha.plugin.markdown
   (:require
     [clojure.instant :as instant]

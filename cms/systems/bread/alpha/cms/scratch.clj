@@ -16,7 +16,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
@@ -189,16 +189,16 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defmethod ig/init-key :bread/datastore
+(defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
-  (store/create-database! db-config {:force? force?})
-  (assoc db-config :datastore/connection (store/connect! db-config)))
+  (db/create! db-config {:force? force?})
+  (assoc db-config :db/connection (db/connect db-config)))
 
-(defmethod ig/halt-key! :bread/datastore
+(defmethod ig/halt-key! :bread/db
   [_ {:keys [recreate?] :as db-config}]
   ;; TODO call datahike API directly
-  (when recreate? (store/delete-database! db-config)))
+  (when recreate? (db/delete! db-config)))
 
 (defmethod ig/init-key :bread/router [_ router]
   router)
@@ -263,7 +263,7 @@
   (:ring/wrap-defaults @system)
   (:bread/app @system)
   (:bread/router @system)
-  (:bread/datastore @system)
+  (:bread/db @system)
   (:bread/profilers @system)
   (restart! (-> "dev/cgi.edn" aero/read-config))
 
@@ -314,23 +314,23 @@
   ;; And, while we're at it, define a query helper:
   (defn q [& args]
     (apply
-      store/q
-      (store/datastore (->app $req))
+      db/q
+      (db/database (->app $req))
       args))
-  (store/q (store/datastore (:bread/app @system))
-           '{:find [(pull ?e [*])]
-             :in [$]
-             :where [[?e :user/username "coby"]]})
-  (store/q (store/datastore (:bread/app @system))
-           '{:find [(pull ?e [*])]
-             :in [$]
-             :where [[?e :user/locked-at]]})
-  (store/transact (store/connection (:bread/app @system))
-                  [{:db/foo 85
-                    :user/locked-at (java.util.Date.)}])
-  (store/transact (store/connection (:bread/app @system))
-                  [{:user/username "coby"
-                    :user/locked-at (java.util.Date.)}])
+  (db/q (db/database (:bread/app @system))
+        '{:find [(pull ?e [*])]
+          :in [$]
+          :where [[?e :user/username "coby"]]})
+  (db/q (db/database (:bread/app @system))
+        '{:find [(pull ?e [*])]
+          :in [$]
+          :where [[?e :user/locked-at]]})
+  (db/transact (db/connection (:bread/app @system))
+               [{:db/foo 85
+                 :user/locked-at (java.util.Date.)}])
+  (db/transact (db/connection (:bread/app @system))
+               [{:user/username "coby"
+                 :user/locked-at (java.util.Date.)}])
 
   ;; SITEMAP DESIGN
 
@@ -338,7 +338,7 @@
   ;; We can query for every :db/ident in the database:
   (require '[systems.bread.alpha.util.datalog :as datalog])
   (def idents
-    (map :db/ident (datalog/attrs (store/datastore (->app $req)))))
+    (map :db/ident (datalog/attrs (db/database (->app $req)))))
 
   ;; Now we can scan a given route for db idents...
   (def route
@@ -349,7 +349,7 @@
 
   ;; Before the next step, we query for all refs in the db:
   (def refs
-    (datalog/attrs-by-type (store/datastore (->app $req)) :db.type/ref))
+    (datalog/attrs-by-type (db/database (->app $req)) :db.type/ref))
 
   ;; One more thing: we need to keep track of the attrs we've seen so far:
   (def seen

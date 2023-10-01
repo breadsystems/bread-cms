@@ -4,12 +4,12 @@
     [kaocha.repl :as k]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]
-    [systems.bread.alpha.test-helpers :refer [plugins->loaded use-datastore]]))
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded use-db]]))
 
-(def config {:datastore/type :datahike
+(def config {:db/type :datahike
              :store {:backend :mem :id "expand-db"}
-             :datastore/initial-txns
+             :db/initial-txns
              [;; init simplified schema
               {:db/ident :post/slug
                :db/valueType :db.type/string
@@ -52,12 +52,12 @@
                               :field/lang :fr
                               :field/content "chose"}]}]})
 
-(use-datastore :each config)
+(use-db :each config)
 
 (deftest test-datahike-query
 
-  (let [app (plugins->loaded [(store/plugin config) (query/plugin)])
-        db (store/datastore app)]
+  (let [app (plugins->loaded [(db/plugin config) (query/plugin)])
+        db (db/database app)]
     (are
       [data queries]
       (= data (-> app
@@ -70,7 +70,7 @@
        ;; Querying for a non-existent post
        {:post false
         :not-found? true}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -83,7 +83,7 @@
        ;; Querying for a non-existent post and its fields
        {:post false
         :not-found? true}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -93,7 +93,7 @@
             :where [[?e :post/slug ?slug]]}
           "non-existent-slug"]}
         {:query/key [:post :post/fields]
-         :query/name ::store/query
+         :query/name ::db/query
          :query/db db
          :query/args
          ['{:find [(pull ?e [:field/key :field/content])]
@@ -109,7 +109,7 @@
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
         :not-found? false}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -125,7 +125,7 @@
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
         :not-found? false}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -143,7 +143,7 @@
                              [{:field/key :stuff
                               :field/content "hello"}]]}
         :not-found? false}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -151,7 +151,7 @@
             :in [$ ?slug]
             :where [[?e :post/slug ?slug]]}
           "parent-post"]}
-        {:query/name ::store/query
+        {:query/name ::db/query
          :query/key [:post :post/fields]
          :query/db db
          :query/args
@@ -169,7 +169,7 @@
                              [{:field/key :stuff
                                :field/content "hello"}]]}
         :not-found? false}
-       [{:query/name ::store/query
+       [{:query/name ::db/query
          :query/key :post
          :query/db db
          :query/args
@@ -177,7 +177,7 @@
             :in [$ ?slug]
             :where [[?e :post/slug ?slug]]}
           "parent-post"]}
-        {:query/name ::store/query
+        {:query/name ::db/query
          :query/key [:post :post/fields]
          :query/db db
          :query/args

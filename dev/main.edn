@@ -6,23 +6,23 @@
                       [:security :anti-forgery] false}
  :ring/session-store
  {:store/type :datalog
-  :store/datastore #ig/ref :bread/datastore}
+  :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
  :bread/app
- {:datastore #ig/ref :bread/datastore
+ {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
   :i18n true
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.main/not-found}
   :plugins []}
- :bread/datastore
- {:datastore/type :datahike
+ :bread/db
+ {:db/type :datahike
   :store {:backend :mem
           :id "bread-db"}
   :recreate? true
   :force? true
-  :datastore/migrations #deref #var systems.bread.alpha.schema/initial
-  :datastore/initial-txns
+  :db/migrations #deref #var systems.bread.alpha.schema/initial
+  :db/initial-txns
   #concat [#deref #var systems.bread.alpha.cms.defaults/initial-data
            [{:user/username "coby"
              :user/name "Coby Tamayo"

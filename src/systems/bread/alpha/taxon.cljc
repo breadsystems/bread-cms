@@ -5,7 +5,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.query-inference :as i]))
 
 (defmethod bread/query ::compact
@@ -26,7 +26,7 @@
 (defn- posts-query [t status taxon-query spec path]
   (let [pull (get spec (last path))
         pull (if (some #{:db/id} pull) pull (cons :db/id pull))]
-    {:query/name ::store/query
+    {:query/name ::db/query
      :query/key path
      :query/db (:query/db taxon-query)
      :query/args
@@ -49,9 +49,9 @@
          :or {post-type :post.type/page
               post-status :post.status/published}}
         dispatcher
-        db (store/datastore req)
+        db (db/database req)
         pull-spec (dispatcher/pull-spec dispatcher)
-        taxon-query {:query/name ::store/query
+        taxon-query {:query/name ::db/query
                      :query/key k
                      :query/db db
                      :query/args

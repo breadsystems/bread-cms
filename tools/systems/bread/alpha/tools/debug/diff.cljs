@@ -14,11 +14,11 @@
   (get-in @db [:request/uuid uuid]))
 
 (defn- uuid->max-tx [uuid]
-  (-> uuid uuid->req (get-in [:request/response :response/datastore :max-tx])))
+  (-> uuid uuid->req (get-in [:request/response :response/database :max-tx])))
 
 (def ^:private type->path
   {:response-pre-render [:response/pre-render]
-   :database [:request/response :response/datastore]})
+   :database [:request/response :response/database]})
 
 (defn- diff-entities [[a b] diff-type]
   (when (and a b)

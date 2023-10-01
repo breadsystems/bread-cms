@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.user
   (:require
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.datastore :as store]))
+    [systems.bread.alpha.database :as db]))
 
 (defn abilities [{:user/keys [roles]}]
   (reduce (fn [user-abilities role]
@@ -33,19 +33,19 @@
   )
 
 (defn fetch [req id]
-  (store/q (store/datastore req)
-           '{:find [(pull ?e [:db/id
-                              :user/username
-                              :user/uuid
-                              :user/email
-                              :user/name
-                              :user/lang
-                              :user/slug
-                              {:user/roles [:role/key
-                                            {:role/abilities
-                                             [:ability/key]}]}]) .]
-             :in [$ ?e]}
-           id))
+  (db/q (db/database req)
+        '{:find [(pull ?e [:db/id
+                           :user/username
+                           :user/uuid
+                           :user/email
+                           :user/name
+                           :user/lang
+                           :user/slug
+                           {:user/roles [:role/key
+                                         {:role/abilities
+                                          [:ability/key]}]}]) .]
+          :in [$ ?e]}
+        id))
 
 (defmethod bread/action ::query [req {:keys [data-key]} _]
   (if-let [uid (->> req :session :user (bread/hook req ::from-session) :db/id)]

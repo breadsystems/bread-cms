@@ -3,10 +3,10 @@
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.test-helpers :refer [datastore->plugin
+    [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 
 (deftest test-create-post-ancestry-rule
@@ -61,7 +61,7 @@
 
 (deftest test-dispatch-post-queries
   (let [db ::FAKEDB
-        app (plugins->loaded [(datastore->plugin db)
+        app (plugins->loaded [(db->plugin db)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
                               (dispatcher/plugin)])
@@ -77,7 +77,7 @@
 
       ;; {:uri "/en/simple"}
       ;; i18n'd by default
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -102,7 +102,7 @@
 
       ;; {:uri "/en/one/two"}
       ;; Default key -> :post
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -127,7 +127,7 @@
 
       ;; {:uri "/en/one/two"}
       ;; Default key -> :post
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -151,7 +151,7 @@
        :route/params {:slugs "one/two" :lang "en"}}
 
       ;; {:uri "/en/one/two"}
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -175,7 +175,7 @@
        :route/params {:slugs "one/two" :lang "en"}}
 
       ;; {:uri "/en/one/two/three"}
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -201,7 +201,7 @@
 
       ;; {:uri "/en/simple"}
       ;; :translatable/fields alone only queries for :db/id, not :field/content
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -225,7 +225,7 @@
 
       ;; {:uri "/en/simple"}
       ;; :translatable/fields WITHOUT :field/content
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
@@ -251,7 +251,7 @@
 
       ;; {:uri "/en"}
       ;; home page - no `slugs`
-      [{:query/name ::store/query
+      [{:query/name ::db/query
         :query/key :post
         :query/db db
         :query/args
