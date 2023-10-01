@@ -83,7 +83,7 @@
         ;; TODO query description
         page-query {:query/name ::store/query
                     :query/key query-key
-                    :query/db (store/datastore req)
+                    :query/db (store/database req)
                     :query/args page-args}
         ;; TODO move this to i18n
         queries (conj (bread/hook req ::i18n/queries [page-query])

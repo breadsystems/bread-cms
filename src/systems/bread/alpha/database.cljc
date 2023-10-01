@@ -39,7 +39,7 @@
 
 (defmethod connect :default [{:db/keys [type] :as config}]
   (let [msg (if (nil? type)
-              "No :db/type specified in datastore config!"
+              "No :db/type specified in database config!"
               (str "Unknown :db/type `" type "`!"
                    " Did you forget to load a plugin?"))]
     (throw (ex-info msg {:config config
@@ -54,13 +54,13 @@
       (bread/config :db/connection)
       (bread/hook ::connection)))
 
-(defn datastore [app]
+(defn database [app]
   (let [timepoint (bread/hook app ::timepoint nil)
         db (db (connection app))]
     (bread/hook app ::db (if timepoint (as-of db timepoint) db))))
 
 (defn add-txs
-  "Adds the given txs as effects to be run on the app datastore.
+  "Adds the given txs as effects to be run on the app database.
   Options include:
   * :description - a custom description to use for :effect/description in the
     Effect map. Default is \"Run database transactions\".
@@ -126,14 +126,14 @@
   (let [conn (connection app)]
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
-      (let [db (datastore app)
+      (let [db (database app)
             unmet-deps (filter
                          (complement (migration-keys db))
                          (:migration/dependencies (meta migration)))]
         (when (seq unmet-deps)
           (throw (ex-info "Migration has one or more unmet dependencies!"
                           {:unmet-deps (set unmet-deps)})))
-        (when-not (migration-ran? (datastore app) migration)
+        (when-not (migration-ran? (database app) migration)
           (transact conn migration)))))
   app)
 
@@ -142,7 +142,7 @@
   (when (seq txs)
     (if-let [conn (connection app)]
       (transact conn txs)
-      (throw (ex-info "Failed to connect to datastore." {:type :no-connection}))))
+      (throw (ex-info "Failed to connect to database." {:type :no-connection}))))
   app)
 
 (defmethod bread/action ::timepoint
@@ -161,7 +161,7 @@
           (catch java.text.ParseException _ nil))))))
 
 (defn plugin
-  "Helper for instantiating a datastore. Do not call this fn directly from
+  "Helper for instantiating a database. Do not call this fn directly from
   application code; recommended for use from plugins only. Use store/plugin
   instead."
   [config]

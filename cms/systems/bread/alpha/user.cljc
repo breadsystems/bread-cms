@@ -33,7 +33,7 @@
   )
 
 (defn fetch [req id]
-  (store/q (store/datastore req)
+  (store/q (store/database req)
            '{:find [(pull ?e [:db/id
                               :user/username
                               :user/uuid

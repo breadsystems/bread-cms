@@ -229,7 +229,7 @@
        [{:query/name ::store/query
          :query/key :auth/result
          :query/description "Find a user with the given username"
-         :query/db (store/datastore req)
+         :query/db (store/database req)
          :query/args
          ['{:find [(pull ?e [:db/id
                              :user/username

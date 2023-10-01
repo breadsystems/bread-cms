@@ -24,7 +24,7 @@
 
 (defn db->plugin [db]
   {:hooks {::store/db [{:action/name ::db
-                        :action/description "Mock datastore"
+                        :action/description "Mock database"
                         :db db}]}
    ;; Configure a sensible connection object we can call (db conn) on.
    :config {:db/connection (reify

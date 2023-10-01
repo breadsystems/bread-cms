@@ -104,7 +104,7 @@
                                         [?e :db/valueType ?types]]} types))))
 
 (defn migrations
-  "All schema changes throughout the history of the given datastore"
+  "All schema changes throughout the history of the given database"
   [store]
   (->> (store/q store '{:find
                         [(pull ?e [:db/id :db/txInstant
@@ -125,7 +125,7 @@
        (sort-by :db/txInstant)))
 
 (defn latest-migration
-  "Get the latest migration performed on the given datastore"
+  "Get the latest migration performed on the given database"
   [store]
   (first (store/q
            store
@@ -136,11 +136,11 @@
 
 (comment
 
-  ;; Do some minimal setup to get an example datastore instance.
+  ;; Do some minimal setup to get an example database instance.
   (do
     (require '[clojure.repl :as repl]
              '[breadbox.app :as breadbox :refer [app]])
-    (def $store (store/datastore @app)))
+    (def $store (store/database @app)))
 
   (migrations $store)
   (map (fn [migration]

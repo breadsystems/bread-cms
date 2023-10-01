@@ -57,7 +57,7 @@
 (deftest test-datahike-query
 
   (let [app (plugins->loaded [(store/plugin config) (query/plugin)])
-        db (store/datastore app)]
+        db (store/database app)]
     (are
       [data queries]
       (= data (-> app

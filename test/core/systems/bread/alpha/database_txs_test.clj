@@ -46,7 +46,7 @@
                                   [:field/key :field/content]}])]
                       :in [$ ?slug]
                       :where [[?e :post/slug ?slug]]}]
-                (-> (store/datastore (handler {:uri "/"}))
+                (-> (store/database (handler {:uri "/"}))
                     (store/q query slug)
                     ffirst)))
 

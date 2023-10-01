@@ -1,4 +1,4 @@
-;; Tests for the low-level functionality of the Datahike datastore integration.
+;; Tests for the low-level functionality of the Datahike database integration.
 (ns systems.bread.alpha.database-datahike-test
   (:require
     [clojure.test :refer [deftest is testing use-fixtures]]

@@ -288,7 +288,7 @@
     (select-keys $ [:status :body :headers]))
 
   (defn q [query & args]
-    (apply store/q (store/datastore $req) query args))
+    (apply store/q (store/database $req) query args))
 
   (q '{:find [(pull ?e [:db/id :post/slug])],
        :in [$ % ?status ?taxonomy ?slug],
@@ -344,11 +344,11 @@
     [[:db/retractEntity 66]])
 
   (store/installed? $config)
-  (store/migration-keys (store/datastore $req))
-  (store/migration-ran? (store/datastore $req) schema/migrations)
-  (store/migration-ran? (store/datastore $req) schema/posts)
-  (store/migration-ran? (store/datastore $req) schema/i18n)
-  (store/migration-ran? (store/datastore $req) [{:migration/key :x}])
+  (store/migration-keys (store/database $req))
+  (store/migration-ran? (store/database $req) schema/migrations)
+  (store/migration-ran? (store/database $req) schema/posts)
+  (store/migration-ran? (store/database $req) schema/i18n)
+  (store/migration-ran? (store/database $req) [{:migration/key :x}])
 
   ;; Site-wide string in the requested lang
   (i18n/strings $req)

@@ -38,7 +38,7 @@
                    :where '[[?e]]}]
         ;; TODO can we express this in a more data-oriented way?
         (fn [req eid]
-          (let [entity (store/q (store/datastore req) query eid)]
+          (let [entity (store/q (store/database req) query eid)]
             (reduce (fn [m [param path]]
                       (let [attr (get-attr-via entity path)
                             attr (if (coll? attr) attr (set (list attr)))]
@@ -89,7 +89,7 @@
     (component/query $)
     (affecting-attrs $ mapping)
     (datoms-with-attrs $ tx)
-    (extrapolate-eid (store/datastore req) $)))
+    (extrapolate-eid (store/database req) $)))
 
 (defn- cart [colls]
   (if (empty? colls)

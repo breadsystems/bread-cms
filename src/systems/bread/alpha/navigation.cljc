@@ -50,7 +50,7 @@
 (defn expand-post-ids [req tree]
   (let [results (some->> tree
                          (post-items-query req)
-                         (store/q (store/datastore req)))
+                         (store/q (store/database req)))
         by-id (->> results
                    (map (fn [[{id :db/id :as post}
                               {title :field/content}]]
@@ -105,7 +105,7 @@
                   :where '[[?e :menu/locations _]]}]
        (->> query
             (bread/hook req :hook/global-menus-query)
-            (store/q (store/datastore req))
+            (store/q (store/database req))
             (map (comp #(assoc % :type :location)
                        (partial format-menu req)
                        first))
@@ -134,7 +134,7 @@
                 :where [['?e :menu/locations location]]}
          menu (as-> query $
                 (bread/hook req :hook/location-menu-query $ location)
-                (store/q (store/datastore req) $)
+                (store/q (store/database req) $)
                 (format-menu req $)
                 (assoc $ :type :location))]
      (->> menu
@@ -177,7 +177,7 @@
          items
          (as-> query $
                (bread/hook req :hook/posts-menu-query $)
-               (store/q (store/datastore req) $ t statuses)
+               (store/q (store/database req) $ t statuses)
                (map first $)
                (walk-posts->items $)
                (expand-post-ids req $))]

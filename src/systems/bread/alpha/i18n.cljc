@@ -37,7 +37,7 @@
   ([req]
    (strings req (lang req)))
   ([req lang]
-   (->> (store/q (store/datastore req)
+   (->> (store/q (store/database req)
                  '{:find [?key ?content]
                    :in [$ ?lang]
                    :where [[?e :field/key ?key]
@@ -139,7 +139,7 @@
   (query/add req {:query/name ::store/query
                   :query/key :i18n
                   :query/into {}
-                  :query/db (store/datastore req)
+                  :query/db (store/database req)
                   :query/args
                   ['{:find [?key ?content]
                      :in [$ ?lang]

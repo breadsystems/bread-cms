@@ -49,7 +49,7 @@
          :or {post-type :post.type/page
               post-status :post.status/published}}
         dispatcher
-        db (store/datastore req)
+        db (store/database req)
         pull-spec (dispatcher/pull-spec dispatcher)
         taxon-query {:query/name ::store/query
                      :query/key k

@@ -224,4 +224,4 @@
   (d/delete-database config))
 
 (defmethod store/max-tx :datahike [req]
-  (:max-tx (store/datastore req)))
+  (:max-tx (store/database req)))

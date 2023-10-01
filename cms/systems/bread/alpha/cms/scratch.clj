@@ -315,13 +315,13 @@
   (defn q [& args]
     (apply
       store/q
-      (store/datastore (->app $req))
+      (store/database (->app $req))
       args))
-  (store/q (store/datastore (:bread/app @system))
+  (store/q (store/database (:bread/app @system))
            '{:find [(pull ?e [*])]
              :in [$]
              :where [[?e :user/username "coby"]]})
-  (store/q (store/datastore (:bread/app @system))
+  (store/q (store/database (:bread/app @system))
            '{:find [(pull ?e [*])]
              :in [$]
              :where [[?e :user/locked-at]]})
@@ -338,7 +338,7 @@
   ;; We can query for every :db/ident in the database:
   (require '[systems.bread.alpha.util.datalog :as datalog])
   (def idents
-    (map :db/ident (datalog/attrs (store/datastore (->app $req)))))
+    (map :db/ident (datalog/attrs (store/database (->app $req)))))
 
   ;; Now we can scan a given route for db idents...
   (def route
@@ -349,7 +349,7 @@
 
   ;; Before the next step, we query for all refs in the db:
   (def refs
-    (datalog/attrs-by-type (store/datastore (->app $req)) :db.type/ref))
+    (datalog/attrs-by-type (store/database (->app $req)) :db.type/ref))
 
   ;; One more thing: we need to keep track of the attrs we've seen so far:
   (def seen

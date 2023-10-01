@@ -32,14 +32,14 @@
          :request/uuid (str uuid)
          :request/millis (.getTime (Date.))
          ;; TODO support extending these fields via metadata
-         :request/datastore (store/datastore req)))
+         :request/database (store/database req)))
 
 (defmethod event-data :profile.type/response
   [[_ {uuid :request/uuid :as res}]]
   (assoc res
          :request/uuid (str uuid)
          ;; TODO compute duration?
-         :response/datastore (store/datastore res)))
+         :response/database (store/database res)))
 
 (defmethod event-data :profile.type/hook
   [[_ {:keys [hook args app f result millis]
