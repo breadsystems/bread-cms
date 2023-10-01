@@ -13,7 +13,7 @@
   :auth {:lock-seconds 10}
   :i18n true
   :routes {:router #ig/ref :bread/router}
-  :components {:not-found #var systems.bread.alpha.cms.main/not-found}
+  :components {:not-found #var systems.bread.alpha.cms.theme/not-found}
   :plugins []}
  :bread/db
  {:db/type :datahike
@@ -41,17 +41,22 @@
             ]]}
  :bread/router
  #reitit/router
- [["/"
-   ["login"
-    {:dispatcher/type :systems.bread.alpha.plugin.auth/login
+ [[["/login"
+    {:name :login
+     :dispatcher/type :systems.bread.alpha.plugin.auth/login
      :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}]
-   [":lang"
+   ["/assets/*"
+    #invoke [reitit.ring/create-resource-handler
+             {:param :filename}]]
+   ["/:lang"
     [""
-     {:dispatcher/type :dispatcher.type/page
-      :dispatcher/component #var systems.bread.alpha.cms.main/home-page}]
-    ["/:slug"
-     {:dispatcher/type :dispatcher.type/page
-      :dispatcher/component #var systems.bread.alpha.cms.main/interior-page}]]]
+     {:name :home
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/home-page}]
+    ["/*slugs"
+     {:home :page
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/interior-page}]]]
   {:conflicts nil}]
  :bread/profilers
  [#_{:hook #{:systems.bread.alpha.core/response}

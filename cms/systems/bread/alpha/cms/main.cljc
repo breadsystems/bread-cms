@@ -8,15 +8,14 @@
     [integrant.core :as ig]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
+    [reitit.ring]
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
     ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
-    ;; TODO load components dynamicaly using sci
-    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.cms.theme]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
@@ -25,33 +24,6 @@
     [java.time LocalDateTime]
     [java.util Properties])
   (:gen-class))
-
-(defc not-found
-  [{:keys [lang]}]
-  {}
-  [:html {:lang lang}
-   [:p "404"]])
-
-(defc home-page
-  [{:keys [lang user post]}]
-  {:key :post
-   :query [:post/children
-           :post/slug
-           :post/authors
-           {:translatable/fields ['*]}]}
-  [:html {:lang lang}
-   [:head
-    [:meta {:content-type "utf-8"}]
-    [:title "Home | BreadCMS"]]
-   [:body
-    [:h1 (:title (:translatable/fields post))]
-    [:pre (pr-str post)]
-    [:pre (pr-str (user/can? user :edit-posts))]]])
-
-(defc interior-page
-  [data]
-  {:key :post}
-  [:pre (prn-str data)])
 
 (def status-mappings
   {200 "OK"
@@ -221,6 +193,14 @@
 (defmethod aero/reader 'reitit/router [_ _ args]
   (apply reitit/router args))
 
+(defmethod aero/reader 'invoke [_ _ [f & args]]
+  (let [var* (resolve f)]
+    (when-not (var? var*)
+      (throw (ex-info (str f " does not resolve to a var") {:f f})))
+    (when-not (ifn? (deref var*))
+      (throw (ex-info (str f " must be a function") {:f f})))
+    (apply (deref var*) args)))
+
 (defmethod aero/reader 'var [_ _ sym]
   (let [var* (resolve sym)]
     (when-not (var? var*)
@@ -253,6 +233,9 @@
   (defn- response [res]
     (select-keys res [:status :headers :body :session]))
 
+  (slurp (io/resource "public/assets/hi.txt"))
+  (bread/match (:bread/router @system) {:uri "/assets/hi.txt"
+                                        :request-method :get})
   (bread/match (:bread/router @system) {:uri "/en"
                                         :request-method :get})
   (bread/match (:bread/router @system) {:uri "/login"
