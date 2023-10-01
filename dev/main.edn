@@ -6,7 +6,7 @@
                       [:security :anti-forgery] false}
  :ring/session-store
  {:store/type :datalog
-  :store/datastore #ig/ref :bread/db}
+  :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:db #ig/ref :bread/db

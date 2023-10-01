@@ -160,7 +160,7 @@
     defaults))
 
 (defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :db/connection} :store/datastore}]
+  [_ {store-type :store/type {conn :db/connection} :store/db}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
     (auth/session-store conn)))
