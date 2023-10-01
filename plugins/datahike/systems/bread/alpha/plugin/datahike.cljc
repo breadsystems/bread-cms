@@ -188,27 +188,6 @@
      :max-tx (:max-tx db)
      :max-eid (:max-eid db)}))
 
-(defn- eval-arg [data arg]
-  (if (and (vector? arg) (= ::bread/data (first arg)))
-    (get-in data (next arg))
-    arg))
-
-(comment
-  ;; pass-thru
-  (= "x" (eval-arg {:a {:b :AB}} "x"))
-  ;; vector, but not a path
-  (= [:a :b] (eval-arg {:a {:b :AB}} [:a :b]))
-  ;; path w/ correct meta flag
-  (= :AB (eval-arg {:a {:b :AB}} [::bread/data :a :b]))
-
-  ;;
-  )
-
-(defn- query-db [db data qry args]
-  (let [args (map (partial eval-arg data) args)]
-    (when (every? some? args)
-      (apply d/q qry db args))))
-
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -218,8 +197,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
-;; Implement Bread's core TemporalDatabase and
-;; TransactionalDatabaseConnection protocols
+;; Methods for managing database connection and state.
 ;;
 
 (defmethod store/connect :datahike [config]
@@ -247,27 +225,3 @@
 
 (defmethod store/max-tx :datahike [req]
   (:max-tx (store/datastore req)))
-
-(defn datastore
-  "Takes a request and returns a datastore instance, optionally configured
-   as a temporal-db (via as-of) or with-db (via db-with)"
-  [req]
-  (let [conn (bread/config req :db/connection)
-        timepoint (store/timepoint req)]
-    (if timepoint
-      (with-meta
-        (store/as-of (store/db conn) timepoint)
-        {`datafy (fn [_]
-                   {:type 'datahike.db.AsOfDB
-                    :max-tx (:max-tx @conn)
-                    :max-eid (:max-eid @conn)})})
-      (with-meta
-        (store/db conn)
-        {`datafy (fn [db]
-                   {:type 'datahike.db.DB
-                    :max-tx (:max-tx db)
-                    :max-eid (:max-eid db)})}))))
-
-(defmethod store/plugin :datahike [config]
-  (let [config (merge {:db/req->datastore datastore} config)]
-    (store/base-plugin config)))

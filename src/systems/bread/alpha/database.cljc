@@ -9,7 +9,6 @@
 (defmulti create! (fn [config & _]
                              (:db/type config)))
 (defmulti delete! :db/type)
-(defmulti plugin :db/type)
 (defmulti max-tx (fn [app]
                    (:db/type (bread/config app :db/config))))
 
@@ -43,7 +42,7 @@
               "No :db/type specified in datastore config!"
               (str "Unknown :db/type `" type "`!"
                    " Did you forget to load a plugin?"))]
-    (throw (ex-info msg {:config        config
+    (throw (ex-info msg {:config config
                          :bread.context :db/connect}))))
 
 (defprotocol TransactionalDatabaseConnection
@@ -59,41 +58,6 @@
   (let [timepoint (bread/hook app ::timepoint nil)
         db (db (connection app))]
     (bread/hook app ::db (if timepoint (as-of db timepoint) db))))
-
-(defn db-datetime
-  "Returns the as-of database instant (DateTime) for the given request,
-  based on its params."
-  [{:keys [params] :as req}]
-  (let [as-of-param (bread/config req :db/as-of-param)
-        as-of-tx? (bread/config req :db/as-of-tx?)
-        as-of (get params as-of-param)
-        fmt (bread/config req :db/as-of-format)]
-    (when as-of
-      (if as-of-tx?
-        (try
-          (Integer. as-of)
-          (catch NumberFormatException _ nil))
-        (try
-          (.parse (java.text.SimpleDateFormat. fmt) as-of)
-          (catch java.text.ParseException _ nil))))))
-
-(defn db-tx
-  "Returns the as-of database transaction (integer) for the given request,
-  based on its params."
-  [{:keys [params] :as req}]
-  (let [as-of-param (bread/config req :db/as-of-param)
-        as-of (get params as-of-param)]
-    (when as-of (try
-                  (Integer. as-of)
-                  (catch java.lang.NumberFormatException e
-                    nil)))))
-
-(defn timepoint [req]
-  (bread/hook req ::timepoint))
-
-(defmethod bread/effect ::transact
-  [{:keys [conn txs]} _]
-  (transact conn {:tx-data txs}))
 
 (defn add-txs
   "Adds the given txs as effects to be run on the app datastore.
@@ -111,6 +75,29 @@
                           :effect/key (:key opts)
                           :conn (connection req)
                           :txs txs})))
+
+(defn migration-key [migration]
+  (reduce (fn [_ {k :migration/key}]
+            (when k (reduced k)))
+          nil migration))
+
+(comment
+  (migration-key schema/migrations)
+  (migration-key schema/posts))
+
+(defn migration-keys [db]
+  "Returns the :migration/key of each migration that has been run on db."
+  (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
+
+(defn migration-ran? [db migration]
+  "Returns true if the given migration has been run on db, false otherwise."
+  (let [key-tx (first migration)
+        ks (migration-keys db)]
+    (contains? ks (migration-key migration))))
+
+(defmethod bread/effect ::transact
+  [{:keys [conn txs]} _]
+  (transact conn {:tx-data txs}))
 
 (defn- data-path? [x]
   (and (sequential? x) (= ::bread/data (first x))))
@@ -133,25 +120,6 @@
     (if (and (:query/into query) (seqable? result))
       (into (:query/into query) result)
       result)))
-
-(defn migration-key [migration]
-  (reduce (fn [_ {k :migration/key}]
-            (when k (reduced k)))
-          nil migration))
-
-(comment
-  (migration-key schema/migrations)
-  (migration-key schema/posts))
-
-(defn migration-keys [db]
-  "Returns the :migration/key of each migration that has been run on db."
-  (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
-
-(defn migration-ran? [db migration]
-  "Returns true if the given migration has been run on db, false otherwise."
-  (let [key-tx (first migration)
-        ks (migration-keys db)]
-    (contains? ks (migration-key migration))))
 
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
@@ -178,14 +146,21 @@
   app)
 
 (defmethod bread/action ::timepoint
-  [req _ _]
-  (db-datetime req))
+  [{:keys [params] :as req} _ _]
+  (let [as-of-param (bread/config req :db/as-of-param)
+        as-of-tx? (bread/config req :db/as-of-tx?)
+        as-of (get params as-of-param)
+        fmt (bread/config req :db/as-of-format)]
+    (when as-of
+      (if as-of-tx?
+        (try
+          (Integer. as-of)
+          (catch NumberFormatException _ nil))
+        (try
+          (.parse (java.text.SimpleDateFormat. fmt) as-of)
+          (catch java.text.ParseException _ nil))))))
 
-(defmethod bread/action ::db
-  [req {:keys [req->datastore]} _]
-  (req->datastore req))
-
-(defn base-plugin
+(defn plugin
   "Helper for instantiating a datastore. Do not call this fn directly from
   application code; recommended for use from plugins only. Use store/plugin
   instead."
@@ -196,14 +171,12 @@
                      as-of-format
                      as-of-param
                      as-of-tx?
-                     req->datastore
-                     req->timepoint
                      initial-txns
                      migrations]
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z"
                 as-of-tx? false
-                req->timepoint db-tx
+                ;; TODO load this from defaults
                 migrations schema/initial
                 connection
                 (try
@@ -224,6 +197,4 @@
         ::timepoint
         [{:action/name ::timepoint
           :action/description
-          "Get the temporal database timepoint for the current request."}]
-        ::db
-        [{:action/name ::db :req->datastore req->datastore}]}})))
+          "Get the temporal database timepoint for the current request."}]}})))

@@ -26,9 +26,9 @@
       (is (instance? clojure.lang.Atom
                      (bread/config app :db/connection)))))
 
-  (testing "::store/db returns the present snapshot by default"
+  (testing "datastore returns the present snapshot by default"
     (let [app (db-config->loaded config)]
-      (is (instance? datahike.db.DB (bread/hook app ::store/db)))))
+      (is (instance? datahike.db.DB (store/datastore app)))))
 
   (testing "datastore honors as-of-tx? config"
     (let [app (db-config->loaded (assoc config :db/as-of-tx? true))
