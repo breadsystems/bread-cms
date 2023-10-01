@@ -6,7 +6,7 @@
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.defaults :as defaults]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
@@ -280,16 +280,16 @@
 
 (deftest test-log-attempt
   (let [!NOW! (Date.)
-        app (plugins->loaded [(store/plugin config)])
-        conn (store/connection app)
+        app (plugins->loaded [(db/plugin config)])
+        conn (db/connection app)
         get-user (fn [username]
-                   (store/q @conn
-                            '{:find [(pull ?e [:user/username
-                                               :user/failed-login-count
-                                               :user/locked-at]) .]
-                              :in [$ ?username]
-                              :where [[?e :user/username ?username]]}
-                            (or username "")))]
+                   (db/q @conn
+                         '{:find [(pull ?e [:user/username
+                                            :user/failed-login-count
+                                            :user/locked-at]) .]
+                           :in [$ ?username]
+                           :where [[?e :user/username ?username]]}
+                         (or username "")))]
     (are
       [expected args]
       (= expected (let [[effect-data result] args
@@ -377,16 +377,16 @@
       )))
 
 (deftest test-session-store
-  (let [app (plugins->loaded [(store/plugin config)])
-        conn (store/connection app)
+  (let [app (plugins->loaded [(db/plugin config)])
+        conn (db/connection app)
         session-store (auth/session-store conn)
         get-session-data (fn [sk]
-                           (store/q @conn
-                                    '{:find [?data .]
-                                      :in [$ ?sk]
-                                      :where [[?e :session/uuid ?sk]
-                                              [?e :session/data ?data]]}
-                                    sk))]
+                           (db/q @conn
+                                 '{:find [?data .]
+                                   :in [$ ?sk]
+                                   :where [[?e :session/uuid ?sk]
+                                           [?e :session/data ?data]]}
+                                 sk))]
 
     (testing "write-session"
       (testing "passing a UUID"
@@ -432,16 +432,16 @@
   (d/delete-database config)
   (require '[systems.bread.alpha.util.datalog :as datalog])
 
-  (def app (plugins->loaded [(store/plugin config)]))
-  (def $conn (store/connection app))
+  (def app (plugins->loaded [(db/plugin config)]))
+  (def $conn (db/connection app))
   (def $store (auth/session-store $conn))
   (def $uuid (UUID/randomUUID))
   (satisfies? ss/SessionStore $store)
   (ss/write-session $store $uuid {:a :b})
   (datalog/attrs @$conn)
-  (store/q @$conn '{:find [(pull ?e [*]) .]
-                    :in [$ ?sk]
-                    :where [[?e :session/data]]})
+  (db/q @$conn '{:find [(pull ?e [*]) .]
+                 :in [$ ?sk]
+                 :where [[?e :session/data]]})
 
   (require '[kaocha.repl :as k])
   (k/run))

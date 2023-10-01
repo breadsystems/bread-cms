@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [are deftest testing use-fixtures]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.test-helpers :refer [db-config->loaded
                                               use-db]]))
 
@@ -36,7 +36,7 @@
     (are [page args]
       (= page (let [[slug txs] args
                     app (-> (db-config->loaded config)
-                            (store/add-txs txs))
+                            (db/add-txs txs))
                     handler (bread/handler app)
                     query
                     '{:find
@@ -46,8 +46,8 @@
                                   [:field/key :field/content]}])]
                       :in [$ ?slug]
                       :where [[?e :post/slug ?slug]]}]
-                (-> (store/database (handler {:uri "/"}))
-                    (store/q query slug)
+                (-> (db/database (handler {:uri "/"}))
+                    (db/q query slug)
                     ffirst)))
 
       ;; Without fields.

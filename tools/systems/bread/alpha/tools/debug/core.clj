@@ -6,7 +6,7 @@
     [clojure.tools.logging :as log]
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.tools.protocols]
     [systems.bread.alpha.tools.debug.server :as srv])
   (:import
@@ -32,14 +32,14 @@
          :request/uuid (str uuid)
          :request/millis (.getTime (Date.))
          ;; TODO support extending these fields via metadata
-         :request/database (store/database req)))
+         :request/database (db/database req)))
 
 (defmethod event-data :profile.type/response
   [[_ {uuid :request/uuid :as res}]]
   (assoc res
          :request/uuid (str uuid)
          ;; TODO compute duration?
-         :response/database (store/database res)))
+         :response/database (db/database res)))
 
 (defmethod event-data :profile.type/hook
   [[_ {:keys [hook args app f result millis]
@@ -122,7 +122,7 @@
   (let [;; TODO parameterize getting IDs
         rid (UUID/randomUUID)
         as-of-param (bread/config req :db/as-of-param)
-        as-of (or (store/timepoint req) (store/max-tx req))
+        as-of (or (db/timepoint req) (db/max-tx req))
         req (assoc req
                    :profiler/profiled? true
                    :profiler/as-of-param as-of-param

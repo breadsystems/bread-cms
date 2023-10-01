@@ -15,7 +15,7 @@
     [systems.bread.alpha.core :as bread]
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth]
@@ -168,13 +168,13 @@
 (defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
-  (store/create! db-config {:force? force?})
-  (assoc db-config :db/connection (store/connect db-config)))
+  (db/create! db-config {:force? force?})
+  (assoc db-config :db/connection (db/connect db-config)))
 
 (defmethod ig/halt-key! :bread/db
   [_ {:keys [recreate?] :as db-config}]
   ;; TODO call datahike API directly
-  (when recreate? (store/delete! db-config)))
+  (when recreate? (db/delete! db-config)))
 
 (defmethod ig/init-key :bread/router [_ router]
   router)
@@ -292,8 +292,8 @@
 
   (defn q [& args]
     (apply
-      store/q
-      (store/database (->app $req))
+      db/q
+      (db/database (->app $req))
       args))
 
   (def coby
@@ -311,11 +311,11 @@
   (defn retraction [{e :db/id :as entity}]
     (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
   (retraction coby)
-  (store/transact (store/connection (:bread/app @system))
-                  (retraction coby))
-  (store/transact (store/connection (:bread/app @system))
-                  [{:user/username "coby"
-                    :user/locked-at (java.util.Date.)}])
+  (db/transact (db/connection (:bread/app @system))
+               (retraction coby))
+  (db/transact (db/connection (:bread/app @system))
+               [{:user/username "coby"
+                 :user/locked-at (java.util.Date.)}])
 
   (defn- sci-ns [ns-sym]
     (let [ns* (sci/create-ns ns-sym)
@@ -333,8 +333,8 @@
     sci-ctx
     "(ns my-theme (:require [systems.bread.alpha.component :refer [defc]]))
     (defc my-page [_]
-      {}
-      [:p \"MY PAGE\"])")
+    {}
+    [:p \"MY PAGE\"])")
 
   (sci/eval-string*
     sci-ctx
@@ -346,7 +346,7 @@
   ;; We can query for every :db/ident in the database:
   (require '[systems.bread.alpha.util.datalog :as datalog])
   (def idents
-    (map :db/ident (datalog/attrs (store/database (->app $req)))))
+    (map :db/ident (datalog/attrs (db/database (->app $req)))))
 
   ;; Now we can scan a given route for db idents...
   (def route
@@ -357,7 +357,7 @@
 
   ;; Before the next step, we query for all refs in the db:
   (def refs
-    (datalog/attrs-by-type (store/database (->app $req)) :db.type/ref))
+    (datalog/attrs-by-type (db/database (->app $req)) :db.type/ref))
 
   ;; One more thing: we need to keep track of the attrs we've seen so far:
   (def seen

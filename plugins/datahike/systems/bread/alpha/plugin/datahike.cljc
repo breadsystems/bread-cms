@@ -6,7 +6,7 @@
     [datahike.db :as dhdb]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store])
+    [systems.bread.alpha.database :as db])
   (:import
     [java.lang IllegalArgumentException]
     [java.util UUID]))
@@ -37,136 +37,136 @@
 ;; TransactionalDatabaseConnection protocols
 ;;
 
-(extend-protocol store/TemporalDatabase
+(extend-protocol db/TemporalDatabase
   datahike.db.DB
-  (as-of [store instant]
-    (d/as-of store instant))
-  (history [store]
-    (d/history store))
+  (as-of [db instant]
+    (d/as-of db instant))
+  (history [db]
+    (d/history db))
   (q
-    ([store query]
-     (d/q query store))
-    ([store query a]
-     (d/q query store a))
-    ([store query a b]
-     (d/q query store a b))
-    ([store query a b c]
-     (d/q query store a b c))
-    ([store query a b c d]
-     (d/q query store a b c d))
-    ([store query a b c d e]
-     (d/q query store a b c d e))
-    ([store query a b c d e f]
-     (d/q query store a b c d e f))
-    ([store query a b c d e f g]
-     (d/q query store a b c d e f g))
-    ([store query a b c d e f g h]
-     (d/q query store a b c d e f g h))
-    ([store query a b c d e f g h i]
-     (d/q query store a b c d e f g h i))
-    ([store query a b c d e f g h i j]
-     (d/q query store a b c d e f g h i j))
-    ([store query a b c d e f g h i j k]
-     (d/q query store a b c d e f g h i j k))
-    ([store query a b c d e f g h i j k l]
-     (d/q query store a b c d e f g h i j k l))
-    ([store query a b c d e f g h i j k l m]
-     (d/q query store a b c d e f g h i j k l m))
-    ([store query a b c d e f g h i j k l m n]
-     (d/q query store a b c d e f g h i j k l m n))
-    ([store query a b c d e f g h i j k l m n o]
-     (d/q query store a b c d e f g h i j k l m n o))
-    ([store query a b c d e f g h i j k l m n o p]
-     (d/q query store a b c d e f g h i j k l m n o p))
-    ([store query a b c d e f g h i j k l m n o p r]
-     (d/q query store a b c d e f g h i j k l m n o p r)))
-  (pull [store query ident]
-    (d/pull store query ident))
-  (db-with [store tx]
-    (d/db-with store tx))
+    ([db query]
+     (d/q query db))
+    ([db query a]
+     (d/q query db a))
+    ([db query a b]
+     (d/q query db a b))
+    ([db query a b c]
+     (d/q query db a b c))
+    ([db query a b c d]
+     (d/q query db a b c d))
+    ([db query a b c d e]
+     (d/q query db a b c d e))
+    ([db query a b c d e f]
+     (d/q query db a b c d e f))
+    ([db query a b c d e f g]
+     (d/q query db a b c d e f g))
+    ([db query a b c d e f g h]
+     (d/q query db a b c d e f g h))
+    ([db query a b c d e f g h i]
+     (d/q query db a b c d e f g h i))
+    ([db query a b c d e f g h i j]
+     (d/q query db a b c d e f g h i j))
+    ([db query a b c d e f g h i j k]
+     (d/q query db a b c d e f g h i j k))
+    ([db query a b c d e f g h i j k l]
+     (d/q query db a b c d e f g h i j k l))
+    ([db query a b c d e f g h i j k l m]
+     (d/q query db a b c d e f g h i j k l m))
+    ([db query a b c d e f g h i j k l m n]
+     (d/q query db a b c d e f g h i j k l m n))
+    ([db query a b c d e f g h i j k l m n o]
+     (d/q query db a b c d e f g h i j k l m n o))
+    ([db query a b c d e f g h i j k l m n o p]
+     (d/q query db a b c d e f g h i j k l m n o p))
+    ([db query a b c d e f g h i j k l m n o p r]
+     (d/q query db a b c d e f g h i j k l m n o p r)))
+  (pull [db query ident]
+    (d/pull db query ident))
+  (db-with [db tx]
+    (d/db-with db tx))
 
   datahike.db.AsOfDB
   (q
-    ([store query]
-     (d/q query store))
-    ([store query a]
-     (d/q query store a))
-    ([store query a b]
-     (d/q query store a b))
-    ([store query a b c]
-     (d/q query store a b c))
-    ([store query a b c d]
-     (d/q query store a b c d))
-    ([store query a b c d e]
-     (d/q query store a b c d e))
-    ([store query a b c d e f]
-     (d/q query store a b c d e f))
-    ([store query a b c d e f g]
-     (d/q query store a b c d e f g))
-    ([store query a b c d e f g h]
-     (d/q query store a b c d e f g h))
-    ([store query a b c d e f g h i]
-     (d/q query store a b c d e f g h i))
-    ([store query a b c d e f g h i j]
-     (d/q query store a b c d e f g h i j))
-    ([store query a b c d e f g h i j k]
-     (d/q query store a b c d e f g h i j k))
-    ([store query a b c d e f g h i j k l]
-     (d/q query store a b c d e f g h i j k l))
-    ([store query a b c d e f g h i j k l m]
-     (d/q query store a b c d e f g h i j k l m))
-    ([store query a b c d e f g h i j k l m n]
-     (d/q query store a b c d e f g h i j k l m n))
-    ([store query a b c d e f g h i j k l m n o]
-     (d/q query store a b c d e f g h i j k l m n o))
-    ([store query a b c d e f g h i j k l m n o p]
-     (d/q query store a b c d e f g h i j k l m n o p))
-    ([store query a b c d e f g h i j k l m n o p r]
-     (d/q query store a b c d e f g h i j k l m n o p r)))
-  (pull [store query ident]
-    (d/pull store query ident))
+    ([db query]
+     (d/q query db))
+    ([db query a]
+     (d/q query db a))
+    ([db query a b]
+     (d/q query db a b))
+    ([db query a b c]
+     (d/q query db a b c))
+    ([db query a b c d]
+     (d/q query db a b c d))
+    ([db query a b c d e]
+     (d/q query db a b c d e))
+    ([db query a b c d e f]
+     (d/q query db a b c d e f))
+    ([db query a b c d e f g]
+     (d/q query db a b c d e f g))
+    ([db query a b c d e f g h]
+     (d/q query db a b c d e f g h))
+    ([db query a b c d e f g h i]
+     (d/q query db a b c d e f g h i))
+    ([db query a b c d e f g h i j]
+     (d/q query db a b c d e f g h i j))
+    ([db query a b c d e f g h i j k]
+     (d/q query db a b c d e f g h i j k))
+    ([db query a b c d e f g h i j k l]
+     (d/q query db a b c d e f g h i j k l))
+    ([db query a b c d e f g h i j k l m]
+     (d/q query db a b c d e f g h i j k l m))
+    ([db query a b c d e f g h i j k l m n]
+     (d/q query db a b c d e f g h i j k l m n))
+    ([db query a b c d e f g h i j k l m n o]
+     (d/q query db a b c d e f g h i j k l m n o))
+    ([db query a b c d e f g h i j k l m n o p]
+     (d/q query db a b c d e f g h i j k l m n o p))
+    ([db query a b c d e f g h i j k l m n o p r]
+     (d/q query db a b c d e f g h i j k l m n o p r)))
+  (pull [db query ident]
+    (d/pull db query ident))
 
   datahike.db.HistoricalDB
   (q
-    ([store query]
-     (d/q query store))
-    ([store query a]
-     (d/q query store a))
-    ([store query a b]
-     (d/q query store a b))
-    ([store query a b c]
-     (d/q query store a b c))
-    ([store query a b c d]
-     (d/q query store a b c d))
-    ([store query a b c d e]
-     (d/q query store a b c d e))
-    ([store query a b c d e f]
-     (d/q query store a b c d e f))
-    ([store query a b c d e f g]
-     (d/q query store a b c d e f g))
-    ([store query a b c d e f g h]
-     (d/q query store a b c d e f g h))
-    ([store query a b c d e f g h i]
-     (d/q query store a b c d e f g h i))
-    ([store query a b c d e f g h i j]
-     (d/q query store a b c d e f g h i j))
-    ([store query a b c d e f g h i j k]
-     (d/q query store a b c d e f g h i j k))
-    ([store query a b c d e f g h i j k l]
-     (d/q query store a b c d e f g h i j k l))
-    ([store query a b c d e f g h i j k l m]
-     (d/q query store a b c d e f g h i j k l m))
-    ([store query a b c d e f g h i j k l m n]
-     (d/q query store a b c d e f g h i j k l m n))
-    ([store query a b c d e f g h i j k l m n o]
-     (d/q query store a b c d e f g h i j k l m n o))
-    ([store query a b c d e f g h i j k l m n o p]
-     (d/q query store a b c d e f g h i j k l m n o p))
-    ([store query a b c d e f g h i j k l m n o p r]
-     (d/q query store a b c d e f g h i j k l m n o p r))))
+    ([db query]
+     (d/q query db))
+    ([db query a]
+     (d/q query db a))
+    ([db query a b]
+     (d/q query db a b))
+    ([db query a b c]
+     (d/q query db a b c))
+    ([db query a b c d]
+     (d/q query db a b c d))
+    ([db query a b c d e]
+     (d/q query db a b c d e))
+    ([db query a b c d e f]
+     (d/q query db a b c d e f))
+    ([db query a b c d e f g]
+     (d/q query db a b c d e f g))
+    ([db query a b c d e f g h]
+     (d/q query db a b c d e f g h))
+    ([db query a b c d e f g h i]
+     (d/q query db a b c d e f g h i))
+    ([db query a b c d e f g h i j]
+     (d/q query db a b c d e f g h i j))
+    ([db query a b c d e f g h i j k]
+     (d/q query db a b c d e f g h i j k))
+    ([db query a b c d e f g h i j k l]
+     (d/q query db a b c d e f g h i j k l))
+    ([db query a b c d e f g h i j k l m]
+     (d/q query db a b c d e f g h i j k l m))
+    ([db query a b c d e f g h i j k l m n]
+     (d/q query db a b c d e f g h i j k l m n))
+    ([db query a b c d e f g h i j k l m n o]
+     (d/q query db a b c d e f g h i j k l m n o))
+    ([db query a b c d e f g h i j k l m n o p]
+     (d/q query db a b c d e f g h i j k l m n o p))
+    ([db query a b c d e f g h i j k l m n o p r]
+     (d/q query db a b c d e f g h i j k l m n o p r))))
 
 
-(extend-protocol store/TransactionalDatabaseConnection
+(extend-protocol db/TransactionalDatabaseConnection
   clojure.lang.Atom
   (db [conn] (deref conn))
   (transact [conn tx]
@@ -200,7 +200,7 @@
 ;; Methods for managing database connection and state.
 ;;
 
-(defmethod store/connect :datahike [config]
+(defmethod db/connect :datahike [config]
   (try
     (d/connect config)
     (catch IllegalArgumentException e
@@ -211,7 +211,7 @@
                        :message   (.getMessage e)
                        :config    config})))))
 
-(defmethod store/create! :datahike [config & [{:keys [force?]}]]
+(defmethod db/create! :datahike [config & [{:keys [force?]}]]
   (try
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
@@ -220,8 +220,8 @@
           (d/delete-database config)
           (d/create-database config))))))
 
-(defmethod store/delete! :datahike [config]
+(defmethod db/delete! :datahike [config]
   (d/delete-database config))
 
-(defmethod store/max-tx :datahike [req]
-  (:max-tx (store/database req)))
+(defmethod db/max-tx :datahike [req]
+  (:max-tx (db/database req)))

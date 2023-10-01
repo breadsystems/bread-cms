@@ -6,10 +6,10 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.database :as store]))
+    [systems.bread.alpha.database :as db]))
 
 (defn query-key [dispatcher]
-  "Get from the component layer the key at which to store the dispatchd query
+  "Get from the component layer the key at which to db the dispatched query
   within the ::bread/queries map"
   (component/query-key (:dispatcher/component dispatcher)))
 

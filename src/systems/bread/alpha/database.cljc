@@ -13,29 +13,29 @@
                    (:db/type (bread/config app :db/config))))
 
 (defprotocol TemporalDatabase
-  (as-of [store timepoint])
-  (history [store])
-  (pull [store struct lookup-ref])
-  (q [store query]
-     [store query a]
-     [store query a b]
-     [store query a b c]
-     [store query a b c d]
-     [store query a b c d e]
-     [store query a b c d e f]
-     [store query a b c d e f g]
-     [store query a b c d e f g h]
-     [store query a b c d e f g h i]
-     [store query a b c d e f g h i j]
-     [store query a b c d e f g h i j k]
-     [store query a b c d e f g h i j k l]
-     [store query a b c d e f g h i j k l m]
-     [store query a b c d e f g h i j k l m n]
-     [store query a b c d e f g h i j k l m n o]
-     [store query a b c d e f g h i j k l m n o p]
-     [store query a b c d e f g h i j k l m n o p q]
-     [store query a b c d e f g h i j k l m n o p q r])
-  (db-with [store timepoint]))
+  (as-of [db timepoint])
+  (history [db])
+  (pull [db struct lookup-ref])
+  (q [db query]
+     [db query a]
+     [db query a b]
+     [db query a b c]
+     [db query a b c d]
+     [db query a b c d e]
+     [db query a b c d e f]
+     [db query a b c d e f g]
+     [db query a b c d e f g h]
+     [db query a b c d e f g h i]
+     [db query a b c d e f g h i j]
+     [db query a b c d e f g h i j k]
+     [db query a b c d e f g h i j k l]
+     [db query a b c d e f g h i j k l m]
+     [db query a b c d e f g h i j k l m n]
+     [db query a b c d e f g h i j k l m n o]
+     [db query a b c d e f g h i j k l m n o p]
+     [db query a b c d e f g h i j k l m n o p q]
+     [db query a b c d e f g h i j k l m n o p q r])
+  (db-with [db timepoint]))
 
 (defmethod connect :default [{:db/keys [type] :as config}]
   (let [msg (if (nil? type)
@@ -162,7 +162,7 @@
 
 (defn plugin
   "Helper for instantiating a database. Do not call this fn directly from
-  application code; recommended for use from plugins only. Use store/plugin
+  application code; recommended for use from plugins only. Use db/plugin
   instead."
   [config]
   ;; TODO make these simple keys

@@ -3,7 +3,7 @@
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
     [systems.bread.alpha.query :as query]
@@ -124,7 +124,7 @@
         [(dispatcher/plugin)
          (query/plugin)
          (component/plugin components)
-         (when (not (false? db)) (store/plugin db))
+         (when (not (false? db)) (db/plugin db))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))

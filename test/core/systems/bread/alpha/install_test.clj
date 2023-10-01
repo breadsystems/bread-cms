@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.install-test
   (:require
    [clojure.test :refer [deftest are is use-fixtures]]
-   [systems.bread.alpha.database :as store]
+   [systems.bread.alpha.database :as db]
    [systems.bread.alpha.schema :as schema]
    [systems.bread.alpha.plugin.datahike]
    [systems.bread.alpha.test-helpers :refer [db-config->loaded]]))
@@ -11,9 +11,9 @@
 
 (defn- wrap-db-installation [run]
   ;; Clean up after any bad test runs
-  (store/delete! config)
+  (db/delete! config)
   (run)
-  (store/delete! config))
+  (db/delete! config))
 
 (use-fixtures :each wrap-db-installation)
 
@@ -23,12 +23,12 @@
                        {:migration/dependencies
                         #{:bread.migration/migrations
                           :bread.migration/posts}})]
-    (store/create! config)
+    (db/create! config)
     (db-config->loaded (assoc config :db/migrations
                                      (conj schema/initial my-migration)))
     (are
-      [pred migration] (pred (store/migration-ran?
-                               (store/db (store/connect config))
+      [pred migration] (pred (db/migration-ran?
+                               (db/db (db/connect config))
                                migration))
       true? schema/migrations
       true? schema/posts
@@ -46,7 +46,7 @@
                        [{:migration/key :my/migration}]
                        {:migration/dependencies #{:UNMET}})
         config (assoc config :db/migrations [my-migration])]
-    (store/create! config)
+    (db/create! config)
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Migration has one or more unmet dependencies!"
                           (db-config->loaded config)))

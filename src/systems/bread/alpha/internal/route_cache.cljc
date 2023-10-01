@@ -3,7 +3,7 @@
     [clojure.string :as string]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.util.datalog :as datalog]))
 
 (defn- get-attr-via [entity [step & steps]]
@@ -38,7 +38,7 @@
                    :where '[[?e]]}]
         ;; TODO can we express this in a more data-oriented way?
         (fn [req eid]
-          (let [entity (store/q (store/database req) query eid)]
+          (let [entity (db/q (db/database req) query eid)]
             (reduce (fn [m [param path]]
                       (let [attr (get-attr-via entity path)
                             attr (if (coll? attr) attr (set (list attr)))]
@@ -63,23 +63,23 @@
         datoms (:tx-data tx)]
     (filter (fn [[_ attr]] (attrs attr)) datoms)))
 
-(defn- normalize [store datoms]
+(defn- normalize [db datoms]
   (reduce (fn [entities [eid attr v]]
-            (if (datalog/cardinality-many? store attr)
+            (if (datalog/cardinality-many? db attr)
               (update-in entities [eid attr] (comp set conj) v)
               (assoc-in entities [eid attr] v)))
           {} datoms))
 
-(defn- extrapolate-eid [store datoms]
+(defn- extrapolate-eid [db datoms]
   (let [;; Putting refs first helps us eliminate eids more efficiently,
         ;; since any eid that is a value in a ref datom within a tx is,
         ;; by definition, not the primary entity being transacted.
-        datoms (sort-by (complement (comp #(datalog/ref? store %) second)) datoms)
-        normalized (normalize store datoms)]
+        datoms (sort-by (complement (comp #(datalog/ref? db %) second)) datoms)
+        normalized (normalize db datoms)]
     (first (keys (reduce (fn [norm [eid attr v]]
                            (cond
                              (= 1 (count norm))        (reduced norm)
-                             (datalog/ref? store attr) (dissoc norm v)
+                             (datalog/ref? db attr) (dissoc norm v)
                              :else                     norm))
                          normalized datoms)))))
 
@@ -89,7 +89,7 @@
     (component/query $)
     (affecting-attrs $ mapping)
     (datoms-with-attrs $ tx)
-    (extrapolate-eid (store/database req) $)))
+    (extrapolate-eid (db/database req) $)))
 
 (defn- cart [colls]
   (if (empty? colls)

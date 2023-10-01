@@ -2,7 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.internal.query-inference :as inf]
@@ -37,14 +37,14 @@
   ([req]
    (strings req (lang req)))
   ([req lang]
-   (->> (store/q (store/database req)
-                 '{:find [?key ?content]
-                   :in [$ ?lang]
-                   :where [[?e :field/key ?key]
-                           [?e :field/content ?content]
-                           [?e :field/lang ?lang]
-                           (not-join [?e] [_ :translatable/fields ?e])]}
-                 lang)
+   (->> (db/q (db/database req)
+              '{:find [?key ?content]
+                :in [$ ?lang]
+                :where [[?e :field/key ?key]
+                        [?e :field/content ?content]
+                        [?e :field/lang ?lang]
+                        (not-join [?e] [_ :translatable/fields ?e])]}
+              lang)
         (into {})
         (bread/hook req ::strings))))
 
@@ -76,7 +76,7 @@
         id-path (if (sequential? k)
                   (concat [::bread/data] k [:db/id])
                   [::bread/data k :db/id])]
-    {:query/name ::store/query
+    {:query/name ::db/query
      :query/db (:query/db orig-query)
      :query/key path
      :query/args
@@ -136,10 +136,10 @@
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
-  (query/add req {:query/name ::store/query
+  (query/add req {:query/name ::db/query
                   :query/key :i18n
                   :query/into {}
-                  :query/db (store/database req)
+                  :query/db (db/database req)
                   :query/args
                   ['{:find [?key ?content]
                      :in [$ ?lang]

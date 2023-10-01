@@ -2,7 +2,6 @@
   (:require
     [clojure.test :refer [deftest are is]]
     [systems.bread.alpha.util.datalog :as d]
-    [systems.bread.alpha.database :as store]
     [systems.bread.alpha.i18n :as i18n]))
 
 (deftest test-relation-reversed?

@@ -7,7 +7,7 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.database :as store]))
+    [systems.bread.alpha.database :as db]))
 
 (defn- collect-item-ids [tree]
   (reduce (fn [ids node]
@@ -50,7 +50,7 @@
 (defn expand-post-ids [req tree]
   (let [results (some->> tree
                          (post-items-query req)
-                         (store/q (store/database req)))
+                         (db/q (db/database req)))
         by-id (->> results
                    (map (fn [[{id :db/id :as post}
                               {title :field/content}]]
@@ -105,7 +105,7 @@
                   :where '[[?e :menu/locations _]]}]
        (->> query
             (bread/hook req :hook/global-menus-query)
-            (store/q (store/database req))
+            (db/q (db/database req))
             (map (comp #(assoc % :type :location)
                        (partial format-menu req)
                        first))
@@ -134,7 +134,7 @@
                 :where [['?e :menu/locations location]]}
          menu (as-> query $
                 (bread/hook req :hook/location-menu-query $ location)
-                (store/q (store/database req) $)
+                (db/q (db/database req) $)
                 (format-menu req $)
                 (assoc $ :type :location))]
      (->> menu
@@ -177,7 +177,7 @@
          items
          (as-> query $
                (bread/hook req :hook/posts-menu-query $)
-               (store/q (store/database req) $ t statuses)
+               (db/q (db/database req) $ t statuses)
                (map first $)
                (walk-posts->items $)
                (expand-post-ids req $))]

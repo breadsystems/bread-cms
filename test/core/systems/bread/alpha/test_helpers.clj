@@ -4,7 +4,7 @@
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.database :as store]))
+    [systems.bread.alpha.database :as db]))
 
 (defn plugins->app [plugins]
   (bread/app {:plugins plugins}))
@@ -16,20 +16,20 @@
   (-> plugins plugins->app bread/load-handler))
 
 (defn db-config->app [config]
-  (plugins->app [(store/plugin config)]))
+  (plugins->app [(db/plugin config)]))
 
 (defmethod bread/action ::db
   [_ {:keys [db]} _]
   db)
 
 (defn db->plugin [db]
-  {:hooks {::store/db [{:action/name ::db
+  {:hooks {::db/db [{:action/name ::db
                         :action/description "Mock database"
                         :db db}]}
    ;; Configure a sensible connection object we can call (db conn) on.
    :config {:db/connection (reify
-                             store/TransactionalDatabaseConnection
-                             (store/db [_] db))}})
+                             db/TransactionalDatabaseConnection
+                             (db/db [_] db))}})
 
 (defn db-config->loaded [config]
   (-> config db-config->app bread/load-app))
@@ -50,13 +50,13 @@
 (defmacro use-db [freq config]
   `(t/use-fixtures ~freq (fn [f#]
                            (try
-                             (store/delete! ~config)
+                             (db/delete! ~config)
                              (catch Throwable e#
                                (log/warn (.getMessage e#))))
-                           (store/create! ~config)
-                           (store/connect ~config)
+                           (db/create! ~config)
+                           (db/connect ~config)
                            (f#)
-                           (store/delete! ~config))))
+                           (db/delete! ~config))))
 
 (comment
   (macroexpand '(use-db :each {:my :config})))
