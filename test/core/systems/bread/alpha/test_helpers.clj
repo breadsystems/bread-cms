@@ -31,9 +31,6 @@
                              store/TransactionalDatabaseConnection
                              (store/db [_] db))}})
 
-(defn datastore->loaded [store]
-  (plugins->loaded [(db->plugin store)]))
-
 (defn db-config->loaded [config]
   (-> config db-config->app bread/load-app))
 
