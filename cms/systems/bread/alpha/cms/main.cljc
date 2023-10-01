@@ -330,15 +330,16 @@
     (sci-context ['systems.bread.alpha.component]))
 
   (sci/eval-string*
-    sci-ctx
+    $theme-ctx
     "(ns my-theme (:require [systems.bread.alpha.component :refer [defc]]))
     (defc my-page [_]
-    {}
-    [:p \"MY PAGE\"])")
+      {}
+      [:p \"MY PAGE\"])")
 
   (sci/eval-string*
-    sci-ctx
-    "(ns my-theme (:require []))")
+    $theme-ctx
+    "(ns my-theme)
+    (my-page {})")
 
   ;; SITEMAP DESIGN
 
