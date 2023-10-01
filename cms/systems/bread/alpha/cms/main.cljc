@@ -17,6 +17,8 @@
     [systems.bread.alpha.cms.theme]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.cms.defaults :as defaults]
+    [systems.bread.alpha.cms.config.bread]
+    [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.reitit])
@@ -186,32 +188,6 @@
 (defmethod ig/halt-key! :bread/profilers [_ profilers]
   (doseq [{:keys [tap]} profilers]
     (remove-tap tap)))
-
-(defmethod aero/reader 'ig/ref [_ _ value]
-  (ig/ref value))
-
-(defmethod aero/reader 'reitit/router [_ _ args]
-  (apply reitit/router args))
-
-(defmethod aero/reader 'invoke [_ _ [f & args]]
-  (let [var* (resolve f)]
-    (when-not (var? var*)
-      (throw (ex-info (str f " does not resolve to a var") {:f f})))
-    (when-not (ifn? (deref var*))
-      (throw (ex-info (str f " must be a function") {:f f})))
-    (apply (deref var*) args)))
-
-(defmethod aero/reader 'var [_ _ sym]
-  (let [var* (resolve sym)]
-    (when-not (var? var*)
-      (throw (ex-info (str sym " does not resolve to a var") {:symbol sym})))
-    var*))
-
-(defmethod aero/reader 'deref [_ _ v]
-  (deref v))
-
-(defmethod aero/reader 'concat [_ _ args]
-  (apply concat args))
 
 (defn restart! [config]
   (stop!)
