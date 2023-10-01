@@ -35,13 +35,16 @@
 (defc home-page
   [{:keys [lang user post]}]
   {:key :post
-   :query [{:post/fields ['*]}]}
+   :query [:post/children
+           :post/slug
+           :post/authors
+           {:translatable/fields ['*]}]}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
     [:title "Home | BreadCMS"]]
    [:body
-    [:h1 (:title (:post/fields post))]
+    [:h1 (:title (:translatable/fields post))]
     [:pre (pr-str post)]
     [:pre (pr-str (user/can? user :edit-posts))]]])
 
@@ -162,13 +165,13 @@
   (when (= :datalog store-type)
     (auth/session-store conn)))
 
-(defmethod ig/init-key :bread/datastore
+(defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
   (store/create! db-config {:force? force?})
   (assoc db-config :db/connection (store/connect db-config)))
 
-(defmethod ig/halt-key! :bread/datastore
+(defmethod ig/halt-key! :bread/db
   [_ {:keys [recreate?] :as db-config}]
   ;; TODO call datahike API directly
   (when recreate? (store/delete! db-config)))
@@ -241,7 +244,7 @@
   (:ring/session-store @system)
   (:bread/app @system)
   (:bread/router @system)
-  (:bread/datastore @system)
+  (:bread/db @system)
   (:bread/profilers @system)
   (restart! (-> "dev/main.edn" aero/read-config))
 

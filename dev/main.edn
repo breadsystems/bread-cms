@@ -6,16 +6,16 @@
                       [:security :anti-forgery] false}
  :ring/session-store
  {:store/type :datalog
-  :store/datastore #ig/ref :bread/datastore}
+  :store/datastore #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
  :bread/app
- {:db #ig/ref :bread/datastore
+ {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
   :i18n true
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.main/not-found}
   :plugins []}
- :bread/datastore
+ :bread/db
  {:db/type :datahike
   :store {:backend :mem
           :id "bread-db"}

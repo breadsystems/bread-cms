@@ -27,7 +27,7 @@
     :post/type :post.type/page
     :post/slug ""
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "The Title")}
@@ -38,7 +38,7 @@
     :post/type :post.type/page
     :post/slug "child-page"
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Child")}
@@ -49,7 +49,7 @@
     :post/type :post.type/page
     :post/slug "sister-page"
     :post/status :post.status/draft
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Sister")}
@@ -61,7 +61,7 @@
     :post/slug "parent-page"
     :post/children ["page.child"]
     :post/status :post.status/published
-    :post/fields
+    :translatable/fields
     #{{:field/key :title
        :field/lang :en
        :field/content (prn-str "Parent Page")}
@@ -70,19 +70,12 @@
        :field/content (prn-str "La Page Parent")}}}
 
    ;; Site-wide translations
-   #:i18n{:lang :en
-          :key :not-found
-          :string "404 Not Found"}
-   #:i18n{:lang :fr
-          :key :not-found
-          :string "404 Pas Trouvé"}
-   #:i18n{:lang :fr
-          :key :breadbox
-          :string "Boite à pain"}
-   #:i18n{:lang :en
-          :key :breadbox
-          :string "Breadbox"}
-   ])
+   {:field/lang :en
+    :field/key :not-found
+    :field/content "404 Not Found"}
+   {:field/lang :es
+    :field/key :not-found
+    :field/content "404 Pas Trouvé"}])
 
 (defmethod bread/action ::request-data
   [req _ _]

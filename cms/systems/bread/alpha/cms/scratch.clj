@@ -189,13 +189,13 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defmethod ig/init-key :bread/datastore
+(defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
   ;; TODO call datahike API directly
   (store/create! db-config {:force? force?})
   (assoc db-config :db/connection (store/connect db-config)))
 
-(defmethod ig/halt-key! :bread/datastore
+(defmethod ig/halt-key! :bread/db
   [_ {:keys [recreate?] :as db-config}]
   ;; TODO call datahike API directly
   (when recreate? (store/delete! db-config)))
@@ -263,7 +263,7 @@
   (:ring/wrap-defaults @system)
   (:bread/app @system)
   (:bread/router @system)
-  (:bread/datastore @system)
+  (:bread/db @system)
   (:bread/profilers @system)
   (restart! (-> "dev/cgi.edn" aero/read-config))
 
