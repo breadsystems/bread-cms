@@ -19,13 +19,17 @@
   (plugins->app [(store/plugin config)]))
 
 (defmethod bread/action ::db
-  [_ {:keys [store]} _]
-  store)
+  [_ {:keys [db]} _]
+  db)
 
-(defn db->plugin [store]
+(defn db->plugin [db]
   {:hooks {::store/db [{:action/name ::db
                         :action/description "Mock datastore"
-                        :store store}]}})
+                        :db db}]}
+   ;; Configure a sensible connection object we can call (db conn) on.
+   :config {:db/connection (reify
+                             store/TransactionalDatabaseConnection
+                             (store/db [_] db))}})
 
 (defn datastore->loaded [store]
   (plugins->loaded [(db->plugin store)]))

@@ -56,19 +56,26 @@
       (bread/hook ::connection)))
 
 (defn datastore [app]
-  (bread/hook app ::db))
+  (let [timepoint (bread/hook app ::timepoint nil)
+        db (db (connection app))]
+    (bread/hook app ::db (if timepoint (as-of db timepoint) db))))
 
 (defn db-datetime
   "Returns the as-of database instant (DateTime) for the given request,
   based on its params."
   [{:keys [params] :as req}]
   (let [as-of-param (bread/config req :db/as-of-param)
+        as-of-tx? (bread/config req :db/as-of-tx?)
         as-of (get params as-of-param)
         fmt (bread/config req :db/as-of-format)]
     (when as-of
-      (try
-        (.parse (java.text.SimpleDateFormat. fmt) as-of)
-        (catch java.text.ParseException _e nil)))))
+      (if as-of-tx?
+        (try
+          (Integer. as-of)
+          (catch NumberFormatException _ nil))
+        (try
+          (.parse (java.text.SimpleDateFormat. fmt) as-of)
+          (catch java.text.ParseException _ nil))))))
 
 (defn db-tx
   "Returns the as-of database transaction (integer) for the given request,
@@ -170,10 +177,9 @@
       (throw (ex-info "Failed to connect to datastore." {:type :no-connection}))))
   app)
 
-;; TODO drop support for these in favor of simply overriding multimethods
 (defmethod bread/action ::timepoint
-  [req {:keys [req->timepoint]} _]
-  (req->timepoint req))
+  [req _ _]
+  (db-datetime req))
 
 (defmethod bread/action ::db
   [req {:keys [req->datastore]} _]
@@ -189,12 +195,14 @@
     (let [{:db/keys [connection
                      as-of-format
                      as-of-param
+                     as-of-tx?
                      req->datastore
                      req->timepoint
                      initial-txns
                      migrations]
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z"
+                as-of-tx? false
                 req->timepoint db-tx
                 migrations schema/initial
                 connection
@@ -207,12 +215,15 @@
        {:db/config config
         :db/connection connection
         :db/as-of-param as-of-param
-        :db/as-of-format as-of-format}
+        :db/as-of-format as-of-format
+        :db/as-of-tx? as-of-tx?}
        :hooks
        {::bread/init
         [{:action/name ::migrate :migrations migrations}
          {:action/name ::transact-initial :txs initial-txns}]
         ::timepoint
-        [{:action/name ::timepoint :req->timepoint req->timepoint}]
+        [{:action/name ::timepoint
+          :action/description
+          "Get the temporal database timepoint for the current request."}]
         ::db
         [{:action/name ::db :req->datastore req->datastore}]}})))
