@@ -10,6 +10,7 @@
   clean {:depends [-target]
          :task (do
                  (fs/delete-tree -target))}
+  todo (shell "grep --include=*.cljc --include=*.clj --include=*.cljs --include=*.edn -r TODO")
   -target "target"
   -class-dir "target/classes"}
  }
