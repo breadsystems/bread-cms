@@ -70,6 +70,7 @@
 (defmethod bread/query ::compact-fields [{k :query/key} data]
   (-> data (query/get-at k) i18n/compact))
 
+;; TODO ::page
 (defmethod dispatcher/dispatch :dispatcher.type/page
   [{::bread/keys [dispatcher] :as req}]
   (let [params (:route/params dispatcher)
