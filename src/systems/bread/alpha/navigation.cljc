@@ -395,7 +395,7 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hooks menus menus-key] global-menu-opts :global-menus :as opts}]
+  ([{:keys [hooks menus menus-key] :as opts}]
    (if opts
      {:config
       {:navigation/menus-key (or menus-key :menus)}
