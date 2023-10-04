@@ -63,7 +63,7 @@
            :in [$ ?type [?status ...] [?field-key ...] ?lang]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
-                   [?e :post/fields ?f]
+                   [?e :translatable/fields ?f]
                    [?f :field/key ?field-key]
                    [?f :field/lang ?lang]]}
          :post.type/page
@@ -105,7 +105,7 @@
            :in [$ ?type [?status ...] [?field-key ...] ?lang]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
-                   [?e :post/fields ?f]
+                   [?e :translatable/fields ?f]
                    [?f :field/key ?field-key]
                    [?f :field/lang ?lang]]}
          :post.type/article
@@ -122,7 +122,7 @@
          :menu/type :menu.type/posts
          :post/type :post.type/article
          :post/status [:post.status/x :post.status/y]
-         :post/fields [:custom :other]
+         :translatable/fields [:custom :other]
          :route/name :bread.route/page}]
        :menus-key :custom-menu-key}
 
@@ -150,7 +150,7 @@
            :in [$ ?type [?status ...] [?field-key ...] ?lang]
            :where [[?e :post/type ?type]
                    [?e :post/status ?status]
-                   [?e :post/fields ?f]
+                   [?e :translatable/fields ?f]
                    [?f :field/key ?field-key]
                    [?f :field/lang ?lang]]}
          :post.type/page
@@ -166,7 +166,7 @@
        [{:menu/key :main-nav
          :menu/type :menu.type/pages
          :post/status [:post.status/x :post.status/y]
-         :post/fields [:custom :other]
+         :translatable/fields [:custom :other]
          :route/name :bread.route/page}]
        :menus-key :custom-menu-key})))
 
@@ -200,13 +200,13 @@
       :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
-               :post/fields {:title "eleven"}}
+               :translatable/fields {:title "eleven"}}
       :children []}
      {:title "twenty-two"
       :url "/en"
       :entity {:db/id 2
                :post/slug ""
-               :post/fields {:title "twenty-two"}}
+               :translatable/fields {:title "twenty-two"}}
       :children []}]
     {:menus
      {:main-nav
@@ -215,10 +215,10 @@
        :route/name :bread.route/page
        :items [[{:db/id 1
                  :post/slug "parent-page"
-                 :post/fields [{:db/id 11}]}]
+                 :translatable/fields [{:db/id 11}]}]
                [{:db/id 2
                  :post/slug ""
-                 :post/fields [{:db/id 22}]}]]}}
+                 :translatable/fields [{:db/id 22}]}]]}}
      :navigation/i18n
      {:main-nav
       [[{:db/id 11 :field/key :title :field/content "\"eleven\""}]
@@ -229,16 +229,16 @@
       :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
-               :post/fields {:one "eleven"
-                             :two "twelve"}}
+               :translatable/fields {:one "eleven"
+                                     :two "twelve"}}
       :children []}
      {;; NOTE: :one is missing from this post's fields.
       :title nil
       :url "/en"
       :entity {:db/id 2
                :post/slug ""
-               :post/fields {;; Handle missing fields gracefully.
-                             :two "twenty-two"}}
+               :translatable/fields {;; Handle missing fields gracefully.
+                                     :two "twenty-two"}}
       :children []}]
     {:menus
      {:main-nav
@@ -248,10 +248,10 @@
        :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
-                 :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]}]
+                 :translatable/fields [{:db/id 11} {:db/id 12} {:db/id 13}]}]
                [{:db/id 2
                  :post/slug ""
-                 :post/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
+                 :translatable/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
      :navigation/i18n
      {:main-nav
       [[{:db/id 11 :field/key :one :field/content "\"eleven\""}]
@@ -263,41 +263,41 @@
       :url "/en/parent-page"
       :entity {:db/id 1
                :post/slug "parent-page"
-               :post/fields {:one "eleven"
-                             :two "twelve"}}
+               :translatable/fields {:one "eleven"
+                                     :two "twelve"}}
       :children [{:title "thirty-one"
                   :url "/en/parent-page/child-page"
                   :entity {:db/id 3
                            :post/slug "child-page"
-                           :post/fields {:one "thirty-one"
-                                         :two "thirty-two"}}
+                           :translatable/fields {:one "thirty-one"
+                                                 :two "thirty-two"}}
                   :children []}
                  {:title "forty-one"
                   :url "/en/parent-page/another-kid"
                   :entity {:db/id 4
                            :post/slug "another-kid"
-                           :post/fields {:one "forty-one"
-                                         :two "forty-two"}}
+                           :translatable/fields {:one "forty-one"
+                                                 :two "forty-two"}}
                   :children [{:title "fifty-one"
                               :url "/en/parent-page/another-kid/grandchild"
                               :entity {:db/id 5
                                        :post/slug "grandchild"
-                                       :post/fields {:one "fifty-one"
+                                       :translatable/fields {:one "fifty-one"
                                                      :two "fifty-two"}}
                               :children []}
                              {:title "sixty-one"
                               :url "/en/parent-page/another-kid/another-grandchild"
                               :entity {:db/id 6
                                        :post/slug "another-grandchild"
-                                       :post/fields {:one "sixty-one"
+                                       :translatable/fields {:one "sixty-one"
                                                      :two "sixty-two"}}
                               :children []}]}]}
      {:title "twenty-one"
       :url "/en"
       :entity {:db/id 2
                :post/slug ""
-               :post/fields {:one "twenty-one"
-                             :two "twenty-two"}}
+               :translatable/fields {:one "twenty-one"
+                                     :two "twenty-two"}}
       :children []}]
     {:menus
      {:main-nav
@@ -307,24 +307,24 @@
        :title-field :one
        :items [[{:db/id 1
                  :post/slug "parent-page"
-                 :post/fields [{:db/id 11} {:db/id 12} {:db/id 13}]
+                 :translatable/fields [{:db/id 11} {:db/id 12} {:db/id 13}]
                  :post/children
                  [{:db/id 3
                    :post/slug "child-page"
-                   :post/fields [{:db/id 31} {:db/id 32} {:db/id 33}]}
+                   :translatable/fields [{:db/id 31} {:db/id 32} {:db/id 33}]}
                   {:db/id 4
                    :post/slug "another-kid"
-                   :post/fields [{:db/id 41} {:db/id 42} {:db/id 43}]
+                   :translatable/fields [{:db/id 41} {:db/id 42} {:db/id 43}]
                    :post/children
                    [{:db/id 5
                      :post/slug "grandchild"
-                     :post/fields [{:db/id 51} {:db/id 52} {:db/id 53}]}
+                     :translatable/fields [{:db/id 51} {:db/id 52} {:db/id 53}]}
                     {:db/id 6
                      :post/slug "another-grandchild"
-                     :post/fields [{:db/id 61} {:db/id 62} {:db/id 63}]}]}]}]
+                     :translatable/fields [{:db/id 61} {:db/id 62} {:db/id 63}]}]}]}]
                [{:db/id 2
                  :post/slug ""
-                 :post/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
+                 :translatable/fields [{:db/id 21} {:db/id 22} {:db/id 23}]}]]}}
      :navigation/i18n
      {:main-nav
       [[{:db/id 11 :field/key :one :field/content "\"eleven\""}]

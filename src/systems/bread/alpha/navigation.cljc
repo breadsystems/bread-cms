@@ -20,13 +20,13 @@
          (let [post
                (-> (dissoc post :post/children)
                    (update
-                     :post/fields
+                     :translatable/fields
                      (fn [fields]
                        (into {} (map (fn [{id :db/id}]
                                        (let [[k v] (get field-kvs id)]
                                          (when v [k (edn/read-string v)])))
                                      fields)))))
-               title (title-field (:post/fields post))
+               title (title-field (:translatable/fields post))
                ancestry (conj ancestry (:post/slug post))
                context (assoc context :ancestry ancestry)
                children (walk-post-menu-items children context)
@@ -49,13 +49,13 @@
   (walk-post-menu-items
     [{:db/id 123
       :post/slug "mom"
-      :post/fields [{:db/id 1} {:db/id 2} {:db/id 3}]}
+      :translatable/fields [{:db/id 1} {:db/id 2} {:db/id 3}]}
      {:db/id 456
       :post/slug "dad"
-      :post/fields [{:db/id 4} {:db/id 5} {:db/id 6}]
+      :translatable/fields [{:db/id 4} {:db/id 5} {:db/id 6}]
       :post/children [{:db/id 789
                        :post/slug "child"
-                       :post/fields [{:db/id 7}]}]}]
+                       :translatable/fields [{:db/id 7}]}]}]
     {:field-kvs
      (index-entity-fields
        [[{:db/id 1 :field/key :a :field/content (prn-str "A")}]
@@ -99,7 +99,7 @@
         route-name :route/name
         post-type :post/type
         status :post/status
-        field-keys :post/fields
+        field-keys :translatable/fields
         :or {status :post.status/published
              field-keys :title}}]
   (let [router (route/router req)
@@ -132,7 +132,7 @@
                    :in [$ ?type [?status ...] [?field-key ...] ?lang]
                    :where [[?e :post/type ?type]
                            [?e :post/status ?status]
-                           [?e :post/fields ?f]
+                           [?e :translatable/fields ?f]
                            [?f :field/key ?field-key]
                            [?f :field/lang ?lang]]}
                  post-type
