@@ -396,7 +396,8 @@
   ([]
    (plugin {}))
   ([{:keys [hooks menus menus-key] :as opts}]
-   (if opts
+   (if-not opts
+     {:hooks {}}
      {:config
       {:navigation/menus-key (or menus-key :menus)}
       :hooks
@@ -406,8 +407,7 @@
                 :action/description
                 "Add a query to fetch the menu with the given opts"
                 :opts menu-opts})
-             menus)}}
-     {:hooks {}})
+             menus)}})
    #_
    (if (and opts (seq opts))
      (let [dispatch-hooks
