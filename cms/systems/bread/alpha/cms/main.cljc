@@ -305,11 +305,16 @@
   (defc Article
     [data]
     {:routes
-     {::article {:path ["/article" :post/slug]
-                 :dispatcher/type :dispatcher.type/page
-                 :x :y}
-      ::articles {:path ["/articles"]
-                  :dispatcher :dispatcher.type/page}}
+     [{:name ::article
+       :path ["/article" :post/slug]
+       :dispatcher/type :dispatcher.type/page
+       :x :y}
+      {:name ::articles
+       :path ["/articles"]
+       :dispatcher :dispatcher.type/page}
+      {:name ::wildcard
+       :path ["/x" :*post/slug]
+       :dispatcher/type :wildcard}]
      ;:route/children [Something]
      :query '[{:translatable/fields [*]} :post/authors :post/slug]}
     [:div data])
@@ -318,8 +323,10 @@
     (reitit/router
       ["/"
        [(segment :field/lang)
-        (routes Article)]]))
+        (c/routes Article)]]))
   (reitit/match-by-path $router "/en/article/hello")
+  (reitit/match-by-path $router "/en/articles")
+  (reitit/match-by-path $router "/en/x/a/b/c")
 
 
   ;; SITEMAP DESIGN
