@@ -322,11 +322,18 @@
   (def $router
     (reitit/router
       ["/"
-       [(segment :field/lang)
+       [(c/route-segment :field/lang)
         (c/routes Article)]]))
   (reitit/match-by-path $router "/en/article/hello")
   (reitit/match-by-path $router "/en/articles")
   (reitit/match-by-path $router "/en/x/a/b/c")
+
+  (reitit/match->path
+    (reitit/match-by-path $router "/en/x/a/b/c"))
+  (reitit/match->path
+    (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
+  (bread/routes $router)
+  (bread/path $router ::article {:field/lang :en :post/slug "x"})
 
 
   ;; SITEMAP DESIGN

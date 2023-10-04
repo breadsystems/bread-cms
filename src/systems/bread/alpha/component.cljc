@@ -84,7 +84,7 @@
       :else
       content)))
 
-(defn- route-segment [x]
+(defn route-segment [x]
   (if (string? x) x (format "{%s/%s}" (namespace x) (name x))))
 
 (defn- build-route-pattern [segments]
