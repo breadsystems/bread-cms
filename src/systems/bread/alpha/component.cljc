@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.component
   (:require
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]))
 
 (defn- macro-symbolize [tree]
@@ -82,6 +83,31 @@
         (recur (component-parent component) data (component data)))
       :else
       content)))
+
+(defn route-segment [x]
+  (if (string? x) x (format "{%s/%s}" (namespace x) (name x))))
+
+(defn- build-route-pattern [segments]
+  (string/join "/" (map route-segment segments)))
+
+(defn define-route
+  "Takes a map containing *at least* the following keys:
+  - :path
+  - :dispatcher/type
+  Returns a single route spec as a vector. Preserves all other keys in the
+  returned route spec data."
+  [{path :path dispatcher :dispatcher/type :as route-data}]
+  [(build-route-pattern path)
+   (-> route-data
+       (dissoc :path :dispatcher)
+       (assoc :dispatcher/type dispatcher))])
+
+(defn routes
+  "Takes a component (with metadata) and returns a vector of route definitions,
+  themselves vectors."
+  [cpt]
+  (map #(define-route (assoc % :dispatcher/component cpt))
+       (:routes (meta cpt))))
 
 (defmethod bread/action ::not-found
   [_ {:keys [component]} _]

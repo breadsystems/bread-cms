@@ -97,6 +97,60 @@
   (is (= [:level/next {:level/below [:db/id {:my/post [:db/id :post/slug]}]}]
          (component/query next-level))))
 
+(deftest test-define-route
+  (is (= ["/article/{post/slug}"
+          {:dispatcher/type :article-single
+           :extra :data}]
+         (component/define-route {:dispatcher/type :article-single
+                                  :path ["/article" :post/slug]
+                                  :extra :data})))
+  (is (= ["/articles"
+          {:dispatcher/type :article-listing}]
+         (component/define-route {:dispatcher/type :article-listing
+                                  :path ["/articles"]}))))
+
+(defc Article
+  [_]
+  {:routes
+   [{:name ::article
+     :dispatcher/type :article-single
+     :path ["/article" :post/slug]
+     :extra :data}
+    {:name ::wildcard
+     :dispatcher/type :wildcard
+     :path ["/x" :*post/slug]}
+    {:name ::articles
+     :dispatcher/type :article-listing
+     :path ["/articles"]}]})
+
+(deftest test-routes
+  (are
+    [expected cpt]
+    (= expected (component/routes cpt))
+
+    [] nil
+    [] {}
+    [] (with-meta {} {:routes nil})
+    [] (with-meta {} {:routes []})
+
+    [["/article/{post/slug}"
+      {:name ::article
+       :dispatcher/type :article-single
+       :dispatcher/component Article
+       :extra :data}]
+     ["/x/{*post/slug}"
+      {:name ::wildcard
+       :dispatcher/type :wildcard
+       :dispatcher/component Article}]
+     ["/articles"
+      {:name ::articles
+       :dispatcher/type :article-listing
+       :dispatcher/component Article}]]
+    Article
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))

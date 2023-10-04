@@ -33,7 +33,7 @@
           params (into {} (map (juxt key (comp dash-encode val)) params))]
       (some-> router
               (reitit/match-by-name route-name params)
-              :path
+              reitit/match->path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
   (bread/match [router req]
@@ -46,10 +46,4 @@
 (extend-protocol RoutesCollection
   reitit.core.Router
   (bread/routes [router]
-    (map
-      #(with-meta % {`bread/watch-config
-                     (fn [[_ {config :bread/watch-static}]]
-                       (when config
-                         (let [{:keys [ext] :or {ext ".md"}} config]
-                           (assoc config :ext ext))))})
-      (reitit/compiled-routes router))))
+    (reitit/compiled-routes router)))

@@ -300,6 +300,42 @@
     "(ns my-theme)
     (my-page {})")
 
+  (require '[systems.bread.alpha.component :as c :refer [defc]])
+
+  (defc Article
+    [data]
+    {:routes
+     [{:name ::article
+       :path ["/article" :post/slug]
+       :dispatcher/type :dispatcher.type/page
+       :x :y}
+      {:name ::articles
+       :path ["/articles"]
+       :dispatcher :dispatcher.type/page}
+      {:name ::wildcard
+       :path ["/x" :*post/slug]
+       :dispatcher/type :wildcard}]
+     ;:route/children [Something]
+     :query '[{:translatable/fields [*]} :post/authors :post/slug]}
+    [:div data])
+
+  (def $router
+    (reitit/router
+      ["/"
+       [(c/route-segment :field/lang)
+        (c/routes Article)]]))
+  (reitit/match-by-path $router "/en/article/hello")
+  (reitit/match-by-path $router "/en/articles")
+  (reitit/match-by-path $router "/en/x/a/b/c")
+
+  (reitit/match->path
+    (reitit/match-by-path $router "/en/x/a/b/c"))
+  (reitit/match->path
+    (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
+  (bread/routes $router)
+  (bread/path $router ::article {:field/lang :en :post/slug "x"})
+
+
   ;; SITEMAP DESIGN
 
   ;; OK, algorithm time.

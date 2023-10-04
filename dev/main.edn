@@ -48,6 +48,7 @@
    ["/assets/*"
     #invoke [reitit.ring/create-resource-handler
              {:param :filename}]]
+   ;; TODO :field/lang
    ["/:lang"
     [""
      {:name :home
