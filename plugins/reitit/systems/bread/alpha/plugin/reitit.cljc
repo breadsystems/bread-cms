@@ -33,7 +33,7 @@
           params (into {} (map (juxt key (comp dash-encode val)) params))]
       (some-> router
               (reitit/match-by-name route-name params)
-              :path
+              reitit/match->path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
   (bread/match [router req]
