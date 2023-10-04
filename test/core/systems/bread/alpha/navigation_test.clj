@@ -36,7 +36,7 @@
       ;; Support disabling navigation completely.
       [] false
       [] nil
-      [] {:global-menus false}
+      [] {}
 
       [{:query/name ::bread/value
         :query/key [:menus :main-nav]
@@ -79,8 +79,7 @@
        [{:menu/key :main-nav
          :menu/type :menu.type/posts
          :post/type :post.type/page
-         :route/name :bread.route/page}]
-       :global-menus false}
+         :route/name :bread.route/page}]}
 
       ;; Support custom post status, post type, and field keys.
       [{:query/name ::bread/value
@@ -125,7 +124,6 @@
          :post/status [:post.status/x :post.status/y]
          :post/fields [:custom :other]
          :route/name :bread.route/page}]
-       :global-menus false
        :menus-key :custom-menu-key}
 
       ;; Page type composes with status and other options.
@@ -170,7 +168,6 @@
          :post/status [:post.status/x :post.status/y]
          :post/fields [:custom :other]
          :route/name :bread.route/page}]
-       :global-menus false
        :menus-key :custom-menu-key})))
 
 (deftest test-merge-post-menu-items
