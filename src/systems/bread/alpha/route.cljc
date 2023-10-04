@@ -82,6 +82,4 @@
     ::params
     [{:action/name ::params :router router}]
     ::bread/route
-    [{:action/name ::dispatch :router router}]
-    ::router
-    [{:action/name ::bread/value :action/value router}]}})
+    [{:action/name ::dispatch :router router}]}})
