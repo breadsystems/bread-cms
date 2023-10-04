@@ -6,9 +6,9 @@
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.datastore :as store]
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.test-helpers :refer [datastore->plugin
+    [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded
                                               map->router]]))
 
@@ -19,7 +19,7 @@
                  (bread/params [_ _]))]
     (are
       [data navigation-config]
-      (= data (-> (plugins->loaded [(datastore->plugin db)
+      (= data (-> (plugins->loaded [(db->plugin db)
                                     (i18n/plugin {:query-strings? false
                                                   :query-lang? false})
                                     (navigation/plugin navigation-config)
@@ -42,7 +42,7 @@
         :query/key [:menus :main-nav]
         :query/value {:menu/type :menu.type/posts
                       :post/type :post.type/page}}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:menus :main-nav  :items]
         :query/db db
         :query/args
@@ -55,7 +55,7 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          :post.type/page
          #{:post.status/published}]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:navigation/i18n :main-nav]
         :query/db db
         :query/args
@@ -87,7 +87,7 @@
         :query/key [:custom-menu-key :main-nav]
         :query/value {:menu/type :menu.type/posts
                       :post/type :post.type/article}}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:custom-menu-key :main-nav :items]
         :query/db db
         :query/args
@@ -98,7 +98,7 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          :post.type/article
          #{:post.status/x :post.status/y}]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:navigation/i18n :main-nav]
         :query/db db
         :query/args
@@ -133,7 +133,7 @@
         :query/key [:custom-menu-key :main-nav]
         :query/value {:menu/type :menu.type/posts
                       :post/type :post.type/page}}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:custom-menu-key :main-nav :items]
         :query/db db
         :query/args
@@ -144,7 +144,7 @@
                    (not-join [?e] [?parent :post/children ?e])]}
          :post.type/page
          #{:post.status/x :post.status/y}]}
-       {:query/name ::store/query
+       {:query/name ::db/query
         :query/key [:navigation/i18n :main-nav]
         :query/db db
         :query/args

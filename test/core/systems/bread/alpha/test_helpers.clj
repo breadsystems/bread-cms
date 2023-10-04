@@ -86,7 +86,7 @@
     (bread/params [_ match]
       (:route/params match))
     (bread/dispatcher [_ match]
-      (:bread/dispatcher match))))
+      match)))
 
 (defn map->route-plugin [routes]
   "Takes a map m like:

@@ -337,7 +337,7 @@
         :or {status :post.status/published
              field-keys :title}}]
   (let [router (route/router req)
-        db (store/datastore req)
+        db (db/database req)
         menus-key (bread/config req :navigation/menus-key)
         statuses (if (coll? status) (set status) #{status})
         field-keys (if (coll? field-keys) (set field-keys) #{field-keys})]
@@ -346,7 +346,7 @@
                 :query/key [menus-key k]
                 :query/value {:menu/type :menu.type/posts
                               :post/type post-type}}
-               {:query/name ::store/query
+               {:query/name ::db/query
                 :query/db db
                 :query/key [menus-key k :items]
                 :query/args
@@ -358,7 +358,7 @@
                            (not-join [?e] [?parent :post/children ?e])]}
                  post-type
                  statuses]}
-               {:query/name ::store/query
+               {:query/name ::db/query
                 :query/db db
                 :query/key [:navigation/i18n k]
                 :query/args
