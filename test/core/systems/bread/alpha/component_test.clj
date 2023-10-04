@@ -130,6 +130,8 @@
 
     [] nil
     [] {}
+    [] (with-meta {} {:routes nil})
+    [] (with-meta {} {:routes []})
 
     [["/article/{post/slug}"
       {:name ::article
