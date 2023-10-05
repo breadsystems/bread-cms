@@ -40,7 +40,7 @@
 
       [{:query/name ::bread/value
         :query/key [:menus :main-nav]
-        :query/value {:menu/type :menu.type/posts
+        :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/page}}
        {:query/name ::db/query
         :query/key [:menus :main-nav  :items]
@@ -77,14 +77,14 @@
         :lang :en}]
       {:menus
        [{:menu/key :main-nav
-         :menu/type :menu.type/posts
+         :menu/type ::navigation/posts
          :post/type :post.type/page
          :route/name :bread.route/page}]}
 
       ;; Support custom post status, post type, and field keys.
       [{:query/name ::bread/value
         :query/key [:custom-menu-key :main-nav]
-        :query/value {:menu/type :menu.type/posts
+        :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/article}}
        {:query/name ::db/query
         :query/key [:custom-menu-key :main-nav :items]
@@ -119,7 +119,7 @@
         :lang :en}]
       {:menus
        [{:menu/key :main-nav
-         :menu/type :menu.type/posts
+         :menu/type ::navigation/posts
          :post/type :post.type/article
          :post/status [:post.status/x :post.status/y]
          :translatable/fields [:custom :other]
@@ -129,7 +129,7 @@
       ;; Page type composes with status and other options.
       [{:query/name ::bread/value
         :query/key [:custom-menu-key :main-nav]
-        :query/value {:menu/type :menu.type/posts
+        :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/page}}
        {:query/name ::db/query
         :query/key [:custom-menu-key :main-nav :items]
@@ -164,7 +164,7 @@
         :lang :en}]
       {:menus
        [{:menu/key :main-nav
-         :menu/type :menu.type/pages
+         :menu/type ::navigation/pages
          :post/status [:post.status/x :post.status/y]
          :translatable/fields [:custom :other]
          :route/name :bread.route/page}]
@@ -210,7 +210,7 @@
       :children []}]
     {:menus
      {:main-nav
-      {:menu/type :menu.type/posts
+      {:menu/type ::navigation/posts
        :post/type :post.type/page
        :route/name :bread.route/page
        :items [[{:db/id 1
@@ -242,7 +242,7 @@
       :children []}]
     {:menus
      {:main-nav
-      {:menu/type :menu.type/posts
+      {:menu/type ::navigation/posts
        :post/type :post.type/page
        :route/name :bread.route/page
        :title-field :one
@@ -301,7 +301,7 @@
       :children []}]
     {:menus
      {:main-nav
-      {:menu/type :menu.type/posts
+      {:menu/type ::navigation/posts
        :post/type :post.type/page
        :route/name :bread.route/page
        :title-field :one

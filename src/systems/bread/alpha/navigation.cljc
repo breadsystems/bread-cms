@@ -89,11 +89,11 @@
 (defmulti add-menu-query (fn [_req opts]
                            (:menu/type opts)))
 
-(defmethod add-menu-query :menu.type/location
+(defmethod add-menu-query ::location
   add-menu-query?type=location
   [req {k :menu/key}])
 
-(defmethod add-menu-query :menu.type/posts
+(defmethod add-menu-query ::posts
   add-menu-query?type=posts
   [req {k :menu/key
         route-name :route/name
@@ -110,7 +110,7 @@
     (query/add req
                {:query/name ::bread/value
                 :query/key [menus-key k]
-                :query/value {:menu/type :menu.type/posts
+                :query/value {:menu/type ::posts
                               :post/type post-type}}
                {:query/name ::db/query
                 :query/db db
@@ -145,12 +145,12 @@
                 :router router
                 :lang (i18n/lang req)})))
 
-(defmethod add-menu-query :menu.type/pages
+(defmethod add-menu-query ::pages
   add-menu-query?type=pages
   [req opts]
   "Convenience posts menu type specifically for posts of type page."
   (add-menu-query req (assoc opts
-                             :menu/type :menu.type/posts
+                             :menu/type ::posts
                              :post/type :post.type/page)))
 
 (defmethod bread/action ::add-menu-query
