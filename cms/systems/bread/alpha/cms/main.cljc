@@ -246,6 +246,8 @@
   (as-> (->app  $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
+    #_
+    (update $ ::bread/queries butlast)
     (bread/hook $ ::bread/expand)
     (::bread/data $))
   (as-> (->app $req) $
