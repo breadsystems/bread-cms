@@ -95,11 +95,11 @@
   (let [db (db/database req)
         menus-key (bread/config req :navigation/menus-key)
         value-query {:query/name ::bread/value
-                     :query/key [menus-key k]
+                     :query/key [k]
                      :query/value {:menu/type ::location}}
         menu-query
         {:query/name ::db/query
-         :query/key [menus-key k]
+         :query/key [k]
          :query/db db
          :query/args
          ['{:find [(pull ?e [:db/id
@@ -135,12 +135,12 @@
         field-keys (if (coll? field-keys) (set field-keys) #{field-keys})]
     (query/add req
                {:query/name ::bread/value
-                :query/key [menus-key k]
+                :query/key [k]
                 :query/value {:menu/type ::posts
                               :post/type post-type}}
                {:query/name ::db/query
                 :query/db db
-                :query/key [menus-key k :items]
+                :query/key [k :items]
                 :query/args
                 ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
                    :in [$ ?type [?status ...]]
@@ -166,7 +166,7 @@
                  field-keys
                  (i18n/lang req)]}
                {:query/name ::merge-post-menu-items
-                :query/key [menus-key k :items]
+                :query/key [k :items]
                 :route/name route-name
                 :router router
                 :lang (i18n/lang req)})))

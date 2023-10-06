@@ -4,7 +4,7 @@
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.component :refer [defc]]))
 
-(defc layout [{:keys [lang content]}]
+(defc layout [{:keys [lang content main-nav] nav :navigation/i18n}]
   {}
   [:html {:lang lang}
    [:head
@@ -12,6 +12,7 @@
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
+    [:pre (pr-str main-nav)]
     content]])
 
 (defc not-found
@@ -28,10 +29,11 @@
             :post/slug
             :post/authors
             {:translatable/fields [*]}]}
+  {:content
    [:main {:role :main}
     [:h1 (:title (:translatable/fields post))]
     [:pre (pr-str post)]
-    [:pre (pr-str (user/can? user :edit-posts))]])
+    [:pre (pr-str (user/can? user :edit-posts))]]})
 
 (defc tag
   [{{fields :translatable/fields :as tag} :tag}]
