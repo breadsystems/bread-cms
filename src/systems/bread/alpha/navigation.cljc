@@ -91,7 +91,33 @@
 
 (defmethod add-menu-query ::location
   add-menu-query?type=location
-  [req {k :menu/key}])
+  [req {k :menu/key loc :menu}]
+  (let [db (db/database req)
+        menus-key (bread/config req :navigation/menus-key)
+        value-query {:query/name ::bread/value
+                     :query/key [menus-key k]
+                     :query/value {:menu/type ::location}}
+        menu-query
+        {:query/name ::db/query
+         :query/key [menus-key k]
+         :query/db db
+         :query/args
+         ['{:find [(pull ?e [:db/id
+                             :menu/key
+                             :menu/uuid
+                             :menu/locations
+                             {:menu/items [:db/id
+                                           :menu.item/order
+                                           {:menu.item/children [*]}
+                                           {:menu.item/entity [*]}
+                                           {:translatable/fields
+                                            [:field/key
+                                             :field/content]}]}])]
+            :in [$ ?loc]
+            :where [[?e :menu/locations ?loc]]}
+          :main-nav]}
+        inferred-queries (bread/hook req ::i18n/queries [menu-query])]
+    (apply query/add req value-query inferred-queries)))
 
 (defmethod add-menu-query ::posts
   add-menu-query?type=posts
