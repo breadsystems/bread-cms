@@ -38,6 +38,7 @@
       [] nil
       [] {}
 
+      ;; Basic post menu.
       [{:query/name ::bread/value
         :query/key [:menus :main-nav]
         :query/value {:menu/type ::navigation/posts
@@ -168,7 +169,45 @@
          :post/status [:post.status/x :post.status/y]
          :translatable/fields [:custom :other]
          :route/name :bread.route/page}]
-       :menus-key :custom-menu-key})))
+       :menus-key :custom-menu-key}
+
+      ;; Location menu.
+      [{:query/name ::bread/value
+        :query/key [:menus :main-nav]
+        :query/value {:menu/type ::navigation/location}}
+       {:query/name ::db/query
+        :query/key [:menus :main-nav]
+        :query/db db
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :menu/key
+                            :menu/uuid
+                            :menu/locations
+                            {:menu/items [:db/id
+                                          :menu.item/order
+                                          {:menu.item/children [*]}
+                                          {:menu.item/entity [*]}
+                                          :translatable/fields]}])]
+           :in [$ ?loc]
+           :where [[?e :menu/locations ?loc]]}
+         :main-nav]}
+       {:query/name ::db/query
+        :query/key [:menus :main-nav :menu/items :translatable/fields]
+        :query/db db
+        :query/args
+        ['{:find [(pull ?e [:db/id :field/key :field/content])]
+           :in [$ ?e1 ?lang]
+           :where [[?e :field/lang ?lang]
+                   [?e0 :translatable/fields ?e]
+                   [?e1 :menu/items ?e0]]}
+         [::bread/data :menus :main-nav :db/id]
+         :en]}]
+      {:menus
+       [{:menu/key :main-nav
+         :menu/type ::navigation/location}]}
+
+      ;;
+      )))
 
 (deftest test-merge-post-menu-items
   (are
