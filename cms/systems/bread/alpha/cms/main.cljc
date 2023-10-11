@@ -254,23 +254,230 @@
     (bread/hook $ ::bread/render)
     (select-keys $ [:status :body :headers]))
 
-  (bread/query {:query/name :systems.bread.alpha.database/query,
-                :query/key :post,
-                :query/db (db/database (->app $req)) ,
-                :query/args
-                ['{:find [(pull ?e (:db/id :post/slug :post/type :post/status)) .],
-                   :in [$ % ?slug_0 ?type ?status],
-                   :where
-                   [(post-ancestry ?e ?slug_0)
-                    [?e :post/type ?type]
-                    [?e :post/status ?status]]}
-                 '[[(post-ancestry ?child ?slug_0)
-                    [?child :post/slug ?slug_0]
-                    (not-join [?child] [?_ :post/children ?child])]]
-                 "child-page"
-                 :post.type/page
-                 :post.status/published]}
-               {})
+  (def $query
+    {:query/name :systems.bread.alpha.database/query,
+     :query/db (db/database (->app $req))
+     :query/key [:post :translatable/fields],
+     :query/args
+     ['{:find [(pull ?e [:db/id
+                         :post/slug
+                         :post/publish-date
+                         {:post/authors [:user/name]}
+                         {:translatable/fields [*]}])],
+        :in [$ ?slug ?status],
+        :where [[?e :post/slug ?slug]
+                [?e :post/status ?status]]}
+      "my-page"
+      :post.status/published]}
+    )
+  (def $dq (first (:query/args $query)))
+  (def $dqv '[:find (pull ?e [:db/id
+                              :post/slug
+                              :post/publish-date
+                              {:post/authors [:user/name]}
+                              {:translatable/fields [*]}])
+              :in $ ?slug
+              :where [?e :post/slug ?slug]])
+
+  (require '[meander.epsilon :as m])
+
+  (m/match 2
+    1 :one
+    3 :three)
+  (m/find 2
+    1 :one
+    3 :three)
+  (m/search 2
+    1 :one
+    3 :three)
+
+  (m/search 2
+    1 :one
+    2 :two
+    (m/pred #(= 2 %) ?m) {:is ?m}
+    3 :three)
+
+  (m/search (keys $dq)
+            (m/scan ?x) ?x)
+  ;; match keys
+  (m/search $dq
+            (m/scan [?k (m/pred any?)]) ?k)
+  (m/search $dq
+            (m/scan [:find ?find]
+                    [:in ?in]
+                    [:where ?where])
+            [?find ?in ?where])
+
+  ;; Sequences
+  (m/search [3 4 5 6 7 8]
+            [3 4 . !xs !ys ...]
+            [!xs !ys])
+  (m/search [1 2 1 3 1 5]
+            [_ ... 1 ?x] ?x)
+  ;; these are equivalent:
+  (m/search [1 2 1 3 1 5]
+            [_ ... 1 ?x . _ ...] ?x)
+  (m/search [1 2 1 3 1 5]
+            (m/scan 1 ?x) ?x)
+
+  (m/search [1 2 3 1 2 4]
+            (m/scan 1 2 ?x) ?x)
+
+  (m/search '(pull ?e [:db/id])
+            (m/scan 'pull _ ?x) ?x)
+  (m/search {:find ['(pull ?e [:db/id])]}
+            {:find [(m/scan 'pull _ ?pull)]} ?pull)
+  (m/search {:find ['(pull ?e [:db/id * {:translatable/fields [*]}])]}
+            {:find [(m/scan 'pull _ ?pull)]} ?pull)
+
+  ;; Subtree
+  (m/search (:find $dq)
+            [(m/and (m/pred list? ?list)
+                    (m/pred #(= 'pull (first %)) ?list))]
+            (last ?list))
+
+  (m/search [[1 2] [3 4] [1 5]]
+            (m/$ (m/scan 1 ?x)) ?x)
+  (m/search [[{:a :b} {:c :d}] [{:e :f}] [{:a :g}]]
+            (m/$ (m/scan [:a ?x])) ?x)
+
+  (def pages-with-fields
+    (q '{:find [(pull ?e [:db/id *])
+                (pull ?f [:db/id :field/key :field/content])]
+         :in [$ ?lang]
+         :where [[?e :post/type :post.type/page]
+                 [?e :translatable/fields ?f]
+                 [?f :field/lang ?lang]]}
+       :en))
+
+  (m/search pages-with-fields
+            (m/$ (m/scan {:db/id ?pid :translatable/fields [{:db/id !fid} ...]}
+                         {:field/key (m/some ?fk) :field/content (m/some ?fc)}))
+            {:post/id ?pid :field/key ?fk :field/content ?fc :fids !fid})
+
+  (def page-query
+    '{:find [(pull ?e [:db/id * {:translatable/fields [*]}])]
+      :in [$ ?type ?slug]
+      :where [[?e :post/type ?type]
+              [?e :post/slug ?slug]]})
+
+  (def page-query2
+    '{:find [(pull ?e [:db/id * {:translatable/fields [:field/key
+                                                       :field/content]}])]
+      :in [$ ?type ?slug]
+      :where [[?e :post/type ?type]
+              [?e :post/slug ?slug]]})
+
+  (def menu-query
+    '{:find [(pull ?e [:db/id
+                       {:menu/items
+                        [:db/id
+                         {:menu.item/entities
+                          [{:translatable/fields
+                            [:field/key
+                             :field/content]}]}]}])]
+      :in [$ ?mk]
+      :where [[?e :menu/key ?mk]]})
+
+  (def pull
+    [:db/id
+     {:menu/items
+      [:db/id
+       {:menu.item/entities
+        [{:translatable/fields
+          [:field/key
+           :field/content]}]}]}])
+  (m/search pull
+            (m/$ (m/scan (m/pred translatable-binding? ?binding)))
+            ?binding)
+  (m/search pull
+            (m/scan _ ..?n . (m/pred map? ?binding))
+            [?n (m/cata ?binding)]
+            (m/pred map? ?binding)
+            ?binding)
+  (m/search
+    [:a :b :c {:d [:e {:f :g}]} [{}]]
+
+    (m/any ?k) ?k
+
+    [(m/not (m/pred map?)) ..?n {?k ?v} & _]
+    [(concat [?n ?k] (m/cata (doto ?v prn))) ?v]
+
+    )
+  (m/search
+    [:e {:f :g}]
+
+    (m/any ?k) ?k
+
+    [(m/not (m/pred map?)) ..?n {?k ?v} & _]
+    [(concat [?n ?k] (m/cata (doto ?v prn))) ?v]
+
+    )
+
+  (m/search [:e {:f :g}]
+            [(m/not (m/pred map?)) ..?n {?k _} & _]
+            [?n ?k])
+
+  (m/defsyntax transb [pred x]
+    `())
+
+  (m/match page-query
+           {:find [!fs]
+            :in ?in
+            :where ?where}
+           !fs)
+  (m/match page-query
+           {:find [?find]}
+           ?find)
+
+  (defn translatable-binding? [x]
+    (when-let [field-attrs (:translatable/fields x)]
+      (or (some #{'* :field/content} field-attrs))))
+
+  (m/search page-query
+            {:find [(m/scan 'pull _
+                            (m/$ (m/scan (m/pred translatable-binding? ?xs))))]}
+            ?xs)
+  (m/search menu-query
+            {:find [(m/scan 'pull _
+                            (m/$ (m/scan (m/pred translatable-binding? ?xs))))]}
+            ?xs)
+
+  (def page
+    (q '{:find [(pull ?e [:db/id *])
+                (pull ?f [:db/id :field/key :field/content])]
+         :in [$ ?type ?slug ?lang]
+         :where [[?e :post/type ?type]
+                 [?e :post/slug ?slug]
+                 [?e :translatable/fields ?f]
+                 [?f :field/lang ?lang]]}
+       :post.type/page
+       ""
+       :en))
+  (reduce (fn [acc [post {:field/keys [key content]}]]
+            (assoc-in (or acc post) [:fields key] content))
+          nil page)
+
+  (m/match [[1 2] [1 2]]
+           (m/with [%x-y [?x ?y]]
+             [%x-y %x-y])
+           [?x ?y])
+
+  ;; memory variables accumulate into a vector
+  (m/match [1 2 3]
+           [!xs ...]
+           !xs)
+
+  (m/rewrite {:xs [1 2 3 4 5]
+              :ys [6 7 8 9 10]}
+             {:xs [!xs ...]
+              :ys [!ys ...]}
+             ;; this is like (interleave xs ys)
+             [!xs !ys ...])
+
+  ;; substitutions
+  (m/subst 1)
+  (m/subst (hey (there, boo)))
 
   (defn q [& args]
     (apply
