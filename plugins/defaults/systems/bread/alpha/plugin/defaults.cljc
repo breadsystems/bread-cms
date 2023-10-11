@@ -33,7 +33,10 @@
        :field/content (prn-str "The Title")}
       {:field/key :title
        :field/lang :fr
-       :field/content (prn-str "Le Titre")}}}
+       :field/content (prn-str "Le Titre")}
+      {:field/key :content
+       :field/lang :en
+       :field/content (pr-str [{:a "some content" :b "more content"}])}}}
    {:db/id "page.child"
     :post/type :post.type/page
     :post/slug "child-page"
@@ -44,7 +47,10 @@
        :field/content (prn-str "Child")}
       {:field/key :title
        :field/lang :fr
-       :field/content (prn-str "Enfant")}}}
+       :field/content (prn-str "Enfant")}
+      {:field/key :content
+       :field/lang :en
+       :field/content (pr-str [{:a "lorem ipsum" :b "dolor sit amet"}])}}}
    {:db/id "page.sister"
     :post/type :post.type/page
     :post/slug "sister-page"
