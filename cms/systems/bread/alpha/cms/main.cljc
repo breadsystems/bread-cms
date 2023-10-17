@@ -276,214 +276,206 @@
                               :post/publish-date
                               {:post/authors [:user/name]}
                               {:translatable/fields [*]}])
-              :in $ ?slug
-              :where [?e :post/slug ?slug]])
+              :in $ ?slug ?status
+              :where [?e :post/slug ?slug] [?e :post/status ?status]])
 
   (require '[meander.epsilon :as m])
 
-  (m/match 2
-    1 :one
-    3 :three)
-  (m/find 2
-    1 :one
-    3 :three)
-  (m/search 2
-    1 :one
-    3 :three)
+  (m/search
+    $dqv
 
-  (m/search 2
-    1 :one
-    2 :two
-    (m/pred #(= 2 %) ?m) {:is ?m}
-    3 :three)
+    [:find . !find ... :in . !in ... :where & ?where]
+    {:find !find :in !in :where ?where}
 
-  (m/search (keys $dq)
-            (m/scan ?x) ?x)
-  ;; match keys
-  (m/search $dq
-            (m/scan [?k (m/pred any?)]) ?k)
-  (m/search $dq
-            (m/scan [:find ?find]
-                    [:in ?in]
-                    [:where ?where])
-            [?find ?in ?where])
-
-  ;; Sequences
-  (m/search [3 4 5 6 7 8]
-            [3 4 . !xs !ys ...]
-            [!xs !ys])
-  (m/search [1 2 1 3 1 5]
-            [_ ... 1 ?x] ?x)
-  ;; these are equivalent:
-  (m/search [1 2 1 3 1 5]
-            [_ ... 1 ?x . _ ...] ?x)
-  (m/search [1 2 1 3 1 5]
-            (m/scan 1 ?x) ?x)
-
-  (m/search [1 2 3 1 2 4]
-            (m/scan 1 2 ?x) ?x)
-
-  (m/search '(pull ?e [:db/id])
-            (m/scan 'pull _ ?x) ?x)
-  (m/search {:find ['(pull ?e [:db/id])]}
-            {:find [(m/scan 'pull _ ?pull)]} ?pull)
-  (m/search {:find ['(pull ?e [:db/id * {:translatable/fields [*]}])]}
-            {:find [(m/scan 'pull _ ?pull)]} ?pull)
-
-  ;; Subtree
-  (m/search (:find $dq)
-            [(m/and (m/pred list? ?list)
-                    (m/pred #(= 'pull (first %)) ?list))]
-            (last ?list))
-
-  (m/search [[1 2] [3 4] [1 5]]
-            (m/$ (m/scan 1 ?x)) ?x)
-  (m/search [[{:a :b} {:c :d}] [{:e :f}] [{:a :g}]]
-            (m/$ (m/scan [:a ?x])) ?x)
-
-  (def pages-with-fields
-    (q '{:find [(pull ?e [:db/id *])
-                (pull ?f [:db/id :field/key :field/content])]
-         :in [$ ?lang]
-         :where [[?e :post/type :post.type/page]
-                 [?e :translatable/fields ?f]
-                 [?f :field/lang ?lang]]}
-       :en))
-
-  (m/search pages-with-fields
-            (m/$ (m/scan {:db/id ?pid :translatable/fields [{:db/id !fid} ...]}
-                         {:field/key (m/some ?fk) :field/content (m/some ?fc)}))
-            {:post/id ?pid :field/key ?fk :field/content ?fc :fids !fid})
-
-  (def page-query
-    '{:find [(pull ?e [:db/id * {:translatable/fields [*]}])]
-      :in [$ ?type ?slug]
-      :where [[?e :post/type ?type]
-              [?e :post/slug ?slug]]})
-
-  (def page-query2
-    '{:find [(pull ?e [:db/id * {:translatable/fields [:field/key
-                                                       :field/content]}])]
-      :in [$ ?type ?slug]
-      :where [[?e :post/type ?type]
-              [?e :post/slug ?slug]]})
-
-  (def menu-query
-    '{:find [(pull ?e [:db/id
-                       {:menu/items
-                        [:db/id
-                         {:menu.item/entities
-                          [{:translatable/fields
-                            [:field/key
-                             :field/content]}]}]}])]
-      :in [$ ?mk]
-      :where [[?e :menu/key ?mk]]})
+    (m/pred map? ?m) ?m)
 
   (def pull
     [:db/id
      {:menu/items
       [:db/id
-       {:menu.item/entities
+       {:menu.item/entity
         [{:translatable/fields
-          [:field/key
-           :field/content]}]}]}])
-  (m/search pull
-            (m/$ (m/scan (m/pred translatable-binding? ?binding)))
-            ?binding)
-  (m/search pull
-            (m/scan _ ..?n . (m/pred map? ?binding))
-            [?n (m/cata ?binding)]
-            (m/pred map? ?binding)
-            ?binding)
-  (m/search
-    [:a :b :c {:d [:e {:f :g}]} [{}]]
+          [:field/key :field/content]}]}]}])
 
-    (m/any ?k) ?k
+  (def query
+    {:find [(list 'pull '?e pull)]
+     :in '[$ ?menu-key]
+     :where '[[?e :menu/key ?menu-key]]})
 
-    [(m/not (m/pred map?)) ..?n {?k ?v} & _]
-    [(concat [?n ?k] (m/cata (doto ?v prn))) ?v]
+  (defn- binding-paths [pull search-key pred]
+    (m/search
+      pull
 
-    )
-  (m/search
-    [:e {:f :g}]
+      {~search-key (m/pred pred ?v)}
+      {search-key ?v}
 
-    (m/any ?k) ?k
+      [_ ..?n (m/cata ?map) & _]
+      [[?n] ?map]
 
-    [(m/not (m/pred map?)) ..?n {?k ?v} & _]
-    [(concat [?n ?k] (m/cata (doto ?v prn))) ?v]
+      [_ ..?n {(m/and (m/not ~search-key) ?k) (m/cata ?v)} & _]
+      (let [[path m] ?v]
+        [(vec (concat [?n ?k] path)) m])))
 
-    )
+  (def translatable-binding? #(some #{'* :field/content} %))
+  (def attr :translatable/fields)
 
-  (m/search [:e {:f :g}]
-            [(m/not (m/pred map?)) ..?n {?k _} & _]
-            [?n ?k])
+  (defn binding-clauses [query attr pred]
+    (map-indexed
+      (fn [idx clause]
+        (m/find clause
+                (m/scan 'pull ?sym ?pull)
+                {:index idx
+                 :sym ?sym
+                 :ops (binding-paths ?pull attr pred)}))
+      (:find query)))
 
-  (m/defsyntax transb [pred x]
-    `())
+  (def clauses
+    (binding-clauses query :translatable/fields translatable-binding?))
 
-  (m/match page-query
-           {:find [!fs]
-            :in ?in
-            :where ?where}
-           !fs)
-  (m/match page-query
-           {:find [?find]}
-           ?find)
+  (defn transform-expr [expr path k]
+    (let [pull (second (rest expr))]
+      (assoc-in pull path k)))
 
-  (defn translatable-binding? [x]
-    (when-let [field-attrs (:translatable/fields x)]
-      (or (some #{'* :field/content} field-attrs))))
+  (defn $construct [{:keys [origin relation target attr]}]
+    (case (count relation)
+      1 {:in ['?lang]
+         :where [[origin :menu/items '?mi]
+                 ['?mi attr target]
+                 [target :field/lang '?lang]]}
+      2 {:in ['?lang]
+         :where [[origin :menu/items '?mi]
+                 ['?mi :menu.item/entity '?mie]
+                 ['?mie attr target]
+                 [target :field/lang '?lang]]}))
 
-  (m/search page-query
-            {:find [(m/scan 'pull _
-                            (m/$ (m/scan (m/pred translatable-binding? ?xs))))]}
-            ?xs)
-  (m/search menu-query
-            {:find [(m/scan 'pull _
-                            (m/$ (m/scan (m/pred translatable-binding? ?xs))))]}
-            ?xs)
-
-  (def page
-    (q '{:find [(pull ?e [:db/id *])
-                (pull ?f [:db/id :field/key :field/content])]
-         :in [$ ?type ?slug ?lang]
-         :where [[?e :post/type ?type]
-                 [?e :post/slug ?slug]
-                 [?e :translatable/fields ?f]
-                 [?f :field/lang ?lang]]}
-       :post.type/page
-       ""
-       :en))
-  (reduce (fn [acc [post {:field/keys [key content]}]]
-            (assoc-in (or acc post) [:fields key] content))
-          nil page)
-
-  (m/match [[1 2] [1 2]]
-           (m/with [%x-y [?x ?y]]
-             [%x-y %x-y])
-           [?x ?y])
-
-  ;; memory variables accumulate into a vector
-  (m/match [1 2 3]
-           [!xs ...]
-           !xs)
-
-  (m/rewrite {:xs [1 2 3 4 5]
-              :ys [6 7 8 9 10]}
-             {:xs [!xs ...]
-              :ys [!ys ...]}
-             ;; this is like (interleave xs ys)
-             [!xs !ys ...])
-
-  ;; substitutions
-  (m/subst 1)
-  (m/subst (hey (there, boo)))
+  ;; TODO operate on the full data structure from ::bread/queries
+  (def $transq
+    (reduce (fn [query clause]
+              (if clause
+                (let [{:keys [index sym ops]} clause]
+                  (reduce
+                    (fn [query [path b]]
+                      (let [expr (get-in query [:find index])
+                            find-idx (count (:find query))
+                            pull (transform-expr expr path attr)
+                            pull-expr (list 'pull sym pull)
+                            binding-sym (gensym "?e")
+                            bspec (cons :db/id (get b attr))
+                            binding-expr (list 'pull binding-sym bspec)
+                            relation (filterv keyword? path)
+                            {:keys [in where]}
+                            ($construct {:origin sym
+                                         :target binding-sym
+                                         :relation relation
+                                         :attr attr})
+                            in (filter (complement (set (:in query))) in)
+                            binding-where
+                            (->> where
+                                 (filter (complement (set (:where query)))))]
+                        (-> query
+                            (assoc-in [:find index] pull-expr)
+                            (update :find conj binding-expr)
+                            (update :in concat in)
+                            (update :where concat binding-where)
+                            ;; this info will go in a separate query
+                            (update :CLAUSES assoc binding-sym
+                                    {:entity-index index
+                                     :relation-index find-idx
+                                     :relation (conj relation attr)}))))
+                          query
+                          ops))
+                query))
+            query
+            clauses))
 
   (defn q [& args]
     (apply
       db/q
       (db/database (->app $req))
       args))
+
+  (identity $transq)
+  (def $menu-ir (q $transq :main-nav :en))
+  (def $result-clauses (:CLAUSES $transq))
+  (def $rel (-> $result-clauses first val :relation))
+
+  (def $attrs
+    (let [attrs (dlog/attrs (db/database (->app $req)))]
+      (into {} (map (juxt :db/ident identity) attrs))))
+
+  (defn relation->spath [relation]
+    (vec (mapcat (fn [attr]
+                   ;; TODO Build this predicate at ::bread/init
+                   (let [attr-entity (get $attrs attr)]
+                     (if (= :db.cardinality/many (:db/cardinality attr-entity))
+                       [attr ALL]
+                       [attr])))
+                 relation)))
+
+  (defn reunite [entity relatives relation]
+    (let [lookup (comp relatives :db/id)
+          path (relation->spath relation)]
+      (s/transform path lookup entity)))
+
+  (require '[com.rpl.specter :as s :refer [MAP-VALS ALL]])
+
+  (s/transform [MAP-VALS MAP-VALS] inc {:a {:x 1} :b {:y 3 :z 5}})
+  (s/transform [ALL MAP-VALS] inc [{:x 1} {:y 3 :z 5}])
+
+  (defn reconstitute [results clauses]
+    (reduce
+      (fn [entity [_ {:keys [entity-index relation-index relation]}]]
+        (let [result (first results)
+              entity (or entity (get result entity-index))
+              relatives (into {} (map #(let [e (get % relation-index)]
+                                        [(:db/id e) e]) results))]
+          (reunite entity relatives relation)))
+      nil clauses))
+
+  (reconstitute $menu-ir $result-clauses)
+
+  (defn $i18n-compactor [fields]
+    (into {} (map (juxt :field/key :field/content))
+                  (filter identity fields)))
+
+  (defn compact [rows k v]
+    (into {} (map (juxt k v)) (filter identity rows)))
+
+  (defmethod bread/query ::compact
+    [{:keys [path compact-val compact-key] k :query/key} data]
+      (s/transform path #(compact % compact-val compact-key) (get data k)))
+
+  (defn $i18n-compact-path [relation]
+    (conj (relation->spath (butlast relation)) :translatable/fields))
+
+  (bread/query {:query/name ::compact
+                :query/key :menu
+                :compact-key :field/key
+                :compact-val :field/content
+                :path ($i18n-compact-path $rel)}
+               {:menu (reconstitute $menu-ir $result-clauses)})
+
+  (require '[systems.bread.alpha.util.datalog :as dlog])
+
+  (dlog/cardinality-many?
+    (db/database (->app $req))
+    :menu/items)
+
+
+
+  (reduce
+    (fn [posts {pid :db/id fid :field/id fk :field/key fc :field/content fids :fids}]
+      (-> posts
+          (update-in [pid :translatable/fields] merge {fk fc})
+          (update-in [pid :translatable/fields] vary-meta merge {fk fid})))
+    {}
+    page-ir)
+
+
+
+  (q '{:find [(pull ?mi [:db/id {:menu.item/entity [*]}])]
+       :in [$]
+       :where [[?mi :menu.item/entity ?mie]]})
 
   (def coby
     (q '{:find [(pull ?e [:db/id
