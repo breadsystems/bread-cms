@@ -438,22 +438,33 @@
     (into {} (map (juxt :field/key :field/content))
                   (filter identity fields)))
 
-  (defn compact [rows k v]
-    (into {} (map (juxt k v)) (filter identity rows)))
+  (defn compact [rows k v m]
+    (let [rows (filter identity rows)]
+      (with-meta
+        (into {} (map (juxt k v)) rows)
+        (merge (into {} (map (juxt k :db/id) rows)) m))))
 
   (defmethod bread/query ::compact
-    [{:keys [path compact-val compact-key] k :query/key} data]
-      (s/transform path #(compact % compact-val compact-key) (get data k)))
+    [{:keys [path compact-val compact-key relation] k :query/key} data]
+    (let [m {:relation relation}]
+      (s/transform path #(compact % compact-key compact-val m) (get data k))))
 
   (defn $i18n-compact-path [relation]
     (conj (relation->spath (butlast relation)) :translatable/fields))
 
-  (bread/query {:query/name ::compact
-                :query/key :menu
-                :compact-key :field/key
-                :compact-val :field/content
-                :path ($i18n-compact-path $rel)}
-               {:menu (reconstitute $menu-ir $result-clauses)})
+  (def $menu
+    (bread/query {:query/name ::compact
+                  :query/key :menu
+                  :compact-key :field/key
+                  :compact-val :field/content
+                  :relation $rel
+                  :path ($i18n-compact-path $rel)}
+                 {:menu (reconstitute $menu-ir $result-clauses)}))
+
+  (s/transform
+    [:menu/items ALL :menu.item/entity :translatable/fields]
+    meta
+    $menu)
 
   (require '[systems.bread.alpha.util.datalog :as dlog])
 
