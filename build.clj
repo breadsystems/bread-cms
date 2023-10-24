@@ -5,7 +5,6 @@
 
 (def PLUGIN-DIRS
   ["plugins/auth"
-   "plugins/bidi" ;; TODO fix reitit routes
    "plugins/datahike"
    "plugins/markdown"
    "plugins/reitit"
