@@ -11,7 +11,7 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [use-db]]
-    [systems.bread.alpha.cms.defaults :as defaults]))
+    [systems.bread.alpha.plugins.defaults :as defaults]))
 
 (def config {:db/type :datahike
              :store {:backend :mem

@@ -17,7 +17,7 @@
     ;; TODO load components dynamicaly using sci
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.cms.defaults :as defaults]
+    [systems.bread.alpha.plugins.defaults :as defaults]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
     [java.lang Throwable]

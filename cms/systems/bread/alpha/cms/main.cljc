@@ -16,7 +16,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.cms.defaults :as defaults]
+    [systems.bread.alpha.plugins.defaults :as defaults]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]

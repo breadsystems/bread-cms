@@ -5,7 +5,7 @@
     [clojure.test :refer [deftest are is testing]]
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.cms.defaults :as defaults]
+    [systems.bread.alpha.plugins.defaults :as defaults]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
