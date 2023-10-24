@@ -28,6 +28,10 @@
   {:core
    {:lib 'systems.bread/bread-core}
 
+   :cms
+   {:lib 'systems.bread/bread-cms
+    :aliases [:cms]}
+
    :datahike
    {:lib 'systems.bread/bread-plugin-datahike
     :aliases [:datahike]}
