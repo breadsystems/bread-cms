@@ -69,12 +69,7 @@
                   :version patch-version
                   :basis (b/create-basis {:project "deps.edn"
                                           :aliases aliases})
-                  :src-dirs ["src"]
-                  :pom-data
-                  [:licenses
-                   [:license
-                    [:name "Anti-Capitalist Software License v1.4"]
-                    [:url "https://anticapitalist.software/"]]]})
+                  :src-dirs ["src"]})
     (b/copy-dir {:src-dirs ["src"]
                  :target-dir class-dir})
     (println "Writing jar:" jar-file)
