@@ -63,7 +63,6 @@
 (defn jar [opts]
   (let [{:keys [aliases lib]} (get libs (:lib opts :core))
         jar-file (jar-path lib patch-version)]
-    (clean nil)
     (b/write-pom {:class-dir class-dir
                   :lib lib
                   :version patch-version
