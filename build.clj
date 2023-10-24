@@ -83,6 +83,14 @@
     (b/jar {:class-dir class-dir
             :jar-file jar-file})))
 
+(defn deploy [opts]
+  (let [{:keys [lib]} (get libs (:lib opts :core))
+        jar-file (jar-path lib patch-version)]
+    (println "Deploying jar:" jar-file)
+    (dd/deploy {:installer :remote
+                :artifact jar-file
+                :pom-file (b/pom-path {:lib lib :class-dir class-dir})})))
+
 (defn uber [_]
   (println "Cleaning target directory...")
   (clean nil)
@@ -93,7 +101,7 @@
                                :aliases [:cms]})]
     (println "Compiling namespaces...")
     (b/compile-clj {:basis basis
-                    :src-dirs (concat ["src" "cms"] PLUGIN-DIRS)
+                    :src-dirs (concat ["src" "cms" "resources"] PLUGIN-DIRS)
                     :class-dir class-dir
                     :ns-compile '[systems.bread.alpha.cms.main]})
     (println "Writing uberjar...")
@@ -102,11 +110,3 @@
              :basis basis
              :main 'systems.bread.alpha.cms.main}))
   (println "Uberjar written to" uber-file))
-
-(defn deploy [opts]
-  (let [{:keys [lib]} (get libs (:lib opts :core))
-        jar-file (jar-path lib patch-version)]
-    (println "Deploying jar:" jar-file)
-    (dd/deploy {:installer :remote
-                :artifact jar-file
-                :pom-file (b/pom-path {:lib lib :class-dir class-dir})})))
