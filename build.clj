@@ -26,15 +26,24 @@
 
 (def libs
   {:core
-   {:lib 'systems.bread/bread-core}
+   {:lib 'systems.bread/bread-core
+    :src-dirs ["src"]}
 
    :cms
    {:lib 'systems.bread/bread-cms
-    :aliases [:cms]}
+    :aliases [:cms]
+    :src-dirs ["cms"
+               "resources"
+               "plugins/auth"
+               "plugins/datahike"
+               "plugins/markdown"
+               "plugins/reitit"
+               "plugins/rum"]}
 
    :datahike
    {:lib 'systems.bread/bread-plugin-datahike
-    :aliases [:datahike]}
+    :aliases [:datahike]
+    :src-dirs ["plugins/datahike"]}
 
    :garden
    {:lib 'systems.bread/bread-plugin-garden
@@ -42,19 +51,23 @@
 
    :markdown
    {:lib 'systems.bread/bread-plugin-markdown
-    :aliases [:markdown]}
+    :aliases [:markdown]
+    :src-dirs ["plugins/markdown"]}
 
    :reitit
    {:lib 'systems.bread/bread-plugin-reitit
-    :aliases [:reitit]}
+    :aliases [:reitit]
+    :src-dirs ["plugins/reitit"]}
 
    :rum
    {:lib 'systems.bread/bread-plugin-rum
-    :aliases [:rum]}
+    :aliases [:rum]
+    :src-dirs ["plugins/rum"]}
 
    :selmer
    {:lib 'systems.bread/bread-plugin-selmer
-    :aliases [:selmer]}
+    :aliases [:selmer]
+    :src-dirs ["plugins/selmer"]}
 
    ;;
    })
@@ -65,15 +78,15 @@
 ;; TODO parameterize to build CMS & plugins.
 ;; This only builds core for now.
 (defn jar [opts]
-  (let [{:keys [aliases lib]} (get libs (:lib opts :core))
+  (let [{:keys [aliases lib src-dirs]} (get libs (:lib opts :core))
         jar-file (jar-path lib patch-version)]
     (b/write-pom {:class-dir class-dir
                   :lib lib
                   :version patch-version
                   :basis (b/create-basis {:project "deps.edn"
                                           :aliases aliases})
-                  :src-dirs ["src"]})
-    (b/copy-dir {:src-dirs ["src"]
+                  :src-dirs src-dirs})
+    (b/copy-dir {:src-dirs src-dirs
                  :target-dir class-dir})
     (println "Writing jar:" jar-file)
     (b/jar {:class-dir class-dir
