@@ -94,7 +94,4 @@
 
   :selmer
   {:extra-paths ["plugins/selmer"]
-   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}
-
- :mvn/repos
- {"jitpack" {:url "https://jitpack.io"}}}
+   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}}
