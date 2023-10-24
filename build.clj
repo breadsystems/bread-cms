@@ -6,6 +6,7 @@
 (def PLUGIN-DIRS
   ["plugins/auth"
    "plugins/datahike"
+   "plugins/defaults"
    "plugins/markdown"
    "plugins/reitit"
    "plugins/rum"])
