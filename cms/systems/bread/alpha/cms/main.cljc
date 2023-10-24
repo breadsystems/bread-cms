@@ -382,8 +382,8 @@
                                     {:entity-index index
                                      :relation-index find-idx
                                      :relation (conj relation attr)}))))
-                          query
-                          ops))
+                    query
+                    ops))
                 query))
             query
             clauses))
@@ -428,7 +428,7 @@
         (let [result (first results)
               entity (or entity (get result entity-index))
               relatives (into {} (map #(let [e (get % relation-index)]
-                                        [(:db/id e) e]) results))]
+                                         [(:db/id e) e]) results))]
           (reunite entity relatives relation)))
       nil clauses))
 
@@ -436,13 +436,16 @@
 
   (defn $i18n-compactor [fields]
     (into {} (map (juxt :field/key :field/content))
-                  (filter identity fields)))
+          (filter identity fields)))
 
   (defn compact [rows k v m]
     (let [rows (filter identity rows)]
       (with-meta
         (into {} (map (juxt k v)) rows)
         (merge (into {} (map (juxt k :db/id) rows)) m))))
+
+  (s/replace-in [ALL even?] (fn [x] [(* x x) [x]]) (range 10))
+  (->> (range 1 8) (mapcat #(repeat % %)))
 
   (defmethod bread/query ::compact
     [{:keys [path compact-val compact-key relation] k :query/key} data]
@@ -549,24 +552,98 @@
        :path ["/x" :*post/slug]
        :dispatcher/type :wildcard}]
      ;:route/children [Something]
-     :query '[{:translatable/fields [*]} :post/authors :post/slug]}
+     :query '[{:translatable/fields [:field/key :field/content]}
+              :post/authors :post/slug]}
     [:div data])
+
+  (.toString "abc")
+  (.toString :field/lang)
+
+  (with-meta "abc" {:a true})
+
+  (deftype RouteSegment [kw]
+    Object
+    (toString [this]
+      (format "{%s/%s}" (namespace kw) (name kw)))
+    clojure.lang.IMeta
+    (meta [this]
+      {:param kw}))
+
+  (meta (RouteSegment. :field/lang))
+  (str (RouteSegment. :field/lang))
+
+  (require '[reitit.trie :as trie])
+
+  (defn- parse-params [template]
+    (mapv keyword (loop [[c & cs] template
+                         param ""
+                         params []]
+                    (case c
+                      nil params
+                      \{ (recur cs "" params)
+                      \* (recur cs param params)
+                      \} (recur cs "" (conj params param))
+                      (recur cs (str param c) params)))))
 
   (def $router
     (reitit/router
       ["/"
        [(c/route-segment :field/lang)
         (c/routes Article)]]))
-  (reitit/match-by-path $router "/en/article/hello")
-  (reitit/match-by-path $router "/en/articles")
-  (reitit/match-by-path $router "/en/x/a/b/c")
+  (map #(reitit/match-by-path $router %) ["/en/article/hello"
+                                          "/en/articles"
+                                          "/en/x/a/b/c"])
 
   (reitit/match->path
     (reitit/match-by-path $router "/en/x/a/b/c"))
   (reitit/match->path
     (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
   (bread/routes $router)
-  (bread/path $router ::article {:field/lang :en :post/slug "x"})
+  (bread/path $router ::article {:field/lang :en :post/slug "a/b/c"})
+
+  (defn- expand-route [[template data]]
+    (let [cpt (:dispatcher/component data)]
+      [(parse-params template) (c/query cpt)]))
+  (map expand-route (bread/routes $router))
+
+  (defn- ref-attrs []
+    (q '{:find [?ident ?attr]
+         :where [[?ref :db/ident ?ident]
+                 [?ref :db/valueType :db.type/ref]
+                 [_ ?ident ?e]
+                 [?e ?attr]]}))
+  (defn- attr-neighbors [attr]
+    (q '{:find [?neighbor]
+         :in [$ ?attr]
+         :where [[?i :db/ident ?attr]
+                 [?e ?attr]
+                 [?e ?neighbor]
+                 [(not= ?attr ?neighbor)]]}
+       attr))
+
+  (attr-neighbors :post/type)
+
+  (q '{:find [?attr ?neighbor]
+       :where [[?i :db/ident ?attr]
+               [?j :db/ident ?neighbor]
+               [?e ?attr]
+               [?e ?neighbor]
+               [(!= ?attr ?neighbor)]
+               (not [?j :db/valueType :db.type/ref])
+               (not [?i :db/valueType :db.type/ref])]})
+
+  (defn- attr-edges [by-ref?]
+    (reduce
+      (fn [refs [ref-attr target]]
+        (let [[k v] (if by-ref? [ref-attr target] [target ref-attr])]
+          (if-let [targets (get refs k)]
+            (update refs k conj v)
+            (assoc refs k #{v}))))
+      {} (ref-attrs)))
+
+  (def $refs->attrs (attr-edges true))
+  (def $attrs->refs (attr-edges false))
+  (select-keys $attrs->refs [:post/slug :field/content :field/lang :translatable/fields :menu.item/entity])
 
 
   ;; SITEMAP DESIGN
