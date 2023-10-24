@@ -28,16 +28,10 @@
    {:lib 'systems.bread/bread-core
     :src-dirs ["src"]}
 
-   :cms
-   {:lib 'systems.bread/bread-cms
-    :aliases [:cms]
-    :src-dirs ["cms"
-               "resources"
-               "plugins/auth"
-               "plugins/datahike"
-               "plugins/markdown"
-               "plugins/reitit"
-               "plugins/rum"]}
+   :defaults
+   {:lib 'systems.bread/bread-plugin-defaults
+    :aliases [:defaults]
+    :src-dirs PLUGIN-DIRS}
 
    :datahike
    {:lib 'systems.bread/bread-plugin-datahike
@@ -74,8 +68,6 @@
 (defn- jar-path [lib version]
   (format "target/%s-%s.jar" (name lib) version))
 
-;; TODO parameterize to build CMS & plugins.
-;; This only builds core for now.
 (defn jar [opts]
   (let [{:keys [aliases lib src-dirs]} (get libs (:lib opts :core))
         jar-file (jar-path lib patch-version)]
