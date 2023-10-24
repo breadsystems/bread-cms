@@ -49,6 +49,7 @@
                  "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
                 buddy/buddy-hashers         {:mvn/version "2.0.167"}
+                clj-totp/clj-totp           {:mvn/version "0.1.0"}
                 fi.metosin/reitit           {:mvn/version "0.7.0-alpha6"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
@@ -56,8 +57,6 @@
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
                 juxt/dirwatch               {:mvn/version "0.2.5"}
                 markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
-                clj-totp/clj-totp           {:mvn/version "0.1.0"} ;; TODO replace with one-time?
-                one-time/one-time           {:mvn/version "0.8.0"}
                 org.babashka/sci            {:mvn/version "0.8.40"}
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
                 ring/ring                   {:mvn/version "1.9.5"}
