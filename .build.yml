@@ -1,0 +1,5 @@
+image: ubuntu/lts
+tasks:
+  - deploy: |
+    bin/ci
+    bin/deploy
