@@ -1,5 +1,6 @@
-image: ubuntu/lts
+image: nixos/latest
+packages:
+  - clojure
 tasks:
   - deploy: |
-    bin/ci
     bin/deploy
