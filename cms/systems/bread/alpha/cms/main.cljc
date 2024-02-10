@@ -297,7 +297,7 @@
 
     (m/pred map? ?m) ?m)
 
-  (def pull
+  (def $menu-pull
     [:db/id
      {:menu/items
       [:db/id
@@ -305,10 +305,30 @@
         [{:translatable/fields
           [:field/key :field/content]}]}]}])
 
-  (def query
-    {:find [(list 'pull '?e pull)]
+  (def $trans-query-orig
+    {:find [(list 'pull '?e $menu-pull)]
      :in '[$ ?menu-key]
      :where '[[?e :menu/key ?menu-key]]})
+  (def $trans-query-vec
+    [:find (list 'pull '?e $menu-pull)
+     :in '$ '?menu-key
+     :where '[?e :menu/key ?menu-key]])
+
+  (def $translatable-binding? #(some #{'* :field/content} %))
+  (def $trans-attr :translatable/fields)
+
+  (defn- normalize-datalog-query
+    "Normalize a datalog query to map form"
+    [query]
+    (if (map? query)
+      query
+      (first (m/search
+               query
+
+               [:find . !find ... :in . !in ... :where & ?where]
+               {:find !find :in !in :where ?where}))))
+
+  (normalize-datalog-query $trans-query-vec)
 
   (defn- binding-paths [pull search-key pred]
     (m/search
@@ -324,28 +344,38 @@
       (let [[path m] ?v]
         [(vec (concat [?n ?k] path)) m])))
 
-  (def translatable-binding? #(some #{'* :field/content} %))
-  (def trans-attr :translatable/fields)
-
-  (defn binding-clauses [query attr pred]
+  (defn binding-clauses
+    "Takes a query, a target attr, and a predicate. Returns a list of matching
+    clauses"
+    [query attr pred]
     (map-indexed
       (fn [idx clause]
         (m/find clause
                 (m/scan 'pull ?sym ?pull)
                 {:index idx
                  :sym ?sym
-                 :ops (binding-paths ?pull attr pred)}))
-      (:find query)))
+                 :ops (binding-paths ?pull attr pred)
+                 :clause clause}))
+      (:find (normalize-datalog-query query))))
 
-  (def clauses
-    (binding-clauses query :translatable/fields translatable-binding?))
+  (def $trans-clauses
+    (binding-clauses $trans-query-orig $trans-attr $translatable-binding?))
+  (def $trans-clauses-vec
+    (binding-clauses $trans-query-vec $trans-attr $translatable-binding?))
+  (= $trans-clauses $trans-clauses-vec)
 
   (defn transform-expr [expr path k]
     (let [pull (second (rest expr))]
       (assoc-in pull path k)))
 
+  (transform-expr
+    (list 'pull '?e $menu-pull)
+    [1 :menu/items 1 :menu.item/entity 0]
+    $trans-attr)
+
   ;; TODO make this generic...
   (defn $construct [{:keys [origin relation target attr]}]
+    (prn 'relation relation)
     (case (count relation)
       1 {:in ['?lang]
          :where [[origin :menu/items '?mi]
@@ -366,17 +396,17 @@
                     (fn [query [path b]]
                       (let [expr (get-in query [:find index])
                             find-idx (count (:find query))
-                            pull (transform-expr expr path trans-attr)
+                            pull (transform-expr expr path $trans-attr)
                             pull-expr (list 'pull sym pull)
                             binding-sym (gensym "?e")
-                            bspec (cons :db/id (get b trans-attr))
+                            bspec (cons :db/id (get b $trans-attr))
                             binding-expr (list 'pull binding-sym bspec)
                             relation (filterv keyword? path)
                             {:keys [in where]}
                             ($construct {:origin sym
                                          :target binding-sym
                                          :relation relation
-                                         :attr trans-attr})
+                                         :attr $trans-attr})
                             in (filter (complement (set (:in query))) in)
                             binding-where
                             (->> where
@@ -387,15 +417,57 @@
                             (update :in concat in)
                             (update :where concat binding-where)
                             ;; this info will go in a separate query
-                            (vary-meta assoc-in [:bindings binding-sym]
-                                       {:entity-index index
+                            (vary-meta update :bindings conj
+                                       {:sym binding-sym
+                                        :entity-index index
                                         :relation-index find-idx
-                                        :relation (conj relation trans-attr)}))))
+                                        :relation (conj relation $trans-attr)}))))
                     query
                     ops))
                 query))
-            query
-            clauses))
+            $trans-query-orig
+            $trans-clauses))
+
+  (defn $infer [query clauses]
+    (reduce (fn [query clause]
+              (if clause
+                (let [{:keys [index sym ops]} clause]
+                  (reduce
+                    (fn [query [path b]]
+                      (let [expr (get-in query [:find index])
+                            find-idx (count (:find query))
+                            pull (transform-expr expr path $trans-attr)
+                            pull-expr (list 'pull sym pull)
+                            binding-sym (gensym "?e")
+                            bspec (cons :db/id (get b $trans-attr))
+                            binding-expr (list 'pull binding-sym bspec)
+                            relation (filterv keyword? path)
+                            {:keys [in where]}
+                            ($construct {:origin sym
+                                         :target binding-sym
+                                         :relation relation
+                                         :attr $trans-attr})
+                            in (filter (complement (set (:in query))) in)
+                            binding-where
+                            (->> where
+                                 (filter (complement (set (:where query)))))]
+                        (-> query
+                            (assoc-in [:find index] pull-expr)
+                            (update :find conj binding-expr)
+                            (update :in concat in)
+                            (update :where concat binding-where)
+                            ;; this info will go in a separate query
+                            (vary-meta update :bindings conj
+                                       {:sym binding-sym
+                                        :entity-index index
+                                        :relation-index find-idx
+                                        :relation (conj relation $trans-attr)}))))
+                    query
+                    ops))
+                query))
+            query clauses))
+
+  (meta ($infer $trans-query-orig $trans-clauses))
 
   (defn q [& args]
     (apply
@@ -403,10 +475,10 @@
       (db/database (->app $req))
       args))
 
-  (identity $transq)
+  ((juxt identity meta) $transq)
   (def $menu-ir (q $transq :main-nav :en))
   (def $result-clauses (:bindings (meta $transq)))
-  (def $rel (-> $result-clauses first val :relation))
+  (def $rel (-> $result-clauses first :relation))
 
   (def $attrs
     (let [attrs (dlog/attrs (db/database (->app $req)))]
@@ -430,18 +502,17 @@
                  relation)))
 
   (defn reunite
-    "Tranform "
+    "Transforms entity such that each nested entity at relation is expanded by
+    its db/id into the corresponding entity within relatives."
     [attrs-map entity relatives relation]
     (let [lookup (comp relatives :db/id)
           path (relation->spath attrs-map relation)]
-      (prn 'reunite relatives entity)
-      (prn 'path path)
       (s/transform path lookup entity)))
 
-  (defn reconstitute [attrs-map results clauses]
+  (defn reconstitute
+    [attrs-map results clauses]
     (reduce
-      (fn [entity [_ {:keys [entity-index relation-index relation] :as e}]]
-        (prn 'ENTITY e)
+      (fn [entity {:keys [entity-index relation-index relation] :as _clause}]
         (let [result (first results)
               entity (or entity (get result entity-index))
               relatives (into {} (map #(let [e (get % relation-index)]
