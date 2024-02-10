@@ -411,7 +411,7 @@
     (let [attrs (dlog/attrs (db/database (->app $req)))]
       (into {} (map (juxt :db/ident identity) attrs))))
 
-  (defn relation->spath [relation]
+  (defn $relation->spath [relation]
     (vec (mapcat (fn [attr]
                    ;; TODO Build this predicate at ::bread/init
                    (let [attr-entity (get $attrs attr)]
@@ -420,27 +420,22 @@
                        [attr])))
                  relation)))
 
-  (defn reunite [entity relatives relation]
+  (defn $reunite [entity relatives relation]
     (let [lookup (comp relatives :db/id)
-          path (relation->spath relation)]
+          path ($relation->spath relation)]
       (s/transform path lookup entity)))
 
-  (require '[com.rpl.specter :as s :refer [MAP-VALS ALL]])
-
-  (s/transform [MAP-VALS MAP-VALS] inc {:a {:x 1} :b {:y 3 :z 5}})
-  (s/transform [ALL MAP-VALS] inc [{:x 1} {:y 3 :z 5}])
-
-  (defn reconstitute [results clauses]
+  (defn $reconstitute [results clauses]
     (reduce
       (fn [entity [_ {:keys [entity-index relation-index relation]}]]
         (let [result (first results)
               entity (or entity (get result entity-index))
               relatives (into {} (map #(let [e (get % relation-index)]
                                          [(:db/id e) e]) results))]
-          (reunite entity relatives relation)))
+          ($reunite entity relatives relation)))
       nil clauses))
 
-  (reconstitute $menu-ir $result-clauses)
+  ($reconstitute $menu-ir $result-clauses)
 
   (defn $i18n-compactor [fields]
     (into {} (map (juxt :field/key :field/content))
@@ -452,16 +447,13 @@
         (into {} (map (juxt k v)) rows)
         (merge (into {} (map (juxt k :db/id) rows)) m))))
 
-  (s/replace-in [ALL even?] (fn [x] [(* x x) [x]]) (range 10))
-  (->> (range 1 8) (mapcat #(repeat % %)))
-
   (defmethod bread/query ::compact
     [{:keys [path compact-val compact-key relation] k :query/key} data]
     (let [m {:relation relation}]
       (s/transform path #(compact % compact-key compact-val m) (get data k))))
 
   (defn $i18n-compact-path [relation]
-    (conj (relation->spath (butlast relation)) :translatable/fields))
+    (conj ($relation->spath (butlast relation)) :translatable/fields))
 
   (def $menu
     (bread/query {:query/name ::compact
@@ -470,8 +462,9 @@
                   :compact-val :field/content
                   :relation $rel
                   :path ($i18n-compact-path $rel)}
-                 {:menu (reconstitute $menu-ir $result-clauses)}))
+                 {:menu ($reconstitute $menu-ir $result-clauses)}))
 
+  ;; TODO use this on the frontend to backref fields for updates
   (s/transform
     [:menu/items ALL :menu.item/entity :translatable/fields]
     meta
