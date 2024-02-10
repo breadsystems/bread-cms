@@ -279,7 +279,15 @@
               :in $ ?slug ?status
               :where [?e :post/slug ?slug] [?e :post/status ?status]])
 
-  (require '[meander.epsilon :as m])
+
+  (require '[com.rpl.specter :as s :refer [MAP-VALS ALL]]
+           '[meander.epsilon :as m]
+           '[systems.bread.alpha.util.datalog :as dlog])
+
+  ;; Play with Specter
+  (s/transform [MAP-VALS MAP-VALS] inc {:a {:x 1} :b {:y 3 :z 5}})
+  (s/transform [ALL MAP-VALS] inc [{:x 1} {:y 3 :z 5}])
+  (s/replace-in [ALL even?] (fn [x] [(* x x) [x]]) (range 10))
 
   (m/search
     $dqv
@@ -469,14 +477,11 @@
     meta
     $menu)
 
-  (require '[systems.bread.alpha.util.datalog :as dlog])
-
   (dlog/cardinality-many?
     (db/database (->app $req))
     :menu/items)
 
-
-
+  ;; ???
   (reduce
     (fn [posts {pid :db/id fid :field/id fk :field/key fc :field/content fids :fids}]
       (-> posts
@@ -486,6 +491,8 @@
     page-ir)
 
 
+
+  ;; AUTH
 
   (q '{:find [(pull ?mi [:db/id {:menu.item/entity [*]}])]
        :in [$]
@@ -512,6 +519,10 @@
                [{:user/username "coby"
                  :user/locked-at (java.util.Date.)}])
 
+
+
+  ;; SCI
+
   (defn- sci-ns [ns-sym]
     (let [ns* (sci/create-ns ns-sym)
           publics (ns-publics ns-sym)]
@@ -535,6 +546,10 @@
     $theme-ctx
     "(ns my-theme)
     (my-page {})")
+
+
+
+  ;; COMPONENT ROUTING
 
   (require '[systems.bread.alpha.component :as c :refer [defc]])
 
