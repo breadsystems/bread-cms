@@ -325,7 +325,7 @@
         [(vec (concat [?n ?k] path)) m])))
 
   (def translatable-binding? #(some #{'* :field/content} %))
-  (def attr :translatable/fields)
+  (def trans-attr :translatable/fields)
 
   (defn binding-clauses [query attr pred]
     (map-indexed
@@ -344,6 +344,7 @@
     (let [pull (second (rest expr))]
       (assoc-in pull path k)))
 
+  ;; TODO make this generic...
   (defn $construct [{:keys [origin relation target attr]}]
     (case (count relation)
       1 {:in ['?lang]
@@ -365,17 +366,17 @@
                     (fn [query [path b]]
                       (let [expr (get-in query [:find index])
                             find-idx (count (:find query))
-                            pull (transform-expr expr path attr)
+                            pull (transform-expr expr path trans-attr)
                             pull-expr (list 'pull sym pull)
                             binding-sym (gensym "?e")
-                            bspec (cons :db/id (get b attr))
+                            bspec (cons :db/id (get b trans-attr))
                             binding-expr (list 'pull binding-sym bspec)
                             relation (filterv keyword? path)
                             {:keys [in where]}
                             ($construct {:origin sym
                                          :target binding-sym
                                          :relation relation
-                                         :attr attr})
+                                         :attr trans-attr})
                             in (filter (complement (set (:in query))) in)
                             binding-where
                             (->> where
@@ -386,10 +387,10 @@
                             (update :in concat in)
                             (update :where concat binding-where)
                             ;; this info will go in a separate query
-                            (update :CLAUSES assoc binding-sym
-                                    {:entity-index index
-                                     :relation-index find-idx
-                                     :relation (conj relation attr)}))))
+                            (vary-meta assoc-in [:bindings binding-sym]
+                                       {:entity-index index
+                                        :relation-index find-idx
+                                        :relation (conj relation trans-attr)}))))
                     query
                     ops))
                 query))
@@ -404,42 +405,51 @@
 
   (identity $transq)
   (def $menu-ir (q $transq :main-nav :en))
-  (def $result-clauses (:CLAUSES $transq))
+  (def $result-clauses (:bindings (meta $transq)))
   (def $rel (-> $result-clauses first val :relation))
 
   (def $attrs
     (let [attrs (dlog/attrs (db/database (->app $req)))]
       (into {} (map (juxt :db/ident identity) attrs))))
 
-  (defn $relation->spath [relation]
+  (->> $attrs
+       (filter #(= :db.cardinality/many (:db/cardinality (val %))))
+       (map (comp :db/ident val))
+       (sort-by str))
+
+  (defn relation->spath
+    "Takes an attribute map (db/ident -> attr-entity) and a Datalog relation
+    vector. Returns a Specter path for transforming arbitrary db entities to
+    their expanded (inferred) forms."
+    [attrs-map relation]
     (vec (mapcat (fn [attr]
-                   ;; TODO Build this predicate at ::bread/init
-                   (let [attr-entity (get $attrs attr)]
+                   (let [attr-entity (get attrs-map attr)]
                      (if (= :db.cardinality/many (:db/cardinality attr-entity))
-                       [attr ALL]
+                       [attr s/ALL]
                        [attr])))
                  relation)))
 
-  (defn $reunite [entity relatives relation]
+  (defn reunite
+    "Tranform "
+    [attrs-map entity relatives relation]
     (let [lookup (comp relatives :db/id)
-          path ($relation->spath relation)]
+          path (relation->spath attrs-map relation)]
+      (prn 'reunite relatives entity)
+      (prn 'path path)
       (s/transform path lookup entity)))
 
-  (defn $reconstitute [results clauses]
+  (defn reconstitute [attrs-map results clauses]
     (reduce
-      (fn [entity [_ {:keys [entity-index relation-index relation]}]]
+      (fn [entity [_ {:keys [entity-index relation-index relation] :as e}]]
+        (prn 'ENTITY e)
         (let [result (first results)
               entity (or entity (get result entity-index))
               relatives (into {} (map #(let [e (get % relation-index)]
                                          [(:db/id e) e]) results))]
-          ($reunite entity relatives relation)))
+          (reunite attrs-map entity relatives relation)))
       nil clauses))
 
-  ($reconstitute $menu-ir $result-clauses)
-
-  (defn $i18n-compactor [fields]
-    (into {} (map (juxt :field/key :field/content))
-          (filter identity fields)))
+  (reconstitute $attrs $menu-ir $result-clauses)
 
   (defn compact [rows k v m]
     (let [rows (filter identity rows)]
@@ -453,7 +463,7 @@
       (s/transform path #(compact % compact-key compact-val m) (get data k))))
 
   (defn $i18n-compact-path [relation]
-    (conj ($relation->spath (butlast relation)) :translatable/fields))
+    (conj (relation->spath (butlast relation)) :translatable/fields))
 
   (def $menu
     (bread/query {:query/name ::compact
@@ -462,7 +472,7 @@
                   :compact-val :field/content
                   :relation $rel
                   :path ($i18n-compact-path $rel)}
-                 {:menu ($reconstitute $menu-ir $result-clauses)}))
+                 {:menu (reconstitute $attrs $menu-ir $result-clauses)}))
 
   ;; TODO use this on the frontend to backref fields for updates
   (s/transform
