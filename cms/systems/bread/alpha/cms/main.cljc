@@ -428,7 +428,7 @@
             $trans-query-orig
             $trans-clauses))
 
-  (defn $infer [query clauses]
+  (defn infer [attr construct query clauses]
     (reduce (fn [query clause]
               (if clause
                 (let [{:keys [index sym ops]} clause]
@@ -436,17 +436,17 @@
                     (fn [query [path b]]
                       (let [expr (get-in query [:find index])
                             find-idx (count (:find query))
-                            pull (transform-expr expr path $trans-attr)
+                            pull (transform-expr expr path attr)
                             pull-expr (list 'pull sym pull)
                             binding-sym (gensym "?e")
-                            bspec (cons :db/id (get b $trans-attr))
+                            bspec (cons :db/id (get b attr))
                             binding-expr (list 'pull binding-sym bspec)
                             relation (filterv keyword? path)
                             {:keys [in where]}
-                            ($construct {:origin sym
-                                         :target binding-sym
-                                         :relation relation
-                                         :attr $trans-attr})
+                            (construct {:origin sym
+                                        :target binding-sym
+                                        :relation relation
+                                        :attr attr})
                             in (filter (complement (set (:in query))) in)
                             binding-where
                             (->> where
@@ -461,13 +461,13 @@
                                        {:sym binding-sym
                                         :entity-index index
                                         :relation-index find-idx
-                                        :relation (conj relation $trans-attr)}))))
+                                        :relation (conj relation attr)}))))
                     query
                     ops))
                 query))
             query clauses))
 
-  (meta ($infer $trans-query-orig $trans-clauses))
+  (meta (infer $trans-attr $construct $trans-query-orig $trans-clauses))
 
   (defn q [& args]
     (apply
