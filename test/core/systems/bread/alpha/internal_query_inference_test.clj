@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.internal-query-inference-test
   (:require
     [clojure.test :refer [deftest are is]]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.i18n :as i18n]))
 
@@ -275,6 +276,30 @@
 
       ;;
       )))
+
+(deftest test-relation->spath
+  (is (= [] (qi/relation->spath nil nil)))
+  (is (= [] (qi/relation->spath nil ())))
+  (is (= [] (qi/relation->spath nil [])))
+  (is (= [] (qi/relation->spath {} [])))
+  (is (= [:x :y :z] (qi/relation->spath {} (list :x :y :z))))
+  (is (= [:x :y :z] (qi/relation->spath {} [:x :y :z])))
+
+  (is (= [:x :y :z]
+         (qi/relation->spath {:x {:db/cardinality :db.cardinality/one}}
+                             [:x :y :z])))
+
+  (is (= [:x s/ALL :y :z]
+         (qi/relation->spath {:x {:db/cardinality :db.cardinality/many}}
+                             [:x :y :z])))
+
+  (is (= [:x s/ALL :y s/ALL :z]
+         (qi/relation->spath {:x {:db/cardinality :db.cardinality/many}
+                              :y {:db/cardinality :db.cardinality/many}}
+                             [:x :y :z])))
+
+  ;;
+  )
 
 (comment
   (require '[kaocha.repl :as k])

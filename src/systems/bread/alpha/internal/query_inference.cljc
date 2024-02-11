@@ -3,7 +3,8 @@
     [clojure.walk :as walk]
     [clojure.string :as string]
     ;; TODO ^^ DELETE ^^
-    [meander.epsilon :as m]))
+    [meander.epsilon :as m]
+    [com.rpl.specter :as s]))
 
 (defn- attr-binding [search-key field]
   (when (map? field)
@@ -164,6 +165,18 @@
                       :clause clause}))))
        (filter identity)))
 
+(defn relation->spath
+  "Takes an attribute map (db/ident -> attr-entity) and a Datalog relation
+  vector. Returns a Specter path for transforming arbitrary db entities to
+  their expanded (inferred) forms."
+  [attrs-map relation]
+  (vec (mapcat (fn [attr]
+                 (let [attr-entity (get attrs-map attr)]
+                   (if (= :db.cardinality/many (:db/cardinality attr-entity))
+                     [attr s/ALL]
+                     [attr])))
+               relation)))
+
 (comment
   (transform-expr
     (list 'pull '?e [:db/id
@@ -204,6 +217,8 @@
                         [:field/key :field/content]}])]}
     :translatable/fields
     #(some #{'* :field/content} %))
+
+  (relation->spath {:x {:db/cardinality :db.cardinality/many}} [:x :y])
 
   (infer-query-bindings
     :translatable/fields
