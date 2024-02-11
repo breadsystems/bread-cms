@@ -282,7 +282,8 @@
 
   (require '[com.rpl.specter :as s :refer [MAP-VALS ALL]]
            '[meander.epsilon :as m]
-           '[systems.bread.alpha.util.datalog :as dlog])
+           '[systems.bread.alpha.util.datalog :as dlog]
+           '[systems.bread.alpha.i18n :as i18n])
 
   ;; Play with Specter
   (s/transform [MAP-VALS MAP-VALS] inc {:a {:x 1} :b {:y 3 :z 5}})
@@ -314,8 +315,9 @@
      :in '$ '?menu-key
      :where '[?e :menu/key ?menu-key]])
 
-  (defn translatable-binding? [qb]
-    (some #{'* :field/content} qb))
+  (defn $translatable-binding? [qb]
+    (when-let [qb (seq qb)] (some #{'* :field/content} qb)))
+
   (def $trans-attr :translatable/fields)
 
   (defn- normalize-datalog-query
@@ -433,7 +435,7 @@
             $trans-clauses))
 
   (defn infer-query-bindings [attr construct pred query]
-    (reduce (fn [{:keys [query bindings] :as _query-and-bindings}
+    (reduce (fn [{:keys [query bindings]}
                  {:keys [index sym ops] :as _clause}]
               (reduce
                 (fn [query [path b]]
@@ -539,13 +541,16 @@
         (merge (into {} (map (juxt k :db/id) rows)) m))))
 
   (defmethod bread/query ::compact
-    [{:keys [path compact-val compact-key relation] k :query/key} data]
-    (let [m {:relation relation}]
-      (s/transform path #(compact % compact-key compact-val m) (get data k))))
+    [{:keys [k v relation attrs-map] qk :query/key} data]
+    (let [m {:relation relation}
+          path (conj
+                 (relation->spath attrs-map (butlast relation))
+                 :translatable/fields)]
+      (s/transform path #(compact % k v m) (get data qk))))
 
   (defmethod bread/query ::reconstitute
-    [{:keys [attrs-map clauses] k :query/key} data]
-    (reconstitute attrs-map ))
+    [{:keys [attrs-map bindings] k :query/key} data]
+    (reconstitute attrs-map (get data k) bindings))
 
   (defn $i18n-compact-path [relation]
     (conj (relation->spath $attrs (butlast relation)) :translatable/fields))
@@ -554,50 +559,50 @@
   (def $menu
     (bread/query {:query/name ::compact
                   :query/key :menu
-                  :compact-key :field/key
-                  :compact-val :field/content
+                  :k :field/key
+                  :v :field/content
                   :relation $rel
-                  :path ($i18n-compact-path $rel)}
+                  :attrs-map $attrs}
                  {:menu (reconstitute $attrs $menu-ir $result-clauses)}))
 
-  (bread/query {:query/name ::db/query
-                :query/key :menu
-                :query/args [$trans-query-orig :main-nav]
-                :query/db (db/database (->app $req))}
-               {})
-
-  ;; TODO Our goal is to generalize this process:
   (do
     (def $menu
-      (as-> $trans-query-orig $
-        ;; Refactor this ...
-        (infer-query-bindings
-          $trans-attr
-          $construct
-          translatable-binding?
-          $)
-        (:query $)
-        (q $ :main-nav :en)
-        (reconstitute $attrs $ $result-clauses)
-        ;; ...into a generic query method, like:
-        #_
-        (bread/query {:query/name ::reconstitute
-                      :query/key :menu
-                      :attrs $attrs
-                      :clauses $result-clauses}
-                     $)
-        (bread/query {:query/name ::compact
-                      :query/key :menu
-                      :compact-key :field/key
-                      :compact-val :field/content
-                      :relation $rel
-                      :path ($i18n-compact-path $rel)}
-                     {:menu $})))
+      (let [attrs-map (->> (->app $req)
+                           db/database
+                           dlog/attrs
+                           (into {} (map (juxt :db/ident identity))))
+            {:keys [query bindings]} (infer-query-bindings
+                                       :translatable/fields
+                                       $construct
+                                       i18n/translatable-binding?
+                                       $trans-query-orig)
+            relation (:relation (first bindings))]
+        (as-> {} $
+          (bread/query {:query/name ::db/query
+                        :query/key :menu
+                        :query/args [query :main-nav :en]
+                        :query/db (db/database (->app $req))}
+                       $)
+          (bread/query {:query/name ::reconstitute
+                        :query/key :menu
+                        :attrs-map attrs-map
+                        :bindings bindings}
+                       {:menu $})
+          (bread/query {:query/name ::compact
+                        :query/key :menu
+                        :attrs-map attrs-map
+                        :k :field/key
+                        :v :field/content
+                        :relation relation}
+                       {:menu $}))))
     ((juxt identity
            ;; TODO use this on the frontend to backref fields for updates
-           #(s/transform
-              [:menu/items ALL :menu.item/entity :translatable/fields]
-              meta %)) $menu))
+           #(->> %
+                 (s/transform
+                   [:menu/items ALL :menu.item/entity :translatable/fields]
+                   meta)
+                 :menu/items
+                 (map (comp :translatable/fields :menu.item/entity)))) $menu))
 
   (dlog/cardinality-many?
     (db/database (->app $req))
