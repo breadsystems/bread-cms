@@ -298,27 +298,32 @@
 
     (m/pred map? ?m) ?m)
 
-  (def $menu-pull
-    [:db/id
-     {:menu/items
-      [:db/id
-       {:menu.item/entity
-        [{:translatable/fields
-          [:field/key :field/content]}]}]}])
+  (def $menu-query
+    '{:find [(pull ?e [:db/id
+                       {:menu/items
+                        [:db/id
+                         {:menu.item/entity
+                          [{:translatable/fields
+                            [:field/key :field/content]}]}]}])]
+      :in [$ ?menu-key]
+      :where [[?e :menu/key ?menu-key]]})
 
-  (def $trans-query-orig
-    {:find [(list 'pull '?e $menu-pull)]
-     :in '[$ ?menu-key]
-     :where '[[?e :menu/key ?menu-key]]})
-  (def $trans-query-vec
-    [:find (list 'pull '?e $menu-pull)
-     :in '$ '?menu-key
-     :where '[?e :menu/key ?menu-key]])
-
-  (defn $translatable-binding? [qb]
-    (when-let [qb (seq qb)] (some #{'* :field/content} qb)))
-
-  (def $trans-attr :translatable/fields)
+  ;; TODO make this generic...
+  (defn $construct [{:keys [origin relation target attr]}]
+    (prn 'origin origin)
+    (prn 'relation relation)
+    (prn 'target target)
+    (prn 'attr attr)
+    (case (count relation)
+      1 {:in ['?lang]
+         :where [[origin :menu/items '?mi]
+                 ['?mi attr target]
+                 [target :field/lang '?lang]]}
+      2 {:in ['?lang]
+         :where [[origin :menu/items '?mi]
+                 ['?mi :menu.item/entity '?mie]
+                 ['?mie attr target]
+                 [target :field/lang '?lang]]}))
 
   (defn- normalize-datalog-query
     "Normalize a datalog query to map form"
@@ -331,7 +336,9 @@
                [:find . !find ... :in . !in ... :where & ?where]
                {:find !find :in !in :where ?where}))))
 
-  (normalize-datalog-query $trans-query-vec)
+  (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
+                             :in $ ?menu-key
+                             :where [?e :menu/key ?menu-key]])
 
   (defn- binding-paths [pull search-key pred]
     (m/search
@@ -361,78 +368,19 @@
                  :clause clause}))
       (:find (normalize-datalog-query query))))
 
-  (def $trans-clauses
-    (binding-clauses $trans-query-orig $trans-attr $translatable-binding?))
-  (def $trans-clauses-vec
-    (binding-clauses $trans-query-vec $trans-attr $translatable-binding?))
-  (= $trans-clauses $trans-clauses-vec)
-
   (defn transform-expr [expr path k]
     (let [pull (second (rest expr))]
       (assoc-in pull path k)))
 
   (transform-expr
-    (list 'pull '?e $menu-pull)
+    (list 'pull '?e [:db/id
+                     {:menu/items
+                      [:db/id
+                       {:menu.item/entity
+                        [{:translatable/fields
+                          [:field/key :field/content]}]}]}])
     [1 :menu/items 1 :menu.item/entity 0]
-    $trans-attr)
-
-  ;; TODO make this generic...
-  (defn $construct [{:keys [origin relation target attr]}]
-    (prn 'origin origin)
-    (prn 'relation relation)
-    (prn 'target target)
-    (prn 'attr attr)
-    (case (count relation)
-      1 {:in ['?lang]
-         :where [[origin :menu/items '?mi]
-                 ['?mi attr target]
-                 [target :field/lang '?lang]]}
-      2 {:in ['?lang]
-         :where [[origin :menu/items '?mi]
-                 ['?mi :menu.item/entity '?mie]
-                 ['?mie attr target]
-                 [target :field/lang '?lang]]}))
-
-  ;; TODO operate on the full data structure from ::bread/queries
-  (def $transq
-    (reduce (fn [query clause]
-              (if clause
-                (let [{:keys [index sym ops]} clause]
-                  (reduce
-                    (fn [query [path b]]
-                      (let [expr (get-in query [:find index])
-                            find-idx (count (:find query))
-                            pull (transform-expr expr path $trans-attr)
-                            pull-expr (list 'pull sym pull)
-                            binding-sym (gensym "?e")
-                            bspec (cons :db/id (get b $trans-attr))
-                            binding-expr (list 'pull binding-sym bspec)
-                            relation (filterv keyword? path)
-                            {:keys [in where]}
-                            ($construct {:origin sym
-                                         :target binding-sym
-                                         :relation relation
-                                         :attr $trans-attr})
-                            in (filter (complement (set (:in query))) in)
-                            binding-where
-                            (->> where
-                                 (filter (complement (set (:where query)))))]
-                        (-> query
-                            (assoc-in [:find index] pull-expr)
-                            (update :find conj binding-expr)
-                            (update :in concat in)
-                            (update :where concat binding-where)
-                            ;; this info will go in a separate query
-                            (vary-meta update :bindings conj
-                                       {:sym binding-sym
-                                        :entity-index index
-                                        :relation-index find-idx
-                                        :relation (conj relation $trans-attr)}))))
-                    query
-                    ops))
-                query))
-            $trans-query-orig
-            $trans-clauses))
+    :translatable/fields)
 
   (defn infer-query-bindings [attr construct pred query]
     (reduce (fn [{:keys [query bindings]}
@@ -510,30 +458,6 @@
       (db/database (->app $req))
       args))
 
-  (def $transqb
-    (infer-query-bindings
-      :translatable/fields
-      $construct
-      translatable-binding?
-      $trans-query-orig))
-  ((juxt identity meta) $transq)
-  ((juxt :query :bindings) $transqb)
-  #_(def $menu-ir (q $transq :main-nav :en))
-  (def $menu-ir (q (:query $transqb) :main-nav :en))
-  (def $result-clauses (:bindings $transqb))
-  (def $rel (-> $result-clauses first :relation))
-
-  (def $attrs
-    (let [attrs (dlog/attrs (db/database (->app $req)))]
-      (into {} (map (juxt :db/ident identity) attrs))))
-
-  (->> $attrs
-       (filter #(= :db.cardinality/many (:db/cardinality (val %))))
-       (map (comp :db/ident val))
-       (sort-by str))
-
-  (reconstitute $attrs $menu-ir $result-clauses)
-
   (defn compact [rows k v m]
     (let [rows (filter identity rows)]
       (with-meta
@@ -552,19 +476,6 @@
     [{:keys [attrs-map bindings] k :query/key} data]
     (reconstitute attrs-map (get data k) bindings))
 
-  (defn $i18n-compact-path [relation]
-    (conj (relation->spath $attrs (butlast relation)) :translatable/fields))
-
-  ;; TODO run ::compact query for each clause
-  (def $menu
-    (bread/query {:query/name ::compact
-                  :query/key :menu
-                  :k :field/key
-                  :v :field/content
-                  :relation $rel
-                  :attrs-map $attrs}
-                 {:menu (reconstitute $attrs $menu-ir $result-clauses)}))
-
   (do
     (def $menu
       (let [attrs-map (->> (->app $req)
@@ -575,7 +486,7 @@
                                        :translatable/fields
                                        $construct
                                        i18n/translatable-binding?
-                                       $trans-query-orig)
+                                       $menu-query)
             relation (:relation (first bindings))]
         (as-> {} $
           (bread/query {:query/name ::db/query
@@ -588,6 +499,7 @@
                         :attrs-map attrs-map
                         :bindings bindings}
                        {:menu $})
+          ;; TODO compact query for each binding clause...
           (bread/query {:query/name ::compact
                         :query/key :menu
                         :attrs-map attrs-map
@@ -603,19 +515,6 @@
                    meta)
                  :menu/items
                  (map (comp :translatable/fields :menu.item/entity)))) $menu))
-
-  (dlog/cardinality-many?
-    (db/database (->app $req))
-    :menu/items)
-
-  ;; ???
-  (reduce
-    (fn [posts {pid :db/id fid :field/id fk :field/key fc :field/content fids :fids}]
-      (-> posts
-          (update-in [pid :translatable/fields] merge {fk fc})
-          (update-in [pid :translatable/fields] vary-meta merge {fk fid})))
-    {}
-    page-ir)
 
 
 
