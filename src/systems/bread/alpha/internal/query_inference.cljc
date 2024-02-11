@@ -122,12 +122,12 @@
     (assoc-in pull path k)))
 
 (defn- normalize-datalog-query
-  "Normalize a datalog query to map form"
+  "Normalize a datalog query to map form. Treats lists as vectors."
   [query]
   (if (map? query)
     query
     (first (m/search
-             query
+             (vec query)
 
              [:find . !find ... :in . !in ... :where & ?where]
              {:find !find :in !in :where ?where}))))
@@ -186,6 +186,12 @@
     [1 :menu/items 1 :menu.item/entity 0]
     :translatable/fields)
 
+  (normalize-datalog-query '(:find ?xyz
+                             :in $ ?menu-key
+                             :where [?e :menu/key ?menu-key]))
+  (normalize-datalog-query '[:find ?xyz
+                             :in $ ?menu-key
+                             :where [?e :menu/key ?menu-key]])
   (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
                              :in $ ?menu-key
                              :where [?e :menu/key ?menu-key]])
@@ -239,12 +245,11 @@
                       bspec (cons :db/id (get b attr))
                       binding-expr (list 'pull binding-sym bspec)
                       relation (filterv keyword? path)
-                      ;; TODO normalize
                       {:keys [in where]}
-                      (construct {:origin sym
-                                  :target binding-sym
-                                  :relation relation
-                                  :attr attr})
+                      (normalize-datalog-query (construct {:origin sym
+                                                           :target binding-sym
+                                                           :relation relation
+                                                           :attr attr}))
                       in (filter (complement (set (:in query))) in)
                       binding-where
                       (->> where

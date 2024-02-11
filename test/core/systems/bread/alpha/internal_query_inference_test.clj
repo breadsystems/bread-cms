@@ -220,6 +220,27 @@
         :in [$ ?slug]
         :where [[?e :post/slug ?slug]]}
 
+      ;; when construct returns a vector-style query
+      {:query '{:find [(pull ?e [:translatable/fields])
+                       (pull ?e1 [:db/id :field/key :field/content])]
+                :in [$ ?slug ?lang]
+                :where [[?e :post/slug ?slug]
+                        [?e :translatable/fields ?e1]
+                        [?e1 :field/lang ?lang]]}
+       :bindings [{:binding-sym '?e1
+                   :attr :translatable/fields
+                   :entity-index 0
+                   :relation-index 1
+                   :relation [:translatable/fields]}]}
+      :translatable/fields
+      (comp (fn [{:keys [in where]}]
+              (concat [:find '?whatevs :in] in [:where] where))
+            i18n-query)
+      i18n/translatable-binding?
+      '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+        :in [$ ?slug]
+        :where [[?e :post/slug ?slug]]}
+
       ;; querying for a menu with deeply nested fields clause
       {:query '{:find [(pull ?e [{:menu/items
                                   [{:menu.item/entity
