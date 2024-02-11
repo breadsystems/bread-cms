@@ -179,8 +179,15 @@
                     (qi/infer-query-bindings attr construct pred query))))
 
       {:query nil :bindings []} nil nil nil nil
-      {:query nil :bindings []} {} nil nil nil
-      {:query nil :bindings []} {:find []} nil nil nil
+      {:query {} :bindings []} :attr nil nil {}
+      {:query {} :bindings []} :attr i18n-query (constantly false) {}
+
+      {:query {:find []} :bindings []}
+      :attr i18n-query (constantly false) {:find []}
+
+      ;; predicate "matches", but no attr present
+      {:query {:find []} :bindings []}
+      :attr i18n-query (constantly true) {:find []}
 
       ;; querying for fields with a wildcard binding
       {:query '{:find [(pull ?e [:translatable/fields])
@@ -233,8 +240,7 @@
                    :relation-index 1
                    :relation [:translatable/fields]}]}
       :translatable/fields
-      (comp (fn [{:keys [in where]}]
-              (concat [:find '?whatevs :in] in [:where] where))
+      (comp #(concat [:find '?whatevs :in] (:in %) [:where] (:where %))
             i18n-query)
       i18n/translatable-binding?
       '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
