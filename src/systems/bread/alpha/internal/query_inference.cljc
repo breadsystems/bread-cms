@@ -148,22 +148,11 @@
     (let [[path m] ?v]
       [(vec (concat [?n ?k] path)) m])))
 
-(comment
-  (binding-paths [:x {:y :yy} :z] :y #(= :yy %))
-  (binding-paths [:x {:y :yy} :z] :NOPE #(= :yy %))
-  (binding-paths [:x {:y :yy} :z] :y #(= :NOPE %))
-  (binding-paths [:x {:y :yy} :z] :y (constantly false))
-
-  ;;
-  )
-
 (defn binding-clauses
   "Takes a query, a target attr, and a predicate. Returns a list of matching
   clauses."
   [query attr pred]
-  (->> query
-       normalize-datalog-query
-       :find
+  (->> query normalize-datalog-query :find
        (map-indexed
          (fn [idx clause]
            (m/find clause
@@ -195,6 +184,11 @@
   (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
                              :in $ ?menu-key
                              :where [?e :menu/key ?menu-key]])
+
+  (binding-paths [:x {:y :yy} :z] :y #(= :yy %))
+  (binding-paths [:x {:y :yy} :z] :NOPE #(= :yy %))
+  (binding-paths [:x {:y :yy} :z] :y #(= :NOPE %))
+  (binding-paths [:x {:y :yy} :z] :y (constantly false))
 
   (binding-clauses
     '{:find [(pull ?e [:post/slug
