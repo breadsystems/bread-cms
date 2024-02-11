@@ -118,6 +118,18 @@
       (update entity :translatable/fields compact-fields))
     entity))
 
+(defn translatable-binding?
+  "Takes a query binding vector and returns the binding itself if it is
+  translatable, otherwise nil."
+  [qb]
+  (when-let [qb (seq qb)] (some #{'* :field/content} qb)))
+
+(comment
+  (translatable-binding? [:field/content])
+  (translatable-binding? ['*])
+  (translatable-binding? [])
+  (translatable-binding? [:post/slug :post/authors :post/fields]))
+
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [queries]]
