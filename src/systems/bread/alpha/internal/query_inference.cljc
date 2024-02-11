@@ -1,7 +1,9 @@
 (ns systems.bread.alpha.internal.query-inference
   (:require
     [clojure.walk :as walk]
-    [clojure.string :as string]))
+    [clojure.string :as string]
+    ;; TODO ^^ DELETE ^^
+    [meander.epsilon :as m]))
 
 (defn- attr-binding [search-key field]
   (when (map? field)
@@ -112,3 +114,96 @@
   (reduce (fn [queries query]
             (apply conj queries (infer-single query ks f)))
           [] queries))
+
+;; TODO DELETE ABOVE
+
+(defn transform-expr [expr path k]
+  (let [pull (second (rest expr))]
+    (assoc-in pull path k)))
+
+(defn- normalize-datalog-query
+  "Normalize a datalog query to map form"
+  [query]
+  (if (map? query)
+    query
+    (first (m/search
+             query
+
+             [:find . !find ... :in . !in ... :where & ?where]
+             {:find !find :in !in :where ?where}))))
+
+(defn- binding-paths [pull search-key pred]
+  (m/search
+    pull
+
+    {~search-key (m/pred pred ?v)}
+    {search-key ?v}
+
+    ;; Recurse into a map binding at position ?n within a vector.
+    [_ ..?n (m/cata ?map) & _]
+    [[?n] ?map]
+
+    ;; Recurse into a map binding at key ?k
+    [_ ..?n {(m/and (m/not ~search-key) ?k) (m/cata ?v)} & _]
+    (let [[path m] ?v]
+      [(vec (concat [?n ?k] path)) m])))
+
+(comment
+  (binding-paths [:x {:y :yy} :z] :y #(= :yy %))
+  (binding-paths [:x {:y :yy} :z] :NOPE #(= :yy %))
+  (binding-paths [:x {:y :yy} :z] :y #(= :NOPE %))
+  (binding-paths [:x {:y :yy} :z] :y (constantly false))
+
+  ;;
+  )
+
+(defn binding-clauses
+  "Takes a query, a target attr, and a predicate. Returns a list of matching
+  clauses."
+  [query attr pred]
+  (->> query
+       normalize-datalog-query
+       :find
+       (map-indexed
+         (fn [idx clause]
+           (m/find clause
+                   (m/scan 'pull ?sym ?pull)
+                   (when-let [paths (seq (binding-paths ?pull attr pred))]
+                     {:index idx
+                      :sym ?sym
+                      :ops paths
+                      :clause clause}))))
+       (filter identity)))
+
+(comment
+  (transform-expr
+    (list 'pull '?e [:db/id
+                     {:menu/items
+                      [:db/id
+                       {:menu.item/entity
+                        [{:translatable/fields
+                          [:field/key :field/content]}]}]}])
+    [1 :menu/items 1 :menu.item/entity 0]
+    :translatable/fields)
+
+  (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
+                             :in $ ?menu-key
+                             :where [?e :menu/key ?menu-key]])
+
+  (binding-clauses
+    '{:find [(pull ?e [:post/slug
+                       {:translatable/fields [*]}])]}
+    :translatable/fields
+    (constantly false))
+
+  (binding-clauses
+    '{:find [(pull ?e [:post/slug
+                       {:translatable/fields [*]}])
+             (pull ?e [:post/slug
+                       {:translatable/fields
+                        [:field/key :field/content]}])]}
+    :translatable/fields
+    #(some #{'* :field/content} %))
+
+  ;;
+  )

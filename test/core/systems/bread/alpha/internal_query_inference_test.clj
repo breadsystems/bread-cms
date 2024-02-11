@@ -1,13 +1,13 @@
 (ns systems.bread.alpha.internal-query-inference-test
   (:require
     [clojure.test :refer [deftest are is]]
-    [systems.bread.alpha.internal.query-inference :as i]
+    [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.i18n :as i18n]))
 
 (deftest test-binding-pairs
   (are
     [pairs args]
-    (= pairs (apply i/binding-pairs args))
+    (= pairs (apply qi/binding-pairs args))
 
     []
     [[] :query-key []]
@@ -56,7 +56,7 @@
 (deftest test-infer
   (are
     [queries args]
-    (= queries (apply i/infer args))
+    (= queries (apply qi/infer args))
 
     []
     [[] nil #()]
@@ -100,6 +100,67 @@
        (let [new-spec (get spec (last path))]
          {:query/args [{:find [(list 'pull '?e new-spec)]}]
           :query/key path}))]
+
+    ;;
+    ))
+
+;; TODO DELETE ABOVE
+
+(deftest test-binding-clauses
+  (are
+    [clauses query attr pred]
+    (= clauses (qi/binding-clauses query attr pred))
+
+    [] nil nil nil
+    [] [] nil nil
+    [] {} nil nil
+    [] {} :whatever (constantly true)
+
+    ;; no match
+    []
+    '{:find [(pull ?e [{:ATTR [:x :y]}])]}
+    :ATTR
+    #(some #{:a} %)
+
+    ;; multiple clauses, still no match
+    []
+    '{:find [(pull ?e [{:ATTR [:x :y]}]) (pull ?f [{:ATTR [:y :z]}])]}
+    :ATTR
+    #(some #{:a} %)
+
+    ;; single match
+    [{:index 0
+      :sym '?e
+      :ops [[[0] {:ATTR [:x :y]}]]
+      :clause '(pull ?e [{:ATTR [:x :y]}])}]
+    '{:find [(pull ?e [{:ATTR [:x :y]}])]}
+    :ATTR
+    #(some #{:y} %)
+
+    ;; match pulls even when they're not the first clause
+    [{:index 2
+      :sym '?x
+      :ops [[[0] {:ATTR [:x :y]}]]
+      :clause '(pull ?x [{:ATTR [:x :y]}])}]
+    '{:find [?extra ?stuff (pull ?x [{:ATTR [:x :y]}])]}
+    :ATTR
+    #(some #{:y} %)
+
+    ;; match multiple pulls, with stuff between
+    [{:index 1
+      :sym '?a
+      :ops [[[0 :a 1] {:ATTR [:x :y]}]]
+      :clause '(pull ?a [{:a [:aa {:ATTR [:x :y]}]}])}
+     {:index 3
+      :sym '?b
+      :ops [[[0] {:ATTR [:y :z]}]]
+      :clause '(pull ?b [{:ATTR [:y :z]}])}]
+    '{:find [?stuff
+             (pull ?a [{:a [:aa {:ATTR [:x :y]}]}])
+             ?between
+             (pull ?b [{:ATTR [:y :z]}])]}
+    :ATTR
+    #(some #{:y} %)
 
     ;;
     ))
