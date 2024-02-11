@@ -41,7 +41,7 @@
                                       (butlast descendant-syms)
                                       (rest slug-syms))))
            [(list 'not-join [earliest-ancestor-sym]
-                  ['?_ :post/parent earliest-ancestor-sym])]))))
+                  ['?_ :post/children earliest-ancestor-sym])]))))
 
 (defn- ancestralize [query slugs]
   (let [depth (count slugs)
