@@ -221,6 +221,9 @@
 
   (response ((:bread/handler @system) {:uri "/en"}))
   (response ((:bread/handler @system) {:uri "/en/hello"}))
+  (response ((:bread/handler @system) {:uri "/en/hello/child-page"}))
+  ;; This should 404:
+  (response ((:bread/handler @system) {:uri "/en/child-page"}))
 
   (response ((:bread/handler @system) {:uri "/login"}))
   (response ((:bread/handler @system) {:uri "/login"
@@ -250,6 +253,24 @@
     (bread/hook $ ::bread/expand)
     (bread/hook $ ::bread/render)
     (select-keys $ [:status :body :headers]))
+
+  (bread/query {:query/name :systems.bread.alpha.database/query,
+                :query/key :post,
+                :query/db (db/database (->app $req)) ,
+                :query/args
+                ['{:find [(pull ?e (:db/id :post/slug :post/type :post/status)) .],
+                   :in [$ % ?slug_0 ?type ?status],
+                   :where
+                   [(post-ancestry ?e ?slug_0)
+                    [?e :post/type ?type]
+                    [?e :post/status ?status]]}
+                 '[[(post-ancestry ?child ?slug_0)
+                    [?child :post/slug ?slug_0]
+                    (not-join [?child] [?_ :post/children ?child])]]
+                 "child-page"
+                 :post.type/page
+                 :post.status/published]}
+               {})
 
   (defn q [& args]
     (apply
