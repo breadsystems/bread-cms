@@ -194,6 +194,8 @@
   (start! config))
 
 (comment
+  (set! *print-namespace-maps* false)
+
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
