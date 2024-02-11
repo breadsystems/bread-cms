@@ -283,7 +283,8 @@
   (require '[com.rpl.specter :as s :refer [MAP-VALS ALL]]
            '[meander.epsilon :as m]
            '[systems.bread.alpha.util.datalog :as dlog]
-           '[systems.bread.alpha.i18n :as i18n])
+           '[systems.bread.alpha.i18n :as i18n]
+           '[systems.bread.alpha.internal.query-inference :as qi])
 
   ;; Play with Specter
   (s/transform [MAP-VALS MAP-VALS] inc {:a {:x 1} :b {:y 3 :z 5}})
@@ -324,102 +325,6 @@
                  ['?mi :menu.item/entity '?mie]
                  ['?mie attr target]
                  [target :field/lang '?lang]]}))
-
-  (defn- normalize-datalog-query
-    "Normalize a datalog query to map form"
-    [query]
-    (if (map? query)
-      query
-      (first (m/search
-               query
-
-               [:find . !find ... :in . !in ... :where & ?where]
-               {:find !find :in !in :where ?where}))))
-
-  (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
-                             :in $ ?menu-key
-                             :where [?e :menu/key ?menu-key]])
-
-  (defn- binding-paths [pull search-key pred]
-    (m/search
-      pull
-
-      {~search-key (m/pred pred ?v)}
-      {search-key ?v}
-
-      [_ ..?n (m/cata ?map) & _]
-      [[?n] ?map]
-
-      [_ ..?n {(m/and (m/not ~search-key) ?k) (m/cata ?v)} & _]
-      (let [[path m] ?v]
-        [(vec (concat [?n ?k] path)) m])))
-
-  (defn binding-clauses
-    "Takes a query, a target attr, and a predicate. Returns a list of matching
-    clauses"
-    [query attr pred]
-    (map-indexed
-      (fn [idx clause]
-        (m/find clause
-                (m/scan 'pull ?sym ?pull)
-                {:index idx
-                 :sym ?sym
-                 :ops (binding-paths ?pull attr pred)
-                 :clause clause}))
-      (:find (normalize-datalog-query query))))
-
-  (defn transform-expr [expr path k]
-    (let [pull (second (rest expr))]
-      (assoc-in pull path k)))
-
-  (transform-expr
-    (list 'pull '?e [:db/id
-                     {:menu/items
-                      [:db/id
-                       {:menu.item/entity
-                        [{:translatable/fields
-                          [:field/key :field/content]}]}]}])
-    [1 :menu/items 1 :menu.item/entity 0]
-    :translatable/fields)
-
-  (defn infer-query-bindings [attr construct pred query]
-    (reduce (fn [{:keys [query bindings]}
-                 {:keys [index sym ops] :as _clause}]
-              (reduce
-                (fn [query [path b]]
-                  (let [relation-index (count (:find query))
-                        expr (get-in query [:find index])
-                        pull (transform-expr expr path attr)
-                        pull-expr (list 'pull sym pull)
-                        binding-sym (gensym "?e")
-                        bspec (cons :db/id (get b attr))
-                        binding-expr (list 'pull binding-sym bspec)
-                        relation (filterv keyword? path)
-                        {:keys [in where]}
-                        (construct {:origin sym
-                                    :target binding-sym
-                                    :relation relation
-                                    :attr attr})
-                        in (filter (complement (set (:in query))) in)
-                        binding-where
-                        (->> where
-                             (filter (complement (set (:where query)))))]
-                    {:query (-> query
-                                (assoc-in [:find index] pull-expr)
-                                (update :find conj binding-expr)
-                                (update :in concat in)
-                                (update :where concat binding-where))
-                     ;; We'll use this to reconstitute the query results.
-                     :bindings (conj bindings
-                                     {:binding-sym binding-sym
-                                      :attr attr
-                                      :entity-index index
-                                      :relation-index relation-index
-                                      :relation (conj relation attr)})}))
-                query
-                ops))
-            {:query query :bindings []}
-            (binding-clauses query attr pred)))
 
   (defn relation->spath
     "Takes an attribute map (db/ident -> attr-entity) and a Datalog relation
@@ -482,7 +387,7 @@
                            db/database
                            dlog/attrs
                            (into {} (map (juxt :db/ident identity))))
-            {:keys [query bindings]} (infer-query-bindings
+            {:keys [query bindings]} (qi/infer-query-bindings
                                        :translatable/fields
                                        $construct
                                        i18n/translatable-binding?

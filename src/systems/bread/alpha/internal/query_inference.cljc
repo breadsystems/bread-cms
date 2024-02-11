@@ -205,5 +205,63 @@
     :translatable/fields
     #(some #{'* :field/content} %))
 
+  (infer-query-bindings
+    :translatable/fields
+    (fn [{:keys [origin target attr relation]}]
+      {:in ['?lang]
+       :where [[origin attr target]
+               [target :field/lang '?lang]]})
+    #(some #{'* :field/content} %)
+    '{:find [(pull ?e [:post/slug
+                       {:translatable/fields
+                        [:field/key :field/content]}])]
+      :in [$ ?slug]
+      :where [[?e :post/slug ?slug]]})
+
   ;;
   )
+
+(defn infer-query-bindings
+  "Takes an attr, a function to construct a new db query, a predicate,
+  and a query. Searches the query for bindings to attr, such that the binding
+  value returns logical true for (pred binding-value). Returns a map of the
+  form {:query transformed-query :bindings binding-specs}."
+  [attr construct pred query]
+  (reduce (fn [{:keys [query bindings]}
+               {:keys [index sym ops] :as _clause}]
+            (reduce
+              (fn [query [path b]]
+                (let [relation-index (count (:find query))
+                      expr (get-in query [:find index])
+                      pull (transform-expr expr path attr)
+                      pull-expr (list 'pull sym pull)
+                      binding-sym (gensym "?e")
+                      bspec (cons :db/id (get b attr))
+                      binding-expr (list 'pull binding-sym bspec)
+                      relation (filterv keyword? path)
+                      ;; TODO normalize
+                      {:keys [in where]}
+                      (construct {:origin sym
+                                  :target binding-sym
+                                  :relation relation
+                                  :attr attr})
+                      in (filter (complement (set (:in query))) in)
+                      binding-where
+                      (->> where
+                           (filter (complement (set (:where query)))))]
+                  {:query (-> query
+                              (assoc-in [:find index] pull-expr)
+                              (update :find conj binding-expr)
+                              (update :in concat in)
+                              (update :where concat binding-where))
+                   ;; We'll use this to reconstitute the query results.
+                   :bindings (conj bindings
+                                   {:binding-sym binding-sym
+                                    :attr attr
+                                    :entity-index index
+                                    :relation-index relation-index
+                                    :relation (conj relation attr)})}))
+              query
+              ops))
+          {:query query :bindings []}
+          (binding-clauses query attr pred)))

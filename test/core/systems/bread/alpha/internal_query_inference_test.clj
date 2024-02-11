@@ -165,6 +165,90 @@
     ;;
     ))
 
+(deftest test-infer-query-bindings
+  (let [i18n-query (fn [{:keys [origin target attr]}]
+                     {:in ['?lang]
+                      :where [[origin attr target]
+                              [target :field/lang '?lang]]})]
+    (are
+      [result attr construct pred query]
+      (= result (let [counter (atom 0)
+                      gensym* (fn [prefix]
+                                (symbol (str prefix (swap! counter inc))))]
+                  (with-redefs [gensym gensym*]
+                    (qi/infer-query-bindings attr construct pred query))))
+
+      {:query nil :bindings []} nil nil nil nil
+      {:query nil :bindings []} {} nil nil nil
+      {:query nil :bindings []} {:find []} nil nil nil
+
+      ;; querying for fields with a wildcard binding
+      {:query '{:find [(pull ?e [:translatable/fields])
+                       (pull ?e1 [:db/id *])]
+                :in [$ ?slug ?lang]
+                :where [[?e :post/slug ?slug]
+                        [?e :translatable/fields ?e1]
+                        [?e1 :field/lang ?lang]]}
+       :bindings [{:binding-sym '?e1
+                   :attr :translatable/fields
+                   :entity-index 0
+                   :relation-index 1
+                   :relation [:translatable/fields]}]}
+      :translatable/fields
+      i18n-query
+      i18n/translatable-binding?
+      '{:find [(pull ?e [{:translatable/fields [*]}])]
+        :in [$ ?slug]
+        :where [[?e :post/slug ?slug]]}
+
+      ;; querying for fields with key & content bindings
+      {:query '{:find [(pull ?e [:translatable/fields])
+                       (pull ?e1 [:db/id :field/key :field/content])]
+                :in [$ ?slug ?lang]
+                :where [[?e :post/slug ?slug]
+                        [?e :translatable/fields ?e1]
+                        [?e1 :field/lang ?lang]]}
+       :bindings [{:binding-sym '?e1
+                   :attr :translatable/fields
+                   :entity-index 0
+                   :relation-index 1
+                   :relation [:translatable/fields]}]}
+      :translatable/fields
+      i18n-query
+      i18n/translatable-binding?
+      '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+        :in [$ ?slug]
+        :where [[?e :post/slug ?slug]]}
+
+      ;; querying for a menu with deeply nested fields clause
+      {:query '{:find [(pull ?e [{:menu/items
+                                  [{:menu.item/entity
+                                    [:translatable/fields]}]}])
+                       (pull ?e1 [:db/id :field/key :field/content])]
+                :in [$ ?menu-key ?lang]
+                :where [[?e :menu/key ?menu-key]
+                        [?e :translatable/fields ?e1]
+                        [?e1 :field/lang ?lang]]}
+       :bindings [{:binding-sym '?e1
+                   :attr :translatable/fields
+                   :entity-index 0
+                   :relation-index 1
+                   :relation [:menu/items
+                              :menu.item/entity
+                              :translatable/fields]}]}
+      :translatable/fields
+      i18n-query
+      i18n/translatable-binding?
+      '{:find [(pull ?e [{:menu/items
+                          [{:menu.item/entity
+                            [{:translatable/fields
+                              [:field/key :field/content]}]}]}])]
+        :in [$ ?menu-key]
+        :where [[?e :menu/key ?menu-key]]}
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
