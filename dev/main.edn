@@ -38,6 +38,70 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}
+            {:db/id "hello"
+             :post/slug "hello"
+             :post/type :post.type/page
+             :post/status :post.status/published
+             :post/children #{"child-page"}
+             :translatable/fields
+             [{:field/key :a
+               :field/content "A"
+               :field/lang :en}
+              {:field/key :a
+               :field/content "___"
+               :field/lang :es}
+              {:field/key :b
+               :field/content "B"
+               :field/lang :en}
+              {:field/key :other
+               :field/content "other"
+               :field/lang :es}]}
+            {:db/id "child-page"
+             :post/slug "child-page"
+             :post/type :post.type/page
+             :post/status :post.status/published
+             :translatable/fields
+             [{:field/key :a
+               :field/content "A"
+               :field/lang :en}
+              {:field/key :a
+               :field/content "___"
+               :field/lang :es}
+              {:field/key :b
+               :field/content "B"
+               :field/lang :en}
+              {:field/key :other
+               :field/content "other"
+               :field/lang :es}]}
+            {:db/id "my-item"
+             :post/type :post.type/menu-item
+             :translatable/fields
+             [{:field/key :a
+               :field/content "A"
+               :field/lang :en}
+              {:field/key :a
+               :field/content "___"
+               :field/lang :es}
+              {:field/key :b
+               :field/content "B"
+               :field/lang :en}
+              {:field/key :other
+               :field/content "other"
+               :field/lang :es}]}
+            #_
+            [:db/id
+             {:menu/items
+              [:db/id
+               {:translatable/fields
+                [:field/key :field/content]}
+               {:menu.item/entities
+                [{:translatable/fields
+                  [:field/key :field/content]}]}]}]
+            {:menu/key :main-nav
+             :menu/items [{:menu.item/entity "hello"
+                           :menu.item/order 0}
+                          {:menu.item/entity "my-item"
+                           :menu.item/order 1}]}
             ]]}
  :bread/router
  #reitit/router
