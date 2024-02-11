@@ -220,16 +220,18 @@
                                         :request-method :post})
 
   (response ((:bread/handler @system) {:uri "/en"}))
+  (response ((:bread/handler @system) {:uri "/en/hello"}))
+
   (response ((:bread/handler @system) {:uri "/login"}))
   (response ((:bread/handler @system) {:uri "/login"
                                        :request-method :post
                                        :params {:username "coby"
                                                 :password "hello"}}))
-  (response ((:bread/handler @system) {:uri "/en/page"}))
 
   (defn ->app [req]
     (when-let [app (:bread/app @system)] (merge app req)))
   (def $req {:uri "/en"})
+  (def $req {:uri "/en/hello"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (::bread/dispatcher $))
