@@ -11,7 +11,8 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user] ;; TODO y u no include
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.rum :as rum]))
+    [systems.bread.alpha.plugin.rum :as rum]
+    [systems.bread.alpha.util.datalog :as datalog]))
 
 (comment
   (let [config {:a true :b false}]
@@ -113,6 +114,14 @@
       (update :status #(or % (if (:not-found? data) 404 200)))
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
+(defmethod bread/action ::attrs
+  [req _ _]
+  (datalog/attrs (db/database req)))
+
+(defmethod bread/action ::attrs-map
+  [req _ _]
+  (into {} (map (juxt :db/ident identity)) (bread/hook req ::bread/attrs)))
+
 (defn plugins [{:keys [db
                        routes
                        i18n
@@ -151,7 +160,13 @@
            ::bread/response
            [{:action/name ::response
              :action/description "Sensible defaults for Ring responses"
-             :default-content-type default-content-type}]}}]]
+             :default-content-type default-content-type}]
+           ::bread/attrs
+           [{:action/name ::attrs
+             :action/description "Add db attrs as raw maps"}]
+           ::bread/attrs-map
+           [{:action/name ::attrs-map
+             :action/description "All db attrs, indexed by :db/ident"}]}}]]
     (concat
       (filter identity configured-plugins)
       plugins)))
