@@ -5,7 +5,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.internal.query-inference :as inf]
+    [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.util.datalog :as d]))
 
 (defn supported-langs
@@ -137,7 +137,7 @@
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (inf/infer
+  (qi/infer
     queries
     {:translatable/fields field-content-binding?}
     (partial construct-fields-query (lang req))))
