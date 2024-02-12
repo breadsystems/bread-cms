@@ -301,6 +301,85 @@
   ;;
   )
 
+(deftest test-reconstitute
+  (are
+    [entity attrs-map results bindings]
+    (= entity (qi/reconstitute attrs-map results bindings))
+
+    nil nil nil nil
+    [] {} [] []
+
+    ;; No bindings - should short-circuit and return results.
+    [{:db/id 1 :post/slug "hello"}]
+    {} [{:db/id 1 :post/slug "hello"}] []
+
+    {:db/id 1,
+     :post/children
+     [{:db/id 2,
+       :translatable/fields
+       [{:db/id 10, :field/key :a, :field/content "A"}
+        nil
+        {:db/id 12, :field/key :b, :field/content "B"}]}]}
+    {:post/children {:db/cardinality :db.cardinality/many}
+     :translatable/fields {:db/cardinality :db.cardinality/many}}
+    [[{:db/id 1
+       :post/children [{:db/id 2
+                        :translatable/fields [{:db/id 10}
+                                              {:db/id 11}
+                                              {:db/id 12}]}]}
+      {:db/id 10 :field/key :a :field/content "A"}]
+     [{:db/id 1
+       :post/children [{:db/id 2
+                        :translatable/fields [{:db/id 10}
+                                              {:db/id 11}
+                                              {:db/id 12}]}]}
+      {:db/id 12 :field/key :b :field/content "B"}]]
+    [{:entity-index 0
+      :relation-index 1
+      :relation [:post/children :translatable/fields]}]
+
+    {:db/id 99
+     :menu/items
+     [{:db/id 100
+       :menu.item/entity
+       {:translatable/fields
+        [{:db/id 80 :field/key :a :field/content "A"}
+         nil
+         {:db/id 82 :field/key :b :field/content "B"}
+         nil]}}
+      {:db/id 101
+       :menu.item/entity
+       {:translatable/fields
+        [{:db/id 90 :field/key :a :field/content "AA"}
+         nil
+         {:db/id 92 :field/key :b :field/content "BB"}
+         nil]}}]}
+    {:menu/items {:db/cardinality :db.cardinality/many}
+     :translatable/fields {:db/cardinality :db.cardinality/many}}
+    (let [menu {:db/id 99
+                :menu/items [{:db/id 100
+                              :menu.item/entity {:translatable/fields
+                                                 [{:db/id 80}
+                                                  {:db/id 81}
+                                                  {:db/id 82}
+                                                  {:db/id 83}]}}
+                             {:db/id 101
+                              :menu.item/entity {:translatable/fields
+                                                 [{:db/id 90}
+                                                  {:db/id 91}
+                                                  {:db/id 92}
+                                                  {:db/id 93}]}}]}]
+      [[menu {:db/id 80 :field/key :a :field/content "A"}]
+       [menu {:db/id 82 :field/key :b :field/content "B"}]
+       [menu {:db/id 90 :field/key :a :field/content "AA"}]
+       [menu {:db/id 92 :field/key :b :field/content "BB"}]])
+    [{:entity-index 0
+      :relation-index 1
+      :relation [:menu/items :menu.item/entity :translatable/fields]}]
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
