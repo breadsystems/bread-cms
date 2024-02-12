@@ -282,10 +282,9 @@
   value returns logical true for (pred binding-value). Returns a map of the
   form {:query transformed-query :bindings binding-specs}."
   [attr construct pred query]
-  (reduce (fn [{:keys [query bindings]}
-               {:keys [index sym ops] :as _clause}]
+  (reduce (fn [{:keys [query]} {:keys [index sym ops] :as _clause}]
             (reduce
-              (fn [query [path b]]
+              (fn [{:keys [query bindings]} [path b]]
                 (let [relation-index (count (:find query))
                       expr (get-in query [:find index])
                       pull (transform-expr expr path attr)
@@ -315,7 +314,7 @@
                                     :entity-index index
                                     :relation-index relation-index
                                     :relation (conj relation attr)})}))
-              query
+              {:query query :bindings []}
               ops))
           {:query query :bindings []}
           (binding-clauses query attr pred)))
