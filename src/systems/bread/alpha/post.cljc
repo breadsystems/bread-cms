@@ -75,8 +75,9 @@
   [{::bread/keys [dispatcher] :as req}]
   (let [params (:route/params dispatcher)
         page-args
-        (-> (pull-query dispatcher)
-            (update-in [0 :find] conj '.) ;; Query for a single post.
+        (-> [{:find [(list 'pull '?e (vec (:dispatcher/pull dispatcher)))]
+              :in '[$]
+              :where []}]
             (ancestralize (string/split (:slugs params "") #"/"))
             (where [['?type :post/type :post.type/page]
                     ['?status :post/status :post.status/published]]))
