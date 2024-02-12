@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.edn :as edn]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
@@ -141,6 +142,24 @@
     queries
     {:translatable/fields field-content-binding?}
     (partial construct-fields-query (lang req))))
+
+(defmethod bread/query ::reconstitute
+  [{:keys [attrs-map bindings] k :query/key} data]
+  (qi/reconstitute attrs-map (get data k) bindings))
+
+(defn- compact* [rows k v m]
+  (let [rows (filter identity rows)]
+    (with-meta
+      (into {} (map (juxt k v)) rows)
+      (merge (into {} (map (juxt k :db/id) rows)) m))))
+
+(defmethod bread/query ::compact
+  [{:keys [k v relation attrs-map] qk :query/key} data]
+  (let [m {:relation relation}
+        path (conj
+               (qi/relation->spath attrs-map (butlast relation))
+               :translatable/fields)]
+    (s/transform path #(compact* % k v m) (get data qk))))
 
 (defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
   (let [syms (take (count relation) (repeatedly (partial gensym origin)))
