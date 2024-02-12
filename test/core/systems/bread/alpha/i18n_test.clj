@@ -549,6 +549,185 @@
     ;;
     ))
 
+(deftest test-internationalize-query-v2
+  (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
+                   :translatable/fields {:db/cardinality :db.cardinality/many}
+                   :post/children       {:db/cardinality :db.cardinality/many}}]
+    (are
+      [queries query lang compact-fields?]
+      (= queries
+         (let [app (plugins->loaded
+                     [(i18n/plugin {:supported-langs
+                                    #{:en :fr :ru :es :de}
+                                    :compact-fields? compact-fields?})
+                      ;; Set up an ad-hoc plugin to hard-code lang.
+                      {:hooks
+                       {:hook/lang [{:action/name ::bread/value
+                                     :action/value lang}]
+                        ::bread/attrs-map [{:action/name ::bread/value
+                                            :action/value attrs-map}]}}])
+               counter (atom 0)
+               gensym* (fn [prefix]
+                         (symbol (str prefix (swap! counter inc))))]
+           (with-redefs [gensym gensym*]
+             (bread/hook app ::i18n/queries* query))))
+
+      ;; Without :field/content
+      [{:query/name ::db/query
+        :query/key :post
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id :post/slug])]
+           :in [$ ?type]
+           :where [[?e :post/type ?type]]}
+         :post.type/page]}]
+      {:query/name ::db/query
+       :query/key :post
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id :post/slug])]
+          :in [$ ?type]
+          :where [[?e :post/type ?type]]}
+        :post.type/page]}
+      :whatever
+      true ;; this has no effect without translatable fields present
+
+      ;; With :translatable/fields, but still without :field/content
+      [{:query/name ::db/query
+        :query/key :post
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:translatable/fields [:field/key :field/lang]}])]
+           :in [$ ?type]
+           :where [[?e :post/type ?type]]}
+         :post.type/page]}]
+      {:query/name ::db/query
+       :query/key :post
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:translatable/fields [:field/key :field/lang]}])]
+          :in [$ ?type]
+          :where [[?e :post/type ?type]]}
+        :post.type/page]}
+      :whatever
+      true
+
+      ;; With :field/content
+      [{:query/name ::db/query
+        :query/key :post-with-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id :post/slug :translatable/fields])
+                  (pull ?e1 [:db/id :field/key :field/content])]
+           :in [$ ?type ?lang]
+           :where [[?e :post/type ?type]
+                   [?e :translatable/fields ?e1]
+                   [?e1 :field/lang ?lang]]}
+         :post.type/page
+         :fr]}
+       {:query/name ::i18n/reconstitute
+        :query/key :post-with-content
+        :attrs-map attrs-map
+        :bindings [{:binding-sym '?e1
+                    :attr :translatable/fields
+                    :entity-index 0
+                    :relation-index 1
+                    :relation [:translatable/fields]}]}
+       {:query/name ::i18n/compact
+        :query/key :post-with-content
+        :k :field/key
+        :v :field/content
+        :attrs-map attrs-map
+        :relation [:translatable/fields]}]
+      {:query/name ::db/query
+       :query/key :post-with-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:translatable/fields [:field/key :field/content]}])]
+          :in [$ ?type]
+          :where [[?e :post/type ?type]]}
+        :post.type/page]}
+      :fr
+      true
+
+      ;; With deeply nested, mixed implicit & explicit :field/content
+      [{:query/name ::db/query
+        :query/key :post-with-taxons-and-field-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            :translatable/fields
+                            {:post/taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           :translatable/fields]}])
+                  (pull ?e1 [:db/id :field/key :field/content])
+                  (pull ?e2 [:db/id *])]
+           :in [$ ?slug ?type ?lang]
+           :where [[?e :post/slug ?slug]
+                   [?e :post/type ?type]
+                   [?e :translatable/fields ?e1]
+                   [?e1 :field/lang ?lang]
+                   ;; TODO fix construct-lang-query
+                   [?e :post/taxons ?e3]
+                   [?e3 :translatable/fields ?e2]
+                   [?e2 :field/lang ?lang]
+                   ]}
+         "my-post"
+         :post.type/page
+         :en]}
+       {:query/name ::i18n/reconstitute
+        :query/key :post-with-taxons-and-field-content
+        :attrs-map attrs-map
+        :bindings [{:binding-sym '?e1
+                    :attr :translatable/fields
+                    :entity-index 0
+                    :relation-index 1
+                    :relation [:translatable/fields]}
+                   {:binding-sym '?e2
+                    :attr :translatable/fields
+                    :entity-index 0
+                    :relation-index 2
+                    :relation [:post/taxons :translatable/fields]}]}
+       {:query/name ::i18n/compact
+        :query/key :post-with-taxons-and-field-content
+        :k :field/key
+        :v :field/content
+        :attrs-map attrs-map
+        :relation [:translatable/fields]}
+       {:query/name ::i18n/compact
+        :query/key :post-with-taxons-and-field-content
+        :k :field/key
+        :v :field/content
+        :attrs-map attrs-map
+        :relation [:post/taxons :translatable/fields]}]
+      {:query/name ::db/query
+       :query/key :post-with-taxons-and-field-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:translatable/fields [:field/key :field/content]}
+                           {:post/taxons [:taxon/slug
+                                          :taxon/taxonomy
+                                          {:translatable/fields [*]}]}])]
+          :in [$ ?slug ?type]
+          :where [[?e :post/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      true
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
