@@ -8,37 +8,6 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.query-inference :as qi]))
 
-(defmethod bread/query ::compact
-  [{k :query/key} data]
-  (-> data
-      (get k)
-      (i18n/compact)
-      (update :post/_taxons i18n/compact)
-      (rename-keys {:post/_taxons :taxon/posts})))
-
-;; TODO datalog-pull ...?
-(defn- coalesce-query [query]
-  (as-> query $
-    (update-in $ [0 :in] (partial filterv identity))
-    (update-in $ [0 :where] (partial filterv identity))
-    (filterv identity $)))
-
-(defn- posts-query [t status taxon-query spec path]
-  (let [pull (get spec (last path))
-        pull (if (some #{:db/id} pull) pull (cons :db/id pull))]
-    {:query/name ::db/query
-     :query/key path
-     :query/db (:query/db taxon-query)
-     :query/args
-     (coalesce-query
-       [{:find [(list 'pull '?post (vec pull))]
-         :in ['$ '?taxon (when t '?type) (when status '?status)]
-         :where ['[?post :post/taxons ?taxon]
-                 (when t '[?post :post/type ?type])
-                 (when status '[?post :post/status ?status])]}
-        [::bread/data (first path) :db/id]
-        (when t t) (when status status)])}))
-
 (defmethod dispatcher/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key
