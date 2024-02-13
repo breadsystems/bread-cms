@@ -152,7 +152,8 @@
 (defn- compact* [rows k v m]
   (let [rows (filter identity rows)]
     (with-meta
-      (into {} (map (juxt k v)) rows)
+      ;; TODO :field/format
+      (into {} (map (juxt k (comp edn/read-string v))) rows)
       (merge (into {} (map (juxt k :db/id) rows)) m))))
 
 (defmethod bread/query ::compact
