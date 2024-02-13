@@ -46,7 +46,6 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
-      #_#_
       [{:query/name ::db/query
         :query/key :tag
         :query/db ::FAKEDB
@@ -56,9 +55,7 @@
            :where [[?e0 :taxon/taxonomy ?taxonomy]
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
@@ -66,7 +63,6 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post/type and :post/status have no effect without :post/_taxons
-      #_#_
       [{:query/name ::db/query
         :query/key :tag
         :query/db ::FAKEDB
@@ -76,9 +72,7 @@
            :where [[?e0 :taxon/taxonomy ?taxonomy]
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
@@ -87,7 +81,7 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; Query includes :taxon/field as a map.
+      ;; Query includes :translatable/field as a map.
       #_#_
       [{:query/name ::db/query
         :query/key :taxon
