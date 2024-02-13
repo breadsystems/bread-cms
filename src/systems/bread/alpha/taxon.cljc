@@ -47,24 +47,35 @@
          post-type :post/type
          post-status :post/status
          :or {post-type :post.type/page
-              post-status :post.status/published}}
-        dispatcher
-        db (db/database req)
-        pull-spec (dispatcher/pull-spec dispatcher)
-        taxon-query {:query/name ::db/query
-                     :query/key k
-                     :query/db db
-                     :query/args
-                     [{:find [(list 'pull '?e pull-spec)]
-                       :in '[$ ?taxonomy ?slug]
-                       :where '[[?e :taxon/taxonomy ?taxonomy]
-                                [?e :taxon/slug ?slug]]}
-                      taxonomy
-                      (:slug params)]}
-        taxon-queries (qi/infer
-                        [taxon-query] [:post/_taxons]
-                        (partial posts-query post-type post-status))]
-    {:queries (mapcat #(bread/hook req ::i18n/queries* %) taxon-queries)}))
+              post-status :post.status/published}} dispatcher
+        pull-spec (vec (dispatcher/pull-spec dispatcher))
+        orig-q {:find [(list 'pull '?e pull-spec)]
+                :in '[$ ?taxonomy ?slug]
+                :where '[[?e :taxon/taxonomy ?taxonomy]
+                         [?e :taxon/slug ?slug]]}
+        {:keys [query bindings]} (qi/infer-query-bindings
+                                   :post/_taxons
+                                   (fn [{:keys [target]}]
+                                     {:in ['?type '?status]
+                                      :where [[target :post/type '?type]
+                                              [target :post/status '?status]]})
+                                   vector?
+                                   orig-q)]
+    {:queries (bread/hook
+                req ::i18n/queries*
+                (if (seq bindings)
+                  {:query/name ::db/query
+                   :query/key k
+                   :query/db (db/database req)
+                   :query/args [query
+                                taxonomy
+                                (:slug params)
+                                post-type
+                                post-status]}
+                  {:query/name ::db/query
+                   :query/key k
+                   :query/db (db/database req)
+                   :query/args [orig-q taxonomy (:slug params)]}))}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]
