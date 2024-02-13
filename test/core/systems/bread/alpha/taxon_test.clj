@@ -47,9 +47,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
+      #_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
@@ -66,9 +67,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post/type and :post/status have no effect without :post/_taxons
+      #_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
@@ -87,9 +89,10 @@
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Query includes :taxon/field as a map.
+      #_#_
       [{:query/name ::db/query
         :query/key :taxon
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id :taxon/slug :translatable/fields]) .]
            :in [$ ?taxonomy ?slug]
@@ -99,7 +102,7 @@
          "some-tag"]}
        {:query/name ::db/query
         :query/key [:taxon :translatable/fields]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e0 ?lang]
@@ -119,9 +122,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Default :post/type and :post/status with :post/_taxons
+#_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id
                              ;; :taxon/posts
@@ -133,7 +137,7 @@
          "some-tag"]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?post [:db/id :translatable/fields])]
            :in [$ ?taxon ?type ?status]
@@ -145,7 +149,7 @@
          :post.status/published]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e1 ?lang]
@@ -164,9 +168,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Custom :post/type and :post/status with :post/_taxons
+#_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id
                              ;; :taxon/posts
@@ -178,7 +183,7 @@
          "some-tag"]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?post [:db/id :translatable/fields])]
            :in [$ ?taxon ?type ?status]
@@ -190,7 +195,7 @@
          :post.status/draft]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e1 ?lang]
@@ -211,9 +216,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status nil
+#_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id
                              ;; :taxon/posts
@@ -225,7 +231,7 @@
          "some-tag"]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?post [:db/id :translatable/fields])]
            :in [$ ?taxon]
@@ -233,7 +239,7 @@
          [::bread/data :tag :db/id]]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e1 ?lang]
@@ -254,9 +260,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status false
+#_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id
                              ;; :taxon/posts
@@ -268,7 +275,7 @@
          "some-tag"]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?post [:db/id :translatable/fields])]
            :in [$ ?taxon]
@@ -276,7 +283,7 @@
          [::bread/data :tag :db/id]]}
        {:query/name ::db/query
         :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
            :in [$ ?e1 ?lang]
@@ -300,7 +307,7 @@
       #_#_
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
            :in [$ ?status ?taxonomy ?slug]
