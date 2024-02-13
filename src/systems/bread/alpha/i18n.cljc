@@ -145,7 +145,9 @@
 
 (defmethod bread/query ::reconstitute
   [{:keys [attrs-map bindings] k :query/key} data]
-  (qi/reconstitute attrs-map (get data k) bindings))
+  (if (seq (get data k))
+    (qi/reconstitute attrs-map (get data k) bindings)
+    false))
 
 (defn- compact* [rows k v m]
   (let [rows (filter identity rows)]
@@ -155,11 +157,13 @@
 
 (defmethod bread/query ::compact
   [{:keys [k v relation attrs-map] qk :query/key} data]
-  (let [m {:relation relation}
-        path (conj
-               (qi/relation->spath attrs-map (butlast relation))
-               :translatable/fields)]
-    (s/transform path #(compact* % k v m) (get data qk))))
+  (if (get data qk)
+    (let [m {:relation relation}
+          path (conj
+                 (qi/relation->spath attrs-map (butlast relation))
+                 :translatable/fields)]
+      (s/transform path #(compact* % k v m) (get data qk)))
+    false))
 
 (defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
   (let [syms (take (count relation) (repeatedly (partial gensym origin)))
