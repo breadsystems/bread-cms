@@ -47,8 +47,7 @@
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/category
-         "some-tag"]}
-       ]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug]
        :dispatcher/key :taxon
@@ -129,37 +128,29 @@
         :query/key :tag
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id
-                             ;; :taxon/posts
-                             :post/_taxons])]
-           :in [$ ?taxonomy ?slug]
+        ['{:find [(pull ?e [:db/id :post/_taxons])
+                  (pull ?e1 [:db/id :translatable/fields])
+                  ;; TODO why is this getting cast to a vector??
+                  (pull ?e2 [:db/id :field/key :field/content])]
+           :in [$ ?taxonomy ?slug ?type ?status ?lang]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :taxon/slug ?slug]
+                   [?e1 :post/type ?type]
+                   [?e1 :post/status ?status]
+                   [?e1 :translatable/fields ?e2]
+                   [?e2 :field/lang ?lang]]}
          :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons]
-        :query/db ::FAKEDB
-        :query/args
-        ['{:find [(pull ?post [:db/id :translatable/fields])
-                  (pull ?e1 [:db/id :field/key :field/content])]
-           :in [$ ?taxon ?type ?status ?lang]
-           :where [[?post :post/taxons ?taxon]
-                   [?post :post/type ?type]
-                   [?post :post/status ?status]
-                   [?post :translatable/fields ?e1]
-                   [?e1 :field/lang ?lang]]}
-         [::bread/data :tag :db/id]
+         "some-tag"
          :post.type/page
          :post.status/published
          :en]}
        {:query/name ::i18n/reconstitute
-        :query/key [:tag :post/_taxons]
+        :query/key :tag
         :attrs-map attrs-map
         :bindings [{:attr :translatable/fields
-                    :binding-sym '?e1
-                    :entity-index 0
-                    :relation-index 1
+                    :binding-sym '?e2
+                    :entity-index 1
+                    :relation-index 2
                     :relation [:translatable/fields]}]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
@@ -169,6 +160,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Custom :post/type and :post/status with :post/_taxons
+      #_#_
       [{:query/name ::db/query
         :query/key :tag
         :query/db ::FAKEDB
@@ -215,6 +207,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status nil
+      #_#_
       [{:query/name ::db/query
         :query/key :tag
         :query/db ::FAKEDB
@@ -257,6 +250,7 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag with :post/type and :post/status false
+      #_#_
       [{:query/name ::db/query
         :query/key :tag
         :query/db ::FAKEDB
