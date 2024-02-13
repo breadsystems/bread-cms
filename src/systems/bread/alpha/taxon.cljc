@@ -6,7 +6,7 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.query-inference :as i]))
+    [systems.bread.alpha.internal.query-inference :as qi]))
 
 (defmethod bread/query ::compact
   [{k :query/key} data]
@@ -31,7 +31,7 @@
      :query/db (:query/db taxon-query)
      :query/args
      (coalesce-query
-       [{:find [(list 'pull '?post pull)]
+       [{:find [(list 'pull '?post (vec pull))]
          :in ['$ '?taxon (when t '?type) (when status '?status)]
          :where ['[?post :post/taxons ?taxon]
                  (when t '[?post :post/type ?type])
@@ -55,13 +55,13 @@
                      :query/key k
                      :query/db db
                      :query/args
-                     [{:find [(list 'pull '?e0 pull-spec) '.]
+                     [{:find [(list 'pull '?e pull-spec)]
                        :in '[$ ?taxonomy ?slug]
-                       :where '[[?e0 :taxon/taxonomy ?taxonomy]
-                                [?e0 :taxon/slug ?slug]]}
+                       :where '[[?e :taxon/taxonomy ?taxonomy]
+                                [?e :taxon/slug ?slug]]}
                       taxonomy
                       (:slug params)]}
-        taxon-queries (i/infer
+        taxon-queries (qi/infer
                         [taxon-query] [:post/_taxons]
                         (partial posts-query post-type post-status))]
     {:queries (mapcat #(bread/hook req ::i18n/queries* %) taxon-queries)}))
