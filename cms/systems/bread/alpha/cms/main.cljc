@@ -236,7 +236,8 @@
   (defn ->app [req]
     (when-let [app (:bread/app @system)] (merge app req)))
   (def $req {:uri "/en"})
-  (def $req {:uri "/en/hello"})
+  (def $req {:uri "/en/p/hello"})
+  (def $req {:uri "/en/tag/one"})
   (def $req {:uri "/en/404"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
@@ -244,7 +245,8 @@
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
-    (::bread/queries $))
+    (::bread/queries $)
+    (map #(assoc % :attrs-map '_____) $))
   (as-> (->app  $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
@@ -264,6 +266,32 @@
       db/q
       (db/database (->app $req))
       args))
+
+  (defn numq->data
+    ([end]
+     (numq->data 0 end))
+    ([start end]
+     (-> $req ->app
+         (bread/hook ::bread/route)
+         (bread/hook ::bread/dispatch)
+         (update ::bread/queries subvec start end)
+         (bread/hook ::bread/expand)
+         ::bread/data)))
+
+  (numq->data 0 1)
+
+  (q '{:find
+       [(pull ?e [:db/id :taxon/slug :translatable/fields :post/_taxons])
+        (pull ?e110192 (:db/id *))],
+       :in [$ ?taxonomy ?slug ?lang],
+       :where
+       ([?e :taxon/taxonomy ?taxonomy]
+        [?e :taxon/slug ?slug]
+        [?e :translatable/fields ?e110192]
+        [?e110192 :field/lang ?lang])}
+     :taxon.taxonomy/tag
+     "one"
+     :en)
 
   ;; querying for inverse relationships (post <-> taxon):
   (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
