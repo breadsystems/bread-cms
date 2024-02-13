@@ -265,13 +265,21 @@
       (db/database (->app $req))
       args))
 
+  ;; querying for inverse relationships (post <-> taxon):
+  (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
+       :in [$ ?slug]
+       :where [[?t :taxon/taxonomy :tag]
+               [?t :taxon/slug ?slug]]}
+     "one")
+  (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
+       :in [$ ?slug]
+       :where [[?p :post/type :post.type/page]
+               [?p :post/slug ?slug]]}
+     "hello")
+
 
 
   ;; AUTH
-
-  (q '{:find [(pull ?mi [:db/id {:menu.item/entity [*]}])]
-       :in [$]
-       :where [[?mi :menu.item/entity ?mie]]})
 
   (def coby
     (q '{:find [(pull ?e [:db/id
