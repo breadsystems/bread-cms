@@ -282,6 +282,7 @@
          ::bread/data)))
 
   (numq->data 0 1)
+  (numq->data 0 4)
 
   ;; querying for inverse relationships (post <-> taxon):
   (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
