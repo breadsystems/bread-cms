@@ -237,6 +237,7 @@
     (when-let [app (:bread/app @system)] (merge app req)))
   (def $req {:uri "/en"})
   (def $req {:uri "/en/hello"})
+  (def $req {:uri "/en/404"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (::bread/dispatcher $))
