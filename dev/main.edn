@@ -38,11 +38,24 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}
+            {:db/id "tag.one"
+             :taxon/slug "one"
+             :taxon/taxonomy :taxon.taxonomy/tag
+             :translatable/fields
+             [{:field/key :name :field/content "One" :field/lang :en}
+              {:field/key :name :field/content "Un" :field/lang :fr}]}
+            {:db/id "tag.two"
+             :taxon/slug "two"
+             :taxon/taxonomy :taxon.taxonomy/tag
+             :translatable/fields
+             [{:field/key :name :field/content "One" :field/lang :en}
+              {:field/key :name :field/content "Un" :field/lang :fr}]}
             {:db/id "hello"
              :post/slug "hello"
              :post/type :post.type/page
              :post/status :post.status/published
              :post/children #{"child-page"}
+             :post/taxons #{"tag.one" "tag.two"}
              :translatable/fields
              [{:field/key :a
                :field/content "A"
@@ -118,6 +131,9 @@
      {:name :home
       :dispatcher/type :dispatcher.type/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/home-page}]
+    ["/tag/:slug"
+     {:dispatcher/type :dispatcher.type/tag
+      :dispatcher/component #var systems.bread.alpha.cms.theme/tag}]
     ["/*slugs"
      {:home :page
       :dispatcher/type :dispatcher.type/page
