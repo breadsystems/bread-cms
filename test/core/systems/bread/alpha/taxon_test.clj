@@ -10,10 +10,10 @@
                                               plugins->loaded]]))
 
 (deftest test-dispatch-taxon-queries
-  (let [db ::FAKEDB
-        app (plugins->loaded [(db->plugin db)
+  (let [app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
-                                            :query-lang? false})
+                                            :query-lang? false
+                                            :compact-fields? false})
                               (dispatcher/plugin)])
         ->app (fn [dispatcher]
                 (assoc app ::bread/dispatcher dispatcher))]
@@ -29,7 +29,7 @@
       ;; Not querying for any translatable content.
       [{:query/name ::db/query
         :query/key :taxon
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
            :in [$ ?taxonomy ?slug]
@@ -37,8 +37,7 @@
                    [?e0 :taxon/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :taxon}]
+       ]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug]
        :dispatcher/key :taxon

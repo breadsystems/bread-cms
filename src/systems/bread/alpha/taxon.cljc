@@ -63,10 +63,8 @@
                       (:slug params)]}
         taxon-queries (i/infer
                         [taxon-query] [:post/_taxons]
-                        (partial posts-query post-type post-status))
-        compact-query {:query/name ::compact :query/key k}]
-    {:queries (conj (bread/hook req ::i18n/queries taxon-queries)
-                    compact-query)}))
+                        (partial posts-query post-type post-status))]
+    {:queries (mapcat #(bread/hook req ::i18n/queries* %) taxon-queries)}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]
