@@ -287,11 +287,11 @@
               (fn [{:keys [query bindings]} [path b]]
                 (let [relation-index (count (:find query))
                       expr (get-in query [:find index])
-                      pull (transform-expr expr path attr)
+                      pull (vec (transform-expr expr path attr))
                       pull-expr (list 'pull sym pull)
                       binding-sym (gensym "?e")
                       bspec (cons :db/id (get b attr))
-                      binding-expr (list 'pull binding-sym bspec)
+                      binding-expr (list 'pull binding-sym (vec bspec))
                       relation (filterv keyword? path)
                       {:keys [in where]}
                       (normalize-datalog-query (construct {:origin sym

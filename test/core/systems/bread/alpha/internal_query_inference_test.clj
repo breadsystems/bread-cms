@@ -167,6 +167,19 @@
     ))
 
 (deftest test-infer-query-bindings
+  (let [db-query '{:find [(pull ?e [:db/id
+                                    {:post/_taxons
+                                     [{:translatable/fields [*]}]}])],
+                   :in [$ ?slug],
+                   :where [[?e :taxon/slug ?slug]]}
+        {:keys [query]} (qi/infer-query-bindings
+                          :post/_taxons
+                          (constantly {})
+                          vector?
+                          db-query)]
+    (is (vector? (-> query :find first vec (get 2))))
+    (is (vector? (-> query :find second vec (get 2)))))
+
   (let [i18n-query (fn [{:keys [origin target attr]}]
                      {:in ['?lang]
                       :where [[origin attr target]
