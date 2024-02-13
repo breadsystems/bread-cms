@@ -42,14 +42,31 @@
              :taxon/slug "one"
              :taxon/taxonomy :taxon.taxonomy/tag
              :translatable/fields
-             [{:field/key :name :field/content "One" :field/lang :en}
-              {:field/key :name :field/content "Un" :field/lang :fr}]}
+             [{:field/key :name :field/content "\"One\"" :field/lang :en}
+              {:field/key :name :field/content "\"Un\"" :field/lang :fr}]}
             {:db/id "tag.two"
              :taxon/slug "two"
              :taxon/taxonomy :taxon.taxonomy/tag
              :translatable/fields
-             [{:field/key :name :field/content "Two" :field/lang :en}
-              {:field/key :name :field/content "Deux" :field/lang :fr}]}
+             [{:field/key :name :field/content "\"Two\"" :field/lang :en}
+              {:field/key :name :field/content "\"Deux\"" :field/lang :fr}]}
+            {:db/id "child-page"
+             :post/slug "child-page"
+             :post/type :post.type/page
+             :post/status :post.status/published
+             :translatable/fields
+             [{:field/key :a
+               :field/content "\"A\""
+               :field/lang :en}
+              {:field/key :a
+               :field/content "\"___\""
+               :field/lang :es}
+              {:field/key :b
+               :field/content "\"B\""
+               :field/lang :en}
+              {:field/key :other
+               :field/content "\"other\""
+               :field/lang :es}]}
             {:db/id "hello"
              :post/slug "hello"
              :post/type :post.type/page
@@ -58,48 +75,31 @@
              :post/taxons #{"tag.one" "tag.two"}
              :translatable/fields
              [{:field/key :a
-               :field/content "A"
+               :field/content "\"A\""
                :field/lang :en}
               {:field/key :a
-               :field/content "___"
+               :field/content "\"___\""
                :field/lang :es}
               {:field/key :b
-               :field/content "B"
+               :field/content "\"B\""
                :field/lang :en}
               {:field/key :other
-               :field/content "other"
-               :field/lang :es}]}
-            {:db/id "child-page"
-             :post/slug "child-page"
-             :post/type :post.type/page
-             :post/status :post.status/published
-             :translatable/fields
-             [{:field/key :a
-               :field/content "A"
-               :field/lang :en}
-              {:field/key :a
-               :field/content "___"
-               :field/lang :es}
-              {:field/key :b
-               :field/content "B"
-               :field/lang :en}
-              {:field/key :other
-               :field/content "other"
+               :field/content "\"other\""
                :field/lang :es}]}
             {:db/id "my-item"
              :post/type :post.type/menu-item
              :translatable/fields
              [{:field/key :a
-               :field/content "A"
+               :field/content "\"A\""
                :field/lang :en}
               {:field/key :a
-               :field/content "___"
+               :field/content "\"___\""
                :field/lang :es}
               {:field/key :b
-               :field/content "B"
+               :field/content "\"B\""
                :field/lang :en}
               {:field/key :other
-               :field/content "other"
+               :field/content "\"other\""
                :field/lang :es}]}
             #_
             [:db/id
