@@ -238,6 +238,7 @@
   (def $req {:uri "/en"})
   (def $req {:uri "/en/p/hello"})
   (def $req {:uri "/en/tag/one"})
+  (def $req {:uri "/fr/tag/one"})
   (def $req {:uri "/en/404"})
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
@@ -259,6 +260,8 @@
     (bread/hook $ ::bread/render)
     (select-keys $ [:status :body :headers]))
 
+  (bread/config (->app $req) :i18n/supported-langs)
+
   (defn db []
     (db/database (->app $req)))
   (defn q [& args]
@@ -279,19 +282,6 @@
          ::bread/data)))
 
   (numq->data 0 1)
-
-  (q '{:find
-       [(pull ?e [:db/id :taxon/slug :translatable/fields :post/_taxons])
-        (pull ?e110192 (:db/id *))],
-       :in [$ ?taxonomy ?slug ?lang],
-       :where
-       ([?e :taxon/taxonomy ?taxonomy]
-        [?e :taxon/slug ?slug]
-        [?e :translatable/fields ?e110192]
-        [?e110192 :field/lang ?lang])}
-     :taxon.taxonomy/tag
-     "one"
-     :en)
 
   ;; querying for inverse relationships (post <-> taxon):
   (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]

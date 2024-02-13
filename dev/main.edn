@@ -11,7 +11,7 @@
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
-  :i18n true
+  :i18n {:supported-langs #{:en :fr}}
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme/not-found}
   :plugins []}
