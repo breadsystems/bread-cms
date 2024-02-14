@@ -237,11 +237,10 @@
   )
 
 (defn infer-query-bindings
-  "Takes an attr, a function to construct a new db query, a predicate,
-  and a query. Searches the query for bindings to attr, such that the binding
-  value returns logical true for (pred binding-value). Returns a map of the
-  form {:query transformed-query :bindings binding-specs}."
-  [attr construct pred query]
+  "Searches query for bindings to attr, such that the binding value returns
+  logical true for (pred binding-value). Returns a map of the form:
+  {:query transformed-query :bindings binding-specs}."
+  [attr pred query]
   (reduce (fn [{:keys [bindings]} {:keys [index sym ops] :as _clause}]
             (reduce
               (fn [{:keys [query bindings]} [path b]]

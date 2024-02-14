@@ -167,84 +167,76 @@
     ))
 
 (deftest test-infer-query-bindings
-  (let [i18n-query (fn [{:keys [origin target attr]}]
-                     {:in ['?lang]
-                      :where [[origin attr target]
-                              [target :field/lang '?lang]]})]
-    (are
-      [result attr construct pred query]
-      (= result (let [counter (atom 0)
-                      gensym* (fn [prefix]
-                                (symbol (str prefix (swap! counter inc))))]
-                  (with-redefs [gensym gensym*]
-                    (qi/infer-query-bindings attr construct pred query))))
+  (are
+    [result attr pred query]
+    (= result (let [counter (atom 0)
+                    gensym* (fn [prefix]
+                              (symbol (str prefix (swap! counter inc))))]
+                (with-redefs [gensym gensym*]
+                  (qi/infer-query-bindings attr pred query))))
 
-      {:bindings []} nil nil nil nil
-      {:bindings []} :attr nil nil {}
-      {:bindings []} :attr i18n-query (constantly false) {}
+    {:bindings []} nil nil nil
+    {:bindings []} :attr nil {}
+    {:bindings []} :attr (constantly false) {}
 
-      {:bindings []}
-      :attr i18n-query (constantly false) {:find []}
+    {:bindings []}
+    :attr (constantly false) {:find []}
 
-      ;; predicate "matches", but no attr present
-      {:bindings []}
-      :attr i18n-query (constantly true) {:find []}
+    ;; predicate "matches", but no attr present
+    {:bindings []}
+    :attr (constantly true) {:find []}
 
-      ;; querying for fields with a wildcard binding
-      {:bindings [{:binding-sym '?e
-                   :attr :translatable/fields
-                   :entity-index 0
-                   :relation [:translatable/fields]}]}
-      :translatable/fields
-      i18n-query
-      i18n/translatable-binding?
-      '{:find [(pull ?e [{:translatable/fields [*]}])]
-        :in [$ ?slug]
-        :where [[?e :post/slug ?slug]]}
+    ;; querying for fields with a wildcard binding
+    {:bindings [{:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :relation [:translatable/fields]}]}
+    :translatable/fields
+    i18n/translatable-binding?
+    '{:find [(pull ?e [{:translatable/fields [*]}])]
+      :in [$ ?slug]
+      :where [[?e :post/slug ?slug]]}
 
-      ;; querying for fields with key & content bindings
-      {:bindings [{:binding-sym '?e
-                   :attr :translatable/fields
-                   :entity-index 0
-                   :relation [:translatable/fields]}]}
-      :translatable/fields
-      i18n-query
-      i18n/translatable-binding?
-      '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
-        :in [$ ?slug]
-        :where [[?e :post/slug ?slug]]}
+    ;; querying for fields with key & content bindings
+    {:bindings [{:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :relation [:translatable/fields]}]}
+    :translatable/fields
+    i18n/translatable-binding?
+    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+      :in [$ ?slug]
+      :where [[?e :post/slug ?slug]]}
 
-      ;; when construct returns a vector-style query
-      {:bindings [{:binding-sym '?e
-                   :attr :translatable/fields
-                   :entity-index 0
-                   :relation [:translatable/fields]}]}
-      :translatable/fields
-      nil
-      i18n/translatable-binding?
-      '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
-        :in [$ ?slug]
-        :where [[?e :post/slug ?slug]]}
+    ;; when construct returns a vector-style query
+    {:bindings [{:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :relation [:translatable/fields]}]}
+    :translatable/fields
+    i18n/translatable-binding?
+    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+      :in [$ ?slug]
+      :where [[?e :post/slug ?slug]]}
 
-      ;; querying for a menu with deeply nested fields clause
-      {:bindings [{:binding-sym '?e
-                   :attr :translatable/fields
-                   :entity-index 0
-                   :relation [:menu/items
-                              :menu.item/entity
-                              :translatable/fields]}]}
-      :translatable/fields
-      i18n-query
-      i18n/translatable-binding?
-      '{:find [(pull ?e [{:menu/items
-                          [{:menu.item/entity
-                            [{:translatable/fields
-                              [:field/key :field/content]}]}]}])]
-        :in [$ ?menu-key]
-        :where [[?e :menu/key ?menu-key]]}
+    ;; querying for a menu with deeply nested fields clause
+    {:bindings [{:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :relation [:menu/items
+                            :menu.item/entity
+                            :translatable/fields]}]}
+    :translatable/fields
+    i18n/translatable-binding?
+    '{:find [(pull ?e [{:menu/items
+                        [{:menu.item/entity
+                          [{:translatable/fields
+                            [:field/key :field/content]}]}]}])]
+      :in [$ ?menu-key]
+      :where [[?e :menu/key ?menu-key]]}
 
-      ;;
-      )))
+    ;;
+    ))
 
 (deftest test-relation->spath
   (is (= [] (qi/relation->spath nil nil)))
