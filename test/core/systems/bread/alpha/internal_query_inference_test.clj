@@ -167,19 +167,6 @@
     ))
 
 (deftest test-infer-query-bindings
-  (let [db-query '{:find [(pull ?e [:db/id
-                                    {:post/_taxons
-                                     [{:translatable/fields [*]}]}])],
-                   :in [$ ?slug],
-                   :where [[?e :taxon/slug ?slug]]}
-        {:keys [query]} (qi/infer-query-bindings
-                          :post/_taxons
-                          (constantly {})
-                          vector?
-                          db-query)]
-    (is (vector? (-> query :find first vec (get 2))))
-    (is (vector? (-> query :find second vec (get 2)))))
-
   (let [i18n-query (fn [{:keys [origin target attr]}]
                      {:in ['?lang]
                       :where [[origin attr target]
@@ -192,28 +179,21 @@
                   (with-redefs [gensym gensym*]
                     (qi/infer-query-bindings attr construct pred query))))
 
-      {:query nil :bindings []} nil nil nil nil
-      {:query {} :bindings []} :attr nil nil {}
-      {:query {} :bindings []} :attr i18n-query (constantly false) {}
+      {:bindings []} nil nil nil nil
+      {:bindings []} :attr nil nil {}
+      {:bindings []} :attr i18n-query (constantly false) {}
 
-      {:query {:find []} :bindings []}
+      {:bindings []}
       :attr i18n-query (constantly false) {:find []}
 
       ;; predicate "matches", but no attr present
-      {:query {:find []} :bindings []}
+      {:bindings []}
       :attr i18n-query (constantly true) {:find []}
 
       ;; querying for fields with a wildcard binding
-      {:query '{:find [(pull ?e [:translatable/fields])
-                       (pull ?e1 [:db/id *])]
-                :in [$ ?slug ?lang]
-                :where [[?e :post/slug ?slug]
-                        [?e :translatable/fields ?e1]
-                        [?e1 :field/lang ?lang]]}
-       :bindings [{:binding-sym '?e1
+      {:bindings [{:binding-sym '?e
                    :attr :translatable/fields
                    :entity-index 0
-                   :relation-index 1
                    :relation [:translatable/fields]}]}
       :translatable/fields
       i18n-query
@@ -223,16 +203,9 @@
         :where [[?e :post/slug ?slug]]}
 
       ;; querying for fields with key & content bindings
-      {:query '{:find [(pull ?e [:translatable/fields])
-                       (pull ?e1 [:db/id :field/key :field/content])]
-                :in [$ ?slug ?lang]
-                :where [[?e :post/slug ?slug]
-                        [?e :translatable/fields ?e1]
-                        [?e1 :field/lang ?lang]]}
-       :bindings [{:binding-sym '?e1
+      {:bindings [{:binding-sym '?e
                    :attr :translatable/fields
                    :entity-index 0
-                   :relation-index 1
                    :relation [:translatable/fields]}]}
       :translatable/fields
       i18n-query
@@ -242,38 +215,21 @@
         :where [[?e :post/slug ?slug]]}
 
       ;; when construct returns a vector-style query
-      {:query '{:find [(pull ?e [:translatable/fields])
-                       (pull ?e1 [:db/id :field/key :field/content])]
-                :in [$ ?slug ?lang]
-                :where [[?e :post/slug ?slug]
-                        [?e :translatable/fields ?e1]
-                        [?e1 :field/lang ?lang]]}
-       :bindings [{:binding-sym '?e1
+      {:bindings [{:binding-sym '?e
                    :attr :translatable/fields
                    :entity-index 0
-                   :relation-index 1
                    :relation [:translatable/fields]}]}
       :translatable/fields
-      (comp #(concat [:find '?whatevs :in] (:in %) [:where] (:where %))
-            i18n-query)
+      nil
       i18n/translatable-binding?
       '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
         :in [$ ?slug]
         :where [[?e :post/slug ?slug]]}
 
       ;; querying for a menu with deeply nested fields clause
-      {:query '{:find [(pull ?e [{:menu/items
-                                  [{:menu.item/entity
-                                    [:translatable/fields]}]}])
-                       (pull ?e1 [:db/id :field/key :field/content])]
-                :in [$ ?menu-key ?lang]
-                :where [[?e :menu/key ?menu-key]
-                        [?e :translatable/fields ?e1]
-                        [?e1 :field/lang ?lang]]}
-       :bindings [{:binding-sym '?e1
+      {:bindings [{:binding-sym '?e
                    :attr :translatable/fields
                    :entity-index 0
-                   :relation-index 1
                    :relation [:menu/items
                               :menu.item/entity
                               :translatable/fields]}]}

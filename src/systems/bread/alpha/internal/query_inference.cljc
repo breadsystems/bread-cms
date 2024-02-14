@@ -242,39 +242,16 @@
   value returns logical true for (pred binding-value). Returns a map of the
   form {:query transformed-query :bindings binding-specs}."
   [attr construct pred query]
-  (reduce (fn [{:keys [query]} {:keys [index sym ops] :as _clause}]
+  (reduce (fn [{:keys [bindings]} {:keys [index sym ops] :as _clause}]
             (reduce
               (fn [{:keys [query bindings]} [path b]]
-                (let [relation-index (count (:find query))
-                      expr (get-in query [:find index])
-                      pull (vec (transform-expr expr path attr))
-                      pull-expr (list 'pull sym pull)
-                      binding-sym (gensym "?e")
-                      bspec (cons :db/id (get b attr))
-                      binding-expr (list 'pull binding-sym (vec bspec))
-                      relation (filterv keyword? path)
-                      {:keys [in where]}
-                      (normalize-datalog-query (construct {:origin sym
-                                                           :target binding-sym
-                                                           :relation relation
-                                                           :attr attr}))
-                      in (filter (complement (set (:in query))) in)
-                      binding-where
-                      (->> where
-                           (filter (complement (set (:where query)))))]
-                  {:query (-> query
-                              (assoc-in [:find index] pull-expr)
-                              (update :find conj binding-expr)
-                              (update :in concat in)
-                              (update :where concat binding-where))
-                   ;; We'll use this to reconstitute the query results.
-                   :bindings (conj bindings
-                                   {:binding-sym binding-sym
+                (let [relation (filterv keyword? path)]
+                  {:bindings (conj bindings
+                                   {:binding-sym sym
                                     :attr attr
                                     :entity-index index
-                                    :relation-index relation-index
                                     :relation (conj relation attr)})}))
-              {:query query :bindings []}
+              {:bindings bindings}
               ops))
-          {:query query :bindings []}
+          {:bindings []}
           (binding-clauses query attr pred)))
