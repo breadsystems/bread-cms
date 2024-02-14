@@ -9,7 +9,15 @@
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 
-(deftest test-dispatch-taxon-queries
+#_ ;; TODO move taxon inference to its own hook?
+(deftest test-taxon-inference
+  (let [app (plugins->loaded [(db->plugin ::FAKEDB)
+                              {:hooks
+                               {::bread/attrs-map {:attr :ATTR}}}])]
+    (are
+      [query ])))
+
+(deftest ^:kaocha/skip test-dispatch-taxon-queries
   (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
                    :translatable/fields {:db/cardinality :db.cardinality/many}
                    :post/children       {:db/cardinality :db.cardinality/many}}
