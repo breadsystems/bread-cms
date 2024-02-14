@@ -177,27 +177,6 @@
                      [attr])))
                relation)))
 
-(defn reconstitute
-  "Reconstitutes each entity in results according to the binding info in
-  clauses. It does this by expanding (via a Spector transform) each entity
-  into the corresponding sub-entities (such as translatable/fields). Finds
-  entity at :entity-index within each binding clause; finds sub-entities at
-  :relation-index, resp. Uses the :db/cardinalities from attrs-map to build
-  relation paths for transforming each sub-entity."
-  [attrs-map results clauses]
-  (if (seq clauses)
-    (reduce
-      (fn [entity {:keys [entity-index relation-index relation] :as _clause}]
-        (let [result (first results)
-              entity (or entity (get result entity-index))
-              relatives (into {} (map #(let [e (get % relation-index)]
-                                         [(:db/id e) e]) results))
-              lookup (comp relatives :db/id)
-              path (relation->spath attrs-map relation)]
-          (s/transform path lookup entity)))
-      nil clauses)
-    results))
-
 (comment
   (transform-expr
     (list 'pull '?e [:db/id
@@ -240,25 +219,6 @@
     #(some #{'* :field/content} %))
 
   (relation->spath {:x {:db/cardinality :db.cardinality/many}} [:x :y])
-
-  (reconstitute
-    {:post/children {:db/cardinality :db.cardinality/many}
-     :translatable/fields {:db/cardinality :db.cardinality/many}}
-    [[{:db/id 1
-       :post/children [{:db/id 2
-                        :translatable/fields [{:db/id 10}
-                                              {:db/id 11}
-                                              {:db/id 12}]}]}
-      {:db/id 10 :field/key :a :field/content "A"}]
-     [{:db/id 1
-       :post/children [{:db/id 2
-                        :translatable/fields [{:db/id 10}
-                                              {:db/id 11}
-                                              {:db/id 12}]}]}
-      {:db/id 12 :field/key :b :field/content "B"}]]
-    [{:entity-index 0
-      :relation-index 1
-      :relation [:post/children :translatable/fields]}])
 
   (infer-query-bindings
     :translatable/fields
