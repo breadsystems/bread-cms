@@ -287,7 +287,7 @@
   ;; querying for inverse relationships (post <-> taxon):
   (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
        :in [$ ?slug]
-       :where [[?t :taxon/taxonomy :tag]
+       :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
                [?t :taxon/slug ?slug]]}
      "one")
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
