@@ -151,14 +151,11 @@
       (merge (into {} (map (juxt k :db/id) rows)) m))))
 
 (defmethod bread/query ::compact
-  [{:keys [k v relation attrs-map] qk :query/key} data]
-  (if (get data qk)
-    (let [m {:relation relation}
-          path (conj
-                 (qi/relation->spath attrs-map (butlast relation))
-                 :translatable/fields)]
-      (s/transform path #(compact* % k v m) (get data qk)))
-    false))
+  [{k :query/key spath :spath} data]
+  (s/transform spath (fn [fields]
+                       (into {} (map (juxt :field/key :field/content)) fields))
+               (get data k)))
+
 
 (defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
   (let [syms (take (count relation) (repeatedly (partial gensym origin)))

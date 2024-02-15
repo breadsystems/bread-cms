@@ -777,6 +777,38 @@
       ;;
       )))
 
+
+(deftest test-compact-hook
+  (are
+    [compacted e spath]
+    (= compacted (bread/query {:query/name ::i18n/compact
+                               :query/key :the-query-key
+                               :spath spath}
+                              {:the-query-key e}))
+
+    ;; Single entity with fields.
+    {:translatable/fields {:a "A" :b "B"}}
+    {:translatable/fields [{:field/key :a :field/content "A"}
+                           {:field/key :b :field/content "B"}]}
+    [:translatable/fields]
+
+    ;; Nested entity with fields.
+    {:menu.item/entity {:translatable/fields {:a "A" :b "B"}}}
+    {:menu.item/entity {:translatable/fields
+                        [{:field/key :a :field/content "A"}
+                         {:field/key :b :field/content "B"}]}}
+    [:menu.item/entity :translatable/fields]
+
+    ;; Entity with nested fields through a has-many relation.
+    {:post/children [{:translatable/fields {:a "A" :b "B"}}]}
+    {:post/children [{:translatable/fields
+                      [{:field/key :a :field/content "A"}
+                       {:field/key :b :field/content "B"}]}]}
+    [:post/children s/ALL :translatable/fields]
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
