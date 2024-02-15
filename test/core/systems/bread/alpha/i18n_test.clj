@@ -777,6 +777,50 @@
       ;;
       )))
 
+(deftest test-filter-fields-hook
+  (are
+    [filtered e lang spath]
+    (= filtered (bread/query {:query/name ::i18n/filter-fields
+                              :query/key :the-query-key
+                              :field/lang lang
+                              :spath spath}
+                             {:the-query-key e}))
+
+    ;; Single entity with fields.
+    {:translatable/fields [{:field/key :a :field/lang :es}
+                           {:field/key :b :field/lang :es}]}
+    {:translatable/fields [{:field/key :a :field/lang :fr}
+                           {:field/key :a :field/lang :es}
+                           {:field/key :b :field/lang :fr}
+                           {:field/key :b :field/lang :es}]}
+    :es [:translatable/fields]
+
+    ;; Nested entity with fields.
+    {:menu.item/entity {:translatable/fields [{:field/key :a :field/lang :es}
+                                              {:field/key :b :field/lang :es}]}}
+    {:menu.item/entity {:translatable/fields [{:field/key :a :field/lang :fr}
+                                              {:field/key :a :field/lang :es}
+                                              {:field/key :b :field/lang :fr}
+                                              {:field/key :b :field/lang :es}]}}
+    :es [:menu.item/entity :translatable/fields]
+
+    ;; Nested fields through a has-many relation.
+    {:post/_taxons [{:translatable/fields [{:field/key :a :field/lang :es}
+                                           {:field/key :b :field/lang :es}]}
+                    {:translatable/fields [{:field/key :c :field/lang :es}
+                                           {:field/key :d :field/lang :es}]}]}
+    {:post/_taxons [{:translatable/fields [{:field/key :a :field/lang :fr}
+                                           {:field/key :a :field/lang :es}
+                                           {:field/key :b :field/lang :fr}
+                                           {:field/key :b :field/lang :es}]}
+                    {:translatable/fields [{:field/key :c :field/lang :fr}
+                                           {:field/key :c :field/lang :es}
+                                           {:field/key :d :field/lang :fr}
+                                           {:field/key :d :field/lang :es}]}]}
+    :es [:post/_taxons s/ALL :translatable/fields]
+
+    ;;
+    ))
 
 (deftest test-compact-hook
   (are

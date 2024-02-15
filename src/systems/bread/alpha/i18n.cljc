@@ -156,6 +156,11 @@
                        (into {} (map (juxt :field/key :field/content)) fields))
                (get data k)))
 
+(defmethod bread/query ::filter-fields
+  [{k :query/key lang :field/lang spath :spath} data]
+  (s/transform spath (fn [fields]
+                       (filter #(= lang (:field/lang %)) fields))
+               (get data k)))
 
 (defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
   (let [syms (take (count relation) (repeatedly (partial gensym origin)))
