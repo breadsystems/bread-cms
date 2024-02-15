@@ -8,6 +8,14 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.query-inference :as qi]))
 
+(defmethod bread/query ::filter-posts
+  [{k :query/key post-type :post/type post-status :post/status} data]
+  (filter (fn [post]
+            (prn post-type post-status '? ((juxt :post/type :post/status) post))
+            (doto (and (or (nil? post-type)   (= post-type   (:post/type post)))
+                 (or (nil? post-status) (= post-status (:post/status post)))) prn))
+          (get-in data [k :post/_taxons])))
+
 (defmethod dispatcher/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key

@@ -206,6 +206,37 @@
       ;;
       )))
 
+(deftest test-filter-posts-hook
+  (let [posts
+        [{:post/type :page    :post/status :published :post/slug "one"}
+         {:post/type :article :post/status :published :post/slug "two"}
+         {:post/type :page    :post/status :published :post/slug "three"}
+         {:post/type :article :post/status :published :post/slug "four"}
+         {:post/type :page    :post/status :draft     :post/slug "five"}]]
+    (are
+      [filtered-slugs post-type post-status]
+      (= filtered-slugs (->> {:the-query-key {:post/_taxons posts}}
+                             (bread/query {:query/name ::taxon/filter-posts
+                                           :query/key :the-query-key
+                                           :post/type post-type
+                                           :post/status post-status})
+                             (map :post/slug)))
+
+      ;; Filter by post type only.
+      ["one" "three" "five"]
+      :page nil
+
+      ;; Filter by post status only.
+      ["one" "two" "three" "four"]
+      nil :published
+
+      ;; Filter by post type AND status.
+      ["one" "three"]
+      :page :published
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
