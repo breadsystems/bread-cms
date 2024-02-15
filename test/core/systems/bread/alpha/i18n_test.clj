@@ -710,9 +710,6 @@
         :spath [:translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
         :spath [:translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -755,15 +752,9 @@
         :spath [:post/taxons s/ALL :translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
         :spath [:translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
         :spath [:post/taxons s/ALL :translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content

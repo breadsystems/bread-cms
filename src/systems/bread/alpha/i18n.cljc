@@ -195,10 +195,8 @@
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
                                  :query/key k
-                                 :spath (qi/relation->spath attrs-map relation)
-                                 :attrs-map attrs-map
-                                 :k :field/key
-                                 :v :field/content}) bindings)
+                                 :spath (qi/relation->spath attrs-map relation)})
+                              bindings)
                          [])]
         (vec (concat [query] filter-qs compact-qs)))
       [query])))
