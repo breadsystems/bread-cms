@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.taxon-test
   (:require
     [clojure.test :refer [deftest are]]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.database :as db]
@@ -18,9 +19,8 @@
       [query ])))
 
 (deftest test-dispatch-taxon-queries
-  (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
-                   :translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/children       {:db/cardinality :db.cardinality/many}}
+  (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
+                   :post/_taxons        {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false
@@ -116,11 +116,7 @@
        {:query/name ::i18n/filter-fields
         :query/key :taxon
         :field/lang :en
-        :attrs-map attrs-map
-        :bindings [{:attr :translatable/fields
-                    :binding-sym '?e
-                    :entity-index 0
-                    :relation [:translatable/fields]}]}]
+        :spath [:translatable/fields]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
                          {:translatable/fields [:field/key
@@ -151,15 +147,11 @@
        {:query/name ::i18n/filter-fields
         :query/key :tag-with-posts
         :field/lang :en
-        :attrs-map attrs-map
-        :bindings [{:attr :translatable/fields
-                    :binding-sym '?e
-                    :entity-index 0
-                    :relation [:post/_taxons :translatable/fields]}
-                   {:attr :translatable/fields
-                    :binding-sym '?e
-                    :entity-index 0
-                    :relation [:translatable/fields]}]}]
+        :spath [:post/_taxons s/ALL :translatable/fields]}
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:translatable/fields]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
                                                                 :field/content]}]}
