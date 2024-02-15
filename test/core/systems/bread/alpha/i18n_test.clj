@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as string]
     [clojure.test :refer [are deftest is testing use-fixtures]]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
@@ -552,7 +553,8 @@
 (deftest test-internationalize-query-v2
   (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
                    :translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/children       {:db/cardinality :db.cardinality/many}}]
+                   :post/children       {:db/cardinality :db.cardinality/many}
+                   :post/taxons         {:db/cardinality :db.cardinality/many}}]
     (are
       [queries query lang compact-fields?]
       (= queries
@@ -723,7 +725,7 @@
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation [:translatable/fields]}]
+        :relation-path [:translatable/fields s/ALL]}]
       {:query/name ::db/query
        :query/key :post-with-content
        :query/db ::FAKEDB
@@ -772,13 +774,13 @@
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation [:translatable/fields]}
+        :relation-path [:translatable/fields s/ALL]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation [:post/taxons :translatable/fields]}]
+        :relation-path [:post/taxons s/ALL :translatable/fields s/ALL]}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content
        :query/db ::FAKEDB

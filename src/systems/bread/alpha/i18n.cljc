@@ -194,7 +194,7 @@
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
                                  :query/key k
-                                 :relation relation
+                                 :relation-path (qi/relation->spath attrs-map relation)
                                  :attrs-map attrs-map
                                  :k :field/key
                                  :v :field/content}) bindings)
