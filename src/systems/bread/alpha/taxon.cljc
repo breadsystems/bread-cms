@@ -26,17 +26,20 @@
                              :post/_taxons
                              vector?
                              query)]
-    {:queries (bread/hook
-                req ::i18n/queries*
-                (if (seq bindings)
-                  {:query/name ::db/query
-                   :query/key k
-                   :query/db (db/database req)
-                   :query/args [query
-                                taxonomy
-                                (:slug params)
-                                post-type
-                                post-status]}
+    {:queries (if (seq bindings)
+                (vec (mapcat
+                       (fn [query]
+                         (bread/hook req ::i18n/queries* query))
+                       [{:query/name ::db/query
+                         :query/key k
+                         :query/db (db/database req)
+                         :query/args [query taxonomy (:slug params)]}
+                        {:query/name ::filter-posts
+                         :query/key :tag-with-posts
+                         :post/type post-type
+                         :post/status post-status}]))
+                (bread/hook
+                  req ::i18n/queries*
                   {:query/name ::db/query
                    :query/key k
                    :query/db (db/database req)

@@ -141,9 +141,7 @@
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
-         "some-tag"
-         :post.type/page
-         :post.status/published]}
+         "some-tag"]}
        {:query/name ::i18n/filter-fields
         :query/key :tag-with-posts
         :field/lang :en
@@ -151,13 +149,59 @@
        {:query/name ::i18n/filter-fields
         :query/key :tag-with-posts
         :field/lang :en
-        :spath [:translatable/fields]}]
+        :spath [:translatable/fields]}
+       {:query/name ::taxon/filter-posts
+        :query/key :tag-with-posts
+        :post/type :post.type/page
+        :post/status :post.status/published}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
                                                                 :field/content]}]}
                          {:translatable/fields [:field/key :field/content]}]
        :dispatcher/key :tag-with-posts
        :route/params {:lang "en" :slug "some-tag"}}
+
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :post.type/article and :post.status/draft with :post/_taxons
+      [;; Query for the taxon and its relation.
+       {:query/name ::db/query
+        :query/key :tag-with-posts
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            {:post/_taxons
+                             [{:translatable/fields
+                               [:field/key :field/content]}]}
+                            {:translatable/fields
+                             [:field/key :field/content]}])]
+           :in [$ ?taxonomy ?slug]
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
+         :taxon.taxonomy/tag
+         "some-tag"]}
+       ;; Filter the taxon's posts' fields by lang.
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:post/_taxons s/ALL :translatable/fields]}
+       ;; Filter the taxon's own fields by lang.
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:translatable/fields]}
+       ;; Filter the taxon's posts by type and status.
+       {:query/name ::taxon/filter-posts
+        :query/key :tag-with-posts
+        :post/type :post.type/article
+        :post/status :post.status/draft}]
+      {:dispatcher/type :dispatcher.type/tag
+       :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
+                                                                :field/content]}]}
+                         {:translatable/fields [:field/key :field/content]}]
+       :dispatcher/key :tag-with-posts
+       :route/params {:lang "en" :slug "some-tag"}
+       :post/type :post.type/article
+       :post/status :post.status/draft}
 
       ;;
       )))
