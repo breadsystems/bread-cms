@@ -143,12 +143,6 @@
     {:translatable/fields field-content-binding?}
     (partial construct-fields-query (lang req))))
 
-(defmethod bread/query ::reconstitute
-  [{:keys [attrs-map bindings] k :query/key} data]
-  (if (seq (get data k))
-    (qi/reconstitute attrs-map (get data k) bindings)
-    false))
-
 (defn- compact* [rows k v m]
   (let [rows (filter identity rows)]
     (with-meta
@@ -182,24 +176,20 @@
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [{bs :bindings dbq :query} (qi/infer-query-bindings
-                                    :translatable/fields
-                                    construct-lang-query
-                                    translatable-binding?
-                                    (first (:query/args query)))]
-    (if (seq bs)
+  (let [{:keys [bindings]} (qi/infer-query-bindings
+                           :translatable/fields
+                           translatable-binding?
+                           (first (:query/args query)))
+        attrs-map (bread/hook req ::bread/attrs-map)
+        field-lang (lang req)]
+    (if (seq bindings)
       (let [{qn :query/name k :query/key :query/keys [db args]} query
-            translated-q {:query/name qn
-                          :query/key k
-                          :query/db db
-                          :query/args (concat [dbq]
-                                              (rest args)
-                                              [(lang req)])}
             attrs-map (bread/hook req ::bread/attrs-map)
-            reconst-q {:query/name ::reconstitute
-                       :query/key k
-                       :attrs-map attrs-map
-                       :bindings bs}
+            filter-q {:query/name ::filter-fields
+                      :query/key k
+                      :bindings bindings
+                      :attrs-map attrs-map
+                      :field/lang field-lang}
             compact-qs (if (bread/config req :i18n/compact-fields?)
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
@@ -207,9 +197,9 @@
                                  :relation relation
                                  :attrs-map attrs-map
                                  :k :field/key
-                                 :v :field/content}) bs)
+                                 :v :field/content}) bindings)
                          [])]
-        (vec (concat [translated-q reconst-q] compact-qs)))
+        (vec (concat [query filter-q] compact-qs)))
       [query])))
 
 (defmethod bread/action ::path-params

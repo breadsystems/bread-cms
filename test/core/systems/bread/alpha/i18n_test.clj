@@ -621,22 +621,23 @@
         :query/key :post-with-content
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :post/slug :translatable/fields])
-                  (pull ?e1 [:db/id :field/key :field/content])]
-           :in [$ ?type ?lang]
-           :where [[?e :post/type ?type]
-                   [?e :translatable/fields ?e1]
-                   [?e1 :field/lang ?lang]]}
-         :post.type/page
-         :fr]}
-       {:query/name ::i18n/reconstitute
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:translatable/fields
+                             [:field/key :field/content]}])]
+           :in [$ ?type]
+           :where [[?e :post/type ?type]]}
+         :post.type/page]}
+       {:query/name ::i18n/filter-fields
         :query/key :post-with-content
         :attrs-map attrs-map
-        :bindings [{:binding-sym '?e1
+        ;; TODO pre-compute the path here instead
+        :bindings [{:binding-sym '?e
                     :attr :translatable/fields
                     :entity-index 0
-                    :relation-index 1
-                    :relation [:translatable/fields]}]}
+                    :relation [:translatable/fields]}]
+        :field/lang :fr}
+       #_
        {:query/name ::i18n/compact
         :query/key :post-with-content
         :k :field/key
@@ -649,12 +650,13 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :post/slug
-                           {:translatable/fields [:field/key :field/content]}])]
+                           {:translatable/fields
+                            [:field/key :field/content]}])]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
         :post.type/page]}
       :fr
-      true
+      false
 
       ;; With deeply nested, mixed implicit & explicit :field/content
       [{:query/name ::db/query
@@ -663,38 +665,28 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :post/slug
-                            :translatable/fields
+                            {:translatable/fields [:field/key :field/content]}
                             {:post/taxons [:taxon/slug
                                            :taxon/taxonomy
-                                           :translatable/fields]}])
-                  (pull ?e1 [:db/id :field/key :field/content])
-                  (pull ?e2 [:db/id *])]
-           :in [$ ?slug ?type ?lang]
+                                           {:translatable/fields [*]}]}])]
+           :in [$ ?slug ?type]
            :where [[?e :post/slug ?slug]
-                   [?e :post/type ?type]
-                   [?e :translatable/fields ?e1]
-                   [?e1 :field/lang ?lang]
-                   ;; TODO fix construct-lang-query
-                   [?e :post/taxons ?e3]
-                   [?e3 :translatable/fields ?e2]
-                   [?e2 :field/lang ?lang]
-                   ]}
+                   [?e :post/type ?type]]}
          "my-post"
-         :post.type/page
-         :en]}
-       {:query/name ::i18n/reconstitute
+         :post.type/page]}
+       {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
         :attrs-map attrs-map
-        :bindings [{:binding-sym '?e1
+        :bindings [{:binding-sym '?e
                     :attr :translatable/fields
                     :entity-index 0
-                    :relation-index 1
                     :relation [:translatable/fields]}
-                   {:binding-sym '?e2
+                   {:binding-sym '?e
                     :attr :translatable/fields
                     :entity-index 0
-                    :relation-index 2
-                    :relation [:post/taxons :translatable/fields]}]}
+                    :relation [:post/taxons :translatable/fields]}]
+        :field/lang :en}
+       #_#_
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
         :k :field/key
@@ -723,7 +715,7 @@
         "my-post"
         :post.type/page]}
       :en
-      true
+      false
 
       ;;
       )))
