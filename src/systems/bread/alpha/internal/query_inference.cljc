@@ -170,12 +170,15 @@
   vector. Returns a Specter path for transforming arbitrary db entities to
   their expanded (inferred) forms."
   [attrs-map relation]
-  (vec (mapcat (fn [attr]
-                 (let [attr-entity (get attrs-map attr)]
-                   (if (= :db.cardinality/many (:db/cardinality attr-entity))
-                     [attr s/ALL]
-                     [attr])))
-               relation)))
+  (if-not (seq relation)
+    []
+    (conj (vec (mapcat (fn [attr]
+                         (let [many? (= :db.cardinality/many
+                                        (:db/cardinality (get attrs-map attr)))]
+                           (if many?
+                             [attr s/ALL]
+                             [attr])))
+                       (butlast relation))) (last relation))))
 
 (comment
   (transform-expr

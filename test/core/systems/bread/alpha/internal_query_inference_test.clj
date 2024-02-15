@@ -259,6 +259,15 @@
                               :y {:db/cardinality :db.cardinality/many}}
                              [:x :y :z])))
 
+  ;; if (get-at entity spath) is a collection, we want to be able to operate
+  ;; on it directly, so don't return a Specter operator for the last attr in
+  ;; the relation even if it's *-cardinality.
+  (is (= [:x s/ALL :y s/ALL :z]
+         (qi/relation->spath {:x {:db/cardinality :db.cardinality/many}
+                              :y {:db/cardinality :db.cardinality/many}
+                              :z {:db/cardinality :db.cardinality/many}}
+                             [:x :y :z])))
+
   ;;
   )
 
