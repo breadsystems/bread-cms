@@ -643,20 +643,7 @@
                     :attr :translatable/fields
                     :entity-index 0
                     :relation [:post/taxons :translatable/fields]}]
-        :field/lang :en}
-       #_#_
-       {:query/name ::i18n/compact
-        :query/key :post-with-taxons-and-field-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
-        :relation [:translatable/fields]}
-       {:query/name ::i18n/compact
-        :query/key :post-with-taxons-and-field-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
-        :relation [:post/taxons :translatable/fields]}]
+        :field/lang :en}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content
        :query/db ::FAKEDB
@@ -695,14 +682,7 @@
                     :attr :translatable/fields
                     :entity-index 0
                     :relation [:translatable/fields]}]
-        :field/lang :fr}
-       #_
-       {:query/name ::i18n/compact
-        :query/key :post-with-content
-        :k :field/key
-        :v :field/content
-        :attrs-map attrs-map
-        :relation [:translatable/fields]}]
+        :field/lang :fr}]
       {:query/name ::db/query
        :query/key :post-with-content
        :query/db ::FAKEDB
