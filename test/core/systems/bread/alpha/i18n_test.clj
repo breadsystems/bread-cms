@@ -554,7 +554,8 @@
   (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
                    :translatable/fields {:db/cardinality :db.cardinality/many}
                    :post/children       {:db/cardinality :db.cardinality/many}
-                   :post/taxons         {:db/cardinality :db.cardinality/many}}]
+                   :post/taxons         {:db/cardinality :db.cardinality/many}
+                   :post/_taxons        {:db/cardinality :db.cardinality/many}}]
     (are
       [queries query lang compact-fields?]
       (= queries
@@ -618,7 +619,8 @@
       :whatever
       true
 
-      ;; With deeply nested, mixed implicit & explicit :field/content
+      ;; With deeply nested, mixed implicit & explicit :field/content,
+      ;; no compaction
       [{:query/name ::db/query
         :query/key :post-with-taxons-and-field-content
         :query/db ::FAKEDB
@@ -626,9 +628,9 @@
         ['{:find [(pull ?e [:db/id
                             :post/slug
                             {:translatable/fields [:field/key :field/content]}
-                            {:post/taxons [:taxon/slug
-                                           :taxon/taxonomy
-                                           {:translatable/fields [*]}]}])]
+                            {:post/_taxons [:taxon/slug
+                                            :taxon/taxonomy
+                                            {:translatable/fields [*]}]}])]
            :in [$ ?slug ?type]
            :where [[?e :post/slug ?slug]
                    [?e :post/type ?type]]}
@@ -636,16 +638,12 @@
          :post.type/page]}
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
-        :attrs-map attrs-map
-        :bindings [{:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:translatable/fields]}
-                   {:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:post/taxons :translatable/fields]}]
-        :field/lang :en}]
+        :field/lang :en
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/filter-fields
+        :query/key :post-with-taxons-and-field-content
+        :field/lang :en
+        :spath [:post/_taxons s/ALL :translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content
        :query/db ::FAKEDB
@@ -653,9 +651,9 @@
        ['{:find [(pull ?e [:db/id
                            :post/slug
                            {:translatable/fields [:field/key :field/content]}
-                           {:post/taxons [:taxon/slug
-                                          :taxon/taxonomy
-                                          {:translatable/fields [*]}]}])]
+                           {:post/_taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           {:translatable/fields [*]}]}])]
           :in [$ ?slug ?type]
           :where [[?e :post/slug ?slug]
                   [?e :post/type ?type]]}
@@ -664,7 +662,7 @@
       :en
       false
 
-      ;; With :field/content
+      ;; With :field/content, no compaction
       [{:query/name ::db/query
         :query/key :post-with-content
         :query/db ::FAKEDB
@@ -678,13 +676,8 @@
          :post.type/page]}
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
-        :attrs-map attrs-map
-        ;; TODO pre-compute the path here instead
-        :bindings [{:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:translatable/fields]}]
-        :field/lang :fr}]
+        :field/lang :fr
+        :spath [:translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-content
        :query/db ::FAKEDB
@@ -713,19 +706,14 @@
          :post.type/page]}
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
-        :attrs-map attrs-map
-        ;; TODO pre-compute the path here instead
-        :bindings [{:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:translatable/fields]}]
-        :field/lang :fr}
+        :field/lang :fr
+        :spath [:translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-content
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation-path [:translatable/fields s/ALL]}]
+        :spath [:translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-content
        :query/db ::FAKEDB
@@ -759,28 +747,24 @@
          :post.type/page]}
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
-        :attrs-map attrs-map
-        :bindings [{:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:translatable/fields]}
-                   {:binding-sym '?e
-                    :attr :translatable/fields
-                    :entity-index 0
-                    :relation [:post/taxons :translatable/fields]}]
-        :field/lang :en}
+        :field/lang :en
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/filter-fields
+        :query/key :post-with-taxons-and-field-content
+        :field/lang :en
+        :spath [:post/taxons s/ALL :translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation-path [:translatable/fields s/ALL]}
+        :spath [:translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content
         :k :field/key
         :v :field/content
         :attrs-map attrs-map
-        :relation-path [:post/taxons s/ALL :translatable/fields s/ALL]}]
+        :spath [:post/taxons s/ALL :translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content
        :query/db ::FAKEDB

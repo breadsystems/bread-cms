@@ -185,21 +185,22 @@
     (if (seq bindings)
       (let [{qn :query/name k :query/key :query/keys [db args]} query
             attrs-map (bread/hook req ::bread/attrs-map)
-            filter-q {:query/name ::filter-fields
-                      :query/key k
-                      :bindings bindings
-                      :attrs-map attrs-map
-                      :field/lang field-lang}
+            filter-qs (map (fn [{:keys [relation]}]
+                             {:query/name ::filter-fields
+                              :query/key k
+                              :field/lang field-lang
+                              :spath (qi/relation->spath attrs-map relation)})
+                           bindings)
             compact-qs (if (bread/config req :i18n/compact-fields?)
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
                                  :query/key k
-                                 :relation-path (qi/relation->spath attrs-map relation)
+                                 :spath (qi/relation->spath attrs-map relation)
                                  :attrs-map attrs-map
                                  :k :field/key
                                  :v :field/content}) bindings)
                          [])]
-        (vec (concat [query filter-q] compact-qs)))
+        (vec (concat [query] filter-qs compact-qs)))
       [query])))
 
 (defmethod bread/action ::path-params
