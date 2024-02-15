@@ -18,18 +18,14 @@
          :or {post-type :post.type/page
               post-status :post.status/published}} dispatcher
         pull-spec (vec (dispatcher/pull-spec dispatcher))
-        orig-q {:find [(list 'pull '?e pull-spec)]
-                :in '[$ ?taxonomy ?slug]
-                :where '[[?e :taxon/taxonomy ?taxonomy]
-                         [?e :taxon/slug ?slug]]}
-        {:keys [query bindings]} (qi/infer-query-bindings
-                                   :post/_taxons
-                                   (fn [{:keys [target]}]
-                                     {:in ['?type '?status]
-                                      :where [[target :post/type '?type]
-                                              [target :post/status '?status]]})
-                                   vector?
-                                   orig-q)]
+        query {:find [(list 'pull '?e pull-spec)]
+               :in '[$ ?taxonomy ?slug]
+               :where '[[?e :taxon/taxonomy ?taxonomy]
+                        [?e :taxon/slug ?slug]]}
+        {:keys [bindings]} (qi/infer-query-bindings
+                             :post/_taxons
+                             vector?
+                             query)]
     {:queries (bread/hook
                 req ::i18n/queries*
                 (if (seq bindings)
@@ -44,7 +40,7 @@
                   {:query/name ::db/query
                    :query/key k
                    :query/db (db/database req)
-                   :query/args [orig-q taxonomy (:slug params)]}))}))
+                   :query/args [query taxonomy (:slug params)]}))}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]
