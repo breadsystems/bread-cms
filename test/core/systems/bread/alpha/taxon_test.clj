@@ -12,7 +12,7 @@
 
 (deftest test-dispatch-taxon-queries
   (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/_taxons        {:db/cardinality :db.cardinality/many}}
+                   :post/taxons         {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false
@@ -21,20 +21,17 @@
                               {:hooks
                                {::bread/attrs-map
                                 [{:action/name ::bread/value
-                                  :action/value attrs-map}]}}])
-        ->app (fn [dispatcher]
-                (assoc app ::bread/dispatcher dispatcher))]
+                                  :action/value attrs-map}]}}])]
 
     (are
-      [query dispatcher]
-      (= query (let [counter (atom 0)
-                     gensym* (fn [prefix]
-                               (symbol (str prefix (swap! counter inc))))]
-                 (with-redefs [gensym gensym*]
-                   (-> dispatcher
-                       ->app
-                       (bread/hook ::bread/dispatch)
-                       ::bread/queries))))
+      [queries dispatcher]
+      (= queries (let [counter (atom 0)
+                       gensym* (fn [prefix]
+                                 (symbol (str prefix (swap! counter inc))))]
+                   (with-redefs [gensym gensym*]
+                     (-> (assoc app ::bread/dispatcher dispatcher)
+                         (bread/hook ::bread/dispatch)
+                         ::bread/queries))))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.
