@@ -143,18 +143,13 @@
     {:translatable/fields field-content-binding?}
     (partial construct-fields-query (lang req))))
 
-(defn- compact* [rows k v m]
-  (let [rows (filter identity rows)]
-    (with-meta
-      ;; TODO :field/format
-      (into {} (map (juxt k (comp edn/read-string v))) rows)
-      (merge (into {} (map (juxt k :db/id) rows)) m))))
+(defn- compact* [fields]
+  (into {} (map (juxt :field/key (comp edn/read-string :field/content)))
+        fields))
 
 (defmethod bread/query ::compact
   [{k :query/key spath :spath} data]
-  (s/transform spath (fn [fields]
-                       (into {} (map (juxt :field/key :field/content)) fields))
-               (get data k)))
+  (s/transform spath compact* (get data k)))
 
 (defmethod bread/query ::filter-fields
   [{k :query/key lang :field/lang spath :spath} data]
