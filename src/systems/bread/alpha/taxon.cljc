@@ -37,7 +37,7 @@
     {:queries (if (seq bindings)
                 (vec (mapcat
                        (fn [query]
-                         (bread/hook req ::i18n/queries* query))
+                         (bread/hook req ::i18n/queries query))
                        [{:query/name ::db/query
                          :query/key k
                          :query/db (db/database req)
@@ -47,7 +47,7 @@
                          :post/type post-type
                          :post/status post-status}]))
                 (bread/hook
-                  req ::i18n/queries*
+                  req ::i18n/queries
                   {:query/name ::db/query
                    :query/key k
                    :query/db (db/database req)

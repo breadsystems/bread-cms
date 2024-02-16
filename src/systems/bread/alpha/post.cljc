@@ -91,5 +91,5 @@
                     :query/key query-key
                     :query/db (db/database req)
                     :query/args page-args}
-        queries (bread/hook req ::i18n/queries* page-query)]
+        queries (bread/hook req ::i18n/queries page-query)]
     {:queries queries}))
