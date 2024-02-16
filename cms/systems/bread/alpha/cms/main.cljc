@@ -196,6 +196,9 @@
 (comment
   (set! *print-namespace-maps* false)
 
+  (require '[flow-storm.api :as flow])
+  (flow/local-connect)
+
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
@@ -208,8 +211,118 @@
 
   (alter-var-root #'bread/*profile-hooks* not)
 
-  (defn- response [res]
-    (select-keys res [:status :headers :body :session]))
+  ;; TODO put this stuff in its own tooling util ns...
+  (do
+    (defn- response [res]
+      (select-keys res [:status :headers :body :session]))
+
+    (defn ->app [req]
+      (when-let [app (:bread/app @system)] (merge app req)))
+
+    #trace
+    (defn diagnose-queries [req]
+      (let [app (-> (->app req)
+                    (bread/hook ::bread/route)
+                    (bread/hook ::bread/dispatch))
+            queries (::bread/queries app)
+            {:keys [data err n before]}
+            (reduce (fn [{:keys [data n]} _]
+                      (try
+                        (let [before data
+                              data
+                              (-> app
+                                  ;; Expand n queries
+                                  (assoc ::bread/queries
+                                         (subvec queries 0 (inc n)))
+                                  (bread/hook ::bread/expand)
+                                  ::bread/data)]
+                          {:data data :n (inc n) :data-before before})
+                        (catch Throwable err
+                          (reduced {:err err :n n}))))
+                    {:data {} :err nil :n 0} queries)]
+        (if err
+          {:err err
+           :at n
+           :query (get-in app [::bread/queries n])
+           :before before}
+          {:ok data})))
+
+    #trace
+    (defn do-queries
+      ([app end]
+       (do-queries app 0 end))
+      ([app start end]
+       (-> app
+           (bread/hook ::bread/route)
+           (bread/hook ::bread/dispatch)
+           (update ::bread/queries subvec start end)
+           (bread/hook ::bread/expand)
+           ::bread/data))))
+
+  (def $req {:uri "/en"})
+  (def $req {:uri "/en/hello"})
+  (def $req {:uri "/en/tag/one"})
+  (def $req {:uri "/fr/tag/one"})
+  (def $req {:uri "/en/404"})
+
+  (do
+    (defn db []
+      (db/database (->app $req)))
+
+    (defn q [& args]
+      (apply
+        db/q
+        (db/database (->app $req))
+        args)))
+
+  (do #rtrace (diagnose-queries (->app $req)))
+  (do #rtrace (do-queries (->app $req) 3))
+  (do-queries (->app $req) 1)
+  (do-queries (->app $req) 2)
+  (do-queries (->app $req) 3)
+  (update (-> (->app $req)) ::bread/queries (fn [qrs]
+                                         (prn 'QRS qrs) qrs))
+  (subvec $qrs 0 3)
+
+  (do #rtrace (as-> (->app $req) $
+                (bread/hook $ ::bread/route)
+                (::bread/dispatcher $)))
+  (do #rtrace (as-> (->app $req) $
+                (bread/hook $ ::bread/route)
+                (bread/hook $ ::bread/dispatch)
+                (::bread/queries $)))
+  (do #rtrace (as-> (->app  $req) $
+                (bread/hook $ ::bread/route)
+                (bread/hook $ ::bread/dispatch)
+                (bread/hook $ ::bread/expand)
+                (::bread/data $)))
+  (do #rtrace (as-> (->app $req) $
+                (bread/hook $ ::bread/route)
+                (bread/hook $ ::bread/dispatch)
+                (bread/hook $ ::bread/expand)
+                (bread/hook $ ::bread/render)
+                (select-keys $ [:status :body :headers])))
+
+  (bread/config (->app $req) :i18n/supported-langs)
+
+  ;; TODO Nice debug mechanism:
+  (catch-as-> (->app $req)
+              [::bread/route ::bread/dispatcher]
+              [::bread/dispatch ::bread/queries]
+              [::bread/expand ::bread/data (diagnose-queries $)]
+              [::bread/render (select-keys $ [:status :body :headers])])
+
+  ;; querying for inverse relationships (post <-> taxon):
+  (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
+       :in [$ ?slug]
+       :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
+               [?t :taxon/slug ?slug]]}
+     "one")
+  (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
+       :in [$ ?slug]
+       :where [[?p :post/type :post.type/page]
+               [?p :post/slug ?slug]]}
+     "hello")
 
   (slurp (io/resource "public/assets/hi.txt"))
   (bread/match (:bread/router @system) {:uri "/assets/hi.txt"
@@ -232,69 +345,6 @@
                                        :request-method :post
                                        :params {:username "coby"
                                                 :password "hello"}}))
-
-  (defn ->app [req]
-    (when-let [app (:bread/app @system)] (merge app req)))
-  (def $req {:uri "/en"})
-  (def $req {:uri "/en/p/hello"})
-  (def $req {:uri "/en/tag/one"})
-  (def $req {:uri "/fr/tag/one"})
-  (def $req {:uri "/en/404"})
-  (as-> (->app $req) $
-    (bread/hook $ ::bread/route)
-    (::bread/dispatcher $))
-  (as-> (->app $req) $
-    (bread/hook $ ::bread/route)
-    (bread/hook $ ::bread/dispatch)
-    (::bread/queries $)
-    (map #(assoc % :attrs-map '_____) $))
-  (as-> (->app  $req) $
-    (bread/hook $ ::bread/route)
-    (bread/hook $ ::bread/dispatch)
-    (bread/hook $ ::bread/expand)
-    (::bread/data $))
-  (as-> (->app $req) $
-    (bread/hook $ ::bread/route)
-    (bread/hook $ ::bread/dispatch)
-    (bread/hook $ ::bread/expand)
-    (bread/hook $ ::bread/render)
-    (select-keys $ [:status :body :headers]))
-
-  (bread/config (->app $req) :i18n/supported-langs)
-
-  (defn db []
-    (db/database (->app $req)))
-  (defn q [& args]
-    (apply
-      db/q
-      (db/database (->app $req))
-      args))
-
-  (defn numq->data
-    ([end]
-     (numq->data 0 end))
-    ([start end]
-     (-> $req ->app
-         (bread/hook ::bread/route)
-         (bread/hook ::bread/dispatch)
-         (update ::bread/queries subvec start end)
-         (bread/hook ::bread/expand)
-         ::bread/data)))
-
-  (numq->data 0 1)
-  (numq->data 0 4)
-
-  ;; querying for inverse relationships (post <-> taxon):
-  (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
-       :in [$ ?slug]
-       :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
-               [?t :taxon/slug ?slug]]}
-     "one")
-  (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
-       :in [$ ?slug]
-       :where [[?p :post/type :post.type/page]
-               [?p :post/slug ?slug]]}
-     "hello")
 
 
 
