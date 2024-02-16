@@ -50,7 +50,7 @@
         :query/key :taxon
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/slug])]
+        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -68,7 +68,7 @@
         :query/key :tag
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever])]
+        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -85,7 +85,7 @@
         :query/key :tag
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/whatever])]
+        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -107,7 +107,7 @@
         ['{:find [(pull ?e [:db/id
                             :taxon/slug
                             {:translatable/fields
-                             [:field/key :field/content]}])]
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -136,7 +136,7 @@
                              [{:translatable/fields
                                [:field/key :field/content]}]}
                             {:translatable/fields
-                             [:field/key :field/content]}])]
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -173,7 +173,7 @@
                              [{:translatable/fields
                                [:field/key :field/content]}]}
                             {:translatable/fields
-                             [:field/key :field/content]}])]
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}

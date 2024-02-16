@@ -26,7 +26,7 @@
          :or {post-type :post.type/page
               post-status :post.status/published}} dispatcher
         pull-spec (vec (dispatcher/pull-spec dispatcher))
-        query {:find [(list 'pull '?e pull-spec)]
+        query {:find [(list 'pull '?e pull-spec) '.]
                :in '[$ ?taxonomy ?slug]
                :where '[[?e :taxon/taxonomy ?taxonomy]
                         [?e :taxon/slug ?slug]]}
