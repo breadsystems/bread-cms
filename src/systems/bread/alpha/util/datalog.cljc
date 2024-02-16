@@ -56,6 +56,11 @@
   ([prefix start ct]
    (map #(symbol (str prefix %)) (range start (+ start ct)))))
 
+(defn ensure-db-id [pull]
+  (vec (if (some #{:db/id} pull)
+         pull
+         (cons :db/id pull))))
+
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})
   (attr-binding :taxon/fields {:taxon/fields [:field/key :field/content]})

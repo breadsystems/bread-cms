@@ -7,7 +7,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.util.datalog :refer [where pull-query]]))
+    [systems.bread.alpha.util.datalog :refer [where pull-query ensure-db-id]]))
 
 (defn- syms
   ([prefix]
@@ -67,29 +67,29 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
-(defmethod bread/query ::compact-fields [{k :query/key} data]
-  (-> data (query/get-at k) i18n/compact))
-
 ;; TODO ::page
 (defmethod dispatcher/dispatch :dispatcher.type/page
-  [{::bread/keys [dispatcher] :as req}]
+  [{{pull :dispatcher/pull
+     post-type :post/type
+     post-status :post/status
+     :or {post-type :post.type/page
+          post-status :post.status/published}
+     :as dispatcher} ::bread/dispatcher
+    :as req}]
   (let [params (:route/params dispatcher)
+        ;; Ensure we always have :db/id
         page-args
-        (-> (pull-query dispatcher)
-            (update-in [0 :find] conj '.) ;; Query for a single post.
+        (-> [{:find [(list 'pull '?e (ensure-db-id pull)) '.]
+              :in '[$]
+              :where []}]
             (ancestralize (string/split (:slugs params "") #"/"))
-            (where [['?type :post/type :post.type/page]
-                    ['?status :post/status :post.status/published]]))
+            (where [['?type :post/type post-type]
+                    ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)
         ;; TODO query description
         page-query {:query/name ::db/query
                     :query/key query-key
                     :query/db (db/database req)
                     :query/args page-args}
-        ;; TODO move this to i18n
-        queries (conj (bread/hook req ::i18n/queries [page-query])
-                      {:query/name ::compact-fields
-                       :query/key query-key
-                       :query/description
-                       "Compact :translatable/fields into a more usable shape."})]
+        queries (bread/hook req ::i18n/queries* page-query)]
     {:queries queries}))

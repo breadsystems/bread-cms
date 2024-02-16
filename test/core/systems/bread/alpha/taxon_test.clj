@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.taxon-test
   (:require
     [clojure.test :refer [deftest are]]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.database :as db]
@@ -10,35 +11,40 @@
                                               plugins->loaded]]))
 
 (deftest test-dispatch-taxon-queries
-  (let [db ::FAKEDB
-        app (plugins->loaded [(db->plugin db)
+  (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
+                   :post/taxons         {:db/cardinality :db.cardinality/many}}
+        app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
-                                            :query-lang? false})
-                              (dispatcher/plugin)])
-        ->app (fn [dispatcher]
-                (assoc app ::bread/dispatcher dispatcher))]
+                                            :query-lang? false
+                                            :compact-fields? false})
+                              (dispatcher/plugin)
+                              {:hooks
+                               {::bread/attrs-map
+                                [{:action/name ::bread/value
+                                  :action/value attrs-map}]}}])]
 
     (are
-      [query dispatcher]
-      (= query (-> dispatcher
-                   ->app
-                   (bread/hook ::bread/dispatch)
-                   ::bread/queries))
+      [queries dispatcher]
+      (= queries (let [counter (atom 0)
+                       gensym* (fn [prefix]
+                                 (symbol (str prefix (swap! counter inc))))]
+                   (with-redefs [gensym gensym*]
+                     (-> (assoc app ::bread/dispatcher dispatcher)
+                         (bread/hook ::bread/dispatch)
+                         ::bread/queries))))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.
       [{:query/name ::db/query
         :query/key :taxon
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/category
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :taxon}]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug]
        :dispatcher/key :taxon
@@ -49,16 +55,14 @@
       ;; :dispatcher.type/tag
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
@@ -68,16 +72,14 @@
       ;; :post/type and :post/status have no effect without :post/_taxons
       [{:query/name ::db/query
         :query/key :tag
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
+        ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+         "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
@@ -86,29 +88,24 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; Query includes :taxon/field as a map.
+      ;; Query includes :translatable/field as a map.
       [{:query/name ::db/query
         :query/key :taxon
-        :query/db db
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/slug :translatable/fields]) .]
+        ['{:find [(pull ?e [:db/id
+                            :taxon/slug
+                            {:translatable/fields
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:taxon :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e0 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]]}
-         [::bread/data :taxon :db/id]
-         :en]}
-       {:query/name ::taxon/compact
-        :query/key :taxon}]
+       {:query/name ::i18n/filter-fields
+        :query/key :taxon
+        :field/lang :en
+        :spath [:translatable/fields]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
                          {:translatable/fields [:field/key
@@ -120,207 +117,115 @@
       ;; {:uri "/en/tag/some-tag"}
       ;; Default :post/type and :post/status with :post/_taxons
       [{:query/name ::db/query
-        :query/key :tag
-        :query/db db
+        :query/key :tag-with-posts
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id
-                             ;; :taxon/posts
-                             :post/_taxons]) .]
+        ['{:find [(pull ?e [:db/id
+                            {:post/_taxons
+                             [{:translatable/fields
+                               [:field/key :field/content]}]}
+                            {:translatable/fields
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?post [:db/id :translatable/fields])]
-           :in [$ ?taxon ?type ?status]
-           :where [[?post :post/taxons ?taxon]
-                   [?post :post/type ?type]
-                   [?post :post/status ?status]]}
-         [::bread/data :tag :db/id]
-         :post.type/page
-         :post.status/published]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e1 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]
-                   [?e0 :post/taxons ?e1]]}
-         [::bread/data :tag :post/_taxons :db/id]
-         :en]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:post/_taxons s/ALL :translatable/fields]}
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:translatable/fields]}
+       {:query/name ::taxon/filter-posts
+        :query/key :tag-with-posts
+        :post/type :post.type/page
+        :post/status :post.status/published}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}]
-       :dispatcher/key :tag
+                                                                :field/content]}]}
+                         {:translatable/fields [:field/key :field/content]}]
+       :dispatcher/key :tag-with-posts
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
-      ;; Custom :post/type and :post/status with :post/_taxons
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db db
+      ;; :post.type/article and :post.status/draft with :post/_taxons
+      [;; Query for the taxon and its relation.
+       {:query/name ::db/query
+        :query/key :tag-with-posts
+        :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e0 [:db/id
-                             ;; :taxon/posts
-                             :post/_taxons]) .]
+        ['{:find [(pull ?e [:db/id
+                            {:post/_taxons
+                             [{:translatable/fields
+                               [:field/key :field/content]}]}
+                            {:translatable/fields
+                             [:field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?post [:db/id :translatable/fields])]
-           :in [$ ?taxon ?type ?status]
-           :where [[?post :post/taxons ?taxon]
-                   [?post :post/type ?type]
-                   [?post :post/status ?status]]}
-         [::bread/data :tag :db/id]
-         :post.type/article
-         :post.status/draft]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e1 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]
-                   [?e0 :post/taxons ?e1]]}
-         [::bread/data :tag :post/_taxons :db/id]
-         :en]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
+       ;; Filter the taxon's posts' fields by lang.
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:post/_taxons s/ALL :translatable/fields]}
+       ;; Filter the taxon's own fields by lang.
+       {:query/name ::i18n/filter-fields
+        :query/key :tag-with-posts
+        :field/lang :en
+        :spath [:translatable/fields]}
+       ;; Filter the taxon's posts by type and status.
+       {:query/name ::taxon/filter-posts
+        :query/key :tag-with-posts
+        :post/type :post.type/article
+        :post/status :post.status/draft}]
       {:dispatcher/type :dispatcher.type/tag
        :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}]
-       :dispatcher/key :tag
-       :post/status :post.status/draft
+                                                                :field/content]}]}
+                         {:translatable/fields [:field/key :field/content]}]
+       :dispatcher/key :tag-with-posts
+       :route/params {:lang "en" :slug "some-tag"}
        :post/type :post.type/article
-       :route/params {:lang "en" :slug "some-tag"}}
+       :post/status :post.status/draft}
 
-      ;; {:uri "/en/tag/some-tag"}
-      ;; :dispatcher.type/tag with :post/type and :post/status nil
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e0 [:db/id
-                             ;; :taxon/posts
-                             :post/_taxons]) .]
-           :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
-         :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?post [:db/id :translatable/fields])]
-           :in [$ ?taxon]
-           :where [[?post :post/taxons ?taxon]]}
-         [::bread/data :tag :db/id]]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e1 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]
-                   [?e0 :post/taxons ?e1]]}
-         [::bread/data :tag :post/_taxons :db/id]
-         :en]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
-      {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}]
-       :dispatcher/key :tag
-       :post/type nil
-       :post/status nil
-       :route/params {:lang "en" :slug "some-tag"}}
+      ;;
+      )))
 
-      ;; {:uri "/en/tag/some-tag"}
-      ;; :dispatcher.type/tag with :post/type and :post/status false
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e0 [:db/id
-                             ;; :taxon/posts
-                             :post/_taxons]) .]
-           :in [$ ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
-         :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?post [:db/id :translatable/fields])]
-           :in [$ ?taxon]
-           :where [[?post :post/taxons ?taxon]]}
-         [::bread/data :tag :db/id]]}
-       {:query/name ::db/query
-        :query/key [:tag :post/_taxons :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e1 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]
-                   [?e0 :post/taxons ?e1]]}
-         [::bread/data :tag :post/_taxons :db/id]
-         :en]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
-      {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}]
-       :dispatcher/key :tag
-       :post/type false ; same as explicit nil.
-       :post/status false ; same as explicit nil.
-       :route/params {:lang "en" :slug "some-tag"}}
+(deftest test-filter-posts-hook
+  (let [posts
+        [{:post/type :page    :post/status :published :post/slug "one"}
+         {:post/type :article :post/status :published :post/slug "two"}
+         {:post/type :page    :post/status :published :post/slug "three"}
+         {:post/type :article :post/status :published :post/slug "four"}
+         {:post/type :page    :post/status :draft     :post/slug "five"}]]
+    (are
+      [filtered-slugs post-type post-status]
+      (= filtered-slugs (->> {:the-query-key {:post/_taxons posts}}
+                             (bread/query {:query/name ::taxon/filter-posts
+                                           :query/key :the-query-key
+                                           :post/type post-type
+                                           :post/status post-status})
+                             (map :post/slug)))
 
-      ;; {:uri "/en/tag/some-tag"}
-      ;; TODO Dynamic params from request...
-      #_#_
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e0 [:db/id :taxon/whatever]) .]
-           :in [$ ?status ?taxonomy ?slug]
-           :where [[?e0 :taxon/taxonomy ?taxonomy]
-                   [?e0 :taxon/slug ?slug]]}
-         :post.status/draft ; populated from req
-         :taxon.taxonomy/tag
-         "some-tag"]}
-       {:query/name ::taxon/compact
-        :query/key :tag}]
-      {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [:taxon/whatever]
-       :dispatcher/key :tag
-       :dispatcher/params {:post/status :status
-                           :post/type :type}
-       :route/params {:lang "en" :slug "some-tag"
-                      :type "article" :status "draft"}}
+      ;; Filter by post type only.
+      ["one" "three" "five"]
+      :page nil
 
-)))
+      ;; Filter by post status only.
+      ["one" "two" "three" "four"]
+      nil :published
+
+      ;; Filter by post type AND status.
+      ["one" "three"]
+      :page :published
+
+      ;;
+      )))
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))

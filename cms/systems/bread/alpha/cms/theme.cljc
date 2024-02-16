@@ -33,8 +33,22 @@
     [:pre (pr-str post)]
     [:pre (pr-str (user/can? user :edit-posts))]])
 
+(defc tag
+  [{{fields :translatable/fields :as tag} :tag}]
+  {:extends layout
+   :key :tag
+   :query '[:taxon/slug
+            {:translatable/fields [*]}
+            {:post/_taxons
+             [{:post/authors [*]}
+              {:translatable/fields [*]}]}]}
+  [:main
+   [:h1 (:name fields)]
+   [:h2 [:code (:taxon/slug tag)]]])
+
 (defc interior-page
   [data]
   {:extends layout
-   :key :post}
+   :key :post
+   :query '[{:post/taxons [{:translatable/fields [*]}]}]}
   [:pre (prn-str data)])

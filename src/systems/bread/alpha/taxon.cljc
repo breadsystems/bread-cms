@@ -6,38 +6,15 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.query-inference :as i]))
+    [systems.bread.alpha.internal.query-inference :as qi]))
 
-(defmethod bread/query ::compact
-  [{k :query/key} data]
-  (-> data
-      (get k)
-      (i18n/compact)
-      (update :post/_taxons i18n/compact)
-      (rename-keys {:post/_taxons :taxon/posts})))
-
-;; TODO datalog-pull ...?
-(defn- coalesce-query [query]
-  (as-> query $
-    (update-in $ [0 :in] (partial filterv identity))
-    (update-in $ [0 :where] (partial filterv identity))
-    (filterv identity $)))
-
-(defn- posts-query [t status taxon-query spec path]
-  (let [pull (get spec (last path))
-        pull (if (some #{:db/id} pull) pull (cons :db/id pull))]
-    {:query/name ::db/query
-     :query/key path
-     :query/db (:query/db taxon-query)
-     :query/args
-     (coalesce-query
-       [{:find [(list 'pull '?post pull)]
-         :in ['$ '?taxon (when t '?type) (when status '?status)]
-         :where ['[?post :post/taxons ?taxon]
-                 (when t '[?post :post/type ?type])
-                 (when status '[?post :post/status ?status])]}
-        [::bread/data (first path) :db/id]
-        (when t t) (when status status)])}))
+(defmethod bread/query ::filter-posts
+  [{k :query/key post-type :post/type post-status :post/status} data]
+  (filter (fn [post]
+            (prn post-type post-status '? ((juxt :post/type :post/status) post))
+            (doto (and (or (nil? post-type)   (= post-type   (:post/type post)))
+                 (or (nil? post-status) (= post-status (:post/status post)))) prn))
+          (get-in data [k :post/_taxons])))
 
 (defmethod dispatcher/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]
@@ -47,26 +24,34 @@
          post-type :post/type
          post-status :post/status
          :or {post-type :post.type/page
-              post-status :post.status/published}}
-        dispatcher
-        db (db/database req)
-        pull-spec (dispatcher/pull-spec dispatcher)
-        taxon-query {:query/name ::db/query
-                     :query/key k
-                     :query/db db
-                     :query/args
-                     [{:find [(list 'pull '?e0 pull-spec) '.]
-                       :in '[$ ?taxonomy ?slug]
-                       :where '[[?e0 :taxon/taxonomy ?taxonomy]
-                                [?e0 :taxon/slug ?slug]]}
-                      taxonomy
-                      (:slug params)]}
-        taxon-queries (i/infer
-                        [taxon-query] [:post/_taxons]
-                        (partial posts-query post-type post-status))
-        compact-query {:query/name ::compact :query/key k}]
-    {:queries (conj (bread/hook req ::i18n/queries taxon-queries)
-                    compact-query)}))
+              post-status :post.status/published}} dispatcher
+        pull-spec (vec (dispatcher/pull-spec dispatcher))
+        query {:find [(list 'pull '?e pull-spec) '.]
+               :in '[$ ?taxonomy ?slug]
+               :where '[[?e :taxon/taxonomy ?taxonomy]
+                        [?e :taxon/slug ?slug]]}
+        {:keys [bindings]} (qi/infer-query-bindings
+                             :post/_taxons
+                             vector?
+                             query)]
+    {:queries (if (seq bindings)
+                (vec (mapcat
+                       (fn [query]
+                         (bread/hook req ::i18n/queries* query))
+                       [{:query/name ::db/query
+                         :query/key k
+                         :query/db (db/database req)
+                         :query/args [query taxonomy (:slug params)]}
+                        {:query/name ::filter-posts
+                         :query/key :tag-with-posts
+                         :post/type post-type
+                         :post/status post-status}]))
+                (bread/hook
+                  req ::i18n/queries*
+                  {:query/name ::db/query
+                   :query/key k
+                   :query/db (db/database req)
+                   :query/args [query taxonomy (:slug params)]}))}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]

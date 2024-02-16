@@ -25,16 +25,16 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
-                  :field/content (prn-str "Home Page")}
+                  :field/content (pr-str "Home Page")}
                  {:field/key :title
                   :field/lang :fr
-                  :field/content (prn-str "Page D'Accueil")}
+                  :field/content (pr-str "Page D'Accueil")}
                  {:field/key :simple
                   :field/lang :en
-                  :field/content (prn-str {:hello "Hi!"})}
+                  :field/content (pr-str {:hello "Hi!"})}
                  {:field/key :simple
                   :field/lang :fr
-                  :field/content (prn-str {:hello "Allo!"})}}}
+                  :field/content (pr-str {:hello "Allo!"})}}}
               {:db/id "page.parent"
                :post/type :post.type/page
                :post/slug "parent-page"
@@ -43,18 +43,18 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
-                  :field/content (prn-str "Parent Page")}
+                  :field/content (pr-str "Parent Page")}
                  {:field/key :title
                   :field/lang :fr
-                  :field/content (prn-str "La Page Parent")}
+                  :field/content (pr-str "La Page Parent")}
                  {:field/key :simple
                   :field/lang :en
                   :field/content
-                  (prn-str {:hello "Hello from parent"})}
+                  (pr-str {:hello "Hello from parent"})}
                  {:field/key :simple
                   :field/lang :fr
                   :field/content
-                  (prn-str {:hello "Bonjour de parent"})}}}
+                  (pr-str {:hello "Bonjour de parent"})}}}
               {:db/id "page.child"
                :post/type :post.type/page
                :post/slug "child-page"
@@ -62,18 +62,18 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
-                  :field/content (prn-str "Child Page")}
+                  :field/content (pr-str "Child Page")}
                  {:field/key :title
                   :field/lang :fr
-                  :field/content (prn-str "La Page Enfant")}
+                  :field/content (pr-str "La Page Enfant")}
                  {:field/key :simple
                   :field/lang :en
                   :field/content
-                  (prn-str {:hello "Hello from child"})}
+                  (pr-str {:hello "Hello from child"})}
                  {:field/key :simple
                   :field/lang :fr
                   :field/content
-                  (prn-str {:hello "Bonjour d'enfant"})}}}
+                  (pr-str {:hello "Bonjour d'enfant"})}}}
               {:field/lang :en
                :field/key :not-found
                :field/content "404 Not Found"}
@@ -89,17 +89,16 @@
    content])
 
 (defc home [{:keys [post]}]
-  {:query [{:translatable/fields [:field/key :field/content]}]
+  {:query '[{:translatable/fields [*]}]
    :key :post
    :extends layout}
-  (let [post (i18n/compact post)
-        {:keys [title simple]} (:translatable/fields post)]
+  (let [{:keys [title simple]} (:translatable/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
 (defc page [{:keys [post]}]
-  {:query [{:translatable/fields [:field/key :field/content]}]
+  {:query '[{:translatable/fields [*]}]
    :key :post
    :extends layout}
   (let [{:keys [title simple]} (:translatable/fields post)]
@@ -239,4 +238,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))

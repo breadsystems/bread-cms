@@ -1,11 +1,12 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.edn :as edn]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.internal.query-inference :as inf]
+    [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.util.datalog :as d]))
 
 (defn supported-langs
@@ -118,6 +119,18 @@
       (update entity :translatable/fields compact-fields))
     entity))
 
+(defn translatable-binding?
+  "Takes a query binding vector and returns the binding itself if it is
+  translatable, otherwise nil."
+  [qb]
+  (when-let [qb (seq qb)] (some #{'* :field/content} qb)))
+
+(comment
+  (translatable-binding? [:field/content])
+  (translatable-binding? ['*])
+  (translatable-binding? [])
+  (translatable-binding? [:post/slug :post/authors :post/fields]))
+
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [queries]]
@@ -125,10 +138,69 @@
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (inf/infer
+  (qi/infer
     queries
     {:translatable/fields field-content-binding?}
     (partial construct-fields-query (lang req))))
+
+(defn- compact* [fields]
+  (into {} (map (juxt :field/key (comp edn/read-string :field/content)))
+        fields))
+
+(defmethod bread/query ::compact
+  [{k :query/key spath :spath} data]
+  (let [e (get data k)]
+    (if e (s/transform spath compact* (get data k)) e)))
+
+(defmethod bread/query ::filter-fields
+  [{k :query/key lang :field/lang spath :spath} data]
+  (let [e (get data k)]
+    (if e
+      (s/transform spath (fn [fields]
+                           (filter #(= lang (:field/lang %)) fields))
+                   e)
+      e)))
+
+(defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
+  (let [syms (take (count relation) (repeatedly (partial gensym origin)))
+        left-syms (cons origin syms)
+        attrs (concat relation [attr])
+        right-syms (concat syms [target])]
+    {:in ['?lang]
+     :where (conj (mapv vector left-syms attrs right-syms)
+                  [target :field/lang '?lang])}))
+
+(defmethod bread/action ::queries*
+  i18n-queries
+  [req _ [{:query/keys [db] :as query}]]
+  "Internationalizes the given query, returning a vector of queries for
+  translated content (i.e. :field/content in the appropriate lang).
+  If no translation is needed, returns a length-1 vector containing only the
+  original query."
+  (let [{:keys [bindings]} (qi/infer-query-bindings
+                           :translatable/fields
+                           translatable-binding?
+                           (first (:query/args query)))
+        attrs-map (bread/hook req ::bread/attrs-map)
+        field-lang (lang req)]
+    (if (seq bindings)
+      (let [{qn :query/name k :query/key :query/keys [db args]} query
+            attrs-map (bread/hook req ::bread/attrs-map)
+            filter-qs (map (fn [{:keys [relation]}]
+                             {:query/name ::filter-fields
+                              :query/key k
+                              :field/lang field-lang
+                              :spath (qi/relation->spath attrs-map relation)})
+                           bindings)
+            compact-qs (if (bread/config req :i18n/compact-fields?)
+                         (map (fn [{:keys [relation]}]
+                                {:query/name ::compact
+                                 :query/key k
+                                 :spath (qi/relation->spath attrs-map relation)})
+                              bindings)
+                         [])]
+        (vec (concat [query] filter-qs compact-qs)))
+      [query])))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
@@ -159,19 +231,24 @@
   ([]
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs
-            query-strings? query-lang?]
+            query-strings? query-lang? compact-fields?]
      :or {lang-param :lang
           fallback-lang :en
           supported-langs #{:en}
           query-strings? true
-          query-lang? true}}]
+          query-lang? true
+          compact-fields? true}}]
    {:config
     {:i18n/lang-param lang-param
      :i18n/fallback-lang fallback-lang
-     :i18n/supported-langs supported-langs}
+     :i18n/supported-langs supported-langs
+     :i18n/compact-fields? compact-fields?}
     :hooks
     {::queries
      [{:action/name ::queries
+       :action/description "Internationalize the given queries"}]
+     ::queries*
+     [{:action/name ::queries*
        :action/description "Internationalize the given queries"}]
      :hook/path-params
      [{:action/name ::path-params
