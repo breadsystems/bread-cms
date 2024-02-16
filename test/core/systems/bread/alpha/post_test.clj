@@ -106,9 +106,7 @@
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
        :dispatcher/key :post
-       {:lang "en" :slugs ""} :route/params
-       :post/status :post.status/published
-       :post/type :post.type/page}
+       {:lang "en" :slugs ""} :route/params}
 
       ;; Post type, status are dynamic.
       [{:query/name ::db/query
