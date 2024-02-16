@@ -49,5 +49,6 @@
 (defc interior-page
   [data]
   {:extends layout
-   :key :post}
+   :key :post
+   :query '[{:post/taxons [{:translatable/fields [*]}]}]}
   [:pre (prn-str data)])
