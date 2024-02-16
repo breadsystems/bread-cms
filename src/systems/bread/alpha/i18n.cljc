@@ -149,13 +149,17 @@
 
 (defmethod bread/query ::compact
   [{k :query/key spath :spath} data]
-  (s/transform spath compact* (get data k)))
+  (let [e (get data k)]
+    (if e (s/transform spath compact* (get data k)) e)))
 
 (defmethod bread/query ::filter-fields
   [{k :query/key lang :field/lang spath :spath} data]
-  (s/transform spath (fn [fields]
-                       (filter #(= lang (:field/lang %)) fields))
-               (get data k)))
+  (let [e (get data k)]
+    (if e
+      (s/transform spath (fn [fields]
+                           (filter #(= lang (:field/lang %)) fields))
+                   e)
+      e)))
 
 (defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
   (let [syms (take (count relation) (repeatedly (partial gensym origin)))

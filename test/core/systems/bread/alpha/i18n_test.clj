@@ -778,6 +778,10 @@
       )))
 
 (deftest test-filter-fields-hook
+  (is (false? (bread/query {:query/name ::i18n/filter-fields
+                            :query/key :the-query-key}
+                           {:the-query-key false})))
+
   (are
     [filtered e lang spath]
     (= filtered (bread/query {:query/name ::i18n/filter-fields
@@ -823,6 +827,10 @@
     ))
 
 (deftest test-compact-hook
+  (is (false? (bread/query {:query/name ::i18n/compact
+                            :query/key :the-query-key}
+                           {:the-query-key false})))
+
   (are
     [compacted e spath]
     (= compacted (bread/query {:query/name ::i18n/compact
