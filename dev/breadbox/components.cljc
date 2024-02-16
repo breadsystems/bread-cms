@@ -39,8 +39,7 @@
   {:extends main-layout
    :query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :post}
-  (let [post (post/compact-fields post)
-        {:keys [title simple]} (:post/fields post)]
+  (let [{:keys [title simple]} (:post/fields post)]
     [:<>
      [:h1 title]
      [:p (:hello simple)]
@@ -67,8 +66,7 @@
   {:extends main-layout
    :query [{:post/fields [:field/key :field/content]}]
    :key :post}
-  (let [post (post/compact-fields post)
-        {:keys [title simple flex-content]} (:post/fields post)]
+  (let [{:keys [title simple flex-content]} (:post/fields post)]
     [:<>
      [:h1 title]
      [:h2 (:hello simple)]
