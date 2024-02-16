@@ -7,7 +7,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.query :as query]
-    [systems.bread.alpha.util.datalog :refer [where pull-query]]))
+    [systems.bread.alpha.util.datalog :refer [where pull-query ensure-db-id]]))
 
 (defn- syms
   ([prefix]
@@ -78,9 +78,8 @@
     :as req}]
   (let [params (:route/params dispatcher)
         ;; Ensure we always have :db/id
-        pull (if (some #{:db/id} pull) pull (cons :db/id pull))
         page-args
-        (-> [{:find [(list 'pull '?e (vec pull)) '.]
+        (-> [{:find [(list 'pull '?e (ensure-db-id pull)) '.]
               :in '[$]
               :where []}]
             (ancestralize (string/split (:slugs params "") #"/"))
