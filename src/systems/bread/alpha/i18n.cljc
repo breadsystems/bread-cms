@@ -55,70 +55,6 @@
   {:pre [(keyword? k)]}
   (k (strings app)))
 
-(defn- syms
-  ([prefix]
-   (syms prefix 0))
-  ([prefix start]
-   (for [n (range)] (symbol (str prefix (+ start n))))))
-
-(defn- construct-fields-query [lang {k :query/key :as orig-query} spec path]
-  (let [fields-pull (cons :db/id (get spec (last path)))
-        rels (cons :field/lang (reverse (rest path)))
-        depth (dec (count rels))
-        left-syms (cons '?e (take depth (syms "?e")))
-        right-syms (cons '?lang (butlast left-syms))
-        ;; TODO support specifying :field/key's to filter by...
-        input-sym (last left-syms)
-        where-clause (map (fn [s k s']
-                            (if (d/relation-reversed? k)
-                              [s' (d/reverse-relation k) s]
-                              [s k s']))
-                          left-syms rels right-syms)
-        id-path (if (sequential? k)
-                  (concat [::bread/data] k [:db/id])
-                  [::bread/data k :db/id])]
-    {:query/name ::db/query
-     :query/db (:query/db orig-query)
-     :query/key path
-     :query/args
-     [{:find [(list 'pull '?e fields-pull)]
-       :in ['$ input-sym '?lang]
-       :where where-clause}
-      id-path
-      lang]}))
-
-(defn- field-content-binding? [binding-map]
-  (let [k (first (keys binding-map))
-        v (get binding-map k)]
-    (some #{:field/content '*} v)))
-
-(defn- field-kv [field]
-  (let [field (if (sequential? field) (first field) field)
-        {k :field/key content :field/content} field]
-    ;; TODO :field/format ?
-    (when k [k (edn/read-string content)])))
-
-(defn- compact-fields [fields]
-  (if (map? fields)
-    fields
-    (into {} (map field-kv fields))))
-
-(defn compact
-  "Takes an entity with a :translatable/fields attr in raw form (as from a
-  datalog query) and compacts fields into a single map where the keys and
-  values are the :field/key and (EDN-parsed) :field/content, respectively.
-
-  The :translatable/fields attr can take the form of:
-  - a map (this is a noop)
-  - a vector of maps e.g. [{:field/key ... :field/content ...} ...]
-  - a vector of length-1 vectors of maps e.g.
-    [[{:field/key ... :field/content ...}] [...]]"
-  [{fields :translatable/fields :as entity}]
-  (if (and entity (seq entity))
-    (let [entity (if (sequential? entity) (first entity) entity)]
-      (update entity :translatable/fields compact-fields))
-    entity))
-
 (defn translatable-binding?
   "Takes a query binding vector and returns the binding itself if it is
   translatable, otherwise nil."
@@ -130,18 +66,6 @@
   (translatable-binding? ['*])
   (translatable-binding? [])
   (translatable-binding? [:post/slug :post/authors :post/fields]))
-
-(defmethod bread/action ::queries
-  i18n-queries
-  [req _ [queries]]
-  "Internationalizes the given query, returning a vector of queries for
-  translated content (i.e. :field/content in the appropriate lang).
-  If no translation is needed, returns a length-1 vector containing only the
-  original query."
-  (qi/infer
-    queries
-    {:translatable/fields field-content-binding?}
-    (partial construct-fields-query (lang req))))
 
 (defn- compact* [fields]
   (into {} (map (juxt :field/key (comp edn/read-string :field/content)))
@@ -170,7 +94,7 @@
      :where (conj (mapv vector left-syms attrs right-syms)
                   [target :field/lang '?lang])}))
 
-(defmethod bread/action ::queries*
+(defmethod bread/action ::queries
   i18n-queries
   [req _ [{:query/keys [db] :as query}]]
   "Internationalizes the given query, returning a vector of queries for
@@ -246,9 +170,6 @@
     :hooks
     {::queries
      [{:action/name ::queries
-       :action/description "Internationalize the given queries"}]
-     ::queries*
-     [{:action/name ::queries*
        :action/description "Internationalize the given queries"}]
      :hook/path-params
      [{:action/name ::path-params

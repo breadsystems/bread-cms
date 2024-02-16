@@ -47,8 +47,15 @@
    [:h2 [:code (:taxon/slug tag)]]])
 
 (defc interior-page
-  [data]
+  [{{fields :translatable/fields tags :post/taxons :as data} :post}]
   {:extends layout
    :key :post
-   :query '[{:post/taxons [{:translatable/fields [*]}]}]}
-  [:pre (prn-str data)])
+   :query '[{:translatable/fields [*]}
+            {:post/taxons [{:translatable/fields [*]}]}]}
+  [:main
+   [:h1 (:a fields)]
+   [:div.tags-list
+    (map (fn [{tag :translatable/fields}]
+           (:name tag))
+         tags)]
+   [:pre (prn-str data)]])
