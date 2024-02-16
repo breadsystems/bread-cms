@@ -59,6 +59,89 @@
       (not-join [?ancestor_4] [?_ :post/children ?ancestor_4])]
     5))
 
+(deftest test-post-dispatcher
+  (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
+                   :post/taxons         {:db/cardinality :db.cardinality/many}}
+        app (plugins->loaded [(db->plugin ::FAKEDB)
+                              (i18n/plugin {:query-strings? false
+                                            :query-lang? false
+                                            :compact-fields? false})
+                              (dispatcher/plugin)
+                              {:hooks
+                               {::bread/attrs-map
+                                [{:action/name ::bread/value
+                                  :aciton/value attrs-map}]}}])]
+
+    (are
+      [queries dispatcher]
+      (= queries (let [counter (atom 0)
+                       gensym* (fn [prefix]
+                                 (symbol (str prefix (swap! counter inc))))]
+                   (with-redefs [gensym gensym*]
+                     (-> (assoc app ::bread/dispatcher dispatcher)
+                         (bread/hook ::bread/dispatch)
+                         ::bread/queries))))
+
+      [{:query/name ::db/query
+        :query/key :post
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:translatable/fields [*]}]) .]
+           :where [(post-ancestry ?e ?slug_0)
+                   [?e :post/type ?type]
+                   [?e :post/status ?status]]
+           :in [$ % ?slug_0 ?type ?status]}
+         '[[(post-ancestry ?child ?slug_0)
+            [?child :post/slug ?slug_0]
+            (not-join [?child] [?_ :post/children ?child])]]
+         ""
+         :post.type/page
+         :post.status/published]}
+       {:query/name ::i18n/filter-fields
+        :query/key :post
+        :spath [:translatable/fields]
+        :field/lang :en}]
+      {:dispatcher/type :dispatcher.type/page
+       :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
+       :dispatcher/key :post
+       {:lang "en" :slugs ""} :route/params
+       :post/status :post.status/published
+       :post/type :post.type/page}
+
+      ;; Post type, status are dynamic.
+      [{:query/name ::db/query
+        :query/key :post
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:translatable/fields [*]}]) .]
+           :where [(post-ancestry ?e ?slug_0)
+                   [?e :post/type ?type]
+                   [?e :post/status ?status]]
+           :in [$ % ?slug_0 ?type ?status]}
+         '[[(post-ancestry ?child ?slug_0)
+            [?child :post/slug ?slug_0]
+            (not-join [?child] [?_ :post/children ?child])]]
+         ""
+         :post.type/article
+         :post.status/draft]}
+       {:query/name ::i18n/filter-fields
+        :query/key :post
+        :spath [:translatable/fields]
+        :field/lang :en}]
+      {:dispatcher/type :dispatcher.type/page
+       :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
+       :dispatcher/key :post
+       {:lang "en" :slugs ""} :route/params
+       :post/status :post.status/draft
+       :post/type :post.type/article}
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))
