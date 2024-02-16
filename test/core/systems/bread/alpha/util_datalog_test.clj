@@ -12,6 +12,14 @@
   (is (= :a/b (d/reverse-relation :a/_b)))
   (is (= :a/_b (d/reverse-relation :a/b))))
 
+(deftest test-query-syms
+  (is (= [] (d/query-syms 0)))
+  (is (= ['?e0] (d/query-syms 1)))
+  (is (= ['?e0 '?e1] (d/query-syms 2)))
+  (is (= ['?e0 '?e1 '?e2] (d/query-syms 3)))
+  (is (= ['?e1 '?e2 '?e3] (d/query-syms 1 3)))
+  (is (= ['?x1 '?x2 '?x3] (d/query-syms "?x" 1 3))))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))

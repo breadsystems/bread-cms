@@ -48,6 +48,14 @@
     (keyword (string/join "/" [kns (if reversed?
                                      (subs kname 1) (str "_" kname))]))))
 
+(defn query-syms
+  ([ct]
+   (query-syms "?e" 0 ct))
+  ([start ct]
+   (query-syms "?e" start ct))
+  ([prefix start ct]
+   (map #(symbol (str prefix %)) (range start (+ start ct)))))
+
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})
   (attr-binding :taxon/fields {:taxon/fields [:field/key :field/content]})
