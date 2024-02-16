@@ -165,6 +165,21 @@
                       :clause clause}))))
        (filter identity)))
 
+(defn- inverted-rel? [attr]
+  (clojure.string/starts-with? (name attr) "_"))
+
+(defn- revert-rel [attr]
+  (keyword (namespace attr) (subs (name attr) 1)))
+
+(comment
+  (inverted-rel? :a)
+  (inverted-rel? :_b)
+  (inverted-rel? :a/b)
+  (inverted-rel? :a/_b)
+  (revert-rel :a/_b)
+  ;;
+  )
+
 (defn relation->spath
   "Takes an attribute map (db/ident -> attr-entity) and a Datalog relation
   vector. Returns a Specter path for transforming arbitrary db entities to
@@ -173,8 +188,11 @@
   (if-not (seq relation)
     []
     (conj (vec (mapcat (fn [attr]
-                         (let [many? (= :db.cardinality/many
-                                        (:db/cardinality (get attrs-map attr)))]
+                         (let [attr' (if (inverted-rel? attr)
+                                       (revert-rel attr)
+                                       attr)
+                               many? (= :db.cardinality/many
+                                        (:db/cardinality (get attrs-map attr')))]
                            (if many?
                              [attr s/ALL]
                              [attr])))

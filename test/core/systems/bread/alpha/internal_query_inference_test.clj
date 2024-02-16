@@ -268,6 +268,12 @@
                               :z {:db/cardinality :db.cardinality/many}}
                              [:x :y :z])))
 
+  ;; Assume :db.cardinality/many means *-* by default
+  ;; TODO make this more configurable
+  (is (= [:x/_y s/ALL :z]
+      (qi/relation->spath {:x/y {:db/cardinality :db.cardinality/many}}
+                          [:x/_y :z])))
+
   ;;
   )
 
