@@ -67,19 +67,11 @@
   (translatable-binding? [])
   (translatable-binding? [:post/slug :post/authors :post/fields]))
 
-(defn- compact* [fields]
-  (into {} (map (juxt :field/key :field/content)) fields))
-
 (defn compact-fields
   "Takes a sequence of translatable fields and compacts it down to a single map,
   using :field/key and :field/content as the map keys and values, respectively."
   [fields]
   (into {} (map (juxt :field/key :field/content)) fields))
-
-(defmethod bread/query ::compact
-  [{k :query/key spath :spath} data]
-  (let [e (get data k)]
-    (if e (s/transform spath compact* (get data k)) e)))
 
 (defmulti format-field-content (fn [fmt _field] fmt))
 
@@ -89,25 +81,13 @@
 (defmethod format-field-content :default [_ content]
   content)
 
-(defn- format-fields [fields]
+(defn format-fields
+  "Formats each field's :field/content according to :field/format (by calling
+  format-field-content)."
+  [fields]
   (map (fn [{fmt :field/format :as field}]
          (update field :field/content (partial format-field-content fmt)))
        fields))
-
-(defmethod bread/query ::format
-  [{k :query/key spath :spath} data]
-  (let [e (get data k)]
-    (if e (s/transform spath format-fields e)
-      e)))
-
-(defmethod bread/query ::filter-fields
-  [{k :query/key lang :field/lang spath :spath} data]
-  (let [e (get data k)]
-    (if e
-      (s/transform spath (fn [fields]
-                           (filter #(= lang (:field/lang %)) fields))
-                   e)
-      e)))
 
 (defmethod bread/query ::fields
   [{k :query/key lang :field/lang :keys [format? compact? spaths]} data]
