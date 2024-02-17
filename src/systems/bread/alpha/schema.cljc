@@ -48,6 +48,12 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
+     {:db/ident :field/format
+      :attr/label "Field Format"
+      :db/doc "A keyword representing the format in which this field's content is stored."
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
      {:db/ident :field/lang
       :attr/label "Field Language"
       :db/doc "Language this field is written in"
