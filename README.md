@@ -103,7 +103,7 @@ Bread's (planned) high-level feature set:
 (defc article-component
   [{:keys [i18n lang]
    {:post/keys [slug fields]} :article}] ; :article corresponds to :key
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:query [:post/slug fields*]
    :key :article
    :extends main-layout}
   [:main.single
@@ -114,7 +114,7 @@ Bread's (planned) high-level feature set:
 
 (defc article-listing-component
   [{:keys [i18n lang articles]}] ; :articles corresponds to :key
-  {:query [:post/slug {:post/fields [:field/key :field/content]}]
+  {:query [:post/slug fields*]
    :key :articles
    :extends main-layout}
   [:main.listing
@@ -127,10 +127,37 @@ Bread's (planned) high-level feature set:
 (def router
   (reitit/router
     ["/:lang"
-     ["/" {:bread/dispatcher :dispatcher.type/articles
-           :bread/component article-listing-component}]
-     ["/article/:slug" {:bread/dispatcher :dispatcher.type/article
-                        :bread/component article-component}]]))
+     ["/"
+      {:dispatcher/type      :dispatcher.type/articles
+       :dispatcher/component article-listing-component}]
+     ["/article/:slug"
+      {:dispatcher/type      :dispatcher.type/article
+       :dispatcher/component article-component}]]))
+
+(def data
+  [{:string/key :hello
+    :string/lang :en
+    :string/value "My Blog"}
+   {:post/type :post.type/article
+    :post/status :post.type/published
+    :translatable/fields [{:field/key :title
+                           :field/lang :en
+                           :field/format :edn
+                           :field/content "\"English Article Title\""}
+                          {:field/key :title
+                           :field/lang :en
+                           :field/format :edn
+                           :field/content "\"Article content in English...\""}]}
+   {:post/type :post.type/article
+    :post/status :post.type/published
+    :translatable/fields [{:field/key :title
+                           :field/lang :en
+                           :field/format :edn
+                           :field/content "\"An Older Article\""}
+                          {:field/key :title
+                           :field/lang :en
+                           :field/format :edn
+                           :field/content "\"Lorem ipsum dolor sit amet\""}]}])
 
 (def handler
   (bread/load-handler (defaults/app {:router router
@@ -142,7 +169,7 @@ Bread's (planned) high-level feature set:
 (handler {:uri "/en/"})
 ;; => [:html {:lang "en"}
 ;;     [:body
-;;      [:h1 "My Simple Blog"]
+;;      [:h1 "My Blog"]
 ;;      [:main.listing
 ;;       [:article [:a {:href "/en/newer-article"} "English Article Title"]]
 ;;       [:article [:a {:href "/en/older-article"} "An Older Article"]]]]]
@@ -150,7 +177,7 @@ Bread's (planned) high-level feature set:
 (handler {:uri "/en/article/newer-article"})
 ;; => [:html {:lang "en"}
 ;;     [:body
-;;      [:h1 "My Simple Blog"]
+;;      [:h1 "My Blog"]
 ;;      [:main.single
 ;;       [:article
 ;;        [:h2 "English Article Title"]
