@@ -117,10 +117,6 @@
 
   (infer-query-bindings
     :translatable/fields
-    (fn [{:keys [origin target attr relation]}]
-      {:in ['?lang]
-       :where [[origin attr target]
-               [target :field/lang '?lang]]})
     #(some #{'* :field/content} %)
     '{:find [(pull ?e [:post/slug
                        {:translatable/fields
