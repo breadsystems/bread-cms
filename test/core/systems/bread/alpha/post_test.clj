@@ -64,9 +64,7 @@
                    :post/taxons         {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
-                                            :query-lang? false
-                                            :format-fields? false
-                                            :compact-fields? false})
+                                            :query-lang? false})
                               (dispatcher/plugin)
                               {:hooks
                                {::bread/attrs-map
@@ -97,10 +95,13 @@
          ""
          :post.type/page
          :post.status/published]}
-       {:query/name ::i18n/filter-fields
+       {:query/name ::i18n/fields
         :query/key :post
+        :query/description "Process translatable fields."
         :spath [:translatable/fields]
-        :field/lang :en}]
+        :field/lang :en
+        :format? true
+        :compact? true}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
        :dispatcher/key :post
@@ -124,10 +125,13 @@
          ""
          :post.type/article
          :post.status/draft]}
-       {:query/name ::i18n/filter-fields
+       {:query/name ::i18n/fields
         :query/key :post
-        :spath [:translatable/fields]
-        :field/lang :en}]
+        :query/description "Process translatable fields."
+        :spaths [[:translatable/fields]]
+        :field/lang :en
+        :format? true
+        :compact? true}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
        :dispatcher/key :post
