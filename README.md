@@ -135,11 +135,11 @@ Bread's (planned) high-level feature set:
        :dispatcher/component article-component}]]))
 
 (def data
-  [{:string/key :hello
-    :string/lang :en
-    :string/value "My Blog"}
-   {:post/type :post.type/article
-    :post/status :post.type/published
+  [{:string/key          :hello
+    :string/lang         :en
+    :string/value        "My Blog"}
+   {:post/type           :post.type/article
+    :post/status         :post.type/published
     :translatable/fields [{:field/key     :title
                            :field/lang    :en
                            :field/format  :edn
@@ -148,8 +148,8 @@ Bread's (planned) high-level feature set:
                            :field/lang    :en
                            :field/format  :edn
                            :field/content "\"Article content in English...\""}]}
-   {:post/type :post.type/article
-    :post/status :post.type/published
+   {:post/type           :post.type/article
+    :post/status         :post.type/published
     :translatable/fields [{:field/key     :title
                            :field/lang    :en
                            :field/format  :edn
