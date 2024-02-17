@@ -85,15 +85,6 @@
                    e)
       e)))
 
-(defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
-  (let [syms (take (count relation) (repeatedly (partial gensym origin)))
-        left-syms (cons origin syms)
-        attrs (concat relation [attr])
-        right-syms (concat syms [target])]
-    {:in ['?lang]
-     :where (conj (mapv vector left-syms attrs right-syms)
-                  [target :field/lang '?lang])}))
-
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [{:query/keys [db] :as query}]]
