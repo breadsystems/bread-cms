@@ -25,10 +25,11 @@ Bread aims to be three things:
 Bread's (planned) high-level feature set:
 
 * Next-level user experience for editing content. *Design-aware editing. No separate backend UI.*
+* First-class support for translation/internationalization
+* First-class support for Datahike and Datalog queries
 * Collaborative editing
 * Offline first
 * Fully static rendering at write time (for simple use-cases)
-* First-class support for translation/internationalization
 * An extensible default schema supporting many "open-world" content patterns
 * Co-located component queries for more advanced data models
 * Completely hackable through an extremely simple plugin API
@@ -67,7 +68,11 @@ Bread's (planned) high-level feature set:
                     :component hello}]]))
 
 (def handler
-  (bread/load-handler (defaults/app {:router router})))
+  (bread/load-handler (defaults/app {:router router
+                                     :db {:db/type :datahike
+                                          :store {; datahike config
+                                                  :backend :mem
+                                                  :id "hello-bread"}}})))
 
 (handler {:uri "/en/hello/Breadsters"})
 ;; => [:p "Hello, Breadsters!"]
@@ -80,7 +85,7 @@ Bread's (planned) high-level feature set:
 
 ```clojure
 (ns my.simple.blog
-	(:require
+  (:require
     [reitit.core :as reitit]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.plugin.reitit]
@@ -88,7 +93,7 @@ Bread's (planned) high-level feature set:
     [systems.bread.alpha.core :as bread]))
 
 (defc main-layout [{:keys [main-content i18n lang]}]
-  {:content-path [:main-content]}
+  {:content-path [:main-content]} ; how extending components pass their content
   [:html {:lang lang}
    [:body
     [:h1 (:site-header i18n)]
@@ -107,7 +112,7 @@ Bread's (planned) high-level feature set:
     (:content fields)]])
 
 (defc article-listing-component
-  [{:keys [i18n lang articles]}]
+  [{:keys [i18n lang articles]}] ; :articles corresponds to :key
   {:query [:post/slug {:post/fields [:field/key :field/content]}]
    :key :articles
    :extends main-layout}
@@ -127,7 +132,11 @@ Bread's (planned) high-level feature set:
                         :bread/component article-component}]]))
 
 (def handler
-  (bread/load-handler (defaults/app {:router router})))
+  (bread/load-handler (defaults/app {:router router
+                                     :db {:db/type :datahike
+                                          :store {; datahike config
+                                                  :backend :mem
+                                                  :id "bread-blog-db"}}})))
 
 (handler {:uri "/en/"})
 ;; => [:html {:lang "en"}
