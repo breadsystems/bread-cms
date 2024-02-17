@@ -119,25 +119,22 @@
         field-lang (lang req)]
     (if (seq bindings)
       (let [{qn :query/name k :query/key :query/keys [db args]} query
-            attrs-map (bread/hook req ::bread/attrs-map)]
-        (reduce
-          (fn [qs {:keys [binding-path relation entity-index] :as _b}]
-            (conj
-              (s/transform
-                (concat [0 :query/args 0 ;; db query
-                         :find           ;; find clause
-                         entity-index    ;; position within find
-                         s/LAST]         ;; pull expr
-                        binding-path)
-                (partial d/ensure-attrs [:field/lang :field/key :db/id])
-                qs)
-              #_
-              {:query/name ::filter-fields
-               :query/key k
-               :field/lang field-lang
-               :spath (qi/relation->spath attrs-map relation)}))
-          [query]
-          bindings))
+            attrs-map (bread/hook req ::bread/attrs-map)
+            query (reduce
+                    (fn [query {:keys [binding-path relation entity-index]}]
+                      (s/transform (concat [:query/args 0 ;; datalog query
+                                            :find         ;; find clause
+                                            entity-index  ;; find position
+                                            s/LAST]       ;; pull-expr
+                                           binding-path)  ;; within pull-expr
+                                   (partial d/ensure-attrs
+                                            [:field/lang :field/key :db/id])
+                                   query))
+                    query bindings)]
+        [query
+         {:query/name ::fields
+          :query/key k
+          :query/description "Process translatable fields."}])
       [query])))
 
 (defmethod bread/action ::path-params
