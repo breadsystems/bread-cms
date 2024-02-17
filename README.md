@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <strong>WORK IN PROGRESS. Code is pre-alpha status. A lot of this does not work yet.</strong>
+  <strong>WORK IN PROGRESS. Code is approaching "stable alpha" status. A lot of this still does not work yet.</strong>
 </p>
 
 ## Goals
