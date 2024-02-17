@@ -26,7 +26,7 @@ Bread's (planned) high-level feature set:
 
 * Next-level user experience for editing content. *Design-aware editing. No separate backend UI.*
 * First-class support for translation/internationalization
-* First-class support for Datahike and Datalog queries
+* First-class support for [Datahike](https://datahike.io/) and Datalog queries
 * Collaborative editing
 * Offline first
 * Fully static rendering at write time (for simple use-cases)
