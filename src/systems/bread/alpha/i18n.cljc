@@ -75,6 +75,25 @@
   (let [e (get data k)]
     (if e (s/transform spath compact* (get data k)) e)))
 
+(defmulti format-field-content (fn [fmt _field] fmt))
+
+(defmethod format-field-content :edn [_ content]
+  (edn/read-string content))
+
+(defmethod format-field-content :default [_ content]
+  content)
+
+(defn- format-fields [fields]
+  (map (fn [{fmt :field/format :as field}]
+         (update field :field/content (partial format-field-content fmt)))
+       fields))
+
+(defmethod bread/query ::format
+  [{k :query/key spath :spath} data]
+  (let [e (get data k)]
+    (if e (s/transform spath format-fields e)
+      e)))
+
 (defmethod bread/query ::filter-fields
   [{k :query/key lang :field/lang spath :spath} data]
   (let [e (get data k)]

@@ -451,6 +451,59 @@
     ;;
     ))
 
+(deftest test-format-hook
+  (is (false? (bread/query {:query/name ::i18n/format
+                            :query/key :the-query-key}
+                           {:the-query-key false})))
+
+  (are
+    [compacted e spath]
+    (= compacted (bread/query {:query/name ::i18n/format
+                               :query/key :the-query-key
+                               :spath spath}
+                              {:the-query-key e}))
+
+    ;; Single entity with fields; default to raw
+    {:translatable/fields [{:field/content "A"} {:field/content "B"}]}
+    {:translatable/fields [{:field/content "A"} {:field/content "B"}]}
+    [:translatable/fields]
+
+    ;; Single entity with fields with explicit :raw format.
+    ;; NOTE: There is no multimethod for :raw, this just uses :default.
+    {:translatable/fields [{:field/format :raw :field/content "A"}
+                           {:field/format :raw :field/content "B"}]}
+    {:translatable/fields [{:field/format :raw :field/content "A"}
+                           {:field/format :raw :field/content "B"}]}
+    [:translatable/fields]
+
+    ;; Single entity with fields in EDN format.
+    {:translatable/fields [{:field/format :edn :field/content "A"}
+                           {:field/format :edn :field/content "B"}]}
+    {:translatable/fields [{:field/format :edn :field/content (pr-str "A")}
+                           {:field/format :edn :field/content (pr-str "B")}]}
+    [:translatable/fields]
+
+    ;; Nested entity with fields.
+    {:menu.item/entity {:translatable/fields
+                        [{:field/format :edn :field/content "A"}
+                         {:field/format :edn :field/content "B"}]}}
+    {:menu.item/entity {:translatable/fields
+                        [{:field/format :edn :field/content (pr-str "A")}
+                         {:field/format :edn :field/content (pr-str "B")}]}}
+    [:menu.item/entity :translatable/fields]
+
+    ;; Entity with nested fields through a has-many relation.
+    {:post/children [{:translatable/fields
+                      [{:field/format :edn :field/content "A"}
+                       {:field/format :edn :field/content "B"}]}]}
+    {:post/children [{:translatable/fields
+                      [{:field/format :edn :field/content (pr-str "A")}
+                       {:field/format :edn :field/content (pr-str "B")}]}]}
+    [:post/children s/ALL :translatable/fields]
+
+    ;;
+    ))
+
 (deftest test-compact-hook
   (is (false? (bread/query {:query/name ::i18n/compact
                             :query/key :the-query-key}
