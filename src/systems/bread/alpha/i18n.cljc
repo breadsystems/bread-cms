@@ -68,8 +68,7 @@
   (translatable-binding? [:post/slug :post/authors :post/fields]))
 
 (defn- compact* [fields]
-  (into {} (map (juxt :field/key (comp edn/read-string :field/content)))
-        fields))
+  (into {} (map (juxt :field/key :field/content)) fields))
 
 (defmethod bread/query ::compact
   [{k :query/key spath :spath} data]
