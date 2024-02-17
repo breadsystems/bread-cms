@@ -248,6 +248,12 @@
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
         :field/lang :en
+        :spath [:post/_taxons s/ALL :translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-taxons-and-field-content
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-taxons-and-field-content
         :spath [:post/_taxons s/ALL :translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-taxons-and-field-content
@@ -283,6 +289,9 @@
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
         :field/lang :fr
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-content
         :spath [:translatable/fields]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -313,6 +322,9 @@
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
         :field/lang :fr
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-content
         :spath [:translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-content
@@ -356,6 +368,12 @@
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
         :field/lang :en
+        :spath [:post/taxons s/ALL :translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-taxons-and-field-content
+        :spath [:translatable/fields]}
+       {:query/name ::i18n/format
+        :query/key :post-with-taxons-and-field-content
         :spath [:post/taxons s/ALL :translatable/fields]}
        {:query/name ::i18n/compact
         :query/key :post-with-taxons-and-field-content

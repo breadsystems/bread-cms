@@ -119,6 +119,12 @@
                    :spath (qi/relation->spath attrs-map relation)}))
               [query]
               bindings)
+            format-qs (when (bread/config req :i18n/format-fields?)
+                        (map (fn [{:keys [relation]}]
+                               {:query/name ::format
+                                :query/key k
+                                :spath (qi/relation->spath attrs-map relation)})
+                             bindings))
             compact-qs (if (bread/config req :i18n/compact-fields?)
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
@@ -126,7 +132,7 @@
                                  :spath (qi/relation->spath attrs-map relation)})
                               bindings)
                          [])]
-        (concat db-and-filter-qs compact-qs))
+        (concat db-and-filter-qs format-qs compact-qs))
       [query])))
 
 (defmethod bread/action ::path-params
@@ -170,7 +176,7 @@
     {:i18n/lang-param      lang-param
      :i18n/fallback-lang   fallback-lang
      :i18n/supported-langs supported-langs
-     :i18n/format-fields   format-fields?
+     :i18n/format-fields?  format-fields?
      :i18n/compact-fields? compact-fields?}
     :hooks
     {::queries
