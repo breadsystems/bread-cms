@@ -114,27 +114,30 @@
         {:keys [bindings]} (qi/infer-query-bindings
                              :translatable/fields
                              translatable-binding?
-                             dbq)
-        attrs-map (bread/hook req ::bread/attrs-map)
-        field-lang (lang req)]
+                             dbq)]
     (if (seq bindings)
-      (let [{qn :query/name k :query/key :query/keys [db args]} query
-            attrs-map (bread/hook req ::bread/attrs-map)
-            query (reduce
-                    (fn [query {:keys [binding-path relation entity-index]}]
-                      (s/transform (concat [:query/args 0 ;; datalog query
-                                            :find         ;; find clause
-                                            entity-index  ;; find position
-                                            s/LAST]       ;; pull-expr
-                                           binding-path)  ;; within pull-expr
-                                   (partial d/ensure-attrs
-                                            [:field/lang :field/key :db/id])
-                                   query))
-                    query bindings)]
-        [query
-         {:query/name ::fields
-          :query/key k
-          :query/description "Process translatable fields."}])
+      [(reduce
+         (fn [query {:keys [binding-path relation entity-index]}]
+           (s/transform (concat [:query/args 0 ;; datalog query
+                                 :find         ;; find clause
+                                 entity-index  ;; find position
+                                 s/LAST]       ;; pull-expr
+                                binding-path)  ;; within pull-expr
+                        (partial d/ensure-attrs
+                                 [:field/lang :field/key :db/id])
+                        query))
+         query bindings)
+       {:query/name ::fields
+        :query/key (:query/key query)
+        :query/description "Process translatable fields."
+        :field/lang (lang req)
+        :compact? (bread/config req :i18n/compact-fields?)
+        :format? (bread/config req :i18n/format-fields?)
+        :spaths
+        (map (comp (partial qi/relation->spath
+                            (bread/hook req ::bread/attrs-map))
+                   :relation)
+             bindings)}]
       [query])))
 
 (defmethod bread/action ::path-params

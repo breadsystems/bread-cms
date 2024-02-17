@@ -246,7 +246,12 @@
          :post.type/page]}
        {:query/name ::i18n/fields
         :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."}
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? false
+        :compact? false
+        :spaths [[:translatable/fields]
+                 [:post/_taxons s/ALL :translatable/fields]]}
        #_#_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
@@ -296,7 +301,11 @@
          :post.type/page]}
        {:query/name ::i18n/fields
         :query/key :post-with-content
-        :query/description  "Process translatable fields."}
+        :query/description  "Process translatable fields."
+        :field/lang :fr
+        :format? false
+        :compact? false
+        :spaths [[:translatable/fields]]}
        #_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
@@ -334,7 +343,11 @@
          :post.type/page]}
        {:query/name ::i18n/fields
         :query/key :post-with-content
-        :query/description "Process translatable fields."}
+        :query/description "Process translatable fields."
+        :field/lang :fr
+        :format? false
+        :compact? true
+        :spaths [[:translatable/fields]]}
        #_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
@@ -381,7 +394,12 @@
          :post.type/page]}
        {:query/name ::i18n/fields
         :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."}
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :spaths [[:translatable/fields]
+                 [:post/taxons s/ALL :translatable/fields]]}
        #_#_#_#_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
