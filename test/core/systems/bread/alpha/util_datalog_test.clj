@@ -20,6 +20,14 @@
   (is (= ['?e1 '?e2 '?e3] (d/query-syms 1 3)))
   (is (= ['?x1 '?x2 '?x3] (d/query-syms "?x" 1 3))))
 
+(deftest test-ensure-db-id
+  (are
+    [expected pull] (= expected (d/ensure-db-id pull))
+    [:db/id] []
+    [:db/id] [:db/id]
+    [:db/id :xyz] [:xyz]
+    [:db/id :xyz] [:db/id :xyz]))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))
