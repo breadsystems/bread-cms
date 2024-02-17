@@ -65,6 +65,7 @@
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false
+                                            :format-fields? false
                                             :compact-fields? false})
                               (dispatcher/plugin)
                               {:hooks
