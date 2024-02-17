@@ -166,17 +166,19 @@
   ([]
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs
-            query-strings? query-lang? compact-fields?]
-     :or {lang-param :lang
-          fallback-lang :en
+            query-strings? query-lang? format-fields? compact-fields?]
+     :or {lang-param      :lang
+          fallback-lang   :en
           supported-langs #{:en}
-          query-strings? true
-          query-lang? true
+          query-strings?  true
+          query-lang?     true
+          format-fields?  true
           compact-fields? true}}]
    {:config
-    {:i18n/lang-param lang-param
-     :i18n/fallback-lang fallback-lang
+    {:i18n/lang-param      lang-param
+     :i18n/fallback-lang   fallback-lang
      :i18n/supported-langs supported-langs
+     :i18n/format-fields   format-fields?
      :i18n/compact-fields? compact-fields?}
     :hooks
     {::queries
