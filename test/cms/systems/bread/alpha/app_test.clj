@@ -25,15 +25,19 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
+                  :field/format :edn
                   :field/content (pr-str "Home Page")}
                  {:field/key :title
                   :field/lang :fr
+                  :field/format :edn
                   :field/content (pr-str "Page D'Accueil")}
                  {:field/key :simple
                   :field/lang :en
+                  :field/format :edn
                   :field/content (pr-str {:hello "Hi!"})}
                  {:field/key :simple
                   :field/lang :fr
+                  :field/format :edn
                   :field/content (pr-str {:hello "Allo!"})}}}
               {:db/id "page.parent"
                :post/type :post.type/page
@@ -43,16 +47,20 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
+                  :field/format :edn
                   :field/content (pr-str "Parent Page")}
                  {:field/key :title
                   :field/lang :fr
+                  :field/format :edn
                   :field/content (pr-str "La Page Parent")}
                  {:field/key :simple
                   :field/lang :en
+                  :field/format :edn
                   :field/content
                   (pr-str {:hello "Hello from parent"})}
                  {:field/key :simple
                   :field/lang :fr
+                  :field/format :edn
                   :field/content
                   (pr-str {:hello "Bonjour de parent"})}}}
               {:db/id "page.child"
@@ -62,23 +70,29 @@
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en
+                  :field/format :edn
                   :field/content (pr-str "Child Page")}
                  {:field/key :title
                   :field/lang :fr
+                  :field/format :edn
                   :field/content (pr-str "La Page Enfant")}
                  {:field/key :simple
                   :field/lang :en
+                  :field/format :edn
                   :field/content
                   (pr-str {:hello "Hello from child"})}
                  {:field/key :simple
                   :field/lang :fr
+                  :field/format :edn
                   :field/content
                   (pr-str {:hello "Bonjour d'enfant"})}}}
               {:field/lang :en
                :field/key :not-found
+               :field/format :edn
                :field/content "404 Not Found"}
               {:field/lang :fr
                :field/key :not-found
+               :field/format :edn
                :field/content "404 Pas Trouvé"}]})
 
 (use-db :each config)
