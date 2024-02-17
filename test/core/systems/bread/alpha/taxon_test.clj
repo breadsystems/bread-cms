@@ -15,9 +15,7 @@
                    :post/taxons         {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
-                                            :query-lang? false
-                                            :format-fields? false
-                                            :compact-fields? false})
+                                            :query-lang? false})
                               (dispatcher/plugin)
                               {:hooks
                                {::bread/attrs-map
@@ -100,10 +98,13 @@
                    [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
-       {:query/name ::i18n/filter-fields
+       {:query/name ::i18n/fields
         :query/key :taxon
+        :query/description "Process translatable fields."
         :field/lang :en
-        :spath [:translatable/fields]}]
+        :format? true
+        :compact? true
+        :spaths [[:translatable/fields]]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
                          {:translatable/fields [:field/key
@@ -129,14 +130,14 @@
                    [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::i18n/filter-fields
+       {:query/name ::i18n/fields
         :query/key :tag-with-posts
+        :query/description "Process translatable fields."
         :field/lang :en
-        :spath [:post/_taxons s/ALL :translatable/fields]}
-       {:query/name ::i18n/filter-fields
-        :query/key :tag-with-posts
-        :field/lang :en
-        :spath [:translatable/fields]}
+        :compact? true
+        :format? true
+        :spaths [[:post/_taxons s/ALL :translatable/fields]
+                 [:translatable/fields]]}
        {:query/name ::taxon/filter-posts
         :query/key :tag-with-posts
         :post/type :post.type/page
@@ -166,17 +167,14 @@
                    [?e :taxon/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       ;; Filter the taxon's posts' fields by lang.
-       {:query/name ::i18n/filter-fields
+       {:query/name ::i18n/fields
         :query/key :tag-with-posts
+        :query/description "Process translatable fields."
         :field/lang :en
-        :spath [:post/_taxons s/ALL :translatable/fields]}
-       ;; Filter the taxon's own fields by lang.
-       {:query/name ::i18n/filter-fields
-        :query/key :tag-with-posts
-        :field/lang :en
-        :spath [:translatable/fields]}
-       ;; Filter the taxon's posts by type and status.
+        :format? true
+        :compact? true
+        :spaths [[:post/_taxons s/ALL :translatable/fields]
+                 [:translatable/fields]]}
        {:query/name ::taxon/filter-posts
         :query/key :tag-with-posts
         :post/type :post.type/article
