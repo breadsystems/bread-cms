@@ -177,8 +177,7 @@
                counter (atom 0)
                gensym* (fn [prefix]
                          (symbol (str prefix (swap! counter inc))))]
-           (with-redefs [gensym gensym*]
-             (bread/hook app ::i18n/queries query))))
+           (bread/hook app ::i18n/queries query)))
 
       ;; Without :field/content
       [{:query/name ::db/query
@@ -232,7 +231,10 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :post/slug
-                            {:translatable/fields [:field/key :field/content]}
+                            {:translatable/fields [:db/id
+                                                   :field/key
+                                                   :field/lang
+                                                   :field/content]}
                             {:post/_taxons [:taxon/slug
                                             :taxon/taxonomy
                                             {:translatable/fields [*]}]}])]
@@ -255,7 +257,8 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :post/slug
-                           {:translatable/fields [:field/key :field/content]}
+                           {:translatable/fields [;; should add id, key, lang
+                                                  :field/content]}
                            {:post/_taxons [:taxon/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}])]
@@ -275,7 +278,7 @@
         ['{:find [(pull ?e [:db/id
                             :post/slug
                             {:translatable/fields
-                             [:field/key :field/content]}])]
+                             [:db/id :field/lang :field/key :field/content]}])]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
@@ -305,7 +308,7 @@
         ['{:find [(pull ?e [:db/id
                             :post/slug
                             {:translatable/fields
-                             [:field/key :field/content]}])]
+                             [:db/id :field/lang :field/key :field/content]}])]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
@@ -338,7 +341,8 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :post/slug
-                            {:translatable/fields [:field/key :field/content]}
+                            {:translatable/fields
+                             [:db/id :field/lang :field/key :field/content]}
                             {:post/taxons [:taxon/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}])]
