@@ -98,7 +98,7 @@
        {:query/name ::i18n/fields
         :query/key :post
         :query/description "Process translatable fields."
-        :spath [:translatable/fields]
+        :spaths [[:translatable/fields]]
         :field/lang :en
         :format? true
         :compact? true}]
