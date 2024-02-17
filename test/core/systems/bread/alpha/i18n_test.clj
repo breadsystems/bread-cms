@@ -155,18 +155,19 @@
 
 (deftest ^:kaocha/skip test-lang-param-config)
 
-(deftest test-internationalize-query-v2
+(deftest test-internationalize-query
   (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
                    :translatable/fields {:db/cardinality :db.cardinality/many}
                    :post/children       {:db/cardinality :db.cardinality/many}
                    :post/taxons         {:db/cardinality :db.cardinality/many}
                    :post/_taxons        {:db/cardinality :db.cardinality/many}}]
     (are
-      [queries query lang compact-fields?]
+      [queries query lang format-fields? compact-fields?]
       (= queries
          (let [app (plugins->loaded
                      [(i18n/plugin {:supported-langs
                                     #{:en :fr :ru :es :de}
+                                    :format-fields? format-fields?
                                     :compact-fields? compact-fields?})
                       ;; Set up an ad-hoc plugin to hard-code lang.
                       {:hooks
@@ -177,7 +178,7 @@
                counter (atom 0)]
            (bread/hook app ::i18n/queries query)))
 
-      ;; Without :field/content
+      ;; No translatable content; noop.
       [{:query/name ::db/query
         :query/key :post
         :query/db ::FAKEDB
@@ -196,6 +197,7 @@
         :post.type/page]}
       :whatever
       true ;; this has no effect without translatable fields present
+      true ;; ditto
 
       ;; With :translatable/fields, but still without :field/content
       [{:query/name ::db/query
@@ -219,10 +221,11 @@
           :where [[?e :post/type ?type]]}
         :post.type/page]}
       :whatever
-      true
+      true ;; this has no effect without translatable fields present
+      true ;; ditto
 
-      ;; With deeply nested, mixed implicit & explicit :field/content,
-      ;; no compaction
+      ;; With deeply nested, mixed implicit & explicit :field/content;
+      ;; no formatting; no compaction.
       [{:query/name ::db/query
         :query/key :post-with-taxons-and-field-content
         :query/db ::FAKEDB
@@ -241,6 +244,7 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
+       #_#_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
         :field/lang :en
@@ -273,8 +277,9 @@
         :post.type/page]}
       :en
       false
+      false
 
-      ;; With :field/content, no compaction
+      ;; With :field/content; no formatting; no compaction.
       [{:query/name ::db/query
         :query/key :post-with-content
         :query/db ::FAKEDB
@@ -286,6 +291,7 @@
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
+       #_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
         :field/lang :fr
@@ -306,8 +312,9 @@
         :post.type/page]}
       :fr
       false
+      false
 
-      ;; With :field/content, compact enabled
+      ;; With :field/content; no formatting; with compaction.
       [{:query/name ::db/query
         :query/key :post-with-content
         :query/db ::FAKEDB
@@ -319,6 +326,7 @@
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
+       #_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-content
         :field/lang :fr
@@ -341,10 +349,11 @@
           :where [[?e :post/type ?type]]}
         :post.type/page]}
       :fr
+      false
       true
 
-      ;; With deeply nested, mixed implicit & explicit :field/content,
-      ;; two entities to compact
+      ;; With deeply nested, mixed implicit & explicit :field/content;
+      ;; with formatting; two entities to compact.
       [{:query/name ::db/query
         :query/key :post-with-taxons-and-field-content
         :query/db ::FAKEDB
@@ -361,6 +370,7 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
+       #_#_#_#_#_#_
        {:query/name ::i18n/filter-fields
         :query/key :post-with-taxons-and-field-content
         :field/lang :en
@@ -397,6 +407,7 @@
         "my-post"
         :post.type/page]}
       :en
+      true
       true
 
       ;;
