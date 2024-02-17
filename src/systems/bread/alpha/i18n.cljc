@@ -119,39 +119,25 @@
         field-lang (lang req)]
     (if (seq bindings)
       (let [{qn :query/name k :query/key :query/keys [db args]} query
-            attrs-map (bread/hook req ::bread/attrs-map)
-            db-and-filter-qs
-            (reduce
-              (fn [qs {:keys [binding-path relation entity-index] :as _b}]
-                (conj
-                  (s/transform
-                    (concat [0 :query/args 0 ;; db query
-                             :find           ;; find clause
-                             entity-index    ;; position within find
-                             s/LAST]         ;; pull expr
-                            binding-path)
-                    (partial d/ensure-attrs [:field/lang :field/key :db/id])
-                    qs)
-                  {:query/name ::filter-fields
-                   :query/key k
-                   :field/lang field-lang
-                   :spath (qi/relation->spath attrs-map relation)}))
-              [query]
-              bindings)
-            format-qs (when (bread/config req :i18n/format-fields?)
-                        (map (fn [{:keys [relation]}]
-                               {:query/name ::format
-                                :query/key k
-                                :spath (qi/relation->spath attrs-map relation)})
-                             bindings))
-            compact-qs (if (bread/config req :i18n/compact-fields?)
-                         (map (fn [{:keys [relation]}]
-                                {:query/name ::compact
-                                 :query/key k
-                                 :spath (qi/relation->spath attrs-map relation)})
-                              bindings)
-                         [])]
-        (concat db-and-filter-qs format-qs compact-qs))
+            attrs-map (bread/hook req ::bread/attrs-map)]
+        (reduce
+          (fn [qs {:keys [binding-path relation entity-index] :as _b}]
+            (conj
+              (s/transform
+                (concat [0 :query/args 0 ;; db query
+                         :find           ;; find clause
+                         entity-index    ;; position within find
+                         s/LAST]         ;; pull expr
+                        binding-path)
+                (partial d/ensure-attrs [:field/lang :field/key :db/id])
+                qs)
+              #_
+              {:query/name ::filter-fields
+               :query/key k
+               :field/lang field-lang
+               :spath (qi/relation->spath attrs-map relation)}))
+          [query]
+          bindings))
       [query])))
 
 (defmethod bread/action ::path-params
