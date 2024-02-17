@@ -33,7 +33,13 @@ Bread's (planned) high-level feature set:
 * Co-located component queries for more advanced data models
 * Completely hackable through an extremely simple plugin API
 
-## Basic Usage
+## Non-goals
+
+* **Performance.** Bread is a relatively lightweight CMS, and should perform reasonably well on modern hardware. However, little attention has been given to benchmarking, optimization, etc. We are still in the design stage and thus are focusing on correctness and API ergonomics.
+* **Minimalism by default.** A Content Management System must, by definition, have a fairly large surface area to be broadly useful. While some CMSs reach for a Spartan minimalism out of the box, Bread takes a balanced approach. Its core library is a handful of namespaces that define a very generic app lifecyle, small but very powerful. However, Bread's default install is considerably bigger, with utilities for various common use-cases; it is "batteries included." If you want real minimalism, you can get it by throwing away the defaults and composing your own bespoke CMS.
+* **Integration with ___ framework.** Following from the above non-goal, the default install for Bread comes with many opinions about UX, UI, db schema, routing, etc. While these defaults are _simple_ to override, in aggregate they are not _easy_ to compose with another system's differing opinions. Take out the "batteries" and start with the core library if you want tight integration with your favorite Clojure framework.
+
+## Basic usage
 
 ```clojure
 (ns my-project
