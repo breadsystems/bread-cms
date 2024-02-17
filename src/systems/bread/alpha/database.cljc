@@ -174,7 +174,7 @@
                      initial-txns
                      migrations]
            :or {as-of-param :as-of
-                as-of-format "yyyy-MM-dd HH:mm:ss z"
+                as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
                 ;; TODO load this from defaults
                 migrations schema/initial
