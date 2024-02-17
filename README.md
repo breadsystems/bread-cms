@@ -135,7 +135,7 @@ Bread's (planned) high-level feature set:
        :dispatcher/component article-component}]]))
 
 (def data
-  [{:string/key          :hello
+  [{:string/key          :site-header
     :string/lang         :en
     :string/value        "My Blog"}
    {:post/type           :post.type/article
