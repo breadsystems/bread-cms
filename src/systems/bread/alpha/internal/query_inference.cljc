@@ -134,17 +134,32 @@
 (defn infer-query-bindings
   "Searches query for bindings to attr, such that the binding value returns
   logical true for (pred binding-value). Returns a map of the form:
-  {:query transformed-query :bindings binding-specs}."
+
+  {:query transformed-query :bindings binding-specs}.
+
+  A binding-spec is a map with the following keys:
+
+  - :binding-sym - the symbol used in the pull expr containing the binding.
+  - :binding-path - the path through the pull spec to the binding, for use with
+    get-in, etc.
+  - :attr - the (keyword) attribute originally passed to infer-query-bindings.
+  - :entity-index - the position of the pull expr within (:find query).
+  - :relation relation - the relation vector between the top-level entity
+    being queried and the entity to which attr belongs within this binding.
+    Like binding-path but containing only db attributes (keywords).
+  "
   [attr pred query]
   (reduce (fn [{:keys [bindings]} {:keys [index sym ops] :as _clause}]
             (reduce
               (fn [{:keys [query bindings]} [path b]]
-                (let [relation (filterv keyword? path)]
+                (let [binding-path (conj (vec path) attr)
+                      relation (filterv keyword? binding-path)]
                   {:bindings (conj bindings
                                    {:binding-sym sym
+                                    :binding-path binding-path
                                     :attr attr
                                     :entity-index index
-                                    :relation (conj relation attr)})}))
+                                    :relation relation})}))
               {:bindings bindings}
               ops))
           {:bindings []}

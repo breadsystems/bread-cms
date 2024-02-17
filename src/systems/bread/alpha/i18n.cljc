@@ -85,15 +85,6 @@
                    e)
       e)))
 
-(defn- construct-lang-query [{:keys [origin target attr relation] :as m}]
-  (let [syms (take (count relation) (repeatedly (partial gensym origin)))
-        left-syms (cons origin syms)
-        attrs (concat relation [attr])
-        right-syms (concat syms [target])]
-    {:in ['?lang]
-     :where (conj (mapv vector left-syms attrs right-syms)
-                  [target :field/lang '?lang])}))
-
 (defmethod bread/action ::queries
   i18n-queries
   [req _ [{:query/keys [db] :as query}]]
@@ -101,21 +92,41 @@
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [{:keys [bindings]} (qi/infer-query-bindings
-                           :translatable/fields
-                           translatable-binding?
-                           (first (:query/args query)))
+  (let [dbq (first (:query/args query))
+        {:keys [bindings]} (qi/infer-query-bindings
+                             :translatable/fields
+                             translatable-binding?
+                             dbq)
         attrs-map (bread/hook req ::bread/attrs-map)
         field-lang (lang req)]
     (if (seq bindings)
       (let [{qn :query/name k :query/key :query/keys [db args]} query
             attrs-map (bread/hook req ::bread/attrs-map)
-            filter-qs (map (fn [{:keys [relation]}]
-                             {:query/name ::filter-fields
-                              :query/key k
-                              :field/lang field-lang
-                              :spath (qi/relation->spath attrs-map relation)})
-                           bindings)
+            db-and-filter-qs
+            (reduce
+              (fn [qs {:keys [binding-path relation entity-index] :as _b}]
+                (prn 'BEFORE (-> qs first :query/args first :find
+                                 (get entity-index) last (get-in binding-path)))
+                (prn (concat [0 :query/args 0 ;; db query
+                              :find           ;; find clause
+                              entity-index    ;; position within find
+                              s/LAST]         ;; pull expr
+                             binding-path))
+                (conj
+                  (s/transform
+                    (concat [0 :query/args 0 ;; db query
+                             :find           ;; find clause
+                             entity-index    ;; position within find
+                             s/LAST]         ;; pull expr
+                            binding-path)
+                    (partial d/ensure-attrs [:field/lang :field/key :db/id])
+                    qs)
+                  {:query/name ::filter-fields
+                   :query/key k
+                   :field/lang field-lang
+                   :spath (qi/relation->spath attrs-map relation)}))
+              [query]
+              bindings)
             compact-qs (if (bread/config req :i18n/compact-fields?)
                          (map (fn [{:keys [relation]}]
                                 {:query/name ::compact
@@ -123,7 +134,7 @@
                                  :spath (qi/relation->spath attrs-map relation)})
                               bindings)
                          [])]
-        (vec (concat [query] filter-qs compact-qs)))
+        (concat db-and-filter-qs compact-qs))
       [query])))
 
 (defmethod bread/action ::path-params

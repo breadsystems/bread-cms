@@ -74,13 +74,10 @@
 
     (are
       [queries dispatcher]
-      (= queries (let [counter (atom 0)
-                       gensym* (fn [prefix]
-                                 (symbol (str prefix (swap! counter inc))))]
-                   (with-redefs [gensym gensym*]
-                     (-> (assoc app ::bread/dispatcher dispatcher)
-                         (bread/hook ::bread/dispatch)
-                         ::bread/queries))))
+      (= queries (let [counter (atom 0)]
+                   (-> (assoc app ::bread/dispatcher dispatcher)
+                       (bread/hook ::bread/dispatch)
+                       ::bread/queries)))
 
       [{:query/name ::db/query
         :query/key :post
