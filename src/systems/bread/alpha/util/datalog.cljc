@@ -57,9 +57,20 @@
    (map #(symbol (str prefix %)) (range start (+ start ct)))))
 
 (defn ensure-db-id [pull]
-  (vec (if (some #{:db/id} pull)
-         pull
-         (cons :db/id pull))))
+  (if (= '[*] pull)
+    pull
+    (vec (if (some #{:db/id} pull)
+           pull
+           (cons :db/id pull)))))
+
+(defn ensure-attrs [attrs pull]
+  (if (= '[*] pull)
+    pull
+    (vec (reduce (fn [pull attr]
+                   (if (some #{attr} pull)
+                     pull
+                     (cons attr pull)))
+                 pull attrs))))
 
 (comment
   (attr-binding :taxon/fields {:taxon/fields [:field/content]})

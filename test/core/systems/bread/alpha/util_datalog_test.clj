@@ -23,10 +23,22 @@
 (deftest test-ensure-db-id
   (are
     [expected pull] (= expected (d/ensure-db-id pull))
+    ['*] ['*]
     [:db/id] []
     [:db/id] [:db/id]
     [:db/id :xyz] [:xyz]
     [:db/id :xyz] [:db/id :xyz]))
+
+(deftest test-ensure-attrs
+  (are
+    [expected attrs pull] (= expected (d/ensure-attrs attrs pull))
+    ['*] [:db/id] ['*]
+    ['*] [:db/id :abc] ['*]
+    ['*] [:db/id :abc :xyz] ['*]
+    [:db/id] [:db/id] []
+    [:abc :db/id] [:db/id :abc] []
+    [:db/id :abc] [:db/id] [:abc]
+    [:db/id :abc :xyz] [:db/id] [:abc :xyz]))
 
 (comment
   (require '[kaocha.repl :as k])
