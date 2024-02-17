@@ -53,7 +53,7 @@
    :query '[{:translatable/fields [*]}
             {:post/taxons [{:translatable/fields [*]}]}]}
   [:main
-   [:h1 (:a fields)]
+   [:h1 (:title fields)]
    [:div.tags-list
     (map (fn [{tag :translatable/fields}]
            (:name tag))
