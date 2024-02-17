@@ -362,7 +362,6 @@
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :attr/migration "migration.menus"}
-     ;; Menu Item attributes.
      {:db/ident :menu.item/entity
       :attr/label "Menu Item Entity"
       :db/doc "DB entity this item references (if any)."
