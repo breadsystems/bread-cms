@@ -40,11 +40,11 @@
 
       ;; Basic post menu.
       [{:query/name ::bread/value
-        :query/key [:main-nav]
+        :query/key [:basic-nav]
         :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/page}}
        {:query/name ::db/query
-        :query/key [:main-nav  :items]
+        :query/key [:basic-nav  :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
@@ -57,7 +57,7 @@
          :post.type/page
          #{:post.status/published}]}
        {:query/name ::db/query
-        :query/key [:navigation/i18n :main-nav]
+        :query/key [:navigation/i18n :basic-nav]
         :query/db db
         :query/args
         ['{:find [(pull ?f [:db/id :field/key :field/content])]
@@ -72,23 +72,23 @@
          #{:title}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:main-nav :items]
+        :query/key [:basic-nav :items]
         :route/name :bread.route/page
         :router router
         :lang :en}]
       {:menus
-       [{:menu/key :main-nav
+       [{:menu/key :basic-nav
          :menu/type ::navigation/posts
          :post/type :post.type/page
          :route/name :bread.route/page}]}
 
       ;; Support custom post status, post type, and field keys.
       [{:query/name ::bread/value
-        :query/key [:main-nav]
+        :query/key [:articles-menu]
         :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/article}}
        {:query/name ::db/query
-        :query/key [:main-nav :items]
+        :query/key [:articles-menu :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
@@ -99,7 +99,7 @@
          :post.type/article
          #{:post.status/x :post.status/y}]}
        {:query/name ::db/query
-        :query/key [:navigation/i18n :main-nav]
+        :query/key [:navigation/i18n :articles-menu]
         :query/db db
         :query/args
         ['{:find [(pull ?f [:db/id :field/key :field/content])]
@@ -114,12 +114,12 @@
          #{:custom :other}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:main-nav :items]
+        :query/key [:articles-menu :items]
         :route/name :bread.route/page
         :router router
         :lang :en}]
       {:menus
-       [{:menu/key :main-nav
+       [{:menu/key :articles-menu
          :menu/type ::navigation/posts
          :post/type :post.type/article
          :post/status [:post.status/x :post.status/y]
@@ -128,11 +128,11 @@
 
       ;; Page type composes with status and other options.
       [{:query/name ::bread/value
-        :query/key [:main-nav]
+        :query/key [:posts-menu]
         :query/value {:menu/type ::navigation/posts
                       :post/type :post.type/page}}
        {:query/name ::db/query
-        :query/key [:main-nav :items]
+        :query/key [:posts-menu :items]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
@@ -143,7 +143,7 @@
          :post.type/page
          #{:post.status/x :post.status/y}]}
        {:query/name ::db/query
-        :query/key [:navigation/i18n :main-nav]
+        :query/key [:navigation/i18n :posts-menu]
         :query/db db
         :query/args
         ['{:find [(pull ?f [:db/id :field/key :field/content])]
@@ -158,12 +158,12 @@
          #{:custom :other}
          :en]}
        {:query/name ::navigation/merge-post-menu-items
-        :query/key [:main-nav :items]
+        :query/key [:posts-menu :items]
         :route/name :bread.route/page
         :router router
         :lang :en}]
       {:menus
-       [{:menu/key :main-nav
+       [{:menu/key :posts-menu
          :menu/type ::navigation/pages
          :post/status [:post.status/x :post.status/y]
          :translatable/fields [:custom :other]
@@ -171,10 +171,10 @@
 
       ;; Location menu.
       [{:query/name ::bread/value
-        :query/key [:main-nav]
+        :query/key [:location-nav]
         :query/value {:menu/type ::navigation/location}}
        {:query/name ::db/query
-        :query/key [:main-nav]
+        :query/key [:location-nav]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id
@@ -188,9 +188,9 @@
                                           :translatable/fields]}])]
            :in [$ ?loc]
            :where [[?e :menu/locations ?loc]]}
-         :main-nav]}
+         :location-nav]}
        {:query/name ::db/query
-        :query/key [:main-nav :menu/items :translatable/fields]
+        :query/key [:location-nav :menu/items :translatable/fields]
         :query/db db
         :query/args
         ['{:find [(pull ?e [:db/id :field/key :field/content])]
@@ -198,10 +198,10 @@
            :where [[?e :field/lang ?lang]
                    [?e0 :translatable/fields ?e]
                    [?e1 :menu/items ?e0]]}
-         [::bread/data :main-nav :db/id]
+         [::bread/data :location-nav :db/id]
          :en]}]
       {:menus
-       [{:menu/key :main-nav
+       [{:menu/key :location-nav
          :menu/type ::navigation/location}]}
 
       ;;
@@ -379,4 +379,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))
