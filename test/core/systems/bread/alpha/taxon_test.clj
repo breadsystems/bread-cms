@@ -25,13 +25,10 @@
 
     (are
       [queries dispatcher]
-      (= queries (let [counter (atom 0)
-                       gensym* (fn [prefix]
-                                 (symbol (str prefix (swap! counter inc))))]
-                   (with-redefs [gensym gensym*]
-                     (-> (assoc app ::bread/dispatcher dispatcher)
-                         (bread/hook ::bread/dispatch)
-                         ::bread/queries))))
+      (= queries (let [counter (atom 0)]
+                   (-> (assoc app ::bread/dispatcher dispatcher)
+                       (bread/hook ::bread/dispatch)
+                       ::bread/queries)))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.
@@ -96,7 +93,7 @@
         ['{:find [(pull ?e [:db/id
                             :taxon/slug
                             {:translatable/fields
-                             [:field/key :field/content]}]) .]
+                             [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -123,9 +120,9 @@
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:translatable/fields
-                               [:field/key :field/content]}]}
+                               [:db/id :field/lang :field/key :field/content]}]}
                             {:translatable/fields
-                             [:field/key :field/content]}]) .]
+                             [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
@@ -160,9 +157,9 @@
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:translatable/fields
-                               [:field/key :field/content]}]}
+                               [:db/id :field/lang :field/key :field/content]}]}
                             {:translatable/fields
-                             [:field/key :field/content]}]) .]
+                             [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :taxon/slug ?slug]]}
