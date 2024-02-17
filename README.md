@@ -140,23 +140,23 @@ Bread's (planned) high-level feature set:
     :string/value "My Blog"}
    {:post/type :post.type/article
     :post/status :post.type/published
-    :translatable/fields [{:field/key :title
-                           :field/lang :en
-                           :field/format :edn
+    :translatable/fields [{:field/key     :title
+                           :field/lang    :en
+                           :field/format  :edn
                            :field/content "\"English Article Title\""}
-                          {:field/key :title
-                           :field/lang :en
-                           :field/format :edn
+                          {:field/key     :title
+                           :field/lang    :en
+                           :field/format  :edn
                            :field/content "\"Article content in English...\""}]}
    {:post/type :post.type/article
     :post/status :post.type/published
-    :translatable/fields [{:field/key :title
-                           :field/lang :en
-                           :field/format :edn
+    :translatable/fields [{:field/key     :title
+                           :field/lang    :en
+                           :field/format  :edn
                            :field/content "\"An Older Article\""}
-                          {:field/key :title
-                           :field/lang :en
-                           :field/format :edn
+                          {:field/key     :title
+                           :field/lang    :en
+                           :field/format  :edn
                            :field/content "\"Lorem ipsum dolor sit amet\""}]}])
 
 (def handler
