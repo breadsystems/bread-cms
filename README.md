@@ -47,10 +47,10 @@ Bread's (planned) high-level feature set:
   (:require
     [reitit.core :as reitit]
     ;; include support for plugging in a Reitit Router
-    [systems.bread.alpha.plugin.reitit]
-    [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.defaults :as defaults]))
+    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.plugin.defaults :as defaults]))
 
 ;; Assume the database has the following global translation strings:
 ;; [{:string/key :hello :string/lang :en :string/value "Hello"}
@@ -87,10 +87,10 @@ Bread's (planned) high-level feature set:
 (ns my.simple.blog
   (:require
     [reitit.core :as reitit]
+    [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.plugin.reitit]
-    [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.plugin.defaults :as defaults]))
 
 (defc main-layout [{:keys [main-content i18n lang]}]
   {:content-path [:main-content]} ; how extending components pass their content
