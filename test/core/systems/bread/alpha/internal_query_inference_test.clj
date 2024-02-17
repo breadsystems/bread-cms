@@ -88,6 +88,7 @@
     {:bindings [{:binding-sym '?e
                  :attr :translatable/fields
                  :entity-index 0
+                 :binding-path [0 :translatable/fields]
                  :relation [:translatable/fields]}]}
     :translatable/fields
     i18n/translatable-binding?
@@ -99,6 +100,7 @@
     {:bindings [{:binding-sym '?e
                  :attr :translatable/fields
                  :entity-index 0
+                 :binding-path [0 :translatable/fields]
                  :relation [:translatable/fields]}]}
     :translatable/fields
     i18n/translatable-binding?
@@ -110,6 +112,7 @@
     {:bindings [{:binding-sym '?e
                  :attr :translatable/fields
                  :entity-index 0
+                 :binding-path [0 :translatable/fields]
                  :relation [:translatable/fields]}]}
     :translatable/fields
     i18n/translatable-binding?
@@ -121,6 +124,9 @@
     {:bindings [{:binding-sym '?e
                  :attr :translatable/fields
                  :entity-index 0
+                 :binding-path [0 :menu/items
+                                0 :menu.item/entity
+                                0 :translatable/fields]
                  :relation [:menu/items
                             :menu.item/entity
                             :translatable/fields]}]}
