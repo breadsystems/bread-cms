@@ -105,13 +105,6 @@
             db-and-filter-qs
             (reduce
               (fn [qs {:keys [binding-path relation entity-index] :as _b}]
-                (prn 'BEFORE (-> qs first :query/args first :find
-                                 (get entity-index) last (get-in binding-path)))
-                (prn (concat [0 :query/args 0 ;; db query
-                              :find           ;; find clause
-                              entity-index    ;; position within find
-                              s/LAST]         ;; pull expr
-                             binding-path))
                 (conj
                   (s/transform
                     (concat [0 :query/args 0 ;; db query
