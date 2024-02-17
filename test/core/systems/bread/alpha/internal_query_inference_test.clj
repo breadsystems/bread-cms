@@ -67,11 +67,8 @@
 (deftest test-infer-query-bindings
   (are
     [result attr pred query]
-    (= result (let [counter (atom 0)
-                    gensym* (fn [prefix]
-                              (symbol (str prefix (swap! counter inc))))]
-                (with-redefs [gensym gensym*]
-                  (qi/infer-query-bindings attr pred query))))
+    (= result (let [counter (atom 0)]
+                (qi/infer-query-bindings attr pred query)))
 
     {:bindings []} nil nil nil
     {:bindings []} :attr nil {}

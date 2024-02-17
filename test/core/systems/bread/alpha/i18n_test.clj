@@ -174,9 +174,7 @@
                                      :action/value lang}]
                         ::bread/attrs-map [{:action/name ::bread/value
                                             :action/value attrs-map}]}}])
-               counter (atom 0)
-               gensym* (fn [prefix]
-                         (symbol (str prefix (swap! counter inc))))]
+               counter (atom 0)]
            (bread/hook app ::i18n/queries query)))
 
       ;; Without :field/content
