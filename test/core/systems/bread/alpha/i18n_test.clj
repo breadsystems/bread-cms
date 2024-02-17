@@ -388,6 +388,135 @@
       ;;
       )))
 
+(deftest test-fields-hook
+  (are
+    [entity query data]
+    (= entity (bread/query query data))
+
+    false {:query/name ::i18n/fields :query/key :the-key} {:the-key false}
+
+    ;; With direct fields; no formatting; no compaction.
+    {:translatable/fields [{:field/key :opposite-of-occupied
+                            :field/format :edn
+                            :field/content (pr-str "عكس المحتل")
+                            :field/lang :ar}
+                           {:field/key :not-vacant
+                            :field/format :edn
+                            :field/content (pr-str "ليس الشاغر")
+                            :field/lang :ar}]}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :ar
+     :format? false
+     :compact? false
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{:field/key :opposite-of-occupied
+                 :field/format :edn
+                 :field/content (pr-str "عكس المحتل")
+                 :field/lang :ar}
+                {:field/key :opposite-of-occupied
+                 :field/format :edn
+                 :field/content (pr-str "The opposite of occupied")
+                 :field/lang :en}
+                {:field/key :not-vacant
+                 :field/format :edn
+                 :field/content (pr-str "ليس الشاغر")
+                 :field/lang :ar}
+                {:field/key :not-vacant
+                 :field/format :edn
+                 :field/content (pr-str "is not vacant")
+                 :field/lang :en}]}}
+
+    ;; With direct fields; EDN formatting; no compaction.
+    {:translatable/fields [{:field/key :from-the-river
+                            :field/format :edn
+                            :field/content "מהנהר"
+                            :field/lang :ar}
+                           {:field/key :to-the-sea
+                            :field/format :edn
+                            :field/content "לים"
+                            :field/lang :ar}]}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :ar
+     :format? true
+     :compact? false
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "מהנהר")
+                 :field/lang :ar}
+                {:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "From the river")
+                 :field/lang :en}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "לים")
+                 :field/lang :ar}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "to the sea")
+                 :field/lang :en}]}}
+
+    ;; With direct fields; no formatting; compactions.
+    {:translatable/fields {:from-the-river (pr-str "מהנהר")
+                           :to-the-sea (pr-str "לים")}}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :ar
+     :format? false
+     :compact? true
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "מהנהר")
+                 :field/lang :ar}
+                {:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "From the river")
+                 :field/lang :en}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "לים")
+                 :field/lang :ar}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "to the sea")
+                 :field/lang :en}]}}
+
+    ;; With direct fields; EDN formatting; compactions.
+    {:translatable/fields {:from-the-river "מהנהר" :to-the-sea "לים"}}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :ar
+     :format? true
+     :compact? true
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "מהנהר")
+                 :field/lang :ar}
+                {:field/key :from-the-river
+                 :field/format :edn
+                 :field/content (pr-str "From the river")
+                 :field/lang :en}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "לים")
+                 :field/lang :ar}
+                {:field/key :to-the-sea
+                 :field/format :edn
+                 :field/content (pr-str "to the sea")
+                 :field/lang :en}]}}
+
+    ;;
+    ))
+
 (deftest test-filter-fields-hook
   (is (false? (bread/query {:query/name ::i18n/filter-fields
                             :query/key :the-query-key}

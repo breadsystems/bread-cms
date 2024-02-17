@@ -70,6 +70,12 @@
 (defn- compact* [fields]
   (into {} (map (juxt :field/key :field/content)) fields))
 
+(defn compact-fields
+  "Takes a sequence of translatable fields and compacts it down to a single map,
+  using :field/key and :field/content as the map keys and values, respectively."
+  [fields]
+  (into {} (map (juxt :field/key :field/content)) fields))
+
 (defmethod bread/query ::compact
   [{k :query/key spath :spath} data]
   (let [e (get data k)]
@@ -102,6 +108,20 @@
                            (filter #(= lang (:field/lang %)) fields))
                    e)
       e)))
+
+(defmethod bread/query ::fields
+  [{k :query/key lang :field/lang :keys [format? compact? spaths]} data]
+  (if (get data k)
+    (let [chain [(when compact? compact-fields)
+                 (when format? format-fields)
+                 (fn [fields]
+                   (filter #(= lang (:field/lang %)) fields))]
+          process (apply comp (conj (filterv identity chain)))]
+      (reduce
+        (fn [e spath]
+          (s/transform spath process e))
+        (get data k) spaths))
+    (get data k)))
 
 (defmethod bread/action ::queries
   i18n-queries
