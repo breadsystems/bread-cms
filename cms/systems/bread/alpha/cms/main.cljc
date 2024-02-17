@@ -196,7 +196,8 @@
 (comment
   (set! *print-namespace-maps* false)
 
-  (require '[flow-storm.api :as flow])
+  (require '[flow-storm.api :as flow]
+           '[systems.bread.alpha.tools.util :as util :refer [do-queries]])
   (flow/local-connect)
 
   (deref system)
@@ -211,54 +212,6 @@
 
   (alter-var-root #'bread/*profile-hooks* not)
 
-  ;; TODO put this stuff in its own tooling util ns...
-  (do
-    (defn- response [res]
-      (select-keys res [:status :headers :body :session]))
-
-    (defn ->app [req]
-      (when-let [app (:bread/app @system)] (merge app req)))
-
-    #trace
-    (defn diagnose-queries [req]
-      (let [app (-> (->app req)
-                    (bread/hook ::bread/route)
-                    (bread/hook ::bread/dispatch))
-            queries (::bread/queries app)
-            {:keys [data err n before]}
-            (reduce (fn [{:keys [data n]} _]
-                      (try
-                        (let [before data
-                              data
-                              (-> app
-                                  ;; Expand n queries
-                                  (assoc ::bread/queries
-                                         (subvec queries 0 (inc n)))
-                                  (bread/hook ::bread/expand)
-                                  ::bread/data)]
-                          {:data data :n (inc n) :data-before before})
-                        (catch Throwable err
-                          (reduced {:err err :n n}))))
-                    {:data {} :err nil :n 0} queries)]
-        (if err
-          {:err err
-           :at n
-           :query (get-in app [::bread/queries n])
-           :before before}
-          {:ok data})))
-
-    #trace
-    (defn do-queries
-      ([app end]
-       (do-queries app 0 end))
-      ([app start end]
-       (-> app
-           (bread/hook ::bread/route)
-           (bread/hook ::bread/dispatch)
-           (update ::bread/queries subvec start end)
-           (bread/hook ::bread/expand)
-           ::bread/data))))
-
   (def $req {:uri "/en"})
   (def $req {:uri "/en/hello"})
   (def $req {:uri "/en/tag/one"})
@@ -266,6 +219,9 @@
   (def $req {:uri "/en/404"})
 
   (do
+    (def ->app            (partial util/->app            (:bread/app @system)))
+    (def diagnose-queries (partial util/diagnose-queries (:bread/app @system)))
+
     (defn db []
       (db/database (->app $req)))
 
@@ -275,33 +231,29 @@
         (db/database (->app $req))
         args)))
 
-  (do #rtrace (diagnose-queries (->app $req)))
-  (do #rtrace (do-queries (->app $req) 3))
+  (diagnose-queries (->app $req))
   (do-queries (->app $req) 1)
   (do-queries (->app $req) 2)
   (do-queries (->app $req) 3)
-  (update (-> (->app $req)) ::bread/queries (fn [qrs]
-                                         (prn 'QRS qrs) qrs))
-  (subvec $qrs 0 3)
 
-  (do #rtrace (as-> (->app $req) $
-                (bread/hook $ ::bread/route)
-                (::bread/dispatcher $)))
-  (do #rtrace (as-> (->app $req) $
-                (bread/hook $ ::bread/route)
-                (bread/hook $ ::bread/dispatch)
-                (::bread/queries $)))
-  (do #rtrace (as-> (->app  $req) $
-                (bread/hook $ ::bread/route)
-                (bread/hook $ ::bread/dispatch)
-                (bread/hook $ ::bread/expand)
-                (::bread/data $)))
-  (do #rtrace (as-> (->app $req) $
-                (bread/hook $ ::bread/route)
-                (bread/hook $ ::bread/dispatch)
-                (bread/hook $ ::bread/expand)
-                (bread/hook $ ::bread/render)
-                (select-keys $ [:status :body :headers])))
+  (as-> (->app $req) $
+    (bread/hook $ ::bread/route)
+    (::bread/dispatcher $))
+  (as-> (->app $req) $
+    (bread/hook $ ::bread/route)
+    (bread/hook $ ::bread/dispatch)
+    (::bread/queries $))
+  (as-> (->app  $req) $
+    (bread/hook $ ::bread/route)
+    (bread/hook $ ::bread/dispatch)
+    (bread/hook $ ::bread/expand)
+    (::bread/data $))
+  (as-> (->app $req) $
+    (bread/hook $ ::bread/route)
+    (bread/hook $ ::bread/dispatch)
+    (bread/hook $ ::bread/expand)
+    (bread/hook $ ::bread/render)
+    (select-keys $ [:status :body :headers]))
 
   (bread/config (->app $req) :i18n/supported-langs)
 
