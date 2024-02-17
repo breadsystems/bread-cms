@@ -52,10 +52,6 @@ Bread's (planned) high-level feature set:
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.defaults :as defaults]))
 
-;; Assume the database has the following global translation strings:
-;; [{:string/key :hello :string/lang :en :string/value "Hello"}
-;;  {:string/key :hello :string/lang :fr :string/value "Bonjour"}]
-
 (defc hello [{:keys [i18n params]}]
   [:p (format "%s, %s!" (:greeting i18n) (:to params))])
 
@@ -67,12 +63,17 @@ Bread's (planned) high-level feature set:
                     :data [:params]
                     :component hello}]]))
 
+(def data
+  [{:string/key :hello :string/lang :en :string/value "Hello"}
+   {:string/key :hello :string/lang :fr :string/value "Bonjour"}])
+
 (def handler
   (bread/load-handler (defaults/app {:router router
                                      :db {:db/type :datahike
                                           :store {; datahike config
                                                   :backend :mem
-                                                  :id "hello-bread"}}})))
+                                                  :id "hello-bread"}
+                                          :initial-txns data}})))
 
 (handler {:uri "/en/hello/Breadsters"})
 ;; => [:p "Hello, Breadsters!"]
