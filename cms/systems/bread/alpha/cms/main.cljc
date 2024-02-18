@@ -375,10 +375,6 @@
               :post/authors :post/slug]}
     [:div data])
 
-  (.toString "abc")
-  (.toString :field/lang)
-
-  (with-meta "abc" {:a true})
 
   (deftype RouteSegment [kw]
     Object
@@ -390,8 +386,6 @@
 
   (meta (RouteSegment. :field/lang))
   (str (RouteSegment. :field/lang))
-
-  (require '[reitit.trie :as trie])
 
   (defn- parse-params [template]
     (mapv keyword (loop [[c & cs] template
