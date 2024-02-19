@@ -45,6 +45,7 @@
     :post/type :post.type/page
     :post/slug "child-page"
     :post/status :post.status/published
+    :post/children ["page.grandchild"]
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
@@ -86,6 +87,19 @@
        :field/lang :fr
        :field/format :edn
        :field/content (pr-str "Bonjour!")}}}
+   {:db/id "page.grandchild"
+    :post/type :post.type/page
+    :post/slug "grandchild-page"
+    :post/status :post.status/published
+    :translatable/fields
+    #{{:field/key :title
+       :field/lang :en
+       :field/format :edn
+       :field/content (pr-str "Grandchild Page")}
+      {:field/key :title
+       :field/lang :fr
+       :field/format :edn
+       :field/content (pr-str "Petit Enfant Page")}}}
    {:db/id "tag.one"
     :taxon/slug "one"
     :taxon/taxonomy :taxon.taxonomy/tag
