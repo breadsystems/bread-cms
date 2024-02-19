@@ -66,7 +66,7 @@
       :compact? true
       :format? true
       :spaths [[:translatable/fields]]}
-     {:query/name ::navigation/items
+     {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::page
@@ -109,7 +109,7 @@
       :compact? true
       :format? true
       :spaths [[:translatable/fields]]}
-     {:query/name ::navigation/items
+     {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::page
@@ -156,7 +156,7 @@
       :compact? true
       :format? true
       :spaths [[:translatable/fields]]}
-     {:query/name ::navigation/items
+     {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::park
@@ -203,7 +203,7 @@
       :format? true
       :spaths [[:menu.item/entity :translatable/fields]
                [:translatable/fields]]}
-     {:query/name ::navigation/items
+     {:query/name [::navigation/items ::navigation/location]
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true}]
@@ -245,7 +245,7 @@
       :format? true
       :spaths [[:menu.item/entity :translatable/fields]
                [:translatable/fields]]}
-     {:query/name ::navigation/items
+     {:query/name [::navigation/items ::navigation/location]
       :query/key [:menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true}]
