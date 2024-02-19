@@ -186,6 +186,11 @@
 
 ;; TODO DELETE ABOVE
 
+(defn- field-keys [ks]
+  (cond
+    (coll? ks) (set ks)
+    ks #{ks}))
+
 (defmulti menu-queries (fn [_req opts]
                          (:menu/type opts)))
 
@@ -197,7 +202,7 @@
         post-status :post/status
         route-name :route/name
         recursion-limit :recursion-limit
-        field-keys :field/key
+        fks :field/key
         :or {post-type :post.type/page
              post-status :post.status/published
              recursion-limit '...}}]
@@ -227,12 +232,55 @@
         items-query
         {:query/name ::items
          :query/key [menus-key k :menu/items]
+         #_#_
+         :query/description "Process menu item data."
          :router (route/router req)
          :route/name route-name
          :route/params (route/params req (route/match req))
-         :field/key (cond
-                      (coll? field-keys) (set field-keys)
-                      field-keys #{field-keys})}]
+         :field/key (field-keys fks)}]
+    (conj (apply vector init-query
+                 (bread/hook req ::i18n/queries db-query))
+          items-query)))
+
+(defmethod menu-queries ::location
+  menu-queries?type=location
+  [req {k :menu/key
+        location :menu/location
+        fks :field/key
+        recursion-limit :recursion-limit
+        merge? :merge-entities?
+        :or {recursion-limit '...
+             merge? true}}]
+  (let [menus-key (bread/config req :navigation/menus-key)
+        init-query
+        {:query/name ::bread/value
+         :query/key [menus-key k]
+         :query/description "Basic initial info for this location menu."
+         :query/value {:menu/type ::location
+                       :menu/location location}}
+        db-query
+        {:query/name ::db/query
+         :query/key [menus-key k :menu/items]
+         :query/description "Recursively query for menu items."
+         :query/db (db/database req)
+         :query/args [{:find [(list 'pull '?i [:db/id
+                                               :menu.item/order
+                                               {:menu.item/children
+                                                recursion-limit}
+                                               {:menu.item/entity
+                                                [:db/id
+                                                 :post/slug
+                                                 {:translatable/fields '[*]}]}
+                                               {:translatable/fields '[*]}])]
+                       :in '[$ ?location]
+                       :where '[[?m :menu/locations ?location]
+                                [?m :menu/items ?i]]}
+                      location]}
+        items-query
+        {:query/key [menus-key k :menu/items]
+         :query/name ::items
+         :field/key (field-keys fks)
+         :merge-entities? merge?}]
     (conj (apply vector init-query
                  (bread/hook req ::i18n/queries db-query))
           items-query)))
