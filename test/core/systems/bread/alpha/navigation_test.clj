@@ -38,11 +38,12 @@
     ;; Basic post menu.
     [{:query/name ::bread/value
       :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this menu."
+      :query/description "Basic initial info for this posts menu."
       :query/value {:menu/type ::navigation/posts
                     :post/type :post.type/page}}
      {:query/name ::db/query
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Recursively query for posts of a specific type."
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
@@ -67,6 +68,7 @@
       :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process post menu item data."
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
@@ -81,11 +83,12 @@
     ;; passing recursion-limit.
     [{:query/name ::bread/value
       :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this menu."
+      :query/description "Basic initial info for this posts menu."
       :query/value {:menu/type ::navigation/posts
                     :post/type :post.type/page}}
      {:query/name ::db/query
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Recursively query for posts of a specific type."
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [:db/id
@@ -108,6 +111,7 @@
       :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process post menu item data."
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
@@ -124,11 +128,12 @@
     ;; Basic post menu; single :post/status, :field/key.
     [{:query/name ::bread/value
       :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this menu."
+      :query/description "Basic initial info for this posts menu."
       :query/value {:menu/type ::navigation/posts
                     :post/type :post.type/park}}
      {:query/name ::db/query
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Recursively query for posts of a specific type."
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
@@ -153,6 +158,7 @@
       :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process post menu item data."
       :route/name ::park
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
