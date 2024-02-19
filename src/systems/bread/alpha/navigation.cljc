@@ -202,7 +202,6 @@
              post-status :post.status/published
              recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)
-        router (route/router req)
         init-query
         {:query/name ::bread/value
          :query/key [menus-key k]
@@ -228,7 +227,7 @@
         items-query
         {:query/name ::items
          :query/key [menus-key k :menu/items]
-         :router router
+         :router (route/router req)
          :route/name route-name
          :route/params (route/params req (route/match req))
          :field/key (cond
