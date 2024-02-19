@@ -242,6 +242,43 @@
                  (bread/hook req ::i18n/queries db-query))
           items-query)))
 
+(defmethod menu-queries ::taxon
+  menu-queries?type=taxon
+  [req {k :menu/key
+        taxonomy :taxon/taxonomy
+        recursion-limit :recursion-limit
+        fks :field/key
+        :or {recursion-limit '...}}]
+  (let [menus-key (bread/config req :navigation/menus-key)
+        init-query
+        {:query/name ::bread/value
+         :query/key [menus-key k]
+         :query/description "Basic initial info for this taxon menu."
+         :query/value {:menu/type ::taxon
+                       :taxon/taxonomy taxonomy}}
+        db-query
+        {:query/name ::db/query
+         :query/key [menus-key k :menu/items]
+         :query/description
+         "Recursively query for taxons of a specific taxonomy."
+         :query/db (db/database req)
+         :query/args [{:find [(list 'pull '?e [:db/id
+                                               :taxon/taxonomy
+                                               :taxon/slug
+                                               {:taxon/children
+                                                recursion-limit}
+                                               {:translatable/fields '[*]}])]
+                       :in '[$ ?taxonomy]
+                       :where '[[?e :taxon/taxonomy ?taxonomy]]}
+                      taxonomy]}
+        items-query
+        {:query/name [::items ::taxon]
+         :query/key [menus-key k :menu/items]
+         :field/key (field-keys fks)}]
+    (conj (apply vector init-query
+                 (bread/hook req ::i18n/queries db-query))
+          items-query)))
+
 (defmethod menu-queries ::location
   menu-queries?type=location
   [req {k :menu/key

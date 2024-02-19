@@ -256,6 +256,78 @@
        :merge-entities? true}}}
     {:field/lang "en"}
 
+    ;; Basic taxon menu.
+    [{:query/name ::bread/value
+      :query/description "Basic initial info for this taxon menu."
+      :query/key [:menus :taxon-nav]
+      :query/value {:menu/type ::navigation/taxon
+                    :taxon/taxonomy :taxon.taxonomy/tag}}
+     {:query/name ::db/query
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Recursively query for taxons of a specific taxonomy."
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :taxon/taxonomy
+                          :taxon/slug
+                          {:taxon/children ...}
+                          {:translatable/fields [*]}])]
+         :in [$ ?taxonomy]
+         :where [[?e :taxon/taxonomy ?taxonomy]]}
+       :taxon.taxonomy/tag]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
+     {:query/name [::navigation/items ::navigation/taxon]
+      :query/key [:menus :taxon-nav :menu/items]
+      :field/key nil}]
+    {:menus
+     {:taxon-nav
+      {:menu/type ::navigation/taxon
+       :taxon/taxonomy :taxon.taxonomy/tag}}}
+    {:field/lang "en"}
+
+    ;; Basic taxon menu; recursion-limit, field/keys.
+    [{:query/name ::bread/value
+      :query/description "Basic initial info for this taxon menu."
+      :query/key [:menus :taxon-nav]
+      :query/value {:menu/type ::navigation/taxon
+                    :taxon/taxonomy :taxon.taxonomy/category}}
+     {:query/name ::db/query
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Recursively query for taxons of a specific taxonomy."
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :taxon/taxonomy
+                          :taxon/slug
+                          {:taxon/children 2}
+                          {:translatable/fields [*]}])]
+         :in [$ ?taxonomy]
+         :where [[?e :taxon/taxonomy ?taxonomy]]}
+       :taxon.taxonomy/category]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
+     {:query/name [::navigation/items ::navigation/taxon]
+      :query/key [:menus :taxon-nav :menu/items]
+      :field/key #{:x :y :z}}]
+    {:menus
+     {:taxon-nav
+      {:menu/type ::navigation/taxon
+       :taxon/taxonomy :taxon.taxonomy/category
+       :field/key [:x :y :z]
+       :recursion-limit 2}}}
+    {:field/lang "en"}
+
     ;;
     ))
 
