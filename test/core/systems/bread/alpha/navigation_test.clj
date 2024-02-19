@@ -261,7 +261,8 @@
       :query/description "Basic initial info for this taxon menu."
       :query/key [:menus :taxon-nav]
       :query/value {:menu/type ::navigation/taxon
-                    :taxon/taxonomy :taxon.taxonomy/tag}}
+                    :taxon/taxonomy :taxon.taxonomy/tag
+                    :taxon/slug nil}}
      {:query/name ::db/query
       :query/key [:menus :taxon-nav :menu/items]
       :query/description "Recursively query for taxons of a specific taxonomy."
@@ -291,12 +292,13 @@
        :taxon/taxonomy :taxon.taxonomy/tag}}}
     {:field/lang "en"}
 
-    ;; Basic taxon menu; recursion-limit, field/keys.
+    ;; Basic taxon menu; recursion-limit, :field/keys.
     [{:query/name ::bread/value
       :query/description "Basic initial info for this taxon menu."
       :query/key [:menus :taxon-nav]
       :query/value {:menu/type ::navigation/taxon
-                    :taxon/taxonomy :taxon.taxonomy/category}}
+                    :taxon/taxonomy :taxon.taxonomy/category
+                    :taxon/slug nil}}
      {:query/name ::db/query
       :query/key [:menus :taxon-nav :menu/items]
       :query/description "Recursively query for taxons of a specific taxonomy."
@@ -324,6 +326,47 @@
      {:taxon-nav
       {:menu/type ::navigation/taxon
        :taxon/taxonomy :taxon.taxonomy/category
+       :field/key [:x :y :z]
+       :recursion-limit 2}}}
+    {:field/lang "en"}
+
+    ;; Basic taxon menu; recursion-limit, :field/keys, :taxon/slug.
+    [{:query/name ::bread/value
+      :query/description "Basic initial info for this taxon menu."
+      :query/key [:menus :taxon-nav]
+      :query/value {:menu/type ::navigation/taxon
+                    :taxon/taxonomy :taxon.taxonomy/category
+                    :taxon/slug "my-lovely-cat"}}
+     {:query/name ::db/query
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Recursively query for taxons of a specific taxonomy."
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :taxon/taxonomy
+                          :taxon/slug
+                          {:taxon/children 2}
+                          {:translatable/fields [*]}])]
+         :in [$ ?taxonomy ?slug]
+         :where [[?e :taxon/taxonomy ?taxonomy]
+                 [?e :taxon/slug ?slug]]}
+       :taxon.taxonomy/category
+       "my-lovely-cat"]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :taxon-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
+     {:query/name [::navigation/items ::navigation/taxon]
+      :query/key [:menus :taxon-nav :menu/items]
+      :field/key #{:x :y :z}}]
+    {:menus
+     {:taxon-nav
+      {:menu/type ::navigation/taxon
+       :taxon/taxonomy :taxon.taxonomy/category
+       :taxon/slug "my-lovely-cat"
        :field/key [:x :y :z]
        :recursion-limit 2}}}
     {:field/lang "en"}
