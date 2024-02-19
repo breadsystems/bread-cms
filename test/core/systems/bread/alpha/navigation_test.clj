@@ -35,14 +35,13 @@
     [] {} {}
 
     ;; Basic post menu.
-    ;; TODO menus-key
     [{:query/name ::bread/value
-      :query/key [:basic-nav]
+      :query/key [:menus :basic-nav]
       :query/description "Basic initial info for this menu."
       :query/value {:menu/type ::navigation/posts
                     :post/type :post.type/page}}
      {:query/name ::db/query
-      :query/key [:basic-nav  :items]
+      :query/key [:menus :basic-nav  :items]
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
@@ -59,16 +58,10 @@
        :post.type/page
        #{:post.status/published}]}
      {:query/name ::navigation/items
-      :query/key [:basic-nav :items]
+      :query/key [:menus :basic-nav :items]
       :route/name ::page
       :route/params {:field/lang :en}
-      :router (MockRouter. {:field/lang :en})}
-     #_
-     {:query/name ::navigation/merge-post-menu-items
-      :query/key [:basic-nav :items]
-      :route/name :bread.route/page
-      :router ::FAKEROUTER
-      :params {:field/lang :en}}]
+      :router (MockRouter. {:field/lang :en})}]
     {:menus
      {:basic-nav
       {:menu/type ::navigation/posts
