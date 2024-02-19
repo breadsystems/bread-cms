@@ -274,6 +274,8 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :taxon/slug
+                          {:taxon/_children [:taxon/slug
+                                             {:taxon/_children ...}]}
                           {:taxon/children ...}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy]
@@ -310,6 +312,8 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :taxon/slug
+                          {:taxon/_children [:taxon/slug
+                                             {:taxon/_children ...}]}
                           {:taxon/children 2}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy]
@@ -348,6 +352,8 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :taxon/slug
+                          {:taxon/_children [:taxon/slug
+                                             {:taxon/_children ...}]}
                           {:taxon/children 2}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy ?slug]

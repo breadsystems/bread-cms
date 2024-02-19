@@ -83,6 +83,9 @@
         [{:find [(list 'pull '?e [:db/id
                                   :taxon/taxonomy
                                   :taxon/slug
+                                  ;; We need full ancestry for Taxon URLs.
+                                  {:taxon/_children
+                                   [:taxon/slug {:taxon/_children '...}]}
                                   {:taxon/children
                                    recursion-limit}
                                   {:translatable/fields '[*]}])]
