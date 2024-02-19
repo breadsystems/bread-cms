@@ -208,11 +208,11 @@
 
   (alter-var-root #'bread/*profile-hooks* not)
 
-  (def $req {:uri "/en"})
-  (def $req {:uri "/en/hello"})
-  (def $req {:uri "/en/tag/one"})
-  (def $req {:uri "/fr/tag/one"})
-  (def $req {:uri "/en/404"})
+  (def $req {:uri "/en" :request-method :get})
+  (def $req {:uri "/en/hello" :request-method :get})
+  (def $req {:uri "/en/tag/one" :request-method :get})
+  (def $req {:uri "/fr/tag/one" :request-method :get})
+  (def $req {:uri "/en/404" :request-method :get})
 
   (do
     (require '[flow-storm.api :as flow]
