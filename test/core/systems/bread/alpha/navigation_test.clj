@@ -247,12 +247,13 @@
                [:translatable/fields]]}
      {:query/name [::navigation/items ::navigation/location]
       :query/key [:menus :location-nav :menu/items]
-      :field/key nil
+      :field/key #{:a}
       :merge-entities? true}]
     {:menus
      {:location-nav
       {:menu/type ::navigation/location
        :menu/location ::primary
+       :field/key :a
        :merge-entities? true}}}
     {:field/lang "en"}
 
