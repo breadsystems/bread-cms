@@ -197,13 +197,14 @@
         post-status :post/status
         route-name :route/name
         :or {post-status :post.status/published}}]
-  (let [router (route/router req)]
+  (let [menus-key (bread/config req :navigation/menus-key)
+        router (route/router req)]
     [{:query/name ::bread/value
-      :query/key [k]
+      :query/key [menus-key k]
       :query/description "Basic initial info for this menu."
       :query/value {:menu/type menu-type :post/type post-type}}
      {:query/name ::db/query
-      :query/key [k :items]
+      :query/key [menus-key k :items]
       :query/db (db/database req)
       :query/args ['{:find [(pull ?e [:db/id :post/type :post/status
                                       {:translatable/fields [*]}
@@ -216,7 +217,7 @@
                    post-type
                    (if (coll? post-status) post-status #{post-status})]}
      {:query/name ::items
-      :query/key [k :items]
+      :query/key [menus-key k :items]
       :router router
       :route/name route-name
       :route/params (route/params req (route/match req))}]))
@@ -229,11 +230,13 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hooks menus menus-key] :as opts}]
+  ([{:keys [hooks menus menus-key]
+     :or {menus-key :menus}
+     :as opts}]
    (if-not opts
      {:hooks {}}
      {:config
-      {:navigation/menus-key (or menus-key :menus)}
+      {:navigation/menus-key menus-key}
       :hooks
       {::bread/dispatch
        (mapv (fn [[k menu-opts]]
