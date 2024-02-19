@@ -14,8 +14,8 @@
   :i18n {:supported-langs #{:en :fr}}
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme/not-found}
-  :navigation {:menus [{:menu/key :main-nav
-                        :menu/type :systems.bread.alpha.navigation/location}]}
+  :navigation {:menus {:main-nav
+                       {:menu/type :systems.bread.alpha.navigation/location}}}
   :plugins []}
  :bread/db
  {:db/type :datahike
