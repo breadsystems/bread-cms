@@ -5,7 +5,6 @@
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.database :as db]))
 
 (defn query-key [dispatcher]
