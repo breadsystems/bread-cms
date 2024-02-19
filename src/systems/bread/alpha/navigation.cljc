@@ -47,6 +47,11 @@
         :query/args [{:find [(list 'pull '?e
                                    [:db/id :post/type :post/status
                                     {:translatable/fields '[*]}
+                                    ;; We need full ancestry for constructing
+                                    ;; Post URLs.
+                                    {:post/_children
+                                     [:post/slug
+                                      {:post/_children '...}]}
                                     {:post/children recursion-limit}])]
                       :in '[$ ?type [?status ...]]
                       :where '[[?e :post/type ?type]

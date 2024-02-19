@@ -51,6 +51,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
+                          {:post/_children [:post/slug {:post/_children ...}]}
                           {:post/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
@@ -94,6 +95,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
+                          {:post/_children [:post/slug {:post/_children ...}]}
                           {:post/children 3}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
@@ -141,6 +143,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
+                          {:post/_children [:post/slug {:post/_children ...}]}
                           {:post/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
