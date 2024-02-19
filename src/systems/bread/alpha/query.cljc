@@ -24,14 +24,9 @@
   (cond
     (not (sequential? k)) (assoc m k v)
     (get-in m (or (butlast k) k))
-    (do
-      (prn 'SEQUENTIAL k v)
-      (update-in
+    (update-in
       m (or (butlast k) k)
       (fn [current]
-        (prn 'current current)
-        (prn 'GOT (or (butlast k) k) (boolean (butlast k)) (get-in m (or (butlast k) k)))
-        (prn 'sequential? (sequential? current) (sequential? v))
         (cond
           (and (sequential? current) (sequential? v))
           (let [v (map #(if (sequential? %) (first %) %) v)
@@ -43,10 +38,10 @@
                            current))
           ;; If current is sequential but v isn't, the query returned
           ;; something we can't use. Bail.
-          (sequential? current) (do (prn "I can't even!!") current)
-          :else (do (prn 'ELSE (list 'assoc current (last k) v)) (assoc current (last k) v))))))
+          (sequential? current) current
+          :else (assoc current (last k) v))))
     (false? (get-in m (or (butlast k) k))) m
-    :else (do (prn 'ELSE2 (list 'assoc-in (get-in m [:menus :main-nav]) k v) (get-in m (butlast k))) (assoc-in m k v))))
+    :else (assoc-in m k v)))
 
 (comment
   (entity? nil)
