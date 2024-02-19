@@ -1,4 +1,3 @@
-;; Test navigation API at the datastore -> ::bread/data level.
 (ns systems.bread.alpha.navigation-test
   (:require
     [clojure.test :refer [deftest are]]
@@ -214,7 +213,7 @@
      :menus-key :my/menus}
     {:field/lang "en"}
 
-    ;; Location menu; recursion-level, field/keys.
+    ;; Location menu; recursion-limit, field/keys.
     [{:query/name ::bread/value
       :query/description "Basic initial info for this location menu."
       :query/key [:menus :location-nav]
