@@ -210,11 +210,12 @@
         init-query
         {:query/name ::bread/value
          :query/key [menus-key k]
-         :query/description "Basic initial info for this menu."
+         :query/description "Basic initial info for this posts menu."
          :query/value {:menu/type menu-type :post/type post-type}}
         db-query
         {:query/name ::db/query
          :query/key [menus-key k :menu/items]
+         :query/description "Recursively query for posts of a specific type."
          :query/db (db/database req)
          :query/args [{:find [(list 'pull '?e
                                     [:db/id :post/type :post/status
@@ -232,8 +233,7 @@
         items-query
         {:query/name ::items
          :query/key [menus-key k :menu/items]
-         #_#_
-         :query/description "Process menu item data."
+         :query/description "Process post menu item data."
          :router (route/router req)
          :route/name route-name
          :route/params (route/params req (route/match req))
