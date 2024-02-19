@@ -231,7 +231,7 @@
                         (set post-status)
                         #{post-status})]}
         items-query
-        {:query/name ::items
+        {:query/name [::items ::posts]
          :query/key [menus-key k :menu/items]
          :query/description "Process post menu item data."
          :router (route/router req)
@@ -278,7 +278,7 @@
                       location]}
         items-query
         {:query/key [menus-key k :menu/items]
-         :query/name ::items
+         :query/name [::items ::location]
          :field/key (field-keys fks)
          :merge-entities? merge?}]
     (conj (apply vector init-query
