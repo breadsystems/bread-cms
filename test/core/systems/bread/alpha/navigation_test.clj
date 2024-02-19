@@ -3,6 +3,7 @@
   (:require
     [clojure.test :refer [deftest are]]
     [clojure.string :as string]
+    [com.rpl.specter :as s]
     [systems.bread.alpha.navigation :as navigation]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
@@ -166,32 +167,87 @@
     {:field/lang "en"}
 
     ;; Location menu; custom menus-key.
-    #_#_#_
     [{:query/name ::bread/value
+      :query/description "Basic initial info for this location menu."
       :query/key [:my/menus :location-nav]
       :query/value {:menu/type ::navigation/location
                     :menu/location ::primary}}
      {:query/name ::db/query
       :query/key [:my/menus :location-nav :menu/items]
+      :query/description "Recursively query for menu items."
       :query/db ::FAKEDB
       :query/args
-      ['{:find [(pull ?e [:db/id
-                          :menu/key
-                          :menu/uuid
-                          :menu/locations
-                          {:menu/items [:db/id
-                                        :menu.item/order
-                                        {:menu.item/children [*]}
-                                        {:menu.item/entity [*]}
-                                        :translatable/fields]}])]
-         :in [$ ?loc]
-         :where [[?e :menu/locations ?loc]]}
-       :location-nav]}
+      ['{:find [(pull ?i [:db/id
+                          :menu.item/order
+                          {:menu.item/children ...}
+                          {:menu.item/entity
+                           [:db/id
+                            :post/slug
+                            {:translatable/fields [*]}]}
+                          {:translatable/fields [*]}])]
+         :in [$ ?location]
+         :where [[?m :menu/locations ?location]
+                 [?m :menu/items ?i]]}
+       ::primary]}
+     {:query/name ::i18n/fields
+      :query/key [:my/menus :location-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:menu.item/entity :translatable/fields]
+               [:translatable/fields]]}
      {:query/name ::navigation/items
-      :query/key [:my/menus :location-nav :menu/items]}]
+      :query/key [:my/menus :location-nav :menu/items]
+      :field/key nil
+      :merge-entities? true}]
     {:menus
      {:location-nav
-      {:menu/type ::navigation/location}}}
+      {:menu/type ::navigation/location
+       :menu/location ::primary}}
+     :menus-key :my/menus}
+    {:field/lang "en"}
+
+    ;; Location menu; recursion-level, field/keys.
+    [{:query/name ::bread/value
+      :query/description "Basic initial info for this location menu."
+      :query/key [:menus :location-nav]
+      :query/value {:menu/type ::navigation/location
+                    :menu/location ::primary}}
+     {:query/name ::db/query
+      :query/key [:menus :location-nav :menu/items]
+      :query/description "Recursively query for menu items."
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?i [:db/id
+                          :menu.item/order
+                          {:menu.item/children ...}
+                          {:menu.item/entity
+                           [:db/id
+                            :post/slug
+                            {:translatable/fields [*]}]}
+                          {:translatable/fields [*]}])]
+         :in [$ ?location]
+         :where [[?m :menu/locations ?location]
+                 [?m :menu/items ?i]]}
+       ::primary]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :location-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:menu.item/entity :translatable/fields]
+               [:translatable/fields]]}
+     {:query/name ::navigation/items
+      :query/key [:menus :location-nav :menu/items]
+      :field/key nil
+      :merge-entities? true}]
+    {:menus
+     {:location-nav
+      {:menu/type ::navigation/location
+       :menu/location ::primary
+       :merge-entities? true}}}
     {:field/lang "en"}
 
     ;;
