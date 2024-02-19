@@ -136,10 +136,8 @@
     ))
 
 (deftest test-router
-  (is (= ::ROUTER (route/router
-                    (bread/load-app
-                      (bread/app {:plugins [(route/plugin
-                                              {:router ::ROUTER})]}))))))
+  (is (= ::ROUTER (route/router (plugins->loaded [(route/plugin
+                                                    {:router ::ROUTER})])))))
 
 (comment
   (require '[kaocha.repl :as k])
