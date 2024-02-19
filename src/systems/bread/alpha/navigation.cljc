@@ -234,7 +234,9 @@
          :field/key (cond
                       (coll? field-keys) (set field-keys)
                       field-keys #{field-keys})}]
-    (conj (apply vector init-query [db-query]) items-query)))
+    (conj (apply vector init-query
+                 (bread/hook req ::i18n/queries db-query))
+          items-query)))
 
 (defmethod bread/action ::add-menu-queries
   add-menu-queries-action
