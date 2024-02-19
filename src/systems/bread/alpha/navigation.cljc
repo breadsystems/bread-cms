@@ -184,6 +184,48 @@
   [req {:keys [opts]} _]
   (add-menu-query req opts))
 
+;; TODO DELETE ABOVE
+
+(defmulti menu-queries (fn [_req opts]
+                         (:menu/type opts)))
+
+(defmethod menu-queries ::posts
+  menu-queries?type=posts
+  [req {k :menu/key
+        menu-type :menu/type
+        post-type :post/type
+        post-status :post/status
+        route-name :route/name
+        :or {post-status :post.status/published}}]
+  (let [router (route/router req)]
+    [{:query/name ::bread/value
+      :query/key [k]
+      :query/description "Basic initial info for this menu."
+      :query/value {:menu/type menu-type :post/type post-type}}
+     {:query/name ::db/query
+      :query/key [k :items]
+      :query/db (db/database req)
+      :query/args ['{:find [(pull ?e [:db/id :post/type :post/status
+                                      {:translatable/fields [*]}
+                                      {:post/children ...}])]
+                     :in [$ ?type [?status ...]]
+                     :where [[?e :post/type ?type]
+                             [?e :post/status ?status]
+                             ;; only top-level pages
+                             (not-join [?e] [?_ :post/children ?e])]}
+                   post-type
+                   (if (coll? post-status) post-status #{post-status})]}
+     {:query/name ::items
+      :query/key [k :items]
+      :router router
+      :route/name route-name
+      :route/params (route/params req (route/match req))}]))
+
+(defmethod bread/action ::add-menu-queries
+  add-menu-queries-action
+  [req {:keys [opts]} _]
+  (apply query/add req (menu-queries req opts)))
+
 (defn plugin
   ([]
    (plugin {}))
@@ -194,9 +236,9 @@
       {:navigation/menus-key (or menus-key :menus)}
       :hooks
       {::bread/dispatch
-       (mapv (fn [menu-opts]
-               {:action/name ::add-menu-query
+       (mapv (fn [[k menu-opts]]
+               {:action/name ::add-menu-queries
                 :action/description
-                "Add a query to fetch the menu with the given opts"
-                :opts menu-opts})
+                "Add queries for the menu with the given opts"
+                :opts (assoc menu-opts :menu/key k)})
              menus)}})))

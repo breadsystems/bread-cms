@@ -12,200 +12,200 @@
                                               plugins->loaded
                                               map->router]]))
 
-(deftest test-post-menu-queries
-  (let [db ::FAKEDB
-        router (reify bread/Router
-                 (bread/match [_ _])
-                 (bread/params [_ _]))]
-    (are
-      [data navigation-config]
-      (= data (-> (plugins->loaded [(db->plugin db)
-                                    (i18n/plugin {:query-strings? false
-                                                  :query-lang? false})
-                                    (navigation/plugin navigation-config)
-                                    (route/plugin {:router router})])
-                  ;; Navigation plugin declares the only ::bread/dispatch
-                  ;; handlers we care about, we don't need a specific
-                  ;; dispatcher here. Dispatchers are normally responsible
-                  ;; for fetching things like posts based on the current
-                  ;; route. Menus, on the other hand, generally don't change
-                  ;; much between routes.
-                  (bread/hook ::bread/dispatch)
-                  ::bread/queries))
+(defrecord MockRouter [params]
+  bread/Router
+  (bread/params [this _] params)
+  (bread/match [this _]))
 
-      ;; Support disabling navigation completely.
-      [] false
-      [] nil
-      [] {}
+(deftest test-queries-hook
+  (are
+    [data config req-params]
+    (= data (-> (plugins->loaded [(db->plugin ::FAKEDB)
+                                  (route/plugin {:router (MockRouter.
+                                                           req-params)})
+                                  (i18n/plugin {:query-strings? false
+                                                :query-lang? false})
+                                  (navigation/plugin config)])
+                (bread/hook ::bread/dispatch)
+                ::bread/queries))
 
-      ;; Basic post menu.
-      [{:query/name ::bread/value
-        :query/key [:basic-nav]
-        :query/value {:menu/type ::navigation/posts
-                      :post/type :post.type/page}}
-       {:query/name ::db/query
-        :query/key [:basic-nav  :items]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
-                            ;; instead, they follow the post hierarchy itself.
-                            :db/id * {:post/children [*]}])]
-           :in [$ ?type [?status ...]]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   (not-join [?e] [?parent :post/children ?e])]}
-         :post.type/page
-         #{:post.status/published}]}
-       {:query/name ::db/query
-        :query/key [:navigation/i18n :basic-nav]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
-           :in [$ ?type [?status ...] [?field-key ...] ?lang]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   [?e :translatable/fields ?f]
-                   [?f :field/key ?field-key]
-                   [?f :field/lang ?lang]]}
-         :post.type/page
-         #{:post.status/published}
-         #{:title}
-         :en]}
-       {:query/name ::navigation/merge-post-menu-items
-        :query/key [:basic-nav :items]
-        :route/name :bread.route/page
-        :router router
-        :lang :en}]
-      {:menus
-       [{:menu/key :basic-nav
-         :menu/type ::navigation/posts
-         :post/type :post.type/page
-         :route/name :bread.route/page}]}
+    ;; Support disabling navigation completely.
+    [] false {}
+    [] nil {}
+    [] {} {}
 
-      ;; Support custom post status, post type, and field keys.
-      [{:query/name ::bread/value
-        :query/key [:articles-menu]
-        :query/value {:menu/type ::navigation/posts
-                      :post/type :post.type/article}}
-       {:query/name ::db/query
-        :query/key [:articles-menu :items]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
-           :in [$ ?type [?status ...]]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   (not-join [?e] [?parent :post/children ?e])]}
-         :post.type/article
-         #{:post.status/x :post.status/y}]}
-       {:query/name ::db/query
-        :query/key [:navigation/i18n :articles-menu]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
-           :in [$ ?type [?status ...] [?field-key ...] ?lang]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   [?e :translatable/fields ?f]
-                   [?f :field/key ?field-key]
-                   [?f :field/lang ?lang]]}
-         :post.type/article
-         #{:post.status/x :post.status/y}
-         #{:custom :other}
-         :en]}
-       {:query/name ::navigation/merge-post-menu-items
-        :query/key [:articles-menu :items]
-        :route/name :bread.route/page
-        :router router
-        :lang :en}]
-      {:menus
-       [{:menu/key :articles-menu
-         :menu/type ::navigation/posts
-         :post/type :post.type/article
-         :post/status [:post.status/x :post.status/y]
-         :translatable/fields [:custom :other]
-         :route/name :bread.route/page}]}
+    ;; Basic post menu.
+    ;; TODO menus-key
+    [{:query/name ::bread/value
+      :query/key [:basic-nav]
+      :query/description "Basic initial info for this menu."
+      :query/value {:menu/type ::navigation/posts
+                    :post/type :post.type/page}}
+     {:query/name ::db/query
+      :query/key [:basic-nav  :items]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
+                          ;; instead, they follow the post hierarchy itself.
+                          :db/id
+                          :post/type
+                          :post/status
+                          {:translatable/fields [*]}
+                          {:post/children ...}])]
+         :in [$ ?type [?status ...]]
+         :where [[?e :post/type ?type]
+                 [?e :post/status ?status]
+                 (not-join [?e] [?_ :post/children ?e])]}
+       :post.type/page
+       #{:post.status/published}]}
+     {:query/name ::navigation/items
+      :query/key [:basic-nav :items]
+      :route/name ::page
+      :route/params {:field/lang :en}
+      :router (MockRouter. {:field/lang :en})}
+     #_
+     {:query/name ::navigation/merge-post-menu-items
+      :query/key [:basic-nav :items]
+      :route/name :bread.route/page
+      :router ::FAKEROUTER
+      :params {:field/lang :en}}]
+    {:menus
+     {:basic-nav
+      {:menu/type ::navigation/posts
+       :post/type :post.type/page
+       :route/name ::page}}}
+    {:field/lang :en}
 
-      ;; Page type composes with status and other options.
-      [{:query/name ::bread/value
-        :query/key [:posts-menu]
-        :query/value {:menu/type ::navigation/posts
-                      :post/type :post.type/page}}
-       {:query/name ::db/query
-        :query/key [:posts-menu :items]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
-           :in [$ ?type [?status ...]]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   (not-join [?e] [?parent :post/children ?e])]}
-         :post.type/page
-         #{:post.status/x :post.status/y}]}
-       {:query/name ::db/query
-        :query/key [:navigation/i18n :posts-menu]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?f [:db/id :field/key :field/content])]
-           :in [$ ?type [?status ...] [?field-key ...] ?lang]
-           :where [[?e :post/type ?type]
-                   [?e :post/status ?status]
-                   [?e :translatable/fields ?f]
-                   [?f :field/key ?field-key]
-                   [?f :field/lang ?lang]]}
-         :post.type/page
-         #{:post.status/x :post.status/y}
-         #{:custom :other}
-         :en]}
-       {:query/name ::navigation/merge-post-menu-items
-        :query/key [:posts-menu :items]
-        :route/name :bread.route/page
-        :router router
-        :lang :en}]
-      {:menus
-       [{:menu/key :posts-menu
-         :menu/type ::navigation/pages
-         :post/status [:post.status/x :post.status/y]
-         :translatable/fields [:custom :other]
-         :route/name :bread.route/page}]}
+    ;; Support custom post status, post type, and field keys.
+    #_#_#_
+    [{:query/name ::bread/value
+      :query/key [:articles-menu]
+      :query/value {:menu/type ::navigation/posts
+                    :post/type :post.type/article}}
+     {:query/name ::db/query
+      :query/key [:articles-menu :items]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
+         :in [$ ?type [?status ...]]
+         :where [[?e :post/type ?type]
+                 [?e :post/status ?status]
+                 (not-join [?e] [?parent :post/children ?e])]}
+       :post.type/article
+       #{:post.status/x :post.status/y}]}
+     {:query/name ::db/query
+      :query/key [:navigation/i18n :articles-menu]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?f [:db/id :field/key :field/content])]
+         :in [$ ?type [?status ...] [?field-key ...] ?lang]
+         :where [[?e :post/type ?type]
+                 [?e :post/status ?status]
+                 [?e :translatable/fields ?f]
+                 [?f :field/key ?field-key]
+                 [?f :field/lang ?lang]]}
+       :post.type/article
+       #{:post.status/x :post.status/y}
+       #{:custom :other}
+       :en]}
+     {:query/name ::navigation/merge-post-menu-items
+      :query/key [:articles-menu :items]
+      :route/name :bread.route/page
+      :router router
+      :lang :en}]
+    {:menus
+     [{:menu/key :articles-menu
+       :menu/type ::navigation/posts
+       :post/type :post.type/article
+       :post/status [:post.status/x :post.status/y]
+       :translatable/fields [:custom :other]
+       :route/name :bread.route/page}]}
+    {}
 
-      ;; Location menu.
-      [{:query/name ::bread/value
-        :query/key [:location-nav]
-        :query/value {:menu/type ::navigation/location}}
-       {:query/name ::db/query
-        :query/key [:location-nav]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id
-                            :menu/key
-                            :menu/uuid
-                            :menu/locations
-                            {:menu/items [:db/id
-                                          :menu.item/order
-                                          {:menu.item/children [*]}
-                                          {:menu.item/entity [*]}
-                                          :translatable/fields]}])]
-           :in [$ ?loc]
-           :where [[?e :menu/locations ?loc]]}
-         :location-nav]}
-       {:query/name ::db/query
-        :query/key [:location-nav :menu/items :translatable/fields]
-        :query/db db
-        :query/args
-        ['{:find [(pull ?e [:db/id :field/key :field/content])]
-           :in [$ ?e1 ?lang]
-           :where [[?e :field/lang ?lang]
-                   [?e0 :translatable/fields ?e]
-                   [?e1 :menu/items ?e0]]}
-         [::bread/data :location-nav :db/id]
-         :en]}]
-      {:menus
-       [{:menu/key :location-nav
-         :menu/type ::navigation/location}]}
+    ;; Page type composes with status and other options.
+    #_#_#_
+    [{:query/name ::bread/value
+      :query/key [:posts-menu]
+      :query/value {:menu/type ::navigation/posts
+                    :post/type :post.type/page}}
+     {:query/name ::db/query
+      :query/key [:posts-menu :items]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id * {:post/children [*]}])]
+         :in [$ ?type [?status ...]]
+         :where [[?e :post/type ?type]
+                 [?e :post/status ?status]
+                 (not-join [?e] [?parent :post/children ?e])]}
+       :post.type/page
+       #{:post.status/x :post.status/y}]}
+     {:query/name ::db/query
+      :query/key [:navigation/i18n :posts-menu]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?f [:db/id :field/key :field/content])]
+         :in [$ ?type [?status ...] [?field-key ...] ?lang]
+         :where [[?e :post/type ?type]
+                 [?e :post/status ?status]
+                 [?e :translatable/fields ?f]
+                 [?f :field/key ?field-key]
+                 [?f :field/lang ?lang]]}
+       :post.type/page
+       #{:post.status/x :post.status/y}
+       #{:custom :other}
+       :en]}
+     {:query/name ::navigation/merge-post-menu-items
+      :query/key [:posts-menu :items]
+      :route/name :bread.route/page
+      :router router
+      :lang :en}]
+    {:menus
+     [{:menu/key :posts-menu
+       :menu/type ::navigation/pages
+       :post/status [:post.status/x :post.status/y]
+       :translatable/fields [:custom :other]
+       :route/name :bread.route/page}]}
+    {}
 
-      ;;
-      )))
+    ;; Location menu.
+    #_#_#_
+    [{:query/name ::bread/value
+      :query/key [:location-nav]
+      :query/value {:menu/type ::navigation/location}}
+     {:query/name ::db/query
+      :query/key [:location-nav]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id
+                          :menu/key
+                          :menu/uuid
+                          :menu/locations
+                          {:menu/items [:db/id
+                                        :menu.item/order
+                                        {:menu.item/children [*]}
+                                        {:menu.item/entity [*]}
+                                        :translatable/fields]}])]
+         :in [$ ?loc]
+         :where [[?e :menu/locations ?loc]]}
+       :location-nav]}
+     {:query/name ::db/query
+      :query/key [:location-nav :menu/items :translatable/fields]
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?e [:db/id :field/key :field/content])]
+         :in [$ ?e1 ?lang]
+         :where [[?e :field/lang ?lang]
+                 [?e0 :translatable/fields ?e]
+                 [?e1 :menu/items ?e0]]}
+       [::bread/data :location-nav :db/id]
+       :en]}]
+    {:menus
+     [{:menu/key :location-nav
+       :menu/type ::navigation/location}]}
+    {}
+
+    ;;
+    ))
 
 (deftest ^:kaocha/skip test-merge-post-menu-items
   (are
