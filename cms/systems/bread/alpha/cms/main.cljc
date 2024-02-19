@@ -407,12 +407,41 @@
                                           "/en/articles"
                                           "/en/x/a/b/c"])
 
+  (def child
+    (q '{:find [(pull ?p [:db/id
+                          :post/slug
+                          {:translatable/fields [*]}
+                          {:post/_children ...}]) .]
+         :in [$ ?slug]
+         :where [[?p :post/slug ?slug]]}
+       "child-page"))
+
+  (def parent-pages
+    (q '{:find [(pull ?p [:db/id
+                          :post/slug
+                          {:translatable/fields [*]}
+                          {:post/children ...}])]
+         :in [$ ?type]
+         :where [[?p :post/type ?type]
+                 (not-join [?p] [?_ :post/children ?p])]}
+       :post.type/page))
+
+  (defn get-ancestry [ancestry {:post/keys [slug _children]}]
+    (let [parent (first _children)
+          ancestry (cons slug ancestry)]
+      (if _children
+        (get-ancestry ancestry parent)
+        ancestry)))
+  (get-ancestry [] child)
+
   (reitit/match->path
     (reitit/match-by-path $router "/en/x/a/b/c"))
   (reitit/match->path
     (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
   (bread/routes $router)
-  (bread/path $router ::article {:field/lang :en :post/slug "a/b/c"})
+  (bread/path $router ::article {:field/lang :en :post/slug ["a" "b" "c"]})
+
+  (bread/params $router (bread/match (:bread/router @system) $req))
 
   (defn- expand-route [[template data]]
     (let [cpt (:dispatcher/component data)]
