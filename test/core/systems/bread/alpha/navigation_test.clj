@@ -57,6 +57,13 @@
                  (not-join [?e] [?_ :post/children ?e])]}
        :post.type/page
        #{:post.status/published}]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :route/name ::page
@@ -91,6 +98,13 @@
                  (not-join [?e] [?_ :post/children ?e])]}
        :post.type/page
        #{:post.status/published :post.status/draft}]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :route/name ::page
@@ -129,6 +143,13 @@
                  (not-join [?e] [?_ :post/children ?e])]}
        :post.type/park
        #{:post.status/draft}]}
+     {:query/name ::i18n/fields
+      :query/key [:menus :basic-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :spaths [[:translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :route/name ::park
