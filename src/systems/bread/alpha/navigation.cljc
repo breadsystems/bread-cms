@@ -7,7 +7,8 @@
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.query :as query]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.database :as db]))
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.util.datalog :as d]))
 
 (defn- walk-post-menu-items [posts {:keys [title-field
                                            field-kvs
@@ -246,31 +247,37 @@
   menu-queries?type=taxon
   [req {k :menu/key
         taxonomy :taxon/taxonomy
+        slug :taxon/slug
         recursion-limit :recursion-limit
         fks :field/key
         :or {recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)
+        datalog-query
+        [{:find [(list 'pull '?e [:db/id
+                                  :taxon/taxonomy
+                                  :taxon/slug
+                                  {:taxon/children
+                                   recursion-limit}
+                                  {:translatable/fields '[*]}])]
+          :in '[$ ?taxonomy]
+          :where '[[?e :taxon/taxonomy ?taxonomy]]}
+         taxonomy]
         init-query
         {:query/name ::bread/value
          :query/key [menus-key k]
          :query/description "Basic initial info for this taxon menu."
          :query/value {:menu/type ::taxon
-                       :taxon/taxonomy taxonomy}}
+                       :taxon/taxonomy taxonomy
+                       :taxon/slug slug}}
         db-query
         {:query/name ::db/query
          :query/key [menus-key k :menu/items]
          :query/description
          "Recursively query for taxons of a specific taxonomy."
          :query/db (db/database req)
-         :query/args [{:find [(list 'pull '?e [:db/id
-                                               :taxon/taxonomy
-                                               :taxon/slug
-                                               {:taxon/children
-                                                recursion-limit}
-                                               {:translatable/fields '[*]}])]
-                       :in '[$ ?taxonomy]
-                       :where '[[?e :taxon/taxonomy ?taxonomy]]}
-                      taxonomy]}
+         :query/args (if slug
+                       (d/where datalog-query [['?slug :taxon/slug slug]])
+                       datalog-query)}
         items-query
         {:query/name [::items ::taxon]
          :query/key [menus-key k :menu/items]
