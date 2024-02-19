@@ -196,31 +196,45 @@
         post-type :post/type
         post-status :post/status
         route-name :route/name
-        :or {post-status :post.status/published}}]
+        recursion-limit :recursion-limit
+        field-keys :field/key
+        :or {post-type :post.type/page
+             post-status :post.status/published
+             recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)
-        router (route/router req)]
-    [{:query/name ::bread/value
-      :query/key [menus-key k]
-      :query/description "Basic initial info for this menu."
-      :query/value {:menu/type menu-type :post/type post-type}}
-     {:query/name ::db/query
-      :query/key [menus-key k :items]
-      :query/db (db/database req)
-      :query/args ['{:find [(pull ?e [:db/id :post/type :post/status
-                                      {:translatable/fields [*]}
-                                      {:post/children ...}])]
-                     :in [$ ?type [?status ...]]
-                     :where [[?e :post/type ?type]
-                             [?e :post/status ?status]
-                             ;; only top-level pages
-                             (not-join [?e] [?_ :post/children ?e])]}
-                   post-type
-                   (if (coll? post-status) post-status #{post-status})]}
-     {:query/name ::items
-      :query/key [menus-key k :items]
-      :router router
-      :route/name route-name
-      :route/params (route/params req (route/match req))}]))
+        router (route/router req)
+        init-query
+        {:query/name ::bread/value
+         :query/key [menus-key k]
+         :query/description "Basic initial info for this menu."
+         :query/value {:menu/type menu-type :post/type post-type}}
+        db-query
+        {:query/name ::db/query
+         :query/key [menus-key k :menu/items]
+         :query/db (db/database req)
+         :query/args [{:find [(list 'pull '?e
+                                    [:db/id :post/type :post/status
+                                     {:translatable/fields '[*]}
+                                     {:post/children recursion-limit}])]
+                       :in '[$ ?type [?status ...]]
+                       :where '[[?e :post/type ?type]
+                                [?e :post/status ?status]
+                                ;; only top-level pages
+                                (not-join [?e] [?_ :post/children ?e])]}
+                      post-type
+                      (if (coll? post-status)
+                        (set post-status)
+                        #{post-status})]}
+        items-query
+        {:query/name ::items
+         :query/key [menus-key k :menu/items]
+         :router router
+         :route/name route-name
+         :route/params (route/params req (route/match req))
+         :field/key (cond
+                      (coll? field-keys) (set field-keys)
+                      field-keys #{field-keys})}]
+    (conj (apply vector init-query [db-query]) items-query)))
 
 (defmethod bread/action ::add-menu-queries
   add-menu-queries-action
