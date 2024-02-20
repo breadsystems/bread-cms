@@ -355,7 +355,8 @@
 
   ;; COMPONENT ROUTING
 
-  (require '[systems.bread.alpha.component :as c :refer [defc]])
+  (require '[systems.bread.alpha.component :as c :refer [defc]]
+           '[systems.bread.alpha.route :as route])
 
   (defc Article
     [data]
@@ -368,71 +369,18 @@
        :path ["/articles"]
        :dispatcher :dispatcher.type/page}
       {:name ::wildcard
-       :path ["/x" :*post/slug]
+       :path ["/x" :entity/slug*]
        :dispatcher/type :wildcard}]
      ;:route/children [Something]
      :query '[{:translatable/fields [:field/key :field/content]}
               :post/authors :post/slug]}
     [:div data])
 
-
-  (deftype RouteSegment [kw]
-    Object
-    (toString [this]
-      (format "{%s/%s}" (namespace kw) (name kw)))
-    clojure.lang.IMeta
-    (meta [this]
-      {:param kw}))
-
-  (meta (RouteSegment. :field/lang))
-  (str (RouteSegment. :field/lang))
-
-  (defn- parse-params [template]
-    (mapv keyword (loop [[c & cs] template
-                         param ""
-                         params []]
-                    (case c
-                      nil params
-                      \{ (recur cs "" params)
-                      \* (recur cs param params)
-                      \} (recur cs "" (conj params param))
-                      (recur cs (str param c) params)))))
-
   (def $router
     (reitit/router
       ["/"
        [(c/route-segment :field/lang)
         (c/routes Article)]]))
-  (map #(reitit/match-by-path $router %) ["/en/article/hello"
-                                          "/en/articles"
-                                          "/en/x/a/b/c"])
-
-  (def child
-    (q '{:find [(pull ?p [:db/id
-                          :post/slug
-                          {:translatable/fields [*]}
-                          {:post/_children ...}]) .]
-         :in [$ ?slug]
-         :where [[?p :post/slug ?slug]]}
-       "child-page"))
-
-  (def parent-pages
-    (q '{:find [(pull ?p [:db/id
-                          :post/slug
-                          {:translatable/fields [*]}
-                          {:post/children ...}])]
-         :in [$ ?type]
-         :where [[?p :post/type ?type]
-                 (not-join [?p] [?_ :post/children ?p])]}
-       :post.type/page))
-
-  (defn get-ancestry [ancestry {:post/keys [slug _children]}]
-    (let [parent (first _children)
-          ancestry (cons slug ancestry)]
-      (if _children
-        (get-ancestry ancestry parent)
-        ancestry)))
-  (get-ancestry [] child)
 
   (reitit/match->path
     (reitit/match-by-path $router "/en/x/a/b/c"))
@@ -440,52 +388,71 @@
     (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
   (bread/routes $router)
   (bread/path $router ::article {:field/lang :en :post/slug ["a" "b" "c"]})
-
   (bread/params $router (bread/match (:bread/router @system) $req))
 
-  (defn- expand-route [[template data]]
-    (let [cpt (:dispatcher/component data)]
-      [(parse-params template) (c/query cpt)]))
-  (map expand-route (bread/routes $router))
+  ;; A "sluggable" entity, with ancestry
+  (def grandchild
+    {:entity/slug "c"
+     :parent/_children [{:entity/slug "b"
+                         :parent/_children [{:entity/slug "a"}]}]})
 
-  (defn- ref-attrs []
-    (q '{:find [?ident ?attr]
-         :where [[?ref :db/ident ?ident]
-                 [?ref :db/valueType :db.type/ref]
-                 [_ ?ident ?e]
-                 [?e ?attr]]}))
-  (defn- attr-neighbors [attr]
-    (q '{:find [?neighbor]
-         :in [$ ?attr]
-         :where [[?i :db/ident ?attr]
-                 [?e ?attr]
-                 [?e ?neighbor]
-                 [(not= ?attr ?neighbor)]]}
-       attr))
+  ;; parse a route template into a vector of param keys
+  (defn- parse-params [template]
+    (mapv keyword (loop [[c & cs] template
+                         param ""
+                         params []]
+                    (case c
+                      nil params
+                      \{ (recur cs "" params)
+                      \} (recur cs "" (conj params param))
+                      (recur cs (str param c) params)))))
 
-  (attr-neighbors :post/type)
+  ;; TODO add this to the Router protocol
+  (defn- route-spec [[template data]]
+    ;; This part needs to be polymorphic
+    {:template template
+     :name (:name data)
+     :param-keys (parse-params template)
+     :data data})
 
-  (q '{:find [?attr ?neighbor]
-       :where [[?i :db/ident ?attr]
-               [?j :db/ident ?neighbor]
-               [?e ?attr]
-               [?e ?neighbor]
-               [(!= ?attr ?neighbor)]
-               (not [?j :db/valueType :db.type/ref])
-               (not [?i :db/valueType :db.type/ref])]})
+  ;; TODO This should go in the route ns as a private var.
+  (defn- ancestry [pathv {slug :entity/slug [parent] :parent/_children}]
+    (let [pathv (cons slug pathv)]
+      (if parent
+        (ancestry pathv parent)
+        pathv)))
 
-  (defn- attr-edges [by-ref?]
-    (reduce
-      (fn [refs [ref-attr target]]
-        (let [[k v] (if by-ref? [ref-attr target] [target ref-attr])]
-          (if-let [targets (get refs k)]
-            (update refs k conj v)
-            (assoc refs k #{v}))))
-      {} (ref-attrs)))
+  ;; TODO all below vars should live in route ns...
+  (defmulti entity->param (fn [route-spec _e] (:param route-spec)))
+  (defmethod entity->param :default [{k :param} entity]
+    (get entity k))
+  (defmethod entity->param :entity/slug* [_ entity]
+    (string/join "/" (ancestry [] entity)))
 
-  (def $refs->attrs (attr-edges true))
-  (def $attrs->refs (attr-edges false))
-  (select-keys $attrs->refs [:post/slug :field/content :field/lang :translatable/fields :menu.item/entity])
+  (ancestry [] grandchild)
+  (entity->param {:param :entity/slug*} grandchild)
+  (route/router (->app $req))
+
+  (defmethod bread/action ::uri [req _ [route-name e]]
+    (let [router $router #_(route/router req) ;; TODO
+          by-name (into {} (map (comp (juxt :name identity) route-spec))
+                        (bread/routes router))
+          route-keys (get-in by-name [route-name :param-keys])
+          params (zipmap route-keys (map (fn [param]
+                                           (entity->param {:param param} e))
+                                         route-keys))]
+      (bread/path router route-name params)))
+
+  (defn uri [req route-name e]
+    (let [app (assoc-in req [::bread/hooks ::uri]
+                        [{:action/name ::uri}])]
+      (bread/hook app ::uri route-name e)))
+
+  (uri (->app $req) ::wildcard (merge {:field/lang :en} grandchild))
+  (uri (->app $req) ::wildcard {:field/lang :en})
+  (uri (->app $req) ::wildcard nil)
+  (uri (->app $req) ::wildcard {})
+
 
 
   ;; SITEMAP DESIGN
