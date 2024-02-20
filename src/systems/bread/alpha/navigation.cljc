@@ -31,8 +31,9 @@
          (map (fn [{fields :translatable/fields
                     {post-fields :translatable/fields :as e} :menu.item/entity
                     :as item}]
-                (let [params (merge route-params e
-                      {:*post/slug (string/join "/" (ancestry [] e))})]
+                (let [;; TODO don't hard-code param names, infer from route
+                      *slug (string/join "/" (ancestry [] e))
+                      params (merge route-params e {:*post/slug *slug})]
                   (-> item
                       (assoc :translatable/fields
                              (-> (merge post-fields fields)
