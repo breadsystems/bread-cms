@@ -447,15 +447,18 @@
 
     [{:menu.item/order 1
       :uri "/en/xyz"
-      :translatable/fields {}}
+      :translatable/fields {}
+      :children ()}
      {:menu.item/order 2
       :uri "/en/abc"
       :translatable/fields {:my/field "Override"
-                            :other/field "Another override"}}
+                            :other/field "Another override"}
+      :children ()}
      {:menu.item/order 3
       :uri "/en/parent/child"
       :translatable/fields {:my/field "Post field"
-                            :other/field "Another post field"}}]
+                            :other/field "Another post field"}
+      :children ()}]
     {:query/name [::navigation/items ::navigation/location]
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? true
@@ -491,17 +494,31 @@
                                     ;; no post
                                     :translatable/fields {:uri "/en/xyz"}}]}}}
 
-    ;; :merge-entities? false
+    ;; :merge-entities? false; recursive.
     [{:menu.item/order 1
       :uri "/en/xyz"
-      :translatable/fields {}}
+      :translatable/fields {}
+      :children
+      [{:menu.item/order 0
+        :uri "/en/xyz/123"
+        :translatable/fields {:my/field "Daughter"}
+        :children []}
+       {:menu.item/order 1
+        :uri "/en/xyz/456"
+        :translatable/fields {:my/field "Child"}
+        :children [{:menu.item/order 0
+                    :uri "/en/xyz/456/789"
+                    :translatable/fields {:my/field "Grandchild"}
+                    :children []}]}]}
      {:menu.item/order 2
       :uri "/en/abc"
       :translatable/fields {:my/field "Override"
-                            :other/field "Another override"}}
+                            :other/field "Another override"}
+      :children []}
      {:menu.item/order 3
       :uri "/en/parent/child"
-      :translatable/fields {}}]
+      :translatable/fields {}
+      :children []}]
     {:query/name [::navigation/items ::navigation/location]
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? false
@@ -510,32 +527,40 @@
      :router (MockRouter. {})
      :route/name ::page
      :route/params {:field/lang :en}}
-    {:menus {:my-nav {:menu/items [{:menu.item/order 2
-                                    :menu.item/entity
-                                    {:post/slug "abc"
-                                     :translatable/fields
-                                     {:extra "This gets filtered out..."
-                                      :my/field "My Field"
-                                      :other/field "Other"}}
-                                    :translatable/fields
-                                    {:more "...and so does this"
-                                     :my/field "Override"
-                                     :other/field "Another override"}}
-                                   {:menu.item/order 3
-                                    :menu.item/entity
-                                    {:post/slug "child"
-                                     :translatable/fields
-                                     {:extra "This gets filtered out..."
-                                      :my/field "Post field"
-                                      :other/field "Another post field"}
-                                     ;; Post ancestry.
-                                     :post/_children
-                                     [{:post/slug "parent"}]}
-                                    :translatable/fields
-                                    {:more "...and so does this"}}
-                                   {:menu.item/order 1
-                                    ;; no post
-                                    :translatable/fields {:uri "/en/xyz"}}]}}}
+    {:menus {:my-nav
+             {:menu/items
+              [{:menu.item/order 2
+                :menu.item/entity {:post/slug "abc"
+                                   :translatable/fields
+                                   {:extra "This gets filtered out..."
+                                    :my/field "My Field"
+                                    :other/field "Other"}}
+                :translatable/fields {:more "...and so does this"
+                                      :my/field "Override"
+                                      :other/field "Another override"}}
+               {:menu.item/order 3
+                :menu.item/entity {:post/slug "child"
+                                   :translatable/fields
+                                   {:extra "This gets filtered out..."
+                                    :my/field "Post field"
+                                    :other/field "Another post field"}
+                                   ;; Post ancestry.
+                                   :post/_children [{:post/slug "parent"}]}
+                :translatable/fields {:more "...and so does this"}}
+               {:menu.item/order 1
+                ;; No entity.
+                :translatable/fields {:uri "/en/xyz"}
+                :menu.item/children
+                [{:menu.item/order 1
+                  :translatable/fields {:uri "/en/xyz/456"
+                                        :my/field "Child"}
+                  :menu.item/children
+                  [{:menu.item/order 0
+                    :translatable/fields {:uri "/en/xyz/456/789"
+                                          :my/field "Grandchild"}}]}
+                 {:menu.item/order 0
+                  :translatable/fields {:uri "/en/xyz/123"
+                                        :my/field "Daughter"}}]}]}}}
 
     ;;
     ))

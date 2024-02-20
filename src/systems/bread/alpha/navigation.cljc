@@ -18,30 +18,43 @@
       (ancestry slugs parent)
       slugs)))
 
-(defmethod bread/query [::items ::location]
-  [{k :query/key
+(defn- ->item
+  [{:as opts
+    k :query/key
     fks :field/key
     merge? :merge-entities?
     sort-by* :sort-by
     router :router
     route-name :route/name
     route-params :route/params}
+   {:as item
+    fields :translatable/fields
+    children :menu.item/children
+    {post-fields :translatable/fields :as e} :menu.item/entity}]
+  (let [;; TODO don't hard-code param names, infer from route
+        *slug (string/join "/" (ancestry [] e))
+        params (merge route-params e {:*post/slug *slug})
+        fields (if merge? (merge post-fields fields) fields)]
+    (-> item
+        (assoc :translatable/fields (select-keys fields fks)
+               :uri (or
+                      (:uri fields)
+                      (bread/path router route-name params))
+               :children (sort-by #(query/get-at % sort-by*) (map (partial ->item opts) children)))
+        (dissoc :menu.item/entity :menu.item/children))))
+
+(defmethod bread/query [::items ::location]
+  [{k :query/key
+    fks :field/key
+    sort-by* :sort-by
+    :as opts}
    data]
   (if-let [items (query/get-at data k)]
     (->> items
          (map (fn [{fields :translatable/fields
                     {post-fields :translatable/fields :as e} :menu.item/entity
                     :as item}]
-                (let [;; TODO don't hard-code param names, infer from route
-                      *slug (string/join "/" (ancestry [] e))
-                      params (merge route-params e {:*post/slug *slug})
-                      fields (if merge? (merge post-fields fields) fields)]
-                  (-> item
-                      (assoc :translatable/fields (select-keys fields fks)
-                             :uri (or
-                                    (:uri fields)
-                                    (bread/path router route-name params)))
-                      (dissoc :menu.item/entity)))))
+                (->item opts item)))
          (sort-by (if (fn? sort-by*) sort-by* #(query/get-at % sort-by*))))
     nil))
 
