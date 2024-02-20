@@ -445,17 +445,14 @@
      :query/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items []}}}
 
-    [{:menu.item/order 1
-      :uri "/en/xyz"
+    [{:uri "/en/xyz"
       :translatable/fields {}
       :children ()}
-     {:menu.item/order 2
-      :uri "/en/abc"
+     {:uri "/en/abc"
       :translatable/fields {:my/field "Override"
                             :other/field "Another override"}
       :children ()}
-     {:menu.item/order 3
-      :uri "/en/parent/child"
+     {:uri "/en/parent/child"
       :translatable/fields {:my/field "Post field"
                             :other/field "Another post field"}
       :children ()}]
@@ -467,56 +464,48 @@
      :router (MockRouter. {})
      :route/name ::page
      :route/params {:field/lang :en}}
-    {:menus {:my-nav {:menu/items [{:menu.item/order 2
-                                    :menu.item/entity
-                                    {:post/slug "abc"
-                                     :translatable/fields
-                                     {:extra "This gets filtered out..."
-                                      :my/field "My Field"
-                                      :other/field "Other"}}
-                                    :translatable/fields
-                                    {:more "...and so does this"
-                                     :my/field "Override"
-                                     :other/field "Another override"}}
-                                   {:menu.item/order 3
-                                    :menu.item/entity
-                                    {:post/slug "child"
-                                     :translatable/fields
-                                     {:extra "This gets filtered out..."
-                                      :my/field "Post field"
-                                      :other/field "Another post field"}
-                                     ;; Post ancestry.
-                                     :post/_children
-                                     [{:post/slug "parent"}]}
-                                    :translatable/fields
-                                    {:more "...and so does this"}}
-                                   {:menu.item/order 1
-                                    ;; no post
-                                    :translatable/fields {:uri "/en/xyz"}}]}}}
+    {:menus {:my-nav
+             {:menu/items
+              [{:menu.item/order 2
+                :menu.item/entity
+                {:post/slug "abc"
+                 :translatable/fields {:extra "This gets filtered out..."
+                                       :my/field "My Field"
+                                       :other/field "Other"}}
+                :translatable/fields {:more "...and so does this"
+                                      :my/field "Override"
+                                      :other/field "Another override"}}
+               {:menu.item/order 3
+                :menu.item/entity
+                {:post/slug "child"
+                 :translatable/fields {:extra "This gets filtered out..."
+                                       :my/field "Post field"
+                                       :other/field "Another post field"}
+                 ;; Post ancestry.
+                 :post/_children
+                 [{:post/slug "parent"}]}
+                :translatable/fields {:more "...and so does this"}}
+               {:menu.item/order 1
+                ;; no post
+                :translatable/fields {:uri "/en/xyz"}}]}}}
 
     ;; :merge-entities? false; recursive.
-    [{:menu.item/order 1
-      :uri "/en/xyz"
+    [{:uri "/en/xyz"
       :translatable/fields {}
       :children
-      [{:menu.item/order 0
-        :uri "/en/xyz/123"
+      [{:uri "/en/xyz/123"
         :translatable/fields {:my/field "Daughter"}
         :children []}
-       {:menu.item/order 1
-        :uri "/en/xyz/456"
+       {:uri "/en/xyz/456"
         :translatable/fields {:my/field "Child"}
-        :children [{:menu.item/order 0
-                    :uri "/en/xyz/456/789"
+        :children [{:uri "/en/xyz/456/789"
                     :translatable/fields {:my/field "Grandchild"}
                     :children []}]}]}
-     {:menu.item/order 2
-      :uri "/en/abc"
+     {:uri "/en/abc"
       :translatable/fields {:my/field "Override"
                             :other/field "Another override"}
       :children []}
-     {:menu.item/order 3
-      :uri "/en/parent/child"
+     {:uri "/en/parent/child"
       :translatable/fields {}
       :children []}]
     {:query/name [::navigation/items ::navigation/location]
