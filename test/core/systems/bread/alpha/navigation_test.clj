@@ -72,7 +72,8 @@
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
-      :field/key nil}]
+      :field/key nil
+      :sort-by nil}]
     {:menus
      {:basic-nav
       {:menu/type ::navigation/posts
@@ -116,7 +117,8 @@
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
-      :field/key #{:a :b}}]
+      :field/key #{:a :b}
+      :sort-by nil}]
     {:menus
      {:basic-nav
       {:menu/type ::navigation/posts
@@ -126,7 +128,7 @@
        :recursion-limit 3}}}
     {:field/lang "en"}
 
-    ;; Basic post menu; single :post/status, :field/key.
+    ;; Basic post menu; single :post/status, :field/key; :sort-by.
     [{:query/name ::bread/value
       :query/key [:menus :basic-nav]
       :query/description "Basic initial info for this posts menu."
@@ -164,14 +166,16 @@
       :route/name ::park
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
-      :field/key #{:b}}]
+      :field/key #{:b}
+      :sort-by [:translatable/fields :title]}]
     {:menus
      {:basic-nav
       {:menu/type ::navigation/posts
        :post/type :post.type/park
        :post/status :post.status/draft
        :route/name ::park
-       :field/key :b}}}
+       :field/key :b
+       :sort-by [:translatable/fields :title]}}}
     {:field/lang "en"}
 
     ;; Location menu; custom menus-key.
@@ -208,7 +212,8 @@
      {:query/name [::navigation/items ::navigation/location]
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
-      :merge-entities? true}]
+      :merge-entities? true
+      :sort-by [:menu.item/order]}]
     {:menus
      {:location-nav
       {:menu/type ::navigation/location
@@ -250,7 +255,8 @@
      {:query/name [::navigation/items ::navigation/location]
       :query/key [:menus :location-nav :menu/items]
       :field/key #{:a}
-      :merge-entities? true}]
+      :merge-entities? true
+      :sort-by [:menu.item/order]}]
     {:menus
      {:location-nav
       {:menu/type ::navigation/location
@@ -290,7 +296,8 @@
       :spaths [[:translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
-      :field/key nil}]
+      :field/key nil
+      :sort-by nil}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
@@ -328,7 +335,8 @@
       :spaths [[:translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
-      :field/key #{:x :y :z}}]
+      :field/key #{:x :y :z}
+      :sort-by nil}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
@@ -337,7 +345,7 @@
        :recursion-limit 2}}}
     {:field/lang "en"}
 
-    ;; Basic taxon menu; recursion-limit, :field/keys, :taxon/slug.
+    ;; Basic taxon menu; recursion-limit, :field/keys, :taxon/slug; :sort-by.
     [{:query/name ::bread/value
       :query/description "Basic initial info for this taxon menu."
       :query/key [:menus :taxon-nav]
@@ -370,14 +378,16 @@
       :spaths [[:translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
-      :field/key #{:x :y :z}}]
+      :field/key #{:x :y :z}
+      :sort-by [:translatable/fields :title]}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :taxon/slug "my-lovely-cat"
        :field/key [:x :y :z]
-       :recursion-limit 2}}}
+       :recursion-limit 2
+       :sort-by [:translatable/fields :title]}}}
     {:field/lang "en"}
 
     ;;

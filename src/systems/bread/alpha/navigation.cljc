@@ -31,6 +31,7 @@
         route-name :route/name
         recursion-limit :recursion-limit
         fks :field/key
+        sort-by* :sort-by
         :or {post-type :post.type/page
              post-status :post.status/published
              recursion-limit '...}}]
@@ -68,7 +69,8 @@
         :router (route/router req)
         :route/name route-name
         :route/params (route/params req (route/match req))
-        :field/key (field-keys fks)}])))
+        :field/key (field-keys fks)
+        :sort-by sort-by*}])))
 
 (defmethod menu-queries ::taxon
   menu-queries?type=taxon
@@ -77,6 +79,7 @@
         slug :taxon/slug
         recursion-limit :recursion-limit
         fks :field/key
+        sort-by* :sort-by
         :or {recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)
         datalog-query
@@ -109,7 +112,8 @@
                       datalog-query)}
        {:query/name [::items ::taxon]
         :query/key [menus-key k :menu/items]
-        :field/key (field-keys fks)}])))
+        :field/key (field-keys fks)
+        :sort-by sort-by*}])))
 
 (defmethod menu-queries ::location
   menu-queries?type=location
@@ -118,8 +122,10 @@
         fks :field/key
         recursion-limit :recursion-limit
         merge? :merge-entities?
+        sort-by* :sort-by
         :or {recursion-limit '...
-             merge? true}}]
+             merge? true
+             sort-by* [:menu.item/order]}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
       [{:query/name ::bread/value
@@ -147,7 +153,8 @@
        {:query/key [menus-key k :menu/items]
         :query/name [::items ::location]
         :field/key (field-keys fks)
-        :merge-entities? merge?}])))
+        :merge-entities? merge?
+        :sort-by sort-by*}])))
 
 (defmethod bread/action ::add-menu-queries
   add-menu-queries-action
