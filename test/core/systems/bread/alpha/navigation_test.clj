@@ -491,6 +491,52 @@
                                     ;; no post
                                     :translatable/fields {:uri "/en/xyz"}}]}}}
 
+    ;; :merge-entities? false
+    [{:menu.item/order 1
+      :uri "/en/xyz"
+      :translatable/fields {}}
+     {:menu.item/order 2
+      :uri "/en/abc"
+      :translatable/fields {:my/field "Override"
+                            :other/field "Another override"}}
+     {:menu.item/order 3
+      :uri "/en/parent/child"
+      :translatable/fields {}}]
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]
+     :merge-entities? false
+     :field/key #{:my/field :other/field}
+     :sort-by [:menu.item/order]
+     :router (MockRouter. {})
+     :route/name ::page
+     :route/params {:field/lang :en}}
+    {:menus {:my-nav {:menu/items [{:menu.item/order 2
+                                    :menu.item/entity
+                                    {:post/slug "abc"
+                                     :translatable/fields
+                                     {:extra "This gets filtered out..."
+                                      :my/field "My Field"
+                                      :other/field "Other"}}
+                                    :translatable/fields
+                                    {:more "...and so does this"
+                                     :my/field "Override"
+                                     :other/field "Another override"}}
+                                   {:menu.item/order 3
+                                    :menu.item/entity
+                                    {:post/slug "child"
+                                     :translatable/fields
+                                     {:extra "This gets filtered out..."
+                                      :my/field "Post field"
+                                      :other/field "Another post field"}
+                                     ;; Post ancestry.
+                                     :post/_children
+                                     [{:post/slug "parent"}]}
+                                    :translatable/fields
+                                    {:more "...and so does this"}}
+                                   {:menu.item/order 1
+                                    ;; no post
+                                    :translatable/fields {:uri "/en/xyz"}}]}}}
+
     ;;
     ))
 
