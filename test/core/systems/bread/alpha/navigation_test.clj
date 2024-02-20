@@ -215,11 +215,15 @@
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true
-      :sort-by [:menu.item/order]}]
+      :sort-by [:menu.item/order]
+      :route/name ::my-route
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
     {:menus
      {:location-nav
       {:menu/type ::navigation/location
-       :menu/location ::primary}}
+       :menu/location ::primary
+       :route/name ::my-route}}
      :menus-key :my/menus}
     {:field/lang "en"}
 
@@ -260,11 +264,15 @@
       :query/key [:menus :location-nav :menu/items]
       :field/key #{:a}
       :merge-entities? true
-      :sort-by [:menu.item/order]}]
+      :sort-by [:menu.item/order]
+      :route/name ::my-route
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
     {:menus
      {:location-nav
       {:menu/type ::navigation/location
        :menu/location ::primary
+       :route/name ::my-route
        :field/key :a
        :merge-entities? true}}}
     {:field/lang "en"}
@@ -301,10 +309,14 @@
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key nil
-      :sort-by nil}]
+      :sort-by nil
+      :route/name ::my-route
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
+       :route/name ::my-route
        :taxon/taxonomy :taxon.taxonomy/tag}}}
     {:field/lang "en"}
 
@@ -340,10 +352,14 @@
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
-      :sort-by nil}]
+      :sort-by nil
+      :route/name ::park
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
+       :route/name ::park
        :taxon/taxonomy :taxon.taxonomy/category
        :field/key [:x :y :z]
        :recursion-limit 2}}}
@@ -383,10 +399,14 @@
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
-      :sort-by [:translatable/fields :title]}]
+      :sort-by [:translatable/fields :title]
+      :route/name ::my-route
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
     {:menus
      {:taxon-nav
       {:menu/type ::navigation/taxon
+       :route/name ::my-route
        :taxon/taxonomy :taxon.taxonomy/category
        :taxon/slug "my-lovely-cat"
        :field/key [:x :y :z]
