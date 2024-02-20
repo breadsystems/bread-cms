@@ -18,12 +18,17 @@
       (ancestry slugs parent)
       slugs)))
 
+(declare ->item)
+
+(defn- ->items [{:as opts sort-by* :sort-by} items]
+  (->> items
+       (sort-by (if (fn? sort-by*) sort-by* #(query/get-at % sort-by*)))
+       (map (partial ->item opts))))
+
 (defn- ->item
   [{:as opts
-    k :query/key
     fks :field/key
     merge? :merge-entities?
-    sort-by* :sort-by
     router :router
     route-name :route/name
     route-params :route/params}
@@ -40,22 +45,13 @@
                :uri (or
                       (:uri fields)
                       (bread/path router route-name params))
-               :children (sort-by #(query/get-at % sort-by*) (map (partial ->item opts) children)))
+               :children (->items opts children))
         (dissoc :menu.item/entity :menu.item/children))))
 
 (defmethod bread/query [::items ::location]
-  [{k :query/key
-    fks :field/key
-    sort-by* :sort-by
-    :as opts}
-   data]
-  (if-let [items (query/get-at data k)]
-    (->> items
-         (map (fn [{fields :translatable/fields
-                    {post-fields :translatable/fields :as e} :menu.item/entity
-                    :as item}]
-                (->item opts item)))
-         (sort-by (if (fn? sort-by*) sort-by* #(query/get-at % sort-by*))))
+  [opts data]
+  (if-let [items (query/get-at data (:query/key opts))]
+    (->items opts items)
     nil))
 
 (defn- field-keys [ks]
