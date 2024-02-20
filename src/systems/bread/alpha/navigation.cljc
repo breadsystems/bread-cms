@@ -46,7 +46,7 @@
                       (:uri fields)
                       (bread/path router route-name params))
                :children (->items opts children))
-        (dissoc :menu.item/entity :menu.item/children))))
+        (dissoc :menu.item/entity :menu.item/children :menu.item/order))))
 
 (defmethod bread/query [::items ::location]
   [opts data]
