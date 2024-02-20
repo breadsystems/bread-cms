@@ -26,29 +26,20 @@
        (map (partial ->item opts))))
 
 (defn- ->item
-  [{:as opts
-    fks :field/key
-    merge? :merge-entities?
-    router :router
-    route-name :route/name
-    route-params :route/params}
-   {:as item
-    fields :translatable/fields
-    children :menu.item/children
-    {post-fields :translatable/fields :as e} :menu.item/entity}]
+  [opts {fields :translatable/fields
+         children :menu.item/children
+         {post-fields :translatable/fields :as e} :menu.item/entity}]
   (let [;; TODO don't hard-code param names, infer from route
         *slug (string/join "/" (ancestry [] e))
-        params (merge route-params e {:*post/slug *slug})
-        fields (if merge? (merge post-fields fields) fields)]
-    (-> item
-        (assoc :translatable/fields (if (seq fks)
-                                      (select-keys fields fks)
-                                      fields)
-               :uri (or
-                      (:uri fields)
-                      (bread/path router route-name params))
-               :children (->items opts children))
-        (dissoc :menu.item/entity :menu.item/children :menu.item/order))))
+        params (merge (:route/params opts) e {:*post/slug *slug})
+        fields (if (:merge-entities? opts)
+                 (merge post-fields fields)
+                 fields)]
+    {:translatable/fields (if (seq (:field/key opts))
+                            (select-keys fields (:field/key opts))
+                            fields)
+     :uri (or (:uri fields) (bread/path (:router opts) (:route/name opts) params))
+     :children (->items opts children)}))
 
 (defmethod bread/query [::items ::location]
   [opts data]
