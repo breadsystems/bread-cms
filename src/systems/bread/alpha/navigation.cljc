@@ -10,7 +10,8 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.util.datalog :as d]))
 
-(defn ancestry [slugs {:post/keys [slug _children]}]
+;; TODO move to route ns
+(defn- ancestry [slugs {:post/keys [slug _children]}]
   (let [parent (first _children)
         slugs (cons slug slugs)]
     (if _children
