@@ -41,7 +41,9 @@
         params (merge route-params e {:*post/slug *slug})
         fields (if merge? (merge post-fields fields) fields)]
     (-> item
-        (assoc :translatable/fields (select-keys fields fks)
+        (assoc :translatable/fields (if (seq fks)
+                                      (select-keys fields fks)
+                                      fields)
                :uri (or
                       (:uri fields)
                       (bread/path router route-name params))

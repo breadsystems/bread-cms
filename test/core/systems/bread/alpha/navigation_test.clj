@@ -445,17 +445,36 @@
      :query/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items []}}}
 
+    ;; Basic menu items; no :field/key filtering.
+    [{:uri "/abc"
+      :translatable/fields {:uri "/abc" :my/field "My Field"}
+      :children []}
+     {:uri "/xyz"
+      :translatable/fields {:uri "/xyz" :other/field "Other"}
+      :children []}]
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :#nofilter :menu/items]
+     :field/key nil
+     :sort-by [:menu.item/order]}
+    {:menus {:#nofilter {:menu/items [{:translatable/fields
+                                       {:uri "/abc"
+                                        :my/field "My Field"}}
+                                      {:translatable/fields
+                                       {:uri "/xyz"
+                                        :other/field "Other"}}]}}}
+
+    ;; Basic menu items with related entities.
     [{:uri "/en/xyz"
       :translatable/fields {}
-      :children ()}
+      :children []}
      {:uri "/en/abc"
       :translatable/fields {:my/field "Override"
                             :other/field "Another override"}
-      :children ()}
+      :children []}
      {:uri "/en/parent/child"
       :translatable/fields {:my/field "Post field"
                             :other/field "Another post field"}
-      :children ()}]
+      :children []}]
     {:query/name [::navigation/items ::navigation/location]
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? true
