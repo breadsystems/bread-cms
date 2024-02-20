@@ -144,7 +144,10 @@
                                               {:menu.item/entity
                                                [:db/id
                                                 :post/slug
-                                                {:translatable/fields '[*]}]}
+                                                {:translatable/fields '[*]}
+                                                {:post/_children
+                                                 [:post/slug
+                                                  {:post/_children '...}]}]}
                                               {:translatable/fields '[*]}])]
                       :in '[$ ?location]
                       :where '[[?m :menu/locations ?location]
