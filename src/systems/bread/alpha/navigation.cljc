@@ -34,11 +34,10 @@
                     :as item}]
                 (let [;; TODO don't hard-code param names, infer from route
                       *slug (string/join "/" (ancestry [] e))
-                      params (merge route-params e {:*post/slug *slug})]
+                      params (merge route-params e {:*post/slug *slug})
+                      fields (if merge? (merge post-fields fields) fields)]
                   (-> item
-                      (assoc :translatable/fields
-                             (-> (merge post-fields fields)
-                                 (select-keys fks))
+                      (assoc :translatable/fields (select-keys fields fks)
                              :uri (or
                                     (:uri fields)
                                     (bread/path router route-name params)))
