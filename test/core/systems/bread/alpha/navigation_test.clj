@@ -15,7 +15,10 @@
 (defrecord MockRouter [params]
   bread/Router
   (bread/params [this _] params)
-  (bread/match [this _]))
+  (bread/match [this _])
+  (bread/path [this route-name params]
+    (let [route (get {::page [:field/lang :*post/slug]} route-name)]
+      (str "/" (string/join "/" (map #(some-> % params name) route))))))
 
 (deftest test-queries-hook
   (are
@@ -413,6 +416,80 @@
        :recursion-limit 2
        :sort-by [:translatable/fields :title]}}}
     {:field/lang "en"}
+
+    ;;
+    ))
+
+(deftest test-items-location-hook
+  (are
+    [items query data]
+    (= items (bread/query query data))
+
+    nil
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {}}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items nil}}}
+
+    []
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items []}}}
+
+    [{:menu.item/order 1
+      :uri "/en/xyz"
+      :translatable/fields {}}
+     {:menu.item/order 2
+      :uri "/en/abc"
+      :translatable/fields {:my/field "Override"
+                            :other/field "Another override"}}
+     {:menu.item/order 3
+      :uri "/en/parent/child"
+      :translatable/fields {:my/field "Post field"
+                            :other/field "Another post field"}}]
+    {:query/name [::navigation/items ::navigation/location]
+     :query/key [:menus :my-nav :menu/items]
+     :merge-entities? true
+     :field/key #{:my/field :other/field}
+     :sort-by [:menu.item/order]
+     :router (MockRouter. {})
+     :route/name ::page
+     :route/params {:field/lang :en}}
+    {:menus {:my-nav {:menu/items [{:menu.item/order 2
+                                    :menu.item/entity
+                                    {:post/slug "abc"
+                                     :translatable/fields
+                                     {:extra "This gets filtered out..."
+                                      :my/field "My Field"
+                                      :other/field "Other"}}
+                                    :translatable/fields
+                                    {:more "...and so does this"
+                                     :my/field "Override"
+                                     :other/field "Another override"}}
+                                   {:menu.item/order 3
+                                    :menu.item/entity
+                                    {:post/slug "child"
+                                     :translatable/fields
+                                     {:extra "This gets filtered out..."
+                                      :my/field "Post field"
+                                      :other/field "Another post field"}
+                                     ;; Post ancestry.
+                                     :post/_children
+                                     [{:post/slug "parent"}]}
+                                    :translatable/fields
+                                    {:more "...and so does this"}}
+                                   {:menu.item/order 1
+                                    ;; no post
+                                    :translatable/fields {:uri "/en/xyz"}}]}}}
 
     ;;
     ))

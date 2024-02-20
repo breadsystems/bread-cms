@@ -10,6 +10,40 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.util.datalog :as d]))
 
+(defn ancestry [slugs {:post/keys [slug _children]}]
+  (let [parent (first _children)
+        slugs (cons slug slugs)]
+    (if _children
+      (ancestry slugs parent)
+      slugs)))
+
+(defmethod bread/query [::items ::location]
+  [{k :query/key
+    fks :field/key
+    merge? :merge-entities?
+    sort-by* :sort-by
+    router :router
+    route-name :route/name
+    route-params :route/params}
+   data]
+  (if-let [items (query/get-at data k)]
+    (->> items
+         (map (fn [{fields :translatable/fields
+                    {post-fields :translatable/fields :as e} :menu.item/entity
+                    :as item}]
+                (let [params (merge route-params e
+                      {:*post/slug (string/join "/" (ancestry [] e))})]
+                  (-> item
+                      (assoc :translatable/fields
+                             (-> (merge post-fields fields)
+                                 (select-keys fks))
+                             :uri (or
+                                    (:uri fields)
+                                    (bread/path router route-name params)))
+                      (dissoc :menu.item/entity)))))
+         (sort-by (if (fn? sort-by*) sort-by* #(query/get-at % sort-by*))))
+    nil))
+
 (defn- field-keys [ks]
   (cond
     (coll? ks) (set ks)
