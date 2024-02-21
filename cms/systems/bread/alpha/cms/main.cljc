@@ -423,10 +423,10 @@
         pathv)))
 
   ;; TODO all below vars should live in route ns...
-  (defmulti entity->param (fn [route-spec _e] (:param route-spec)))
-  (defmethod entity->param :default [{k :param} entity]
+  (defmulti param (fn [k _e] k))
+  (defmethod param :default [k entity]
     (get entity k))
-  (defmethod entity->param :entity/slug* [_ entity]
+  (defmethod param :entity/slug* [_ entity]
     (string/join "/" (ancestry [] entity)))
 
   (ancestry [] grandchild)
@@ -438,8 +438,10 @@
           by-name (into {} (map (comp (juxt :name identity) route-spec))
                         (bread/routes router))
           route-keys (get-in by-name [route-name :param-keys])
-          params (zipmap route-keys (map (fn [param]
-                                           (entity->param {:param param} e))
+          route-params (route/params req (route/match req))
+          route-data (merge route-params e)
+          params (zipmap route-keys (map (fn [k]
+                                           (param k route-data))
                                          route-keys))]
       (bread/path router route-name params)))
 
