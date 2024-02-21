@@ -15,7 +15,8 @@
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme/not-found}
   :navigation {:menus {:main-nav
-                       {:menu/type :systems.bread.alpha.navigation/location}}}
+                       {:menu/type :systems.bread.alpha.navigation/location
+                        :menu/location :primary}}}
   :plugins []}
  :bread/db
  {:db/type :datahike

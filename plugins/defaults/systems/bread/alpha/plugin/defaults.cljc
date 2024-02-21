@@ -125,6 +125,7 @@
       :field/lang :fr
       :field/format :edn}]}
    {:db/id "menu-item.one"
+    :menu.item/order 1
     :post/type :post.type/menu-item
     :translatable/fields
     [{:field/key :one
@@ -144,8 +145,9 @@
       :field/content (pr-str "La Chose Deux")
       :field/lang :fr}]}
    {:menu/key :main-nav
+    :menu/locations [:primary]
     :menu/items [{:menu.item/entity "page.parent"   :menu.item/order 0}
-                 {:menu.item/entity "menu-item.one" :menu.item/order 1}]}
+                 "menu-item.one"]}
 
    ;; Site-wide translations
    {:field/lang :en
