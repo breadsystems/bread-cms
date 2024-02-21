@@ -143,7 +143,7 @@
      {:field/key :two
       :field/format :edn
       :field/content (pr-str "Thing Two")
-      :field/lang :fr}
+      :field/lang :en}
      {:field/key :two
       :field/format :edn
       :field/content (pr-str "La Chose Deux")
