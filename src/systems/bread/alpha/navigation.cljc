@@ -10,14 +10,6 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.util.datalog :as d]))
 
-;; TODO move to route ns
-(defn- ancestry [slugs {:post/keys [slug _children]}]
-  (let [parent (first _children)
-        slugs (cons slug slugs)]
-    (if _children
-      (ancestry slugs parent)
-      slugs)))
-
 (declare ->item)
 
 (defn- ->items [{:as opts sort-by* :sort-by} items]
@@ -30,7 +22,7 @@
          children :menu.item/children
          {post-fields :translatable/fields :as e} :menu.item/entity}]
   (let [;; TODO don't hard-code param names, infer from route
-        *slug (string/join "/" (ancestry [] e))
+        *slug (string/join "/" (route/ancestry e))
         params (merge (:route/params opts) e {:*post/slug *slug})
         fields (if (:merge-entities? opts)
                  (merge post-fields fields)
