@@ -68,7 +68,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
@@ -113,7 +113,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
@@ -162,7 +162,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
@@ -212,8 +212,8 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:menu.item/entity :translatable/fields]
-               [:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
+               [s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/location]
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
@@ -261,8 +261,8 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:menu.item/entity :translatable/fields]
-               [:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
+               [s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/location]
       :query/key [:menus :location-nav :menu/items]
       :field/key #{:a}
@@ -308,7 +308,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key nil
@@ -351,7 +351,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
@@ -398,7 +398,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :spaths [[:translatable/fields]]}
+      :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
