@@ -36,7 +36,8 @@
 (defmethod bread/query [::items ::location]
   [opts data]
   (if-let [items (query/get-at data (:query/key opts))]
-    (->items opts items)
+    ;; First layer will be a vector of vectors
+    (->items opts (map first items))
     nil))
 
 (defn- field-keys [ks]
