@@ -5,6 +5,12 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]))
 
+;; TODO :entity/slug, :parent/_children
+(defn ancestry [e]
+  (loop [slugs [] {slug :post/slug [parent] :post/_children} e]
+    (let [slugs (cons slug slugs)]
+      (if-not parent slugs (recur slugs parent)))))
+
 (defn match [req]
   (bread/hook req ::match))
 
