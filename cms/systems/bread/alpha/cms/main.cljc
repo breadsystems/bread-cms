@@ -210,6 +210,7 @@
 
   (def $req {:uri "/en" :request-method :get})
   (def $req {:uri "/en/hello" :request-method :get})
+  (def $req {:uri "/en/hello/child-page" :request-method :get})
   (def $req {:uri "/en/tag/one" :request-method :get})
   (def $req {:uri "/fr/tag/one" :request-method :get})
   (def $req {:uri "/en/404" :request-method :get})
