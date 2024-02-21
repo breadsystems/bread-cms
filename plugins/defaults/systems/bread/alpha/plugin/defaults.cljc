@@ -124,9 +124,13 @@
       :field/content (pr-str "Deux")
       :field/lang :fr
       :field/format :edn}]}
+   {:db/id "menu-item.zero"
+    :menu.item/entity "page.parent"
+    :menu.item/order 0}
    {:db/id "menu-item.one"
     :menu.item/order 1
     :post/type :post.type/menu-item
+    :menu.item/children ["menu-item.child"]
     :translatable/fields
     [{:field/key :one
       :field/format :edn
@@ -144,10 +148,21 @@
       :field/format :edn
       :field/content (pr-str "La Chose Deux")
       :field/lang :fr}]}
+   {:db/id "menu-item.child"
+    :translatable/fields
+    [{:field/key :uri
+      :field/lang :en
+      :field/content "/en/child-item"}]
+    :menu.item/children ["menu-item.grandchild"]}
+   {:db/id "menu-item.grandchild"
+    :translatable/fields
+    [{:field/key :uri
+      :field/lang :en
+      :field/content "/en/grandchild-item"}]
+    :menu.item/children []}
    {:menu/key :main-nav
     :menu/locations [:primary]
-    :menu/items [{:menu.item/entity "page.parent"   :menu.item/order 0}
-                 "menu-item.one"]}
+    :menu/items ["menu-item.zero" "menu-item.one"]}
 
    ;; Site-wide translations
    {:field/lang :en
