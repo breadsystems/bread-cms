@@ -136,6 +136,44 @@
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}
 
+    ;; querying for menu item AND entity fields...
+    {:bindings [{:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :binding-path [0 :menu.item/entity
+                                0 :translatable/fields]
+                 :relation [:menu.item/entity
+                            :translatable/fields]}
+                {:binding-sym '?e
+                 :attr :translatable/fields
+                 :entity-index 0
+                 :binding-path [1 :translatable/fields]
+                 :relation [:translatable/fields]}]}
+    :translatable/fields
+    i18n/translatable-binding?
+    '{:find [(pull ?e [{:menu.item/entity
+                        [{:translatable/fields
+                          [:field/key :field/content]}]}
+                       {:translatable/fields
+                        [:field/key :field/content]}])]
+      :in [$ ?menu-key]
+      :where [[?e :menu/key ?menu-key]]}
+
+    ;; TODO Finding any recursive binding, getting back the key
+    #_#_#_#_
+    {:bindings [{:binding-sym '?e
+                 :attr :menu.item/children
+                 :entity-index 0
+                 :binding-path [1 :menu.item/children]
+                 :relation [:menu.item/children]}]}
+    keyword? ;; any keyword key
+    (fn [b]
+      (or (= '... b) (integer? b)))
+    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}
+                       {:menu.item/children ...}])]
+      :in [$ ?menu-key]
+      :where [[?e :menu/key ?menu-key]]}
+
     ;;
     ))
 
