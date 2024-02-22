@@ -17,6 +17,34 @@
              [:find . !find ... :in . !in ... :where & ?where]
              {:find !find :in !in :where ?where}))))
 
+(defn- spec-paths [kp vp data]
+  (let [k? (if (keyword? kp) #(= kp %) kp)
+        v? (if (keyword? vp) #(= vp %) vp)
+        binding? (fn [node]
+                   (and (map? node)
+                        (let [[k v] (first node)]
+                          (and (k? k) (v? v)))))
+        walker (s/recursive-path
+                 [] p
+                 [(s/if-path map? s/ALL s/INDEXED-VALS)
+                  (s/if-path [s/LAST (s/pred binding?)]
+                             s/FIRST
+                             [(s/collect-one s/FIRST) s/LAST coll? p])])]
+    (->> data (s/select walker)
+         (map (fn [path]
+                (let [path (if (or (nil? path) (vector? path))
+                             path
+                             [path])]
+                 [path (get-in data path)]))))))
+
+(comment
+  (spec-paths :k :v [1 {:k [:a {:k :v} :c]} {:k :v}])
+  (spec-paths keyword? :v [1 {:k [:a {:k :v} :c]} {:k :v}])
+  (spec-paths keyword? any? [1 {:k [:a {:k :v} :c]} {:k :v}])
+  (spec-paths keyword? (constantly false) [1 {:k [:a {:k :v} :c]} {:k :v}])
+  (spec-paths keyword? nil [1 {:k [:a {:k :v} :c]} {:k :v}])
+  )
+
 (defn- binding-paths [pull search-key pred]
   (m/search
     pull
@@ -42,7 +70,7 @@
          (fn [idx clause]
            (m/find clause
                    (m/scan 'pull ?sym ?pull)
-                   (when-let [paths (seq (binding-paths ?pull attr pred))]
+                   (when-let [paths (seq (spec-paths attr pred ?pull))]
                      {:index idx
                       :sym ?sym
                       :ops paths
