@@ -1,19 +1,7 @@
 (ns systems.bread.alpha.internal.query-inference
   (:require
-    [com.rpl.specter :as s]))
-
-(defn- normalize-datalog-query
-  "Normalize a datalog query to map form. Treats lists as vectors."
-  [query]
-  (if (map? query)
-    query
-    (first (reduce (fn [[query [k :as ks]] x]
-                     (cond
-                       (= k x) [query ks]
-                       (keyword? x) [query (rest ks)]
-                       :else [(update query k conj x) ks]))
-                   [{:find [] :in [] :where []} [:find :in :where]]
-                   (seq query)))))
+    [com.rpl.specter :as s]
+    [systems.bread.alpha.util.datalog :as d]))
 
 (defn- spec-paths [kp vp data]
   (let [k? (if (keyword? kp) #(= kp %) kp)
@@ -47,7 +35,7 @@
   "Takes a query, a key predicate, and a value predicate. Returns a list of
   matching patterns, describing the path and identity of each value found."
   [query kpred vpred]
-  (->> query normalize-datalog-query :find
+  (->> query d/normalize-query :find
        (map-indexed
          (fn [idx clause]
            (when (and (list? clause) (= 'pull (first clause)))
@@ -92,16 +80,6 @@
                        (butlast relation))) (last relation))))
 
 (comment
-  (normalize-datalog-query '(:find ?xyz
-                             :in $ ?menu-key
-                             :where [?e :menu/key ?menu-key]))
-  (normalize-datalog-query '[:find ?xyz
-                             :in $ ?menu-key
-                             :where [?e :menu/key ?menu-key]])
-  (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
-                             :in $ ?menu-key
-                             :where [?e :menu/key ?menu-key]])
-
   (binding-clauses
     '{:find [(pull ?e [:post/slug
                        {:translatable/fields [*]}])]}
