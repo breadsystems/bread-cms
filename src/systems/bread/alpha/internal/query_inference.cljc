@@ -1,9 +1,5 @@
 (ns systems.bread.alpha.internal.query-inference
   (:require
-    [clojure.walk :as walk]
-    [clojure.string :as string]
-    ;; TODO ^^ DELETE ^^
-    [meander.epsilon :as m]
     [com.rpl.specter :as s]))
 
 (defn- normalize-datalog-query
