@@ -11,11 +11,13 @@
   [query]
   (if (map? query)
     query
-    (first (m/search
-             (vec query)
-
-             [:find . !find ... :in . !in ... :where & ?where]
-             {:find !find :in !in :where ?where}))))
+    (first (reduce (fn [[query [k :as ks]] x]
+                     (cond
+                       (= k x) [query ks]
+                       (keyword? x) [query (rest ks)]
+                       :else [(update query k conj x) ks]))
+                   [{:find [] :in [] :where []} [:find :in :where]]
+                   (seq query)))))
 
 (defn- spec-paths [kp vp data]
   (let [k? (if (keyword? kp) #(= kp %) kp)
