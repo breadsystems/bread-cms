@@ -159,8 +159,7 @@
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}
 
-    ;; TODO Finding any recursive binding, getting back the key
-    #_#_#_#_
+    ;; Finding recursive bindings with a keyword predicate.
     {:bindings [{:binding-sym '?e
                  :attr :menu.item/children
                  :entity-index 0

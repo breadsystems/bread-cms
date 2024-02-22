@@ -62,19 +62,18 @@
       [(vec (concat [?n ?k] path)) m])))
 
 (defn binding-clauses
-  "Takes a query, a target attr, and a predicate. Returns a list of matching
-  clauses."
-  [query attr pred]
+  "Takes a query, a key predicate, and a value predicate. Returns a list of
+  matching patterns, describing the path and identity of each value found."
+  [query kpred vpred]
   (->> query normalize-datalog-query :find
        (map-indexed
          (fn [idx clause]
-           (m/find clause
-                   (m/scan 'pull ?sym ?pull)
-                   (when-let [paths (seq (spec-paths attr pred ?pull))]
-                     {:index idx
-                      :sym ?sym
-                      :ops paths
-                      :clause clause}))))
+           (when (and (list? clause) (= 'pull (first clause)))
+             (when-let [paths (seq (spec-paths kpred vpred (last clause)))]
+               {:index idx
+                :sym (second clause)
+                :ops paths
+                :clause clause}))))
        (filter identity)))
 
 (defn- inverted-rel? [attr]
@@ -166,17 +165,19 @@
   - :binding-sym - the symbol used in the pull expr containing the binding.
   - :binding-path - the path through the pull spec to the binding, for use with
     get-in, etc.
-  - :attr - the (keyword) attribute originally passed to infer-query-bindings.
+  - :attr - the (keyword) attribute found in the pull-spec.
   - :entity-index - the position of the pull expr within (:find query).
   - :relation relation - the relation vector between the top-level entity
     being queried and the entity to which attr belongs within this binding.
     Like binding-path but containing only db attributes (keywords).
   "
-  [attr pred query]
+  [kpred vpred query]
   (reduce (fn [{:keys [bindings]} {:keys [index sym ops] :as _clause}]
             (reduce
               (fn [{:keys [query bindings]} [path b]]
-                (let [binding-path (conj (vec path) attr)
+                (let [;; Get the attr we actually found with the predicate.
+                      attr (key (first b))
+                      binding-path (conj (vec path) attr)
                       relation (filterv keyword? binding-path)]
                   {:bindings (conj bindings
                                    {:binding-sym sym
@@ -187,4 +188,4 @@
               {:bindings bindings}
               ops))
           {:bindings []}
-          (binding-clauses query attr pred)))
+          (binding-clauses query kpred vpred)))
