@@ -45,22 +45,6 @@
   (spec-paths keyword? nil [1 {:k [:a {:k :v} :c]} {:k :v}])
   )
 
-(defn- binding-paths [pull search-key pred]
-  (m/search
-    pull
-
-    {~search-key (m/pred pred ?v)}
-    {search-key ?v}
-
-    ;; Recurse into a map binding at position ?n within a vector.
-    [_ ..?n (m/cata ?map) & _]
-    [[?n] ?map]
-
-    ;; Recurse into a map binding at key ?k
-    [_ ..?n {(m/and (m/not ~search-key) ?k) (m/cata ?v)} & _]
-    (let [[path m] ?v]
-      [(vec (concat [?n ?k] path)) m])))
-
 (defn binding-clauses
   "Takes a query, a key predicate, and a value predicate. Returns a list of
   matching patterns, describing the path and identity of each value found."
@@ -119,11 +103,6 @@
   (normalize-datalog-query '[:find (pull ?e [:db/id :menu/items])
                              :in $ ?menu-key
                              :where [?e :menu/key ?menu-key]])
-
-  (binding-paths [:x {:y :yy} :z] :y #(= :yy %))
-  (binding-paths [:x {:y :yy} :z] :NOPE #(= :yy %))
-  (binding-paths [:x {:y :yy} :z] :y #(= :NOPE %))
-  (binding-paths [:x {:y :yy} :z] :y (constantly false))
 
   (binding-clauses
     '{:find [(pull ?e [:post/slug
