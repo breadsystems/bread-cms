@@ -91,17 +91,18 @@
 
 (defmethod bread/query ::fields
   [{k :query/key lang :field/lang :keys [format? compact? spaths]} data]
-  (if (get data k)
-    (let [chain [(when compact? compact-fields)
-                 (when format? format-fields)
-                 (fn [fields]
-                   (filter #(= lang (:field/lang %)) fields))]
-          process (apply comp (conj (filterv identity chain)))]
-      (reduce
-        (fn [e spath]
-          (s/transform spath process e))
-        (get data k) spaths))
-    (get data k)))
+  (let [e (query/get-at data k)]
+    (if e
+      (let [chain [(when compact? compact-fields)
+                   (when format? format-fields)
+                   (fn [fields]
+                     (filter #(= lang (:field/lang %)) fields))]
+            process (apply comp (conj (filterv identity chain)))]
+        (reduce
+          (fn [e spath]
+            (s/transform spath process e))
+          e spaths))
+      false)))
 
 (defmethod bread/action ::queries
   i18n-queries
