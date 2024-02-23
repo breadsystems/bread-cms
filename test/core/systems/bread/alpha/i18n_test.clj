@@ -206,7 +206,7 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :post/slug
-                            {:translatable/fields [:field/key :field/lang]}])]
+                            {:translatable/fields [:field/key :field/lang]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}]
@@ -216,7 +216,7 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :post/slug
-                           {:translatable/fields [:field/key :field/lang]}])]
+                           {:translatable/fields [:field/key :field/lang]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
         :post.type/page]}
@@ -225,7 +225,7 @@
       true ;; ditto
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
-      ;; no formatting; no compaction.
+      ;; no formatting; no compaction; querying many.
       [{:query/name ::db/query
         :query/key :post-with-taxons-and-field-content
         :query/db ::FAKEDB
@@ -262,7 +262,7 @@
                                                   :field/content]}
                            {:post/_taxons [:taxon/slug
                                            :taxon/taxonomy
-                                           {:translatable/fields [*]}]}])]
+                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
           :where [[?e :post/slug ?slug]
                   [?e :post/type ?type]]}
@@ -280,7 +280,7 @@
         ['{:find [(pull ?e [:db/id
                             :post/slug
                             {:translatable/fields
-                             [:db/id :field/lang :field/key :field/content]}])]
+                             [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
@@ -298,7 +298,7 @@
        ['{:find [(pull ?e [:db/id
                            :post/slug
                            {:translatable/fields
-                            [:field/key :field/content]}])]
+                            [:field/key :field/content]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
         :post.type/page]}
@@ -314,7 +314,7 @@
         ['{:find [(pull ?e [:db/id
                             :post/slug
                             {:translatable/fields
-                             [:db/id :field/lang :field/key :field/content]}])]
+                             [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
@@ -332,7 +332,7 @@
        ['{:find [(pull ?e [:db/id
                            :post/slug
                            {:translatable/fields
-                            [:field/key :field/content]}])]
+                            [:field/key :field/content]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
         :post.type/page]}
@@ -352,7 +352,7 @@
                              [:db/id :field/lang :field/key :field/content]}
                             {:post/taxons [:taxon/slug
                                            :taxon/taxonomy
-                                           {:translatable/fields [*]}]}])]
+                                           {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
            :where [[?e :post/slug ?slug]
                    [?e :post/type ?type]]}
@@ -375,7 +375,7 @@
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:taxon/slug
                                           :taxon/taxonomy
-                                          {:translatable/fields [*]}]}])]
+                                          {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
           :where [[?e :post/slug ?slug]
                   [?e :post/type ?type]]}
