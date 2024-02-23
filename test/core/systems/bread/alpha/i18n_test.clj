@@ -480,14 +480,14 @@
     {:translatable/fields [{:field/key :from-the-river
                             :field/format :edn
                             :field/content "מהנהר"
-                            :field/lang :ar}
+                            :field/lang :he}
                            {:field/key :to-the-sea
                             :field/format :edn
                             :field/content "לים"
-                            :field/lang :ar}]}
+                            :field/lang :he}]}
     {:query/name ::i18n/fields
      :query/key :the-key
-     :field/lang :ar
+     :field/lang :he
      :format? true
      :compact? false
      :spaths [[:translatable/fields]]}
@@ -495,7 +495,7 @@
                [{:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "מהנהר")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "From the river")
@@ -503,7 +503,7 @@
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "לים")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "to the sea")
@@ -514,7 +514,7 @@
                            :to-the-sea (pr-str "לים")}}
     {:query/name ::i18n/fields
      :query/key :the-key
-     :field/lang :ar
+     :field/lang :he
      :format? false
      :compact? true
      :spaths [[:translatable/fields]]}
@@ -522,7 +522,7 @@
                [{:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "מהנהר")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "From the river")
@@ -530,7 +530,7 @@
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "לים")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "to the sea")
@@ -540,7 +540,7 @@
     {:translatable/fields {:from-the-river "מהנהר" :to-the-sea "לים"}}
     {:query/name ::i18n/fields
      :query/key :the-key
-     :field/lang :ar
+     :field/lang :he
      :format? true
      :compact? true
      :spaths [[:translatable/fields]]}
@@ -548,7 +548,7 @@
                [{:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "מהנהר")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "From the river")
@@ -556,7 +556,7 @@
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "לים")
-                 :field/lang :ar}
+                 :field/lang :he}
                 {:field/key :to-the-sea
                  :field/format :edn
                  :field/content (pr-str "to the sea")
