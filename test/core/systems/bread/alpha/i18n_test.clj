@@ -250,6 +250,54 @@
         :field/lang :en
         :format? false
         :compact? false
+        :spaths [[s/ALL s/ALL :translatable/fields]
+                 [s/ALL s/ALL :post/_taxons s/ALL :translatable/fields]]}]
+      {:query/name ::db/query
+       :query/key :post-with-taxons-and-field-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:translatable/fields [;; should add id, key, lang
+                                                  :field/content]}
+                           {:post/_taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           {:translatable/fields [*]}]}])]
+          :in [$ ?slug ?type]
+          :where [[?e :post/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      false
+      false
+
+      ;; With deeply nested, mixed implicit & explicit :field/content;
+      ;; no formatting; no compaction.
+      [{:query/name ::db/query
+        :query/key :post-with-taxons-and-field-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:translatable/fields [:db/id
+                                                   :field/key
+                                                   :field/lang
+                                                   :field/content]}
+                            {:post/_taxons [:taxon/slug
+                                            :taxon/taxonomy
+                                            {:translatable/fields [*]}]}]) .]
+           :in [$ ?slug ?type]
+           :where [[?e :post/slug ?slug]
+                   [?e :post/type ?type]]}
+         "my-post"
+         :post.type/page]}
+       {:query/name ::i18n/fields
+        :query/key :post-with-taxons-and-field-content
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? false
+        :compact? false
         :spaths [[:translatable/fields]
                  [:post/_taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query

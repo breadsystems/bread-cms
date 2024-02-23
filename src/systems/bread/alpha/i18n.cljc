@@ -115,7 +115,8 @@
         {:keys [bindings]} (qi/infer-query-bindings
                              :translatable/fields
                              translatable-binding?
-                             dbq)]
+                             dbq)
+        querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
     (if (seq bindings)
       [(reduce
          (fn [query {:keys [binding-path relation entity-index]}]
@@ -135,7 +136,8 @@
         :compact? (bread/config req :i18n/compact-fields?)
         :format? (bread/config req :i18n/format-fields?)
         :spaths
-        (map (comp (partial qi/relation->spath
+        (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
+                   (partial qi/relation->spath
                             (bread/hook req ::bread/attrs-map))
                    :relation)
              bindings)}]
