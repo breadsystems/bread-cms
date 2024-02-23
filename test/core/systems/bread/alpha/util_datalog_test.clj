@@ -4,6 +4,25 @@
     [systems.bread.alpha.util.datalog :as d]
     [systems.bread.alpha.i18n :as i18n]))
 
+(deftest test-normalize-query
+  (are
+    [normalized query] (= normalized (d/normalize-query query))
+
+    {} {}
+    {} []
+
+    '{:find [?e] :in [$] :where [[?e :attr]]}
+    '[:find ?e :in $ :where [?e :attr]]
+
+    '{:find [?e] :in [$ ?attr] :where [[?e :attr ?attr]]}
+    '[:find ?e :in $ ?attr :where [?e :attr ?attr]]
+
+    '{:find [?e] :where [[?e :attr]]}
+    '[:find ?e :where [?e :attr]]
+
+    ;;
+    ))
+
 (deftest test-relation-reversed?
   (is (false? (d/relation-reversed? :a/b)))
   (is (true? (d/relation-reversed? :a/_b))))
