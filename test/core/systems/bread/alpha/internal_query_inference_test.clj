@@ -36,6 +36,27 @@
     :ATTR
     #(some #{:y} %)
 
+    ;; single match at non-zero position
+    [{:index 0
+      :sym '?e
+      :ops [[[1] {:ATTR [:x :y]}]]
+      :clause '(pull ?e [:other {:ATTR [:x :y]}])}]
+    '{:find [(pull ?e [:other {:ATTR [:x :y]}])]}
+    :ATTR
+    #(some #{:y} %)
+
+    ;; multiple matches in the same clause
+    [{:index 0
+      :sym '?e
+      :ops [[[0] {:ATTR [:x :y]}]
+            [[1 :child 0] {:ATTR [:y :z]}]]
+      :clause '(pull ?e [{:ATTR [:x :y]}
+                         {:child [{:ATTR [:y :z]}]}])}]
+    '{:find [(pull ?e [{:ATTR [:x :y]}
+                       {:child [{:ATTR [:y :z]}]}])]}
+    :ATTR
+    #(some #{:y} %)
+
     ;; match pulls even when they're not the first clause
     [{:index 2
       :sym '?x
