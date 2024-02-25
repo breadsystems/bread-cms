@@ -196,10 +196,7 @@
 (comment
   (set! *print-namespace-maps* false)
 
-  (require '[flow-storm.api :as flow]
-           '[systems.bread.alpha.tools.util :as util :refer [do-queries]])
-  (flow/local-connect)
-
+  (restart! (-> "dev/main.edn" aero/read-config))
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
@@ -208,7 +205,6 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
-  (restart! (-> "dev/main.edn" aero/read-config))
 
   (alter-var-root #'bread/*profile-hooks* not)
 
@@ -219,6 +215,8 @@
   (def $req {:uri "/en/404"})
 
   (do
+    (require '[flow-storm.api :as flow]
+             '[systems.bread.alpha.tools.util :as util :refer [do-queries]])
     (def ->app            (partial util/->app            (:bread/app @system)))
     (def diagnose-queries (partial util/diagnose-queries (:bread/app @system)))
 
@@ -230,6 +228,8 @@
         db/q
         (db/database (->app $req))
         args)))
+
+  (flow/local-connect)
 
   (diagnose-queries (->app $req))
   (do-queries (->app $req) 1)
