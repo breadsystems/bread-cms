@@ -250,7 +250,7 @@
         :field/lang :en
         :format? false
         :compact? false
-        :recur-attrs nil
+        :recur-attrs #{}
         :spaths [[s/ALL s/ALL :translatable/fields]
                  [s/ALL s/ALL :post/_taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -299,7 +299,7 @@
         :field/lang :en
         :format? false
         :compact? false
-        :recur-attrs nil
+        :recur-attrs #{}
         :spaths [[:translatable/fields]
                  [:post/_taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -340,7 +340,7 @@
         :field/lang :fr
         :format? false
         :compact? false
-        :recur-attrs nil
+        :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -375,7 +375,7 @@
         :field/lang :fr
         :format? false
         :compact? true
-        :recur-attrs nil
+        :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -416,7 +416,7 @@
         :field/lang :en
         :format? true
         :compact? true
-        :recur-attrs nil
+        :recur-attrs #{}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -428,6 +428,104 @@
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:taxon/slug
                                           :taxon/taxonomy
+                                          {:translatable/fields [*]}]}]) .]
+          :in [$ ?slug ?type]
+          :where [[?e :post/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      true
+      true
+
+      ;; All the things, plus a recursive spec.
+      [{:query/name ::db/query
+        :query/key :post-with-taxons-and-field-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:post/children ...}
+                            {:translatable/fields
+                             [:db/id :field/lang :field/key :field/content]}
+                            {:post/taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           {:translatable/fields [*]}]}]) .]
+           :in [$ ?slug ?type]
+           :where [[?e :post/slug ?slug]
+                   [?e :post/type ?type]]}
+         "my-post"
+         :post.type/page]}
+       {:query/name ::i18n/fields
+        :query/key :post-with-taxons-and-field-content
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{:post/children}
+        :spaths [[:translatable/fields]
+                 [:post/taxons s/ALL :translatable/fields]]}]
+      {:query/name ::db/query
+       :query/key :post-with-taxons-and-field-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:post/children ...}
+                           {:translatable/fields [:field/key :field/content]}
+                           {:post/taxons [:taxon/slug
+                                          :taxon/taxonomy
+                                          {:translatable/fields [*]}]}]) .]
+          :in [$ ?slug ?type]
+          :where [[?e :post/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      true
+      true
+
+      ;; All the things, plus TWO recursive specs including a nested one.
+      [{:query/name ::db/query
+        :query/key :post-with-taxons-and-field-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:post/children 3}
+                            {:translatable/fields
+                             [:db/id :field/lang :field/key :field/content]}
+                            {:post/taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           {:taxon/_children ...}
+                                           {:translatable/fields [*]}]}]) .]
+           :in [$ ?slug ?type]
+           :where [[?e :post/slug ?slug]
+                   [?e :post/type ?type]]}
+         "my-post"
+         :post.type/page]}
+       {:query/name ::i18n/fields
+        :query/key :post-with-taxons-and-field-content
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{:post/children :taxon/_children}
+        :spaths [[:translatable/fields]
+                 [:post/taxons s/ALL :translatable/fields]]}]
+      {:query/name ::db/query
+       :query/key :post-with-taxons-and-field-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:post/children 3}
+                           {:translatable/fields [:field/key :field/content]}
+                           {:post/taxons [:taxon/slug
+                                          :taxon/taxonomy
+                                          ;; We might do this e.g. to get
+                                          ;; a heirarchical URL
+                                          {:taxon/_children ...}
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
           :where [[?e :post/slug ?slug]
