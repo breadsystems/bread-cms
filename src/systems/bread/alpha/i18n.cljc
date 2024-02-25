@@ -116,6 +116,11 @@
                              :translatable/fields
                              translatable-binding?
                              dbq)
+        {recursive-specs :bindings} (qi/infer-query-bindings
+                                      keyword?
+                                      #(or (integer? %) (= '... %))
+                                      dbq)
+        recur-attrs (set (map :attr recursive-specs))
         querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
     (if (seq bindings)
       [(reduce
@@ -135,7 +140,7 @@
         :field/lang (lang req)
         :compact? (bread/config req :i18n/compact-fields?)
         :format? (bread/config req :i18n/format-fields?)
-        :recur-attrs nil
+        :recur-attrs recur-attrs
         :spaths
         (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
                    (partial qi/relation->spath
