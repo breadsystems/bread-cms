@@ -5,6 +5,23 @@
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.i18n :as i18n]))
 
+(deftest test-recursive-attrs-walker
+  (are
+    [selections data]
+    (= selections (s/select (qi/recursive-attrs-walker :a :b) data))
+
+    [] {}
+    [] []
+    [] [[]]
+    [] [{}]
+    [:A] {:a :A}
+    [:A] {:a :A :b {:c :C}}
+    [:A :AA] {:a :A :b [{:a :AA}]}
+    [:A :AA :AAA] [{:a :A :b [{:a :AA}]} {:b [{:a :AAA}]}]
+
+    ;;
+    ))
+
 (deftest test-binding-clauses
   (are
     [clauses query attr pred]
