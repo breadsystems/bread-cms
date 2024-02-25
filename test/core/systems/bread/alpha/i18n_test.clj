@@ -250,6 +250,7 @@
         :field/lang :en
         :format? false
         :compact? false
+        :recur-attrs nil
         :spaths [[s/ALL s/ALL :translatable/fields]
                  [s/ALL s/ALL :post/_taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -298,6 +299,7 @@
         :field/lang :en
         :format? false
         :compact? false
+        :recur-attrs nil
         :spaths [[:translatable/fields]
                  [:post/_taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -338,6 +340,7 @@
         :field/lang :fr
         :format? false
         :compact? false
+        :recur-attrs nil
         :spaths [[:translatable/fields]]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -372,6 +375,7 @@
         :field/lang :fr
         :format? false
         :compact? true
+        :recur-attrs nil
         :spaths [[:translatable/fields]]}]
       {:query/name ::db/query
        :query/key :post-with-content
@@ -412,6 +416,7 @@
         :field/lang :en
         :format? true
         :compact? true
+        :recur-attrs nil
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query

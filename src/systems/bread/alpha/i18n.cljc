@@ -135,6 +135,7 @@
         :field/lang (lang req)
         :compact? (bread/config req :i18n/compact-fields?)
         :format? (bread/config req :i18n/format-fields?)
+        :recur-attrs nil
         :spaths
         (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
                    (partial qi/relation->spath
