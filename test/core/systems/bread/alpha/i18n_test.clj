@@ -438,6 +438,59 @@
       true
       true
 
+      ;; All the things, with a recursive spec that can be disregarded because
+      ;; it doesn't coincide with any translatable fields.
+      [{:query/name ::db/query
+        :query/key :post-with-taxons-and-field-content
+        :query/db ::FAKEDB
+        :query/args
+        ['{:find [(pull ?e [:db/id
+                            :post/slug
+                            {:post/children ...}
+                            {:some/relation [{:hierarchical/stuff ...}]}
+                            {:translatable/fields
+                             [:db/id :field/lang :field/key :field/content]}
+                            {:post/taxons [:taxon/slug
+                                           :taxon/taxonomy
+                                           {:translatable/fields [*]}]}]) .]
+           :in [$ ?slug ?type]
+           :where [[?e :post/slug ?slug]
+                   [?e :post/type ?type]]}
+         "my-post"
+         :post.type/page]}
+       {:query/name ::i18n/fields
+        :query/key :post-with-taxons-and-field-content
+        :query/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        ;; "disregarded" means it doesn't show up here:
+        :recur-attrs #{:post/children}
+        :spaths [[:translatable/fields]
+                 [:post/taxons s/ALL :translatable/fields]]}]
+      {:query/name ::db/query
+       :query/key :post-with-taxons-and-field-content
+       :query/db ::FAKEDB
+       :query/args
+       ['{:find [(pull ?e [:db/id
+                           :post/slug
+                           {:post/children ...}
+                           {:some/relation [;; We can safely disregard this
+                                            ;; recursive binding.
+                                            {:hierarchical/stuff ...}]}
+                           {:translatable/fields [:field/key :field/content]}
+                           {:post/taxons [:taxon/slug
+                                          :taxon/taxonomy
+                                          {:translatable/fields [*]}]}]) .]
+          :in [$ ?slug ?type]
+          :where [[?e :post/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      true
+      true
+
       ;; All the things, plus a recursive spec.
       [{:query/name ::db/query
         :query/key :post-with-taxons-and-field-content

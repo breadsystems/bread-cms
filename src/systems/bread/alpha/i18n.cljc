@@ -120,7 +120,17 @@
                                       keyword?
                                       #(or (integer? %) (= '... %))
                                       dbq)
-        recur-attrs (set (map :attr recursive-specs))
+        ;; We only care about recursive specs at the same "level" or higher as
+        ;; any of the field bindings, because if there's recursion at a lower
+        ;; level than the fields', then by definition they don't include field
+        ;; data and we don't need to worry about them.
+        coincidental-paths (reduce (fn [tree b]
+                                     (assoc-in tree (:relation b) true))
+                                   {} bindings)
+        recur-attrs (->> recursive-specs
+                         (filter (fn [{rel :relation}]
+                                   (get-in coincidental-paths (butlast rel))))
+                         (map :attr) set)
         querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
     (if (seq bindings)
       [(reduce
