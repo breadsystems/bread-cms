@@ -433,6 +433,8 @@
     [items query data]
     (= items (bread/query query data))
 
+    ;; Location Menus
+
     nil
     {:query/name [::navigation/items ::navigation/location]
      :query/key [:menus :my-nav :menu/items]}
@@ -577,6 +579,46 @@
                   {:menu.item/order 0
                    :translatable/fields {:uri "/en/xyz/123"
                                          :my/field "Daughter"}}]}]]}}}
+
+    ;; Global Menus
+
+    nil
+    {:query/name [::navigation/items ::navigation/global]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/global]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {}}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/global]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items nil}}}
+
+    []
+    {:query/name [::navigation/items ::navigation/global]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items []}}}
+
+    ;; Basic menu items; no :field/key filtering.
+    [{:uri "/abc"
+      :translatable/fields {:uri "/abc" :my/field "My Field"}
+      :children []}
+     {:uri "/xyz"
+      :translatable/fields {:uri "/xyz" :other/field "Other"}
+      :children []}]
+    {:query/name [::navigation/items ::navigation/global]
+     :query/key [:menus :#nofilter :menu/items]
+     :field/key nil
+     :sort-by [:menu.item/order]}
+    {:menus {:#nofilter {:menu/items [[{:translatable/fields
+                                        {:uri "/abc"
+                                         :my/field "My Field"}}]
+                                      [{:translatable/fields
+                                        {:uri "/xyz"
+                                         :other/field "Other"}}]]}}}
 
     ;;
     ))
