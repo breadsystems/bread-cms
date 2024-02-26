@@ -101,7 +101,8 @@
         :spaths [[:translatable/fields]]
         :field/lang :en
         :format? true
-        :compact? true}]
+        :compact? true
+        :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
        :dispatcher/key :post
@@ -131,7 +132,8 @@
         :spaths [[:translatable/fields]]
         :field/lang :en
         :format? true
-        :compact? true}]
+        :compact? true
+        :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
        :dispatcher/key :post

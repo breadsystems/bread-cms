@@ -104,6 +104,7 @@
         :field/lang :en
         :format? true
         :compact? true
+        :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:taxon/slug
@@ -134,8 +135,9 @@
         :query/key :tag-with-posts
         :query/description "Process translatable fields."
         :field/lang :en
-        :compact? true
         :format? true
+        :compact? true
+        :recur-attrs #{}
         :spaths [[:post/_taxons s/ALL :translatable/fields]
                  [:translatable/fields]]}
        {:query/name ::taxon/filter-posts
@@ -173,6 +175,7 @@
         :field/lang :en
         :format? true
         :compact? true
+        :recur-attrs #{}
         :spaths [[:post/_taxons s/ALL :translatable/fields]
                  [:translatable/fields]]}
        {:query/name ::taxon/filter-posts
