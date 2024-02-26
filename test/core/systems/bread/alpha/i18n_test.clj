@@ -613,6 +613,7 @@
      :field/lang :ar
      :format? false
      :compact? false
+     :recur-attrs #{}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :opposite-of-occupied
@@ -646,6 +647,7 @@
      :field/lang :he
      :format? true
      :compact? false
+     :recur-attrs #{}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :from-the-river
@@ -673,6 +675,7 @@
      :field/lang :he
      :format? false
      :compact? true
+     :recur-attrs #{}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :from-the-river
@@ -699,6 +702,7 @@
      :field/lang :he
      :format? true
      :compact? true
+     :recur-attrs #{}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :from-the-river
@@ -726,6 +730,7 @@
      :field/lang :he
      :format? true
      :compact? true
+     :recur-attrs #{:menu.item/children}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :from-the-river
