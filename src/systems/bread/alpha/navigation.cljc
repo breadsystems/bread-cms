@@ -30,10 +30,18 @@
     {:translatable/fields (if (seq (:field/key opts))
                             (select-keys fields (:field/key opts))
                             fields)
-     :uri (or (:uri fields) (bread/path (:router opts) (:route/name opts) params))
+     :uri (or (:uri fields)
+              (bread/path (:router opts) (:route/name opts) params))
      :children (->items opts children)}))
 
 (defmethod bread/query [::items ::location]
+  [opts data]
+  (if-let [items (query/get-at data (:query/key opts))]
+    ;; First layer will be a vector of vectors
+    (->items opts (map first items))
+    nil))
+
+(defmethod bread/query [::items ::global]
   [opts data]
   (if-let [items (query/get-at data (:query/key opts))]
     ;; First layer will be a vector of vectors
