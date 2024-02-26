@@ -90,14 +90,26 @@
        fields))
 
 (defmethod bread/query ::fields
-  [{k :query/key lang :field/lang :keys [format? compact? spaths]} data]
+  [{k :query/key
+    lang :field/lang
+    :keys [format? compact? spaths recur-attrs]} data]
   (let [e (query/get-at data k)]
     (if e
-      (let [chain [(when compact? compact-fields)
+      (let [chain [;; NOTE: chain gets passed to comp, so these operations
+                   ;; happen in reverse!
+                   (when compact? compact-fields)
                    (when format? format-fields)
                    (fn [fields]
                      (filter #(= lang (:field/lang %)) fields))]
-            process (apply comp (conj (filterv identity chain)))]
+            process* (apply comp (conj (filterv identity chain)))
+            [process spaths]
+            (if (seq recur-attrs)
+              ;; Query is recursive:
+              ;; Wrap our process chain in a recursive transform.
+              (let [walker (qi/attrs-walker :translatable/fields recur-attrs)]
+                [#(s/transform walker process* %) (map butlast spaths)])
+              ;; Non-recursive query.
+              [process* spaths])]
         (reduce
           (fn [e spath]
             (s/transform spath process e))
