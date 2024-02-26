@@ -5,10 +5,28 @@
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.i18n :as i18n]))
 
-(deftest test-recursive-attrs-walker
+(deftest test-attrs-walker
+  ;; Simple keyword kmod
   (are
     [selections data]
-    (= selections (s/select (qi/recursive-attrs-walker :a :b) data))
+    (= selections (s/select (qi/attrs-walker :a :b) data))
+
+    [] {}
+    [] []
+    [] [[]]
+    [] [{}]
+    [:A] {:a :A}
+    [:A] {:a :A :b {:c :C}}
+    [:A :AA] {:a :A :b [{:a :AA}]}
+    [:A :AA :AAA] [{:a :A :b [{:a :AA}]} {:b [{:a :AAA}]}]
+
+    ;;
+    )
+
+  ;; Passing a set
+  (are
+    [selections data]
+    (= selections (s/select (qi/attrs-walker :a #{:b}) data))
 
     [] {}
     [] []
