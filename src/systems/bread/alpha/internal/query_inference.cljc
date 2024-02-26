@@ -3,13 +3,17 @@
     [com.rpl.specter :as s]
     [systems.bread.alpha.util.datalog :as d]))
 
-(def recursive-attrs-walker
+(def attrs-walker
   (s/recursive-path
     [kmod krecur] path
-    (s/multi-path
-      (s/if-path sequential? [s/ALL path])
-      (s/if-path #(get % kmod) [kmod])
-      (s/if-path #(get % krecur) [krecur path]))))
+    (s/if-path sequential?
+               [s/ALL path]
+               (apply
+                 s/multi-path
+                 (s/if-path #(get % kmod) [kmod])
+                 (map (fn [krecur]
+                        (s/if-path #(get % krecur) [krecur path]))
+                      (if (set? krecur) krecur #{krecur}))))))
 
 (defn- spec-paths [kp vp data]
   (let [k? (if (keyword? kp) #(= kp %) kp)
