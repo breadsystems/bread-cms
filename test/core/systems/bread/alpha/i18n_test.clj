@@ -719,10 +719,8 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; compactions; recursive data.
-    {:translatable/fields {:from-the-river "מהנהר"
-                           :to-the-sea "לים"}
-     :menu.item/children [{:translatable/fields {:from-the-river "מהנהר"
-                                                 :to-the-sea "לים"}}]}
+    {:translatable/fields {:from-the-river "מהנהר"}
+     :menu.item/children [{:translatable/fields {:to-the-sea "לים"}}]}
     {:query/name ::i18n/fields
      :query/key :the-key
      :field/lang :he
@@ -737,26 +735,10 @@
                 {:field/key :from-the-river
                  :field/format :edn
                  :field/content (pr-str "From the river")
-                 :field/lang :en}
-                {:field/key :to-the-sea
-                 :field/format :edn
-                 :field/content (pr-str "לים")
-                 :field/lang :he}
-                {:field/key :to-the-sea
-                 :field/format :edn
-                 :field/content (pr-str "to the sea")
                  :field/lang :en}]
                :menu.item/children
                [{:translatable/fields
-                 [{:field/key :from-the-river
-                   :field/format :edn
-                   :field/content (pr-str "מהנהר")
-                   :field/lang :he}
-                  {:field/key :from-the-river
-                   :field/format :edn
-                   :field/content (pr-str "From the river")
-                   :field/lang :en}
-                  {:field/key :to-the-sea
+                 [{:field/key :to-the-sea
                    :field/format :edn
                    :field/content (pr-str "לים")
                    :field/lang :he}
