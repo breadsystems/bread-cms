@@ -752,6 +752,26 @@
                    :field/content (pr-str "to the sea")
                    :field/lang :en}]}]}}
 
+    ;; With direct fields; raw formatting; compactions; universal fields.
+    {:translatable/fields {:uri "/abc"}
+     :menu.item/children [{:translatable/fields {:uri "/def"}}]}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :he
+     :format? true
+     :compact? true
+     :recur-attrs #{:menu.item/children}
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{;; no :field/lang
+                 :field/key :uri
+                 :field/content "/abc"}]
+               :menu.item/children
+               [{:translatable/fields
+                 [{;; no :field/lang
+                   :field/key :uri
+                   :field/content "/def"}]}]}}
+
     ;;
     ))
 
