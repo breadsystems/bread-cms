@@ -100,7 +100,9 @@
                    (when compact? compact-fields)
                    (when format? format-fields)
                    (fn [fields]
-                     (filter #(= lang (:field/lang %)) fields))]
+                     (filter #(or (nil? (:field/lang %))
+                                  (= lang (:field/lang %)))
+                             fields))]
             process* (apply comp (conj (filterv identity chain)))
             [process spaths]
             (if (seq recur-attrs)
