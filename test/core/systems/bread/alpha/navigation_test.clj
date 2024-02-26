@@ -68,6 +68,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
@@ -113,6 +114,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
@@ -162,6 +164,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/posts]
       :query/key [:menus :basic-nav :menu/items]
@@ -212,6 +215,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:menu.item/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/location]
@@ -261,6 +265,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:menu.item/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/location]
@@ -308,6 +313,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
@@ -351,6 +357,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
@@ -398,6 +405,7 @@
       :field/lang :en
       :compact? true
       :format? true
+      :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name [::navigation/items ::navigation/taxon]
       :query/key [:menus :taxon-nav :menu/items]
