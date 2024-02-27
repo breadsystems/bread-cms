@@ -672,6 +672,48 @@
                                         {:uri "/xyz"
                                          :other/field "Other"}}]]}}}
 
+    ;; Taxon Menus
+
+    nil
+    {:query/name [::navigation/items ::navigation/taxon]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/taxon]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {}}}
+
+    nil
+    {:query/name [::navigation/items ::navigation/taxon]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items nil}}}
+
+    []
+    {:query/name [::navigation/items ::navigation/taxon]
+     :query/key [:menus :my-nav :menu/items]}
+    {:menus {:my-nav {:menu/items []}}}
+
+    ;; Basic menu items; with :field/key filtering.
+    [{:uri "/xyz"
+      :translatable/fields {:order 1}
+      :children []}
+     {:uri "/abc"
+      :translatable/fields {:order 2 :my/field "My Field"}
+      :children []}]
+    {:query/name [::navigation/items ::navigation/taxon]
+     :query/key [:menus :#nofilter :menu/items]
+     :field/key [:order :my/field]
+     :sort-by [:translatable/fields :order]}
+    {:menus {:#nofilter {:menu/items [[{:translatable/fields
+                                        {:uri "/abc"
+                                         :my/field "My Field"
+                                         :order 2}}]
+                                      [{:translatable/fields
+                                        {:uri "/xyz"
+                                         :other/field "Other"
+                                         :order 1}}]]}}}
+
     ;;
     ))
 

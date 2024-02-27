@@ -48,6 +48,12 @@
     (->items opts (map first items))
     nil))
 
+(defmethod bread/query [::items ::taxon]
+  [opts data]
+  (if-let [items (query/get-at data (:query/key opts))]
+    (->items opts (map first items))
+    nil))
+
 (defn- field-keys [ks]
   (cond
     (coll? ks) (set ks)
