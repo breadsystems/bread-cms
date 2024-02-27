@@ -667,6 +667,20 @@
                  :field/content (pr-str "to the sea")
                  :field/lang :en}]}}
 
+    ;; With direct fields; EDN formatting; with compaction.
+    {:translatable/fields {:uri "/es/the-slug"}}
+    {:query/name ::i18n/fields
+     :query/key :the-key
+     :field/lang :es
+     :format? true
+     :compact? true
+     :recur-attrs #{}
+     :spaths [[:translatable/fields]]}
+    {:the-key {:translatable/fields
+               [{:field/key :uri
+                 :field/format :join
+                 :field/content (pr-str ["/" :field/lang "/the-slug"])}]}}
+
     ;; With direct fields; no formatting; compactions.
     {:translatable/fields {:from-the-river (pr-str "מהנהר")
                            :to-the-sea (pr-str "לים")}}
