@@ -132,22 +132,28 @@
     :post/type :post.type/menu-item
     :menu.item/children ["menu-item.child"]
     :translatable/fields
-    [{:field/key :one
-      :field/format :edn
-      :field/content (pr-str "Thing One")
+    [{:field/key :title
+      :field/content "Thing One"
       :field/lang :en}
-     {:field/key :one
-      :field/format :edn
-      :field/content (pr-str "La Chose Un")
+     {:field/key :title
+      :field/content "La Chose Un"
       :field/lang :fr}
-     {:field/key :two
-      :field/format :edn
-      :field/content (pr-str "Thing Two")
+     {:field/key :uri
+      :field/format :join
+      :field/content (pr-str ["/" :field/lang "/thing-one"])}]}
+   {:db/id "menu-item.two"
+    :menu.item/order 2
+    :post/type :post.type/menu-item
+    :translatable/fields
+    [{:field/key :title
+      :field/content "Thing Two"
       :field/lang :en}
-     {:field/key :two
-      :field/format :edn
-      :field/content (pr-str "La Chose Deux")
-      :field/lang :fr}]}
+     {:field/key :title
+      :field/content "La Chose Deux"
+      :field/lang :fr}
+     {:field/key :uri
+      :field/format :join
+      :field/content (pr-str ["/" :field/lang "/thing-two"])}]}
    {:db/id "menu-item.child"
     :translatable/fields
     [{:field/key :uri
@@ -162,7 +168,7 @@
     :menu.item/children []}
    {:menu/key :main-nav
     :menu/locations [:primary]
-    :menu/items ["menu-item.zero" "menu-item.one"]}
+    :menu/items ["menu-item.zero" "menu-item.one" "menu-item.two"]}
 
    ;; Site-wide translations
    {:field/lang :en
