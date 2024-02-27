@@ -25,7 +25,7 @@
                  :post/type :post.type/page}
         match (match req)
         ;; Get the matched dispatcher from the Router.
-        declared (bread/hook req ::dispatcher match)
+        declared (bread/hook req ::dispatcher-matched match)
         component (bread/hook req ::component (:dispatcher/component declared))
         {:dispatcher/keys [defaults?]} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
@@ -60,7 +60,7 @@
   [req {:keys [router]} _]
   (bread/match router req))
 
-(defmethod bread/action ::dispatcher
+(defmethod bread/action ::dispatcher-matched
   [_ {:keys [router]} [match]]
   (bread/dispatcher router match))
 
@@ -84,8 +84,8 @@
     [{:action/name ::path :router router}]
     ::match
     [{:action/name ::match :router router}]
-    ::dispatcher
-    [{:action/name ::dispatcher :router router}]
+    ::dispatcher-matched
+    [{:action/name ::dispatcher-matched :router router}]
     ::params
     [{:action/name ::params :router router}]
     ::bread/route
