@@ -50,7 +50,7 @@
                          :dispatcher/component component
                          :dispatcher/key (component/query-key component)
                          :dispatcher/pull (component/query component))]
-    (bread/hook req :hook/dispatcher dispatcher')))
+    (bread/hook req ::dispatcher dispatcher')))
 
 (defmethod bread/action ::path
   [_ {:keys [router]} [_path route-name params]]

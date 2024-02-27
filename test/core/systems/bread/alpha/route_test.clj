@@ -125,7 +125,7 @@
     (testing "with a custom dispatcher hook"
       (let [app (plugins->loaded [(map->route-plugin routes)
                                   {:hooks
-                                   {:hook/dispatcher
+                                   {::route/dispatcher
                                     [{:action/name ::bread/value
                                       :action/value ::FAKE_DISPATCHER}]}}])]
         (is (= ::FAKE_DISPATCHER
