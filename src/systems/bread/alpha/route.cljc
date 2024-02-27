@@ -24,6 +24,7 @@
                  :dispatcher/type :dispatcher.type/page
                  :post/type :post.type/page}
         match (match req)
+        ;; Get the matched dispatcher from the Router.
         declared (bread/hook req ::dispatcher match)
         component (bread/hook req ::component (:dispatcher/component declared))
         {:dispatcher/keys [defaults?]} declared

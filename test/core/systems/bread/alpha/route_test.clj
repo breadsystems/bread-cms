@@ -7,9 +7,6 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               map->route-plugin]]))
 
-(defmethod bread/action ::stuff [_ _ _]
-  {:dispatcher/stuff :totally-different})
-
 (defc Home [_]
   {:key :home
    :query [:post/slug]})
@@ -129,8 +126,9 @@
       (let [app (plugins->loaded [(map->route-plugin routes)
                                   {:hooks
                                    {:hook/dispatcher
-                                    [{:action/name ::stuff}]}}])]
-        (is (= {:dispatcher/stuff :totally-different}
+                                    [{:action/name ::bread/value
+                                      :action/value ::FAKE_DISPATCHER}]}}])]
+        (is (= ::FAKE_DISPATCHER
                (route/dispatcher (merge app {:uri "/whatever"}))))))
 
     ))
