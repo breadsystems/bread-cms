@@ -23,7 +23,7 @@
          {post-fields :translatable/fields :as e} :menu.item/entity}]
   (let [;; TODO don't hard-code param names, infer from route
         *slug (string/join "/" (route/ancestry e))
-        params (merge (:route/params opts) e {:*post/slug *slug})
+        params (merge (:route/params opts) e {:slugs *slug})
         fields (if (:merge-entities? opts)
                  (merge post-fields fields)
                  fields)]

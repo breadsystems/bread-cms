@@ -17,7 +17,7 @@
   (bread/params [this _] params)
   (bread/match [this _])
   (bread/path [this route-name params]
-    (let [route (get {::page [:field/lang :*post/slug]} route-name)]
+    (let [route (get {::page [:field/lang :slugs]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
   bread/RoutesCollection
   (bread/routes [this] []))
