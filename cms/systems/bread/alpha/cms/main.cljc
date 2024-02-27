@@ -277,6 +277,34 @@
                [?p :post/slug ?slug]]}
      "hello")
 
+  ;; Menu queries!
+
+  (q '{:find [(pull ?e [:db/id
+                        :taxon/taxonomy
+                        :taxon/slug
+                        {:taxon/_children [:taxon/slug
+                                           {:taxon/_children ...}]}
+                        {:taxon/children ...}
+                        {:translatable/fields [*]}])]
+       :in [$ ?taxonomy]
+       :where [[?e :taxon/taxonomy ?taxonomy]]}
+     :taxon.taxonomy/tag)
+
+  (q '{:find [(pull ?e [;; Post menus don't store their own data in the db:
+                        ;; instead, they follow the post hierarchy itself.
+                        :db/id
+                        :post/type
+                        :post/status
+                        {:translatable/fields [*]}
+                        {:post/_children [:post/slug {:post/_children ...}]}
+                        {:post/children ...}])]
+       :in [$ ?type [?status ...]]
+       :where [[?e :post/type ?type]
+               [?e :post/status ?status]
+               (not-join [?e] [?_ :post/children ?e])]}
+     :post.type/page
+     #{:post.status/published})
+
   (slurp (io/resource "public/assets/hi.txt"))
   (bread/match (:bread/router @system) {:uri "/assets/hi.txt"
                                         :request-method :get})
