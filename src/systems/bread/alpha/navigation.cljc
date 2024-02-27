@@ -157,6 +157,53 @@
         :route/name route-name
         :route/params (route/params req (route/match req))}])))
 
+(defmethod menu-queries ::global
+  menu-queries?type=global
+  [req {k :menu/key
+        fks :field/key
+        recursion-limit :recursion-limit
+        merge? :merge-entities?
+        sort-by* :sort-by
+        route-name :route/name
+        :or {recursion-limit '...
+             merge? true
+             sort-by* [:menu.item/order]}}]
+  (let [menus-key (bread/config req :navigation/menus-key)]
+    (with-i18n req
+      [{:query/name ::bread/value
+        :query/key [menus-key k]
+        :query/description "Basic initial info for this global menu."
+        :query/value {:menu/type ::global
+                      :menu/key k}}
+       {:query/name ::db/query
+        :query/key [menus-key k :menu/items]
+        :query/description "Recursively query for menu items."
+        :query/db (db/database req)
+        :query/args [{:find [(list 'pull '?i [:db/id
+                                              :menu.item/order
+                                              {:menu.item/children
+                                               recursion-limit}
+                                              {:menu.item/entity
+                                               [:db/id
+                                                :post/slug
+                                                {:translatable/fields '[*]}
+                                                {:post/_children
+                                                 [:post/slug
+                                                  {:post/_children '...}]}]}
+                                              {:translatable/fields '[*]}])]
+                      :in '[$ ?key]
+                      :where '[[?m :menu/key ?key]
+                               [?m :menu/items ?i]]}
+                     k]}
+       {:query/key [menus-key k :menu/items]
+        :query/name [::items ::global]
+        :field/key (field-keys fks)
+        :merge-entities? merge?
+        :sort-by sort-by*
+        :router (route/router req)
+        :route/name route-name
+        :route/params (route/params req (route/match req))}])))
+
 (defmethod menu-queries ::location
   menu-queries?type=location
   [req {k :menu/key
