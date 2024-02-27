@@ -73,13 +73,13 @@
   [fields]
   (into {} (map (juxt :field/key :field/content)) fields))
 
-(defmulti format-field-content (fn [fmt _field] fmt))
+(defmulti format-field-content :field/format)
 
-(defmethod format-field-content :edn [_ content]
-  (edn/read-string content))
+(defmethod format-field-content :default [field]
+  (:field/content field))
 
-(defmethod format-field-content :default [_ content]
-  content)
+(defmethod format-field-content :edn [field]
+  (edn/read-string (:field/content field)))
 
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
