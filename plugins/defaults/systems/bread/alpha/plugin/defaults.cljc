@@ -31,16 +31,18 @@
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str "The Title")}
+       :field/content "The Title"}
       {:field/key :title
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str "Le Titre")}
+       :field/content "Le Titre"}
       {:field/key :content
        :field/lang :en
        :field/format :edn
-       :field/content (pr-str [{:a "some content" :b "more content"}])}}}
+       :field/content (pr-str [{:a "some content" :b "more content"}])}
+      {:field/key :content
+       :field/lang :fr
+       :field/format :edn
+       :field/content (pr-str [{:a "le content" :b "et plus"}])}}}
    {:db/id "page.child"
     :post/type :post.type/page
     :post/slug "child-page"
@@ -49,16 +51,18 @@
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str "Child")}
+       :field/content "Child"}
       {:field/key :title
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str "Enfant")}
+       :field/content "Enfant"}
       {:field/key :content
        :field/lang :en
        :field/format :edn
-       :field/content (pr-str [{:a "lorem ipsum" :b "dolor sit amet"}])}}}
+       :field/content (pr-str [{:a "lorem ipsum" :b "dolor sit amet"}])}
+      {:field/key :content
+       :field/lang :fr
+       :field/format :edn
+       :field/content (pr-str [{:a "loreme ipsumee" :b "dolore siter amet"}])}}}
    {:db/id "page.daughter"
     :post/type :post.type/page
     :post/slug "daughter-page"
@@ -66,12 +70,10 @@
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str "Daughter Page")}
+       :field/content "Daughter Page"}
       {:field/key :title
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str "La Page Fille")}}}
+       :field/content "La Page Fille"}}}
    {:db/id "page.parent"
     :post/type :post.type/page
     :post/slug "hello"
@@ -81,12 +83,10 @@
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str "Hello!")}
+       :field/content "Hello!"}
       {:field/key :title
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str "Bonjour!")}}}
+       :field/content "Bonjour!"}}}
    {:db/id "page.grandchild"
     :post/type :post.type/page
     :post/slug "grandchild-page"
@@ -94,36 +94,30 @@
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str "Grandchild Page")}
+       :field/content "Grandchild Page"}
       {:field/key :title
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str "Petit Enfant Page")}}}
+       :field/content "Petit Enfant Page"}}}
    {:db/id "tag.one"
     :taxon/slug "one"
     :taxon/taxonomy :taxon.taxonomy/tag
     :translatable/fields
     [{:field/key :name
-      :field/content (pr-str "One")
-      :field/lang :en
-      :field/format :edn}
+      :field/content "One"
+      :field/lang :en}
      {:field/key :name
-      :field/content (pr-str "Un")
-      :field/lang :fr
-      :field/format :edn}]}
+      :field/content "Un"
+      :field/lang :fr}]}
    {:db/id "tag.two"
     :taxon/slug "two"
     :taxon/taxonomy :taxon.taxonomy/tag
     :translatable/fields
     [{:field/key :name
-      :field/content (pr-str "Two")
-      :field/lang :en
-      :field/format :edn}
+      :field/content "Two"
+      :field/lang :en}
      {:field/key :name
-      :field/content (pr-str "Deux")
-      :field/lang :fr
-      :field/format :edn}]}
+      :field/content "Deux"
+      :field/lang :fr}]}
    {:db/id "menu-item.zero"
     :menu.item/entity "page.parent"
     :menu.item/order 0}
@@ -173,11 +167,9 @@
    ;; Site-wide translations
    {:field/lang :en
     :field/key :not-found
-    :field/format :edn
     :field/content "404 Not Found"}
    {:field/lang :es
     :field/key :not-found
-    :field/format :edn
     :field/content "404 Pas Trouvé"}])
 
 (defmethod bread/action ::request-data
