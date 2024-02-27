@@ -4,7 +4,21 @@
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.component :refer [defc]]))
 
-(defc layout [{:keys [lang content main-nav] nav :navigation/i18n}]
+(defn- nav-menu-item [{:keys [children uri]
+                       {:keys [title] :as fields} :translatable/fields
+                       :as item}]
+  [:li
+   [:div
+    [:a {:href uri} title]]
+   (map nav-menu-item children)])
+
+(defn- nav-menu [{items :menu/items}]
+  [:nav
+   [:ul
+    (map nav-menu-item items)]])
+
+(defc MainLayout [{:keys [lang content]
+               {:keys [main-nav]} :menus}]
   {}
   [:html {:lang lang}
    [:head
@@ -12,18 +26,18 @@
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
-    [:pre (pr-str main-nav)]
+    (nav-menu main-nav)
     content]])
 
-(defc not-found
+(defc NotFoundPage
   [{:keys [lang]}]
-  {:extends layout}
+  {:extends MainLayout}
   [:main
    "404"])
 
-(defc home-page
+(defc HomePage
   [{:keys [lang user post]}]
-  {:extends layout
+  {:extends MainLayout
    :key :post
    :query '[:post/children
             :post/slug
@@ -35,9 +49,9 @@
     [:pre (pr-str post)]
     [:pre (pr-str (user/can? user :edit-posts))]]})
 
-(defc tag
+(defc Tag
   [{{fields :translatable/fields :as tag} :tag}]
-  {:extends layout
+  {:extends MainLayout
    :key :tag
    :query '[:taxon/slug
             {:translatable/fields [*]}
@@ -48,9 +62,10 @@
    [:h1 (:name fields)]
    [:h2 [:code (:taxon/slug tag)]]])
 
-(defc interior-page
-  [{{fields :translatable/fields tags :post/taxons :as data} :post}]
-  {:extends layout
+(defc InteriorPage
+  [{{fields :translatable/fields tags :post/taxons} :post
+    {:keys [main-nav]} :menus}]
+  {:extends MainLayout
    :key :post
    :query '[{:translatable/fields [*]}
             {:post/taxons [{:translatable/fields [*]}]}]}
