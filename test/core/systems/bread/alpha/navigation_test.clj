@@ -72,7 +72,7 @@
       :format? true
       :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/posts]
+     {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::page
@@ -118,7 +118,7 @@
       :format? true
       :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/posts]
+     {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::page
@@ -168,7 +168,7 @@
       :format? true
       :recur-attrs #{:post/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/posts]
+     {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
       :query/description "Process post menu item data."
       :route/name ::park
@@ -220,7 +220,7 @@
       :recur-attrs #{:menu.item/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/global]
+     {:query/name ::navigation/items
       :query/key [:my/menus :global-nav :menu/items]
       :field/key nil
       :merge-entities? true
@@ -270,7 +270,7 @@
       :recur-attrs #{:menu.item/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/location]
+     {:query/name ::navigation/items
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true
@@ -320,7 +320,7 @@
       :recur-attrs #{:menu.item/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/location]
+     {:query/name ::navigation/items
       :query/key [:menus :location-nav :menu/items]
       :field/key #{:a}
       :merge-entities? true
@@ -367,7 +367,7 @@
       :format? true
       :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/taxon]
+     {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
       :field/key nil
       :sort-by nil
@@ -411,7 +411,7 @@
       :format? true
       :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/taxon]
+     {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
       :sort-by nil
@@ -459,7 +459,7 @@
       :format? true
       :recur-attrs #{:taxon/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name [::navigation/items ::navigation/taxon]
+     {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
       :sort-by [:translatable/fields :title]
@@ -485,25 +485,23 @@
     [items query data]
     (= items (bread/query query data))
 
-    ;; Location Menus
-
     nil
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]}
     {:menus {}}
 
     nil
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {}}}
 
     nil
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items nil}}}
 
     []
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items []}}}
 
@@ -514,7 +512,7 @@
      {:uri "/xyz"
       :translatable/fields {:uri "/xyz" :other/field "Other"}
       :children []}]
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :#nofilter :menu/items]
      :field/key nil
      :sort-by [:menu.item/order]}
@@ -537,7 +535,7 @@
       :translatable/fields {:my/field "Post field"
                             :other/field "Another post field"}
       :children []}]
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? true
      :field/key #{:my/field :other/field}
@@ -589,7 +587,7 @@
      {:uri "/en/parent/child"
       :translatable/fields {}
       :children []}]
-    {:query/name [::navigation/items ::navigation/location]
+    {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? false
      :field/key #{:my/field :other/field}
@@ -631,88 +629,6 @@
                   {:menu.item/order 0
                    :translatable/fields {:uri "/en/xyz/123"
                                          :my/field "Daughter"}}]}]]}}}
-
-    ;; Global Menus
-
-    nil
-    {:query/name [::navigation/items ::navigation/global]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {}}
-
-    nil
-    {:query/name [::navigation/items ::navigation/global]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {}}}
-
-    nil
-    {:query/name [::navigation/items ::navigation/global]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {:menu/items nil}}}
-
-    []
-    {:query/name [::navigation/items ::navigation/global]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {:menu/items []}}}
-
-    ;; Basic menu items; no :field/key filtering.
-    [{:uri "/abc"
-      :translatable/fields {:uri "/abc" :my/field "My Field"}
-      :children []}
-     {:uri "/xyz"
-      :translatable/fields {:uri "/xyz" :other/field "Other"}
-      :children []}]
-    {:query/name [::navigation/items ::navigation/global]
-     :query/key [:menus :#nofilter :menu/items]
-     :field/key nil
-     :sort-by [:menu.item/order]}
-    {:menus {:#nofilter {:menu/items [[{:translatable/fields
-                                        {:uri "/abc"
-                                         :my/field "My Field"}}]
-                                      [{:translatable/fields
-                                        {:uri "/xyz"
-                                         :other/field "Other"}}]]}}}
-
-    ;; Taxon Menus
-
-    nil
-    {:query/name [::navigation/items ::navigation/taxon]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {}}
-
-    nil
-    {:query/name [::navigation/items ::navigation/taxon]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {}}}
-
-    nil
-    {:query/name [::navigation/items ::navigation/taxon]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {:menu/items nil}}}
-
-    []
-    {:query/name [::navigation/items ::navigation/taxon]
-     :query/key [:menus :my-nav :menu/items]}
-    {:menus {:my-nav {:menu/items []}}}
-
-    ;; Basic menu items; with :field/key filtering.
-    [{:uri "/xyz"
-      :translatable/fields {:order 1}
-      :children []}
-     {:uri "/abc"
-      :translatable/fields {:order 2 :my/field "My Field"}
-      :children []}]
-    {:query/name [::navigation/items ::navigation/taxon]
-     :query/key [:menus :#nofilter :menu/items]
-     :field/key [:order :my/field]
-     :sort-by [:translatable/fields :order]}
-    {:menus {:#nofilter {:menu/items [[{:translatable/fields
-                                        {:uri "/abc"
-                                         :my/field "My Field"
-                                         :order 2}}]
-                                      [{:translatable/fields
-                                        {:uri "/xyz"
-                                         :other/field "Other"
-                                         :order 1}}]]}}}
 
     ;;
     ))
