@@ -16,7 +16,8 @@
   :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
-                        :menu/location :primary}}}
+                        :menu/location :primary
+                        :route/name :page}}}
   :plugins []}
  :bread/db
  {:db/type :datahike
