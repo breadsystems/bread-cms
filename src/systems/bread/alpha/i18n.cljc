@@ -25,7 +25,7 @@
         supported (get (supported-langs req) (keyword (lang-param params)))
         fallback (bread/config req :i18n/fallback-lang)
         lang (or supported fallback)]
-    (bread/hook req :hook/lang lang)))
+    (bread/hook req ::lang lang)))
 
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
@@ -227,7 +227,7 @@
     {::queries
      [{:action/name ::queries
        :action/description "Internationalize the given queries"}]
-     :hook/path-params
+     ::path-params
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch

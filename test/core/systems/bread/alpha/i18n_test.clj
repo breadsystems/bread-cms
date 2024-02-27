@@ -171,8 +171,8 @@
                                     :compact-fields? compact-fields?})
                       ;; Set up an ad-hoc plugin to hard-code lang.
                       {:hooks
-                       {:hook/lang [{:action/name ::bread/value
-                                     :action/value lang}]
+                       {::i18n/lang [{:action/name ::bread/value
+                                      :action/value lang}]
                         ::bread/attrs-map [{:action/name ::bread/value
                                             :action/value attrs-map}]}}])
                counter (atom 0)]
