@@ -186,6 +186,56 @@
        :sort-by [:translatable/fields :title]}}}
     {:field/lang "en"}
 
+    ;; Global menu; custom menus-key.
+    [{:query/name ::bread/value
+      :query/description "Basic initial info for this global menu."
+      :query/key [:my/menus :global-nav]
+      :query/value {:menu/type ::navigation/global
+                    :menu/key :global-nav}}
+     {:query/name ::db/query
+      :query/key [:my/menus :global-nav :menu/items]
+      :query/description "Recursively query for menu items."
+      :query/db ::FAKEDB
+      :query/args
+      ['{:find [(pull ?i [:db/id
+                          :menu.item/order
+                          {:menu.item/children ...}
+                          {:menu.item/entity
+                           [:db/id
+                            :post/slug
+                            {:translatable/fields [*]}
+                            {:post/_children [:post/slug
+                                              {:post/_children ...}]}]}
+                          {:translatable/fields [*]}])]
+         :in [$ ?key]
+         :where [[?m :menu/key ?key]
+                 [?m :menu/items ?i]]}
+       :global-nav]}
+     {:query/name ::i18n/fields
+      :query/key [:my/menus :global-nav :menu/items]
+      :query/description "Process translatable fields."
+      :field/lang :en
+      :compact? true
+      :format? true
+      :recur-attrs #{:menu.item/children}
+      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
+               [s/ALL s/ALL :translatable/fields]]}
+     {:query/name [::navigation/items ::navigation/global]
+      :query/key [:my/menus :global-nav :menu/items]
+      :field/key nil
+      :merge-entities? true
+      :sort-by [:menu.item/order]
+      :route/name ::my-route
+      :route/params {:field/lang "en"}
+      :router (MockRouter. {:field/lang "en"})}]
+    {:menus
+     {:global-nav
+      {:menu/type ::navigation/global
+       :menu/key ::main
+       :route/name ::my-route}}
+     :menus-key :my/menus}
+    {:field/lang "en"}
+
     ;; Location menu; custom menus-key.
     [{:query/name ::bread/value
       :query/description "Basic initial info for this location menu."
