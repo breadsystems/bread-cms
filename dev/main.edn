@@ -13,7 +13,7 @@
   :auth {:lock-seconds 10}
   :i18n {:supported-langs #{:en :fr}}
   :routes {:router #ig/ref :bread/router}
-  :components {:not-found #var systems.bread.alpha.cms.theme/not-found}
+  :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary}}}
@@ -55,14 +55,15 @@
     [""
      {:name :home
       :dispatcher/type :dispatcher.type/page
-      :dispatcher/component #var systems.bread.alpha.cms.theme/home-page}]
+      :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
     ["/tag/:slug"
-     {:dispatcher/type :dispatcher.type/tag
-      :dispatcher/component #var systems.bread.alpha.cms.theme/tag}]
+     {:name :tag
+      :dispatcher/type :dispatcher.type/tag
+      :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
     ["/*slugs"
-     {:home :page
+     {:name :page
       :dispatcher/type :dispatcher.type/page
-      :dispatcher/component #var systems.bread.alpha.cms.theme/interior-page}]]]
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
   {:conflicts nil}]
  :bread/profilers
  [#_{:hook #{:systems.bread.alpha.core/response}

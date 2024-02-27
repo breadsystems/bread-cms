@@ -74,5 +74,4 @@
    [:div.tags-list
     (map (fn [{tag :translatable/fields}]
            (:name tag))
-         tags)]
-   [:pre (prn-str data)]])
+         tags)]])
