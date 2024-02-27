@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -81,12 +82,17 @@
 (defmethod format-field-content :edn [field]
   (edn/read-string (:field/content field)))
 
+(defmethod format-field-content :join
+  [{content :field/content :as field}]
+  (string/join "" (map #(name (get field % %)) (edn/read-string content))))
+
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
   format-field-content)."
-  [fields]
-  (map (fn [{fmt :field/format :as field}]
-         (update field :field/content (partial format-field-content fmt)))
+  [context fields]
+  (map (fn [field]
+         (->> (merge context field) format-field-content
+              (assoc field :field/content)))
        fields))
 
 (defmethod bread/query ::fields
@@ -98,7 +104,8 @@
       (let [chain [;; NOTE: chain gets passed to comp, so these operations
                    ;; happen in reverse!
                    (when compact? compact-fields)
-                   (when format? format-fields)
+                   ;; TODO hook for passing extra context...
+                   (when format? (partial format-fields {:field/lang lang}))
                    (fn [fields]
                      (filter #(or (nil? (:field/lang %))
                                   (= lang (:field/lang %)))
