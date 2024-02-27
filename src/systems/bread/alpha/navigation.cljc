@@ -34,23 +34,10 @@
               (bread/path (:router opts) (:route/name opts) params))
      :children (->items opts children)}))
 
-(defmethod bread/query [::items ::location]
+(defmethod bread/query ::items
   [opts data]
   (if-let [items (query/get-at data (:query/key opts))]
     ;; First layer will be a vector of vectors
-    (->items opts (map first items))
-    nil))
-
-(defmethod bread/query [::items ::global]
-  [opts data]
-  (if-let [items (query/get-at data (:query/key opts))]
-    ;; First layer will be a vector of vectors
-    (->items opts (map first items))
-    nil))
-
-(defmethod bread/query [::items ::taxon]
-  [opts data]
-  (if-let [items (query/get-at data (:query/key opts))]
     (->items opts (map first items))
     nil))
 
@@ -107,7 +94,7 @@
                      (if (coll? post-status)
                        (set post-status)
                        #{post-status})]}
-       {:query/name [::items ::posts]
+       {:query/name ::items
         :query/key [menus-key k :menu/items]
         :query/description "Process post menu item data."
         :router (route/router req)
@@ -155,7 +142,7 @@
         :query/args (if slug
                       (d/where datalog-query [['?slug :taxon/slug slug]])
                       datalog-query)}
-       {:query/name [::items ::taxon]
+       {:query/name ::items
         :query/key [menus-key k :menu/items]
         :field/key (field-keys fks)
         :sort-by sort-key
@@ -202,7 +189,7 @@
                                [?m :menu/items ?i]]}
                      k]}
        {:query/key [menus-key k :menu/items]
-        :query/name [::items ::global]
+        :query/name ::items
         :field/key (field-keys fks)
         :merge-entities? merge?
         :sort-by sort-key
@@ -250,7 +237,7 @@
                                [?m :menu/items ?i]]}
                      location]}
        {:query/key [menus-key k :menu/items]
-        :query/name [::items ::location]
+        :query/name ::items
         :field/key (field-keys fks)
         :merge-entities? merge?
         :sort-by sort-key
