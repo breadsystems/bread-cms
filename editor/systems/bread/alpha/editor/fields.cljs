@@ -42,11 +42,10 @@
               :toolbar {:tools (map (fn [tool]
                                       {:tool tool
                                        :effect #(tiptap/command ed tool)})
-                                    tools)}
-              :menu-element menu-elem})
+                                    tools)}})
       (rum/mount (ui/EditorMenu ed config) menu-elem)
       (tiptap/mount!
         {:editor ed
          :config config
          :element elem
-         :extensions (tiptap/extensions ed tools config)})))
+         :extensions (tiptap/extensions ed tools {:menu-element menu-elem})})))

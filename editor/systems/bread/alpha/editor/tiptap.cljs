@@ -65,11 +65,9 @@
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
    :code :codeblock :hr :br])
 
-(defn extensions [ed tools {field-name :name}]
-  (prn field-name (get-in @ed [:bread/fields field-name :menu-element]))
+(defn extensions [ed tools {:keys [menu-element]}]
   (let [{:keys [collab menu tiptap]
-         :or {menu true}
-         :as ed-state} @ed
+         :or {menu true}} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
@@ -87,9 +85,7 @@
                                                      :user user})))
          (when menu
            (.configure FloatingMenu
-                       (clj->js {:element (get-in ed-state [:bread/fields
-                                                            field-name
-                                                            :menu-element])
+                       (clj->js {:element menu-element
                                  :shouldShow (constantly true)})))
          Document
          Dropcursor
