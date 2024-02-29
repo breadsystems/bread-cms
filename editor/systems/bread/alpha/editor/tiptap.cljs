@@ -66,6 +66,7 @@
   (prn tiptap)
   (let [elem (js/document.createElement "DIV")]
     (-> elem .-innerHTML (set! "MENU"))
+    (-> elem (.addEventListener "click" (fn [] (prn 'click))))
     elem))
 
 (defn extensions [ed tools]
