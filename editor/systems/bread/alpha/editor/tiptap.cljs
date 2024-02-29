@@ -63,10 +63,11 @@
    :code :codeblock :hr :br])
 
 (defn- tiptap-menu []
-  (let [elem (js/document.createElement "DIV")]
-    (-> elem .-innerHTML (set! "MENU"))
-    (-> elem (.addEventListener "click" (fn [] (prn 'click))))
-    elem))
+  (doto (js/document.createElement "DIV")
+    (-> .-innerHTML (set! "MENU"))
+    (.setAttribute "id" "bread-menu")
+    (.addEventListener "click" (fn [_]
+                                 (prn 'click)))))
 
 (defn extensions [ed tools]
   (let [{:keys [collab menu tiptap]
