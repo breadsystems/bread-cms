@@ -62,8 +62,7 @@
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
    :code :codeblock :hr :br])
 
-(defn- tiptap-menu [tiptap]
-  (prn tiptap)
+(defn- tiptap-menu []
   (let [elem (js/document.createElement "DIV")]
     (-> elem .-innerHTML (set! "MENU"))
     (-> elem (.addEventListener "click" (fn [] (prn 'click))))
@@ -89,7 +88,7 @@
                                                      :user user})))
          (when menu
            (.configure FloatingMenu
-                       (clj->js {:element (tiptap-menu tiptap)
+                       (clj->js {:element (tiptap-menu)
                                  :shouldShow (fn [props]
                                                (prn 'shouldShow props)
                                                true)})))
