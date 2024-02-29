@@ -7,6 +7,17 @@
         :save "Save"
         :settings "Settings"})
 
+(rum/defc EditorMenu < rum/reactive [ed]
+  [:div
+   {:on-click (fn [] (prn 'click!))}
+   "Menu"])
+
+(defn menu-element [ed {:keys [id]}]
+  (let [elem (js/document.createElement "DIV")]
+    (.setAttribute elem "id" id)
+    (rum/mount (EditorMenu ed) elem)
+    elem))
+
 (defmulti bar-section (fn [_ section]
                          (cond
                            (keyword? section) section
