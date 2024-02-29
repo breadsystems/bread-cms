@@ -62,16 +62,11 @@
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
    :code :codeblock :hr :br])
 
-(defn- tiptap-menu []
-  (doto (js/document.createElement "DIV")
-    (-> .-innerHTML (set! "MENU"))
-    (.setAttribute "id" "bread-menu")
-    (.addEventListener "click" (fn [_]
-                                 (prn 'click)))))
-
-(defn extensions [ed tools]
+(defn extensions [ed tools {field-name :name}]
+  (prn field-name (get-in @ed [:bread/fields field-name :menu-element]))
   (let [{:keys [collab menu tiptap]
-         :or {menu true}} @ed
+         :or {menu true}
+         :as ed-state} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
@@ -89,7 +84,9 @@
                                                      :user user})))
          (when menu
            (.configure FloatingMenu
-                       (clj->js {:element (tiptap-menu)
+                       (clj->js {:element (get-in ed-state [:bread/fields
+                                                            field-name
+                                                            :menu-element])
                                  :shouldShow (fn [props]
                                                (prn 'shouldShow props)
                                                true)})))
