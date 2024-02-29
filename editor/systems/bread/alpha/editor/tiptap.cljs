@@ -99,12 +99,6 @@
          Typography]
         (mapcat #(extension ed %) tools)))))
 
-(comment
-  (def a (atom {:a {:b {}}}))
-  (deref a)
-  (swap! a update-in [:a :b] assoc :c (js/Date.))
-  (get-in @a [:a :b :c]))
-
 (defn mount! [{:keys [editor element extensions]
                {field-name :name} :config}]
   ;; TODO figure out how to re-mount the entire editor
