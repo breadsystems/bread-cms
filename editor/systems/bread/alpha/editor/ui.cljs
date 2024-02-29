@@ -7,18 +7,16 @@
         :save "Save"
         :settings "Settings"})
 
-(rum/defc EditorMenu < rum/reactive [ed config]
-  (let [{:keys [toolbar]} (get-in @ed [:bread/fields (:name config)])]
-    (prn toolbar)
-    [:div {:data-bread-menu true
-           :data-field-name (:name config)
-           :data-field-type (:type config)
-           #_#_:on-click (fn [] (prn 'CLICK config toolbar))}
-     (map (fn [{:keys [tool effect]}]
-            (let [label (if (map? tool)
-                          (or (:label tool) (:type tool))
-                          tool)]
-              [:button {:on-click effect} (str label)])) (:tools toolbar))]))
+(rum/defc EditorMenu < rum/reactive [toolbar config]
+  [:div {:data-bread-menu true
+         :data-field-name (:name config)
+         :data-field-type (:type config)
+         #_#_:on-click (fn [] (prn 'CLICK config toolbar))}
+   (map (fn [{:keys [tool effect]}]
+          (let [label (if (map? tool)
+                        (or (:label tool) (:type tool))
+                        tool)]
+            [:button {:on-click effect} (str label)])) (:tools toolbar))])
 
 (defn menu-element [{:keys [id]}]
   (let [elem (js/document.createElement "DIV")]
