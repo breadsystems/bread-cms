@@ -10,8 +10,7 @@
 (rum/defc EditorMenu < rum/reactive [toolbar config]
   [:div {:data-bread-menu true
          :data-field-name (:name config)
-         :data-field-type (:type config)
-         #_#_:on-click (fn [] (prn 'CLICK config toolbar))}
+         :data-field-type (:type config)}
    (map (fn [{:keys [tool effect]}]
           (let [label (if (map? tool)
                         (or (:label tool) (:type tool))
@@ -23,42 +22,42 @@
     (when id (.setAttribute elem "id" id))
     elem))
 
-(defmulti bar-section (fn [_ section]
+(defmulti BarSection (fn [_ section]
                          (cond
                            (keyword? section) section
                            :default (:type section))))
 
-(defmethod bar-section :default [_ section]
+(defmethod BarSection :default [_ section]
   [:span
    (cond
      (keyword? section) (name section)
      :default (:name section))])
 
-(defmethod bar-section :spacer [_ _]
+(defmethod BarSection :spacer [_ _]
   [:span {:data-bread-spacer true}])
 
-(defmethod bar-section :site-name [ed _]
+(defmethod BarSection :site-name [ed _]
   [:span (:site/name ed)])
 
-(defmethod bar-section :settings [ed {:keys [label]}]
+(defmethod BarSection :settings [ed {:keys [label]}]
   [:a {:href "#"
        :on-click (fn []
                    (prn 'SETTINGS!))}
    (or label (t :settings))])
 
-(defmethod bar-section :media-library [ed {:keys [label]}]
+(defmethod BarSection :media-library [ed {:keys [label]}]
   [:a {:href "#"
        :on-click (fn []
                    (prn 'MEDIA!))}
    (or label (t :media-library))])
 
-(defmethod bar-section :save-button [ed _]
+(defmethod BarSection :save-button [ed _]
   [:button {:data-bread-button true
             :on-click #(prn 'SAVE)}
    (t :save)])
 
-(rum/defc editor-bar < rum/reactive [{:bar/keys [sections] :as ed}]
+(rum/defc EditorBar < rum/reactive [{:bar/keys [sections] :as ed}]
   [:div {:data-bread-bar true}
    (map-indexed (fn [i section]
-                  [:<> {:key i} (bar-section ed section)])
+                  [:<> {:key i} (BarSection ed section)])
                 sections)])
