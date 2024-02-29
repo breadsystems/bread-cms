@@ -97,7 +97,7 @@
 
 (defn mount! [{:keys [editor element extensions]
                {field-name :name} :config}]
-  ;; TODO figure out how to re-mount the entire editor
+  #_;; TODO figure out how to re-mount the entire editor
   (when-let [tiptap-inst (get-in @editor [:bread/fields field-name :tiptap])]
     (prn 'TIPTAP? tiptap-inst)
     (.destroy tiptap-inst))
@@ -105,7 +105,7 @@
         (TiptapEditor. (clj->js {:element (.-parentNode element)
                                  :extensions extensions
                                  :content (.-outerHTML element)}))]
-    (prn 'SET tiptap-inst)
+    #_
     (swap! editor update-in [:bread/fields field-name] assoc
            :tiptap tiptap-inst))
   (.removeChild (.-parentNode element) element))

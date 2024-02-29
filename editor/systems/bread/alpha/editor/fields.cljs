@@ -35,17 +35,19 @@
   (let [tools (or (:tools config)
                   (:tools ed)
                   tiptap/default-rich-text-tools)
-        menu-elem (ui/menu-element (:menu-element config))]
+        menu-elem (ui/menu-element (:menu-element config))
+        tiptap (tiptap/mount!
+                 {:editor ed
+                  :config config
+                  :element elem
+                  :extensions (tiptap/extensions
+                                ed tools {:menu-element menu-elem})})
+        toolbar {:tools (map (fn [tool]
+                               {:tool tool
+                                :effect #(tiptap/command ed tool)})
+                             tools)}]
+      (rum/mount (ui/EditorMenu toolbar config) menu-elem)
       (swap! ed assoc-in [:bread/fields (:name config)]
              {:config config
               :element elem
-              :toolbar {:tools (map (fn [tool]
-                                      {:tool tool
-                                       :effect #(tiptap/command ed tool)})
-                                    tools)}})
-      (rum/mount (ui/EditorMenu ed config) menu-elem)
-      (tiptap/mount!
-        {:editor ed
-         :config config
-         :element elem
-         :extensions (tiptap/extensions ed tools {:menu-element menu-elem})})))
+              :toolbar toolbar})))
