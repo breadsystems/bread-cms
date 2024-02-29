@@ -44,7 +44,7 @@
                                 ed tools {:menu-element menu-elem})})
         toolbar {:tools (map (fn [tool]
                                {:tool tool
-                                :effect #(tiptap/command ed tool)})
+                                :effect #(tiptap/command tiptap tool)})
                              tools)}]
       (rum/mount (ui/EditorMenu toolbar config) menu-elem)
       (swap! ed assoc-in [:bread/fields (:name config)]

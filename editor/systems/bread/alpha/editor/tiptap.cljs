@@ -55,10 +55,10 @@
 (defmethod extension :br [_ _] [HardBreak])
 (defmethod extension :hr [_ _] [HorizontalRule])
 
-(defmulti command (fn [_ed tool] (if (map? tool) (:type tool) tool)))
+(defmulti command (fn [_tiptap tool] (if (map? tool) (:type tool) tool)))
 
-(defmethod command :bold [ed _]
-  (-> @ed :bread/fields :rich-text :tiptap .chain .focus .toggleBold .run))
+(defmethod command :bold [tiptap _]
+  (-> tiptap .chain .focus .toggleBold .run))
 
 (def default-rich-text-tools
   [{:type :heading :levels [2 3 4 5 6]}
@@ -97,15 +97,9 @@
 
 (defn mount! [{:keys [editor element extensions]
                {field-name :name} :config}]
-  #_;; TODO figure out how to re-mount the entire editor
-  (when-let [tiptap-inst (get-in @editor [:bread/fields field-name :tiptap])]
-    (prn 'TIPTAP? tiptap-inst)
-    (.destroy tiptap-inst))
   (let [tiptap-inst
         (TiptapEditor. (clj->js {:element (.-parentNode element)
                                  :extensions extensions
                                  :content (.-outerHTML element)}))]
-    #_
-    (swap! editor update-in [:bread/fields field-name] assoc
-           :tiptap tiptap-inst))
-  (.removeChild (.-parentNode element) element))
+    (.removeChild (.-parentNode element) element)
+    tiptap-inst))
