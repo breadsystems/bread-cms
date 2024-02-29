@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.editor.fields
   (:require
+    [rum.core :as rum]
     [systems.bread.alpha.editor.core :as core]
     [systems.bread.alpha.editor.tiptap :as tiptap]
     [systems.bread.alpha.editor.ui :as ui]))
@@ -33,14 +34,19 @@
   [ed elem config]
   (let [tools (or (:tools config)
                   (:tools ed)
-                  tiptap/default-rich-text-tools)]
-    (swap! ed assoc-in [:bread/fields (:name config)]
-           {:config config
-            :element elem
-            :menu-element (ui/menu-element ed {:id "bread-menu"})})
-    ;; Init commands from tools
-    (tiptap/mount!
-      {:editor ed
-       :config config
-       :element elem
-       :extensions (tiptap/extensions ed tools config)})))
+                  tiptap/default-rich-text-tools)
+        menu-elem (ui/menu-element (:menu-element config))]
+      (swap! ed assoc-in [:bread/fields (:name config)]
+             {:config config
+              :element elem
+              :toolbar {:tools (map (fn [tool]
+                                      {:tool tool
+                                       :effect #(tiptap/command ed tool)})
+                                    tools)}
+              :menu-element menu-elem})
+      (rum/mount (ui/EditorMenu ed config) menu-elem)
+      (tiptap/mount!
+        {:editor ed
+         :config config
+         :element elem
+         :extensions (tiptap/extensions ed tools config)})))

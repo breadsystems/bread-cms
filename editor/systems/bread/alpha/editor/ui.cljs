@@ -7,15 +7,22 @@
         :save "Save"
         :settings "Settings"})
 
-(rum/defc EditorMenu < rum/reactive [ed]
-  [:div
-   {:on-click (fn [] (prn 'click!))}
-   "Menu"])
+(rum/defc EditorMenu < rum/reactive [ed config]
+  (let [{:keys [toolbar]} (get-in @ed [:bread/fields (:name config)])]
+    (prn toolbar)
+    [:div {:data-bread-menu true
+           :data-field-name (:name config)
+           :data-field-type (:type config)
+           #_#_:on-click (fn [] (prn 'CLICK config toolbar))}
+     (map (fn [{:keys [tool effect]}]
+            (let [label (if (map? tool)
+                          (or (:label tool) (:type tool))
+                          tool)]
+              [:button {:on-click effect} (str label)])) (:tools toolbar))]))
 
-(defn menu-element [ed {:keys [id]}]
+(defn menu-element [{:keys [id]}]
   (let [elem (js/document.createElement "DIV")]
-    (.setAttribute elem "id" id)
-    (rum/mount (EditorMenu ed) elem)
+    (when id (.setAttribute elem "id" id))
     elem))
 
 (defmulti bar-section (fn [_ section]

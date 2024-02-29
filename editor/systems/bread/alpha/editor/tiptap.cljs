@@ -55,6 +55,11 @@
 (defmethod extension :br [_ _] [HardBreak])
 (defmethod extension :hr [_ _] [HorizontalRule])
 
+(defmulti command (fn [_ed tool] (if (map? tool) (:type tool) tool)))
+
+(defmethod command :bold [ed _]
+  (-> @ed :bread/fields :rich-text :tiptap .chain .focus .toggleBold .run))
+
 (def default-rich-text-tools
   [{:type :heading :levels [2 3 4 5 6]}
    :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
