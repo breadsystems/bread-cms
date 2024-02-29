@@ -38,4 +38,4 @@
       {:editor ed
        :config config
        :element element
-       :extensions (tiptap/extensions ed tools)})))
+       :extensions (tiptap/extensions ed tools config)})))
