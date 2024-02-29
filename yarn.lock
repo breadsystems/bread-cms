@@ -1605,7 +1605,7 @@ y-protocols@^1.0.5, y-protocols@^1.0.6:
   dependencies:
     lib0 "^0.2.85"
 
-y-webrtc@^10.2.3:
+y-webrtc@^10.3.0:
   version "10.3.0"
   resolved "https://registry.yarnpkg.com/y-webrtc/-/y-webrtc-10.3.0.tgz#b59ebceacf404c9a93008dfee812442d9379aaec"
   integrity sha512-KalJr7dCgUgyVFxoG3CQYbpS0O2qybegD0vI4bYnYHI0MOwoVbucED3RZ5f2o1a5HZb1qEssUKS0H/Upc6p1lA==
@@ -1616,7 +1616,7 @@ y-webrtc@^10.2.3:
   optionalDependencies:
     ws "^8.14.2"
 
-y-websocket@^1.4.5:
+y-websocket@^1.5.4:
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/y-websocket/-/y-websocket-1.5.4.tgz#d14d4033e102a5191c7e78ddcd5da005ef818336"
   integrity sha512-Y3021uy0anOIHqAPyAZbNDoR05JuMEGjRNI8c+K9MHzVS8dWoImdJUjccljAznc8H2L7WkIXhRHZ1igWNRSgPw==
@@ -1628,7 +1628,7 @@ y-websocket@^1.4.5:
     ws "^6.2.1"
     y-leveldb "^0.1.0"
 
-yjs@^13.5.41:
+yjs@^13.6.12:
   version "13.6.12"
   resolved "https://registry.yarnpkg.com/yjs/-/yjs-13.6.12.tgz#dc8be640270f04c4bb92c1984fdabbc13fc9c49f"
   integrity sha512-KOT8ILoyVH2f/PxPadeu5kVVS055D1r3x1iFfJVJzFdnN98pVGM8H07NcKsO+fG3F7/0tf30Vnokf5YIqhU/iw==
