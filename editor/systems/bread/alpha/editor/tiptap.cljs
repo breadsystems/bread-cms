@@ -32,9 +32,7 @@
     ["y-webrtc" :refer [WebrtcProvider]]))
 
 (defmulti extension (fn [ed tool]
-                      (cond
-                        (map? tool) (:type tool)
-                        :default tool)))
+                      (if (map? tool) (:type tool) tool)))
 
 (defmethod extension :heading
   [_ed {:keys [levels]
@@ -87,9 +85,7 @@
                        (clj->js {:element (get-in ed-state [:bread/fields
                                                             field-name
                                                             :menu-element])
-                                 :shouldShow (fn [props]
-                                               (prn 'shouldShow props)
-                                               true)})))
+                                 :shouldShow (constantly true)})))
          Document
          Dropcursor
          Paragraph
