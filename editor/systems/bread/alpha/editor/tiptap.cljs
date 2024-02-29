@@ -3,6 +3,7 @@
     ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
     ["@tiptap/extension-blockquote" :refer [Blockquote]]
     ["@tiptap/extension-bold" :refer [Bold]]
+    ["@tiptap/extension-bubble-menu" :refer [BubbleMenu]]
     ["@tiptap/extension-bullet-list" :refer [BulletList]]
     ["@tiptap/extension-code" :refer [Code]]
     ["@tiptap/extension-collaboration" :refer [Collaboration]]
@@ -78,7 +79,7 @@
 
 (defn extensions [ed tools {:keys [menu-element]}]
   (let [{:keys [collab menu tiptap]
-         :or {menu true}} @ed
+         :or {menu :bubble}} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
@@ -95,9 +96,12 @@
            (.configure CollaborationCursor (clj->js {:provider provider
                                                      :user user})))
          (when menu
-           (.configure FloatingMenu
-                       (clj->js {:element menu-element
-                                 :shouldShow (constantly true)})))
+           (if (= :floating menu)
+             (.configure FloatingMenu
+                         (clj->js {:element menu-element
+                                   :shouldShow (constantly true)}))
+             (.configure BubbleMenu
+                         (clj->js {:element menu-element}))))
          Document
          Dropcursor
          Paragraph
