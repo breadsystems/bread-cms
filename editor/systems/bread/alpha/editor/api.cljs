@@ -33,4 +33,4 @@
       (let [config (core/read-attr elem attr)]
         (core/init-field! ed elem config)))
     (when-let [mount-point (js/document.querySelector (:bar/mount-into @ed))]
-      (rum/mount (ui/editor-bar @ed) mount-point))))
+      (rum/mount (ui/EditorBar @ed) mount-point))))
