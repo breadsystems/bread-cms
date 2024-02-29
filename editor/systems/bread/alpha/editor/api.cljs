@@ -22,12 +22,6 @@
          :bread/fields {}
          :bread/listeners {}))
 
-(defn menu-element [{:keys [id]}]
-  (doto (js/document.createElement "DIV")
-    (-> .-innerHTML (set! "MENU"))
-    (.setAttribute "id" id)
-    (.addEventListener "click" (fn [] (prn 'CLICKED.)))))
-
 (defn init! [ed {:keys [attr]
                  :or {attr "data-bread"}}]
   (let [elements (set (or
@@ -37,10 +31,6 @@
                           (str "[" attr "]"))))]
     (doseq [elem elements]
       (let [config (core/read-attr elem attr)]
-        (swap! ed assoc-in [:bread/fields (:name config)]
-               {:config config
-                :element elem
-                :menu-element (menu-element {:id "bread-menu"})})
         (core/init-field! ed elem config)))
     (when-let [mount-point (js/document.querySelector (:bar/mount-into @ed))]
       (rum/mount (ui/editor-bar @ed) mount-point))))

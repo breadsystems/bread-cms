@@ -1,7 +1,8 @@
 (ns systems.bread.alpha.editor.fields
   (:require
+    [systems.bread.alpha.editor.core :as core]
     [systems.bread.alpha.editor.tiptap :as tiptap]
-    [systems.bread.alpha.editor.core :as core]))
+    [systems.bread.alpha.editor.ui :as ui]))
 
 (defmethod core/init-field! :default [_ _ config]
   (when-not (:derived? config)
@@ -29,13 +30,17 @@
           (core/listen! ed child (->dom-event event-key) handler))))))
 
 (defmethod core/init-field! :rich-text
-  [ed element config]
+  [ed elem config]
   (let [tools (or (:tools config)
                   (:tools ed)
                   tiptap/default-rich-text-tools)]
-    (prn (:name config) (:tiptap (get-in @ed [:bread/fields (:name config)])))
+    (swap! ed assoc-in [:bread/fields (:name config)]
+           {:config config
+            :element elem
+            :menu-element (ui/menu-element ed {:id "bread-menu"})})
+    ;; Init commands from tools
     (tiptap/mount!
       {:editor ed
        :config config
-       :element element
+       :element elem
        :extensions (tiptap/extensions ed tools config)})))
