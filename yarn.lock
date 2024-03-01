@@ -1339,10 +1339,10 @@ regenerator-runtime@^0.14.0:
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.14.1.tgz#356ade10263f685dda125100cd862c1db895327f"
   integrity sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==
 
-remixicons@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/remixicons/-/remixicons-1.0.0.tgz#f4dbfc6cc5ea90a8541ded3cd8af6d55269fdfa2"
-  integrity sha512-vUdVVlnSgMR7FK1nMEsr5yxCv/bXPHZT6ZBitlC3OdtjzXfSTI0efFC/kMgW8LACATi6bJRNgDonAS/rRjh2qA==
+remixicon@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/remixicon/-/remixicon-4.2.0.tgz#2df60b1764b11bb363f796b827ed8e03eab031c4"
+  integrity sha512-MF5wApNveRh3n0iMVM+lr2nSWrj/rBbSD2eWapuD9ReYRGs5naAUR1BqVBCHGqm286FIS6zwwmUf96QjHQ9l4w==
 
 ripemd160@^2.0.0, ripemd160@^2.0.1:
   version "2.0.2"
