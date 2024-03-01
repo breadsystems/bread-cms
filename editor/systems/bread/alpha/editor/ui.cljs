@@ -15,7 +15,7 @@
           (let [label (if (map? tool)
                         (or (:label tool) (:type tool))
                         tool)]
-            [:button {:on-click effect} (str label)])) (:tools toolbar))])
+            [:button {:key tool :on-click effect} (str label)])) (:tools toolbar))])
 
 (defn menu-element [{:keys [id]}]
   (let [elem (js/document.createElement "DIV")]
