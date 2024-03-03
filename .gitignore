@@ -24,3 +24,5 @@ inputFiles.lst
 /*.iml
 /.nrepl-port
 /.idea
+
+/resources/editor/js
