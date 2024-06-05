@@ -1,0 +1,20 @@
+:root {
+  --text: #090909;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 70ch;
+  max-width: 90%;
+  margin: auto;
+  padding: 0 1em;
+
+  color: var(--text);
+}
+
+img {
+  max-width: 100%;
+}
