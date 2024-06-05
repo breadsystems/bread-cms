@@ -34,6 +34,27 @@
                 :initialized? true
                 kvs)))
 
+(defmethod core/field-lifecycle :rich-text
+  [ed {:keys [state elem] :as field}]
+  {:init-state
+   (fn []
+     (let [tools (or (:tools field) (:tools ed) tiptap/default-rich-text-tools)
+           menu-elem (js/document.createElement "DIV")
+           extensions (tiptap/extensions ed tools {:menu-element menu-elem})]
+       {:menu-elem menu-elem
+        :menu-root (rdom/createRoot menu-elem)
+        :extensions extensions
+        :tiptap (TiptapEditor. (clj->js {:element (.-parentNode elem)
+                                         :extensions extensions
+                                         :content (.-outerHTML elem)}))}))
+   :did-mount
+   (fn [state]
+     (.removeChild (.-parentNode elem) elem))
+   :render
+   (fn [state]
+     (.render (:menu-root state) (EditorBar))
+     nil)})
+
 (defmethod core/init-field! :rich-text
   [ed field]
   (let [elem (:elem field)
@@ -54,11 +75,14 @@
                  (doto (rdom/createRoot menu-elem) (prn 'createRoot)))]
     ;; TODO RENDER
     (.render root (EditorBar))
-    ;; TODO INIT
-    (persist-field! ed field elem :tiptap tiptap :menu-elem menu-elem :menu-react-root root)
-    (when (nil? (:tiptap field)) (prn 'TiptapEditor! tiptap))
     ;; TODO INIT?
     (.removeChild (.-parentNode elem) elem)))
+
+(defmethod core/field-lifecycle :editor-bar
+  [ed field]
+  {:render
+   (fn [state]
+     (EditorBar))})
 
 (defmethod core/init-field! :editor-bar
   [ed field]
@@ -88,7 +112,7 @@
                  :or {attr "data-marx"}
                  :as config}]
   (let [fields (or
-                 (fields-from-editor ed)
+                 (core/fields-from-editor ed)
                  (fields-from-dom config))]
     (doseq [field fields]
       (core/init-field* ed field))))
