@@ -60,10 +60,6 @@
     ;; TODO INIT?
     (.removeChild (.-parentNode elem) elem)))
 
-(defmethod core/render-field! :rich-text
-  [ed field]
-  (prn 'TODO 'render :rich-text))
-
 (defmethod core/init-field! :editor-bar
   [ed field]
   (let [elem (:elem field)
@@ -75,10 +71,6 @@
                         [:marx/fields field-name :root]))]
     (prn 'init! field elem)
     (.render !root (EditorBar #js {:children (js/Array.from (.-children elem))}))))
-
-(defmethod core/render-field! :editor-bar
-  [ed field]
-  (prn 'TODO 'render :editor-bar))
 
 (defn- fields-from-editor [ed]
   (vals (:marx/fields @ed)))
