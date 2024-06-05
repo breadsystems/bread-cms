@@ -13,6 +13,7 @@ body {
   padding: 0 1em;
 
   color: var(--text);
+  font-family: sans-serif;
 }
 
 img {
