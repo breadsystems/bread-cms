@@ -11,7 +11,7 @@
    :output-dir "resources/editor/js"
    :asset-path "/js"
    :devtools {:watch-dir "resources/editor"}
-   :modules {:ui ; becomes resources/editor/app.js
+   :modules {:ui ; becomes resources/editor/js/ui.js
              {:init-fn systems.bread.alpha.editor.app/init}}}
 
   ;; TODO separate build for UI testing...?
