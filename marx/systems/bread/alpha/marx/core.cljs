@@ -11,7 +11,7 @@
 (defmulti tool-props (fn [_ed tool] (:type tool)))
 
 (defmethod tool-props :default [_ed tool]
-  tool)
+  {})
 
 (defonce render-count (atom {}))
 
