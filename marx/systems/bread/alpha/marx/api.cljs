@@ -60,6 +60,10 @@
     ;; TODO INIT?
     (.removeChild (.-parentNode elem) elem)))
 
+(defmethod core/render-field! :rich-text
+  [ed field]
+  (prn 'TODO 'render :rich-text))
+
 (defmethod core/init-field! :editor-bar
   [ed field]
   (let [elem (:elem field)
@@ -69,16 +73,12 @@
                 (get-in (persist-field! ed field elem
                                         :root (rdom/createRoot elem))
                         [:marx/fields field-name :root]))]
-    (prn 'render field elem)
+    (prn 'init! field elem)
     (.render !root (EditorBar #js {:children (js/Array.from (.-children elem))}))))
 
-(defn init-field! [ed config {:keys [elem initialized?] :as field}]
-  (let [field (if initialized?
-                field
-                (assoc (read-attr elem (:attr config "data-marx"))
-                       :elem elem))]
-    (prn 'init field)
-    (core/init-field! ed field)))
+(defmethod core/render-field! :editor-bar
+  [ed field]
+  (prn 'TODO 'render :editor-bar))
 
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
@@ -86,8 +86,11 @@
   (let [fields (or
                  (vals (:marx/fields @ed))
                  (doto (map
-                   (fn [elem] {:elem elem})
+                   (fn [elem] (assoc
+                                (read-attr elem attr)
+                                :elem elem))
                    (vec (js/document.querySelectorAll (str "[" attr "]")))) (prn 2)))]
-    (prn 'fields (map (juxt :name :initialized? :elem) fields))
     (doseq [field fields]
-      (init-field! ed config field))))
+      (prn 'field field)
+      (core/init-field! ed field)
+      (core/render-field! ed field))))
