@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/app.css">
+  <title>MARX</title>
+  <meta name="marx-editor" content="{:post/id 123
+                                     :persistence/strategy :local-storage
+                                     :collab/user {:name &quot;cobby&quot;
+                                                   :color &quot;red&quot;}}">
+</head>
+<body>
+  <main>
+    <h1>Breaditor UI sandbox</h1>
+    <section class="rte">
+      <div
+        data-rte
+        data-marx="{:name :rich-text
+                    :type :rich-text}"
+      >
+        <h1>This will be demoted to a &lt;p&gt; by default</h1>
+        <h2>This is a heading</h2>
+        <p>This is some paragraph text. You can type as much paragraph as you want. At fuga mollit excepturi lorem adipisicing soluta. Sunt labore repellendus, libero placeat at eiusmod tempor. Veniam voluptas officia animi sint est cumque.</p>
+        <ul>
+          <li>Some</li>
+          <li>list</li>
+          <li>items</li>
+        </ul>
+
+        <hr>
+
+        <ol>
+          <li>Some</li>
+          <li>numbered</li>
+          <li>list</li>
+          <li>items</li>
+        </ol>
+
+        <p>This isn't code but <code>this is some inline code.</code></p>
+        <p>And here's a code block:
+        <pre><code>(println "Hello, World!")</code></pre>
+
+        <p>Here is some prose with <sup>superscript</sup> and some with <sub>subscript</sub>. Now, here is some <del>struck text</del> and some <mark>highlighted text</mark>.</p>
+
+        <p>Here is a paragraph<br>
+        with some line breaks<br>
+        in the middle of it.</p>
+      </div>
+    </section>
+  </main>
+  <div id="editor-bar"></div>
+  <script src="/js/ui.js"></script>
+</body>
+</html>
