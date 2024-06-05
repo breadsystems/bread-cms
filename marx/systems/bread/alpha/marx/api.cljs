@@ -80,17 +80,23 @@
   [ed field]
   (prn 'TODO 'render :editor-bar))
 
+(defn- fields-from-editor [ed]
+  (vals (:marx/fields @ed)))
+
+(defn- fields-from-dom [config]
+  (let [attr (:attr config "data-marx")
+        selector (str "[" attr "]")
+        elems (vec (js/document.querySelectorAll selector))]
+    (map (fn [elem]
+           (assoc (read-attr elem attr)
+                  :elem elem))
+         elems)))
+
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
                  :as config}]
   (let [fields (or
-                 (vals (:marx/fields @ed))
-                 (doto (map
-                   (fn [elem] (assoc
-                                (read-attr elem attr)
-                                :elem elem))
-                   (vec (js/document.querySelectorAll (str "[" attr "]")))) (prn 2)))]
+                 (fields-from-editor ed)
+                 (fields-from-dom config))]
     (doseq [field fields]
-      (prn 'field field)
-      (core/init-field! ed field)
-      (core/render-field! ed field))))
+      (core/init-field* ed field))))
