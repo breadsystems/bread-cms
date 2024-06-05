@@ -38,7 +38,9 @@
               init-state (constantly {})}}
         (field-lifecycle ed field)]
     (prn (get @render-count (:name field)) (:name field) (:initialized? field) (:state field))
-    (assert (fn? render))
+    (assert (fn? render)
+            (str "field-lifecycle method for " (:type field)
+                 " returned something other than a function!"))
     (if (:initialized? field)
       (let [{{root :marx/react-root :as state} :state} field
             react-element (render state)]
