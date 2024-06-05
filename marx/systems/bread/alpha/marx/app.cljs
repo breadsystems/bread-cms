@@ -37,6 +37,9 @@
                                                           "yellow"])
                                         :data-avatar "/cat.jpg"}}}))))
 
+(comment
+  (deref my-editor))
+
 (defn ^:dev/after-load start []
   (marx/init! my-editor {}))
 
