@@ -22,18 +22,6 @@
 (defn elements [ed]
   (map :elem (vals (:marx/fields ed))))
 
-(defn field [ed field-name]
-  (get-in ed [:marx/fields field-name]))
-
-(def read-attr (memoize core/read-attr))
-
-(defn- persist-field! [ed field elem & kvs]
-  (swap! ed assoc-in [:marx/fields (:name field)]
-         (apply assoc field
-                :elem elem
-                :initialized? true
-                kvs)))
-
 (defmethod core/field-lifecycle :rich-text
   [ed {:keys [state elem] :as field}]
   {:init-state
