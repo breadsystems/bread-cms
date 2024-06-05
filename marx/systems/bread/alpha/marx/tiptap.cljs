@@ -89,9 +89,9 @@
    {:type :hr     :tooltip "Horizontal line"}
    {:type :br     :tooltip "Line break"}])
 
-(defn extensions [ed tools {:keys [menu-element]}]
+(defn extensions [ed tools {:keys [menu-element] :as _opts}]
   (let [{:keys [collab menu tiptap]
-         :or {menu :floating}} @ed
+         :or {menu {:style :floating}}} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
@@ -108,10 +108,12 @@
            (.configure CollaborationCursor (clj->js {:provider provider
                                                      :user user})))
          (when menu
-           (if (= :floating menu)
+           (if (= :floating (:style menu))
              (.configure FloatingMenu
                          (clj->js {:element menu-element
-                                   :shouldShow (constantly true)}))
+                                   :shouldShow (constantly true)
+                                   :tippyOptions {:placement "top-start"
+                                                  :maxWidth "100%"}}))
              (.configure BubbleMenu
                          (clj->js {:element menu-element}))))
          Document
