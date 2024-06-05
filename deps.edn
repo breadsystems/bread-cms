@@ -79,7 +79,7 @@
     thheller/shadow-cljs                            {:mvn/version "2.20.2"}}}
 
   :marx
-  {:extra-paths ["marx"]
+  {:extra-paths ["marx" "marx/out"]
    :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20240317"}
     org.clojure/clojurescript                       {:mvn/version "1.11.132"}
