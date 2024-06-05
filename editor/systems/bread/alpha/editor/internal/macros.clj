@@ -30,10 +30,8 @@
        clojure.core/slurp h/parse-fragment h/as-hiccup first))
 
 (defmacro i
-  ([icon]
-   (svg-as-hiccup :line icon))
-  ([style icon]
-   (svg-as-hiccup style icon)))
+  ([category icon]
+   (svg-as-hiccup category icon)))
 
 (comment
   (macroexpand '(svg-as-hiccup :line :zzz)))
