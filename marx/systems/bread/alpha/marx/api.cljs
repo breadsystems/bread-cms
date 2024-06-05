@@ -6,6 +6,7 @@
 
     ["/MarxEditor$default" :as MarxEditor]
     ["/EditorBar$default" :as EditorBar]
+    ["/EditorMenu$default" :as EditorMenu]
     [systems.bread.alpha.marx.core :as core]
     [systems.bread.alpha.marx.tiptap :as tiptap]))
 
@@ -24,24 +25,34 @@
 
 (defmethod core/field-lifecycle :rich-text
   [ed {:keys [state elem] :as field}]
-  {:init-state
-   (fn []
-     (let [tools (or (:tools field) (:tools ed) tiptap/default-rich-text-tools)
-           menu-elem (js/document.createElement "DIV")
-           extensions (tiptap/extensions ed tools {:menu-element menu-elem})]
-       {:menu-elem menu-elem
-        :menu-root (rdom/createRoot menu-elem)
-        :extensions extensions
-        :tiptap (TiptapEditor. (clj->js {:element (.-parentNode elem)
-                                         :extensions extensions
-                                         :content (.-outerHTML elem)}))}))
-   :did-mount
-   (fn [state]
-     (.removeChild (.-parentNode elem) elem))
-   :render
-   (fn [state]
-     (.render (:menu-root state) (EditorBar))
-     nil)})
+  (let [tools (or (:tools field) (:tools ed) tiptap/default-rich-text-tools)]
+    {:init-state
+     (fn []
+       (let [menu-elem (js/document.createElement "DIV")
+             extensions (tiptap/extensions ed tools {:menu-element menu-elem})]
+         {:menu-elem menu-elem
+          :menu-root (rdom/createRoot menu-elem)
+          :extensions extensions
+          :tiptap (TiptapEditor. (clj->js {:element (.-parentNode elem)
+                                           :extensions extensions
+                                           :content (.-outerHTML elem)}))}))
+     :did-mount
+     (fn [state]
+       (.removeChild (.-parentNode elem) elem))
+     :render
+     (fn [{:keys [menu-root tiptap]}]
+       (let [menu-tool (fn [tool]
+                         (let [tk (if (map? tool) (:type tool) tool)]
+                           (core/tool-props
+                             @ed
+                             {:type tk
+                              ;; TODO deprecate
+                              :tooltip (:tooltip tool (name tk))
+                              :label (name tk)
+                              :effect #(tiptap/command tiptap tool)})))
+             menu-props {:tools (map menu-tool tools)}]
+         (.render menu-root (EditorMenu (clj->js menu-props))))
+       nil)}))
 
 (defmethod core/field-lifecycle :editor-bar
   [ed field]

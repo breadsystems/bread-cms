@@ -8,6 +8,11 @@
 
 (defmulti field-lifecycle (fn [_ed field-config] (:type field-config)))
 
+(defmulti tool-props (fn [_ed tool] (:type tool)))
+
+(defmethod tool-props :default [_ed tool]
+  tool)
+
 (defonce render-count (atom {}))
 
 (defn- persist-field-state! [ed field state]
