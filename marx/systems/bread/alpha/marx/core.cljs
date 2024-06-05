@@ -6,5 +6,15 @@
   (edn/read-string (.getAttribute elem attr)))
 
 (defmulti init-field! (fn [_ed field] (:type field)))
+(defmulti field (fn [_ed field-config] (:type field-config)))
 
 (defmulti render-field! (fn [_ed field] (:type field)))
+
+(defonce render-count (atom 0))
+
+(defn init-field* [ed field]
+  (swap! render-count inc)
+  (prn @render-count (:name field) (:initialized? field) (:elem field))
+  (when-not (:initialized? field)
+    (init-field! ed field))
+  (prn 'TODO 'render (:type field)))
