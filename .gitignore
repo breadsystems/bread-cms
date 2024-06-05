@@ -28,3 +28,4 @@ inputFiles.lst
 .direnv
 .envrc
 /resources/editor/js
+/marx/out
