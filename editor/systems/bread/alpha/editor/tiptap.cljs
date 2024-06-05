@@ -79,7 +79,7 @@
 
 (defn extensions [ed tools {:keys [menu-element]}]
   (let [{:keys [collab menu tiptap]
-         :or {menu :bubble}} @ed
+         :or {menu :floating}} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this
                                    :placeholder "Start writing..."
