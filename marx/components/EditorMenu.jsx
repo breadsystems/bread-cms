@@ -4,14 +4,21 @@ const EditorMenu = ({ tools }) => {
   console.log(tools);
   return (
     <div>
-      {tools.map(({ type, label, tooltip, effect }) => {
+      {tools.map(({
+        type,
+        icon,
+        content,
+        tooltip,
+        effect,
+      }) => {
         return (
           <button
             key={type}
             onClick={effect}
             title={tooltip}
+            data-icon={icon || "empty"}
           >
-            {label}
+            {content}
           </button>
         );
       })}
