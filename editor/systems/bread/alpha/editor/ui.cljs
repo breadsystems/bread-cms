@@ -14,17 +14,19 @@
 (defmethod tool-label :default [kw]
   (clojure.string/upper-case (str (first (name kw)))))
 
+(defmethod tool-label :bold       [_] (i :Editor :bold))
+(defmethod tool-label :italic     [_] (i :Editor :italic))
 (defmethod tool-label :blockquote [_] (i :Editor :double-quotes-l))
-#_(defmethod tool-label :ul         [_] (-> tiptap .chain .focus .toggleBulletList .run))
-#_(defmethod tool-label :ol         [_] (-> tiptap .chain .focus .toggleOrderedList .run))
-#_(defmethod tool-label :strike     [_] (-> tiptap .chain .focus .toggleStrike .run))
-#_(defmethod tool-label :highlight  [_] (-> tiptap .chain .focus .toggleHighlight .run))
-#_(defmethod tool-label :sub        [_] (-> tiptap .chain .focus .toggleSubscript .run))
-#_(defmethod tool-label :sup        [_] (-> tiptap .chain .focus .toggleSuperscript .run))
-#_(defmethod tool-label :code       [_] (-> tiptap .chain .focus .toggleCode .run))
-#_(defmethod tool-label :codeblock  [_] (-> tiptap .chain .focus .toggleCodeBlock .run))
-#_(defmethod tool-label :br         [_] (-> tiptap .chain .focus .setHardBreak .run))
-#_(defmethod tool-label :hr         [_] (-> tiptap .chain .focus .setHorizontalRule .run))
+(defmethod tool-label :ul         [_] (i :Editor :list-unordered))
+(defmethod tool-label :ol         [_] (i :Editor :list-ordered))
+(defmethod tool-label :strike     [_] (i :Editor :strikethrough))
+(defmethod tool-label :highlight  [_] (i :Design :mark-pen-line))
+(defmethod tool-label :sup        [_] (i :Editor :superscript))
+(defmethod tool-label :sub        [_] (i :Editor :subscript))
+(defmethod tool-label :code       [_] (i :Development :code-line))
+(defmethod tool-label :codeblock  [_] (i :Editor :code-block))
+(defmethod tool-label :br         [_] (i :Arrows :corner-down-left-line))
+(defmethod tool-label :hr         [_] (i :Editor :separator))
 
 (rum/defc EditorMenu < rum/reactive [toolbar config]
   [:div {:data-bread-menu true
