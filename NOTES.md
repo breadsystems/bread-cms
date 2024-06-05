@@ -10,6 +10,12 @@ Notes on potential ideas for Bread. Almost all of this is entirely hypothetical,
 - JVM on Heroku: ???
 - JVM on Fly.io: ???
 
+## Marx
+
+1. Boost api/init-field! logic into a smarter, encapsulated thing that decides
+   whether to INIT before RENDERing. It should always RENDER.
+2. Separate core/init-field! into TWO multimethods: core/init-field! and core/render-field!
+
 ## bread.main
 
 CGI mode is enabled by default when the `GATEWAY_INTERFACE` env var is detected, or if the `--cgi` flag is passed explicitly. Maybe make a `--no-cgi` flag to disable when env var present?

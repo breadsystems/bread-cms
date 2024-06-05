@@ -34,8 +34,6 @@
                 :persisted? true
                 kvs)))
 
-(defn- recreate-tiptap [])
-
 (defmethod core/init-field! :rich-text
   [ed field elem]
   (let [tools (or (:tools field)
@@ -46,14 +44,19 @@
                     (.setAttribute "id" "editor-menu"))
         extensions (tiptap/extensions ed tools
                                       {:menu-element menu-elem})
-        ;; TODO conditionally instantiate TiptapEditor
+        ;; TODO RENDER
         tiptap (TiptapEditor. (clj->js {:element (.-parentNode elem)
                                         :extensions extensions
-                                        :content (.-outerHTML elem)}))]
-    (persist-field! ed field elem :tiptap tiptap :menu-elem menu-elem)
-    ;; TODO createRoot
-    (.render (rdom/createRoot menu-elem) (EditorBar))
-    (prn 'tiptap (:tiptap field))
+                                        :content (.-outerHTML elem)}))
+        ;; TODO INIT
+        root (or (:menu-react-root field)
+                 (doto (rdom/createRoot menu-elem) (prn 'createRoot)))]
+    ;; TODO RENDER
+    (.render root (EditorBar))
+    ;; TODO INIT
+    (persist-field! ed field elem :tiptap tiptap :menu-elem menu-elem :menu-react-root root)
+    (when (nil? (:tiptap field)) (prn 'TiptapEditor! tiptap))
+    ;; TODO INIT?
     (.removeChild (.-parentNode elem) elem)))
 
 (defmethod core/init-field! :editor-bar
@@ -79,9 +82,9 @@
                  :as config}]
   (let [fields (or
                  (vals (:marx/fields @ed))
-                 (map
+                 (doto (map
                    (fn [elem] {:elem elem})
-                   (vec (js/document.querySelectorAll (str "[" attr "]")))))]
+                   (vec (js/document.querySelectorAll (str "[" attr "]")))) (prn 2)))]
     (prn 'fields (map (juxt :name :persisted?) fields))
     (doseq [field fields]
       (init-field! ed config field))))
