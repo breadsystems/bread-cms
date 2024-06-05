@@ -8,8 +8,6 @@
 (defmulti init-field! (fn [_ed field] (:type field)))
 (defmulti field (fn [_ed field-config] (:type field-config)))
 
-(defmulti render-field! (fn [_ed field] (:type field)))
-
 (defonce render-count (atom 0))
 
 (defn init-field* [ed field]
