@@ -6,7 +6,6 @@
 (defn read-attr [elem attr]
   (edn/read-string (.getAttribute elem attr)))
 
-(defmulti init-field! (fn [_ed field] (:type field)))
 (defmulti field-lifecycle (fn [_ed field-config] (:type field-config)))
 
 (defonce render-count (atom {}))
@@ -20,6 +19,15 @@
 
 (defn fields-from-editor [ed]
   (vals (:marx/fields @ed)))
+
+(defn fields-from-dom [config]
+  (let [attr (:attr config "data-marx")
+        selector (str "[" attr "]")
+        elems (vec (js/document.querySelectorAll selector))]
+    (map (fn [elem]
+           (assoc (read-attr elem attr)
+                  :elem elem))
+         elems)))
 
 (defn init-field* [ed field]
   (swap! render-count update (:name field) inc)
@@ -37,19 +45,10 @@
         (.render root react-element))
       (do
         (assert (fn? init-state))
-        (prn ())
         (let [root (rdom/createRoot (:elem field))
               initial (assoc (init-state)
                              :marx/react-root root)]
           (persist-field-state! ed field initial)
           (.render root (render initial))
           (when (fn? did-mount)
-            (did-mount initial)))))
-    #_#_#_
-    (assert (fn? render))
-    (let [react-element (render (:state field))]
-      (.render))
-    (render (:state field)))
-  #_
-  (when-not (:initialized? field)
-    (init-field! ed field)))
+            (did-mount initial)))))))
