@@ -5,4 +5,6 @@
 (defn read-attr [elem attr]
   (edn/read-string (.getAttribute elem attr)))
 
-(defmulti init-field! (fn [_ed config _elem] (:type config)))
+(defmulti init-field! (fn [_ed field] (:type field)))
+
+(defmulti render-field! (fn [_ed field] (:type field)))
