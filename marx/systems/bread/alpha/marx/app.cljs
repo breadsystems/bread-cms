@@ -38,7 +38,9 @@
                                         :data-avatar "/cat.jpg"}}}))))
 
 (comment
-  (deref my-editor))
+  (deref my-editor)
+  (marx/elements @my-editor)
+  (js/location.reload))
 
 (defn ^:dev/after-load start []
   (marx/init! my-editor {}))
