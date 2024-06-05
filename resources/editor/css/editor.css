@@ -8,6 +8,11 @@
 
 /* Tiptap */
 
+/* Menu overrides */
+.tippy-box {
+  max-width: unset !important;
+}
+
 /* Give a remote user a caret */
 .collaboration-cursor__caret {
   border-left: 1px solid #0d0d0d;
@@ -39,6 +44,17 @@
 
 [data-bread-bar], [data-bread-bar] * {
   box-sizing: border-box;
+}
+
+[data-bread-menu] button {
+  width: 2.5em;
+  height: 2.5em;
+  padding: 0;
+}
+[data-bread-menu] button svg {
+  inset: 0;
+  width: 24px;
+  height: 24px;
 }
 
 [data-bread-bar] {
