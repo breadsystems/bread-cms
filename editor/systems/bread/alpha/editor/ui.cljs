@@ -34,7 +34,10 @@
          :data-field-type (:type config)}
    (map (fn [{:keys [tool effect]}]
           (let [tk (if (map? tool) (:type tool) tool)]
-            [:button {:key tool :on-click effect} (tool-label tk)])) (:tools toolbar))])
+            [:button {:key tool
+                      :on-click effect
+                      :title (:tooltip tool (name tk))}
+             (tool-label tk)])) (:tools toolbar))])
 
 (defn menu-element [{:keys [id]}]
   (let [elem (js/document.createElement "DIV")]

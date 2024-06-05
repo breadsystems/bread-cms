@@ -73,9 +73,20 @@
 (defmethod command :hr         [tiptap _] (-> tiptap .chain .focus .setHorizontalRule .run))
 
 (def default-rich-text-tools
-  [{:type :heading :levels [2 3 4 5 6]}
-   :bold :italic :blockquote :ul :ol :strike :highlight :sup :sub
-   :code :codeblock :hr :br])
+  [#_{:type :heading :levels [2 3 4 5 6]}
+   :bold
+   :italic
+   {:type :ul     :tooltip "Numbered list"}
+   {:type :ol     :tooltip "Bullet list"}
+   {:type :strike :tooltip "Strikethrough"}
+   :blockquote
+   :highlight
+   {:type :sup    :tooltip "Superscript"}
+   {:type :sub    :tooltip "Subscript"}
+   :code
+   :codeblock
+   {:type :hr     :tooltip "Horizontal line"}
+   {:type :br     :tooltip "Line break"}])
 
 (defn extensions [ed tools {:keys [menu-element]}]
   (let [{:keys [collab menu tiptap]
