@@ -72,6 +72,7 @@
 (defmethod command :br         [tiptap _] (-> tiptap .chain .focus .setHardBreak .run))
 (defmethod command :hr         [tiptap _] (-> tiptap .chain .focus .setHorizontalRule .run))
 
+;; DEPRECATED. Decalre tooltip etc. on tool-specific multimethod instead.
 (def default-rich-text-tools
   [#_{:type :heading :levels [2 3 4 5 6]}
    :bold
@@ -120,12 +121,3 @@
          Text
          Typography]
         (mapcat #(extension ed %) tools)))))
-
-(defn mount! [{:keys [editor element extensions]
-               {field-name :name} :config}]
-  (let [tiptap-inst
-        (TiptapEditor. (clj->js {:element (.-parentNode element)
-                                 :extensions extensions
-                                 :content (.-outerHTML element)}))]
-    (.removeChild (.-parentNode element) element)
-    tiptap-inst))
