@@ -31,7 +31,7 @@
   (swap! ed assoc-in [:marx/fields (:name field)]
          (apply assoc field
                 :elem elem
-                :persisted? true
+                :initialized? true
                 kvs)))
 
 (defmethod core/init-field! :rich-text
@@ -70,8 +70,8 @@
     (prn 'render field elem)
     (.render !root (EditorBar #js {:children (js/Array.from (.-children elem))}))))
 
-(defn init-field! [ed config {:keys [elem persisted?] :as field}]
-  (let [field (if persisted?
+(defn init-field! [ed config {:keys [elem initialized?] :as field}]
+  (let [field (if initialized?
                 field
                 (read-attr elem (:attr config "data-marx")))]
     (prn 'init field)
@@ -85,6 +85,6 @@
                  (doto (map
                    (fn [elem] {:elem elem})
                    (vec (js/document.querySelectorAll (str "[" attr "]")))) (prn 2)))]
-    (prn 'fields (map (juxt :name :persisted?) fields))
+    (prn 'fields (map (juxt :name :initialized?) fields))
     (doseq [field fields]
       (init-field! ed config field))))
