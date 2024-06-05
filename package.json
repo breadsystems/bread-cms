@@ -1,5 +1,9 @@
 {
   "devDependencies": {
+    "@babel/cli": "^7.24.6",
+    "@babel/core": "^7.24.6",
+    "@babel/preset-env": "^7.24.6",
+    "@babel/preset-react": "^7.24.6",
     "react-refresh": "^0.14.2",
     "shadow-cljs": "^2.19.1"
   },
