@@ -1,6 +1,35 @@
 import React from 'react';
 
-const Bar = ({ children }) => {
+// TODO util
+function Spacer() {
+  return <div style={{
+    flexGrow: '100%',
+  }}></div>
+}
+
+function SiteNameSection({siteName}) {
+  return <div>{siteName}</div>
+}
+
+function SettingsSection({label, onClick}) {
+  return <div>
+    <button onClick={onClick}>{label}</button>
+  </div>;
+}
+
+function MediaLibrarySection({label, onClick}) {
+  return <div>
+    <button onClick={onClick}>{label}</button>
+  </div>;
+}
+
+function SaveButtonSection() {
+  return <div>
+    SAVE
+  </div>;
+}
+
+function Bar({children}) {
   return <div style={{
     position: "fixed",
     bottom: 0,
@@ -11,12 +40,15 @@ const Bar = ({ children }) => {
     width: "100%",
     padding: "1em 2em",
   }}>
-    {children.map((child) => {
-      return <div>{child}</div>;
-    })}
+    {children}
   </div>;
-};
+}
 
 export {
-  Bar
+  Spacer,
+  SiteNameSection,
+  SettingsSection,
+  MediaLibrarySection,
+  SaveButtonSection,
+  Bar,
 };
