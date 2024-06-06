@@ -6,7 +6,6 @@
   (let [config (marx/from-meta-element)]
     (atom (marx/editor {:name :my-editor
                         :site/name "Sandbox"
-                        :bar/mount-into "#editor-bar"
                         :bar/sections [:site-name
                                        :settings
                                        {:type :media-library
