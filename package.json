@@ -4,8 +4,19 @@
     "@babel/core": "^7.24.6",
     "@babel/preset-env": "^7.24.6",
     "@babel/preset-react": "^7.24.6",
+    "@chromatic-com/storybook": "^1.5.0",
+    "@storybook/addon-essentials": "^8.1.6",
+    "@storybook/addon-interactions": "^8.1.6",
+    "@storybook/addon-links": "^8.1.6",
+    "@storybook/addon-onboarding": "^8.1.6",
+    "@storybook/blocks": "^8.1.6",
+    "@storybook/react": "^8.1.6",
+    "@storybook/react-vite": "^8.1.6",
+    "@storybook/test": "^8.1.6",
+    "prop-types": "^15.8.1",
     "react-refresh": "^0.14.2",
-    "shadow-cljs": "^2.19.1"
+    "shadow-cljs": "^2.19.1",
+    "storybook": "^8.1.6"
   },
   "dependencies": {
     "@tiptap/core": "^2.4.0",
@@ -45,5 +56,9 @@
     "y-webrtc": "^10.3.0",
     "y-websocket": "^2.0.3",
     "yjs": "^13.6.15"
+  },
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   }
 }
