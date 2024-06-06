@@ -16,7 +16,6 @@
 (defonce render-count (atom {}))
 
 (defn- persist-field-state! [ed field state]
-  (prn 'PERSIST (:name field) field state)
   (swap! ed assoc-in [:marx/fields (:name field)]
          (assoc field
                 :initialized? true
