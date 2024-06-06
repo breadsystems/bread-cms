@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EditorBar = () => {
+const EditorBar = ({ editorState }) => {
   return <div>EDITOR BAR</div>
 };
 
