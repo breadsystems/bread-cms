@@ -1,32 +1,15 @@
 import React from 'react';
 
-// TODO util
-function Spacer() {
-  return <div style={{
-    flexGrow: '100%',
-  }}></div>
+import {Popover} from './Popover';
+import {Button} from './Button';
+
+function BarSection(children) {
+  return <div>{children}</div>;
 }
 
-function SiteNameSection({siteName}) {
-  return <div>{siteName}</div>
-}
-
-function SettingsSection({label, onClick}) {
-  return <div>
-    <button onClick={onClick}>{label}</button>
-  </div>;
-}
-
-function MediaLibrarySection({label, onClick}) {
-  return <div>
-    <button onClick={onClick}>{label}</button>
-  </div>;
-}
-
-function SaveButtonSection() {
-  return <div>
-    SAVE
-  </div>;
+function PopoverSection({buttonProps, content}) {
+  const button = <Button {...buttonProps} />;
+  return <Popover trigger={button}>{content}</Popover>;
 }
 
 function Bar({children}) {
@@ -39,16 +22,10 @@ function Bar({children}) {
     justifyContent: "space-between",
     width: "100%",
     padding: "1em 2em",
+    gap: "2em",
   }}>
     {children}
   </div>;
 }
 
-export {
-  Spacer,
-  SiteNameSection,
-  SettingsSection,
-  MediaLibrarySection,
-  SaveButtonSection,
-  Bar,
-};
+export {BarSection, PopoverSection, Bar};
