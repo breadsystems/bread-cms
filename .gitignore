@@ -31,3 +31,5 @@ dthk.edn
 .envrc
 /resources/editor/js
 /marx/out
+
+*storybook.log
