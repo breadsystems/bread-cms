@@ -53,6 +53,7 @@
     "date-fns": "^3.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "styled-components": "^6.1.11",
     "y-prosemirror": "^1.2.5",
     "y-webrtc": "^10.3.0",
     "y-websocket": "^2.0.3",
