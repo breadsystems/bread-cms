@@ -25,6 +25,7 @@ dthk.edn
 /*.iml
 /.nrepl-port
 /.idea
+/.yarn
 
 .direnv
 .envrc
