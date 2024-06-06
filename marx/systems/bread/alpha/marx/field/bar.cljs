@@ -2,7 +2,12 @@
   (:require
     ["react" :as react]
 
-    ["/Bar" :refer [Bar]]
+    ["/Bar" :refer [Spacer
+                    SiteNameSection
+                    SettingsSection
+                    MediaLibrarySection
+                    SaveButtonSection
+                    Bar]]
     [systems.bread.alpha.marx.core :as core]))
 
 ;; TODO
@@ -16,20 +21,23 @@
                           (keyword? section) section
                           :default (:type section))))
 
-(defmethod bar-section :spacer [_ section]
-  "spacer")
+(defmethod bar-section :spacer [_ _]
+  (Spacer))
 
 (defmethod bar-section :site-name [ed _]
-  (:site/name ed))
+  (SiteNameSection (clj->js {:siteName (:site/name ed)})))
 
 (defmethod bar-section :settings [ed {:keys [label]}]
-  (or label (t :settings)))
+  (SettingsSection (clj->js {:label (or label (t :settings))
+                             :onClick #(prn 'SETTINGS!)})))
 
 (defmethod bar-section :media-library [ed {:keys [label]}]
-  (or label (t :media-library)))
+  (MediaLibrarySection (clj->js {:label (or label (t :media-library))
+                                 :onClick #(prn 'MEDIA!)})))
 
 (defmethod bar-section :save-button [ed {:keys [label]}]
-  (or label (t :save)))
+  (SaveButtonSection (clj->js {:label (or label (t :save))
+                               :onClick #(prn 'SAVE!)})))
 
 #_#_#_#_#_
 (defmethod BarSection :spacer [_ _]
