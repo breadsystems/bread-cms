@@ -60,5 +60,6 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
-  }
+  },
+  "packageManager": "yarn@4.2.2"
 }

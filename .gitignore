@@ -24,6 +24,7 @@ inputFiles.lst
 /*.iml
 /.nrepl-port
 /.idea
+/.yarn
 
 .direnv
 .envrc
