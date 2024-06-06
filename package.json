@@ -16,7 +16,8 @@
     "prop-types": "^15.8.1",
     "react-refresh": "^0.14.2",
     "shadow-cljs": "^2.19.1",
-    "storybook": "^8.1.6"
+    "storybook": "^8.1.6",
+    "vite": "^5.2.12"
   },
   "dependencies": {
     "@tiptap/core": "^2.4.0",
