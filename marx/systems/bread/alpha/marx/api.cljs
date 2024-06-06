@@ -4,8 +4,8 @@
     ["react-dom/client" :as rdom]
     ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
 
+    [systems.bread.alpha.marx.field.bar :as bar]
     ["/MarxEditor$default" :as MarxEditor]
-    ["/EditorBar$default" :as EditorBar]
     ["/EditorMenu$default" :as EditorMenu]
     [systems.bread.alpha.marx.core :as core]
     [systems.bread.alpha.marx.tiptap :as tiptap]))
@@ -55,11 +55,7 @@
          (.render menu-root (EditorMenu (clj->js menu-props))))
        nil)}))
 
-(defmethod core/field-lifecycle :editor-bar
-  [ed field]
-  {:render
-   (fn [state]
-     (EditorBar))})
+(def bar-section bar/bar-section)
 
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
