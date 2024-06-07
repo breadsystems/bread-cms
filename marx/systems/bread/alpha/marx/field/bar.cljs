@@ -34,7 +34,7 @@
   (let [button-props (clj->js {:label (or label (t :media-library))
                                :onClick #(prn 'MEDIA)})]
     (PopoverSection (clj->js {:buttonProps button-props
-                              :cntent nil}))))
+                              :content nil}))))
 
 (defmethod bar-section :save-button [ed {:keys [label]}]
   (BarSection (Button (clj->js {:label (or label (t :save))
