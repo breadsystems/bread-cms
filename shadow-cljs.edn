@@ -20,7 +20,6 @@
   {:target :browser
    :output-dir "resources/marx/js"
    :asset-path "/js"
-   :devtools {:watch-dir "resources/marx"}
    :modules {:ui ; becomes resources/editor/js/ui.js
              {:init-fn systems.bread.alpha.marx.app/init}}}
 
