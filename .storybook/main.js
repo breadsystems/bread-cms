@@ -1,7 +1,7 @@
 /** @type { import('@storybook/react-vite').StorybookConfig } */
 const config = {
   stories: [
-    "../marx/components/**/stories.@(js|jsx)",
+    "../marx/stories/*.stories.@(js|jsx)",
   ],
   addons: [
     "@storybook/addon-onboarding",
