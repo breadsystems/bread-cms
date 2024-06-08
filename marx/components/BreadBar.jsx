@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
+import {BreadStyle} from './BreadStyle';
 import {Popover} from './Popover';
 import {Button} from './Button';
 
@@ -14,7 +15,6 @@ function PopoverSection({buttonProps, content}) {
 }
 
 const Styled = styled.div`
-  box-sizing: border-box;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -28,9 +28,12 @@ const Styled = styled.div`
 `;
 
 function BreadBar({children}) {
-  return <Styled>
-    {children}
-  </Styled>;
+  return <>
+    <BreadStyle />
+    <Styled>
+      {children}
+    </Styled>
+  </>;
 }
 
 export {BarSection, PopoverSection, BreadBar};
