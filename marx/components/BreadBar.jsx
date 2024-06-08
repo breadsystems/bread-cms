@@ -25,7 +25,6 @@ const Styled = styled.div`
   gap: 2em;
 
   line-height: 1.5;
-  background-color: green;
 `;
 
 function BreadBar({children}) {
