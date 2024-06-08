@@ -26,4 +26,4 @@ const EditorMenu = ({ tools }) => {
   );
 };
 
-export default EditorMenu;
+export {EditorMenu};
