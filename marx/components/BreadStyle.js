@@ -5,7 +5,9 @@ const BreadStyle = createGlobalStyle`
     box-sizing: border-box;
   }
   :root {
-    --brd-color-text-main: red;
+    --marx-color-text-main: ${({theme}) => theme.color.text_main};
+    --marx-color-bg-main: ${({theme}) => theme.color.background_main};
+    --marx-color-accent-main: ${({theme}) => theme.color.accent_main};
   }
 `;
 
