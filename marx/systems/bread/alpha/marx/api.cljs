@@ -5,7 +5,6 @@
     ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
 
     [systems.bread.alpha.marx.field.bar :as bar]
-    ["/MarxEditor$default" :as MarxEditor]
     ["/EditorMenu$default" :as EditorMenu]
     [systems.bread.alpha.marx.core :as core]
     [systems.bread.alpha.marx.tiptap :as tiptap]))
