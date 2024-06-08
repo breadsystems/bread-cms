@@ -9,7 +9,7 @@ const meta = {
 
 export default meta;
 
-export const Primary = {
+export const Base = {
   args: {
     label: 'Button',
   },
