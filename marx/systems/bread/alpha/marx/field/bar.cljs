@@ -5,6 +5,7 @@
     ["/Button" :refer [Button]]
     ["/Spacer" :refer [Spacer]]
     ["/Bar" :refer [BarSection PopoverSection Bar]]
+    ["/SettingsBox" :refer [SettingsBox]]
     [systems.bread.alpha.marx.core :as core]))
 
 ;; TODO
@@ -28,7 +29,7 @@
   (let [button-props (clj->js {:label (or label (t :settings))
                                :onClick #(prn 'SETTINGS)})]
     (PopoverSection (clj->js {:buttonProps button-props
-                              :content nil}))))
+                              :content (SettingsBox)}))))
 
 (defmethod bar-section :media-library [ed {:keys [label]}]
   (let [button-props (clj->js {:label (or label (t :media-library))
