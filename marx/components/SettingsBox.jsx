@@ -4,6 +4,7 @@ import styled from 'styled-components';
 const Aside = styled.aside`
   background-color: pink;
   padding: 1em;
+  border: 2px dashed #666;
 `;
 
 function SettingsBox() {

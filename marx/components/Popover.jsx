@@ -3,14 +3,15 @@ import styled from 'styled-components';
 import * as Rp from '@radix-ui/react-popover';
 
 const PopoverContent = styled.div`
-  --bar-height: 1em; // TODO
+  --bar-height: 54px; // TODO
 
-  position: absolute;
+  position: fixed;
+  bottom: 0;
+  left: 0;
 
   [data-radix-popper-content-wrapper] {
     position: absolute !important;
     transform: translate(0, calc(-1 * (var(--bar-height) + 100%))) !important;
-    transform-origin: bottom left;
   }
 `;
 
@@ -18,13 +19,15 @@ function Popover({trigger, children}) {
   const [open, setOpen] = useState(false);
 
   return <Rp.Root open={open}>
-    {open && (
-      <PopoverContent>
-        <Rp.Content>
-          {children}
-        </Rp.Content>
-      </PopoverContent>
-    )}
+    <Rp.Portal>
+      {open && (
+        <PopoverContent>
+          <Rp.Content>
+            {children}
+          </Rp.Content>
+        </PopoverContent>
+      )}
+    </Rp.Portal>
     <Rp.Trigger asChild onClick={() => setOpen(!open)}>
       {trigger}
     </Rp.Trigger>
