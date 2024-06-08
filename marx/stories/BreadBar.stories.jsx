@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { Bar } from '../components/Bar';
+import { BreadBar } from '../components/BreadBar';
 import { Spacer } from '../components/Spacer';
 
 const meta = {
-  component: Bar,
+  component: BreadBar,
 };
 
 export default meta;
