@@ -2,7 +2,6 @@
   (:require
     ["react" :as react]
 
-    ;; TODO export all from index.js
     ["/Button" :refer [Button]]
     ["/Spacer" :refer [Spacer]]
     ["/BreadBar" :refer [BarSection PopoverSection BreadBar]]
