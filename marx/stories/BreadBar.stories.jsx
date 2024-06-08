@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { BreadBar } from '../components/BreadBar';
+import { Button } from '../components/Button';
 import { Spacer } from '../components/Spacer';
 
 const meta = {
@@ -13,10 +14,10 @@ export const Base = {
   args: {
     children: <>
       <div>Site Name</div>
-      <button>click me!</button>
-      <button>another button</button>
+      <Button>click me!</Button>
+      <Button>another button</Button>
       <Spacer />
-      <button>Publish</button>
+      <Button>Publish</Button>
     </>,
   },
 };

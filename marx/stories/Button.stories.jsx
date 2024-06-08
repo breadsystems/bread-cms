@@ -11,6 +11,6 @@ export default meta;
 
 export const Base = {
   args: {
-    label: 'Button',
+    children: 'Button',
   },
 };

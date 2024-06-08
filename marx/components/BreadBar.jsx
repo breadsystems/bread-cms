@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, {ThemeProvider} from 'styled-components';
 
 import {BreadStyle} from './BreadStyle';
 import {Popover} from './Popover';
@@ -25,15 +25,16 @@ const Styled = styled.div`
   gap: 2em;
 
   line-height: 1.5;
+  color: var(--brd-color-text-main);
 `;
 
 function BreadBar({children}) {
-  return <>
+  return <ThemeProvider theme={{}}>
     <BreadStyle />
     <Styled>
       {children}
     </Styled>
-  </>;
+  </ThemeProvider>;
 }
 
 export {BarSection, PopoverSection, BreadBar};
