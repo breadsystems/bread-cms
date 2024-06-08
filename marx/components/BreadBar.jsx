@@ -37,18 +37,18 @@ const themeVariants = {
 };
 
 function BreadBar({
-  settings = {
-    themeVariant: 'light',
-  },
+  settings = {},
   children,
 }) {
-  const {themeVariant} = settings;
-  const theme = themeVariants[themeVariant] || lightTheme;
-  console.log(theme);
+  const {
+    theme: {variant} = {variant: 'dark'},
+  } = settings;
+  const theme = themeVariants[variant] || lightTheme;
+  console.log(variant, theme);
 
   return <ThemeProvider theme={theme}>
     <BreadStyle />
-    <Styled data-bread-theme-variant={themeVariant}>
+    <Styled data-bread-theme-variant={variant}>
       {children}
     </Styled>
   </ThemeProvider>;
