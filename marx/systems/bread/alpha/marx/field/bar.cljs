@@ -26,19 +26,19 @@
   (BarSection (:site/name ed)))
 
 (defmethod bar-section :settings [ed {:keys [label]}]
-  (let [button-props (clj->js {:label (or label (t :settings))
+  (let [button-props (clj->js {:children (or label (t :settings))
                                :onClick #(prn 'SETTINGS)})]
     (PopoverSection (clj->js {:buttonProps button-props
                               :content (SettingsBox)}))))
 
 (defmethod bar-section :media-library [ed {:keys [label]}]
-  (let [button-props (clj->js {:label (or label (t :media-library))
+  (let [button-props (clj->js {:children (or label (t :media-library))
                                :onClick #(prn 'MEDIA)})]
     (PopoverSection (clj->js {:buttonProps button-props
                               :content nil}))))
 
 (defmethod bar-section :save-button [ed {:keys [label]}]
-  (BarSection (Button (clj->js {:label (or label (t :save))
+  (BarSection (Button (clj->js {:children (or label (t :save))
                                 :onClick #(prn 'SAVE!)}))))
 
 (defmethod core/field-lifecycle :bar
