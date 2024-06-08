@@ -1,8 +1,6 @@
 import React from 'react';
 
-import { BreadBar } from '../components/BreadBar';
-import { Button } from '../components/Button';
-import { Spacer } from '../components/Spacer';
+import { BreadBar, Button, Spacer } from '../components';
 
 const meta = {
   component: BreadBar,
