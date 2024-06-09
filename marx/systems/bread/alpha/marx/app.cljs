@@ -8,10 +8,9 @@
                         :site/name "Sandbox"
                         :bar/sections [:site-name
                                        :settings
-                                       {:type :media-library
-                                        :label "Media"}
+                                       :media
                                        :spacer
-                                       :save-button]
+                                       :publish-button]
                         #_#_
                         :collab {:strategy :webrtc
                                  :ydoc ydoc
