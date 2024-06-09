@@ -15,11 +15,21 @@ const meta = {
   args: {
     children,
   },
+  parameters: {
+    controls: {
+      exclude: ['themeVariant', 'children', 'settings'],
+    },
+  },
 };
 
 export default meta;
 
-export const Base = {};
+export const Base = {
+  args: {
+    settings: {},
+  },
+};
+
 export const DarkTheme = {
   args: {
     settings: {
