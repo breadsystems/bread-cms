@@ -10,6 +10,7 @@ const BreadStyle = createGlobalStyle`
     --marx-color-text-desaturated: ${({theme}) => theme.color.text_desaturated};
 
     --marx-color-background-main:        ${({theme}) => theme.color.background_main};
+    --marx-color-background-slab:        ${({theme}) => theme.color.background_slab};
     --marx-color-background-dark:        ${({theme}) => theme.color.background_dark};
     --marx-color-background-desaturated: ${({theme}) => theme.color.background_desaturated};
 
