@@ -42,7 +42,7 @@ const baseTheme = {
   },
   border: {
     width: '2px',
-    box_input: 'dashed',
+    style_box: 'dashed',
     style_input: 'solid',
   },
 };
@@ -63,7 +63,8 @@ const lightTheme = {
     text_main: '#2c1264',
     text_dark: '#120234',
     text_desaturated: '#373440',
-    background_main: '#e3d8a2',
+    background_main: '#ffc9a9',
+    background_slab: '#ede2b0',
     background_dark: '#c4b04b',
     background_desaturated: '#d9d7cd',
     accent_main: '#ce7575',
