@@ -16,7 +16,7 @@ function PopoverSection({buttonProps, content}) {
 const positionedTop = css`
   top: 0;
   width: 100%;
-  border-width: 0 0 var(--marx-border-width-box) 0;
+  border-width: 0 0 var(--marx-border-width) 0;
 `;
 
 const positionedRight = css`
@@ -24,14 +24,14 @@ const positionedRight = css`
   top: 0;
   right: 0;
   height: 100%;
-  border-width: 0 0 0 var(--marx-border-width-box);
+  border-width: 0 0 0 var(--marx-border-width);
 `;
 
 const positionedBottom = css`
   bottom: 0;
   left: 0;
   width: 100%;
-  border-width: var(--marx-border-width-box) 0 0 0;
+  border-width: var(--marx-border-width) 0 0 0;
 `;
 
 const positionedLeft = css`
@@ -39,7 +39,7 @@ const positionedLeft = css`
   top: 0;
   left: 0;
   height: 100%;
-  border-width: 0 var(--marx-border-width-box) 0 0;
+  border-width: 0 var(--marx-border-width) 0 0;
 `;
 
 const Styled = styled.div`
@@ -58,7 +58,7 @@ const Styled = styled.div`
 
   line-height: 1.5;
   color: var(--marx-color-text-main);
-  background: var(--marx-color-bg-main);
+  background: var(--marx-color-background-slab);
   border-style: var(--marx-border-style-box);
   border-color: var(--marx-color-accent-main);
 `;
