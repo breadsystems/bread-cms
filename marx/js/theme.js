@@ -52,7 +52,16 @@ const darkTheme = {
   variant: 'dark',
   color: {
     text_main: solarizedDarkPalette.base3,
+    text_dark: solarizedDarkPalette.base0,
+    text_desaturated: solarizedDarkPalette.base0,
     background_main: solarizedDarkPalette.base03,
+    background_slab: '#1e3d44',
+    background_dark: '#011014',
+    background_desaturated: '#313d40',
+    accent_main: '#d1a9dc',
+    accent_detail: '#1b756e',
+    accent_dark: '#5f64c3',
+    accent_desaturated: '#3d6f93',
   },
 };
 
