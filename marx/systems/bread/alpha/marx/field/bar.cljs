@@ -4,7 +4,8 @@
 
     ["/Button" :refer [Button]]
     ["/Spacer" :refer [Spacer]]
-    ["/BreadBar" :refer [BarSection PopoverSection BreadBar]]
+    ["/BreadBar" :refer [BarSection PopoverSection]]
+    ["/BreadContainer" :refer [BreadContainer]]
     ["/SettingsBox" :refer [SettingsBox]]
     [systems.bread.alpha.marx.core :as core]))
 
@@ -46,5 +47,5 @@
   {:render
    (fn [_]
      (let [ed-state @ed]
-       (BreadBar (clj->js {:children (map (partial bar-section ed-state)
-                                     (:bar/sections ed-state))}))))})
+       (BreadContainer (clj->js {:children (map (partial bar-section ed-state)
+                                                (:bar/sections ed-state))}))))})
