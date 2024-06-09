@@ -64,7 +64,7 @@
          :or {state {}
               init-state (constantly {})}}
         (field-lifecycle ed field)]
-    (prn (get @render-count (:name field)) (:name field) (:initialized? field) (:state field))
+    ;(prn (get @render-count (:name field)) (:name field) (:initialized? field) (:state field))
     (assert (fn? render)
             (str "field-lifecycle method for " (:type field)
                  " returned something other than a function!"))
