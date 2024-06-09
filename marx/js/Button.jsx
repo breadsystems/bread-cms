@@ -3,7 +3,10 @@ import styled from 'styled-components';
 
 const StyledButton = styled.button`
   padding: ${({theme}) => theme.spacing.gap_small} ${({theme}) => theme.spacing.gap_large};
+
   font-weight: 600;
+  font-family: var(--marx-font-copy);
+
   color: var(--marx-color-text-main);
   background: var(--marx-color-background-main);
   border-width: var(--marx-border-width);
