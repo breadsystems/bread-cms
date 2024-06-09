@@ -9,9 +9,7 @@ const StyledButton = styled.button`
 
   color: var(--marx-color-text-main);
   background: var(--marx-color-background-main);
-  border-width: var(--marx-border-width);
-  border-style: var(--marx-border-style-input);
-  border-color: var(--marx-color-accent-detail);
+  border: var(--marx-border-input);
 
   &:hover {
     cursor: pointer;
