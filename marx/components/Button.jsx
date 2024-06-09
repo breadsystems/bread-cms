@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 const StyledButton = styled.button`
-  color: var(--brd-color-text-main);
+  color: var(--marx-color-text-main);
 `;
 
 function Button({children, onClick}) {
