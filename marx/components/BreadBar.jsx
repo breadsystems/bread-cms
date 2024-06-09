@@ -1,8 +1,6 @@
 import React from 'react';
-import styled, {css, ThemeProvider} from 'styled-components';
+import styled, {css} from 'styled-components';
 
-import {darkTheme, lightTheme} from './theme';
-import {BreadStyle} from './BreadStyle';
 import {Popover} from './Popover';
 import {Button} from './Button';
 
@@ -65,11 +63,6 @@ const Styled = styled.div`
   border-color: var(--marx-color-accent-main);
 `;
 
-const themeVariants = {
-  dark: darkTheme,
-  light: lightTheme,
-};
-
 function BreadBar({
   settings = {},
   children,
@@ -78,12 +71,11 @@ function BreadBar({
     theme: {variant} = {variant: 'light'},
     bar: {position} = {position: 'bottom'},
   } = settings;
-  const theme = themeVariants[variant] || lightTheme;
 
   return (
     <Styled
-      data-bread-theme-variant={variant}
       position={position}
+      data-bread-theme-variant={variant}
     >
       {children}
     </Styled>
