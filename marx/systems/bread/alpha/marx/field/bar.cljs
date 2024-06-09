@@ -26,15 +26,17 @@
 (defmethod bar-section :site-name [ed _]
   (HeadingSection #js {:children (:site/name ed)}))
 
-(defmethod bar-section :settings [ed {:keys [label]}]
+(defmethod bar-section :settings [{:site/keys [settings]} {:keys [label]}]
   (let [button-props #js {:children (or label (t :settings))}]
     (PopoverSection #js {:buttonProps button-props
-                         :content (SettingsBox)})))
+                         :content (SettingsBox
+                                    #js {:settings (core/->js settings)})})))
 
-(defmethod bar-section :media [ed {:keys [label]}]
+(defmethod bar-section :media [{:site/keys [settings]} {:keys [label]}]
   (let [button-props #js {:children (or label (t :media))}]
     (PopoverSection #js {:buttonProps button-props
-                         :content (SettingsBox)})))
+                         :content (MediaLibrary
+                                    #js {:settings (core/->js settings)})})))
 
 (defmethod bar-section :publish-button [ed {:keys [label]}]
   (BarSection #js {:children
@@ -45,6 +47,8 @@
   [ed field]
   {:render
    (fn [_]
-     (let [ed-state @ed]
+     (let [ed-state @ed
+           settings (:site/settings ed-state)]
        (BreadContainer #js {:children (map (partial bar-section ed-state)
-                                           (:bar/sections ed-state))})))})
+                                           (:bar/sections ed-state))
+                            :settings (core/->js settings)})))})
