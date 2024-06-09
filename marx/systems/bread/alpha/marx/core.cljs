@@ -33,6 +33,29 @@
                   :elem elem))
          elems)))
 
+(defn ->js [m]
+  (clj->js (reduce (fn [m [k v]]
+                     (if (namespace k)
+                       (assoc-in m [(namespace k) (name k)] v)
+                       (assoc m k v)))
+                   {} m)))
+
+(defn <-js [obj]
+  (reduce (fn [outer [nsk nested]]
+            (reduce (fn [m [nk v]]
+                      (assoc m (keyword nsk nk) v))
+                    outer nested))
+          {} (js->clj obj)))
+
+(comment
+  (->js {:a :b
+         :bar/position "absolute"
+         :theme/variant "light"
+         :hello/there {:some :data}})
+  (<-js #js {:hi #js {:there "data"
+                      :more "dataaaa"}
+             :stuff #js {:things "thingy"}}))
+
 (defn init-field* [ed field]
   (swap! render-count update (:name field) inc)
   (let [{:keys [init-state
