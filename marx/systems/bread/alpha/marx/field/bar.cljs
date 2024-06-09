@@ -7,6 +7,7 @@
     ["/BreadBar" :refer [HeadingSection BarSection PopoverSection]]
     ["/BreadContainer" :refer [BreadContainer]]
     ["/SettingsBox" :refer [SettingsBox]]
+    ["/MediaLibrary" :refer [MediaLibrary]]
     [systems.bread.alpha.marx.core :as core]))
 
 ;; TODO
@@ -15,7 +16,6 @@
         :settings "Settings"})
 
 (defmulti bar-section (fn [_ section]
-                        (prn 'section section)
                         (cond
                           (keyword? section) section
                           :default (:type section))))
