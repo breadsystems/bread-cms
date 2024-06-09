@@ -23,7 +23,7 @@ function BreadContainer({
       settings={settings}
     >
       {children}
-    </BreadBar>;
+    </BreadBar>
   </ThemeProvider>
 }
 
