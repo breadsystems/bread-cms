@@ -18,7 +18,7 @@ const StyledButton = styled.button`
   &:focus {
     outline: var(--marx-border-width) solid var(--marx-color-accent-detail);
   }
-  &:active {
+  &:active:not(:disabled) {
     color: var(--marx-color-text-dark);
     background: var(--marx-color-background-dark);
     outline: var(--marx-border-width) solid var(--marx-color-accent-dark);
