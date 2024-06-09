@@ -1,4 +1,4 @@
-import { Button } from '../components/Button';
+import { Button } from '../js/Button';
 
 const meta = {
   component: Button,

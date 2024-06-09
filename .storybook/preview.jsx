@@ -2,8 +2,8 @@ import React from 'react';
 import {ThemeProvider} from 'styled-components';
 import {withThemeFromJSXProvider} from '@storybook/addon-themes';
 
-import {darkTheme, lightTheme} from '../marx/components/theme';
-import {BreadStyle} from '../marx/components/BreadStyle';
+import {darkTheme, lightTheme} from '../marx/js/theme';
+import {BreadStyle} from '../marx/js/BreadStyle';
 
 const themeVariants = {
   dark: darkTheme,
