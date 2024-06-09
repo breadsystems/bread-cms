@@ -4,7 +4,7 @@
 
     ["/Button" :refer [Button]]
     ["/Spacer" :refer [Spacer]]
-    ["/BreadBar" :refer [BarSection PopoverSection]]
+    ["/BreadBar" :refer [HeadingSection BarSection PopoverSection]]
     ["/BreadContainer" :refer [BreadContainer]]
     ["/SettingsBox" :refer [SettingsBox]]
     [systems.bread.alpha.marx.core :as core]))
@@ -24,7 +24,7 @@
   (Spacer))
 
 (defmethod bar-section :site-name [ed _]
-  (BarSection (:site/name ed)))
+  (HeadingSection #js {:children (:site/name ed)}))
 
 (defmethod bar-section :settings [ed {:keys [label]}]
   (let [button-props (clj->js {:children (or label (t :settings))
@@ -39,8 +39,9 @@
                               :content nil}))))
 
 (defmethod bar-section :save-button [ed {:keys [label]}]
-  (BarSection (Button (clj->js {:children (or label (t :save))
-                                :onClick #(prn 'SAVE!)}))))
+  (BarSection #js {:children
+                   (Button (clj->js {:children (or label (t :save))
+                                     :onClick #(prn 'SAVE!)}))}))
 
 (defmethod core/field-lifecycle :bar
   [ed field]
