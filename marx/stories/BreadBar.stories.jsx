@@ -30,16 +30,6 @@ export const Base = {
   },
 };
 
-export const DarkTheme = {
-  args: {
-    settings: {
-      theme: {
-        variant: 'dark',
-      },
-    },
-  },
-};
-
 export const PositionedTop = {
   args: {
     settings: {
