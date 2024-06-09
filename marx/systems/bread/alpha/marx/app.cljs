@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.marx.app
   (:require
+    ["/theme" :refer [darkTheme lightTheme]]
     [systems.bread.alpha.marx.api :as marx]))
 
 (defonce my-editor
@@ -12,6 +13,8 @@
                                        :media
                                        :spacer
                                        :publish-button]
+                        :theme/variants #js {:dark darkTheme
+                                             :light lightTheme}
                         #_#_
                         :collab {:strategy :webrtc
                                  :ydoc ydoc

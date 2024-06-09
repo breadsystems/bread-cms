@@ -51,4 +51,5 @@
            settings (:site/settings ed-state)]
        (BreadContainer #js {:children (map (partial bar-section ed-state)
                                            (:bar/sections ed-state))
-                            :settings (core/->js settings)})))})
+                            :settings (core/->js settings)
+                            :themeVariants (:theme/variants ed-state)})))})
