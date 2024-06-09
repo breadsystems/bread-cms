@@ -1,7 +1,8 @@
 import React from 'react';
 import {ThemeProvider} from 'styled-components';
 
-import {BreadStyle, darkTheme, lightTheme} from '../marx/components';
+import {darkTheme, lightTheme} from '../marx/components/theme';
+import {BreadStyle} from '../marx/components/BreadStyle';
 
 const themeVariants = {
   dark: darkTheme,
