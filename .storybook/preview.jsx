@@ -1,5 +1,6 @@
 import React from 'react';
 import {ThemeProvider} from 'styled-components';
+import {withThemeFromJSXProvider} from '@storybook/addon-themes';
 
 import {darkTheme, lightTheme} from '../marx/components/theme';
 import {BreadStyle} from '../marx/components/BreadStyle';
@@ -21,26 +22,16 @@ const preview = {
     },
     layout: 'fullscreen',
   },
-  argTypes: {
-    themeVariant: {
-      control: 'select',
-      description: 'Marx editor theme variant',
-      options: ['dark', 'light'],
-    },
-  },
   decorators: [
-    (Story, { args }) => {
-      if (args.settings) {
-        return <Story />;
-      }
-
-      const theme = themeVariants[args.themeVariant] || lightTheme;
-
-      return <ThemeProvider theme={theme}>
-        <BreadStyle />
-        <Story />
-      </ThemeProvider>;
-    },
+    withThemeFromJSXProvider({
+      themes: {
+        light: lightTheme,
+        dark: darkTheme,
+      },
+      defaultTheme: 'light',
+      Provider: ThemeProvider,
+      GlobalStyles: BreadStyle,
+    }),
   ],
 };
 
