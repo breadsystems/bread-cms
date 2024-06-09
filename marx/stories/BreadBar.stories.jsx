@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { BreadBar, Button, Spacer } from '../components';
+import { BreadBar, Button, Spacer } from '../js';
 
 const children = <>
   <div>Site Name</div>
