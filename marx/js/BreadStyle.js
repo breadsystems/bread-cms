@@ -22,6 +22,9 @@ const BreadStyle = createGlobalStyle`
     --marx-border-width:       ${({theme}) => theme.border.width};
     --marx-border-style-box:   ${({theme}) => theme.border.style_box};
     --marx-border-style-input: ${({theme}) => theme.border.style_input};
+
+    --marx-font-heading: ${({theme}) => theme.type.font_heading};
+    --marx-font-copy:    ${({theme}) => theme.type.font_copy};
   }
 `;
 

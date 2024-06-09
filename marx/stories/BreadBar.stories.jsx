@@ -1,13 +1,17 @@
 import React from 'react';
 
-import { BreadBar, Button, Spacer } from '../js';
+import {BreadBar, BarSection, HeadingSection} from '../js/BreadBar';
+import {Button} from '../js/Button';
+import {Spacer} from '../js/Spacer';
 
 const children = <>
-  <div>Site Name</div>
-  <Button>click me!</Button>
-  <Button>another button</Button>
+  <HeadingSection>Site Name</HeadingSection>
+  <Button>Click me!</Button>
+  <Button>Another button</Button>
   <Spacer />
-  <Button>Publish</Button>
+  <BarSection>
+    <Button>Publish</Button>
+  </BarSection>
 </>;
 
 const meta = {

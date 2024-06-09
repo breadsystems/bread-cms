@@ -4,8 +4,22 @@ import styled, {css, ThemeContext} from 'styled-components';
 import {Popover} from './Popover';
 import {Button} from './Button';
 
-function BarSection(children) {
-  return <div>{children}</div>;
+const StyledHeadingSection = styled.div`
+  font-family: var(--marx-font-heading);
+  font-size: 1.5em;
+  font-weight: 600;
+`;
+
+function HeadingSection({children}) {
+  return <StyledHeadingSection>{children}</StyledHeadingSection>;
+}
+
+const StyledBarSection = styled.div`
+  font-family: var(--marx-font-copy);
+`;
+
+function BarSection({children}) {
+  return <StyledBarSection>{children}</StyledBarSection>;
 }
 
 function PopoverSection({buttonProps, content}) {
@@ -53,8 +67,11 @@ const Styled = styled.div`
 
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 1em;
   gap: 2em;
+
+  font-family: var(--marx-font-copy);
 
   line-height: 1.5;
   color: var(--marx-color-text-main);
@@ -82,4 +99,4 @@ function BreadBar({
   );
 }
 
-export {BarSection, PopoverSection, BreadBar};
+export {BarSection, HeadingSection, PopoverSection, BreadBar};

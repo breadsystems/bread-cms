@@ -29,8 +29,8 @@ const solarizedLightPalette = {
 
 const baseTheme = {
   type: {
-    font_heading: 'serif',
-    font_body: 'sans-serif',
+    font_heading: 'monospace',
+    font_copy: 'monospace',
     font_size_basis: '16px',
   },
   spacing: {
