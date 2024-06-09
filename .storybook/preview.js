@@ -6,6 +6,7 @@ const preview = {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+      exclude: ['children', 'settings'],
     },
     layout: 'fullscreen',
   },
