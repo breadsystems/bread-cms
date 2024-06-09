@@ -2,8 +2,10 @@ import React, {useState} from 'react';
 import styled from 'styled-components';
 import * as Rp from '@radix-ui/react-popover';
 
+import {Button} from './Button';
+
 const PopoverContent = styled.div`
-  --bar-height: 54px; // TODO
+  --bar-height: 58px; // TODO
 
   position: fixed;
   bottom: 0;
@@ -22,7 +24,17 @@ function Popover({trigger, children}) {
     <Rp.Portal>
       {open && (
         <PopoverContent>
-          <Rp.Content>
+          <Rp.Content
+            onFocusOutside={() => setOpen(false)}
+            onInteractOutside={() => setOpen(false)}
+            onEscapeKeyDown={() => setOpen(false)}
+            onPointerDownOutside={() => setOpen(false)}
+          >
+            <div>
+              <Rp.Close asChild>
+                <Button onClick={() => setOpen(false)}>Close</Button>
+              </Rp.Close>
+            </div>
             {children}
           </Rp.Content>
         </PopoverContent>

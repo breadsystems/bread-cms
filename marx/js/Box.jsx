@@ -1,7 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Aside = styled.aside`
+const StyledBox = styled.aside`
+  display: flex;
+  flex-flow: column wrap;
+  gap: ${({theme}) => theme.spacing.gap_standard};
+
   color: var(--marx-color-text-main);
   background-color: var(--marx-color-background-slab);
   padding: 1em;
@@ -9,9 +13,9 @@ const Aside = styled.aside`
 `;
 
 function Box({children}) {
-  return <Aside>
+  return <StyledBox>
     {children}
-  </Aside>;
+  </StyledBox>;
 }
 
-export {Box};
+export {StyledBox, Box};

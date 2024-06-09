@@ -1,14 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import {Box} from './Box';
+import {StyledBox} from './Box';
+
+const Styled = styled(StyledBox)`
+`;
 
 function SettingsBox() {
-  return <Box>
+  return <Styled>
     <h2>SETTINGS GO HERE</h2>
     <section>Section one</section>
     <section>Section two</section>
-  </Box>;
+  </Styled>;
 }
 
 export {SettingsBox};
