@@ -1,4 +1,4 @@
-import { SettingsBox } from '../components/SettingsBox';
+import { SettingsBox } from '../js/SettingsBox';
 
 const meta = {
   component: SettingsBox,
