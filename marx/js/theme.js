@@ -31,13 +31,19 @@ const baseTheme = {
   type: {
     font_heading: 'serif',
     font_body: 'sans-serif',
+    font_size_basis: '16px',
   },
   spacing: {
-    gap_small: '0.25em',
+    gap_tiny:     '0.25em',
+    gap_small:    '0.5em',
+    gap_standard: '1em',
+    gap_large:    '2em',
+    gap_spacious: '4em',
   },
   border: {
-    box_style: 'dashed',
-    box_width: '2px',
+    width: '2px',
+    box_input: 'dashed',
+    style_input: 'solid',
   },
 };
 
@@ -54,9 +60,16 @@ const lightTheme = {
   ...baseTheme,
   variant: 'light',
   color: {
-    text_main: '#171818',
+    text_main: '#2c1264',
+    text_dark: '#120234',
+    text_desaturated: '#373440',
     background_main: '#e3d8a2',
+    background_dark: '#c4b04b',
+    background_desaturated: '#d9d7cd',
     accent_main: '#ce7575',
+    accent_detail: '#c4b5a9',
+    accent_dark: '#7b6d63',
+    accent_desaturated: '#7b6d63',
   },
 };
 
