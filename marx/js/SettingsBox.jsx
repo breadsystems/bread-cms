@@ -2,9 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Aside = styled.aside`
-  background-color: pink;
+  background-color: var(--marx-color-background-slab);
   padding: 1em;
-  border: 2px dashed #666;
+  border: var(--marx-border-box);
 `;
 
 function SettingsBox() {

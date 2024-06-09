@@ -65,7 +65,7 @@ const lightTheme = {
     text_desaturated: '#373440',
     background_main: '#ffc9a9',
     background_slab: '#ede2b0',
-    background_dark: '#c4b04b',
+    background_dark: '#cf9082',
     background_desaturated: '#d9d7cd',
     accent_main: '#ce7575',
     accent_detail: '#c4b5a9',
