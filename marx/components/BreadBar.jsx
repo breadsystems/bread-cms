@@ -80,15 +80,14 @@ function BreadBar({
   } = settings;
   const theme = themeVariants[variant] || lightTheme;
 
-  return <ThemeProvider theme={theme}>
-    <BreadStyle />
+  return (
     <Styled
       data-bread-theme-variant={variant}
       position={position}
     >
       {children}
     </Styled>
-  </ThemeProvider>;
+  );
 }
 
 export {BarSection, PopoverSection, BreadBar};
