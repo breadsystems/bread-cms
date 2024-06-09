@@ -27,26 +27,26 @@
   (HeadingSection #js {:children (:site/name ed)}))
 
 (defmethod bar-section :settings [ed {:keys [label]}]
-  (let [button-props (clj->js {:children (or label (t :settings))
-                               :onClick #(prn 'SETTINGS)})]
-    (PopoverSection (clj->js {:buttonProps button-props
-                              :content (SettingsBox)}))))
+  (let [button-props #js {:children (or label (t :settings))
+                          :onClick #(prn 'SETTINGS)}]
+    (PopoverSection #js {:buttonProps button-props
+                         :content (SettingsBox)})))
 
 (defmethod bar-section :media-library [ed {:keys [label]}]
-  (let [button-props (clj->js {:children (or label (t :media-library))
-                               :onClick #(prn 'MEDIA)})]
-    (PopoverSection (clj->js {:buttonProps button-props
-                              :content nil}))))
+  (let [button-props #js {:children (or label (t :media-library))
+                          :onClick #(prn 'MEDIA)}]
+    (PopoverSection #js {:buttonProps button-props
+                         :content nil})))
 
 (defmethod bar-section :save-button [ed {:keys [label]}]
   (BarSection #js {:children
-                   (Button (clj->js {:children (or label (t :save))
-                                     :onClick #(prn 'SAVE!)}))}))
+                   (Button #js {:children (or label (t :save))
+                                :onClick #(prn 'SAVE!)})}))
 
 (defmethod core/field-lifecycle :bar
   [ed field]
   {:render
    (fn [_]
      (let [ed-state @ed]
-       (BreadContainer (clj->js {:children (map (partial bar-section ed-state)
-                                                (:bar/sections ed-state))}))))})
+       (BreadContainer #js {:children (map (partial bar-section ed-state)
+                                           (:bar/sections ed-state))})))})
