@@ -44,8 +44,8 @@ const baseTheme = {
 const darkTheme = {
   ...baseTheme,
   color: {
-    text: solarizedDarkPalette.base3,
-    background: solarizedDarkPalette.base03,
+    text_main: solarizedDarkPalette.base3,
+    background_main: solarizedDarkPalette.base03,
   },
 };
 
