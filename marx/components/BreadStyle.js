@@ -8,6 +8,9 @@ const BreadStyle = createGlobalStyle`
     --marx-color-text-main: ${({theme}) => theme.color.text_main};
     --marx-color-bg-main: ${({theme}) => theme.color.background_main};
     --marx-color-accent-main: ${({theme}) => theme.color.accent_main};
+
+    --marx-border-style-box: ${({theme}) => theme.border.box_style};
+    --marx-border-width-box: ${({theme}) => theme.border.box_width};
   }
 `;
 

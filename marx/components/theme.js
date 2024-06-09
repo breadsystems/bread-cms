@@ -35,6 +35,10 @@ const baseTheme = {
   spacing: {
     gap_small: '0.25em',
   },
+  border: {
+    box_style: 'dashed',
+    box_width: '2px',
+  },
 };
 
 const darkTheme = {
