@@ -5,13 +5,9 @@ import {darkTheme, lightTheme} from './theme';
 import {BreadStyle} from './BreadStyle';
 import {BreadBar} from './BreadBar';
 
-const themeVariants = {
-  dark: darkTheme,
-  light: lightTheme,
-};
-
 function BreadContainer({
   settings = {},
+  themeVariants = {},
   children,
 }) {
   const {theme: {variant} = {variant: 'light'}} = settings;
