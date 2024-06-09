@@ -43,6 +43,7 @@ const baseTheme = {
 
 const darkTheme = {
   ...baseTheme,
+  variant: 'dark',
   color: {
     text_main: solarizedDarkPalette.base3,
     background_main: solarizedDarkPalette.base03,
@@ -51,6 +52,7 @@ const darkTheme = {
 
 const lightTheme = {
   ...baseTheme,
+  variant: 'light',
   color: {
     text_main: '#171818',
     background_main: '#e3d8a2',

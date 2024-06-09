@@ -1,5 +1,5 @@
-import React from 'react';
-import styled, {css} from 'styled-components';
+import React, {useContext} from 'react';
+import styled, {css, ThemeContext} from 'styled-components';
 
 import {Popover} from './Popover';
 import {Button} from './Button';
@@ -68,14 +68,14 @@ function BreadBar({
   children,
 }) {
   const {
-    theme: {variant} = {variant: 'light'},
     bar: {position} = {position: 'bottom'},
   } = settings;
+  const theme = useContext(ThemeContext);
 
   return (
     <Styled
       position={position}
-      data-bread-theme-variant={variant}
+      data-bread-theme-variant={theme.variant}
     >
       {children}
     </Styled>
