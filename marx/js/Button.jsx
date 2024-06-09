@@ -20,7 +20,7 @@ const StyledButton = styled.button`
   &:active {
     color: var(--marx-color-text-dark);
     background: var(--marx-color-background-dark);
-    outline: calc(2 * var(--marx-border-width)) solid var(--marx-color-accent-dark);
+    outline: var(--marx-border-width) solid var(--marx-color-accent-dark);
   }
   &:disabled {
     cursor: not-allowed;
