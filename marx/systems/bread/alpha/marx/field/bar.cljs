@@ -5,6 +5,7 @@
     ["/Button" :refer [Button]]
     ["/Spacer" :refer [Spacer]]
     ["/BreadBar" :refer [HeadingSection BarSection PopoverSection]]
+    ["/Popover" :refer [Popover]]
     ["/BreadContainer" :refer [BreadContainer]]
     ["/SettingsBox" :refer [SettingsBox]]
     ["/MediaLibrary" :refer [MediaLibrary]]
@@ -27,16 +28,14 @@
   (HeadingSection #js {:children (:site/name ed)}))
 
 (defmethod bar-section :settings [{:site/keys [settings]} {:keys [label]}]
-  (let [button-props #js {:children (or label (t :settings))}]
-    (PopoverSection #js {:buttonProps button-props
-                         :content (SettingsBox
-                                    #js {:settings (core/->js settings)})})))
+  (Popover #js {:buttonProps #js {:children (or label (t :settings))}
+                :content (SettingsBox
+                           #js {:settings (core/->js settings)})}))
 
 (defmethod bar-section :media [{:site/keys [settings]} {:keys [label]}]
-  (let [button-props #js {:children (or label (t :media))}]
-    (PopoverSection #js {:buttonProps button-props
-                         :content (MediaLibrary
-                                    #js {:settings (core/->js settings)})})))
+  (Popover #js {:buttonProps #js {:children (or label (t :media))}
+                :content (MediaLibrary
+                           #js {:settings (core/->js settings)})}))
 
 (defmethod bar-section :publish-button [ed {:keys [label]}]
   (BarSection #js {:children
