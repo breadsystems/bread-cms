@@ -35,10 +35,12 @@ function Button({
   children,
   disabled,
   onClick,
+  buttonRef = null,
 }) {
   return <StyledButton
     disabled={disabled}
     onClick={onClick}
+    ref={buttonRef}
   >
     {children}
   </StyledButton>;
