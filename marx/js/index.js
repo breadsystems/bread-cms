@@ -2,7 +2,6 @@ export {
   BreadBar,
   BarSection,
   HeadingSection,
-  PopoverSection,
 } from './BreadBar';
 export {BreadStyle} from './BreadStyle';
 export {Button} from './Button';
