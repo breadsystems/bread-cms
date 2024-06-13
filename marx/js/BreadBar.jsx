@@ -22,11 +22,6 @@ function BarSection({children}) {
   return <StyledBarSection>{children}</StyledBarSection>;
 }
 
-function PopoverSection({buttonProps, content}) {
-  const button = <Button {...buttonProps} />;
-  return <Popover trigger={button}>{content}</Popover>;
-}
-
 const positionedTop = css`
   top: 0;
   width: 100%;
