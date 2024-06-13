@@ -8,27 +8,17 @@ const PopoverButton = forwardRef(function PopoverButton(props, ref) {
   return <Button {...props} buttonRef={ref} />;
 });
 
-const PopoverContent = styled.div`
-  --bar-height: 58px; // TODO
-
-  position: fixed;
-  bottom: 0;
-  left: 0;
-`;
-
 function Popover({buttonProps, content}) {
   return <Rp.Root>
     <Rp.Portal>
-      <PopoverContent>
-        <Rp.Content>
-          <div>
-            <Rp.Close asChild>
-              <Button>Close</Button>
-            </Rp.Close>
-          </div>
-          {content}
-        </Rp.Content>
-      </PopoverContent>
+      <Rp.Content>
+        <div>
+          <Rp.Close asChild>
+            <Button>Close</Button>
+          </Rp.Close>
+        </div>
+        {content}
+      </Rp.Content>
     </Rp.Portal>
     <Rp.Trigger asChild>
       <PopoverButton {...buttonProps} />

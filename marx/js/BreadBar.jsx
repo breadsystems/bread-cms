@@ -94,4 +94,4 @@ function BreadBar({
   );
 }
 
-export {BarSection, HeadingSection, PopoverSection, BreadBar};
+export {BarSection, HeadingSection, BreadBar};
