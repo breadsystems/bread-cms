@@ -21,6 +21,7 @@
           clojure
           zulu11
           babashka
+          yarn-berry
         ];
       };
     };
