@@ -1,3 +1,5 @@
+.direnv
+.envrc
 .cpcache
 .calva
 .idea
@@ -26,8 +28,6 @@ inputFiles.lst
 /.idea
 /.yarn
 
-.direnv
-.envrc
 /resources/editor/js
 /marx/out
 
