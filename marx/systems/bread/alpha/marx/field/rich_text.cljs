@@ -1,8 +1,10 @@
 (ns systems.bread.alpha.marx.field.rich-text
   (:require
+    #_
     ["react-dom/client" :as rdom]
     ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
 
+    #_
     ["/EditorMenu" :refer [EditorMenu]]
     [systems.bread.alpha.marx.core :as core]
     [systems.bread.alpha.marx.tiptap :as tiptap]))
@@ -19,6 +21,7 @@
        (let [menu-elem (js/document.createElement "DIV")
              extensions (tiptap/extensions ed tools {:menu-element menu-elem})]
          {:menu-elem menu-elem
+          #_#_ ;; TODO custom elem
           :menu-root (rdom/createRoot menu-elem)
           :extensions extensions
           :tiptap (TiptapEditor. (clj->js {:element (.-parentNode elem)
@@ -36,5 +39,6 @@
                                       :effect #(tiptap/command tiptap tool)}]
                            (merge props (core/tool-props @ed props))))
              menu-props {:tools (map menu-tool tools)}]
+         #_
          (.render menu-root (EditorMenu (clj->js menu-props))))
        nil)}))
