@@ -13,13 +13,11 @@
     "@storybook/test": "^8.2.5",
     "@storybook/web-components-vite": "^8.2.5",
     "prop-types": "^15.8.1",
-    "react-refresh": "^0.14.2",
     "shadow-cljs": "^2.19.1",
     "storybook": "^8.2.5",
     "vite": "^5.2.12"
   },
   "dependencies": {
-    "@radix-ui/react-popover": "^1.0.7",
     "@tiptap/core": "^2.4.0",
     "@tiptap/extension-blockquote": "^2.4.0",
     "@tiptap/extension-bold": "^2.4.0",
