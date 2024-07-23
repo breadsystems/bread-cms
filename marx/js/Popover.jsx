@@ -4,7 +4,7 @@ import * as Rp from '@radix-ui/react-popover';
 
 import {Button} from './Button';
 
-const PopoverButton = forwardRef(function PopoverButton(props, ref) {
+const RefForwardingButton = forwardRef(function RefForwardingButton(props, ref) {
   return <Button {...props} buttonRef={ref} />;
 });
 
@@ -21,7 +21,7 @@ function Popover({buttonProps, content}) {
       </Rp.Content>
     </Rp.Portal>
     <Rp.Trigger asChild>
-      <PopoverButton {...buttonProps} />
+      <RefForwardingButton {...buttonProps} />
     </Rp.Trigger>
   </Rp.Root>;
 }
