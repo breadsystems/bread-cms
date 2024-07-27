@@ -57,7 +57,12 @@
       :db/valueType :db.type/number
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.things"}
-     ]
+     {:db/ident :thing/children
+      :attr/label "Children"
+      :db/doc "Entity IDs of child things, if any"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.things"}]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
@@ -220,12 +225,6 @@
       :db/index true
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
-     {:db/ident :post/children
-      :attr/label "Post Children"
-      :db/doc "Entity IDs of child posts, if any"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.posts"}
      {:db/ident :post/status
       :attr/label "Post Status"
       :db/doc "Post status, i.e. whether it is published, in review, drafting, etc."
@@ -268,12 +267,6 @@
      {:db/ident :post/taxons
       :attr/label "Post Taxons"
       :db/doc "Zero or more entity IDs of a Post's taxons"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
-      :attr/migration "migration.taxons"}
-     {:db/ident :taxon/children
-      :attr/label "Taxon Children"
-      :db/doc "_is-a_ relations between taxon entities, forming a hierarchy"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :attr/migration "migration.taxons"}
@@ -351,12 +344,6 @@
       :db/doc "DB entity this item references (if any)."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.menus"}
-     {:db/ident :menu.item/children
-      :attr/label "Menu Item Children"
-      :db/doc "Any child items of this item."
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
       :attr/migration "migration.menus"}]
 
     {:type :bread/migration
