@@ -120,9 +120,9 @@
       :field/lang :fr}]}
    {:db/id "menu-item.zero"
     :menu.item/entity "page.parent"
-    :menu.item/order 0}
+    :thing/order 0}
    {:db/id "menu-item.one"
-    :menu.item/order 1
+    :thing/order 1
     :post/type :post.type/menu-item
     :menu.item/children ["menu-item.child"]
     :translatable/fields
@@ -136,7 +136,7 @@
       :field/format :join
       :field/content (pr-str ["/" :field/lang "/thing-one"])}]}
    {:db/id "menu-item.two"
-    :menu.item/order 2
+    :thing/order 2
     :post/type :post.type/menu-item
     :translatable/fields
     [{:field/key :title

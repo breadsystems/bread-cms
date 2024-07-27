@@ -159,7 +159,7 @@
         route-name :route/name
         :or {recursion-limit '...
              merge? true
-             sort-key [:menu.item/order]}}]
+             sort-key [:thing/order]}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
       [{:query/name ::bread/value
@@ -172,7 +172,7 @@
         :query/description "Recursively query for menu items."
         :query/db (db/database req)
         :query/args [{:find [(list 'pull '?i [:db/id
-                                              :menu.item/order
+                                              :thing/order
                                               {:menu.item/children
                                                recursion-limit}
                                               {:menu.item/entity
@@ -207,7 +207,7 @@
         route-name :route/name
         :or {recursion-limit '...
              merge? true
-             sort-key [:menu.item/order]}}]
+             sort-key [:thing/order]}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
       [{:query/name ::bread/value
@@ -220,7 +220,7 @@
         :query/description "Recursively query for menu items."
         :query/db (db/database req)
         :query/args [{:find [(list 'pull '?i [:db/id
-                                              :menu.item/order
+                                              :thing/order
                                               {:menu.item/children
                                                recursion-limit}
                                               {:menu.item/entity
