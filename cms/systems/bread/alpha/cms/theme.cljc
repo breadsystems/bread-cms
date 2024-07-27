@@ -39,7 +39,7 @@
   [{:keys [lang user post]}]
   {:extends MainLayout
    :key :post
-   :query '[:post/children
+   :query '[:thing/children
             :thing/slug
             :post/authors
             {:translatable/fields [*]}]}

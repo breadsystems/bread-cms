@@ -217,15 +217,15 @@
 
     ;; Finding recursive bindings with a keyword predicate.
     {:bindings [{:binding-sym '?e
-                 :attr :menu.item/children
+                 :attr :thing/children
                  :entity-index 0
-                 :binding-path [1 :menu.item/children]
-                 :relation [:menu.item/children]}]}
+                 :binding-path [1 :thing/children]
+                 :relation [:thing/children]}]}
     keyword? ;; any keyword key
     (fn [b]
       (or (= '... b) (integer? b)))
     '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}
-                       {:menu.item/children ...}])]
+                       {:thing/children ...}])]
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}
 

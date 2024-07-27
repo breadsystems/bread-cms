@@ -282,9 +282,9 @@
   (q '{:find [(pull ?e [:db/id
                         :taxon/taxonomy
                         :thing/slug
-                        {:taxon/_children [:thing/slug
-                                           {:taxon/_children ...}]}
-                        {:taxon/children ...}
+                        {:thing/_children [:thing/slug
+                                           {:thing/_children ...}]}
+                        {:thing/children ...}
                         {:translatable/fields [*]}])]
        :in [$ ?taxonomy]
        :where [[?e :taxon/taxonomy ?taxonomy]]}
@@ -296,12 +296,12 @@
                         :post/type
                         :post/status
                         {:translatable/fields [*]}
-                        {:post/_children [:thing/slug {:post/_children ...}]}
-                        {:post/children ...}])]
+                        {:thing/_children [:thing/slug {:thing/_children ...}]}
+                        {:thing/children ...}])]
        :in [$ ?type [?status ...]]
        :where [[?e :post/type ?type]
                [?e :post/status ?status]
-               (not-join [?e] [?_ :post/children ?e])]}
+               (not-join [?e] [?_ :thing/children ?e])]}
      :post.type/page
      #{:post.status/published})
 

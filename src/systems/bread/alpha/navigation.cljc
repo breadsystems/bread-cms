@@ -19,7 +19,7 @@
 
 (defn- ->item
   [opts {fields :translatable/fields
-         children :menu.item/children
+         children :thing/children
          {post-fields :translatable/fields :as e} :menu.item/entity}]
   (let [;; TODO don't hard-code param names, infer from route
         *slug (string/join "/" (route/ancestry e))
@@ -32,7 +32,7 @@
                             fields)
      :uri (or (:uri fields)
               (bread/path (:router opts) (:route/name opts) params))
-     :children (->items opts children)}))
+     :thing/children (->items opts children)}))
 
 (defmethod bread/query ::items
   [opts data]
@@ -80,15 +80,15 @@
                                     {:translatable/fields '[*]}
                                     ;; We need full ancestry for constructing
                                     ;; Post URLs.
-                                    {:post/_children
+                                    {:thing/_children
                                      [:thing/slug
-                                      {:post/_children '...}]}
-                                    {:post/children recursion-limit}])]
+                                      {:thing/_children '...}]}
+                                    {:thing/children recursion-limit}])]
                       :in '[$ ?type [?status ...]]
                       :where '[[?e :post/type ?type]
                                [?e :post/status ?status]
                                ;; only top-level pages
-                               (not-join [?e] [?_ :post/children ?e])]}
+                               (not-join [?e] [?_ :thing/children ?e])]}
                      post-type
                      (if (coll? post-status)
                        (set post-status)
@@ -118,9 +118,9 @@
                                   :taxon/taxonomy
                                   :thing/slug
                                   ;; We need full ancestry for Taxon URLs.
-                                  {:taxon/_children
-                                   [:thing/slug {:taxon/_children '...}]}
-                                  {:taxon/children
+                                  {:thing/_children
+                                   [:thing/slug {:thing/_children '...}]}
+                                  {:thing/children
                                    recursion-limit}
                                   {:translatable/fields '[*]}])]
           :in '[$ ?taxonomy]
@@ -173,15 +173,15 @@
         :query/db (db/database req)
         :query/args [{:find [(list 'pull '?i [:db/id
                                               :thing/order
-                                              {:menu.item/children
+                                              {:thing/children
                                                recursion-limit}
                                               {:menu.item/entity
                                                [:db/id
                                                 :thing/slug
                                                 {:translatable/fields '[*]}
-                                                {:post/_children
+                                                {:thing/_children
                                                  [:thing/slug
-                                                  {:post/_children '...}]}]}
+                                                  {:thing/_children '...}]}]}
                                               {:translatable/fields '[*]}])]
                       :in '[$ ?key]
                       :where '[[?m :menu/key ?key]
@@ -221,15 +221,15 @@
         :query/db (db/database req)
         :query/args [{:find [(list 'pull '?i [:db/id
                                               :thing/order
-                                              {:menu.item/children
+                                              {:thing/children
                                                recursion-limit}
                                               {:menu.item/entity
                                                [:db/id
                                                 :thing/slug
                                                 {:translatable/fields '[*]}
-                                                {:post/_children
+                                                {:thing/_children
                                                  [:thing/slug
-                                                  {:post/_children '...}]}]}
+                                                  {:thing/_children '...}]}]}
                                               {:translatable/fields '[*]}])]
                       :in '[$ ?location]
                       :where '[[?m :menu/locations ?location]

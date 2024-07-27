@@ -158,7 +158,7 @@
 (deftest test-internationalize-query
   (let [attrs-map {:menu/items          {:db/cardinality :db.cardinality/many}
                    :translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/children       {:db/cardinality :db.cardinality/many}
+                   :thing/children      {:db/cardinality :db.cardinality/many}
                    :post/taxons         {:db/cardinality :db.cardinality/many}
                    :post/_taxons        {:db/cardinality :db.cardinality/many}}]
     (are
@@ -446,7 +446,7 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:post/children ...}
+                            {:thing/children ...}
                             {:some/relation [{:hierarchical/stuff ...}]}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
@@ -465,7 +465,7 @@
         :format? true
         :compact? true
         ;; "disregarded" means it doesn't show up here:
-        :recur-attrs #{:post/children}
+        :recur-attrs #{:thing/children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -474,7 +474,7 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
-                           {:post/children ...}
+                           {:thing/children ...}
                            {:some/relation [;; We can safely disregard this
                                             ;; recursive binding.
                                             {:hierarchical/stuff ...}]}
@@ -498,7 +498,7 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:post/children ...}
+                            {:thing/children ...}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
                             {:post/taxons [:thing/slug
@@ -515,7 +515,7 @@
         :field/lang :en
         :format? true
         :compact? true
-        :recur-attrs #{:post/children}
+        :recur-attrs #{:thing/children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -524,7 +524,7 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
-                           {:post/children ...}
+                           {:thing/children ...}
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:thing/slug
                                           :taxon/taxonomy
@@ -545,12 +545,12 @@
         :query/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:post/children 3}
+                            {:thing/children 3}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
                             {:post/taxons [:thing/slug
                                            :taxon/taxonomy
-                                           {:taxon/_children ...}
+                                           {:thing/_children ...}
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
            :where [[?e :thing/slug ?slug]
@@ -563,7 +563,7 @@
         :field/lang :en
         :format? true
         :compact? true
-        :recur-attrs #{:post/children :taxon/_children}
+        :recur-attrs #{:thing/children :thing/_children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
       {:query/name ::db/query
@@ -572,13 +572,13 @@
        :query/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
-                           {:post/children 3}
+                           {:thing/children 3}
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:thing/slug
                                           :taxon/taxonomy
                                           ;; We might do this e.g. to get
                                           ;; a heirarchical URL
-                                          {:taxon/_children ...}
+                                          {:thing/_children ...}
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
           :where [[?e :thing/slug ?slug]
@@ -738,13 +738,13 @@
 
     ;; With direct fields; EDN formatting; compactions; recursive data.
     {:translatable/fields {:from-the-river "מהנהר"}
-     :menu.item/children [{:translatable/fields {:to-the-sea "לים"}}]}
+     :thing/children [{:translatable/fields {:to-the-sea "לים"}}]}
     {:query/name ::i18n/fields
      :query/key :the-key
      :field/lang :he
      :format? true
      :compact? true
-     :recur-attrs #{:menu.item/children}
+     :recur-attrs #{:thing/children}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :from-the-river
@@ -755,7 +755,7 @@
                  :field/format :edn
                  :field/content (pr-str "From the river")
                  :field/lang :en}]
-               :menu.item/children
+               :thing/children
                [{:translatable/fields
                  [{:field/key :to-the-sea
                    :field/format :edn
@@ -768,19 +768,19 @@
 
     ;; With direct fields; raw formatting; compactions; universal fields.
     {:translatable/fields {:uri "/abc"}
-     :menu.item/children [{:translatable/fields {:uri "/def"}}]}
+     :thing/children [{:translatable/fields {:uri "/def"}}]}
     {:query/name ::i18n/fields
      :query/key :the-key
      :field/lang :he
      :format? true
      :compact? true
-     :recur-attrs #{:menu.item/children}
+     :recur-attrs #{:thing/children}
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{;; no :field/lang
                  :field/key :uri
                  :field/content "/abc"}]
-               :menu.item/children
+               :thing/children
                [{:translatable/fields
                  [{;; no :field/lang
                    :field/key :uri

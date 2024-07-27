@@ -35,13 +35,13 @@
            [['?child :thing/slug (first slug-syms)]]
            (mapcat
              (fn [[ancestor-sym descendant-sym slug-sym]]
-               [[ancestor-sym :post/children descendant-sym]
+               [[ancestor-sym :thing/children descendant-sym]
                 [ancestor-sym :thing/slug slug-sym]])
              (partition 3 (interleave (rest descendant-syms)
                                       (butlast descendant-syms)
                                       (rest slug-syms))))
            [(list 'not-join [earliest-ancestor-sym]
-                  ['?_ :post/children earliest-ancestor-sym])]))))
+                  ['?_ :thing/children earliest-ancestor-sym])]))))
 
 (defn- ancestralize [query slugs]
   (let [depth (count slugs)
