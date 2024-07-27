@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.marx.api
   (:require
-    ["react" :as react]
-
     [systems.bread.alpha.marx.field.bar :as bar]
     [systems.bread.alpha.marx.field.rich-text]
     [systems.bread.alpha.marx.core :as core]))

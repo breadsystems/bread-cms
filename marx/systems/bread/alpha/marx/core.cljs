@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.marx.core
   (:require
-    ["react-dom/client" :as rdom]
     [clojure.edn :as edn]))
 
 (defn read-attr [elem attr]
@@ -69,11 +68,29 @@
             (str "field-lifecycle method for " (:type field)
                  " returned something other than a function!"))
     (if (:initialized? field)
+      (let [{{component :marx/component :as state} :state} field
+            parent (.-parentNode component)]
+        (js/console.log "parent" parent)
+        (js/customElements.upgrade parent)
+        (.render component (->js state)))
+      #_
       (let [{{root :marx/react-root :as state} :state} field
             react-element (render state)]
         (.render root react-element))
       (do
         (assert (fn? init-state))
+        (js/console.log (:marx/react-root field) (name (:name field)) (:elem field))
+        (let [component (doto (js/document.createElement "bread-bar")
+                          (.setAttribute "color" "red"))
+              initial (assoc (init-state)
+                             :marx/component component)]
+          (prn 'field field)
+          (prn 'component component)
+          (persist-field-state! ed field initial)
+          (.appendChild (:elem field) component)
+          (when (fn? did-mount)
+            (did-mount initial)))
+        #_
         (let [root (rdom/createRoot (:elem field))
               initial (assoc (init-state)
                              :marx/react-root root)]

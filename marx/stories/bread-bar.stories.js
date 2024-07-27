@@ -10,5 +10,5 @@ export default meta;
 
 export const Primary = () =>
   html`
-    <bread-bar name="World"></bread-bar>
+    <bread-bar name="World" color="green"></bread-bar>
   `;

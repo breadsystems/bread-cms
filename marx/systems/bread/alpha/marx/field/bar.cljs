@@ -1,8 +1,6 @@
 (ns systems.bread.alpha.marx.field.bar
   (:require
-    #_
-    ["react" :as react]
-
+    ["/bread-bar"]
     #_
     #_
     #_
@@ -61,6 +59,7 @@
    (fn [_]
      (let [ed-state @ed
            settings (:site/settings ed-state)]
+       (doto (js/document.createElement "bread-bar"))
        #_
        (BreadContainer #js {:children (map (partial bar-section ed-state)
                                            (:bar/sections ed-state))

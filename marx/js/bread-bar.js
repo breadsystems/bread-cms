@@ -1,26 +1,30 @@
 import {LitElement, css, html} from 'lit';
+import {styleMap} from 'lit/directives/style-map.js';
 
-export class Hello extends LitElement {
+//import {defineOnce} from './util';
+
+export class BreadBar extends LitElement {
   static properties = {
     name: {},
+    color: {},
+    styles: {},
   };
-
-  static styles = css`
-    :host {
-      color: blue;
-    }
-  `;
 
   constructor(args) {
     super();
-    this.name = this.getAttribute('name');
+    this.name = this.getAttribute('name') ?? 'World';
+    this.color = this.getAttribute('color') ?? 'blue';
+    this.styles = {
+      color: this.color,
+      fontWeight: 600,
+    };
   }
 
   render() {
     return html`
-      <p>Hello, ${this.name}!</p>
+      <div style="${styleMap(this.styles)}">Hello, ${this.name}!</div>
     `;
   }
 }
 
-customElements.define('bread-bar', Hello);
+customElements.define('bread-bar', BreadBar);
