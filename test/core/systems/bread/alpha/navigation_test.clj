@@ -197,7 +197,7 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?i [:db/id
-                          :menu.item/order
+                          :thing/order
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
@@ -223,7 +223,7 @@
       :query/key [:my/menus :global-nav :menu/items]
       :field/key nil
       :merge-entities? true
-      :sort-by [:menu.item/order]
+      :sort-by [:thing/order]
       :route/name ::my-route
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})}]
@@ -247,7 +247,7 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?i [:db/id
-                          :menu.item/order
+                          :thing/order
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
@@ -273,7 +273,7 @@
       :query/key [:my/menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true
-      :sort-by [:menu.item/order]
+      :sort-by [:thing/order]
       :route/name ::my-route
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})}]
@@ -297,7 +297,7 @@
       :query/db ::FAKEDB
       :query/args
       ['{:find [(pull ?i [:db/id
-                          :menu.item/order
+                          :thing/order
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
@@ -323,7 +323,7 @@
       :query/key [:menus :location-nav :menu/items]
       :field/key #{:a}
       :merge-entities? true
-      :sort-by [:menu.item/order]
+      :sort-by [:thing/order]
       :route/name ::my-route
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})}]
@@ -514,7 +514,7 @@
     {:query/name ::navigation/items
      :query/key [:menus :#nofilter :menu/items]
      :field/key nil
-     :sort-by [:menu.item/order]}
+     :sort-by [:thing/order]}
     {:menus {:#nofilter {:menu/items [[{:translatable/fields
                                         {:uri "/abc"
                                          :my/field "My Field"}}]
@@ -538,13 +538,13 @@
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? true
      :field/key #{:my/field :other/field}
-     :sort-by [:menu.item/order]
+     :sort-by [:thing/order]
      :router (MockRouter. {})
      :route/name ::page
      :route/params {:field/lang :en}}
     {:menus {:my-nav
              {:menu/items
-              [[{:menu.item/order 2
+              [[{:thing/order 2
                  :menu.item/entity
                  {:post/slug "abc"
                   :translatable/fields {:extra "This gets filtered out..."
@@ -553,7 +553,7 @@
                  :translatable/fields {:more "...and so does this"
                                        :my/field "Override"
                                        :other/field "Another override"}}]
-               [{:menu.item/order 3
+               [{:thing/order 3
                  :menu.item/entity
                  {:post/slug "child"
                   :translatable/fields {:extra "This gets filtered out..."
@@ -563,7 +563,7 @@
                   :post/_children
                   [{:post/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
-               [{:menu.item/order 1
+               [{:thing/order 1
                  ;; no post
                  :translatable/fields {:uri "/en/xyz"}}]]}}}
 
@@ -590,13 +590,13 @@
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? false
      :field/key #{:my/field :other/field}
-     :sort-by [:menu.item/order]
+     :sort-by [:thing/order]
      :router (MockRouter. {})
      :route/name ::page
      :route/params {:field/lang :en}}
     {:menus {:my-nav
              {:menu/items
-              [[{:menu.item/order 2
+              [[{:thing/order 2
                  :menu.item/entity {:post/slug "abc"
                                     :translatable/fields
                                     {:extra "This gets filtered out..."
@@ -605,7 +605,7 @@
                  :translatable/fields {:more "...and so does this"
                                        :my/field "Override"
                                        :other/field "Another override"}}]
-               [{:menu.item/order 3
+               [{:thing/order 3
                  :menu.item/entity {:post/slug "child"
                                     :translatable/fields
                                     {:extra "This gets filtered out..."
@@ -614,18 +614,18 @@
                                     ;; Post ancestry.
                                     :post/_children [{:post/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
-               [{:menu.item/order 1
+               [{:thing/order 1
                  ;; No entity.
                  :translatable/fields {:uri "/en/xyz"}
                  :menu.item/children
-                 [{:menu.item/order 1
+                 [{:thing/order 1
                    :translatable/fields {:uri "/en/xyz/456"
                                          :my/field "Child"}
                    :menu.item/children
-                   [{:menu.item/order 0
+                   [{:thing/order 0
                      :translatable/fields {:uri "/en/xyz/456/789"
                                            :my/field "Grandchild"}}]}
-                  {:menu.item/order 0
+                  {:thing/order 0
                    :translatable/fields {:uri "/en/xyz/123"
                                          :my/field "Daughter"}}]}]]}}}
 
