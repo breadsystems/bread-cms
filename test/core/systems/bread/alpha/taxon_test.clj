@@ -35,14 +35,14 @@
         :query/key :taxon
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :taxon/slug]) .]
+        ['{:find [(pull ?e [:db/id :thing/slug]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}]
       {:dispatcher/type :dispatcher.type/taxon
-       :dispatcher/pull [:taxon/slug]
+       :dispatcher/pull [:thing/slug]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
@@ -56,7 +56,7 @@
         ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
@@ -73,7 +73,7 @@
         ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}]
       {:dispatcher/type :dispatcher.type/tag
@@ -90,12 +90,12 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :taxon/slug
+                            :thing/slug
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
        {:query/name ::i18n/fields
@@ -107,7 +107,7 @@
         :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
       {:dispatcher/type :dispatcher.type/taxon
-       :dispatcher/pull [:taxon/slug
+       :dispatcher/pull [:thing/slug
                          {:translatable/fields [:field/key
                                                 :field/content]}]
        :dispatcher/key :taxon
@@ -128,7 +128,7 @@
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
        {:query/name ::i18n/fields
@@ -166,7 +166,7 @@
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
-                   [?e :taxon/slug ?slug]]}
+                   [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
        {:query/name ::i18n/fields

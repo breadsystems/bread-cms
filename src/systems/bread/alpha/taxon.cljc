@@ -29,7 +29,7 @@
         query {:find [(list 'pull '?e pull-spec) '.]
                :in '[$ ?taxonomy ?slug]
                :where '[[?e :taxon/taxonomy ?taxonomy]
-                        [?e :taxon/slug ?slug]]}
+                        [?e :thing/slug ?slug]]}
         {:keys [bindings]} (qi/infer-query-bindings
                              :post/_taxons
                              vector?

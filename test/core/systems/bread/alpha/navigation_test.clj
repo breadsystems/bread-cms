@@ -342,7 +342,7 @@
       :query/key [:menus :taxon-nav]
       :query/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/tag
-                    :taxon/slug nil}}
+                    :thing/slug nil}}
      {:query/name ::db/query
       :query/key [:menus :taxon-nav :menu/items]
       :query/description "Recursively query for taxons of a specific taxonomy."
@@ -350,8 +350,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
-                          :taxon/slug
-                          {:taxon/_children [:taxon/slug
+                          :thing/slug
+                          {:taxon/_children [:thing/slug
                                              {:taxon/_children ...}]}
                           {:taxon/children ...}
                           {:translatable/fields [*]}])]
@@ -386,7 +386,7 @@
       :query/key [:menus :taxon-nav]
       :query/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/category
-                    :taxon/slug nil}}
+                    :thing/slug nil}}
      {:query/name ::db/query
       :query/key [:menus :taxon-nav :menu/items]
       :query/description "Recursively query for taxons of a specific taxonomy."
@@ -394,8 +394,8 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
-                          :taxon/slug
-                          {:taxon/_children [:taxon/slug
+                          :thing/slug
+                          {:taxon/_children [:thing/slug
                                              {:taxon/_children ...}]}
                           {:taxon/children 2}
                           {:translatable/fields [*]}])]
@@ -426,13 +426,13 @@
        :recursion-limit 2}}}
     {:field/lang "en"}
 
-    ;; Basic taxon menu; recursion-limit, :field/keys, :taxon/slug; :sort-by.
+    ;; Basic taxon menu; recursion-limit, :field/keys, :thing/slug; :sort-by.
     [{:query/name ::bread/value
       :query/description "Basic initial info for this taxon menu."
       :query/key [:menus :taxon-nav]
       :query/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/category
-                    :taxon/slug "my-lovely-cat"}}
+                    :thing/slug "my-lovely-cat"}}
      {:query/name ::db/query
       :query/key [:menus :taxon-nav :menu/items]
       :query/description "Recursively query for taxons of a specific taxonomy."
@@ -440,14 +440,14 @@
       :query/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
-                          :taxon/slug
-                          {:taxon/_children [:taxon/slug
+                          :thing/slug
+                          {:taxon/_children [:thing/slug
                                              {:taxon/_children ...}]}
                           {:taxon/children 2}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy ?slug]
          :where [[?e :taxon/taxonomy ?taxonomy]
-                 [?e :taxon/slug ?slug]]}
+                 [?e :thing/slug ?slug]]}
        :taxon.taxonomy/category
        "my-lovely-cat"]}
      {:query/name ::i18n/fields
@@ -470,7 +470,7 @@
       {:menu/type ::navigation/taxon
        :route/name ::my-route
        :taxon/taxonomy :taxon.taxonomy/category
-       :taxon/slug "my-lovely-cat"
+       :thing/slug "my-lovely-cat"
        :field/key [:x :y :z]
        :recursion-limit 2
        :sort-by [:translatable/fields :title]}}}

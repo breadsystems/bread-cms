@@ -236,7 +236,7 @@
                                                    :field/key
                                                    :field/lang
                                                    :field/content]}
-                            {:post/_taxons [:taxon/slug
+                            {:post/_taxons [:thing/slug
                                             :taxon/taxonomy
                                             {:translatable/fields [*]}]}])]
            :in [$ ?slug ?type]
@@ -261,7 +261,7 @@
                            :thing/slug
                            {:translatable/fields [;; should add id, key, lang
                                                   :field/content]}
-                           {:post/_taxons [:taxon/slug
+                           {:post/_taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}])]
           :in [$ ?slug ?type]
@@ -285,7 +285,7 @@
                                                    :field/key
                                                    :field/lang
                                                    :field/content]}
-                            {:post/_taxons [:taxon/slug
+                            {:post/_taxons [:thing/slug
                                             :taxon/taxonomy
                                             {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
@@ -310,7 +310,7 @@
                            :thing/slug
                            {:translatable/fields [;; should add id, key, lang
                                                   :field/content]}
-                           {:post/_taxons [:taxon/slug
+                           {:post/_taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
@@ -402,7 +402,7 @@
                             :thing/slug
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
-                            {:post/taxons [:taxon/slug
+                            {:post/taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
@@ -426,7 +426,7 @@
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields [:field/key :field/content]}
-                           {:post/taxons [:taxon/slug
+                           {:post/taxons [:thing/slug
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
@@ -450,7 +450,7 @@
                             {:some/relation [{:hierarchical/stuff ...}]}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
-                            {:post/taxons [:taxon/slug
+                            {:post/taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
@@ -479,7 +479,7 @@
                                             ;; recursive binding.
                                             {:hierarchical/stuff ...}]}
                            {:translatable/fields [:field/key :field/content]}
-                           {:post/taxons [:taxon/slug
+                           {:post/taxons [:thing/slug
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
@@ -501,7 +501,7 @@
                             {:post/children ...}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
-                            {:post/taxons [:taxon/slug
+                            {:post/taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
@@ -526,7 +526,7 @@
                            :thing/slug
                            {:post/children ...}
                            {:translatable/fields [:field/key :field/content]}
-                           {:post/taxons [:taxon/slug
+                           {:post/taxons [:thing/slug
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
@@ -548,7 +548,7 @@
                             {:post/children 3}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
-                            {:post/taxons [:taxon/slug
+                            {:post/taxons [:thing/slug
                                            :taxon/taxonomy
                                            {:taxon/_children ...}
                                            {:translatable/fields [*]}]}]) .]
@@ -574,7 +574,7 @@
                            :thing/slug
                            {:post/children 3}
                            {:translatable/fields [:field/key :field/content]}
-                           {:post/taxons [:taxon/slug
+                           {:post/taxons [:thing/slug
                                           :taxon/taxonomy
                                           ;; We might do this e.g. to get
                                           ;; a heirarchical URL

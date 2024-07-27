@@ -53,14 +53,14 @@
   [{{fields :translatable/fields :as tag} :tag}]
   {:extends MainLayout
    :key :tag
-   :query '[:taxon/slug
+   :query '[:thing/slug
             {:translatable/fields [*]}
             {:post/_taxons
              [{:post/authors [*]}
               {:translatable/fields [*]}]}]}
   [:main
    [:h1 (:name fields)]
-   [:h2 [:code (:taxon/slug tag)]]])
+   [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
   [{{fields :translatable/fields tags :post/taxons} :post

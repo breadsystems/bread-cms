@@ -106,7 +106,7 @@
   menu-queries?type=taxon
   [req {k :menu/key
         taxonomy :taxon/taxonomy
-        slug :taxon/slug
+        slug :thing/slug
         recursion-limit :recursion-limit
         fks :field/key
         sort-key :sort-by
@@ -116,10 +116,10 @@
         datalog-query
         [{:find [(list 'pull '?e [:db/id
                                   :taxon/taxonomy
-                                  :taxon/slug
+                                  :thing/slug
                                   ;; We need full ancestry for Taxon URLs.
                                   {:taxon/_children
-                                   [:taxon/slug {:taxon/_children '...}]}
+                                   [:thing/slug {:taxon/_children '...}]}
                                   {:taxon/children
                                    recursion-limit}
                                   {:translatable/fields '[*]}])]
@@ -132,14 +132,14 @@
         :query/description "Basic initial info for this taxon menu."
         :query/value {:menu/type ::taxon
                       :taxon/taxonomy taxonomy
-                      :taxon/slug slug}}
+                      :thing/slug slug}}
        {:query/name ::db/query
         :query/key [menus-key k :menu/items]
         :query/description
         "Recursively query for taxons of a specific taxonomy."
         :query/db (db/database req)
         :query/args (if slug
-                      (d/where datalog-query [['?slug :taxon/slug slug]])
+                      (d/where datalog-query [['?slug :thing/slug slug]])
                       datalog-query)}
        {:query/name ::items
         :query/key [menus-key k :menu/items]
