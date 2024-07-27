@@ -1,0 +1,78 @@
+{:http {:port 1312
+        :handler #ig/ref :bread/handler
+        :wrap-defaults #ig/ref :ring/wrap-defaults}
+ :ring/wrap-defaults {:ring-defaults :site-defaults
+                      [:session :store] #ig/ref :ring/session-store
+                      [:security :anti-forgery] false}
+ :ring/session-store
+ {:store/type :datalog
+  :store/db #ig/ref :bread/db}
+ :bread/handler #ig/ref :bread/app
+ :bread/app
+ {:db #ig/ref :bread/db
+  :auth {:lock-seconds 10}
+  :i18n {:supported-langs #{:en :fr}}
+  :routes {:router #ig/ref :bread/router}
+  :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
+  :navigation {:menus {:main-nav
+                       {:menu/type :systems.bread.alpha.navigation/location
+                        :menu/location :primary
+                        :route/name :page}}}
+  :plugins []}
+ :bread/db
+ {:db/type :datahike
+  :store {:backend :mem
+          :id "bread-db"}
+  :recreate? true
+  :force? true
+  :db/migrations #deref #var systems.bread.alpha.schema/initial
+  :db/initial-txns
+  #concat [#deref #var systems.bread.alpha.plugin.defaults/initial-data
+           [{:user/username "coby"
+             :user/name "Coby Tamayo"
+             :user/email "coby@bread.systems"
+             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             #_#_ ;; Uncomment to enable 2FA
+             :user/two-factor-key "AWWMEFM4ADBSQRET"
+             :user/failed-login-count 0
+             :user/lang :en-US
+             :user/roles
+             #{{:role/key :author
+                :role/abilities
+                #{{:ability/key :publish-posts}
+                  {:ability/key :edit-posts}
+                  {:ability/key :delete-posts}}}}}]]}
+ :bread/router
+ #reitit/router
+ [[["/login"
+    {:name :login
+     :dispatcher/type :systems.bread.alpha.plugin.auth/login
+     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}]
+   ["/assets/*"
+    #invoke [reitit.ring/create-resource-handler
+             {:param :filename}]]
+   ;; TODO :field/lang
+   ["/:lang"
+    [""
+     {:name :home
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
+    ["/tag/:slug"
+     {:name :tag
+      :dispatcher/type :dispatcher.type/tag
+      :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
+    ["/*slugs"
+     {:name :page
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
+  {:conflicts nil}]
+ :bread/profilers
+ [#_{:hook #{:systems.bread.alpha.core/response}
+     :action/name #{:systems.bread.alpha.cms.defaults/response}
+     :f #var systems.bread.alpha.cms.main/log-hook!}]
+ #_#_
+ :bread/debugger
+ {:http
+  {:port 1313
+   :docroot "public/debugger"
+   :middleware [#var systems.bread.alpha.cms.main/wrap-debug]}}}
