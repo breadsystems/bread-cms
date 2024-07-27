@@ -19,7 +19,6 @@
   (bread/path [this route-name params]
     (let [route (get {::page [:field/lang :slugs]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
-  bread/RoutesCollection
   (bread/routes [this] []))
 
 (deftest test-queries-hook
