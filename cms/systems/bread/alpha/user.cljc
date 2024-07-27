@@ -41,7 +41,7 @@
                            :user/email
                            :user/name
                            :user/lang
-                           :user/slug
+                           :thing/slug
                            {:user/roles [:role/key
                                          {:role/abilities
                                           [:ability/key]}]}]) .]
