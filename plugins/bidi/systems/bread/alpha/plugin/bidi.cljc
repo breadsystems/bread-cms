@@ -1,7 +1,7 @@
 (ns systems.bread.alpha.plugin.bidi
   (:require
     [bidi.bidi :as bidi]
-    [systems.bread.alpha.core :as bread :refer [Router RoutesCollection]]))
+    [systems.bread.alpha.core :as bread :refer [Router]]))
 
 (deftype BidiRouter [routes dispatchers]
   Router
@@ -16,7 +16,6 @@
     (get dispatchers (:handler match)))
   (bread/params [this match]
     (:route-params match))
-  RoutesCollection
   (bread/routes [this]
     routes))
 

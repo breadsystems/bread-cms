@@ -4,7 +4,7 @@
     [clojure.core.protocols :refer [Datafiable datafy]]
     [clojure.string :as string]
     [reitit.core :as reitit]
-    [systems.bread.alpha.core :as bread :refer [Router RoutesCollection]]
+    [systems.bread.alpha.core :as bread :refer [Router]]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route])
@@ -41,9 +41,6 @@
   (bread/params [router match]
     (:path-params match))
   (bread/dispatcher [router match]
-    (:data match)))
-
-(extend-protocol RoutesCollection
-  reitit.core.Router
+    (:data match))
   (bread/routes [router]
     (reitit/compiled-routes router)))
