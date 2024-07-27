@@ -43,7 +43,7 @@
                :post/type :post.type/page
                :thing/slug "parent-page"
                :post/status :post.status/published
-               :post/children ["page.child"]
+               :thing/children ["page.child"]
                :translatable/fields
                #{{:field/key :title
                   :field/lang :en

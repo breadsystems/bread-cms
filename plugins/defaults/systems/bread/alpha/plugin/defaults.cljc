@@ -47,7 +47,7 @@
     :post/type :post.type/page
     :thing/slug "child-page"
     :post/status :post.status/published
-    :post/children ["page.grandchild"]
+    :thing/children ["page.grandchild"]
     :translatable/fields
     #{{:field/key :title
        :field/lang :en
@@ -77,7 +77,7 @@
    {:db/id "page.parent"
     :post/type :post.type/page
     :thing/slug "hello"
-    :post/children ["page.child" "page.daughter"]
+    :thing/children ["page.child" "page.daughter"]
     :post/taxons ["tag.one" "tag.two"]
     :post/status :post.status/published
     :translatable/fields
@@ -124,7 +124,7 @@
    {:db/id "menu-item.one"
     :thing/order 1
     :post/type :post.type/menu-item
-    :menu.item/children ["menu-item.child"]
+    :thing/children ["menu-item.child"]
     :translatable/fields
     [{:field/key :title
       :field/content "Thing One"
@@ -153,13 +153,13 @@
     [{:field/key :uri
       :field/lang :en
       :field/content "/en/child-item"}]
-    :menu.item/children ["menu-item.grandchild"]}
+    :thing/children ["menu-item.grandchild"]}
    {:db/id "menu-item.grandchild"
     :translatable/fields
     [{:field/key :uri
       :field/lang :en
       :field/content "/en/grandchild-item"}]
-    :menu.item/children []}
+    :thing/children []}
    {:menu/key :main-nav
     :menu/locations [:primary]
     :menu/items ["menu-item.zero" "menu-item.one" "menu-item.two"]}

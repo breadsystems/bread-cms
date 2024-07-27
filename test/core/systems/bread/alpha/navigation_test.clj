@@ -55,12 +55,12 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:thing/slug {:post/_children ...}]}
-                          {:post/children ...}])]
+                          {:thing/_children [:thing/slug {:thing/_children ...}]}
+                          {:thing/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
                  [?e :post/status ?status]
-                 (not-join [?e] [?_ :post/children ?e])]}
+                 (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/page
        #{:post.status/published}]}
      {:query/name ::i18n/fields
@@ -69,7 +69,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:post/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
@@ -101,12 +101,12 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:thing/slug {:post/_children ...}]}
-                          {:post/children 3}])]
+                          {:thing/_children [:thing/slug {:thing/_children ...}]}
+                          {:thing/children 3}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
                  [?e :post/status ?status]
-                 (not-join [?e] [?_ :post/children ?e])]}
+                 (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/page
        #{:post.status/published :post.status/draft}]}
      {:query/name ::i18n/fields
@@ -115,7 +115,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:post/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
@@ -151,12 +151,12 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:thing/slug {:post/_children ...}]}
-                          {:post/children ...}])]
+                          {:thing/_children [:thing/slug {:thing/_children ...}]}
+                          {:thing/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
                  [?e :post/status ?status]
-                 (not-join [?e] [?_ :post/children ?e])]}
+                 (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/park
        #{:post.status/draft}]}
      {:query/name ::i18n/fields
@@ -165,7 +165,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:post/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :basic-nav :menu/items]
@@ -198,13 +198,13 @@
       :query/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
-                          {:menu.item/children ...}
+                          {:thing/children ...}
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:thing/slug
-                                              {:post/_children ...}]}]}
+                            {:thing/_children [:thing/slug
+                                              {:thing/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?key]
          :where [[?m :menu/key ?key]
@@ -216,7 +216,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:menu.item/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
@@ -248,13 +248,13 @@
       :query/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
-                          {:menu.item/children ...}
+                          {:thing/children ...}
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:thing/slug
-                                              {:post/_children ...}]}]}
+                            {:thing/_children [:thing/slug
+                                              {:thing/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?location]
          :where [[?m :menu/locations ?location]
@@ -266,7 +266,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:menu.item/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
@@ -298,13 +298,13 @@
       :query/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
-                          {:menu.item/children ...}
+                          {:thing/children ...}
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:thing/slug
-                                              {:post/_children ...}]}]}
+                            {:thing/_children [:thing/slug
+                                              {:thing/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?location]
          :where [[?m :menu/locations ?location]
@@ -316,7 +316,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:menu.item/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
@@ -351,9 +351,9 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
-                          {:taxon/_children [:thing/slug
-                                             {:taxon/_children ...}]}
-                          {:taxon/children ...}
+                          {:thing/_children [:thing/slug
+                                             {:thing/_children ...}]}
+                          {:thing/children ...}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
@@ -364,7 +364,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:taxon/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
@@ -395,9 +395,9 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
-                          {:taxon/_children [:thing/slug
-                                             {:taxon/_children ...}]}
-                          {:taxon/children 2}
+                          {:thing/_children [:thing/slug
+                                             {:thing/_children ...}]}
+                          {:thing/children 2}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
@@ -408,7 +408,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:taxon/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
@@ -441,9 +441,9 @@
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
-                          {:taxon/_children [:thing/slug
-                                             {:taxon/_children ...}]}
-                          {:taxon/children 2}
+                          {:thing/_children [:thing/slug
+                                             {:thing/_children ...}]}
+                          {:thing/children 2}
                           {:translatable/fields [*]}])]
          :in [$ ?taxonomy ?slug]
          :where [[?e :taxon/taxonomy ?taxonomy]
@@ -456,7 +456,7 @@
       :field/lang :en
       :compact? true
       :format? true
-      :recur-attrs #{:taxon/children}
+      :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
      {:query/name ::navigation/items
       :query/key [:menus :taxon-nav :menu/items]
@@ -507,10 +507,10 @@
     ;; Basic menu items; no :field/key filtering.
     [{:uri "/abc"
       :translatable/fields {:uri "/abc" :my/field "My Field"}
-      :children []}
+      :thing/children []}
      {:uri "/xyz"
       :translatable/fields {:uri "/xyz" :other/field "Other"}
-      :children []}]
+      :thing/children []}]
     {:query/name ::navigation/items
      :query/key [:menus :#nofilter :menu/items]
      :field/key nil
@@ -525,15 +525,15 @@
     ;; Basic menu items with related entities.
     [{:uri "/en/xyz"
       :translatable/fields {}
-      :children []}
+      :thing/children []}
      {:uri "/en/abc"
       :translatable/fields {:my/field "Override"
                             :other/field "Another override"}
-      :children []}
+      :thing/children []}
      {:uri "/en/parent/child"
       :translatable/fields {:my/field "Post field"
                             :other/field "Another post field"}
-      :children []}]
+      :thing/children []}]
     {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? true
@@ -560,7 +560,7 @@
                                         :my/field "Post field"
                                         :other/field "Another post field"}
                   ;; Post ancestry.
-                  :post/_children
+                  :thing/_children
                   [{:thing/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
                [{:thing/order 1
@@ -570,22 +570,22 @@
     ;; :merge-entities? false; recursive.
     [{:uri "/en/xyz"
       :translatable/fields {}
-      :children
+      :thing/children
       [{:uri "/en/xyz/123"
         :translatable/fields {:my/field "Daughter"}
-        :children []}
+        :thing/children []}
        {:uri "/en/xyz/456"
         :translatable/fields {:my/field "Child"}
-        :children [{:uri "/en/xyz/456/789"
-                    :translatable/fields {:my/field "Grandchild"}
-                    :children []}]}]}
+        :thing/children [{:uri "/en/xyz/456/789"
+                          :translatable/fields {:my/field "Grandchild"}
+                          :thing/children []}]}]}
      {:uri "/en/abc"
       :translatable/fields {:my/field "Override"
                             :other/field "Another override"}
-      :children []}
+      :thing/children []}
      {:uri "/en/parent/child"
       :translatable/fields {}
-      :children []}]
+      :thing/children []}]
     {:query/name ::navigation/items
      :query/key [:menus :my-nav :menu/items]
      :merge-entities? false
@@ -612,16 +612,16 @@
                                      :my/field "Post field"
                                      :other/field "Another post field"}
                                     ;; Post ancestry.
-                                    :post/_children [{:thing/slug "parent"}]}
+                                    :thing/_children [{:thing/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
                [{:thing/order 1
                  ;; No entity.
                  :translatable/fields {:uri "/en/xyz"}
-                 :menu.item/children
+                 :thing/children
                  [{:thing/order 1
                    :translatable/fields {:uri "/en/xyz/456"
                                          :my/field "Child"}
-                   :menu.item/children
+                   :thing/children
                    [{:thing/order 0
                      :translatable/fields {:uri "/en/xyz/456/789"
                                            :my/field "Grandchild"}}]}
