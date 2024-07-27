@@ -7,7 +7,7 @@
 
 ;; TODO :entity/slug, :parent/_children
 (defn ancestry [e]
-  (loop [slugs [] {slug :post/slug [parent] :post/_children} e]
+  (loop [slugs [] {slug :thing/slug [parent] :post/_children} e]
     (let [slugs (cons slug slugs)]
       (if-not parent slugs (recur slugs parent)))))
 

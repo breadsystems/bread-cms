@@ -81,7 +81,7 @@
                                     ;; We need full ancestry for constructing
                                     ;; Post URLs.
                                     {:post/_children
-                                     [:post/slug
+                                     [:thing/slug
                                       {:post/_children '...}]}
                                     {:post/children recursion-limit}])]
                       :in '[$ ?type [?status ...]]
@@ -177,10 +177,10 @@
                                                recursion-limit}
                                               {:menu.item/entity
                                                [:db/id
-                                                :post/slug
+                                                :thing/slug
                                                 {:translatable/fields '[*]}
                                                 {:post/_children
-                                                 [:post/slug
+                                                 [:thing/slug
                                                   {:post/_children '...}]}]}
                                               {:translatable/fields '[*]}])]
                       :in '[$ ?key]
@@ -225,10 +225,10 @@
                                                recursion-limit}
                                               {:menu.item/entity
                                                [:db/id
-                                                :post/slug
+                                                :thing/slug
                                                 {:translatable/fields '[*]}
                                                 {:post/_children
-                                                 [:post/slug
+                                                 [:thing/slug
                                                   {:post/_children '...}]}]}
                                               {:translatable/fields '[*]}])]
                       :in '[$ ?location]

@@ -55,7 +55,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:post/slug {:post/_children ...}]}
+                          {:post/_children [:thing/slug {:post/_children ...}]}
                           {:post/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
@@ -101,7 +101,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:post/slug {:post/_children ...}]}
+                          {:post/_children [:thing/slug {:post/_children ...}]}
                           {:post/children 3}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
@@ -151,7 +151,7 @@
                           :post/type
                           :post/status
                           {:translatable/fields [*]}
-                          {:post/_children [:post/slug {:post/_children ...}]}
+                          {:post/_children [:thing/slug {:post/_children ...}]}
                           {:post/children ...}])]
          :in [$ ?type [?status ...]]
          :where [[?e :post/type ?type]
@@ -201,9 +201,9 @@
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:post/slug
+                            {:post/_children [:thing/slug
                                               {:post/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?key]
@@ -251,9 +251,9 @@
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:post/slug
+                            {:post/_children [:thing/slug
                                               {:post/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?location]
@@ -301,9 +301,9 @@
                           {:menu.item/children ...}
                           {:menu.item/entity
                            [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [*]}
-                            {:post/_children [:post/slug
+                            {:post/_children [:thing/slug
                                               {:post/_children ...}]}]}
                           {:translatable/fields [*]}])]
          :in [$ ?location]
@@ -546,7 +546,7 @@
              {:menu/items
               [[{:thing/order 2
                  :menu.item/entity
-                 {:post/slug "abc"
+                 {:thing/slug "abc"
                   :translatable/fields {:extra "This gets filtered out..."
                                         :my/field "My Field"
                                         :other/field "Other"}}
@@ -555,13 +555,13 @@
                                        :other/field "Another override"}}]
                [{:thing/order 3
                  :menu.item/entity
-                 {:post/slug "child"
+                 {:thing/slug "child"
                   :translatable/fields {:extra "This gets filtered out..."
                                         :my/field "Post field"
                                         :other/field "Another post field"}
                   ;; Post ancestry.
                   :post/_children
-                  [{:post/slug "parent"}]}
+                  [{:thing/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
                [{:thing/order 1
                  ;; no post
@@ -597,7 +597,7 @@
     {:menus {:my-nav
              {:menu/items
               [[{:thing/order 2
-                 :menu.item/entity {:post/slug "abc"
+                 :menu.item/entity {:thing/slug "abc"
                                     :translatable/fields
                                     {:extra "This gets filtered out..."
                                      :my/field "My Field"
@@ -606,13 +606,13 @@
                                        :my/field "Override"
                                        :other/field "Another override"}}]
                [{:thing/order 3
-                 :menu.item/entity {:post/slug "child"
+                 :menu.item/entity {:thing/slug "child"
                                     :translatable/fields
                                     {:extra "This gets filtered out..."
                                      :my/field "Post field"
                                      :other/field "Another post field"}
                                     ;; Post ancestry.
-                                    :post/_children [{:post/slug "parent"}]}
+                                    :post/_children [{:thing/slug "parent"}]}
                  :translatable/fields {:more "...and so does this"}}]
                [{:thing/order 1
                  ;; No entity.

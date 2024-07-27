@@ -9,11 +9,11 @@
 
 (defc Home [_]
   {:key :home
-   :query [:post/slug]})
+   :query [:thing/slug]})
 
 (defc Page [_]
   {:key :page
-   :query [:db/id :post/slug]})
+   :query [:db/id :thing/slug]})
 
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
@@ -58,7 +58,7 @@
           :post/type :post.type/page
           :dispatcher/component Page
           :dispatcher/key :page
-          :dispatcher/pull [:db/id :post/slug]
+          :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
                          :slug "empty-dispatcher-map"}
           :route/match {:dispatcher/component Page
@@ -70,7 +70,7 @@
           :dispatcher/i18n? false
           :dispatcher/component Page
           :dispatcher/key :page
-          :dispatcher/pull [:db/id :post/slug]
+          :dispatcher/pull [:db/id :thing/slug]
           :post/type :post.type/page
           :route/params {:lang nil :slug "overridden"}
           :route/match {:dispatcher/i18n? false
@@ -82,7 +82,7 @@
           :dispatcher/defaults? false
           :dispatcher/component Page
           :dispatcher/key :page
-          :dispatcher/pull [:db/id :post/slug]
+          :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
                          :slug "no-defaults"}
           :route/match {:dispatcher/type :whatevs
@@ -97,7 +97,7 @@
           :dispatcher/component Page
           :dispatcher/key :page
           :post/type :post.type/page
-          :dispatcher/pull [:db/id :post/slug]
+          :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
                          :slug "not-found"}
           :route/match {:dispatcher/type :whatevs

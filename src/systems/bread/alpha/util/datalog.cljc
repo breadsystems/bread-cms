@@ -196,13 +196,13 @@
   (attr $db :post/fields)
   (doc $db :post/fields)
 
-  (cardinality $db :post/slug)
+  (cardinality $db :thing/slug)
   (cardinality $db :post/fields)
   (cardinality $db nil)
   (cardinality $db :fake)
-  (cardinality-one? $db :post/slug)
+  (cardinality-one? $db :thing/slug)
   (cardinality-one? $db :post/fields)
-  (cardinality-many? $db :post/slug)
+  (cardinality-many? $db :thing/slug)
   (cardinality-many? $db :post/fields)
 
   (value-type $db :post/fields)

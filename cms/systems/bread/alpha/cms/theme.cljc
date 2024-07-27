@@ -40,7 +40,7 @@
   {:extends MainLayout
    :key :post
    :query '[:post/children
-            :post/slug
+            :thing/slug
             :post/authors
             {:translatable/fields [*]}]}
   {:content

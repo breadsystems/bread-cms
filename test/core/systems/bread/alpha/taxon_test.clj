@@ -196,11 +196,11 @@
 
 (deftest test-filter-posts-hook
   (let [posts
-        [{:post/type :page    :post/status :published :post/slug "one"}
-         {:post/type :article :post/status :published :post/slug "two"}
-         {:post/type :page    :post/status :published :post/slug "three"}
-         {:post/type :article :post/status :published :post/slug "four"}
-         {:post/type :page    :post/status :draft     :post/slug "five"}]]
+        [{:post/type :page    :post/status :published :thing/slug "one"}
+         {:post/type :article :post/status :published :thing/slug "two"}
+         {:post/type :page    :post/status :published :thing/slug "three"}
+         {:post/type :article :post/status :published :thing/slug "four"}
+         {:post/type :page    :post/status :draft     :thing/slug "five"}]]
     (are
       [filtered-slugs post-type post-status]
       (= filtered-slugs (->> {:the-query-key {:post/_taxons posts}}
@@ -208,7 +208,7 @@
                                            :query/key :the-query-key
                                            :post/type post-type
                                            :post/status post-status})
-                             (map :post/slug)))
+                             (map :thing/slug)))
 
       ;; Filter by post type only.
       ["one" "three" "five"]

@@ -127,7 +127,7 @@
 (comment
 
   (def $ent
-    {:post/slug "sister-page",
+    {:thing/slug "sister-page",
      :post/fields
      [{:field/lang :en}
       {:field/lang :fr}
@@ -135,7 +135,7 @@
       {:field/lang :fr}
       {:field/lang :en}]})
 
-  (get-attr-via $ent [:post/slug])
+  (get-attr-via $ent [:thing/slug])
   (get-attr-via $ent [:post/fields])
   (get-attr-via $ent [:post/fields :field/lang])
 

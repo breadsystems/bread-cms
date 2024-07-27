@@ -147,7 +147,7 @@
     i18n/translatable-binding?
     '{:find [(pull ?e [{:translatable/fields [*]}])]
       :in [$ ?slug]
-      :where [[?e :post/slug ?slug]]}
+      :where [[?e :thing/slug ?slug]]}
 
     ;; querying for fields with key & content bindings
     {:bindings [{:binding-sym '?e
@@ -159,7 +159,7 @@
     i18n/translatable-binding?
     '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
       :in [$ ?slug]
-      :where [[?e :post/slug ?slug]]}
+      :where [[?e :thing/slug ?slug]]}
 
     ;; when construct returns a vector-style query
     {:bindings [{:binding-sym '?e
@@ -171,7 +171,7 @@
     i18n/translatable-binding?
     '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
       :in [$ ?slug]
-      :where [[?e :post/slug ?slug]]}
+      :where [[?e :thing/slug ?slug]]}
 
     ;; querying for a menu with deeply nested fields clause
     {:bindings [{:binding-sym '?e

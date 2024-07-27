@@ -32,11 +32,11 @@
         earliest-ancestor-sym (last descendant-syms)]
     (vec (concat
            [(apply list 'post-ancestry '?child slug-syms)]
-           [['?child :post/slug (first slug-syms)]]
+           [['?child :thing/slug (first slug-syms)]]
            (mapcat
              (fn [[ancestor-sym descendant-sym slug-sym]]
                [[ancestor-sym :post/children descendant-sym]
-                [ancestor-sym :post/slug slug-sym]])
+                [ancestor-sym :thing/slug slug-sym]])
              (partition 3 (interleave (rest descendant-syms)
                                       (butlast descendant-syms)
                                       (rest slug-syms))))

@@ -15,47 +15,47 @@
     (= rule (post/create-post-ancestry-rule n))
 
     '[(post-ancestry ?child ?slug_0)
-      [?child :post/slug ?slug_0]
+      [?child :thing/slug ?slug_0]
       (not-join [?child] [?_ :post/children ?child])]
     1
 
     '[(post-ancestry ?child ?slug_0 ?slug_1)
-      [?child :post/slug ?slug_0]
+      [?child :thing/slug ?slug_0]
       [?ancestor_1 :post/children ?child]
-      [?ancestor_1 :post/slug ?slug_1]
+      [?ancestor_1 :thing/slug ?slug_1]
       (not-join [?ancestor_1] [?_ :post/children ?ancestor_1])]
     2
 
     '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2)
-      [?child :post/slug ?slug_0]
+      [?child :thing/slug ?slug_0]
       [?ancestor_1 :post/children ?child]
-      [?ancestor_1 :post/slug ?slug_1]
+      [?ancestor_1 :thing/slug ?slug_1]
       [?ancestor_2 :post/children ?ancestor_1]
-      [?ancestor_2 :post/slug ?slug_2]
+      [?ancestor_2 :thing/slug ?slug_2]
       (not-join [?ancestor_2] [?_ :post/children ?ancestor_2])]
     3
 
     '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2 ?slug_3)
-      [?child :post/slug ?slug_0]
+      [?child :thing/slug ?slug_0]
       [?ancestor_1 :post/children ?child]
-      [?ancestor_1 :post/slug ?slug_1]
+      [?ancestor_1 :thing/slug ?slug_1]
       [?ancestor_2 :post/children ?ancestor_1]
-      [?ancestor_2 :post/slug ?slug_2]
+      [?ancestor_2 :thing/slug ?slug_2]
       [?ancestor_3 :post/children ?ancestor_2]
-      [?ancestor_3 :post/slug ?slug_3]
+      [?ancestor_3 :thing/slug ?slug_3]
       (not-join [?ancestor_3] [?_ :post/children ?ancestor_3])]
     4
 
     '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2 ?slug_3 ?slug_4)
-      [?child :post/slug ?slug_0]
+      [?child :thing/slug ?slug_0]
       [?ancestor_1 :post/children ?child]
-      [?ancestor_1 :post/slug ?slug_1]
+      [?ancestor_1 :thing/slug ?slug_1]
       [?ancestor_2 :post/children ?ancestor_1]
-      [?ancestor_2 :post/slug ?slug_2]
+      [?ancestor_2 :thing/slug ?slug_2]
       [?ancestor_3 :post/children ?ancestor_2]
-      [?ancestor_3 :post/slug ?slug_3]
+      [?ancestor_3 :thing/slug ?slug_3]
       [?ancestor_4 :post/children ?ancestor_3]
-      [?ancestor_4 :post/slug ?slug_4]
+      [?ancestor_4 :thing/slug ?slug_4]
       (not-join [?ancestor_4] [?_ :post/children ?ancestor_4])]
     5))
 
@@ -83,14 +83,14 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [*]}]) .]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
            :in [$ % ?slug_0 ?type ?status]}
          '[[(post-ancestry ?child ?slug_0)
-            [?child :post/slug ?slug_0]
+            [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :post/children ?child])]]
          ""
          :post.type/page
@@ -104,7 +104,7 @@
         :compact? true
         :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
+       :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
        :dispatcher/key :post
        {:lang "en" :slugs ""} :route/params}
 
@@ -114,14 +114,14 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [*]}]) .]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
            :in [$ % ?slug_0 ?type ?status]}
          '[[(post-ancestry ?child ?slug_0)
-            [?child :post/slug ?slug_0]
+            [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :post/children ?child])]]
          ""
          :post.type/article
@@ -135,7 +135,7 @@
         :compact? true
         :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull '[:post/slug {:translatable/fields [*]}]
+       :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
        :dispatcher/key :post
        {:lang "en" :slugs ""} :route/params
        :post/status :post.status/draft

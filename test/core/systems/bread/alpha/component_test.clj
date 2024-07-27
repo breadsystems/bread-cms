@@ -72,7 +72,7 @@
 
 (defc my-component []
   {:key :my/key
-   :query [:db/id :post/slug]}
+   :query [:db/id :thing/slug]}
   [:<>])
 
 (defc recursive-component []
@@ -91,18 +91,18 @@
 
 (deftest test-query
   (is (nil? (component/query blank)))
-  (is (= [:db/id :post/slug] (component/query my-component))
-  (is (= [:db/id {:my/post [:db/id :post/slug]}]
+  (is (= [:db/id :thing/slug] (component/query my-component))
+  (is (= [:db/id {:my/post [:db/id :thing/slug]}]
          (component/query recursive-component))))
-  (is (= [:level/next {:level/below [:db/id {:my/post [:db/id :post/slug]}]}]
+  (is (= [:level/next {:level/below [:db/id {:my/post [:db/id :thing/slug]}]}]
          (component/query next-level))))
 
 (deftest test-define-route
-  (is (= ["/article/{post/slug}"
+  (is (= ["/article/{thing/slug}"
           {:dispatcher/type :article-single
            :extra :data}]
          (component/define-route {:dispatcher/type :article-single
-                                  :path ["/article" :post/slug]
+                                  :path ["/article" :thing/slug]
                                   :extra :data})))
   (is (= ["/articles"
           {:dispatcher/type :article-listing}]
@@ -114,11 +114,11 @@
   {:routes
    [{:name ::article
      :dispatcher/type :article-single
-     :path ["/article" :post/slug]
+     :path ["/article" :thing/slug]
      :extra :data}
     {:name ::wildcard
      :dispatcher/type :wildcard
-     :path ["/x" :*post/slug]}
+     :path ["/x" :*thing/slug]}
     {:name ::articles
      :dispatcher/type :article-listing
      :path ["/articles"]}]})
@@ -133,12 +133,12 @@
     [] (with-meta {} {:routes nil})
     [] (with-meta {} {:routes []})
 
-    [["/article/{post/slug}"
+    [["/article/{thing/slug}"
       {:name ::article
        :dispatcher/type :article-single
        :dispatcher/component Article
        :extra :data}]
-     ["/x/{*post/slug}"
+     ["/x/{*thing/slug}"
       {:name ::wildcard
        :dispatcher/type :wildcard
        :dispatcher/component Article}]

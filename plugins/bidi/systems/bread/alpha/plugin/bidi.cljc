@@ -42,7 +42,7 @@
     (def $routes
       ["/" {[:lang] {"" :index
                      "/blog" :blog
-                     ["/blog/" :post/slug] :article
+                     ["/blog/" :thing/slug] :article
                      ["/" :slug1] :page
                      ["/" :slug1 "/" :slug2] :page
                      ["/" :slug1 "/" :slug2 "/" :slug3] :page
