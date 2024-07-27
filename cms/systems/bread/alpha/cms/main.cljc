@@ -549,6 +549,9 @@
 
   ;; /experiment
 
+  (require '[kaocha.repl :as k])
+  (k/run :unit)
+
   (-main))
 
 (defn -main [& args]
