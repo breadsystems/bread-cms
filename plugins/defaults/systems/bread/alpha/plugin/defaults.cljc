@@ -99,7 +99,7 @@
        :field/lang :fr
        :field/content "Petit Enfant Page"}}}
    {:db/id "tag.one"
-    :taxon/slug "one"
+    :thing/slug "one"
     :taxon/taxonomy :taxon.taxonomy/tag
     :translatable/fields
     [{:field/key :name
@@ -109,7 +109,7 @@
       :field/content "Un"
       :field/lang :fr}]}
    {:db/id "tag.two"
-    :taxon/slug "two"
+    :thing/slug "two"
     :taxon/taxonomy :taxon.taxonomy/tag
     :translatable/fields
     [{:field/key :name

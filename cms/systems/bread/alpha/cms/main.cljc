@@ -269,7 +269,7 @@
   (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
        :in [$ ?slug]
        :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
-               [?t :taxon/slug ?slug]]}
+               [?t :thing/slug ?slug]]}
      "one")
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
        :in [$ ?slug]
@@ -281,8 +281,8 @@
 
   (q '{:find [(pull ?e [:db/id
                         :taxon/taxonomy
-                        :taxon/slug
-                        {:taxon/_children [:taxon/slug
+                        :thing/slug
+                        {:taxon/_children [:thing/slug
                                            {:taxon/_children ...}]}
                         {:taxon/children ...}
                         {:translatable/fields [*]}])]
