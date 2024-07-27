@@ -44,6 +44,13 @@
       :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.things"}
+     {:db/ident :thing/slug
+      :attr/label "Slug"
+      :db/doc "Route-unique slug. Note that slugs need not be unique at the db level."
+      :db/valueType :db.type/string
+      :db/index true
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.things"}
      {:db/ident :thing/order
       :attr/label "Sort Order"
       :db/doc "Ordinal number in which this thing appears in the menu."
@@ -153,13 +160,6 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
-     {:db/ident :user/slug
-      :attr/label "User Slug"
-      :db/doc "The user's slugified name for use in URLs"
-      :db/valueType :db.type/string
-      :db/unique :db.unique/value
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
 
      ;; Roles
      {:db/ident :user/roles
@@ -213,13 +213,6 @@
     [{:db/id "migration.posts"
       :migration/key :bread.migration/posts
       :migration/description "Posts and fields"}
-     {:db/ident :post/slug
-      :attr/label "Post Slug"
-      :db/doc "Route-unique slug, typically based on the post title"
-      :db/valueType :db.type/string
-      :db/index true
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
      {:db/ident :post/type
       :attr/label "Post Type"
       :db/doc "Post type"
@@ -288,13 +281,6 @@
       :attr/label "Taxonomy"
       :db/doc "The hierarchy of taxons in which this taxon lives, e.g. tags, categories, etc. Analogous to WordPress taxonomies."
       :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.taxons"}
-     {:db/ident :taxon/slug
-      :attr/label "Taxon Slug"
-      :db/doc "Route-unique slug, typically based on the taxon title."
-      :db/valueType :db.type/string
-      :db/index true
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.taxons"}]
 
