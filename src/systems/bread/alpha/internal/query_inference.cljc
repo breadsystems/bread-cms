@@ -93,15 +93,15 @@
 
 (comment
   (binding-clauses
-    '{:find [(pull ?e [:post/slug
+    '{:find [(pull ?e [:thing/slug
                        {:translatable/fields [*]}])]}
     :translatable/fields
     (constantly false))
 
   (binding-clauses
-    '{:find [(pull ?e [:post/slug
+    '{:find [(pull ?e [:thing/slug
                        {:translatable/fields [*]}])
-             (pull ?e [:post/slug
+             (pull ?e [:thing/slug
                        {:translatable/fields
                         [:field/key :field/content]}])]}
     :translatable/fields
@@ -112,11 +112,11 @@
   (infer-query-bindings
     :translatable/fields
     #(some #{'* :field/content} %)
-    '{:find [(pull ?e [:post/slug
+    '{:find [(pull ?e [:thing/slug
                        {:translatable/fields
                         [:field/key :field/content]}])]
       :in [$ ?slug]
-      :where [[?e :post/slug ?slug]]})
+      :where [[?e :thing/slug ?slug]]})
 
   ;;
   )

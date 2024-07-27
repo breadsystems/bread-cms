@@ -13,7 +13,7 @@
 
     nil nil {}
     nil [] {}
-    nil [] {:post/slug "x"}
+    nil [] {:thing/slug "x"}
     nil ["/:slug" {:name :post}] {}
 
     {:slug "abc"}
@@ -112,9 +112,9 @@
     "/wild/card"
     ["/"
      ["" {:name :home}]
-     ["{*post/slug}" {:name :page}]]
+     ["{*thing/slug}" {:name :page}]]
     :page
-    {:post/slug "wild/card"}
+    {:thing/slug "wild/card"}
 
     ;;
     ))

@@ -14,7 +14,7 @@
               ;; to run this test.
               ;; TODO get Kaocha not to print debug logs?
               :db/initial-txns
-              [{:db/ident :post/slug
+              [{:db/ident :thing/slug
                 :db/valueType :db.type/string
                 :db/index true
                 :db/cardinality :db.cardinality/one}
@@ -41,42 +41,42 @@
                     query
                     '{:find
                       [(pull ?e [:db/id
-                                 :post/slug
+                                 :thing/slug
                                  {:post/fields
                                   [:field/key :field/content]}])]
                       :in [$ ?slug]
-                      :where [[?e :post/slug ?slug]]}]
+                      :where [[?e :thing/slug ?slug]]}]
                 (-> (db/database (handler {:uri "/"}))
                     (db/q query slug)
                     ffirst)))
 
       ;; Without fields.
       {:db/id 1000
-       :post/slug "hello"}
+       :thing/slug "hello"}
       ["hello"
        [{:db/id 1000
-         :post/slug "hello"
+         :thing/slug "hello"
          :post/fields []}]]
 
       ;; With two fields in a single tx.
       {:db/id 2000
-       :post/slug "goodbye"
+       :thing/slug "goodbye"
        :post/fields [{:field/key :one :field/content "ONE!"}
                      {:field/key :two :field/content "TWO!"}]}
       ["goodbye"
        [{:db/id 2000
-         :post/slug "goodbye"
+         :thing/slug "goodbye"
          :post/fields [{:field/key :one :field/content "ONE!"}
                        {:field/key :two :field/content "TWO!"}]}]]
 
       ;; With fields and slug in separate txs.
       {:db/id 3000
-       :post/slug "separate"
+       :thing/slug "separate"
        :post/fields [{:field/key :one :field/content "ONE!"}
                      {:field/key :two :field/content "TWO!"}]}
       ["separate"
        [{:db/id 3000
-         :post/slug "separate"}
+         :thing/slug "separate"}
         {:db/id 3000
          :post/fields [{:field/key :one :field/content "ONE!"}
                        {:field/key :two :field/content "TWO!"}]}]])))

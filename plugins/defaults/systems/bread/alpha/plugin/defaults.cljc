@@ -26,7 +26,7 @@
 (def initial-data
   [{:db/id "page.home"
     :post/type :post.type/page
-    :post/slug ""
+    :thing/slug ""
     :post/status :post.status/published
     :translatable/fields
     #{{:field/key :title
@@ -45,7 +45,7 @@
        :field/content (pr-str [{:a "le content" :b "et plus"}])}}}
    {:db/id "page.child"
     :post/type :post.type/page
-    :post/slug "child-page"
+    :thing/slug "child-page"
     :post/status :post.status/published
     :post/children ["page.grandchild"]
     :translatable/fields
@@ -65,7 +65,7 @@
        :field/content (pr-str [{:a "loreme ipsumee" :b "dolore siter amet"}])}}}
    {:db/id "page.daughter"
     :post/type :post.type/page
-    :post/slug "daughter-page"
+    :thing/slug "daughter-page"
     :post/status :post.status/draft
     :translatable/fields
     #{{:field/key :title
@@ -76,7 +76,7 @@
        :field/content "La Page Fille"}}}
    {:db/id "page.parent"
     :post/type :post.type/page
-    :post/slug "hello"
+    :thing/slug "hello"
     :post/children ["page.child" "page.daughter"]
     :post/taxons ["tag.one" "tag.two"]
     :post/status :post.status/published
@@ -89,7 +89,7 @@
        :field/content "Bonjour!"}}}
    {:db/id "page.grandchild"
     :post/type :post.type/page
-    :post/slug "grandchild-page"
+    :thing/slug "grandchild-page"
     :post/status :post.status/published
     :translatable/fields
     #{{:field/key :title

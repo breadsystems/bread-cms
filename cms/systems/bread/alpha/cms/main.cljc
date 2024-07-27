@@ -274,7 +274,7 @@
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
        :in [$ ?slug]
        :where [[?p :post/type :post.type/page]
-               [?p :post/slug ?slug]]}
+               [?p :thing/slug ?slug]]}
      "hello")
 
   ;; Menu queries!
@@ -296,7 +296,7 @@
                         :post/type
                         :post/status
                         {:translatable/fields [*]}
-                        {:post/_children [:post/slug {:post/_children ...}]}
+                        {:post/_children [:thing/slug {:post/_children ...}]}
                         {:post/children ...}])]
        :in [$ ?type [?status ...]]
        :where [[?e :post/type ?type]
@@ -391,7 +391,7 @@
     [data]
     {:routes
      [{:name ::article
-       :path ["/article" :post/slug]
+       :path ["/article" :thing/slug]
        :dispatcher/type :dispatcher.type/page
        :x :y}
       {:name ::articles
@@ -402,7 +402,7 @@
        :dispatcher/type :wildcard}]
      ;:route/children [Something]
      :query '[{:translatable/fields [:field/key :field/content]}
-              :post/authors :post/slug]}
+              :post/authors :thing/slug]}
     [:div data])
 
   (def $router
@@ -414,9 +414,9 @@
   (reitit/match->path
     (reitit/match-by-path $router "/en/x/a/b/c"))
   (reitit/match->path
-    (reitit/match-by-name $router ::article {:field/lang :en :post/slug "x"}))
+    (reitit/match-by-name $router ::article {:field/lang :en :thing/slug "x"}))
   (bread/routes $router)
-  (bread/path $router ::article {:field/lang :en :post/slug ["a" "b" "c"]})
+  (bread/path $router ::article {:field/lang :en :thing/slug ["a" "b" "c"]})
   (bread/params $router (bread/match (:bread/router @system) $req))
 
   ;; A "sluggable" entity, with ancestry
@@ -497,7 +497,7 @@
   ;; Now we can scan a given route for db idents...
   (def route
     ;; TODO where to map :lang -> :field/lang
-    ["/" :field/lang :post/slug])
+    ["/" :field/lang :thing/slug])
   (def route-idents
     (filter (set idents) route))
 
@@ -537,11 +537,11 @@
                 (reduced [ref-attr next-attr])))
             [] entities))
   (def path
-    (find-path adjacents seen :post/slug))
+    (find-path adjacents seen :thing/slug))
   (def full-path
     (vec (concat [:field/lang] path)))
 
-  ;; We've now found the path between :field/lang and :post/slug, the only two
+  ;; We've now found the path between :field/lang and :thing/slug, the only two
   ;; attrs in our route definition. So, we can stop looking in this case. But,
   ;; if there were more attrs in the route or if we hadn't found it, we could
   ;; simply add the adjacent attrs we just found to seen, and explore each of

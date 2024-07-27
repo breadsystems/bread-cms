@@ -11,7 +11,7 @@
              :store {:backend :mem :id "expand-db"}
              :db/initial-txns
              [;; init simplified schema
-              {:db/ident :post/slug
+              {:db/ident :thing/slug
                :db/valueType :db.type/string
                :db/index true
                :db/cardinality :db.cardinality/one}
@@ -38,7 +38,7 @@
 
               ;; init post content
               {:db/id 100
-               :post/slug "parent-post"
+               :thing/slug "parent-post"
                :post/fields [{:field/key :stuff
                               :field/lang :en
                               :field/content "hello"}
@@ -74,10 +74,10 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:post/slug {:post/fields
-                                         [:field/key :field/lang]}]) .]
+         ['{:find [(pull ?e [:thing/slug {:post/fields
+                                          [:field/key :field/lang]}]) .]
             :in [$ ?slug]
-            :where [[?e :post/slug ?slug]]}
+            :where [[?e :thing/slug ?slug]]}
           "non-existent-slug"]}]
 
        ;; Querying for a non-existent post and its fields
@@ -87,10 +87,10 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:post/slug {:post/fields
-                                         [:field/key :field/lang]}]) .]
+         ['{:find [(pull ?e [:thing/slug {:post/fields
+                                          [:field/key :field/lang]}]) .]
             :in [$ ?slug]
-            :where [[?e :post/slug ?slug]]}
+            :where [[?e :thing/slug ?slug]]}
           "non-existent-slug"]}
         {:query/key [:post :post/fields]
          :query/name ::db/query
@@ -103,7 +103,7 @@
           [::bread/data :post :db/id]
           :en]}]
 
-       {:post {:post/slug "parent-post"
+       {:post {:thing/slug "parent-post"
                :post/fields [{:field/key :stuff :field/lang :en}
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
@@ -113,13 +113,13 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:post/slug {:post/fields
-                                         [:field/key :field/lang]}]) .]
+         ['{:find [(pull ?e [:thing/slug {:post/fields
+                                          [:field/key :field/lang]}]) .]
             :in [$]
-            :where [[?e :post/slug ?slug]]}]}]
+            :where [[?e :thing/slug ?slug]]}]}]
 
        ;; with query input args (slug)
-       {:post {:post/slug "parent-post"
+       {:post {:thing/slug "parent-post"
                :post/fields [{:field/key :stuff :field/lang :en}
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
@@ -129,15 +129,15 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:post/slug {:post/fields
-                                         [:field/key
-                                          :field/lang]}]) .]
+         ['{:find [(pull ?e [:thing/slug {:post/fields
+                                          [:field/key
+                                           :field/lang]}]) .]
             :in [$ ?slug]
-            :where [[?e :post/slug ?slug]]}
+            :where [[?e :thing/slug ?slug]]}
           "parent-post"]}]
 
        ;; with explicit input args (for i18n)
-       {:post {:post/slug "parent-post"
+       {:post {:thing/slug "parent-post"
                :post/fields [[{:field/key :thingy
                                :field/content "thing"}]
                              [{:field/key :stuff
@@ -147,9 +147,9 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:post/slug]) .]
+         ['{:find [(pull ?e [:thing/slug]) .]
             :in [$ ?slug]
-            :where [[?e :post/slug ?slug]]}
+            :where [[?e :thing/slug ?slug]]}
           "parent-post"]}
         {:query/name ::db/query
          :query/key [:post :post/fields]
@@ -163,7 +163,7 @@
           :en]}]
 
        ;; deriving input args from previous data (for i18n)
-       {:post {:db/id 100 :post/slug "parent-post"
+       {:post {:db/id 100 :thing/slug "parent-post"
                :post/fields [[{:field/key :thingy
                                :field/content "thing"}]
                              [{:field/key :stuff
@@ -173,9 +173,9 @@
          :query/key :post
          :query/db db
          :query/args
-         ['{:find [(pull ?e [:db/id :post/slug]) .]
+         ['{:find [(pull ?e [:db/id :thing/slug]) .]
             :in [$ ?slug]
-            :where [[?e :post/slug ?slug]]}
+            :where [[?e :thing/slug ?slug]]}
           "parent-post"]}
         {:query/name ::db/query
          :query/key [:post :post/fields]

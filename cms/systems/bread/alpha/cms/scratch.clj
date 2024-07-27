@@ -343,7 +343,7 @@
   ;; Now we can scan a given route for db idents...
   (def route
     ;; TODO where to map :lang -> :field/lang
-    ["/" :field/lang :post/slug])
+    ["/" :field/lang :thing/slug])
   (def route-idents
     (filter (set idents) route))
 
@@ -383,11 +383,11 @@
                 (reduced [ref-attr next-attr])))
             [] entities))
   (def path
-    (find-path adjacents seen :post/slug))
+    (find-path adjacents seen :thing/slug))
   (def full-path
     (vec (concat [:field/lang] path)))
 
-  ;; We've now found the path between :field/lang and :post/slug, the only two
+  ;; We've now found the path between :field/lang and :thing/slug, the only two
   ;; attrs in our route definition. So, we can stop looking in this case. But,
   ;; if there were more attrs in the route or if we hadn't found it, we could
   ;; simply add the adjacent attrs we just found to seen, and explore each of

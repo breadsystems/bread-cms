@@ -183,7 +183,7 @@
         :query/key :post
         :query/db ::FAKEDB
         :query/args
-        ['{:find [(pull ?e [:db/id :post/slug])]
+        ['{:find [(pull ?e [:db/id :thing/slug])]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}]
@@ -191,7 +191,7 @@
        :query/key :post
        :query/db ::FAKEDB
        :query/args
-       ['{:find [(pull ?e [:db/id :post/slug])]
+       ['{:find [(pull ?e [:db/id :thing/slug])]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
         :post.type/page]}
@@ -205,7 +205,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [:field/key :field/lang]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
@@ -215,7 +215,7 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields [:field/key :field/lang]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
@@ -231,7 +231,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [:db/id
                                                    :field/key
                                                    :field/lang
@@ -240,7 +240,7 @@
                                             :taxon/taxonomy
                                             {:translatable/fields [*]}]}])]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -258,14 +258,14 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields [;; should add id, key, lang
                                                   :field/content]}
                            {:post/_taxons [:taxon/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}])]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}
@@ -280,7 +280,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields [:db/id
                                                    :field/key
                                                    :field/lang
@@ -289,7 +289,7 @@
                                             :taxon/taxonomy
                                             {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -307,14 +307,14 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields [;; should add id, key, lang
                                                   :field/content]}
                            {:post/_taxons [:taxon/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}
@@ -328,7 +328,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
@@ -347,7 +347,7 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields
                             [:field/key :field/content]}]) .]
           :in [$ ?type]
@@ -363,7 +363,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
@@ -382,7 +382,7 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields
                             [:field/key :field/content]}]) .]
           :in [$ ?type]
@@ -399,14 +399,14 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
                             {:post/taxons [:taxon/slug
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -424,13 +424,13 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:taxon/slug
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}
@@ -445,7 +445,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:post/children ...}
                             {:some/relation [{:hierarchical/stuff ...}]}
                             {:translatable/fields
@@ -454,7 +454,7 @@
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -473,7 +473,7 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:post/children ...}
                            {:some/relation [;; We can safely disregard this
                                             ;; recursive binding.
@@ -483,7 +483,7 @@
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}
@@ -497,7 +497,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:post/children ...}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
@@ -505,7 +505,7 @@
                                            :taxon/taxonomy
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -523,14 +523,14 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:post/children ...}
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:taxon/slug
                                           :taxon/taxonomy
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}
@@ -544,7 +544,7 @@
         :query/db ::FAKEDB
         :query/args
         ['{:find [(pull ?e [:db/id
-                            :post/slug
+                            :thing/slug
                             {:post/children 3}
                             {:translatable/fields
                              [:db/id :field/lang :field/key :field/content]}
@@ -553,7 +553,7 @@
                                            {:taxon/_children ...}
                                            {:translatable/fields [*]}]}]) .]
            :in [$ ?slug ?type]
-           :where [[?e :post/slug ?slug]
+           :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
@@ -571,7 +571,7 @@
        :query/db ::FAKEDB
        :query/args
        ['{:find [(pull ?e [:db/id
-                           :post/slug
+                           :thing/slug
                            {:post/children 3}
                            {:translatable/fields [:field/key :field/content]}
                            {:post/taxons [:taxon/slug
@@ -581,7 +581,7 @@
                                           {:taxon/_children ...}
                                           {:translatable/fields [*]}]}]) .]
           :in [$ ?slug ?type]
-          :where [[?e :post/slug ?slug]
+          :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
         :post.type/page]}

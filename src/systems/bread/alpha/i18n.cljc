@@ -66,7 +66,7 @@
   (translatable-binding? [:field/content])
   (translatable-binding? ['*])
   (translatable-binding? [])
-  (translatable-binding? [:post/slug :post/authors :post/fields]))
+  (translatable-binding? [:thing/slug :post/authors :post/fields]))
 
 (defn compact-fields
   "Takes a sequence of translatable fields and compacts it down to a single map,

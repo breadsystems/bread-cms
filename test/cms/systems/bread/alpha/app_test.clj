@@ -20,7 +20,7 @@
              [;; init post content
               {:db/id "page.home"
                :post/type :post.type/page
-               :post/slug ""
+               :thing/slug ""
                :post/status :post.status/published
                :translatable/fields
                #{{:field/key :title
@@ -41,7 +41,7 @@
                   :field/content (pr-str {:hello "Allo!"})}}}
               {:db/id "page.parent"
                :post/type :post.type/page
-               :post/slug "parent-page"
+               :thing/slug "parent-page"
                :post/status :post.status/published
                :post/children ["page.child"]
                :translatable/fields
@@ -65,7 +65,7 @@
                   (pr-str {:hello "Bonjour de parent"})}}}
               {:db/id "page.child"
                :post/type :post.type/page
-               :post/slug "child-page"
+               :thing/slug "child-page"
                :post/status :post.status/published
                :translatable/fields
                #{{:field/key :title
