@@ -30,6 +30,25 @@
      :migration/dependencies #{}}))
 
 (def
+  ^{:doc "Schema for generic db entities AKA \"things\" that can have children,
+         slugs, sort order, and a UUID."}
+  things
+  (with-meta
+    [{:db/id "migration.things"
+      :migration/key :bread.migration/things
+      :migration/description "Migration for generic :thing/* attrs"}
+     {:db/ident :thing/order
+      :attr/label "Sort Order"
+      :db/doc "Ordinal number in which this thing appears in the menu."
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.things"}
+     ]
+
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations}}))
+
+(def
   ^{:doc "Schema for (site-wide) internationalization (AKA i18n) strings."}
   i18n
   (with-meta
@@ -368,12 +387,6 @@
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.menus"}
-     {:db/ident :menu.item/order
-      :attr/label "Menu Item Sort Order"
-      :db/doc "Ordinal number in which this item appears in the menu."
-      :db/valueType :db.type/number
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.menus"}
      {:db/ident :menu.item/children
       :attr/label "Menu Item Children"
       :db/doc "Any child items of this item."
@@ -446,6 +459,7 @@
   initial
   (with-meta
     [migrations
+     things
      i18n
      users
      posts
