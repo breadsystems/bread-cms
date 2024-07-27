@@ -37,6 +37,13 @@
     [{:db/id "migration.things"
       :migration/key :bread.migration/things
       :migration/description "Migration for generic :thing/* attrs"}
+     {:db/ident :thing/uuid
+      :attr/label "UUID"
+      :db/doc "Unique identifier for the thing. Distinct from the Datahike entity ID."
+      :db/valueType :db.type/uuid
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.things"}
      {:db/ident :thing/order
       :attr/label "Sort Order"
       :db/doc "Ordinal number in which this thing appears in the menu."
@@ -96,13 +103,6 @@
     [{:db/id  "migration.users"
       :migration/key :bread.migration/users
       :migration/description  "Migration for users and roles schema"}
-     {:db/ident :user/uuid
-      :attr/label "User UUID"
-      :db/doc "Unique identifier. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
      {:db/ident :user/email
       :attr/label "Email"
       :db/doc "User account email"
@@ -213,13 +213,6 @@
     [{:db/id "migration.posts"
       :migration/key :bread.migration/posts
       :migration/description "Posts and fields"}
-     {:db/ident :post/uuid
-      :attr/label "Post UUID"
-      :db/doc "Unique identifier for the post. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
      {:db/ident :post/slug
       :attr/label "Post Slug"
       :db/doc "Route-unique slug, typically based on the post title"
@@ -297,13 +290,6 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.taxons"}
-     {:db/ident :taxon/uuid
-      :attr/label "Taxon UUID"
-      :db/doc "Unique identifier for the taxon. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.taxons"}
      {:db/ident :taxon/slug
       :attr/label "Taxon Slug"
       :db/doc "Route-unique slug, typically based on the taxon title."
@@ -354,13 +340,6 @@
     [{:db/id  "migration.menus"
       :migration/key :bread.migration/menus
       :migration/description  "Menus"}
-     {:db/ident :menu/uuid
-      :attr/label "Menu UUID"
-      :db/doc "Universally unique identifier for the menu. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.menus"}
      {:db/ident :menu/locations
       :attr/label "Menu Locations"
       :db/doc "Locations this menu is being used for."
@@ -405,13 +384,6 @@
     [{:db/id "migration.comments"
       :migration/key :bread.migration/comments
       :migration/description "Comments"}
-     {:db/ident :comment/uuid
-      :attr/label "Comment UUID"
-      :db/doc "Universally unique identifier for the comment. Distinct from the Datahike entity ID."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.comments"}
      {:db/ident :comment/post-id
       :attr/label "Comment Post ID"
       :db/doc "The entity ID of the Post that this comment refers to"
