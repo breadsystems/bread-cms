@@ -25,6 +25,24 @@
   [s]
   (if (string? s) (string/replace s #"/" "-/") s))
 
+(defn- parse-params [template]
+  "Parse a route template into a vector of param keys."
+  (loop [[c & cs] template
+         param ""
+         params []
+         ctx {:keyword? false}]
+    (case c
+      nil params
+      \{ (recur cs "" params {:keyword? true})
+      \} (recur cs "" (conj params (keyword param)) {:keyword? false})
+      \/ (let [param? (seq param)
+               parsing-keyword? (:keyword? ctx)]
+           (cond
+             (:keyword? ctx) (recur cs (str param c) params ctx)
+             (seq param) (recur cs param (conj params param) ctx)
+             :else (recur cs param params ctx)))
+      (recur cs (str param c) params ctx))))
+
 (extend-protocol Router
   reitit.core.Router
   ;; TODO route-name
@@ -38,6 +56,8 @@
               (string/replace #"-%2F" "/"))))
   (bread/match [router req]
     (reitit/match-by-path router (:uri req)))
+  (bread/route-spec [router match]
+    (parse-params (:template match)))
   (bread/params [router match]
     (:path-params match))
   (bread/dispatcher [router match]
