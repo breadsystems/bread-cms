@@ -6,7 +6,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.util.datalog :refer [where pull-query ensure-db-id]]))
 
 (defn- syms

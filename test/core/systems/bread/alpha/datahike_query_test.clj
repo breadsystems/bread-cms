@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [are deftest is]]
     [kaocha.repl :as k]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded use-db]]))
@@ -56,7 +56,7 @@
 
 (deftest test-datahike-query
 
-  (let [app (plugins->loaded [(db/plugin config) (query/plugin)])
+  (let [app (plugins->loaded [(db/plugin config) (expansion/plugin)])
         db (db/database app)]
     (are
       [data queries]

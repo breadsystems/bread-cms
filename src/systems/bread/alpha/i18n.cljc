@@ -6,7 +6,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.util.datalog :as d]))
 
@@ -99,7 +99,7 @@
   [{k :query/key
     lang :field/lang
     :keys [format? compact? spaths recur-attrs]} data]
-  (let [e (query/get-at data k)]
+  (let [e (expansion/get-at data k)]
     (if e
       (let [chain [;; NOTE: chain gets passed to comp, so these operations
                    ;; happen in reverse!
@@ -186,24 +186,24 @@
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
-  (query/add req {:query/name ::db/query
-                  :query/key :i18n
-                  :query/into {}
-                  :query/db (db/database req)
-                  :query/args
-                  ['{:find [?key ?content]
-                     :in [$ ?lang]
-                     :where [[?e :field/key ?key]
-                             [?e :field/content ?content]
-                             [?e :field/lang ?lang]
-                             (not-join [?e] [_ :translatable/fields ?e])]}
-                   (lang req)]}))
+  (expansion/add req {:query/name ::db/query
+                      :query/key :i18n
+                      :query/into {}
+                      :query/db (db/database req)
+                      :query/args
+                      ['{:find [?key ?content]
+                         :in [$ ?lang]
+                         :where [[?e :field/key ?key]
+                                 [?e :field/content ?content]
+                                 [?e :field/lang ?lang]
+                                 (not-join [?e] [_ :translatable/fields ?e])]}
+                       (lang req)]}))
 
 (defmethod bread/action ::add-lang-query
   [req _ _]
-  (query/add req {:query/name ::bread/value
-                  :query/key :lang
-                  :query/value (lang req)}))
+  (expansion/add req {:query/name ::bread/value
+                      :query/key :lang
+                      :query/value (lang req)}))
 
 (defn plugin
   ([]

@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.query
+(ns systems.bread.alpha.expansion
   (:require
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]))

@@ -6,7 +6,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.database :as db] ;; TODO ???
     [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]

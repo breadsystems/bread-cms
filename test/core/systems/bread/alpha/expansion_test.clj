@@ -1,14 +1,14 @@
-(ns systems.bread.alpha.query-test
+(ns systems.bread.alpha.expansion-test
   (:require
     [clojure.test :as t :refer [are deftest is]]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(deftest test-query-expand
+(deftest test-expand
   (are
     [data queries]
-    (= data (-> (plugins->loaded [(query/plugin)])
+    (= data (-> (plugins->loaded [(expansion/plugin)])
                 (assoc ::bread/queries queries
                        ::bread/dispatcher
                        {:dispatcher/type :whatevs
@@ -57,7 +57,7 @@
 (deftest test-populate-in
   (are
     [data args]
-    (= data (apply query/populate-in args))
+    (= data (apply expansion/populate-in args))
 
     {:x :y}
     [{} :x :y]
