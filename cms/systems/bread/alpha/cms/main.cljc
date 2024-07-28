@@ -441,7 +441,7 @@
     ;; This part needs to be polymorphic
     {:template template
      :name (:name data)
-     :param-keys (parse-params template)
+     :route/spec (parse-params template)
      :data data})
 
   ;; TODO This should go in the route ns as a private var.
@@ -459,7 +459,7 @@
     (string/join "/" (ancestry [] entity)))
 
   (ancestry [] grandchild)
-  (entity->param {:param :entity/slug*} grandchild)
+  (param :entity/slug* grandchild)
   (route/router (->app $req))
 
   (defmethod bread/action ::uri [req _ [route-name e]]
