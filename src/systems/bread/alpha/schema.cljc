@@ -254,6 +254,7 @@
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/things
                                :bread.migration/i18n
                                :bread.migration/users}}))
 
@@ -279,6 +280,7 @@
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/things
                                :bread.migration/i18n
                                :bread.migration/posts}}))
 
@@ -348,6 +350,7 @@
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/things
                                :bread.migration/posts}}))
 
 (def
