@@ -72,16 +72,16 @@
                                   :aciton/value attrs-map}]}}])]
 
     (are
-      [queries dispatcher]
-      (= queries (let [counter (atom 0)]
+      [expansions dispatcher]
+      (= expansions (let [counter (atom 0)]
                    (-> (assoc app ::bread/dispatcher dispatcher)
                        (bread/hook ::bread/dispatch)
-                       ::bread/queries)))
+                       ::bread/expansions)))
 
-      [{:query/name ::db/query
-        :query/key :post
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields [*]}]) .]
@@ -95,9 +95,9 @@
          ""
          :post.type/page
          :post.status/published]}
-       {:query/name ::i18n/fields
-        :query/key :post
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post
+        :expansion/description "Process translatable fields."
         :spaths [[:translatable/fields]]
         :field/lang :en
         :format? true
@@ -109,10 +109,10 @@
        {:lang "en" :slugs ""} :route/params}
 
       ;; Post type, status are dynamic.
-      [{:query/name ::db/query
-        :query/key :post
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields [*]}]) .]
@@ -126,9 +126,9 @@
          ""
          :post.type/article
          :post.status/draft]}
-       {:query/name ::i18n/fields
-        :query/key :post
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post
+        :expansion/description "Process translatable fields."
         :spaths [[:translatable/fields]]
         :field/lang :en
         :format? true

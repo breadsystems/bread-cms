@@ -91,7 +91,7 @@
     (catch java.io.FileNotFoundException _
       nil)))
 
-(defmethod bread/query ::markdown [{:keys [root path ext]} _]
+(defmethod bread/expand ::markdown [{:keys [root path ext]} _]
   (let [filepath (filepath root path ext)
         markdown (load-markdown filepath)
         {:keys [metadata html] :as html+}
@@ -102,10 +102,10 @@
 
 (defmethod dispatcher/dispatch ::static [{:keys [uri]}]
   (let [path (filter seq (clojure.string/split uri #"/"))]
-    {:queries
-     [{:query/name ::markdown
-       :query/description "Render a static page"
-       :query/key :page
+    {:expansions
+     [{:expansion/name ::markdown
+       :expansion/description "Render a static page"
+       :expansion/key :page
        :root "dev/content"
        :ext "md"
        :path path}]}))
@@ -298,7 +298,7 @@
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
-    (::bread/queries $))
+    (::bread/expansions $))
   (as-> (->app  $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)

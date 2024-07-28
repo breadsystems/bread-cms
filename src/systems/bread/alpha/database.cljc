@@ -102,10 +102,10 @@
 (defn- data-path? [x]
   (and (sequential? x) (= ::bread/data (first x))))
 
-(defmethod bread/query ::query
+(defmethod bread/expand ::query
   query-db
-  [{:query/keys [db args] :as query} data]
-  "Run the given query against db. If :query/into is present, returns
+  [{:expansion/keys [db args] :as query} data]
+  "Run the given query against db. If :expansion/into is present, returns
   (into into-val query-result)."
   (let [args (map (fn [arg]
                     (if (data-path? arg)
@@ -117,8 +117,8 @@
         ;; If nothing is found, set explicit false so we don't try to write
         ;; nested data to the query key (e.g. at [:post :post/fields]).
         result (or result false)]
-    (if (and (:query/into query) (seqable? result))
-      (into (:query/into query) result)
+    (if (and (:expansion/into query) (seqable? result))
+      (into (:expansion/into query) result)
       result)))
 
 (defmethod bread/action ::migrate

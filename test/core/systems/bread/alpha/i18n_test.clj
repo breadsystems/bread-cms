@@ -149,7 +149,7 @@
       ;; Support disabling fallback lang.
       {} {:fallback-lang false}
 
-      ;; NOTE: when fallback lang is nil, bread/query gets a nil result for the
+      ;; NOTE: when fallback lang is nil, bread/expand gets a nil result for the
       ;; strings query, and therefore sets :i18n to false.
       false {:fallback-lang nil})))
 
@@ -162,8 +162,8 @@
                    :post/taxons         {:db/cardinality :db.cardinality/many}
                    :post/_taxons        {:db/cardinality :db.cardinality/many}}]
     (are
-      [queries query lang format-fields? compact-fields?]
-      (= queries
+      [expansions query lang format-fields? compact-fields?]
+      (= expansions
          (let [app (plugins->loaded
                      [(i18n/plugin {:supported-langs
                                     #{:en :fr :ru :es :de}
@@ -176,21 +176,21 @@
                         ::bread/attrs-map [{:action/name ::bread/value
                                             :action/value attrs-map}]}}])
                counter (atom 0)]
-           (bread/hook app ::i18n/queries query)))
+           (bread/hook app ::i18n/expansions query)))
 
       ;; No translatable content; noop.
-      [{:query/name ::db/query
-        :query/key :post
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id :thing/slug])]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}]
-      {:query/name ::db/query
-       :query/key :post
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id :thing/slug])]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
@@ -200,20 +200,20 @@
       true ;; ditto
 
       ;; With :translatable/fields, but still without :field/content
-      [{:query/name ::db/query
-        :query/key :post
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields [:field/key :field/lang]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}]
-      {:query/name ::db/query
-       :query/key :post
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields [:field/key :field/lang]}]) .]
@@ -226,10 +226,10 @@
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
       ;; no formatting; no compaction; querying many.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields [:db/id
@@ -244,19 +244,19 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? false
         :compact? false
         :recur-attrs #{}
         :spaths [[s/ALL s/ALL :translatable/fields]
                  [s/ALL s/ALL :post/_taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields [;; should add id, key, lang
@@ -275,10 +275,10 @@
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
       ;; no formatting; no compaction.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields [:db/id
@@ -293,19 +293,19 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? false
         :compact? false
         :recur-attrs #{}
         :spaths [[:translatable/fields]
                  [:post/_taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields [;; should add id, key, lang
@@ -323,10 +323,10 @@
       false
 
       ;; With :field/content; no formatting; no compaction.
-      [{:query/name ::db/query
-        :query/key :post-with-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields
@@ -334,18 +334,18 @@
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-content
+        :expansion/description  "Process translatable fields."
         :field/lang :fr
         :format? false
         :compact? false
         :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields
@@ -358,10 +358,10 @@
       false
 
       ;; With :field/content; no formatting; with compaction.
-      [{:query/name ::db/query
-        :query/key :post-with-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields
@@ -369,18 +369,18 @@
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-content
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-content
+        :expansion/description "Process translatable fields."
         :field/lang :fr
         :format? false
         :compact? true
         :recur-attrs #{}
         :spaths [[:translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields
@@ -394,10 +394,10 @@
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
       ;; with formatting; two entities to compact.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields
@@ -410,19 +410,19 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:translatable/fields [:field/key :field/content]}
@@ -440,10 +440,10 @@
 
       ;; All the things, with a recursive spec that can be disregarded because
       ;; it doesn't coincide with any translatable fields.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:thing/children ...}
@@ -458,9 +458,9 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
@@ -468,10 +468,10 @@
         :recur-attrs #{:thing/children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:thing/children ...}
@@ -492,10 +492,10 @@
       true
 
       ;; All the things, plus a recursive spec.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:thing/children ...}
@@ -509,19 +509,19 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{:thing/children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:thing/children ...}
@@ -539,10 +539,10 @@
       true
 
       ;; All the things, plus TWO recursive specs including a nested one.
-      [{:query/name ::db/query
-        :query/key :post-with-taxons-and-field-content
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:thing/children 3}
@@ -557,19 +557,19 @@
                    [?e :post/type ?type]]}
          "my-post"
          :post.type/page]}
-       {:query/name ::i18n/fields
-        :query/key :post-with-taxons-and-field-content
-        :query/description  "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{:thing/children :thing/_children}
         :spaths [[:translatable/fields]
                  [:post/taxons s/ALL :translatable/fields]]}]
-      {:query/name ::db/query
-       :query/key :post-with-taxons-and-field-content
-       :query/db ::FAKEDB
-       :query/args
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
        ['{:find [(pull ?e [:db/id
                            :thing/slug
                            {:thing/children 3}
@@ -595,9 +595,9 @@
 (deftest test-fields-hook
   (are
     [entity query data]
-    (= entity (bread/query query data))
+    (= entity (bread/expand query data))
 
-    false {:query/name ::i18n/fields :query/key :the-key} {:the-key false}
+    false {:expansion/name ::i18n/fields :expansion/key :the-key} {:the-key false}
 
     ;; With direct fields; no formatting; no compaction.
     {:translatable/fields [{:field/key :opposite-of-occupied
@@ -608,8 +608,8 @@
                             :field/format :edn
                             :field/content (pr-str "ليس الشاغر")
                             :field/lang :ar}]}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :ar
      :format? false
      :compact? false
@@ -642,8 +642,8 @@
                             :field/format :edn
                             :field/content "לים"
                             :field/lang :he}]}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :he
      :format? true
      :compact? false
@@ -669,8 +669,8 @@
 
     ;; With direct fields; EDN formatting; with compaction.
     {:translatable/fields {:uri "/es/the-slug"}}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :es
      :format? true
      :compact? true
@@ -684,8 +684,8 @@
     ;; With direct fields; no formatting; compactions.
     {:translatable/fields {:from-the-river (pr-str "מהנהר")
                            :to-the-sea (pr-str "לים")}}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :he
      :format? false
      :compact? true
@@ -711,8 +711,8 @@
 
     ;; With direct fields; EDN formatting; compactions.
     {:translatable/fields {:from-the-river "מהנהר" :to-the-sea "לים"}}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :he
      :format? true
      :compact? true
@@ -739,8 +739,8 @@
     ;; With direct fields; EDN formatting; compactions; recursive data.
     {:translatable/fields {:from-the-river "מהנהר"}
      :thing/children [{:translatable/fields {:to-the-sea "לים"}}]}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :he
      :format? true
      :compact? true
@@ -769,8 +769,8 @@
     ;; With direct fields; raw formatting; compactions; universal fields.
     {:translatable/fields {:uri "/abc"}
      :thing/children [{:translatable/fields {:uri "/def"}}]}
-    {:query/name ::i18n/fields
-     :query/key :the-key
+    {:expansion/name ::i18n/fields
+     :expansion/key :the-key
      :field/lang :he
      :format? true
      :compact? true

@@ -34,9 +34,9 @@
               (bread/path (:router opts) (:route/name opts) params))
      :thing/children (->items opts children)}))
 
-(defmethod bread/query ::items
+(defmethod bread/expand ::items
   [opts data]
-  (when-let [items (expansion/get-at data (:query/key opts))]
+  (when-let [items (expansion/get-at data (:expansion/key opts))]
     ;; First layer will be a vector of vectors
     (->items opts (map first items))))
 
@@ -46,14 +46,14 @@
     ks #{ks}))
 
 (defn- with-i18n [req [init-q db-q items-q]]
-  (let [i18n-queries (bread/hook req ::i18n/queries db-q)]
-    (conj (apply vector init-q i18n-queries) items-q)))
+  (let [i18n-expansions (bread/hook req ::i18n/expansions db-q)]
+    (conj (apply vector init-q i18n-expansions) items-q)))
 
-(defmulti menu-queries (fn [_req opts]
+(defmulti menu-expansions (fn [_req opts]
                          (:menu/type opts)))
 
-(defmethod menu-queries ::posts
-  menu-queries?type=posts
+(defmethod menu-expansions ::posts
+  menu-expansions?type=posts
   [req {k :menu/key
         menu-type :menu/type
         post-type :post/type
@@ -67,43 +67,43 @@
              recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
-      [{:query/name ::bread/value
-        :query/key [menus-key k]
-        :query/description "Basic initial info for this posts menu."
-        :query/value {:menu/type menu-type :post/type post-type}}
-       {:query/name ::db/query
-        :query/key [menus-key k :menu/items]
-        :query/description "Recursively query for posts of a specific type."
-        :query/db (db/database req)
-        :query/args [{:find [(list 'pull '?e
-                                   [:db/id :post/type :post/status
-                                    {:translatable/fields '[*]}
-                                    ;; We need full ancestry for constructing
-                                    ;; Post URLs.
-                                    {:thing/_children
-                                     [:thing/slug
-                                      {:thing/_children '...}]}
-                                    {:thing/children recursion-limit}])]
-                      :in '[$ ?type [?status ...]]
-                      :where '[[?e :post/type ?type]
-                               [?e :post/status ?status]
-                               ;; only top-level pages
-                               (not-join [?e] [?_ :thing/children ?e])]}
-                     post-type
-                     (if (coll? post-status)
-                       (set post-status)
-                       #{post-status})]}
-       {:query/name ::items
-        :query/key [menus-key k :menu/items]
-        :query/description "Process post menu item data."
+      [{:expansion/name ::bread/value
+        :expansion/key [menus-key k]
+        :expansion/description "Basic initial info for this posts menu."
+        :expansion/value {:menu/type menu-type :post/type post-type}}
+       {:expansion/name ::db/query
+        :expansion/key [menus-key k :menu/items]
+        :expansion/description "Recursively query for posts of a specific type."
+        :expansion/db (db/database req)
+        :expansion/args [{:find [(list 'pull '?e
+                                       [:db/id :post/type :post/status
+                                        {:translatable/fields '[*]}
+                                        ;; We need full ancestry for
+                                        ;; constructing URLs.
+                                        {:thing/_children
+                                         [:thing/slug
+                                          {:thing/_children '...}]}
+                                        {:thing/children recursion-limit}])]
+                          :in '[$ ?type [?status ...]]
+                          :where '[[?e :post/type ?type]
+                                   [?e :post/status ?status]
+                                   ;; only top-level pages
+                                   (not-join [?e] [?_ :thing/children ?e])]}
+                         post-type
+                         (if (coll? post-status)
+                           (set post-status)
+                           #{post-status})]}
+       {:expansion/name ::items
+        :expansion/key [menus-key k :menu/items]
+        :expansion/description "Process post menu item data."
         :router (route/router req)
         :route/name route-name
         :route/params (route/params req (route/match req))
         :field/key (field-keys fks)
         :sort-by sort-key}])))
 
-(defmethod menu-queries ::taxon
-  menu-queries?type=taxon
+(defmethod menu-expansions ::taxon
+  menu-expansions?type=taxon
   [req {k :menu/key
         taxonomy :taxon/taxonomy
         slug :thing/slug
@@ -127,30 +127,30 @@
           :where '[[?e :taxon/taxonomy ?taxonomy]]}
          taxonomy]]
     (with-i18n req
-      [{:query/name ::bread/value
-        :query/key [menus-key k]
-        :query/description "Basic initial info for this taxon menu."
-        :query/value {:menu/type ::taxon
-                      :taxon/taxonomy taxonomy
-                      :thing/slug slug}}
-       {:query/name ::db/query
-        :query/key [menus-key k :menu/items]
-        :query/description
+      [{:expansion/name ::bread/value
+        :expansion/key [menus-key k]
+        :expansion/description "Basic initial info for this taxon menu."
+        :expansion/value {:menu/type ::taxon
+                          :taxon/taxonomy taxonomy
+                          :thing/slug slug}}
+       {:expansion/name ::db/query
+        :expansion/key [menus-key k :menu/items]
+        :expansion/description
         "Recursively query for taxons of a specific taxonomy."
-        :query/db (db/database req)
-        :query/args (if slug
-                      (d/where datalog-query [['?slug :thing/slug slug]])
-                      datalog-query)}
-       {:query/name ::items
-        :query/key [menus-key k :menu/items]
+        :expansion/db (db/database req)
+        :expansion/args (if slug
+                          (d/where datalog-query [['?slug :thing/slug slug]])
+                          datalog-query)}
+       {:expansion/name ::items
+        :expansion/key [menus-key k :menu/items]
         :field/key (field-keys fks)
         :sort-by sort-key
         :router (route/router req)
         :route/name route-name
         :route/params (route/params req (route/match req))}])))
 
-(defmethod menu-queries ::global
-  menu-queries?type=global
+(defmethod menu-expansions ::global
+  menu-expansions?type=global
   [req {k :menu/key
         fks :field/key
         recursion-limit :recursion-limit
@@ -162,33 +162,33 @@
              sort-key [:thing/order]}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
-      [{:query/name ::bread/value
-        :query/key [menus-key k]
-        :query/description "Basic initial info for this global menu."
-        :query/value {:menu/type ::global
+      [{:expansion/name ::bread/value
+        :expansion/key [menus-key k]
+        :expansion/description "Basic initial info for this global menu."
+        :expansion/value {:menu/type ::global
                       :menu/key k}}
-       {:query/name ::db/query
-        :query/key [menus-key k :menu/items]
-        :query/description "Recursively query for menu items."
-        :query/db (db/database req)
-        :query/args [{:find [(list 'pull '?i [:db/id
-                                              :thing/order
-                                              {:thing/children
-                                               recursion-limit}
-                                              {:menu.item/entity
-                                               [:db/id
-                                                :thing/slug
-                                                {:translatable/fields '[*]}
-                                                {:thing/_children
-                                                 [:thing/slug
-                                                  {:thing/_children '...}]}]}
-                                              {:translatable/fields '[*]}])]
+       {:expansion/name ::db/query
+        :expansion/key [menus-key k :menu/items]
+        :expansion/description "Recursively query for menu items."
+        :expansion/db (db/database req)
+        :expansion/args [{:find [(list 'pull '?i [:db/id
+                                                  :thing/order
+                                                  {:thing/children
+                                                   recursion-limit}
+                                                  {:menu.item/entity
+                                                   [:db/id
+                                                    :thing/slug
+                                                    {:translatable/fields '[*]}
+                                                    {:thing/_children
+                                                     [:thing/slug
+                                                      {:thing/_children '...}]}]}
+                                                  {:translatable/fields '[*]}])]
                       :in '[$ ?key]
                       :where '[[?m :menu/key ?key]
                                [?m :menu/items ?i]]}
                      k]}
-       {:query/key [menus-key k :menu/items]
-        :query/name ::items
+       {:expansion/key [menus-key k :menu/items]
+        :expansion/name ::items
         :field/key (field-keys fks)
         :merge-entities? merge?
         :sort-by sort-key
@@ -196,8 +196,8 @@
         :route/name route-name
         :route/params (route/params req (route/match req))}])))
 
-(defmethod menu-queries ::location
-  menu-queries?type=location
+(defmethod menu-expansions ::location
+  menu-expansions?type=location
   [req {k :menu/key
         location :menu/location
         fks :field/key
@@ -210,33 +210,33 @@
              sort-key [:thing/order]}}]
   (let [menus-key (bread/config req :navigation/menus-key)]
     (with-i18n req
-      [{:query/name ::bread/value
-        :query/key [menus-key k]
-        :query/description "Basic initial info for this location menu."
-        :query/value {:menu/type ::location
+      [{:expansion/name ::bread/value
+        :expansion/key [menus-key k]
+        :expansion/description "Basic initial info for this location menu."
+        :expansion/value {:menu/type ::location
                       :menu/location location}}
-       {:query/name ::db/query
-        :query/key [menus-key k :menu/items]
-        :query/description "Recursively query for menu items."
-        :query/db (db/database req)
-        :query/args [{:find [(list 'pull '?i [:db/id
-                                              :thing/order
-                                              {:thing/children
-                                               recursion-limit}
-                                              {:menu.item/entity
-                                               [:db/id
-                                                :thing/slug
-                                                {:translatable/fields '[*]}
-                                                {:thing/_children
-                                                 [:thing/slug
-                                                  {:thing/_children '...}]}]}
-                                              {:translatable/fields '[*]}])]
-                      :in '[$ ?location]
-                      :where '[[?m :menu/locations ?location]
-                               [?m :menu/items ?i]]}
-                     location]}
-       {:query/key [menus-key k :menu/items]
-        :query/name ::items
+       {:expansion/name ::db/query
+        :expansion/key [menus-key k :menu/items]
+        :expansion/description "Recursively query for menu items."
+        :expansion/db (db/database req)
+        :expansion/args [{:find [(list 'pull '?i [:db/id
+                                                  :thing/order
+                                                  {:thing/children
+                                                   recursion-limit}
+                                                  {:menu.item/entity
+                                                   [:db/id
+                                                    :thing/slug
+                                                    {:translatable/fields '[*]}
+                                                    {:thing/_children
+                                                     [:thing/slug
+                                                      {:thing/_children '...}]}]}
+                                                  {:translatable/fields '[*]}])]
+                          :in '[$ ?location]
+                          :where '[[?m :menu/locations ?location]
+                                   [?m :menu/items ?i]]}
+                         location]}
+       {:expansion/key [menus-key k :menu/items]
+        :expansion/name ::items
         :field/key (field-keys fks)
         :merge-entities? merge?
         :sort-by sort-key
@@ -244,10 +244,10 @@
         :route/name route-name
         :route/params (route/params req (route/match req))}])))
 
-(defmethod bread/action ::add-menu-queries
-  add-menu-queries-action
+(defmethod bread/action ::add-menu-expansions
+  add-menu-expansions-action
   [req {:keys [opts]} _]
-  (apply expansion/add req (menu-queries req opts)))
+  (apply expansion/add req (menu-expansions req opts)))
 
 (defn plugin
   ([]
@@ -262,8 +262,8 @@
       :hooks
       {::bread/dispatch
        (mapv (fn [[k menu-opts]]
-               {:action/name ::add-menu-queries
+               {:action/name ::add-menu-expansions
                 :action/description
-                "Add queries for the menu with the given opts"
+                "Add expansions for the menu with the given opts"
                 :opts (assoc menu-opts :menu/key k)})
              menus)}})))

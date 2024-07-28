@@ -8,8 +8,8 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.query-inference :as qi]))
 
-(defmethod bread/query ::filter-posts
-  [{k :query/key post-type :post/type post-status :post/status} data]
+(defmethod bread/expand ::filter-posts
+  [{k :expansion/key post-type :post/type post-status :post/status} data]
   (filter (fn [post]
             (prn post-type post-status '? ((juxt :post/type :post/status) post))
             (doto (and (or (nil? post-type)   (= post-type   (:post/type post)))
@@ -34,24 +34,24 @@
                              :post/_taxons
                              vector?
                              query)]
-    {:queries (if (seq bindings)
-                (vec (mapcat
-                       (fn [query]
-                         (bread/hook req ::i18n/queries query))
-                       [{:query/name ::db/query
-                         :query/key k
-                         :query/db (db/database req)
-                         :query/args [query taxonomy (:slug params)]}
-                        {:query/name ::filter-posts
-                         :query/key :tag-with-posts
-                         :post/type post-type
-                         :post/status post-status}]))
-                (bread/hook
-                  req ::i18n/queries
-                  {:query/name ::db/query
-                   :query/key k
-                   :query/db (db/database req)
-                   :query/args [query taxonomy (:slug params)]}))}))
+    {:expansions (if (seq bindings)
+                   (vec (mapcat
+                          (fn [query]
+                            (bread/hook req ::i18n/expansions query))
+                          [{:expansion/name ::db/query
+                            :expansion/key k
+                            :expansion/db (db/database req)
+                            :expansion/args [query taxonomy (:slug params)]}
+                           {:expansion/name ::filter-posts
+                            :expansion/key :tag-with-posts
+                            :post/type post-type
+                            :post/status post-status}]))
+                   (bread/hook
+                     req ::i18n/expansions
+                     {:expansion/name ::db/query
+                      :expansion/key k
+                      :expansion/db (db/database req)
+                      :expansion/args [query taxonomy (:slug params)]}))}))
 
 (defmethod dispatcher/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]

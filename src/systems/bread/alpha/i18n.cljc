@@ -95,8 +95,8 @@
               (assoc field :field/content)))
        fields))
 
-(defmethod bread/query ::fields
-  [{k :query/key
+(defmethod bread/expand ::fields
+  [{k :expansion/key
     lang :field/lang
     :keys [format? compact? spaths recur-attrs]} data]
   (let [e (expansion/get-at data k)]
@@ -125,14 +125,14 @@
           e spaths))
       false)))
 
-(defmethod bread/action ::queries
+(defmethod bread/action ::expansions
   i18n-queries
-  [req _ [{:query/keys [db] :as query}]]
-  "Internationalizes the given query, returning a vector of queries for
+  [req _ [{:expansion/keys [db] :as query}]]
+  "Internationalizes the given db query, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [dbq (first (:query/args query))
+  (let [dbq (first (:expansion/args query))
         {:keys [bindings]} (qi/infer-query-bindings
                              :translatable/fields
                              translatable-binding?
@@ -156,18 +156,18 @@
     (if (seq bindings)
       [(reduce
          (fn [query {:keys [binding-path relation entity-index]}]
-           (s/transform (concat [:query/args 0 ;; datalog query
-                                 :find         ;; find clause
-                                 entity-index  ;; find position
-                                 s/LAST]       ;; pull-expr
-                                binding-path)  ;; within pull-expr
+           (s/transform (concat [:expansion/args 0 ;; datalog query
+                                 :find             ;; find clause
+                                 entity-index      ;; find position
+                                 s/LAST]           ;; pull-expr
+                                binding-path)      ;; within pull-expr
                         (partial d/ensure-attrs
                                  [:field/lang :field/key :db/id])
                         query))
          query bindings)
-       {:query/name ::fields
-        :query/key (:query/key query)
-        :query/description "Process translatable fields."
+       {:expansion/name ::fields
+        :expansion/key (:expansion/key query)
+        :expansion/description "Process translatable fields."
         :field/lang (lang req)
         :compact? (bread/config req :i18n/compact-fields?)
         :format? (bread/config req :i18n/format-fields?)
@@ -186,11 +186,11 @@
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
-  (expansion/add req {:query/name ::db/query
-                      :query/key :i18n
-                      :query/into {}
-                      :query/db (db/database req)
-                      :query/args
+  (expansion/add req {:expansion/name ::db/query
+                      :expansion/key :i18n
+                      :expansion/into {}
+                      :expansion/db (db/database req)
+                      :expansion/args
                       ['{:find [?key ?content]
                          :in [$ ?lang]
                          :where [[?e :field/key ?key]
@@ -201,9 +201,9 @@
 
 (defmethod bread/action ::add-lang-query
   [req _ _]
-  (expansion/add req {:query/name ::bread/value
-                      :query/key :lang
-                      :query/value (lang req)}))
+  (expansion/add req {:expansion/name ::bread/value
+                      :expansion/key :lang
+                      :expansion/value (lang req)}))
 
 (defn plugin
   ([]
@@ -224,8 +224,8 @@
      :i18n/format-fields?  format-fields?
      :i18n/compact-fields? compact-fields?}
     :hooks
-    {::queries
-     [{:action/name ::queries
+    {::expansions
+     [{:action/name ::expansions
        :action/description "Internationalize the given queries"}]
      ::path-params
      [{:action/name ::path-params
