@@ -59,6 +59,41 @@
     ;;
     ))
 
+(deftest test-route-spec
+  (are
+    [expected routes uri]
+    (= expected
+       (let [router (reitit/router routes)]
+         (bread/route-spec router (bread/match router {:uri uri}))))
+
+    [] nil ""
+    [] [] ""
+    [] ["/{slug}" {:name :page}] ""
+    [] ["/{slug}" {:name :page}] "/"
+
+    [:slug]
+    ["/{slug}" {:name :page}]
+    "/abc"
+
+    [:thing/slug]
+    ["/{thing/slug}" {:name :page}]
+    "/abc"
+
+    [:thing/slug*]
+    ["/{thing/slug*}" {:name :page}]
+    "/abc"
+
+    [:field/lang :thing/slug*]
+    ["/{field/lang}/{thing/slug*}" {:name :page}]
+    "/en/abc"
+
+    [:field/lang "page" :thing/slug*]
+    ["/{field/lang}/page/{thing/slug*}" {:name :page}]
+    "/en/page/abc"
+
+    ;;
+    ))
+
 (deftest test-dispatcher
   (are
     [expected routes match]

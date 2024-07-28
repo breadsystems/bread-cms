@@ -24,6 +24,7 @@
   :extend-via-metadata true
   (path [this route-name params])
   (match [this req])
+  (route-spec [this match])
   (params [this match])
   (dispatcher [this match])
   (routes [this]))
