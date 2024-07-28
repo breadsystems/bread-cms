@@ -10,7 +10,7 @@
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 
-(deftest test-dispatch-taxon-queries
+(deftest test-dispatch-taxon-expansions
   (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
                    :post/taxons         {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
@@ -23,18 +23,18 @@
                                   :action/value attrs-map}]}}])]
 
     (are
-      [queries dispatcher]
-      (= queries (let [counter (atom 0)]
+      [expansions dispatcher]
+      (= expansions (let [counter (atom 0)]
                    (-> (assoc app ::bread/dispatcher dispatcher)
                        (bread/hook ::bread/dispatch)
-                       ::bread/queries)))
+                       ::bread/expansions)))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.
-      [{:query/name ::db/query
-        :query/key :taxon
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :taxon
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id :thing/slug]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -49,10 +49,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :dispatcher.type/tag
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :tag
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -66,10 +66,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post/type and :post/status have no effect without :post/_taxons
-      [{:query/name ::db/query
-        :query/key :tag
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :tag
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id :taxon/whatever]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -85,10 +85,10 @@
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Query includes :translatable/field as a map.
-      [{:query/name ::db/query
-        :query/key :taxon
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :taxon
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:translatable/fields
@@ -98,9 +98,9 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}
-       {:query/name ::i18n/fields
-        :query/key :taxon
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :taxon
+        :expansion/description "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
@@ -116,10 +116,10 @@
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Default :post/type and :post/status with :post/_taxons
-      [{:query/name ::db/query
-        :query/key :tag-with-posts
-        :query/db ::FAKEDB
-        :query/args
+      [{:expansion/name ::db/query
+        :expansion/key :tag-with-posts
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:translatable/fields
@@ -131,17 +131,17 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::i18n/fields
-        :query/key :tag-with-posts
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :tag-with-posts
+        :expansion/description "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{}
         :spaths [[:post/_taxons s/ALL :translatable/fields]
                  [:translatable/fields]]}
-       {:query/name ::taxon/filter-posts
-        :query/key :tag-with-posts
+       {:expansion/name ::taxon/filter-posts
+        :expansion/key :tag-with-posts
         :post/type :post.type/page
         :post/status :post.status/published}]
       {:dispatcher/type :dispatcher.type/tag
@@ -154,10 +154,10 @@
       ;; {:uri "/en/tag/some-tag"}
       ;; :post.type/article and :post.status/draft with :post/_taxons
       [;; Query for the taxon and its relation.
-       {:query/name ::db/query
-        :query/key :tag-with-posts
-        :query/db ::FAKEDB
-        :query/args
+       {:expansion/name ::db/query
+        :expansion/key :tag-with-posts
+        :expansion/db ::FAKEDB
+        :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:translatable/fields
@@ -169,17 +169,17 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}
-       {:query/name ::i18n/fields
-        :query/key :tag-with-posts
-        :query/description "Process translatable fields."
+       {:expansion/name ::i18n/fields
+        :expansion/key :tag-with-posts
+        :expansion/description "Process translatable fields."
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{}
         :spaths [[:post/_taxons s/ALL :translatable/fields]
                  [:translatable/fields]]}
-       {:query/name ::taxon/filter-posts
-        :query/key :tag-with-posts
+       {:expansion/name ::taxon/filter-posts
+        :expansion/key :tag-with-posts
         :post/type :post.type/article
         :post/status :post.status/draft}]
       {:dispatcher/type :dispatcher.type/tag
@@ -204,10 +204,10 @@
     (are
       [filtered-slugs post-type post-status]
       (= filtered-slugs (->> {:the-query-key {:post/_taxons posts}}
-                             (bread/query {:query/name ::taxon/filter-posts
-                                           :query/key :the-query-key
-                                           :post/type post-type
-                                           :post/status post-status})
+                             (bread/expand {:expansion/name ::taxon/filter-posts
+                                            :expansion/key :the-query-key
+                                            :post/type post-type
+                                            :post/status post-status})
                              (map :thing/slug)))
 
       ;; Filter by post type only.

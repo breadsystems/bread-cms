@@ -46,7 +46,7 @@
                     :static/slug-param :slug-param
                     :static/parse :parse})
                  (select-keys [:root :ext :lang-param :slug-param :parse]))]
-    {:queries [[:post query-fs params opts]]}))
+    {:expansions [[:post query-fs params opts]]}))
 
 (defprotocol ^:private RequestCreator
   (create-request [this path config]))

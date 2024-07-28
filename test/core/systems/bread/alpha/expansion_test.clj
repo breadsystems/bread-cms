@@ -7,12 +7,12 @@
 
 (deftest test-expand
   (are
-    [data queries]
+    [data expansions]
     (= data (-> (plugins->loaded [(expansion/plugin)])
-                (assoc ::bread/queries queries
+                (assoc ::bread/expansions expansions
                        ::bread/dispatcher
                        {:dispatcher/type :whatevs
-                        :dispatcher/key (:query/key (first queries))})
+                        :dispatcher/key (:expansion/key (first expansions))})
                 (bread/hook ::bread/expand)
                 ::bread/data))
 
@@ -23,36 +23,36 @@
 
     {:my/result false
      :not-found? true}
-    [{:query/key :my/result
-      :query/name ::bread/value
-      :query/value false}]
+    [{:expansion/key :my/result
+      :expansion/name ::bread/value
+      :expansion/value false}]
 
     {:my/result {:nested false}
      :not-found? true}
-    [{:query/key [:my/result :nested]
-      :query/name ::bread/value
-      :query/value false}]
+    [{:expansion/key [:my/result :nested]
+      :expansion/name ::bread/value
+      :expansion/value false}]
 
     {:my/result "the result"
      :not-found? false}
-    [{:query/key :my/result
-      :query/name ::bread/value
-      :query/value "the result"}]
+    [{:expansion/key :my/result
+      :expansion/name ::bread/value
+      :expansion/value "the result"}]
 
     {:my/result "the result"
      :not-found? false}
-    [{:query/key :my/result
-      :query/name ::bread/value
-      :query/value "the result"}]
+    [{:expansion/key :my/result
+      :expansion/name ::bread/value
+      :expansion/value "the result"}]
 
     {:my/map {:my/result "the result"}
      :not-found? false}
-    [{:query/key :my/map
-      :query/name ::bread/value
-      :query/value {}}
-     {:query/key [:my/map :my/result]
-      :query/name ::bread/value
-      :query/value "the result"}]))
+    [{:expansion/key :my/map
+      :expansion/name ::bread/value
+      :expansion/value {}}
+     {:expansion/key [:my/map :my/result]
+      :expansion/name ::bread/value
+      :expansion/value "the result"}]))
 
 (deftest test-populate-in
   (are

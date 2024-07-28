@@ -17,7 +17,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
-;; Generic abstractions over queries and effects.
+;; Generic abstractions over expansions and effects.
 ;;
 
 (defprotocol Router
@@ -129,13 +129,13 @@
 (defmulti effect (fn [effect _data]
                    (:effect/name effect)))
 
-(defmulti query (fn [query _data]
-                  (:query/name query)))
+(defmulti expand (fn [expansion _data]
+                   (:expansion/name expansion)))
 
-(defmethod query ::value
+(defmethod expand ::value
   return-value
-  [{:query/keys [value]} _]
-  "Pass-through query that simply returns the value given by :query/value."
+  [{:expansion/keys [value]} _]
+  "Pass-through expansion that simply returns the value given by :expansion/value."
   value)
 
 (defn hooks-for
@@ -277,7 +277,7 @@
                  [{:action/name ::effects!
                    :action/description
                    "Do side effects"}]}
-      ::queries []
+      ::expansions []
       ::config  {}
       ::data    {}}
      {:type ::app}))
@@ -315,7 +315,7 @@
     (-> (merge req app)
         (hook ::request)
         (hook ::route)       ; -> ::dispatcher
-        (hook ::dispatch)    ; -> ::queries, ::data, ::effects
+        (hook ::dispatch)    ; -> ::expansions, ::data, ::effects
         (hook ::expand)      ; -> more ::data
         (hook ::effects!)    ; -> possibly more ::data
         (hook ::render)      ; -> standard Ring keys: :status, :headers, :body

@@ -21,7 +21,7 @@
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
   (bread/routes [this] []))
 
-(deftest test-queries-hook
+(deftest test-expansions-hook
   (are
     [data config req-params]
     (= data (-> (plugins->loaded [(db->plugin ::FAKEDB)
@@ -31,7 +31,7 @@
                                                 :query-lang? false})
                                   (navigation/plugin config)])
                 (bread/hook ::bread/dispatch)
-                ::bread/queries))
+                ::bread/expansions))
 
     ;; Support disabling navigation completely.
     [] false {}
@@ -39,16 +39,16 @@
     [] {} {}
 
     ;; Basic post menu.
-    [{:query/name ::bread/value
-      :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this posts menu."
-      :query/value {:menu/type ::navigation/posts
+    [{:expansion/name ::bread/value
+      :expansion/key [:menus :basic-nav]
+      :expansion/description "Basic initial info for this posts menu."
+      :expansion/value {:menu/type ::navigation/posts
                     :post/type :post.type/page}}
-     {:query/name ::db/query
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Recursively query for posts of a specific type."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Recursively query for posts of a specific type."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
                           ;; instead, they follow the post hierarchy itself.
                           :db/id
@@ -63,17 +63,17 @@
                  (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/page
        #{:post.status/published}]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process post menu item data."
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process post menu item data."
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
@@ -87,16 +87,16 @@
 
     ;; Basic post menu; passing colls to :post/status, :field/key;
     ;; passing recursion-limit.
-    [{:query/name ::bread/value
-      :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this posts menu."
-      :query/value {:menu/type ::navigation/posts
+    [{:expansion/name ::bread/value
+      :expansion/key [:menus :basic-nav]
+      :expansion/description "Basic initial info for this posts menu."
+      :expansion/value {:menu/type ::navigation/posts
                     :post/type :post.type/page}}
-     {:query/name ::db/query
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Recursively query for posts of a specific type."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Recursively query for posts of a specific type."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [:db/id
                           :post/type
                           :post/status
@@ -109,17 +109,17 @@
                  (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/page
        #{:post.status/published :post.status/draft}]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process post menu item data."
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process post menu item data."
       :route/name ::page
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
@@ -135,16 +135,16 @@
     {:field/lang "en"}
 
     ;; Basic post menu; single :post/status, :field/key; :sort-by.
-    [{:query/name ::bread/value
-      :query/key [:menus :basic-nav]
-      :query/description "Basic initial info for this posts menu."
-      :query/value {:menu/type ::navigation/posts
+    [{:expansion/name ::bread/value
+      :expansion/key [:menus :basic-nav]
+      :expansion/description "Basic initial info for this posts menu."
+      :expansion/value {:menu/type ::navigation/posts
                     :post/type :post.type/park}}
-     {:query/name ::db/query
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Recursively query for posts of a specific type."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Recursively query for posts of a specific type."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [;; Post menus don't store their own data in the db:
                           ;; instead, they follow the post hierarchy itself.
                           :db/id
@@ -159,17 +159,17 @@
                  (not-join [?e] [?_ :thing/children ?e])]}
        :post.type/park
        #{:post.status/draft}]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :basic-nav :menu/items]
-      :query/description "Process post menu item data."
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :basic-nav :menu/items]
+      :expansion/description "Process post menu item data."
       :route/name ::park
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
@@ -186,16 +186,16 @@
     {:field/lang "en"}
 
     ;; Global menu; custom menus-key.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this global menu."
-      :query/key [:my/menus :global-nav]
-      :query/value {:menu/type ::navigation/global
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this global menu."
+      :expansion/key [:my/menus :global-nav]
+      :expansion/value {:menu/type ::navigation/global
                     :menu/key :global-nav}}
-     {:query/name ::db/query
-      :query/key [:my/menus :global-nav :menu/items]
-      :query/description "Recursively query for menu items."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:my/menus :global-nav :menu/items]
+      :expansion/description "Recursively query for menu items."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
                           {:thing/children ...}
@@ -210,17 +210,17 @@
          :where [[?m :menu/key ?key]
                  [?m :menu/items ?i]]}
        :global-nav]}
-     {:query/name ::i18n/fields
-      :query/key [:my/menus :global-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:my/menus :global-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:my/menus :global-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:my/menus :global-nav :menu/items]
       :field/key nil
       :merge-entities? true
       :sort-by [:thing/order]
@@ -236,16 +236,16 @@
     {:field/lang "en"}
 
     ;; Location menu; custom menus-key.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this location menu."
-      :query/key [:my/menus :location-nav]
-      :query/value {:menu/type ::navigation/location
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this location menu."
+      :expansion/key [:my/menus :location-nav]
+      :expansion/value {:menu/type ::navigation/location
                     :menu/location ::primary}}
-     {:query/name ::db/query
-      :query/key [:my/menus :location-nav :menu/items]
-      :query/description "Recursively query for menu items."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:my/menus :location-nav :menu/items]
+      :expansion/description "Recursively query for menu items."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
                           {:thing/children ...}
@@ -260,17 +260,17 @@
          :where [[?m :menu/locations ?location]
                  [?m :menu/items ?i]]}
        ::primary]}
-     {:query/name ::i18n/fields
-      :query/key [:my/menus :location-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:my/menus :location-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:my/menus :location-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:my/menus :location-nav :menu/items]
       :field/key nil
       :merge-entities? true
       :sort-by [:thing/order]
@@ -286,16 +286,16 @@
     {:field/lang "en"}
 
     ;; Location menu; recursion-limit, field/keys.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this location menu."
-      :query/key [:menus :location-nav]
-      :query/value {:menu/type ::navigation/location
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this location menu."
+      :expansion/key [:menus :location-nav]
+      :expansion/value {:menu/type ::navigation/location
                     :menu/location ::primary}}
-     {:query/name ::db/query
-      :query/key [:menus :location-nav :menu/items]
-      :query/description "Recursively query for menu items."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :location-nav :menu/items]
+      :expansion/description "Recursively query for menu items."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?i [:db/id
                           :thing/order
                           {:thing/children ...}
@@ -310,17 +310,17 @@
          :where [[?m :menu/locations ?location]
                  [?m :menu/items ?i]]}
        ::primary]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :location-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :location-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
                [s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :location-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :location-nav :menu/items]
       :field/key #{:a}
       :merge-entities? true
       :sort-by [:thing/order]
@@ -337,17 +337,17 @@
     {:field/lang "en"}
 
     ;; Basic taxon menu.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this taxon menu."
-      :query/key [:menus :taxon-nav]
-      :query/value {:menu/type ::navigation/taxon
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this taxon menu."
+      :expansion/key [:menus :taxon-nav]
+      :expansion/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/tag
                     :thing/slug nil}}
-     {:query/name ::db/query
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Recursively query for taxons of a specific taxonomy."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Recursively query for taxons of a specific taxonomy."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
@@ -358,16 +358,16 @@
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :taxon-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :taxon-nav :menu/items]
       :field/key nil
       :sort-by nil
       :route/name ::my-route
@@ -381,17 +381,17 @@
     {:field/lang "en"}
 
     ;; Basic taxon menu; recursion-limit, :field/keys.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this taxon menu."
-      :query/key [:menus :taxon-nav]
-      :query/value {:menu/type ::navigation/taxon
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this taxon menu."
+      :expansion/key [:menus :taxon-nav]
+      :expansion/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/category
                     :thing/slug nil}}
-     {:query/name ::db/query
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Recursively query for taxons of a specific taxonomy."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Recursively query for taxons of a specific taxonomy."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
@@ -402,16 +402,16 @@
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/category]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :taxon-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
       :sort-by nil
       :route/name ::park
@@ -427,17 +427,17 @@
     {:field/lang "en"}
 
     ;; Basic taxon menu; recursion-limit, :field/keys, :thing/slug; :sort-by.
-    [{:query/name ::bread/value
-      :query/description "Basic initial info for this taxon menu."
-      :query/key [:menus :taxon-nav]
-      :query/value {:menu/type ::navigation/taxon
+    [{:expansion/name ::bread/value
+      :expansion/description "Basic initial info for this taxon menu."
+      :expansion/key [:menus :taxon-nav]
+      :expansion/value {:menu/type ::navigation/taxon
                     :taxon/taxonomy :taxon.taxonomy/category
                     :thing/slug "my-lovely-cat"}}
-     {:query/name ::db/query
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Recursively query for taxons of a specific taxonomy."
-      :query/db ::FAKEDB
-      :query/args
+     {:expansion/name ::db/query
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Recursively query for taxons of a specific taxonomy."
+      :expansion/db ::FAKEDB
+      :expansion/args
       ['{:find [(pull ?e [:db/id
                           :taxon/taxonomy
                           :thing/slug
@@ -450,16 +450,16 @@
                  [?e :thing/slug ?slug]]}
        :taxon.taxonomy/category
        "my-lovely-cat"]}
-     {:query/name ::i18n/fields
-      :query/key [:menus :taxon-nav :menu/items]
-      :query/description "Process translatable fields."
+     {:expansion/name ::i18n/fields
+      :expansion/key [:menus :taxon-nav :menu/items]
+      :expansion/description "Process translatable fields."
       :field/lang :en
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
       :spaths [[s/ALL s/ALL :translatable/fields]]}
-     {:query/name ::navigation/items
-      :query/key [:menus :taxon-nav :menu/items]
+     {:expansion/name ::navigation/items
+      :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
       :sort-by [:translatable/fields :title]
       :route/name ::my-route
@@ -482,26 +482,26 @@
 (deftest test-items-location-hook
   (are
     [items query data]
-    (= items (bread/query query data))
+    (= items (bread/expand query data))
 
     nil
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]}
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]}
     {:menus {}}
 
     nil
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]}
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {}}}
 
     nil
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]}
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items nil}}}
 
     []
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]}
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]}
     {:menus {:my-nav {:menu/items []}}}
 
     ;; Basic menu items; no :field/key filtering.
@@ -511,8 +511,8 @@
      {:uri "/xyz"
       :translatable/fields {:uri "/xyz" :other/field "Other"}
       :thing/children []}]
-    {:query/name ::navigation/items
-     :query/key [:menus :#nofilter :menu/items]
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :#nofilter :menu/items]
      :field/key nil
      :sort-by [:thing/order]}
     {:menus {:#nofilter {:menu/items [[{:translatable/fields
@@ -534,8 +534,8 @@
       :translatable/fields {:my/field "Post field"
                             :other/field "Another post field"}
       :thing/children []}]
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]
      :merge-entities? true
      :field/key #{:my/field :other/field}
      :sort-by [:thing/order]
@@ -586,8 +586,8 @@
      {:uri "/en/parent/child"
       :translatable/fields {}
       :thing/children []}]
-    {:query/name ::navigation/items
-     :query/key [:menus :my-nav :menu/items]
+    {:expansion/name ::navigation/items
+     :expansion/key [:menus :my-nav :menu/items]
      :merge-entities? false
      :field/key #{:my/field :other/field}
      :sort-by [:thing/order]

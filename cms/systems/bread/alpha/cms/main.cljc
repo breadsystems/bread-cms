@@ -217,9 +217,9 @@
 
   (do
     (require '[flow-storm.api :as flow]
-             '[systems.bread.alpha.tools.util :as util :refer [do-queries]])
-    (def ->app            (partial util/->app            (:bread/app @system)))
-    (def diagnose-queries (partial util/diagnose-queries (:bread/app @system)))
+             '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
+    (def ->app (partial util/->app (:bread/app @system)))
+    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @system)))
 
     (defn db []
       (db/database (->app $req)))
@@ -232,10 +232,10 @@
 
   (flow/local-connect)
 
-  (diagnose-queries (->app $req))
-  (do-queries (->app $req) 1)
-  (do-queries (->app $req) 2)
-  (do-queries (->app $req) 3)
+  (diagnose-expansions (->app $req))
+  (do-expansions (->app $req) 1)
+  (do-expansions (->app $req) 2)
+  (do-expansions (->app $req) 3)
 
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
@@ -243,7 +243,7 @@
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
-    (::bread/queries $))
+    (::bread/expansions $))
   (as-> (->app  $req) $
     (bread/hook $ ::bread/route)
     (bread/hook $ ::bread/dispatch)
@@ -261,8 +261,8 @@
   ;; TODO Nice debug mechanism:
   (catch-as-> (->app $req)
               [::bread/route ::bread/dispatcher]
-              [::bread/dispatch ::bread/queries]
-              [::bread/expand ::bread/data (diagnose-queries $)]
+              [::bread/dispatch ::bread/expansions]
+              [::bread/expand ::bread/data (diagnose-expansions $)]
               [::bread/render (select-keys $ [:status :body :headers])])
 
   ;; querying for inverse relationships (post <-> taxon):
@@ -277,7 +277,7 @@
                [?p :thing/slug ?slug]]}
      "hello")
 
-  ;; Menu queries!
+  ;; Menu expansions
 
   (q '{:find [(pull ?e [:db/id
                         :taxon/taxonomy

@@ -59,9 +59,9 @@
   (let [app (plugins->loaded [(db/plugin config) (expansion/plugin)])
         db (db/database app)]
     (are
-      [data queries]
+      [data expansions]
       (= data (-> app
-                  (assoc ::bread/queries queries
+                  (assoc ::bread/expansions expansions
                          ::bread/dispatcher {:dispatcher/type :dispatcher.type/page
                                            :dispatcher/key :post})
                   (bread/hook ::bread/expand)
@@ -70,10 +70,10 @@
        ;; Querying for a non-existent post
        {:post false
         :not-found? true}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:thing/slug {:post/fields
                                           [:field/key :field/lang]}]) .]
             :in [$ ?slug]
@@ -83,19 +83,19 @@
        ;; Querying for a non-existent post and its fields
        {:post false
         :not-found? true}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:thing/slug {:post/fields
                                           [:field/key :field/lang]}]) .]
             :in [$ ?slug]
             :where [[?e :thing/slug ?slug]]}
           "non-existent-slug"]}
-        {:query/key [:post :post/fields]
-         :query/name ::db/query
-         :query/db db
-         :query/args
+        {:expansion/key [:post :post/fields]
+         :expansion/name ::db/query
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:field/key :field/content])]
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
@@ -109,10 +109,10 @@
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
         :not-found? false}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:thing/slug {:post/fields
                                           [:field/key :field/lang]}]) .]
             :in [$]
@@ -125,10 +125,10 @@
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
         :not-found? false}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:thing/slug {:post/fields
                                           [:field/key
                                            :field/lang]}]) .]
@@ -143,18 +143,18 @@
                              [{:field/key :stuff
                               :field/content "hello"}]]}
         :not-found? false}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:thing/slug]) .]
             :in [$ ?slug]
             :where [[?e :thing/slug ?slug]]}
           "parent-post"]}
-        {:query/name ::db/query
-         :query/key [:post :post/fields]
-         :query/db db
-         :query/args
+        {:expansion/name ::db/query
+         :expansion/key [:post :post/fields]
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:field/key :field/content])]
             :in [$ ?p ?lang]
             :where [[?p :post/fields ?e]
@@ -169,18 +169,18 @@
                              [{:field/key :stuff
                                :field/content "hello"}]]}
         :not-found? false}
-       [{:query/name ::db/query
-         :query/key :post
-         :query/db db
-         :query/args
+       [{:expansion/name ::db/query
+         :expansion/key :post
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:db/id :thing/slug]) .]
             :in [$ ?slug]
             :where [[?e :thing/slug ?slug]]}
           "parent-post"]}
-        {:query/name ::db/query
-         :query/key [:post :post/fields]
-         :query/db db
-         :query/args
+        {:expansion/name ::db/query
+         :expansion/key [:post :post/fields]
+         :expansion/db db
+         :expansion/args
          ['{:find [(pull ?e [:field/key :field/content])]
            :in [$ ?p ?lang]
            :where [[?p :post/fields ?e]

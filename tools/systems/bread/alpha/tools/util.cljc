@@ -39,41 +39,41 @@
 (defn ->app [app req]
   (when app (merge app req)))
 
-(defn diagnose-queries [app req]
+(defn diagnose-expansions [app req]
   (let [app (-> (->app app req)
                 (bread/hook ::bread/route)
                 (bread/hook ::bread/dispatch))
-        queries (::bread/queries app)
+        expansions (::bread/expansions app)
         {:keys [data err n before]}
         (reduce (fn [{:keys [data n]} _]
                   (try
                     (let [before data
                           data
                           (-> app
-                              ;; Expand n queries
-                              (assoc ::bread/queries
-                                     (subvec queries 0 (inc n)))
+                              ;; Expand n expansions
+                              (assoc ::bread/expansions
+                                     (subvec expansions 0 (inc n)))
                               (bread/hook ::bread/expand)
                               ::bread/data)]
                       {:data data :n (inc n) :data-before before})
                     (catch Throwable err
                       (reduced {:err err :n n}))))
-                {:data {} :err nil :n 0} queries)]
+                {:data {} :err nil :n 0} expansions)]
     (if err
       {:err err
        :at n
-       :query (get-in app [::bread/queries n])
+       :query (get-in app [::bread/expansions n])
        :before before}
       {:ok data})))
 
-(defn do-queries
+(defn do-expansions
   ([app end]
-   (do-queries app 0 end))
+   (do-expansions app 0 end))
   ([app start end]
    (-> app
        (bread/hook ::bread/route)
        (bread/hook ::bread/dispatch)
-       (update ::bread/queries subvec start end)
+       (update ::bread/expansions subvec start end)
        (bread/hook ::bread/expand)
        ::bread/data)))
 

@@ -87,9 +87,9 @@
                     ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)
         ;; TODO query description
-        page-query {:query/name ::db/query
-                    :query/key query-key
-                    :query/db (db/database req)
-                    :query/args page-args}
-        queries (bread/hook req ::i18n/queries page-query)]
-    {:queries queries}))
+        page-query {:expansion/name ::db/query
+                    :expansion/key query-key
+                    :expansion/db (db/database req)
+                    :expansion/args page-args}
+        expansions (bread/hook req ::i18n/expansions page-query)]
+    {:expansions expansions}))

@@ -11,35 +11,35 @@
 
 (deftest test-dispatch
   (are
-    [data&queries&effects dispatcher]
-    (= data&queries&effects (let [app (plugins->loaded [(dispatcher/plugin)])]
+    [data&expansions&effects dispatcher]
+    (= data&expansions&effects (let [app (plugins->loaded [(dispatcher/plugin)])]
                               (-> app
                                   (assoc ::bread/dispatcher dispatcher)
                                   (bread/hook ::bread/dispatch)
                                   (select-keys [::bread/data
-                                                ::bread/queries
+                                                ::bread/expansions
                                                 ::bread/effects]))))
 
     {::bread/data {}
-     ::bread/queries []
+     ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :v {}}
 
     {::bread/data {:x :Y}
-     ::bread/queries []
+     ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :v {:data {:x :Y}}}
 
     {::bread/data {}
-     ::bread/queries [[:key "yo"]]
+     ::bread/expansions [[:key "yo"]]
      ::bread/effects []}
     {:dispatcher/type ::passthru
-     :v {:queries [[:key "yo"]]}}
+     :v {:expansions [[:key "yo"]]}}
 
     {::bread/data {}
-     ::bread/queries []
+     ::bread/expansions []
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
@@ -47,12 +47,12 @@
                     :effect/description "Example effect"}]}}
 
     {::bread/data {:key "value"}
-     ::bread/queries [[:key "example query"]]
+     ::bread/expansions [[:key "example query"]]
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
      :v {:data {:key "value"}
-         :queries [[:key "example query"]]
+         :expansions [[:key "example query"]]
          :effects [{:effect/name :do-stuff
                     :effect/description "Example effect"}]}}
 
@@ -99,15 +99,15 @@
       {:dispatcher/type ::passthru
        :v {:hooks {::hook.1 [{:action/name ::hook.1}]}}}
 
-      {::bread/queries [{:action/name ::queries}]}
+      {::bread/expansions [{:action/name ::expansions}]}
       {:dispatcher/type ::passthru
-       :v {:hooks {::bread/queries [{:action/name ::queries}]}}}
+       :v {:hooks {::bread/expansions [{:action/name ::expansions}]}}}
 
-      {::bread/queries [{:action/name ::queries}]
+      {::bread/expansions [{:action/name ::expansions}]
        ::bread/render [{:action/name ::render}]
        ::greet [{:action/name ::hello}]}
       {:dispatcher/type ::passthru
-       :v {:hooks {::bread/queries [{:action/name ::queries}]
+       :v {:hooks {::bread/expansions [{:action/name ::expansions}]
                    ::bread/render [{:action/name ::render}]
                    ::greet [{:action/name ::hello}]}}}
 

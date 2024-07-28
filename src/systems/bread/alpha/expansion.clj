@@ -52,14 +52,14 @@
   (populate-in {} [:x] :y)
   (populate-in {:a :A} [:x] :y))
 
-(defn- expand-query [data query]
-  (populate-in data (:query/key query) (bread/query query data)))
+(defn- expand [data expansion]
+  (populate-in data (:expansion/key expansion) (bread/expand expansion data)))
 
-(defmethod bread/action ::expand-queries
-  [{::bread/keys [dispatcher queries data] :as req} _ _]
-  (->> queries
+(defmethod bread/action ::expand
+  [{::bread/keys [dispatcher expansions data] :as req} _ _]
+  (->> expansions
        (filter identity)
-       (reduce expand-query data)
+       (reduce expand data)
        (assoc req ::bread/data)))
 
 (defmethod bread/action ::expand-not-found
@@ -70,11 +70,11 @@
               (bread/hook req ::not-found? not-found?))))
 
 (defn add
-  "Add query to the vector of queries to be run."
-  [req & queries]
-  (update req ::bread/queries
-          (fn [current-queries]
-            (apply conj (vec current-queries) queries))))
+  "Add query to the vector of expansions to be run."
+  [req & expansions]
+  (update req ::bread/expansions
+          (fn [current-expansions]
+            (apply conj (vec current-expansions) expansions))))
 
 (defmethod bread/action ::add
   [req {:keys [query]} _]
@@ -83,9 +83,9 @@
 (defn plugin []
   {:hooks
    {::bread/expand
-    [{:action/name ::expand-queries
+    [{:action/name ::expand
       :action/description
-      "Expand ::bread/queries into their respective results"}
+      "Expand ::bread/expansions into their respective results"}
      {:action/name ::expand-not-found
       :action/description
       "Record whether the main content was found"}]}})

@@ -21,7 +21,7 @@
   (ss/delete-session [_ sk]
     (let [sk (->uuid sk)]
       (db/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
-                            [:db/retract [:session/uuid sk] :session/data]])
+                         [:db/retract [:session/uuid sk] :session/data]])
       sk))
   (ss/read-session [_ sk]
     (let [sk (->uuid sk)
@@ -126,7 +126,7 @@
 (defn- account-locked? [now locked-at seconds]
   (< (inst-ms now) (+ (inst-ms locked-at) seconds)))
 
-(defmethod bread/query ::authenticate
+(defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
   (let [encrypted (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
@@ -145,7 +145,7 @@
                        {:valid false :update false}))]
         (assoc result :user user)))))
 
-(defmethod bread/query ::authenticate-two-factor
+(defmethod bread/expand ::authenticate-two-factor
   [{:keys [user two-factor-code]} _]
   (let [code (try
                (Integer. two-factor-code)
@@ -212,9 +212,9 @@
 
       ;; 2FA
       (and post? two-factor?)
-      {:queries
-       [{:query/name ::authenticate-two-factor
-         :query/key :auth/result
+      {:expansions
+       [{:expansion/name ::authenticate-two-factor
+         :expansion/key :auth/result
          :user user
          :two-factor-code (:two-factor-code params)}]
        :hooks
@@ -225,12 +225,12 @@
 
       ;; Login
       post?
-      {:queries
-       [{:query/name ::db/query
-         :query/key :auth/result
-         :query/description "Find a user with the given username"
-         :query/db (db/database req)
-         :query/args
+      {:expansions
+       [{:expansion/name ::db/query
+         :expansion/key :auth/result
+         :expansion/description "Find a user with the given username"
+         :expansion/db (db/database req)
+         :expansion/args
          ['{:find [(pull ?e [:db/id
                              :user/username
                              ;; TODO protect pw/key in schema
@@ -241,8 +241,8 @@
             :in [$ ?username]
             :where [[?e :user/username ?username]]}
           (:username params)]}
-        {:query/name ::authenticate
-         :query/key :auth/result
+        {:expansion/name ::authenticate
+         :expansion/key :auth/result
          :lock-seconds lock-seconds
          :plaintext-password (:password params)}]
        :effects
