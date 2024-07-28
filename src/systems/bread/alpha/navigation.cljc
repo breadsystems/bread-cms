@@ -20,10 +20,10 @@
 (defn- ->item
   [opts {fields :translatable/fields
          children :thing/children
-         {post-fields :translatable/fields :as e} :menu.item/entity}]
+         {post-fields :translatable/fields :as thing} :menu.item/entity}]
   (let [;; TODO don't hard-code param names, infer from route
-        *slug (string/join "/" (route/ancestry e))
-        params (merge (:route/params opts) e {:slugs *slug})
+        *slug (string/join "/" (route/ancestry thing))
+        params (merge (:route/params opts) thing {:slugs *slug})
         fields (if (:merge-entities? opts)
                  (merge post-fields fields)
                  fields)]
