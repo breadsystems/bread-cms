@@ -5,7 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.util.datalog :as d]))
@@ -14,7 +14,7 @@
 
 (defn- ->items [{:as opts sort-key :sort-by} items]
   (->> items
-       (sort-by (if (fn? sort-key) sort-key #(query/get-at % sort-key)))
+       (sort-by (if (fn? sort-key) sort-key #(expansion/get-at % sort-key)))
        (map (partial ->item opts))))
 
 (defn- ->item
@@ -36,7 +36,7 @@
 
 (defmethod bread/query ::items
   [opts data]
-  (when-let [items (query/get-at data (:query/key opts))]
+  (when-let [items (expansion/get-at data (:query/key opts))]
     ;; First layer will be a vector of vectors
     (->items opts (map first items))))
 
@@ -247,7 +247,7 @@
 (defmethod bread/action ::add-menu-queries
   add-menu-queries-action
   [req {:keys [opts]} _]
-  (apply query/add req (menu-queries req opts)))
+  (apply expansion/add req (menu-queries req opts)))
 
 (defn plugin
   ([]

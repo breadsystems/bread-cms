@@ -6,7 +6,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.navigation :as nav]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user] ;; TODO y u no include
@@ -225,7 +225,7 @@
          :or {default-content-type "text/html"}} renderer
         configured-plugins
         [(dispatcher/plugin)
-         (query/plugin)
+         (expansion/plugin)
          (component/plugin components)
          (when (not (false? db)) (db/plugin db))
          (when (not (false? routes)) (route/plugin routes))

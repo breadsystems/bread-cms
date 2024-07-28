@@ -6,7 +6,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.query :as query]
+    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               use-db]]))
@@ -98,7 +98,7 @@
 (deftest test-add-i18n-query
   (let [app (plugins->loaded [(db/plugin config)
                               (i18n/plugin {:supported-langs #{:en :es}})
-                              (query/plugin)
+                              (expansion/plugin)
                               naive-plugin])]
     (are
       [strings uri]
@@ -127,7 +127,7 @@
   (let [load-app #(plugins->loaded
                     [(db/plugin config)
                      (i18n/plugin (merge {:supported-langs #{:en :es}} %))
-                     (query/plugin)
+                     (expansion/plugin)
                      naive-plugin])]
     (are
       [strings fallback-lang]
