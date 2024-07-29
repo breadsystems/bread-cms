@@ -17,20 +17,23 @@
        (map (partial ->item opts))))
 
 (defn- ->item
-  [opts {fields :translatable/fields
-         children :thing/children
-         {post-fields :translatable/fields :as thing} :menu.item/entity}]
-  (let [;; TODO don't hard-code param names, infer from route
-        *slug (string/join "/" (route/ancestry thing))
-        params (merge (:route/params opts) thing {:slugs *slug})
+  [{router :router
+    route-name :route/name
+    route-params :route/params
+    :as opts}
+   {fields :translatable/fields
+    children :thing/children
+    {thing-fields :translatable/fields :as thing} :menu.item/entity
+    :as item}]
+  (let [route-data (merge route-params thing)
+        path-params (route/path-params router route-name route-data)
         fields (if (:merge-entities? opts)
-                 (merge post-fields fields)
+                 (merge thing-fields fields)
                  fields)]
     {:translatable/fields (if (seq (:field/key opts))
                             (select-keys fields (:field/key opts))
                             fields)
-     :uri (or (:uri fields)
-              (bread/path (:router opts) (:route/name opts) params))
+     :uri (or (:uri fields) (bread/path router route-name path-params))
      :thing/children (->items opts children)}))
 
 (defmethod bread/expand ::items
