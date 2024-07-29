@@ -678,8 +678,8 @@
      :spaths [[:translatable/fields]]}
     {:the-key {:translatable/fields
                [{:field/key :uri
-                 :field/format :join
-                 :field/content (pr-str ["/" :field/lang "/the-slug"])}]}}
+                 :field/format ::i18n/uri
+                 :field/content (pr-str [:field/lang "the-slug"])}]}}
 
     ;; With direct fields; no formatting; compactions.
     {:translatable/fields {:from-the-river (pr-str "מהנהר")

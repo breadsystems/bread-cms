@@ -133,8 +133,8 @@
       :field/content "La Chose Un"
       :field/lang :fr}
      {:field/key :uri
-      :field/format :join
-      :field/content (pr-str ["/" :field/lang "/thing-one"])}]}
+      :field/format ::i18n/uri
+      :field/content (pr-str [:field/lang "thing-one"])}]}
    {:db/id "menu-item.two"
     :thing/order 2
     :post/type :post.type/menu-item
@@ -146,8 +146,8 @@
       :field/content "La Chose Deux"
       :field/lang :fr}
      {:field/key :uri
-      :field/format :join
-      :field/content (pr-str ["/" :field/lang "/thing-two"])}]}
+      :field/format ::i18n/uri
+      :field/content (pr-str [:field/lang "thing-two"])}]}
    {:db/id "menu-item.child"
     :translatable/fields
     [{:field/key :uri
