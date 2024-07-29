@@ -387,102 +387,38 @@
   (require '[systems.bread.alpha.component :as c :refer [defc]]
            '[systems.bread.alpha.route :as route])
 
-  (defc Article
-    [data]
-    {:routes
-     [{:name ::article
-       :path ["/article" :thing/slug]
-       :dispatcher/type :dispatcher.type/page
-       :x :y}
-      {:name ::articles
-       :path ["/articles"]
-       :dispatcher :dispatcher.type/page}
-      {:name ::wildcard
-       :path ["/x" :entity/slug*]
-       :dispatcher/type :wildcard}]
-     ;:route/children [Something]
-     :query '[{:translatable/fields [:field/key :field/content]}
-              :post/authors :thing/slug]}
-    [:div data])
-
-  (def $router
-    (reitit/router
-      ["/"
-       [(c/route-segment :field/lang)
-        (c/routes Article)]]))
-
-  (reitit/match->path
-    (reitit/match-by-path $router "/en/x/a/b/c"))
-  (reitit/match->path
-    (reitit/match-by-name $router ::article {:field/lang :en :thing/slug "x"}))
-  (bread/routes $router)
-  (bread/path $router ::article {:field/lang :en :thing/slug ["a" "b" "c"]})
-  (bread/params $router (bread/match (:bread/router @system) $req))
-
-  ;; A "sluggable" entity, with ancestry
+  ;; A "sluggable" thing, with ancestry
   (def grandchild
-    {:entity/slug "c"
-     :parent/_children [{:entity/slug "b"
-                         :parent/_children [{:entity/slug "a"}]}]})
+    {:thing/slug "c"
+     :thing/_children [{:thing/slug "b"
+                        :thing/_children [{:thing/slug "a"}]}]})
 
-  ;; parse a route template into a vector of param keys
-  (defn- parse-params [template]
-    (mapv keyword (loop [[c & cs] template
-                         param ""
-                         params []]
-                    (case c
-                      nil params
-                      \{ (recur cs "" params)
-                      \} (recur cs "" (conj params param))
-                      (recur cs (str param c) params)))))
+  (def $router (route/router (->app $req)))
 
-  ;; TODO add this to the Router protocol
-  (defn- route-spec [[template data]]
-    ;; This part needs to be polymorphic
-    {:template template
-     :name (:name data)
-     :route/spec (parse-params template)
-     :data data})
+  (reitit/match->path
+    (reitit/match-by-path $router "/en/a/b/c")
+    {:field/lang :en :thing/slug* "a/b/c"})
+  (reitit/match->path
+    (reitit/match-by-name $router :page {:field/lang :en :thing/slug* "x"}))
 
-  ;; TODO This should go in the route ns as a private var.
-  (defn- ancestry [pathv {slug :entity/slug [parent] :parent/_children}]
-    (let [pathv (cons slug pathv)]
-      (if parent
-        (ancestry pathv parent)
-        pathv)))
+  (bread/routes $router)
+  (let [req (->app $req)]
+    (bread/match (route/router req) req))
+  (bread/params $router (bread/match $router $req))
 
-  ;; TODO all below vars should live in route ns...
-  (defmulti param (fn [k _e] k))
-  (defmethod param :default [k entity]
-    (get entity k))
-  (defmethod param :entity/slug* [_ entity]
-    (string/join "/" (ancestry [] entity)))
+  ;; route/uri infers params and then just calls bread/path under the hood...
+  (bread/path $router :page {:field/lang :en :thing/slug* "a/b/c"})
+  (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
+  (route/uri (->app $req) :page! (merge {:field/lang :en} grandchild))
 
-  (ancestry [] grandchild)
-  (param :entity/slug* grandchild)
-  (route/router (->app $req))
+  (route/ancestry grandchild)
+  (bread/infer-param :thing/slug* grandchild)
+  (bread/routes (route/router (->app $req)))
 
-  (defmethod bread/action ::uri [req _ [route-name e]]
-    (let [router $router #_(route/router req) ;; TODO
-          by-name (into {} (map (comp (juxt :name identity) route-spec))
-                        (bread/routes router))
-          route-keys (get-in by-name [route-name :param-keys])
-          route-params (route/params req (route/match req))
-          route-data (merge route-params e)
-          params (zipmap route-keys (map (fn [k]
-                                           (param k route-data))
-                                         route-keys))]
-      (bread/path router route-name params)))
-
-  (defn uri [req route-name e]
-    (let [app (assoc-in req [::bread/hooks ::uri]
-                        [{:action/name ::uri}])]
-      (bread/hook app ::uri route-name e)))
-
-  (uri (->app $req) ::wildcard (merge {:field/lang :en} grandchild))
-  (uri (->app $req) ::wildcard {:field/lang :en})
-  (uri (->app $req) ::wildcard nil)
-  (uri (->app $req) ::wildcard {})
+  (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
+  (route/uri (->app $req) :page {:field/lang :en})
+  (route/uri (->app $req) :page nil)
+  (route/uri (->app $req) :page {})
 
 
 
