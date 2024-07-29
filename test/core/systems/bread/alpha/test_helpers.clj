@@ -83,10 +83,14 @@
               nil routes))
     (bread/match [_ req]
       (get routes (:uri req)))
+    (bread/route-spec [_ match]
+      (:route/spec match))
     (bread/params [_ match]
       (:route/params match))
     (bread/dispatcher [_ match]
-      match)))
+      match)
+    (bread/routes [_]
+      routes)))
 
 (defn map->route-plugin [routes]
   "Takes a map m like:
