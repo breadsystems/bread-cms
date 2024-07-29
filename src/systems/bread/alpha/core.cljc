@@ -133,6 +133,11 @@
 (defmulti expand (fn [expansion _data]
                    (:expansion/name expansion)))
 
+(defmulti infer-param (fn infer* [k _] k))
+
+(defmethod infer-param :default [k thing]
+  (get thing k))
+
 (defmethod expand ::value
   return-value
   [{:expansion/keys [value]} _]
