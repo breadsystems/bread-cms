@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.navigation
   (:require
-    [clojure.edn :as edn]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
