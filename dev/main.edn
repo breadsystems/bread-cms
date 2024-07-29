@@ -51,18 +51,21 @@
    ["/assets/*"
     #invoke [reitit.ring/create-resource-handler
              {:param :filename}]]
-   ;; TODO :field/lang
-   ["/:lang"
+   ["/{field/lang}"
     [""
      {:name :home
       :dispatcher/type :dispatcher.type/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
-    ["/tag/:slug"
+    ["/tag/{thing/slug}"
      {:name :tag
       :dispatcher/type :dispatcher.type/tag
       :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
-    ["/*slugs"
+    ["/{thing/slug*}"
      {:name :page
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
+    ["/page/{thing/slug*}"
+     {:name :page!
       :dispatcher/type :dispatcher.type/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
   {:conflicts nil}]
