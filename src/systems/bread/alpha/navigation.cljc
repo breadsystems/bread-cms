@@ -183,10 +183,10 @@
                                                      [:thing/slug
                                                       {:thing/_children '...}]}]}
                                                   {:translatable/fields '[*]}])]
-                      :in '[$ ?key]
-                      :where '[[?m :menu/key ?key]
-                               [?m :menu/items ?i]]}
-                     k]}
+                          :in '[$ ?key]
+                          :where '[[?m :menu/key ?key]
+                                   [?m :menu/items ?i]]}
+                         k]}
        {:expansion/key [menus-key k :menu/items]
         :expansion/name ::items
         :field/key (field-keys fks)
@@ -214,7 +214,7 @@
         :expansion/key [menus-key k]
         :expansion/description "Basic initial info for this location menu."
         :expansion/value {:menu/type ::location
-                      :menu/location location}}
+                          :menu/location location}}
        {:expansion/name ::db/query
         :expansion/key [menus-key k :menu/items]
         :expansion/description "Recursively query for menu items."
