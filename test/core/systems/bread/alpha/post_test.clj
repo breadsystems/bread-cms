@@ -92,7 +92,7 @@
          '[[(post-ancestry ?child ?slug_0)
             [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :thing/children ?child])]]
-         ""
+         "hello"
          :post.type/page
          :post.status/published]}
        {:expansion/name ::i18n/fields
@@ -106,7 +106,7 @@
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
        :dispatcher/key :post
-       {:lang "en" :slugs ""} :route/params}
+       :route/params {:lang "en" :thing/slug* "hello"}}
 
       ;; Post type, status are dynamic.
       [{:expansion/name ::db/query
@@ -123,7 +123,7 @@
          '[[(post-ancestry ?child ?slug_0)
             [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :thing/children ?child])]]
-         ""
+         "hello"
          :post.type/article
          :post.status/draft]}
        {:expansion/name ::i18n/fields
@@ -137,7 +137,7 @@
       {:dispatcher/type :dispatcher.type/page
        :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
        :dispatcher/key :post
-       {:lang "en" :slugs ""} :route/params
+       :route/params {:lang "en" :thing/slug* "hello"}
        :post/status :post.status/draft
        :post/type :post.type/article}
 
