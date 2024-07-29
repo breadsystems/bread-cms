@@ -16,8 +16,10 @@
   bread/Router
   (bread/params [this _] params)
   (bread/match [this _])
+  (bread/route-spec [this match]
+    [:field/lang :thing/slug*])
   (bread/path [this route-name params]
-    (let [route (get {::page [:field/lang :slugs]} route-name)]
+    (let [route (get {::page [:field/lang :thing/slug*]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
   (bread/routes [this] []))
 
@@ -513,6 +515,7 @@
       :thing/children []}]
     {:expansion/name ::navigation/items
      :expansion/key [:menus :#nofilter :menu/items]
+     :router (MockRouter. {})
      :field/key nil
      :sort-by [:thing/order]}
     {:menus {:#nofilter {:menu/items [[{:translatable/fields
