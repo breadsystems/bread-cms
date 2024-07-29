@@ -82,7 +82,7 @@
         (-> [{:find [(list 'pull '?e (ensure-db-id pull)) '.]
               :in '[$]
               :where []}]
-            (ancestralize (string/split (:slugs params "") #"/"))
+            (ancestralize (string/split (:thing/slug* params "") #"/"))
             (where [['?type :post/type post-type]
                     ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)
