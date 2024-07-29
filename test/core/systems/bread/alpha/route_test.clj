@@ -137,6 +137,48 @@
   (is (= ::ROUTER (route/router (plugins->loaded [(route/plugin
                                                     {:router ::ROUTER})])))))
 
+(deftest test-uri
+  (let [routes {"/en"
+                {:name ::articles
+                 :route/spec [:field/lang]}
+                "/en/the-slug"
+                {:name ::article
+                 :route/spec [:field/lang :thing/slug]}
+                "/en/article/the-slug"
+                {:name ::article-nested
+                 :route/spec [:field/lang "article" :thing/slug]}
+                "/en/a/b/c"
+                {:name ::wildcard
+                 :route/spec [:field/lang :thing/slug*]}
+                "/en/page/a/b/c"
+                {:name ::wildcard-nested
+                 :route/spec [:field/lang "page" :thing/slug*]}}
+        app (plugins->loaded [(map->route-plugin routes)])]
+    (are
+      [expected route-name thing+params]
+      (= expected (route/uri app route-name thing+params))
+
+      nil nil nil
+      nil nil {}
+      "/en" ::articles {}
+      "/en/the-slug" ::article {:thing/slug "the-slug"}
+      "/en/article/the-slug" ::article-nested {:thing/slug "the-slug"}
+
+      "/en/a/b/c"
+      ::wildcard
+      {:thing/slug "c"
+       :thing/_children [{:thing/slug "b"
+                          :thing/_children [{:thing/slug "c"}]}]}
+
+      "/en/page/a/b/c"
+      ::wildcard-nested
+      {:thing/slug "c"
+       :thing/_children [{:thing/slug "b"
+                          :thing/_children [{:thing/slug "c"}]}]}
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))
