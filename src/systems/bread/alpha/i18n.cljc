@@ -82,9 +82,13 @@
 (defmethod format-field-content :edn [field]
   (edn/read-string (:field/content field)))
 
-(defmethod format-field-content :join
+(defmethod format-field-content ::uri
   [{content :field/content :as field}]
-  (string/join "" (map #(name (get field % %)) (edn/read-string content))))
+  (->> content
+       edn/read-string
+       (map #(name (get field % %)))
+       (cons "") ;; ensure a leading slash
+       (string/join "/")))
 
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
