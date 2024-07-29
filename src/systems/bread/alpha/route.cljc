@@ -78,7 +78,7 @@
   "Returns the Router configured for the given app"
   (bread/hook app ::router))
 
-(defmethod bread/action ::uri [req {router :router} [route-name thing]]
+(defn path-params [router route-name route-data]
   (let [;; OK, so turns out we still need to EITHER:
         ;;
         ;; 1. implement a match-by-name protocol method so we can lookup the
@@ -88,12 +88,14 @@
         ;; Currently we opt for #2, to keep the Router protocol as small as
         ;; possible. Should this change?
         route (get (bread/routes router) route-name)
-        route-keys (filter keyword? (bread/route-spec router route))
-        route-params (params req (match req))
-        route-data (merge route-params thing)
-        params (zipmap route-keys (map #(bread/infer-param % route-data)
-                                       route-keys))]
-    (bread/path router route-name params)))
+        route-keys (filter keyword? (bread/route-spec router route))]
+    (zipmap route-keys (map #( bread/infer-param % route-data) route-keys))))
+
+(defmethod bread/action ::uri [req {router :router} [route-name thing]]
+  (->> thing
+       (merge (params req (match req)))
+       (path-params router route-name)
+       (bread/path router route-name)))
 
 (defn uri [app route-name thing]
   (bread/hook app ::uri route-name thing))
