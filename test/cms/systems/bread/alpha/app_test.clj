@@ -196,56 +196,64 @@
           handler (bread/load-handler app)]
       (are
         [expected res]
-        (= expected (select-keys res [:body]))
+        (= expected (select-keys res [:body :status]))
 
         {:body
          [:body [:main
                  [:h1 "Home Page"]
-                 [:p "Hi!"]]]}
+                 [:p "Hi!"]]]
+         :status 200}
         (handler {:uri "/en"})
 
         {:body
          [:body [:main
                  [:h1 "Page D'Accueil"]
-                 [:p "Allo!"]]]}
+                 [:p "Allo!"]]]
+         :status 200}
         (handler {:uri "/fr"})
 
         {:body
          [:body
           [:main.interior-page
            [:h1 "Parent Page"]
-           [:p "Hello from parent"]]]}
+           [:p "Hello from parent"]]]
+         :status 200}
         (handler {:uri "/en/parent-page"})
 
         {:body
          [:body
           [:main.interior-page
            [:h1 "La Page Parent"]
-           [:p "Bonjour de parent"]]]}
+           [:p "Bonjour de parent"]]]
+         :status 200}
         (handler {:uri "/fr/parent-page"})
 
         {:body
          [:body
           [:main.interior-page
            [:h1 "Child Page"]
-           [:p "Hello from child"]]]}
+           [:p "Hello from child"]]]
+         :status 200}
         (handler {:uri "/en/parent-page/child-page"})
 
         {:body
          [:body
           [:main.interior-page
            [:h1 "La Page Enfant"]
-           [:p "Bonjour d'enfant"]]]}
+           [:p "Bonjour d'enfant"]]]
+         :status 200}
         (handler {:uri "/fr/parent-page/child-page"})
 
         {:body
          [:body
-          [:main "404 Not Found"]]}
+          [:main "404 Not Found"]]
+         :status 404}
         (handler {:uri "/en/404"})
 
         {:body
          [:body
-          [:main "404 Pas Trouvé"]]}
+          [:main "404 Pas Trouvé"]]
+         :status 404}
         (handler {:uri "/fr/404"})
 
         ))))
