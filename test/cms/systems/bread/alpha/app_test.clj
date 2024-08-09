@@ -195,22 +195,22 @@
                              :renderer false})
           handler (bread/load-handler app)]
       (are
-        [expected res]
-        (= expected (select-keys res [:body :status]))
+        [expected req]
+        (= expected (-> req handler (select-keys [:body :status])))
 
         {:body
          [:body [:main
                  [:h1 "Home Page"]
                  [:p "Hi!"]]]
          :status 200}
-        (handler {:uri "/en"})
+        {:uri "/en"}
 
         {:body
          [:body [:main
                  [:h1 "Page D'Accueil"]
                  [:p "Allo!"]]]
          :status 200}
-        (handler {:uri "/fr"})
+        {:uri "/fr"}
 
         {:body
          [:body
@@ -218,7 +218,7 @@
            [:h1 "Parent Page"]
            [:p "Hello from parent"]]]
          :status 200}
-        (handler {:uri "/en/parent-page"})
+        {:uri "/en/parent-page"}
 
         {:body
          [:body
@@ -226,7 +226,7 @@
            [:h1 "La Page Parent"]
            [:p "Bonjour de parent"]]]
          :status 200}
-        (handler {:uri "/fr/parent-page"})
+        {:uri "/fr/parent-page"}
 
         {:body
          [:body
@@ -234,7 +234,7 @@
            [:h1 "Child Page"]
            [:p "Hello from child"]]]
          :status 200}
-        (handler {:uri "/en/parent-page/child-page"})
+        {:uri "/en/parent-page/child-page"}
 
         {:body
          [:body
@@ -242,19 +242,19 @@
            [:h1 "La Page Enfant"]
            [:p "Bonjour d'enfant"]]]
          :status 200}
-        (handler {:uri "/fr/parent-page/child-page"})
+        {:uri "/fr/parent-page/child-page"}
 
         {:body
          [:body
           [:main "404 Not Found"]]
          :status 404}
-        (handler {:uri "/en/404"})
+        {:uri "/en/404"}
 
         {:body
          [:body
           [:main "404 Pas Trouvé"]]
          :status 404}
-        (handler {:uri "/fr/404"})
+        {:uri "/fr/404"}
 
         ))))
 
