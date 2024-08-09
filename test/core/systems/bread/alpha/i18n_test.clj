@@ -33,7 +33,7 @@
   [{:keys [uri] :as req} _ _]
   (let [[lang & slugs] (filter (complement empty?)
                                (string/split (or uri "") #"/"))]
-    {:lang lang :slugs slugs}))
+    {:field/lang lang :slugs slugs}))
 
 (def naive-plugin
   {:hooks {::route/params [{:action/name ::naive-params}]}})
@@ -115,7 +115,7 @@
     (are
       [lang uri]
       (= lang (get-in ((bread/handler app) {:uri uri})
-                      [::bread/data :lang]))
+                      [::bread/data :field/lang]))
 
       :es "/es"
       :en "/en"

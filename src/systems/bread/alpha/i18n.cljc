@@ -206,7 +206,7 @@
 (defmethod bread/action ::add-lang-query
   [req _ _]
   (expansion/add req {:expansion/name ::bread/value
-                      :expansion/key :lang
+                      :expansion/key :field/lang
                       :expansion/value (lang req)}))
 
 (defn plugin
@@ -214,7 +214,7 @@
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs
             query-strings? query-lang? format-fields? compact-fields?]
-     :or {lang-param      :lang
+     :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
           query-strings?  true
