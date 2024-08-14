@@ -18,7 +18,9 @@
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
                         :route/name :page}}}
-  :plugins []}
+  :plugins [{:effects
+             [{:effect/name :systems.bread.alpha.cms.main/hello
+               :effect/data-key :hello}]}]}
  :bread/db
  {:db/type :datahike
   :store {:backend :mem
