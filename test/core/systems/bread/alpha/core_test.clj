@@ -2,7 +2,6 @@
   (:require
     [clojure.string :refer [ends-with? upper-case]]
     [clojure.test :refer [are deftest is testing]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [distill-hooks
                                               plugins->handler
@@ -427,4 +426,5 @@
   )
 
 (comment
+  (require '[kaocha.repl :as k])
   (k/run))
