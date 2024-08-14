@@ -173,14 +173,14 @@
 
       [{:retried 0
         :errors [ex]
-        :success? false}]
+        :succeeded? false}]
       [{:effect/name ::flaky
         :flakes 1
         :ex ex}]
 
       [{:retried 3
         :errors [ex ex ex]
-        :success? true}]
+        :succeeded? true}]
       [{:effect/name ::flaky
         :effect/retries 5
         :flakes 3
@@ -188,10 +188,10 @@
 
       [{:retried 2
         :errors [ex ex ex]
-        :success? false}
+        :succeeded? false}
        {:retried 1
         :errors [ex]
-        :success? true}]
+        :succeeded? true}]
       [{:effect/name ::flaky
         :effect/retries 2
         :flakes 4
@@ -300,14 +300,14 @@
 
     {} []
 
-    {:a {:success? true
+    {:a {:succeeded? true
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
       :effect/data-key :a
       :v (future "I AM FROM THE FUTURE")}]
 
-    {:a {:success? true
+    {:a {:succeeded? true
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
@@ -316,7 +316,7 @@
 
     ;; NOTE: If a Derefable effect can throw an exception,
     ;; it's on the user to catch it.
-    {:a {:success? true
+    {:a {:succeeded? true
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
