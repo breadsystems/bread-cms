@@ -4,7 +4,8 @@
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string])
   #?(:clj (:import
-            [java.util Date])))
+            [java.util Date]
+            [java.io Writer])))
 
 ;; TODO move protocols, profiling stuff into helper nss
 
@@ -163,6 +164,14 @@
   Object
   (toString [this]
     (str (.getName (class this)) ": " (pr-str v))))
+
+#?(:clj
+   (defmethod print-method DerefableWithMeta [obj, ^Writer w]
+     (.write w "#<")
+     (.write (.getName (class obj)))
+     (.write ": ")
+     (.write (-> obj deref pr-str))
+     (.write w ">")))
 
 (defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
