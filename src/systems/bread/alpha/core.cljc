@@ -189,10 +189,11 @@
                             [(effect e data) nil]
                             (catch Throwable ex
                               [nil ex]))
+              {more-effects :effects} result
               result (DerefableWithMeta. result (meta e))]
           (cond
             (nil? ex)
-            (recur effects
+            (recur (concat more-effects effects)
                    (if data-key
                      (assoc data data-key (success result true))
                      data)

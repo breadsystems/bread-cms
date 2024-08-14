@@ -290,6 +290,47 @@
 
     ))
 
+(defmethod bread/effect ::chain.one
+  [_ _]
+  {:effects [{:effect/name ::chain.two :effect/data-key :two}]})
+
+(defmethod bread/effect ::chain.two
+  [_ _]
+  {:effects [{:effect/name ::chain.three :effect/data-key :three}
+             {:effect/name ::chain.four :effect/data-key :four}]})
+
+(defmethod bread/effect ::chain.three [_ _] 3)
+
+(defmethod bread/effect ::chain.four [_ _] 4)
+
+(deftest test-effect-chaining
+  (are
+    [data effects]
+    (= data (let [app (plugins->loaded [{:effects effects}])]
+              (reduce
+                (fn [acc [k v]] (assoc acc k (deref v))) {}
+                (::bread/data (bread/hook app ::bread/effects!)))))
+
+    {:one {:effects [{:effect/data-key :two :effect/name ::chain.two}]}
+     :two {:effects [{:effect/data-key :three :effect/name ::chain.three}
+                     {:effect/data-key :four :effect/name ::chain.four}]}
+     :three 3
+     :four 4}
+    [{:effect/data-key :one :effect/name ::chain.one}]
+
+    {:ZERO 0
+     :FINAL 3.1415926535
+     :one {:effects [{:effect/data-key :two :effect/name ::chain.two}]}
+     :two {:effects [{:effect/data-key :three :effect/name ::chain.three}
+                     {:effect/data-key :four :effect/name ::chain.four}]}
+     :three 3
+     :four 4}
+    [{:effect/data-key :ZERO :effect/name ::passthru :v 0}
+     {:effect/data-key :one :effect/name ::chain.one}
+     {:effect/data-key :FINAL :effect/name ::passthru :v 3.1415926535}]
+
+    ))
+
 (deftest test-effects-meta
   (are
     [data effects]
