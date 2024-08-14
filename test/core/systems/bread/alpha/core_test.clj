@@ -283,6 +283,11 @@
       :effect/data-key :a
       :v (ref "referenced value")}]
 
+    {:a "As promised."}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (doto (promise) (deliver "As promised."))}]
+
     ))
 
 (deftest test-effects-meta
@@ -319,19 +324,6 @@
       :v (future (throw (Exception. "ERROR")))}]
 
     ))
-
-(deftest test-effects-promise
-
-  (is (= "As promised"
-         (let [p (promise)
-               app (plugins->loaded [{:effects
-                                      [{:effect/name ::passthru
-                                        :effect/data-key :promised
-                                        :v p}]}])]
-           (deliver p "As promised")
-           (-> app
-               (bread/hook ::bread/effects!)
-               ::bread/data :promised deref)))))
 
 (defmethod bread/action ::my.hook
   [_ {:keys [v]} [arg]]
