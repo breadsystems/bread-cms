@@ -176,12 +176,12 @@
 (defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
   (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
-          (success [e success?] (vary-meta e assoc :success? success?))
+          (success [e success?] (vary-meta e assoc :succeeded? success?))
           (retried [e] (vary-meta e update :retried inc))]
     (loop [[e & effects] effects data data completed []]
       (if e
         (let [e (vary-meta e #(or % {:errors []
-                                     :success? false
+                                     :succeeded? false
                                      :retried 0}))
               retry-count (:retried (meta e))
               {data-key :effect/data-key max-retries :effect/retries} e
