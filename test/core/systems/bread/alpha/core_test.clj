@@ -256,10 +256,32 @@
                :effect/data-key :a
                :v nil}]
 
+    ;; Support any IDeref, including those that don't already extend IObj...
+
     {:a "I AM FROM THE FUTURE"}
     [{:effect/name ::passthru
       :effect/data-key :a
       :v (future "I AM FROM THE FUTURE")}]
+
+    {:a "I was...delayed"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (delay "I was...delayed")}]
+
+    {:a "Up and atom!"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (atom "Up and atom!")}]
+
+    {:a "my var value"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (do (def my-var "my var value") (var my-var))}]
+
+    {:a "referenced value"}
+    [{:effect/name ::passthru
+      :effect/data-key :a
+      :v (ref "referenced value")}]
 
     ))
 
