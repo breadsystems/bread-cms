@@ -154,6 +154,16 @@
   [req e]
   (update req ::effects (comp vec conj) e))
 
+(deftype DerefableWithMeta [v m]
+  clojure.lang.IObj
+  (meta [_] m)
+  (withMeta [_ m] (DerefableWithMeta. v m))
+  clojure.lang.IDeref
+  (deref [_] (if (instance? clojure.lang.IDeref v) (deref v) v))
+  Object
+  (toString [this]
+    (str (.getName (class this)) ": " (pr-str v))))
+
 (defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
   (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
@@ -170,13 +180,7 @@
                             [(effect e data) nil]
                             (catch Throwable ex
                               [nil ex]))
-              ;; TODO abstract this properly to support any ref type
-              result (with-meta (if (instance? clojure.lang.IDeref result)
-                                  result
-                                  (reify
-                                    clojure.lang.IDeref
-                                    (deref [_] result)))
-                                (meta e))]
+              result (DerefableWithMeta. result (meta e))]
           (cond
             (nil? ex)
             (recur effects
