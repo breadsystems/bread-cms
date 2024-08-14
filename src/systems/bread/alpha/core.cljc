@@ -205,9 +205,13 @@
                          effects)
                    data completed)
             ex
-            (recur effects data (conj completed (-> e
-                                                    (add-error ex)
-                                                    (success false))))
+            (recur effects
+                   (if data-key
+                     (assoc data data-key (add-error (success result false) ex))
+                     data)
+                   (conj completed (-> e
+                                       (add-error ex)
+                                       (success false))))
             :else
             (recur effects data (conj completed (success e true)))))
         (assoc req ::data data ::effects completed)))))

@@ -331,6 +331,11 @@
 
     ))
 
+(def thrown-in-effect (ex-info "Something bad happened" {}))
+
+(defmethod bread/effect ::throw [_ _]
+  (throw thrown-in-effect))
+
 (deftest test-effects-meta
   (are
     [data effects]
@@ -363,6 +368,22 @@
     [{:effect/name ::passthru
       :effect/data-key :a
       :v (future (throw (Exception. "ERROR")))}]
+
+    ;; Any errors thrown during an effect should be caught and stored in
+    ;; metadata on a derefable around a nil value.
+    {:a {:succeeded? false
+         :errors [thrown-in-effect]
+         :retried 0}}
+    [{:effect/name ::throw
+      :effect/data-key :a}]
+
+    ;; Same is true of retried errors.
+    {:a {:succeeded? false
+         :errors [thrown-in-effect thrown-in-effect thrown-in-effect]
+         :retried 2}}
+    [{:effect/name ::throw
+      :effect/data-key :a
+      :effect/retries 2}]
 
     ))
 
