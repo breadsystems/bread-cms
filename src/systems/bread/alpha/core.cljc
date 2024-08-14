@@ -168,9 +168,9 @@
 #?(:clj
    (defmethod print-method DerefableWithMeta [obj, ^Writer w]
      (.write w "#<")
-     (.write (.getName (class obj)))
-     (.write ": ")
-     (.write (-> obj deref pr-str))
+     (.write w (.getName (class obj)))
+     (.write w ": ")
+     (.write w (-> obj deref pr-str))
      (.write w ">")))
 
 (defmethod action ::effects!
