@@ -149,7 +149,7 @@
     {:count 3} [{:effect/name :inc} {:effect/name :inc} {:effect/name :inc}]
     {:count 1} [{:effect/name :inc} {:effect/name :dec} {:effect/name :inc}]))
 
-(defmethod bread/effect :flaky
+(defmethod bread/effect ::flaky
   [{:keys [flakes state ex]} _]
   (if (< @state flakes)
     ;; It's unrealistic to pass an exception like this, but this makes it easy
@@ -175,14 +175,14 @@
       [{:retried 0
         :errors [ex]
         :success? false}]
-      [{:effect/name :flaky
+      [{:effect/name ::flaky
         :flakes 1
         :ex ex}]
 
       [{:retried 3
         :errors [ex ex ex]
         :success? true}]
-      [{:effect/name :flaky
+      [{:effect/name ::flaky
         :effect/retries 5
         :flakes 3
         :ex ex}]
@@ -193,11 +193,11 @@
        {:retried 1
         :errors [ex]
         :success? true}]
-      [{:effect/name :flaky
+      [{:effect/name ::flaky
         :effect/retries 2
         :flakes 4
         :ex ex}
-       {:effect/name :flaky
+       {:effect/name ::flaky
         :effect/retries 2
         :flakes 4
         :ex ex}]
