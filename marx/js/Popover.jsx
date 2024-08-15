@@ -11,7 +11,7 @@ const RefForwardingButton = forwardRef(function RefForwardingButton(props, ref) 
 function Popover({buttonProps, content}) {
   return <Rp.Root>
     <Rp.Portal>
-      <Rp.Content>
+      <Rp.Content sideOffset={11}>
         <div>
           <Rp.Close asChild>
             <Button>Close</Button>
