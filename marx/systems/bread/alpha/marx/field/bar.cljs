@@ -9,7 +9,7 @@
     ["/BreadContainer" :refer [BreadContainer]]
     ["/SettingsBox" :refer [SettingsBox]]
     ["/MediaLibrary" :refer [MediaLibrary]]
-    [systems.bread.alpha.marx.core :as core]))
+    [systems.bread.alpha.marx.core :as core :refer [->js]]))
 
 ;; TODO
 (def t {:media "Media"
@@ -30,12 +30,12 @@
 (defmethod bar-section :settings [{:site/keys [settings]} {:keys [label]}]
   (Popover #js {:buttonProps #js {:children (or label (t :settings))}
                 :content (SettingsBox
-                           #js {:settings (core/->js settings)})}))
+                           #js {:settings (->js settings)})}))
 
 (defmethod bar-section :media [{:site/keys [settings]} {:keys [label]}]
   (Popover #js {:buttonProps #js {:children (or label (t :media))}
                 :content (MediaLibrary
-                           #js {:settings (core/->js settings)})}))
+                           #js {:settings (->js settings)})}))
 
 (defmethod bar-section :publish-button [ed {:keys [label]}]
   (BarSection #js {:children
@@ -50,5 +50,5 @@
            settings (:site/settings ed-state)]
        (BreadContainer #js {:children (map (partial bar-section ed-state)
                                            (:bar/sections ed-state))
-                            :settings (core/->js settings)
+                            :settings (->js settings)
                             :themeVariants (:theme/variants ed-state)})))})
