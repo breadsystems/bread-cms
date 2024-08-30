@@ -21,87 +21,77 @@ For a given set of txs, get the concrete routes that need to be updated on the s
 For example, say the query for my/component looks like:
 
 ```clojure
-[{:post/fields [:field/key :field/content]}]
+[{:translatable/fields [:field/key :field/content]}]
 ```
 
-Let's further say that the routing table tells us we care about these route params (mapped to their respective db attrs):
+Let's further say that the route spec looks like:
 
 ```clojure
-{:bread.route/page {:post/slug :slugs :field/lang :lang}}
+[:field/lang "page" :thing/slug*]
 ```
 
-```clojure
-;; (:data match)
-(def $route {:name :bread.route/page
-             :bread/cache
-             {:param->attr {:slugs :post/slug :lang :field/lang}
-              :pull [:slugs {:post/fields [:lang]}]}})
+From this we can infer using a special multimethod (TBD) the underlying db attrs this route spec corresponds to:
+
+```clj
+#{:field/lang :thing/slug}
 ```
 
 Together, these pieces of info tell us that we should check among the transactions that have just run for datoms that have the following attrs:
 
 ```clojure
-#{:post/slug :field/key :field/content :field/lang}
+#{:thing/slug :field/key :field/content :field/lang}
 ```
-
-The `:post/slug` is included here in case the slug changed, in which case a new cache entry needs to be generated for it. The others are there simply by virtue of being present in the component query.
 
 Let's go on a slight detour now.
 
-For a given attr in a query, we need to know its cardinality. This is so that we can faithfully re-normalize the data into a mini-db of entities from which we can extrapolate the **ONE TRUE ENTITY ID** (e.g. `?post`).
+Blah blah modeling attrs as a graph...
 
-We also need to know the value type, to distinguish refs from other attrs...
+Using Djikstra's algorithm, we can find the relationship between `:field/lang` and `:field/slug` among the edges (ref attrs) in the database:
 
-Now we need to figure out what to query for. Well, we have our mapping for that:
-
-```clojure
-(:param->attr $route)
+```clj
+[:field/lang :translatable/fields :thing/slug]
 ```
 
-Once matching datoms are found, we can query the db explicitly for the respective entities to see if any of their attrs are among those corresponding to the route params, in this case :post/slug and :field/lang.
+What this means is that there exists one or more "things" (i.e. with a `:thing/slug`) in the db that also has some `:translatable/fields`, which in turn has one or more `:field/lang` values. This vector represents the simplest relationship between these database attrs in the sense that it is the shortest path (thanks to Djikstra's) through the graph of adjacent attributes.
 
-The query to run in our example will look like:
+From this relationship, we can infer the query we need to run for each affected entity id:
 
 ```clojure
-{:find [(pull ?post [:post/slug
-                     {:post/fields
+{:find [(pull ?post [:thing/slug
+                     {:translatable/fields
                       [:field/lang]}])]
  :in [$ ?post]
- :where [[?post :post/slug ?slug]]}
+ :where [[?post :thing/slug ?slug]]}
 ```
 
-...where the `?post` (eid) arg is extrapolated from the tx data.
+Once datoms matching our routes are found among the transactions, we can query the db explicitly for the respective entities to see if any of their attrs are among those corresponding to the route params, in this case :thing/slug and :field/lang. Extrapolating `?post` from the tx data gives us the binding arguments to pass to this query.
 
 The results of these queries gives us a holistic context of the entities/routes that need to be updated in the cache:
 
 ```clojure
-([:post/slug "my-page" :post/fields [{:field/lang :fr}
-                                     {:field/lang :en}]])
+([:thing/slug "my-page" :translatable/fields [{:field/lang :fr}
+                                              {:field/lang :en}]])
 ```
 
 We now have enough info to act on. Because we know the slug of the single post that was updated and the two languages for which fields were written, we can compute every combination of the two params (in this case, just two permutations):
 
 ```clojure
-[{:post/slug "my-page" :field/lang :en}
- {:post/slug "my-page" :field/lang :fr}]
+[{:db/id 123 :thing/slug "my-page" :field/lang :en}
+ {:db/id 123 :thing/slug "my-page" :field/lang :fr}]
 ```
 
 Using the mapping we got from the routing table, we can transform this into real route params:
 
 ```clojure
-{:slugs "my-page" :lang "en"}
-{:slugs "my-page" :lang "fr"}
+{:thing/slug* "my-page" :field/lang "en"}
+{:thing/slug* "my-page" :field/lang "fr"}
 ```
 
-When keyword fields like `:field/lang` are used as route params directly, Bread assumes by default that the corresponding concrete param should be (name the-keyword); this is configurable with a filter.
-
-We'll ignore :post/status for now--just note that this is a special case static-frontend knows how to handle based on the :hook/static.should-update? hook.
-
-From here, we have everything we need to simply iterate over our sequence of permutations of route params, requesting the fully realized :uri from our backend handler directly, with some special params set to let Bread know that this is a special internal request.
+From here, we have everything we need to simply iterate over our sequence of permutations of route params, requesting the fully realized :uri from our backend handler directly, with some params set to let Bread know that this is a special internal request.
 
 ```clojure
 (for [uri ["/en/my-page" "/fr/my-page"]]
-  (bread/handler (assoc res :uri uri ::internal? true)))
+  (bread/handler (assoc res :uri uri ::bread/internal? true)))
 ```
 
 ## SITEMAP BRAIN DUMP

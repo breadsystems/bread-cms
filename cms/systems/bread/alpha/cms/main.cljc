@@ -435,11 +435,10 @@
     (map :db/ident (datalog/attrs (db/database (->app $req)))))
 
   ;; Now we can scan a given route for db idents...
-  (def route
-    ;; TODO where to map :lang -> :field/lang
-    ["/" :field/lang :thing/slug])
+  (def route-spec
+    [:field/lang :thing/slug])
   (def route-idents
-    (filter (set idents) route))
+    (filter (set idents) route-spec))
 
   ;; Before the next step, we query for all refs in the db:
   (def refs
