@@ -26,6 +26,13 @@
                  :as config}]
   (let [fields (or
                  (core/fields-from-editor ed)
-                 (core/fields-from-dom config))]
+                 (core/fields-from-dom config))
+        backend (:marx/backend @ed)]
+    ;; TODO abstract this away
+    (let [ws (js/WebSocket. (:uri backend))]
+      (.addEventListener ws "open" (fn [x] (js/console.log "open" x)))
+      (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
+      (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED")))
+      (js/setTimeout #(.send ws "hi!") 1000))
     (doseq [field fields]
       (core/init-field* ed field))))
