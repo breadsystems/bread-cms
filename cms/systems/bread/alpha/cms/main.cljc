@@ -24,7 +24,7 @@
     [systems.bread.alpha.plugin.reitit])
   (:import
     [java.time LocalDateTime]
-    [java.util Properties])
+    [java.util Properties UUID])
   (:gen-class))
 
 (def status-mappings
@@ -120,6 +120,29 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
+(defn- ws-handler [on-message-received]
+  (fn [req]
+    (http/with-channel req ws-chan
+      (let [client-id (str (UUID/randomUUID))]
+        ;; TODO logging
+        (println "WebSocket connection created...")
+        (http/on-close ws-chan (fn [status]
+                                 (println "channel closed:" status)))
+        (http/on-receive ws-chan (fn [message]
+                                   (let [msg (edn/read-string message)]
+                                     (on-message-received client-id msg))))
+        ))))
+
+(defmethod ig/init-key :bread/websocket [_ {:keys [port]}]
+  ;; TODO middleware
+  (let [handler (ws-handler (fn [client-id msg]
+                              (println (format "message from %s: %s" client-id msg))))]
+    (http/run-server handler {:port port})))
+
+(defmethod ig/halt-key! :bread/websocket [_ stop-server]
+  (when-let [prom (stop-server :timeout 100)]
+    @prom))
+
 (defmethod ig/init-key :ring/wrap-defaults [_ value]
   (let [default-configs {:api-defaults ring/api-defaults
                          :site-defaults ring/site-defaults
@@ -206,6 +229,7 @@
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
   (:bread/app @system)
+  (:bread/routes @system)
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
