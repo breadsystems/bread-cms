@@ -44,6 +44,9 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
+ :bread/websocket
+ {:port 13120
+  :route "/_bread"}
  :bread/router
  #reitit/router
  [[["/login"

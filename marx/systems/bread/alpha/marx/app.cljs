@@ -5,7 +5,8 @@
 
 (defonce my-editor
   (let [config (marx/from-meta-element)]
-    (atom (marx/editor {:name :my-editor
+    (atom (marx/editor {;; TODO get actual config from <meta>
+                        :name :my-editor
                         :site/name "Sandbox"
                         :site/settings {:bar/position :bottom
                                         :theme/variant :dark}
@@ -16,6 +17,9 @@
                                        :publish-button]
                         :theme/variants #js {:dark darkTheme
                                              :light lightTheme}
+                        :marx/backend
+                        {:type :bread/websocket
+                         :uri "ws://localhost:13120/_bread"}
                         #_#_
                         :collab {:strategy :webrtc
                                  :ydoc ydoc
