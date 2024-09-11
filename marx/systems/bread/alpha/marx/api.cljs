@@ -35,4 +35,4 @@
       (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED")))
       (js/setTimeout #(.send ws "hi!") 1000))
     (doseq [field fields]
-      (core/init-field* ed field))))
+      (core/init-field ed field))))

@@ -56,7 +56,7 @@
                       :more "dataaaa"}
              :stuff #js {:things "thingy"}}))
 
-(defn init-field* [ed field]
+(defn init-field [ed field]
   (swap! render-count update (:name field) inc)
   (let [{:keys [init-state
                 did-mount
