@@ -57,7 +57,8 @@
   (let [fields (or
                  (core/fields-from-editor ed)
                  (core/fields-from-dom config))
-        backend-inst (backend (:backend @ed))]
-    (core/attach-backend! ed backend-inst)
+        ed-state @ed]
+    (when (nil? (:marx/backend ed-state))
+      (core/attach-backend! ed (backend (:backend ed-state))))
     (doseq [field fields]
       (core/init-field ed field))))
