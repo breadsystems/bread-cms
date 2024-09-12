@@ -24,15 +24,13 @@
 (defrecord WebSocketBackend [ws]
   core/MarxBackend
   (init-backend! [_]
-    (js/console.log "WEBSOCKET" ws)
     (.addEventListener ws "open" (fn [x] (js/console.log "OPEN" x)))
     (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
     (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED"))))
   (persist! [_ data]
     (.send ws (pr-str data))))
 
-(defmulti backend (fn [backend]
-                    (:type backend)))
+(defmulti backend :type)
 
 (defmethod backend :bread/websocket [backend-config]
   (WebSocketBackend. (js/WebSocket. (:uri backend-config))))

@@ -66,10 +66,9 @@
   (let [tiptap (:tiptap (:state field))]
     (if tiptap (.getHTML ^TiptapEditor tiptap) "")))
 
-(defn persist-to-backend! [ed-state]
-  (let [fields (:marx/fields ed-state)
-        fields-content (into {} (map (juxt key (comp field-content val))) fields)]
-    (persist! (:marx/backend ed-state) fields-content)))
+(defn persist-to-backend! [{:marx/keys [fields backend]}]
+  (let [content (into {} (map (juxt key (comp field-content val))) fields)]
+    (persist! backend content)))
 
 (defn init-field [ed field]
   (swap! render-count update (:name field) inc)
