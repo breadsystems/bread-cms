@@ -21,18 +21,30 @@
 
 (def bar-section bar/bar-section)
 
+(defrecord WebSocketBackend [ws]
+  core/MarxBackend
+  (init-backend! [_]
+    (js/console.log "WEBSOCKET" ws)
+    (.addEventListener ws "open" (fn [x] (js/console.log "OPEN" x)))
+    (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
+    (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED"))))
+  (persist! [_ data]
+    (.send ws (pr-str data))))
+
+(defmulti backend (fn [backend]
+                    (:type backend)))
+
+(defmethod backend :bread/websocket [backend-config]
+  (WebSocketBackend. (js/WebSocket. (:uri backend-config))))
+
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
                  :as config}]
   (let [fields (or
                  (core/fields-from-editor ed)
                  (core/fields-from-dom config))
-        backend (:marx/backend @ed)]
-    ;; TODO abstract this away
-    (let [ws (js/WebSocket. (:uri backend))]
-      (.addEventListener ws "open" (fn [x] (js/console.log "open" x)))
-      (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
-      (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED")))
-      (js/setTimeout #(.send ws "hi!") 1000))
+        marx-backend (backend (:marx/backend @ed))]
+    (core/init-backend! marx-backend)
+    (swap! ed assoc :marx/backend marx-backend)
     (doseq [field fields]
       (core/init-field ed field))))
