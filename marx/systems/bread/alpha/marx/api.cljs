@@ -21,19 +21,25 @@
 
 (def bar-section bar/bar-section)
 
+(defmulti backend :type)
+
+(defprotocol StatefulBackend
+  (init-backend! [this config]))
+
 (defrecord WebSocketBackend [ws]
-  core/MarxBackend
-  (init-backend! [_]
+  StatefulBackend
+  (init-backend! [_ _]
     (.addEventListener ws "open" (fn [x] (js/console.log "OPEN" x)))
     (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
     (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED"))))
+
+  core/MarxBackend
   (persist! [_ data]
     (.send ws (pr-str data))))
 
-(defmulti backend :type)
-
 (defmethod backend :bread/websocket [backend-config]
-  (WebSocketBackend. (js/WebSocket. (:uri backend-config))))
+  (doto (WebSocketBackend. (js/WebSocket. (:uri backend-config)))
+    (init-backend! backend-config)))
 
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
@@ -42,7 +48,6 @@
                  (core/fields-from-editor ed)
                  (core/fields-from-dom config))
         backend-inst (backend (:backend @ed))]
-    (core/init-backend! backend-inst)
     (core/attach-backend! ed backend-inst)
     (doseq [field fields]
       (core/init-field ed field))))
