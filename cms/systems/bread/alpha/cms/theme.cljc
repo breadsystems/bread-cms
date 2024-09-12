@@ -80,41 +80,7 @@
     [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
     [:div {:data-marx (pr-str {:name :rich-text
                                :type :rich-text})}
-     [:h1 "This will be demoted to a &lt;p&gt; by default"]
-     [:h2 "This is a heading"]
-     [:p "This is some paragraph text."]
-     [:img {:src "/assets/cat.jpeg" :alt "It's a kitty!"}]
-     [:ul
-      [:li "some"]
-      [:li "list"]
-      [:li "items"]]
-     [:hr]
-     [:ol
-      [:li "some"]
-      [:li "numbered"]
-      [:li "list"]
-      [:li "items"]]
-     [:p
-      "This isn't code but "
-      [:code "this is some inline code."]]
-     [:p "And here's a code block:"]
-     [:pre [:code "(println \"Hello, World!\")"]]
-     [:p
-      "Here is some prose with "
-      [:sup "superscript"]
-      " and some with "
-      [:sub "subscript"]
-      ". Now, here is some "
-      [:del "struck text"]
-      " and some "
-      [:mark "highlighted text"]
-      "."]
-     [:p
-      "Here is a paragraph"
-      [:br]
-      "with some line breaks"
-      [:br]
-      "in the middle of it."]]
+     (:rte fields)]
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :translatable/fields}]

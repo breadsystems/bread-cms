@@ -87,7 +87,47 @@
        :field/content "Hello!"}
       {:field/key :title
        :field/lang :fr
-       :field/content "Bonjour!"}}}
+       :field/content "Bonjour!"}
+      {:field/key :rte
+       :field/lang :en
+       :field/format :edn
+       :field/content
+       (pr-str [:<>
+                [:h1 "This will be demoted to a &lt;p&gt; by default"]
+                [:h2 "This is a heading"]
+                [:p "This is some paragraph text."]
+                [:img {:src "/assets/cat.jpeg" :alt "It's a kitty!"}]
+                [:ul
+                 [:li "some"]
+                 [:li "list"]
+                 [:li "items"]]
+                [:hr]
+                [:ol
+                 [:li "some"]
+                 [:li "numbered"]
+                 [:li "list"]
+                 [:li "items"]]
+                [:p
+                 "This isn't code but "
+                 [:code "this is some inline code."]]
+                [:p "And here's a code block:"]
+                [:pre [:code "(println \"Hello, World!\")"]]
+                [:p
+                 "Here is some prose with "
+                 [:sup "superscript"]
+                 " and some with "
+                 [:sub "subscript"]
+                 ". Now, here is some "
+                 [:del "struck text"]
+                 " and some "
+                 [:mark "highlighted text"]
+                 "."]
+                [:p
+                 "Here is a paragraph"
+                 [:br]
+                 "with some line breaks"
+                 [:br]
+                 "in the middle of it."]])}}}
    {:db/id "page.grandchild"
     :post/type :post.type/page
     :thing/slug "grandchild-page"
