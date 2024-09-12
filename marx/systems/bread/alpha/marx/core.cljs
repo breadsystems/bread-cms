@@ -58,7 +58,6 @@
              :stuff #js {:things "thingy"}}))
 
 (defprotocol MarxBackend
-  (init-backend! [this])
   (persist! [this ed-state]))
 
 ;; TODO multimethod
