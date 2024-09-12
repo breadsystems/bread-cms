@@ -17,7 +17,7 @@
                                        :publish-button]
                         :theme/variants #js {:dark darkTheme
                                              :light lightTheme}
-                        :marx/backend
+                        :backend
                         {:type :bread/websocket
                          :uri "ws://localhost:13120/_bread"}
                         #_#_
