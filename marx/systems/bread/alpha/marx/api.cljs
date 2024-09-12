@@ -9,7 +9,7 @@
     [systems.bread.alpha.marx.core :as core]))
 
 (defn from-meta-element
-    ([editor-name]
+  ([editor-name]
    (let [selector (str "meta[name=\"" (name editor-name) "\"]")]
      (core/read-attr (js/document.querySelector selector) "content")))
   ([]
