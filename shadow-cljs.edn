@@ -3,7 +3,8 @@
  :dev-http
  {1315 "resources/debug"
   1316 "resources/editor"
-  1317 "resources/marx"}
+  1317 {:root "resources/marx"
+        :proxy-url "http://localhost:1312"}}
 
  :builds
  {;; npx shadow-cljs -A:dev:tools:editor watch editor
@@ -21,7 +22,7 @@
   {:target :browser
    :output-dir "resources/marx/js"
    :asset-path "/js"
-   :modules {:ui ; becomes resources/editor/js/ui.js
+   :modules {:marx ; becomes resources/editor/js/marx.js
              {:init-fn systems.bread.alpha.marx.app/init}}}
 
   ;; TODO separate build for UI testing...?
