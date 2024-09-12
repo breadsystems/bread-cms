@@ -24,14 +24,24 @@
 (defmulti backend :type)
 
 (defprotocol StatefulBackend
-  (init-backend! [this config]))
+  (init-backend! [this config])
+  (retry! [this config]))
 
-(defrecord WebSocketBackend [ws]
+(deftype WebSocketBackend [^:unsynchronized-mutable ws]
   StatefulBackend
-  (init-backend! [_ _]
+  (init-backend! [this config]
     (.addEventListener ws "open" (fn [x] (js/console.log "OPEN" x)))
     (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
-    (.addEventListener ws "close" (fn [] (js/console.log "WEBSOCKET CLOSED"))))
+    (.addEventListener ws "close"
+                       (fn []
+                         (js/console.log "WEBSOCKET CLOSED")
+                         (retry! this config))))
+  (retry! [this config]
+    (js/console.log "Retrying connection...")
+    (js/setTimeout (fn []
+                     (set! ws (js/WebSocket. (:uri config)))
+                     (init-backend! this config))
+                   1000))
 
   core/MarxBackend
   (persist! [_ data]
