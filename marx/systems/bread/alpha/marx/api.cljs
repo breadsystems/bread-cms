@@ -41,8 +41,8 @@
   (let [fields (or
                  (core/fields-from-editor ed)
                  (core/fields-from-dom config))
-        marx-backend (backend (:marx/backend @ed))]
-    (core/init-backend! marx-backend)
-    (swap! ed assoc :marx/backend marx-backend)
+        backend-inst (backend (:backend @ed))]
+    (core/init-backend! backend-inst)
+    (core/attach-backend! ed backend-inst)
     (doseq [field fields]
       (core/init-field ed field))))
