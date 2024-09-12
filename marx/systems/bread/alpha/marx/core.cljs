@@ -60,6 +60,12 @@
 (defprotocol MarxBackend
   (persist! [this ed-state]))
 
+(defprotocol StatefulBackend
+  (init-backend! [this config])
+  (retry! [this config]))
+
+(defmulti backend :type)
+
 ;; TODO multimethod
 (defn- field-content [field]
   (let [tiptap (:tiptap (:state field))]
