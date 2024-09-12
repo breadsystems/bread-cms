@@ -3,6 +3,7 @@
     ["react" :as react]
     [clojure.math :refer [pow]]
 
+    [systems.bread.alpha.marx.websocket]
     [systems.bread.alpha.marx.field.bar :as bar]
     [systems.bread.alpha.marx.field.rich-text]
     [systems.bread.alpha.marx.core :as core]))
@@ -22,33 +23,9 @@
 
 (def bar-section bar/bar-section)
 
-(defmulti backend :type)
-
-(defprotocol StatefulBackend
-  (init-backend! [this config])
-  (retry! [this config]))
-
-(deftype WebSocketBackend [^:unsynchronized-mutable ws
-                           ^:unsynchronized-mutable retry-count]
-  StatefulBackend
-  (init-backend! [this config]
-    (.addEventListener ws "open" #(set! retry-count 0))
-    (.addEventListener ws "close" #(retry! this config)))
-  (retry! [this config]
-    (let [retry-delay (* 125 (pow 2 retry-count))]
-      (js/setTimeout (fn []
-                       (set! ws (js/WebSocket. (:uri config)))
-                       (set! retry-count (inc retry-count))
-                       (init-backend! this config))
-                     retry-delay)))
-
-  core/MarxBackend
-  (persist! [_ data]
-    (.send ws (pr-str data))))
-
-(defmethod backend :bread/websocket [backend-config]
-  (doto (WebSocketBackend. (js/WebSocket. (:uri backend-config)) 0)
-    (init-backend! backend-config)))
+(def
+  ^{:doc "Creates a MarxBackend instance, dispatching off of :type"}
+  backend core/backend)
 
 (defn init! [ed {:keys [attr]
                  :or {attr "data-marx"}
