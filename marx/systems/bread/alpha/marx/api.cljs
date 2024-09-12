@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.marx.api
   (:require
     ["react" :as react]
+    [clojure.math :refer [pow]]
 
     [systems.bread.alpha.marx.field.bar :as bar]
     [systems.bread.alpha.marx.field.rich-text]
@@ -27,28 +28,26 @@
   (init-backend! [this config])
   (retry! [this config]))
 
-(deftype WebSocketBackend [^:unsynchronized-mutable ws]
+(deftype WebSocketBackend [^:unsynchronized-mutable ws
+                           ^:unsynchronized-mutable retry-count]
   StatefulBackend
   (init-backend! [this config]
-    (.addEventListener ws "open" (fn [x] (js/console.log "OPEN" x)))
-    (.addEventListener ws "message" (fn [msg] (prn 'message msg)))
-    (.addEventListener ws "close"
-                       (fn []
-                         (js/console.log "WEBSOCKET CLOSED")
-                         (retry! this config))))
+    (.addEventListener ws "open" #(set! retry-count 0))
+    (.addEventListener ws "close" #(retry! this config)))
   (retry! [this config]
-    (js/console.log "Retrying connection...")
-    (js/setTimeout (fn []
-                     (set! ws (js/WebSocket. (:uri config)))
-                     (init-backend! this config))
-                   1000))
+    (let [retry-delay (* 125 (pow 2 retry-count))]
+      (js/setTimeout (fn []
+                       (set! ws (js/WebSocket. (:uri config)))
+                       (set! retry-count (inc retry-count))
+                       (init-backend! this config))
+                     retry-delay)))
 
   core/MarxBackend
   (persist! [_ data]
     (.send ws (pr-str data))))
 
 (defmethod backend :bread/websocket [backend-config]
-  (doto (WebSocketBackend. (js/WebSocket. (:uri backend-config)))
+  (doto (WebSocketBackend. (js/WebSocket. (:uri backend-config)) 0)
     (init-backend! backend-config)))
 
 (defn init! [ed {:keys [attr]
