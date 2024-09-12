@@ -23,6 +23,9 @@
 
 (def bar-section bar/bar-section)
 
+(def MarxBackend core/MarxBackend)
+(def StatefulBackend core/StatefulBackend)
+
 (def
   ^{:doc "Creates a MarxBackend instance, dispatching off of :type"}
   backend core/backend)
