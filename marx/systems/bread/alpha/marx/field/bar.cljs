@@ -40,7 +40,7 @@
 (defmethod bar-section :publish-button [ed {:keys [label]}]
   (BarSection #js {:children
                    (Button #js {:children (or label (t :publish))
-                                :onClick #(prn 'SAVE!)})}))
+                                :onClick #(core/persist-to-backend! ed)})}))
 
 (defmethod core/field-lifecycle :bar
   [ed field]
