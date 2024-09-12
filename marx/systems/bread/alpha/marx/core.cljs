@@ -70,6 +70,9 @@
   (let [content (into {} (map (juxt key (comp field-content val))) fields)]
     (persist! backend content)))
 
+(defn attach-backend! [ed backend-inst]
+  (swap! ed assoc :marx/backend backend-inst))
+
 (defn init-field [ed field]
   (swap! render-count update (:name field) inc)
   (let [{:keys [init-state
