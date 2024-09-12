@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.marx.core
   (:require
+    ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}] ;; TODO
     ["react-dom/client" :as rdom]
     [clojure.edn :as edn]))
 
@@ -55,6 +56,20 @@
   (<-js #js {:hi #js {:there "data"
                       :more "dataaaa"}
              :stuff #js {:things "thingy"}}))
+
+(defprotocol MarxBackend
+  (init-backend! [this])
+  (persist! [this ed-state]))
+
+;; TODO multimethod
+(defn- field-content [field]
+  (let [tiptap (:tiptap (:state field))]
+    (if tiptap (.getHTML ^TiptapEditor tiptap) "")))
+
+(defn persist-to-backend! [ed-state]
+  (let [fields (:marx/fields ed-state)
+        fields-content (into {} (map (juxt key (comp field-content val))) fields)]
+    (persist! (:marx/backend ed-state) fields-content)))
 
 (defn init-field [ed field]
   (swap! render-count update (:name field) inc)
