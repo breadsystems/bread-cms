@@ -133,13 +133,16 @@
                                      (on-message-received client-id msg))))
         ))))
 
-(defmethod ig/init-key :bread/websocket [_ {:keys [port]}]
+(defmethod ig/init-key :websocket [_ {:keys [port wrap-defaults]}]
   ;; TODO middleware
   (let [handler (ws-handler (fn [client-id msg]
-                              (println (format "message from %s: %s" client-id msg))))]
+                              (println (format "message from %s: %s" client-id msg))))
+        handler (if wrap-defaults
+                  (ring/wrap-defaults handler wrap-defaults)
+                  handler)]
     (http/run-server handler {:port port})))
 
-(defmethod ig/halt-key! :bread/websocket [_ stop-server]
+(defmethod ig/halt-key! :websocket [_ stop-server]
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 

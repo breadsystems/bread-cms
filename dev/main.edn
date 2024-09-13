@@ -8,6 +8,9 @@
  {:store/type :datalog
   :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
+ :websocket
+ {:port 13120
+  :wrap-defaults #ig/ref :ring/wrap-defaults}
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
@@ -44,9 +47,6 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
- :bread/websocket
- {:port 13120
-  :route "/_bread"}
  :bread/router
  #reitit/router
  [[["/login"
