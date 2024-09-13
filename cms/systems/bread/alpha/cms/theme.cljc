@@ -65,6 +65,18 @@
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
+;; TODO move to marx plugin
+(defn- data-attr [field]
+  (pr-str (clojure.set/rename-keys field {:field/key :name})))
+
+(defn- marx-field [fields tag t k]
+  (let [marx-data (-> fields meta k (assoc :type t))]
+    [tag {:data-marx (data-attr marx-data)} (k fields)]))
+
+(defn- marx-bar []
+  ;; TODO put this in ::data ??
+  [:div {:data-marx (pr-str {:name :bar :type :bar :persist? false})}])
+
 (defc InteriorPage
   [{{fields :translatable/fields tags :post/taxons} :post
     {:keys [main-nav]} :menus
@@ -73,19 +85,15 @@
    :key :post
    :query '[{:translatable/fields [*]}
             {:post/taxons [{:translatable/fields [*]}]}]}
-  (let [field-meta (meta fields)]
-    [:<>
-     [:main
-      [:h1 (:title fields)]
-      [:p "Hello result: " (pr-str @hello)]
-      [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
-      [:div {:data-marx (pr-str {:name :rich-text
-                                 :type :rich-text
-                                 :db/id (:db/id (:rte field-meta))})}
-       (:rte fields)]
-      [:div.tags-list
-       [:p "TAGS"]
-       (map (fn [{tag :translatable/fields}]
-              [:span.tag (:name tag)])
-            tags)]]
-     [:div {:data-marx (pr-str {:name :bar :type :bar :persist? false})}]]))
+  [:<>
+   [:main
+    [:h1 (:title fields)]
+    [:p "Hello result: " (pr-str @hello)]
+    [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
+    (marx-field fields :div :rich-text :rte)
+    [:div.tags-list
+     [:p "TAGS"]
+     (map (fn [{tag :translatable/fields}]
+            [:span.tag (:name tag)])
+          tags)]]
+   (marx-bar)])
