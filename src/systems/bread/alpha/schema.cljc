@@ -98,6 +98,12 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
+     {:db/ident :field/type
+      :attr/label "Field Type"
+      :db/doc "The user experience provided for this field in the Marx editor"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}
      {:db/ident :translatable/fields
       :attr/label "Translatable Fields"
       :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
