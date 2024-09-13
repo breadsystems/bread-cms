@@ -73,17 +73,19 @@
    :key :post
    :query '[{:translatable/fields [*]}
             {:post/taxons [{:translatable/fields [*]}]}]}
-  [:<>
-   [:main
-    [:h1 (:title fields)]
-    [:p "Hello result: " (pr-str @hello)]
-    [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
-    [:div {:data-marx (pr-str {:name :rich-text
-                               :type :rich-text})}
-     (:rte fields)]
-    [:div.tags-list
-     [:p "TAGS"]
-     (map (fn [{tag :translatable/fields}]
-            [:span.tag (:name tag)])
-          tags)]]
-   [:div {:data-marx (pr-str {:name :bar :type :bar})}]])
+  (let [field-meta (meta fields)]
+    [:<>
+     [:main
+      [:h1 (:title fields)]
+      [:p "Hello result: " (pr-str @hello)]
+      [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
+      [:div {:data-marx (pr-str {:name :rich-text
+                                 :type :rich-text
+                                 :db/id (:db/id (:rte field-meta))})}
+       (:rte fields)]
+      [:div.tags-list
+       [:p "TAGS"]
+       (map (fn [{tag :translatable/fields}]
+              [:span.tag (:name tag)])
+            tags)]]
+     [:div {:data-marx (pr-str {:name :bar :type :bar :persist? false})}]]))
