@@ -69,7 +69,8 @@
 ;; TODO multimethod
 (defn- field-content [field]
   (let [tiptap (:tiptap (:state field))]
-    (if tiptap (.getHTML ^TiptapEditor tiptap) "")))
+    (assoc (select-keys field [:name :type :db/id])
+           :html (if tiptap (.getHTML ^TiptapEditor tiptap) ""))))
 
 (defn persist-to-backend! [{:marx/keys [fields backend]}]
   (->> fields
