@@ -36,8 +36,8 @@
 (defn fetch [req id]
   (db/q (db/database req)
         '{:find [(pull ?e [:db/id
+                           :thing/uuid
                            :user/username
-                           :user/uuid
                            :user/email
                            :user/name
                            :user/lang
