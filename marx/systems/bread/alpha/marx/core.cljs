@@ -72,8 +72,11 @@
     (if tiptap (.getHTML ^TiptapEditor tiptap) "")))
 
 (defn persist-to-backend! [{:marx/keys [fields backend]}]
-  (let [content (into {} (map (juxt key (comp field-content val))) fields)]
-    (persist! backend content)))
+  (->> fields
+       vals
+       (filter (complement (comp false? :persist?)))
+       (map field-content)
+       (persist! backend)))
 
 (defn attach-backend! [ed backend-inst]
   (swap! ed assoc :marx/backend backend-inst))
