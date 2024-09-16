@@ -69,8 +69,7 @@
 
 (defc InteriorPage
   [{{fields :translatable/fields tags :post/taxons} :post
-    {:keys [main-nav]} :menus
-    hello :hello}]
+    {:keys [main-nav]} :menus}]
   {:extends MainLayout
    :key :post
    :query '[{:translatable/fields [*]}
@@ -78,8 +77,6 @@
   [:<>
    [:main
     [:h1 (:title fields)]
-    [:p "Hello result: " (pr-str @hello)]
-    [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
     ;; TODO don't compact?
     (marx/render-field (:rte (meta fields)) :rich-text)
     [:div.tags-list
