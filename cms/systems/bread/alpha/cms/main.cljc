@@ -141,7 +141,7 @@
         ))))
 
 (defmethod ig/init-key :websocket [_ {:keys [port wrap-defaults app]}]
-  (let [handler (ws-handler marx/on-websocket-message app)
+  (let [handler (ws-handler #'marx/on-websocket-message app)
         handler (if wrap-defaults
                   (ring/wrap-defaults handler wrap-defaults)
                   handler)]
