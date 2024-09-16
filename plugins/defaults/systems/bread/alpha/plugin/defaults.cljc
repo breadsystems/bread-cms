@@ -11,6 +11,7 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user] ;; TODO y u no include
     [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.datalog :as datalog]))
@@ -256,6 +257,7 @@
 (defn plugins [{:keys [db
                        routes
                        i18n
+                       marx
                        navigation
                        cache
                        components
@@ -282,6 +284,7 @@
          (when (not (false? renderer)) (rum/plugin))
          (when (not (false? auth)) (auth/plugin auth))
          (when (not (false? users)) (user/plugin users))
+         (when (not (false? marx)) (marx/plugin marx))
          {:hooks
           {::bread/expand
            [{:action/name ::request-data
