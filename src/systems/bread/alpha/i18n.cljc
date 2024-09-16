@@ -77,12 +77,19 @@
     (into {} (map (juxt :field/key identity)) fields)))
 
 (defmulti deserialize :field/format)
+(defmulti serialize :field/format)
 
 (defmethod deserialize :default [field]
   (:field/content field))
 
+(defmethod serialize :default [field]
+  (:field/content field))
+
 (defmethod deserialize :edn [field]
   (edn/read-string (:field/content field)))
+
+(defmethod serialize :edn [field]
+  (pr-str (:field/content field)))
 
 (defmethod deserialize ::uri
   [{content :field/content :as field}]
@@ -91,6 +98,9 @@
        (map #(name (get field % %)))
        (cons "") ;; ensure a leading slash
        (string/join "/")))
+
+(defn with-serialized [field]
+  (assoc field :field/content (serialize field)))
 
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
