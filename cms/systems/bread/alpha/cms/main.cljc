@@ -371,7 +371,7 @@
                           :user/username
                           :user/name
                           :user/email
-                          :user/lang
+                          :user/preferences
                           {:user/roles [:role/key
                                         {:role/abilities [:ability/key]}]}]) .]
          :in [$ ?username]

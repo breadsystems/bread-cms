@@ -134,10 +134,10 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
-     {:db/ident :user/lang
-      :attr/label "Preferred Language"
-      :db/doc "The user's preferred language, as a keyword"
-      :db/valueType :db.type/keyword
+     {:db/ident :user/preferences
+      :attr/label "User Preferences"
+      :db/doc "The user's preferences, as an EDN-encoded string"
+      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}]
 
