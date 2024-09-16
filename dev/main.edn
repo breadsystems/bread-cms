@@ -10,7 +10,8 @@
  :bread/handler #ig/ref :bread/app
  :websocket
  {:port 13120
-  :wrap-defaults #ig/ref :ring/wrap-defaults}
+  :wrap-defaults #ig/ref :ring/wrap-defaults
+  :app #ig/ref :bread/app}
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
