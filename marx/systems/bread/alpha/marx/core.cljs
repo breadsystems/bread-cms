@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.marx.core
   (:require
-    ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}] ;; TODO
     ["react-dom/client" :as rdom]
     [clojure.edn :as edn]))
 
@@ -66,18 +65,29 @@
 
 (defmulti backend :type)
 
-;; TODO multimethod
-(defn- field-content [field]
-  (let [tiptap (:tiptap (:state field))]
-    (assoc (select-keys field [:name :type :db/id])
-           :html (if tiptap (.getHTML ^TiptapEditor tiptap) ""))))
+(defmulti content :marx/field-type)
 
-(defn persist-to-backend! [{:marx/keys [fields backend]}]
-  (->> fields
-       vals
-       (filter (complement (comp false? :persist?)))
-       (map field-content)
-       (persist! backend)))
+(defmulti edit (fn [e _ed]
+                  (:edit/action e)))
+
+(defmethod edit :publish-fields [_ {:marx/keys [fields]}]
+  (let [field-data (->> fields
+                        vals
+                        (filter (complement (comp false? :persist?)))
+                        (map (fn [field]
+                               (-> field
+                                   (assoc :field/content (content field))
+                                   (select-keys [:name ;; TODO :field/key
+                                                 :field/key
+                                                 :db/id
+                                                 :field/format
+                                                 :field/content])))))]
+    {:edit/action :publish-fields
+     :edit/key :edit/instant
+     :fields field-data}))
+
+(defn persist-edit! [e {:marx/keys [backend] :as ed}]
+  (persist! backend (edit e ed)))
 
 (defn attach-backend! [ed backend-inst]
   (swap! ed assoc :marx/backend backend-inst))
