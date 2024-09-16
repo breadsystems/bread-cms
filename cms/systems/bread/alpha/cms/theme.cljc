@@ -18,8 +18,8 @@
    [:ul
     (map nav-menu-item items)]])
 
-(defc MainLayout [{:keys [lang content]
-               {:keys [main-nav]} :menus}]
+(defc MainLayout [{:keys [lang content user]
+                   {:keys [main-nav]} :menus}]
   {}
   [:html {:lang lang}
    [:head
@@ -31,6 +31,7 @@
    [:body
     (nav-menu main-nav)
     content
+    (marx/render-bar user)
     [:script {:src "/js/marx.js"}]]])
 
 (defc NotFoundPage
@@ -66,10 +67,6 @@
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
-(defn- marx-bar []
-  ;; TODO put this in ::data ??
-  [:div {:data-marx (pr-str {:name :bar :marx/field-type :bar :persist? false})}])
-
 (defc InteriorPage
   [{{fields :translatable/fields tags :post/taxons} :post
     {:keys [main-nav]} :menus
@@ -89,5 +86,4 @@
      [:p "TAGS"]
      (map (fn [{tag :translatable/fields}]
             [:span.tag (:name tag)])
-          tags)]]
-   (marx-bar)])
+          tags)]]])

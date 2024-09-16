@@ -29,6 +29,11 @@
     [tag {:data-marx data-attr}
      (:field/content field)]))
 
+(defn render-bar [user]
+  [:div {:data-marx (pr-str {:name :bar ;; TODO :field/key
+                             :marx/field-type :bar
+                             :persist? false})}])
+
 (defn fragment
   "Wrap a hiccup-style vector in a hiccup-style fragment."
   [v]
