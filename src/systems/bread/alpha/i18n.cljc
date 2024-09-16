@@ -76,15 +76,15 @@
     (into {} (map (juxt :field/key :field/content)) fields)
     (into {} (map (juxt :field/key identity)) fields)))
 
-(defmulti format-field-content :field/format)
+(defmulti deserialize :field/format)
 
-(defmethod format-field-content :default [field]
+(defmethod deserialize :default [field]
   (:field/content field))
 
-(defmethod format-field-content :edn [field]
+(defmethod deserialize :edn [field]
   (edn/read-string (:field/content field)))
 
-(defmethod format-field-content ::uri
+(defmethod deserialize ::uri
   [{content :field/content :as field}]
   (->> content
        edn/read-string
@@ -94,10 +94,10 @@
 
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
-  format-field-content)."
+  deserialize)."
   [context fields]
   (map (fn [field]
-         (->> (merge context field) format-field-content
+         (->> (merge context field) deserialize
               (assoc field :field/content)))
        fields))
 
