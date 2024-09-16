@@ -68,7 +68,7 @@
    [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
-  [{{fields :translatable/fields tags :post/taxons} :post
+  [{{fields :translatable/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus}]
   {:extends MainLayout
    :key :post
@@ -77,6 +77,7 @@
   [:<>
    [:main
     [:h1 (:title fields)]
+    [:h2 (:db/id post)]
     ;; TODO don't compact?
     (marx/render-field (:rte (meta fields)) :rich-text)
     [:div.tags-list
