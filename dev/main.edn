@@ -41,7 +41,7 @@
              #_#_ ;; Uncomment to enable 2FA
              :user/two-factor-key "AWWMEFM4ADBSQRET"
              :user/failed-login-count 0
-             :user/lang :en-US
+             :user/preferences "{:lang :en}"
              :user/roles
              #{{:role/key :author
                 :role/abilities
