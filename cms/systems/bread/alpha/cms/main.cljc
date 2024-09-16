@@ -216,10 +216,6 @@
         (assoc profiler :tap tap)))
     profilers))
 
-(defmethod bread/effect ::hello [effect data]
-  (throw (ex-info "oh no!" {}))
-  (future "HELLO!"))
-
 (defmethod ig/halt-key! :bread/profilers [_ profilers]
   (doseq [{:keys [tap]} profilers]
     (remove-tap tap)))
