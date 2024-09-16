@@ -10,11 +10,6 @@
                         :site/name "Sandbox"
                         :site/settings {:bar/position :bottom
                                         :theme/variant :dark}
-                        :bar/sections [:site-name
-                                       :settings
-                                       :media
-                                       :spacer
-                                       :publish-button]
                         :theme/variants #js {:dark darkTheme
                                              :light lightTheme}
                         :backend
