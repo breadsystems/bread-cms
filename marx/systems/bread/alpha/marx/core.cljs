@@ -13,8 +13,6 @@
 (defmethod tool-props :default [_ed tool]
   {})
 
-(defonce render-count (atom {}))
-
 (defn- persist-field-state! [ed field state]
   (swap! ed assoc-in [:marx/fields (:field/key field)]
          (assoc field
@@ -92,14 +90,12 @@
   (swap! ed assoc :marx/backend backend-inst))
 
 (defn init-field [ed field]
-  (swap! render-count update (:name field) inc)
   (let [{:keys [init-state
                 did-mount
                 render]
          :or {state {}
               init-state (constantly {})}}
         (field-lifecycle ed field)]
-    ;(prn (get @render-count (:name field)) (:name field) (:initialized? field) (:state field))
     (assert (fn? render)
             (str "field-lifecycle method for " (:marx/field-type field)
                  " returned something other than a function!"))
