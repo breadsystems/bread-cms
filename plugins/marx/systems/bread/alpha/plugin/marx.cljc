@@ -22,7 +22,6 @@
 (defn render-field [field field-type & {:as extra}]
   (let [tag (:tag extra :div)
         data-attr (-> field
-                      (clojure.set/rename-keys {:field/key :name}) ;; TODO just use :field/key
                       (dissoc :field/content)
                       (assoc :marx/field-type field-type)
                       pr-str)]
@@ -30,7 +29,7 @@
      (:field/content field)]))
 
 (defn render-bar [user]
-  [:div {:data-marx (pr-str {:name :bar ;; TODO :field/key
+  [:div {:data-marx (pr-str {:field/key :bar
                              :marx/field-type :bar
                              :persist? false})}])
 
