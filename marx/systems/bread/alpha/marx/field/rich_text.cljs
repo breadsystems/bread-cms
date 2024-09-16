@@ -11,6 +11,9 @@
   {:tooltip "Bold"
    :icon "bold"})
 
+(defmethod core/content :rich-text [{{tiptap :tiptap} :state}]
+  (when tiptap (.getHTML ^TiptapEditor tiptap)))
+
 (defmethod core/field-lifecycle :rich-text
   [ed {:keys [state elem] :as field}]
   (let [tools (or (:tools field) (:tools ed) tiptap/default-rich-text-tools)]

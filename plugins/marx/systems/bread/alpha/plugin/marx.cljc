@@ -7,45 +7,52 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]))
-
-(defn- edits->txs [message]
-  ;; TODO make this polymorphic
-  (map (fn [{html :html :as field}]
-         (let [content (->> html
-                            hickory/parse-fragment
-                            (mapv hickory/as-hiccup)
-                            (cons :<>)
-                            vec
-                            pr-str)]
-           {:field/content content
-            :db/id (:db/id field)}))
-       message))
 
 (defn on-websocket-message [app message]
   (let [message (bread/hook app ::websocket-message (edn/read-string message))]
     (-> app
-        (assoc :marx/edits message)
+        (assoc :marx/edit message)
         (bread/hook ::bread/route)
         (bread/hook ::bread/dispatch)
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defmethod dispatcher/dispatch ::edits
-  [{:marx/keys [edits] :as app}]
-  (let [txs (edits->txs edits)]
+(defn fragment
+  "Wrap a hiccup-style vector in a hiccup-style fragment."
+  [v]
+  (vec (cons :<> v)))
+
+(defmulti edit->transactions :edit/action)
+
+(defmethod edit->transactions :publish-fields [{:keys [fields]}]
+  (map (fn [field]
+         (-> field
+             (update :field/content
+                     #(->> %
+                           hickory/parse-fragment
+                           (mapv hickory/as-hiccup)
+                           fragment))
+             i18n/with-serialized
+             (select-keys [:db/id :field/content])))
+       fields))
+
+(defmethod dispatcher/dispatch ::edit!
+  [{:marx/keys [edit] :as app}]
+  (let [txs (edit->transactions edit)]
     {:effects
      [{:effect/name ::db/transact
        :effect/description "Persist edits."
-       :effect/data-key :marx/db-after-edit
+       :effect/data-key (:edit/key edit)
        :conn (db/connection app)
-       :txs txs}]}))
+       :txs (bread/hook app ::transactions txs)}]}))
 
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]
   ;; TODO support CGI, API route
   (if (bread/config app :marx/websocket?)
-    {:dispatcher/type ::edits
+    {:dispatcher/type ::edit!
      :dispatcher/description
      "Special dispatcher for saving edits made in the Marx editor."}
     dispatcher))
