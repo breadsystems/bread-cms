@@ -67,7 +67,10 @@
 
 ;; TODO move to marx plugin
 (defn- data-attr [field]
-  (pr-str (clojure.set/rename-keys field {:field/key :name})))
+  (-> field
+      (clojure.set/rename-keys {:field/key :name}) ;; TODO just use :field/key
+      (dissoc :field/content)
+      pr-str))
 
 (defn- marx-field [fields tag t k]
   (let [marx-data (-> fields meta k (assoc :type t))]
