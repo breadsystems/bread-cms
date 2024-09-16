@@ -16,7 +16,7 @@
 (defonce render-count (atom {}))
 
 (defn- persist-field-state! [ed field state]
-  (swap! ed assoc-in [:marx/fields (:name field)]
+  (swap! ed assoc-in [:marx/fields (:field/key field)]
          (assoc field
                 :initialized? true
                 :state state)))
@@ -77,9 +77,8 @@
                         (map (fn [field]
                                (-> field
                                    (assoc :field/content (content field))
-                                   (select-keys [:name ;; TODO :field/key
+                                   (select-keys [:db/id
                                                  :field/key
-                                                 :db/id
                                                  :field/format
                                                  :field/content])))))]
     {:edit/action :publish-fields
