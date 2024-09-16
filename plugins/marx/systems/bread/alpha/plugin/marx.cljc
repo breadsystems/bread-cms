@@ -28,9 +28,15 @@
     [tag {:data-marx data-attr}
      (:field/content field)]))
 
-(defn render-bar [user]
+(defn render-bar [{:user/keys [preferences]}]
   [:div {:data-marx (pr-str {:field/key :bar
                              :marx/field-type :bar
+                             :sections (or (:bar/sections preferences)
+                                           [:site-name
+                                            :settings
+                                            :media
+                                            :spacer
+                                            :publish-button])
                              :persist? false})}])
 
 (defn fragment

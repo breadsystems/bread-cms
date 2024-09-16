@@ -46,12 +46,13 @@
                                             ed)})}))
 
 (defmethod core/field-lifecycle :bar
-  [ed field]
+  [ed {:keys [sections]}]
   {:render
    (fn [_]
      (let [ed-state @ed
-           settings (:site/settings ed-state)]
+           settings (:site/settings ed-state)
+           sections (or sections (:bar/sections ed-state))]
        (BreadContainer #js {:children (map (partial bar-section ed-state)
-                                           (:bar/sections ed-state))
+                                           sections)
                             :settings (->js settings)
                             :themeVariants (:theme/variants ed-state)})))})
