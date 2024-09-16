@@ -73,12 +73,12 @@
       pr-str))
 
 (defn- marx-field [fields tag t k]
-  (let [marx-data (-> fields meta k (assoc :type t))]
+  (let [marx-data (-> fields meta k (assoc :marx/field-type t))]
     [tag {:data-marx (data-attr marx-data)} (k fields)]))
 
 (defn- marx-bar []
   ;; TODO put this in ::data ??
-  [:div {:data-marx (pr-str {:name :bar :type :bar :persist? false})}])
+  [:div {:data-marx (pr-str {:name :bar :marx/field-type :bar :persist? false})}])
 
 (defc InteriorPage
   [{{fields :translatable/fields tags :post/taxons} :post
