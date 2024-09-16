@@ -22,6 +22,7 @@
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
+    [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit])
   (:import
     [java.time LocalDateTime]
@@ -121,23 +122,26 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defn- ws-handler [on-message-received]
-  (fn [req]
+(defn- ws-handler [on-message-received app]
+  (fn main-ws-handler [req]
     (http/with-channel req ws-chan
-      (let [client-id (str (UUID/randomUUID))]
+      (let [client-id (str (UUID/randomUUID))
+            app (-> req
+                    (merge app)
+                    (bread/set-config :marx/websocket? true
+                                      :marx/client-id client-id)
+                    (bread/hook ::bread/request))]
         ;; TODO logging
-        (println "WebSocket connection created...")
+        (println "WebSocket connection created with client-id" client-id)
         (http/on-close ws-chan (fn [status]
                                  (println "channel closed:" status)))
-        (http/on-receive ws-chan (fn [message]
-                                   (let [msg (edn/read-string message)]
-                                     (on-message-received client-id msg))))
+        (http/on-receive ws-chan
+                         (fn main-on-message-recieved [message]
+                           (on-message-received app message)))
         ))))
 
-(defmethod ig/init-key :websocket [_ {:keys [port wrap-defaults]}]
-  ;; TODO middleware
-  (let [handler (ws-handler (fn [client-id msg]
-                              (println (format "message from %s: %s" client-id msg))))
+(defmethod ig/init-key :websocket [_ {:keys [port wrap-defaults app]}]
+  (let [handler (ws-handler marx/on-websocket-message app)
         handler (if wrap-defaults
                   (ring/wrap-defaults handler wrap-defaults)
                   handler)]
