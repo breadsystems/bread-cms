@@ -2,6 +2,7 @@
 (ns systems.bread.alpha.cms.theme
   (:require
     [systems.bread.alpha.user :as user]
+    [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.component :refer [defc]]))
 
 (defn- nav-menu-item [{:keys [children uri]
@@ -65,17 +66,6 @@
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
-;; TODO move to marx plugin
-(defn- data-attr [field]
-  (-> field
-      (clojure.set/rename-keys {:field/key :name}) ;; TODO just use :field/key
-      (dissoc :field/content)
-      pr-str))
-
-(defn- marx-field [fields tag t k]
-  (let [marx-data (-> fields meta k (assoc :marx/field-type t))]
-    [tag {:data-marx (data-attr marx-data)} (k fields)]))
-
 (defn- marx-bar []
   ;; TODO put this in ::data ??
   [:div {:data-marx (pr-str {:name :bar :marx/field-type :bar :persist? false})}])
@@ -93,7 +83,8 @@
     [:h1 (:title fields)]
     [:p "Hello result: " (pr-str @hello)]
     [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
-    (marx-field fields :div :rich-text :rte)
+    ;; TODO don't compact?
+    (marx/render-field (:rte (meta fields)) :rich-text)
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :translatable/fields}]
