@@ -19,7 +19,8 @@
     (map nav-menu-item items)]])
 
 (defc MainLayout [{:keys [lang content user]
-                   {:keys [main-nav]} :menus}]
+                   {:keys [main-nav]} :menus
+                   :as data}]
   {}
   [:html {:lang lang}
    [:head
@@ -31,7 +32,7 @@
    [:body
     (nav-menu main-nav)
     content
-    (marx/render-bar user)
+    (marx/render-bar data)
     [:script {:src "/js/marx.js"}]]])
 
 (defc NotFoundPage
