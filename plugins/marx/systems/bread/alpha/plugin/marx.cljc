@@ -28,9 +28,11 @@
     [tag {:data-marx data-attr}
      (:field/content field)]))
 
-(defn render-bar [{:user/keys [preferences]}]
+(defn render-bar [{{:user/keys [preferences]} :user :as data}]
   [:div {:data-marx (pr-str {:field/key :bar
                              :marx/field-type :bar
+                             :marx/document {:query/key (:query/key data)
+                                             :query/pull (:query/pull data)}
                              :sections (or (:bar/sections preferences)
                                            [:site-name
                                             :settings
