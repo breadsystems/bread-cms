@@ -11,30 +11,6 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]))
 
-(defn- revision-diff [db pull id txs]
-  (let [query {:find [(list 'pull '?e pull) '.]
-               :in '[$ ?e]}]
-    (edit/diff (db/q db query id)
-               (db/q (db/db-with db {:tx-data txs}) query id))))
-
-(comment
-  (:user $app)
-  (:marx/edit $app)
-
-  (let [db $db
-        id 76
-        txs (edit->transactions (:marx/edit $app))
-        revised-db (db/db-with db {:tx-data txs})
-        pull [:field/content]
-        query {:find [(list 'pull '?e pull) '.]
-               :in '[$ ?e]}
-        data-orig (db/q db query id)
-        data-revised (db/q revised-db query id)]
-    (edit/diff data-orig data-revised))
-
-  (let [txs (edit->transactions (:marx/edit $app))]
-    (revision-diff $db [:field/content] 76 txs)))
-
 (defn on-websocket-message [app message]
   (let [message (bread/hook app ::websocket-message (edn/read-string message))]
     (prn message)
@@ -91,15 +67,63 @@
              (select-keys [:db/id :field/content])))
        fields))
 
+(defn- revision-diff [db pull id txs]
+  (let [query {:find [(list 'pull '?e pull) '.]
+               :in '[$ ?e]}]
+    (edit/diff (db/q db query id)
+               (db/q (db/db-with db {:tx-data txs}) query id))))
+
+(defn- transactions->revision [app txs]
+  (let [{{doc :marx/document :as edit} :marx/edit} app
+        ;; TODO support revisions for multiple Things
+        pulls [(:query/pull doc)]
+        ids [(:db/id doc)]]
+    {:revision/diffs
+     (map (fn [pull id]
+            {:diff/op (pr-str (revision-diff (db/database app) pull id txs))
+             :diff/thing id})
+          pulls ids)
+     :revision/note (:revision/note edit)}))
+
+(comment
+  (:user $app)
+  (:marx/edit $app)
+
+  (db/q (db/database $app) '{:find [(pull ?e [*])]
+                             :where [[?e :revision/diffs]]})
+
+  (let [db $db
+        id 76
+        txs (edit->transactions (:marx/edit $app))
+        revised-db (db/db-with db {:tx-data txs})
+        pull [:field/content]
+        query {:find [(list 'pull '?e pull) '.]
+               :in '[$ ?e]}
+        data-orig (db/q db query id)
+        data-revised (db/q revised-db query id)]
+    (edit/diff data-orig data-revised))
+
+  (let [txs (edit->transactions (:marx/edit $app))]
+    (revision-diff $db [:field/content] 76 txs))
+
+  (let [txs (edit->transactions (:marx/edit $app))]
+    (transactions->revision $app txs))
+
+  ;;
+  )
+
 (defmethod dispatcher/dispatch ::edit!
   [{:marx/keys [edit] :as app}]
-  (let [txs (edit->transactions edit)]
+  (let [txs (edit->transactions edit)
+        txs (if (:revision? edit)
+              [(transactions->revision app txs)]
+              txs)]
     {:effects
      [{:effect/name ::db/transact
        :effect/description "Persist edits."
        :effect/data-key (:edit/key edit)
        :conn (db/connection app)
-       :txs (bread/hook app ::transactions txs)}]}))
+       :txs (bread/hook app ::transactions txs edit)}]}))
 
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]
