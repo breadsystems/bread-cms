@@ -83,7 +83,7 @@
      :edit/key :edit/instant
      :fields field-data}))
 
-(defn persist-edit! [e {:marx/keys [backend] :as ed}]
+(defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state}]
   (persist! backend (edit e ed)))
 
 (defn attach-backend! [ed backend-inst]
