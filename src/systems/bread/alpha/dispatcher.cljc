@@ -40,7 +40,10 @@
     (dispatcher req)
     (let [{:keys [expansions data effects hooks]} (dispatch req)
           ;; TODO short-circuit here if we got a response...?
-          hooks (filter (comp seq val) hooks)]
+          hooks (filter (comp seq val) hooks)
+          data (assoc data
+                      :query/pull (:dispatcher/pull dispatcher)
+                      :query/key (:dispatcher/key dispatcher))]
       (-> req
           (update ::bread/data merge data)
           (update ::bread/expansions concat expansions)
