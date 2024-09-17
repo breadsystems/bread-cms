@@ -20,37 +20,60 @@
                                                 ::bread/expansions
                                                 ::bread/effects]))))
 
-    {::bread/data {}
+    {::bread/data {:query/pull nil :query/key nil}
      ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :v {}}
 
-    {::bread/data {:x :Y}
+    {::bread/data {:query/pull [:db/id :thing/slug]
+                   :query/key :post}
      ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
+     :dispatcher/pull [:db/id :thing/slug]
+     :dispatcher/key :post
+     :v {}}
+
+    {::bread/data {:x :Y
+                   :query/pull [:db/id :thing/slug]
+                   :query/key :post}
+     ::bread/expansions []
+     ::bread/effects []}
+    {:dispatcher/type ::passthru
+     :dispatcher/pull [:db/id :thing/slug]
+     :dispatcher/key :post
      :v {:data {:x :Y}}}
 
-    {::bread/data {}
+    {::bread/data {:query/pull [:db/id :thing/slug]
+                   :query/key :post}
      ::bread/expansions [[:key "yo"]]
      ::bread/effects []}
     {:dispatcher/type ::passthru
+     :dispatcher/pull [:db/id :thing/slug]
+     :dispatcher/key :post
      :v {:expansions [[:key "yo"]]}}
 
-    {::bread/data {}
+    {::bread/data {:query/pull [:db/id :thing/slug]
+                   :query/key :post}
      ::bread/expansions []
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
+     :dispatcher/pull [:db/id :thing/slug]
+     :dispatcher/key :post
      :v {:effects [{:effect/name :do-stuff
                     :effect/description "Example effect"}]}}
 
-    {::bread/data {:key "value"}
+    {::bread/data {:key "value"
+                   :query/pull [:db/id :thing/slug]
+                   :query/key :post}
      ::bread/expansions [[:key "example query"]]
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
+     :dispatcher/pull [:db/id :thing/slug]
+     :dispatcher/key :post
      :v {:data {:key "value"}
          :expansions [[:key "example query"]]
          :effects [{:effect/name :do-stuff
