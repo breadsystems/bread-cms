@@ -40,13 +40,13 @@
                            #js {:settings (->js settings)})}))
 
 (defmethod bar-section :publish-button
-  [{ed :editor-state} {:keys [label]}]
+  [state {:keys [label]}]
   (BarSection #js {:children
                    (Button #js {:children (or label (t :publish))
                                 :onClick #(core/persist-edit!
                                             ;; TODO :revise-fields
                                             {:edit/action :publish-fields}
-                                            ed)})}))
+                                            state)})}))
 
 (defmethod core/field-lifecycle :bar
   [ed {:keys [sections] :marx/keys [document]}]
