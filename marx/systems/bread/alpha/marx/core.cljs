@@ -85,7 +85,10 @@
 
 (defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state
                         :keys [document]}]
-  (let [message (assoc (edit e ed) :marx/document document)]
+  (let [message (assoc (edit e ed) :marx/document document
+                       :revision? true ;; TODO config
+                       :revision/note "Hello"
+                       )]
     (persist! backend message)))
 
 (defn attach-backend! [ed backend-inst]
