@@ -30,7 +30,7 @@
   ;; Entrypoint for the Bread CMS binary. To run the basic Bread install
   ;; on the JVM, do:
   ;;
-  ;; clojure -M:defaults:cms -m systems.bread.alpha.cms.main
+  ;; clojure -M:cms -m systems.bread.alpha.cms.main
   ;;
   ;; NOTE: if you upgrade any of the dependencies here, make sure
   ;; you also do so below in that dep's standalone alias.
