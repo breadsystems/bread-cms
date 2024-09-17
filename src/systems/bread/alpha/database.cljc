@@ -35,7 +35,7 @@
      [db query a b c d e f g h i j k l m n o p]
      [db query a b c d e f g h i j k l m n o p q]
      [db query a b c d e f g h i j k l m n o p q r])
-  (db-with [db timepoint]))
+  (db-with [db txs]))
 
 (defmethod connect :default [{:db/keys [type] :as config}]
   (let [msg (if (nil? type)
