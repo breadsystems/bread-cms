@@ -262,22 +262,27 @@
     [{:db/id "migration.revisions"
       :migration/key :bread.migration/revisions
       :migration/description "Revisions"}
-     {:db/ident :revision/post-id
-      :attr/label "Revision Post ID"
-      :db/doc "The entity ID of the Post being revised"
-      :db/valueType :db.type/long
+     {:db/ident :revision/diffs
+      :attr/label "Revision Diffs"
+      :db/doc "Changes to be applied, expressed as diffs."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many}
+     {:db/ident :diff/thing
+      :attr/label "Diff Thing"
+      :db/doc "The Thing being revised by this diff."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.revisions"}
+     {:db/ident :diff/op
+      :attr/label "Diff operation"
+      :db/doc "The actual diff operation, stored as EDN."
+      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.revisions"}
      {:db/ident :revision/note
       :attr/label "Revition Note"
-      :db/doc "A note about what was changed as part of this revision"
+      :db/doc "A note about what was changed as part of this revision."
       :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.revisions"}
-     {:db/ident :revision/created-at
-      :attr/label "Revision Create-at Time"
-      :db/doc "Date/time this revision was made"
-      :db/valueType :db.type/instant
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.revisions"}]
 
