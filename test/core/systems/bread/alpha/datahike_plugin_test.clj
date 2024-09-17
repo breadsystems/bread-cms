@@ -1,12 +1,17 @@
 (ns systems.bread.alpha.datahike-plugin-test
   (:require
     [clojure.test :refer :all]
+    [datahike.api :as d]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.datahike :as plugin]
     [systems.bread.alpha.test-helpers :as h :refer [db-config->loaded
                                                     db-config->handler
-                                                    plugins->loaded]]))
+                                                    plugins->loaded]])
+  (:import
+    [java.lang IllegalArgumentException]
+    [clojure.lang ExceptionInfo]))
 
 (def config
   {:db/type :datahike
@@ -16,6 +21,15 @@
 (h/use-db :each config)
 
 (deftest test-datahike-plugin
+
+  (testing "it wraps connection errors"
+    (with-redefs [d/connect (fn [_] (throw (IllegalArgumentException. "nah")))]
+      (is (thrown? ExceptionInfo (db/connect config)))
+      (try
+        (db/connect config)
+        (catch ExceptionInfo e
+          (is (= "Error connecting to datahike" (ex-message e)))
+          (is (= "nah" (-> e ex-cause ex-message)))))))
 
   (testing "it configures a default as-of-param"
     (let [app ((db-config->handler config) {})]

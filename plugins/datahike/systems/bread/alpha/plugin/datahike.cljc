@@ -204,12 +204,11 @@
   (try
     (d/connect config)
     (catch IllegalArgumentException e
-      (throw (ex-info (str "Exception connecting to datahike: "
-                           (.getMessage e))
-                      {:exception e
-                       :type      :connection-error
+      (throw (ex-info (str "Error connecting to datahike")
+                      {:type      :connection-error
                        :message   (.getMessage e)
-                       :config    config})))))
+                       :config    config}
+                      e)))))
 
 (defmethod db/create! :datahike [config & [{:keys [force?]}]]
   (try
