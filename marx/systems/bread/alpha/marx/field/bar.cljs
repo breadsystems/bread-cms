@@ -24,20 +24,23 @@
 (defmethod bar-section :spacer [_ _]
   (Spacer))
 
-(defmethod bar-section :site-name [ed _]
+(defmethod bar-section :site-name [{ed :editor-state} _]
   (HeadingSection #js {:children (:site/name ed)}))
 
-(defmethod bar-section :settings [{:site/keys [settings]} {:keys [label]}]
+(defmethod bar-section :settings
+  [{{:site/keys [settings]} :editor-state} {:keys [label]}]
   (Popover #js {:buttonProps #js {:children (or label (t :settings))}
                 :content (SettingsBox
                            #js {:settings (->js settings)})}))
 
-(defmethod bar-section :media [{:site/keys [settings]} {:keys [label]}]
+(defmethod bar-section :media
+  [{{:site/keys [settings]} :editor-state} {:keys [label]}]
   (Popover #js {:buttonProps #js {:children (or label (t :media))}
                 :content (MediaLibrary
                            #js {:settings (->js settings)})}))
 
-(defmethod bar-section :publish-button [ed {:keys [label]}]
+(defmethod bar-section :publish-button
+  [{ed :editor-state} {:keys [label]}]
   (BarSection #js {:children
                    (Button #js {:children (or label (t :publish))
                                 :onClick #(core/persist-edit!
@@ -46,13 +49,16 @@
                                             ed)})}))
 
 (defmethod core/field-lifecycle :bar
-  [ed {:keys [sections]}]
+  [ed {:keys [sections] :marx/keys [document]}]
   {:render
    (fn [_]
      (let [ed-state @ed
            settings (:site/settings ed-state)
-           sections (or sections (:bar/sections ed-state))]
-       (BreadContainer #js {:children (map (partial bar-section ed-state)
+           sections (or sections (:bar/sections ed-state))
+           child-props {:settings (->js settings)
+                        :editor-state ed-state
+                        :document document}]
+       (BreadContainer #js {:children (map (partial bar-section child-props)
                                            sections)
                             :settings (->js settings)
                             :themeVariants (:theme/variants ed-state)})))})
