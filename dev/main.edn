@@ -1,13 +1,16 @@
 {:http {:port 1312
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
+ ;; TODO default
  :ring/wrap-defaults {:ring-defaults :site-defaults
                       [:session :store] #ig/ref :ring/session-store
                       [:security :anti-forgery] false}
+ ;; TODO default
  :ring/session-store
  {:store/type :datalog
   :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
+ ;; TODO app.edn ?
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
@@ -21,6 +24,7 @@
   :plugins [{:effects
              [{:effect/name :systems.bread.alpha.cms.main/hello
                :effect/data-key :hello}]}]}
+ ;; TODO default db config? based on profile?
  :bread/db
  {:db/type :datahike
   :store {:backend :mem
@@ -44,6 +48,7 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
+ ;; TODO routes.edn ?
  :bread/router
  #reitit/router
  [[["/login"

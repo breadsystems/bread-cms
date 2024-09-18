@@ -141,13 +141,11 @@
 
 (defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
-  ;; TODO call datahike API directly
   (db/create! db-config {:force? force?})
   (assoc db-config :db/connection (db/connect db-config)))
 
 (defmethod ig/halt-key! :bread/db
   [_ {:keys [recreate?] :as db-config}]
-  ;; TODO call datahike API directly
   (when recreate? (db/delete! db-config)))
 
 (defmethod ig/init-key :bread/router [_ router]
