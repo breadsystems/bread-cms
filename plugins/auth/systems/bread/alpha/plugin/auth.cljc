@@ -25,12 +25,12 @@
       sk))
   (ss/read-session [_ sk]
     (let [sk (->uuid sk)
-          data (db/q @conn
-                        '{:find [?data .]
-                          :in [$ ?sk]
-                          :where [[?e :session/data ?data]
-                                  [?e :session/uuid ?sk]]}
-                        sk)]
+          data (db/q (db/db conn)
+                     '{:find [?data .]
+                       :in [$ ?sk]
+                       :where [[?e :session/data ?data]
+                               [?e :session/uuid ?sk]]}
+                     sk)]
       (edn/read-string data)))
   (ss/write-session [_ sk data]
     (let [sk (or (->uuid sk) (UUID/randomUUID))]
