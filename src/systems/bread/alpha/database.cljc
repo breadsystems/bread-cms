@@ -192,8 +192,12 @@
         :db/as-of-tx? as-of-tx?}
        :hooks
        {::bread/init
-        [{:action/name ::migrate :migrations migrations}
-         {:action/name ::transact-initial :txs initial-txns}]
+        [{:action/name ::migrate
+          :action/description "Run database schema migrations."
+          :migrations migrations}
+         {:action/name ::transact-initial
+          :action/description "Transact initial data into the database."
+          :txs initial-txns}]
         ::timepoint
         [{:action/name ::timepoint
           :action/description
