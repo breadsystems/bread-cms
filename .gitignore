@@ -16,6 +16,7 @@ inputFiles.lst
 /ref
 /dist
 *.local.edn
+*.db
 
 /public/js
 /node_modules
