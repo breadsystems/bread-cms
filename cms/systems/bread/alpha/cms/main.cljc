@@ -20,7 +20,7 @@
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.datahike]
+    [systems.bread.alpha.plugin.datahike-cli]
     [systems.bread.alpha.plugin.reitit])
   (:import
     [java.time LocalDateTime]
