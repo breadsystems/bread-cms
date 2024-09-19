@@ -92,37 +92,16 @@
   (q [db query a]
     (q* config :query (pr-str query) (prefix config) a))
   (q [db query a b]
-    (q* config :query (prefix config) a b (pr-str query)))
+    (q* config :query (pr-str query) (prefix config) a b))
   (q [db query a b c]
-    (q* config :query (prefix config) a b c (pr-str query)))
+    (q* config :query (pr-str query) (prefix config) a b c))
   (q [db query a b c d]
-    (q* config :query (prefix config) a b c d (pr-str query)))
+    (q* config :query (pr-str query) (prefix config) a b c d))
   (q [db query a b c d e]
-    (q* config :query (prefix config) a b c d e (pr-str query)))
+    (q* config :query (pr-str query) (prefix config) a b c d e))
   (q [db query a b c d e f]
-    (q* config :query (prefix config) a b c d e f (pr-str query)))
-  (q [db query a b c d e f g]
-    (q* config :query (prefix config) a b c d e f g (pr-str query)))
-  (q [db query a b c d e f g h]
-    (q* config :query (prefix config) a b c d e f g h (pr-str query)))
-  (q [db query a b c d e f g h i]
-    (q* config :query (prefix config) a b c d e f g h i (pr-str query)))
-  (q [db query a b c d e f g h i j]
-    (q* config :query (prefix config) a b c d e f g h i j (pr-str query)))
-  (q [db query a b c d e f g h i j k]
-    (q* config :query (prefix config) a b c d e f g h i j k (pr-str query)))
-  (q [db query a b c d e f g h i j k l]
-    (q* config :query (prefix config) a b c d e f g h i j k l (pr-str query)))
-  (q [db query a b c d e f g h i j k l m]
-    (q* config :query (prefix config) a b c d e f g h i j k l m (pr-str query)))
-  (q [db query a b c d e f g h i j k l m n]
-    (q* config :query (prefix config) a b c d e f g h i j k l m n (pr-str query)))
-  (q [db query a b c d e f g h i j k l m n o]
-    (q* config :query (prefix config) a b c d e f g h i j k l m n o (pr-str query)))
-  (q [db query a b c d e f g h i j k l m n o p]
-    (q* config :query (prefix config) a b c d e f g h i j k l m n o p (pr-str query)))
-  (q [db query a b c d e f g h i j k l m n o p r]
-    (q* config :query (prefix config) a b c d e f g h i j k l m n o p r (pr-str query)))
+    (q* config :query (pr-str query) (prefix config) a b c d e f))
+  ;; TODO
   (pull [db spec ident]
     (q* config :pull (prefix config) (pr-str spec) ident))
 
