@@ -26,6 +26,18 @@
                :effect/data-key :hello}]}]}
  ;; TODO default db config? based on profile?
  :bread/db
+ {:db/type :datahike-cli
+  :store {:backend :file
+          :path "/home/tamayo/projects/bread-cms/dthk.db",
+          :config {:in-place? true}}
+  :recreate? true
+  :force? true
+  :attribute-refs? true
+  :keep-history? true,
+  :schema-flexibility :write,
+  :cli/dthk-path "/home/tamayo/bin/dthk",
+  :cli/config-path "/home/tamayo/projects/bread-cms/dthk.edn"}
+ #_
  {:db/type :datahike
   :store {:backend :mem
           :id "bread-db"}

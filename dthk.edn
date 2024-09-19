@@ -1,0 +1,12 @@
+{:keep-history? true,
+ :store
+ {:backend :file,
+  :path "/home/tamayo/projects/bread-cms/dthk.db",
+  :config {:in-place? true}},
+ :db/type :datahike-cli,
+ :cli/dthk-path "/home/tamayo/bin/dthk",
+ :cli/config-path "/home/tamayo/projects/bread-cms/dthk.edn",
+ :recreate? true,
+ :attribute-refs? true,
+ :force? true,
+ :schema-flexibility :write}
