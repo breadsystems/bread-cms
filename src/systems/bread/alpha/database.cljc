@@ -95,6 +95,11 @@
         ks (migration-keys db)]
     (contains? ks (migration-key migration))))
 
+(defn unmet-deps [db migration]
+  (let [deps (:migration/dependencies (meta migration))]
+    (when (seq deps)
+      (filter (complement (migration-keys db)) deps))))
+
 (defmethod bread/effect ::transact
   [{:keys [conn txs]} _]
   (transact conn {:tx-data txs}))
@@ -121,29 +126,40 @@
       (into (:expansion/into query) result)
       result)))
 
+(comment
+  migration
+  $db
+
+  (migration-ran? $db migration)
+  (migration-keys $db)
+  (q $db '[:find ?key :where [_ :migration/key ?key]])
+
+  )
+
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
   (let [conn (connection app)]
     (doseq [migration migrations]
+      (prn 'migrate (first migration))
+      (def migration migration)
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
-            unmet-deps (filter
-                         (complement (migration-keys db))
-                         (:migration/dependencies (meta migration)))]
-        (when (seq unmet-deps)
+            unmet (unmet-deps db migration)]
+        (when (seq unmet)
+          (prn 'UNMET migration)
           (throw (ex-info "Migration has one or more unmet dependencies!"
-                          {:unmet-deps (set unmet-deps)})))
+                          {:migration migration
+                           :unmet-deps (set unmet)})))
         (when-not (migration-ran? (database app) migration)
-          (transact conn migration)))))
-  app)
+          (def $db (database app)))
+          (prn 'TRANSACT (transact conn migration))))))
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
     (if-let [conn (connection app)]
       (transact conn txs)
-      (throw (ex-info "Failed to connect to database." {:type :no-connection}))))
-  app)
+      (throw (ex-info "Failed to connect to database." {:type :no-connection})))))
 
 (defmethod bread/action ::timepoint
   [{:keys [params] :as req} _ _]

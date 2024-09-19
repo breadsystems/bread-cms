@@ -198,7 +198,11 @@
 (comment
   (set! *print-namespace-maps* false)
 
-  (restart! (-> "dev/main.edn" aero/read-config))
+  (try (restart! (-> "dev/main.edn" aero/read-config))
+       (catch clojure.lang.ExceptionInfo e
+         (-> e ex-cause ((juxt (comp :action/name :action ex-data)
+                               (comp :out ex-data ex-cause)
+                               (comp :reason ex-data))))))
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
