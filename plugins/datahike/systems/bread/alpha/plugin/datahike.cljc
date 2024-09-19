@@ -4,12 +4,10 @@
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
     [datahike.db :as dhdb]
-    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
   (:import
-    [java.lang IllegalArgumentException]
-    [java.util UUID]))
+    [java.lang IllegalArgumentException]))
 
 
 
