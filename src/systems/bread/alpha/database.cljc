@@ -126,33 +126,19 @@
       (into (:expansion/into query) result)
       result)))
 
-(comment
-  migration
-  $db
-
-  (migration-ran? $db migration)
-  (migration-keys $db)
-  (q $db '[:find ?key :where [_ :migration/key ?key]])
-
-  )
-
 (defmethod bread/action ::migrate
   [app {:keys [migrations]} _]
   (let [conn (connection app)]
     (doseq [migration migrations]
-      (prn 'migrate (first migration))
-      (def migration migration)
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
             unmet (unmet-deps db migration)]
         (when (seq unmet)
-          (prn 'UNMET migration)
           (throw (ex-info "Migration has one or more unmet dependencies!"
                           {:migration migration
                            :unmet-deps (set unmet)})))
         (when-not (migration-ran? (database app) migration)
-          (def $db (database app)))
-          (prn 'TRANSACT (transact conn migration))))))
+          (transact conn migration))))))
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
