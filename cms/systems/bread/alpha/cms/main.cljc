@@ -201,6 +201,7 @@
   (try (restart! (-> "dev/main.edn" aero/read-config))
        (catch clojure.lang.ExceptionInfo e
          (-> e ex-cause ((juxt (comp :action/name :action ex-data)
+                               (comp ex-message ex-cause)
                                (comp :out ex-data ex-cause)
                                (comp :reason ex-data))))))
   (deref system)
