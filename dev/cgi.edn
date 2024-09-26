@@ -7,10 +7,7 @@
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
-                        :route/name :page}}}
-  :plugins [{:effects
-             [{:effect/name :systems.bread.alpha.cms.main/hello
-               :effect/data-key :hello}]}]}
+                        :route/name :page}}}}
 
  :bread/db
  {:db/type :datahike-cli
