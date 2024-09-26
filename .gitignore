@@ -17,6 +17,7 @@ inputFiles.lst
 /dist
 *.local.edn
 *.db
+/dthk.edn
 
 /public/js
 /node_modules
