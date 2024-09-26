@@ -138,14 +138,16 @@
                           {:migration migration
                            :unmet-deps (set unmet)})))
         (when-not (migration-ran? (database app) migration)
-          (transact conn migration))))))
+          (transact conn migration)))))
+  app)
 
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
     (if-let [conn (connection app)]
       (transact conn txs)
-      (throw (ex-info "Failed to connect to database." {:type :no-connection})))))
+      (throw (ex-info "Failed to connect to database." {:type :no-connection}))))
+  app)
 
 (defmethod bread/action ::timepoint
   [{:keys [params] :as req} _ _]
