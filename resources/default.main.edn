@@ -1,0 +1,22 @@
+{:http {:port 1312
+        :handler #ig/ref :bread/handler
+        :wrap-defaults #ig/ref :ring/wrap-defaults}
+
+ :ring/wrap-defaults {:ring-defaults :site-defaults
+                      [:session :store] #ig/ref :ring/session-store
+                      [:security :anti-forgery] false}
+
+ :ring/session-store
+ {:store/type :datalog
+  :store/db #ig/ref :bread/db}
+
+ :bread/handler #ig/ref :bread/app
+
+ :bread/profilers []
+
+ #_#_ ;; TODO
+ :bread/debugger
+ {:http
+  {:port 1313
+   :docroot "public/debugger"
+   :middleware [#var systems.bread.alpha.cms.main/wrap-debug]}}}

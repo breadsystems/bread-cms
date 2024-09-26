@@ -20,7 +20,7 @@
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.datahike-cli]
+    [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.reitit])
   (:import
     [java.time LocalDateTime]
@@ -191,6 +191,11 @@
   (doseq [{:keys [tap]} profilers]
     (remove-tap tap)))
 
+(defn get-merged-config [path]
+  (merge
+    (aero/read-config (io/resource "default.main.edn"))
+    (aero/read-config path)))
+
 (defn restart! [config]
   (stop!)
   (start! config))
@@ -198,7 +203,12 @@
 (comment
   (set! *print-namespace-maps* false)
 
-  (try (restart! (-> "dev/main.edn" aero/read-config))
+  (merge
+    (-> "default.main.edn" io/resource aero/read-config)
+    (-> "dev/main.edn" aero/read-config))
+  (get-merged-config "dev/main.edn")
+
+  (try (restart! (get-merged-config "dev/main.edn"))
        (catch clojure.lang.ExceptionInfo e
          (-> e ex-cause ((juxt (comp :action/name :action ex-data)
                                (comp ex-message ex-cause)
@@ -507,7 +517,7 @@
       config (start! config)
       file (if-not (.exists (io/file file))
              (show-errors {:errors [(str "No such file: " file)]})
-             (let [config (-> file aero/read-config
+             (let [config (-> file get-merged-config
                               (update-in [:http :port] #(if port port %)))]
                (start! config)))
       :else (show-help cli-env))))
