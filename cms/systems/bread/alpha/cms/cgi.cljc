@@ -18,72 +18,6 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.defaults :as defaults]
     [systems.bread.alpha.cms.config.bread]
-    [systems.bread.alpha.cms.config.reitit]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.datahike-cli]
-    [systems.bread.alpha.plugin.reitit])
-  (:import
-    [java.time LocalDateTime]
-    [java.util Properties])
-  (:gen-class))
-
-;; TODO log to stderr
-
-(def status-mappings
-  {200 "OK"
-   400 "Bad Request"
-   404 "Not Found"
-   500 "Internal Server Error"})
-
-(def cli-options
-  [["-h" "--help" "Show this usage text."]
-   ["-p" "--port PORT" "Port number to run the HTTP server on."
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536."]]
-   ["-f" "--file FILE" "Config file path. Ignored if --config is passed."
-    :default "bread.edn"]
-   ["-c" "--config EDN"
-    "Full configuration data as EDN. Causes other args to be ignored."
-    :parse-fn edn/read-string]])
-
-(defn show-help [{:keys [summary]}]
-  (println summary))
-
-(defn show-errors [{:keys [errors]}]
-  (println (string/join "\n" errors)))
-
-;; TODO mv
-(defmethod ig/init-key :initial-config [_ config]
-  config)
-
-(defmethod ig/init-key :clojure-version [_ _]
-  (clojure-version))
-
-(defmethod ig/init-key :started-at [_ _]
-  (LocalDateTime/now))
-
-(defmethod ig/halt-key! :http [_ stop-server]
-  (when-let [prom (stop-server :timeout 100)]
-    @prom))
-
-(defmethod ig/init-key :ring/wrap-defaults [_ value]
-  (let [default-configs {:api-defaults ring/api-defaults
-                         :site-defaults ring/site-defaults
-                         :secure-api-defaults ring/secure-api-defaults
-                         :secure-site-defaults ring/secure-api-defaults}
-        k (if (keyword? value) value (get value :ring-defaults))
-        defaults (get default-configs k)
-        defaults (if (map? value)
-                   (reduce #(assoc-in %1 (key %2) (val %2))
-                           defaults (dissoc value :ring-defaults))
-                   defaults)]
-    defaults))
-
-(defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :db/connection} :store/db}]
-  ;; TODO extend with a multimethod??
-  (when (= :datalog store-type)
-    (auth/session-store conn)))
 
 (defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
@@ -124,6 +58,62 @@
 (defmethod ig/halt-key! :bread/profilers [_ profilers]
   (doseq [{:keys [tap]} profilers]
     (remove-tap tap)))
+    [systems.bread.alpha.cms.config.reitit]
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.datahike-cli]
+    [systems.bread.alpha.plugin.reitit])
+  (:import
+    [java.time LocalDateTime]
+    [java.util Properties])
+  (:gen-class))
+
+;; TODO log to stderr
+
+(def status-mappings
+  {200 "OK"
+   400 "Bad Request"
+   404 "Not Found"
+   500 "Internal Server Error"})
+
+(def cli-options
+  [["-h" "--help" "Show this usage text."]
+   ["-p" "--port PORT" "Port number to run the HTTP server on."
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536."]]
+   ["-f" "--file FILE" "Config file path. Ignored if --config is passed."
+    :default "bread.edn"]
+   ["-c" "--config EDN"
+    "Full configuration data as EDN. Causes other args to be ignored."
+    :parse-fn edn/read-string]])
+
+(defn show-help [{:keys [summary]}]
+  (println summary))
+
+(defn show-errors [{:keys [errors]}]
+  (println (string/join "\n" errors)))
+
+;; TODO mv
+(defmethod ig/init-key :clojure-version [_ _]
+  (clojure-version))
+
+(defmethod ig/init-key :ring/wrap-defaults [_ value]
+  (let [default-configs {:api-defaults ring/api-defaults
+                         :site-defaults ring/site-defaults
+                         :secure-api-defaults ring/secure-api-defaults
+                         :secure-site-defaults ring/secure-api-defaults}
+        k (if (keyword? value) value (get value :ring-defaults))
+        defaults (get default-configs k)
+        defaults (if (map? value)
+                   (reduce #(assoc-in %1 (key %2) (val %2))
+                           defaults (dissoc value :ring-defaults))
+                   defaults)]
+    defaults))
+
+(defmethod ig/init-key :ring/session-store
+  [_ {store-type :store/type {conn :db/connection} :store/db}]
+  ;; TODO extend with a multimethod??
+  (when (= :datalog store-type)
+    (auth/session-store conn)))
 ;; /mv
 
 (defn log-hook! [invocation]
@@ -146,8 +136,7 @@
                             (clojure.string/split #"\?"))
           ;; TODO merge with defaults
           config (get-merged-config (:file options))
-          system (ig/init config)
-          handler (:bread/handler system)
+          handler (:bread/handler (ig/init config))
           req {:uri uri
                :query-string (System/getenv "QUERY_STRING")
                :remote-addr (System/getenv "REMOTE_ADDR")
