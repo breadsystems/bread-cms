@@ -11,6 +11,7 @@
     [reitit.ring]
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
+    ;; TODO Timbre
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
@@ -25,6 +26,8 @@
     [java.time LocalDateTime]
     [java.util Properties])
   (:gen-class))
+
+;; TODO log to stderr
 
 (def status-mappings
   {200 "OK"
