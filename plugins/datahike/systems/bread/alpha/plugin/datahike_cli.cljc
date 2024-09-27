@@ -3,7 +3,7 @@
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
     [clojure.core.protocols :refer [Datafiable]]
-    [clojure.java.shell :only [sh]]
+    [clojure.java.shell :refer [sh]]
     [clojure.string :refer [split]]
 
     [systems.bread.alpha.schema :as schema]
