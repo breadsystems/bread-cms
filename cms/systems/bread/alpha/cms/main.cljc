@@ -11,7 +11,6 @@
     [reitit.ring]
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
-    ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
