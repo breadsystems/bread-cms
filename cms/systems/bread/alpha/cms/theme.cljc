@@ -72,8 +72,6 @@
             {:post/taxons [{:translatable/fields [*]}]}]}
   [:main
    [:h1 (:title fields)]
-   [:p "Hello result: " (pr-str @hello)]
-   [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
    [:div.tags-list
     (map (fn [{tag :translatable/fields}]
            [:span.tag (:name tag)])
