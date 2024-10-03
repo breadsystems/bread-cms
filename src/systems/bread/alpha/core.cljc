@@ -233,7 +233,6 @@
        (throw (if (-> e# ex-data ::core?) e#
                 (ex-info (.getMessage e#)
                          (merge (ex-data e#) {:hook ~hook
-                                              :app ~app
                                               :action ~current-action
                                               :args ~args
                                               ::core? true})
