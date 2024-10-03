@@ -60,6 +60,9 @@
 (defn- asof-prefix [instant-ms config]
   (prefix (str "asof:" instant-ms) config))
 
+(defn- hist-prefix [config]
+  (prefix (str "history:") config))
+
 (deftype AsOfDatahikeClient [instant-ms config]
   db/TemporalDatabase
   (q [db query]
@@ -68,23 +71,38 @@
     (q* config :query (pr-str query) (asof-prefix instant-ms config) a))
   (q [db query a b]
     (q* config :query (pr-str query) (asof-prefix instant-ms config) a b))
-  ;; TODO more arities...
+  (q [db query a b c]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c))
+  (q [db query a b c d]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d))
+  (q [db query a b c d e]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e))
+  (q [db query a b c d e f]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f))
+  (q [db query a b c d e f g]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g))
+  (q [db query a b c d e f g h]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h))
+  (q [db query a b c d e f g h i]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i))
+  (q [db query a b c d e f g h i j]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j))
+  (q [db query a b c d e f g h i j k]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k))
+  (q [db query a b c d e f g h i j k l]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l))
+  (q [db query a b c d e f g h i j k l m]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l m))
+  (q [db query a b c d e f g h i j k l m n]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l m n))
+  (q [db query a b c d e f g h i j k l m n o]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l m n o))
+  (q [db query a b c d e f g h i j k l m n o p]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l m n o p))
+  (q [db query a b c d e f g h i j k l m n o p r]
+    (q* config :query (pr-str query) (asof-prefix instant-ms config) a b c d e f g h i j k l m n o p r))
   (pull [db spec ident]
     (q* config :pull spec ident)))
-
-(defn- hist-prefix [config]
-  (prefix (str "history:") config))
-
-(deftype HistoricalDatahikeClient [config]
-  db/TemporalDatabase
-  (q [db query]
-    (q* config :history (pr-str query) (hist-prefix config)))
-  (q [db query a]
-    (q* config :history (pr-str query) (hist-prefix config) a))
-  (q [db query a b]
-    (q* config :history (pr-str query) (hist-prefix config) a b))
-  ;; TODO
-  )
 
 (deftype DatahikeCommandLineInterfaceClient [config]
   db/TemporalDatabase
@@ -106,7 +124,29 @@
     (q* config :query (pr-str query) (prefix config) a b c d e))
   (q [db query a b c d e f]
     (q* config :query (pr-str query) (prefix config) a b c d e f))
-  ;; TODO
+  (q [db query a b c d e f g]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g))
+  (q [db query a b c d e f g h]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h))
+  (q [db query a b c d e f g h i]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i))
+  (q [db query a b c d e f g h i j]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j))
+  (q [db query a b c d e f g h i j k]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k))
+  (q [db query a b c d e f g h i j k l]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l))
+  (q [db query a b c d e f g h i j k l m]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l m))
+  (q [db query a b c d e f g h i j k l m n]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l m n))
+  (q [db query a b c d e f g h i j k l m n o]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l m n o))
+  (q [db query a b c d e f g h i j k l m n o p]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l m n o p))
+  (q [db query a b c d e f g h i j k l m n o p r]
+    (q* config :query (pr-str query) (prefix config) a b c d e f g h i j k l m n o p r))
+
   (pull [db spec ident]
     (q* config :pull (prefix config) (pr-str spec) ident))
 
@@ -115,6 +155,45 @@
     conn)
   (transact [_ txs]
     (q* config :transact (prefix "conn:" config) (pr-str txs))))
+
+(deftype HistoricalDatahikeClient [config]
+  db/TemporalDatabase
+  (q [db query]
+    (q* config :history (pr-str query) (hist-prefix config)))
+  (q [db query a]
+    (q* config :history (pr-str query) (hist-prefix config) a))
+  (q [db query a b]
+    (q* config :history (pr-str query) (hist-prefix config) a b))
+  (q [db query a b c]
+    (q* config :history (pr-str query) (hist-prefix config) a b c))
+  (q [db query a b c d]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d))
+  (q [db query a b c d e]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e))
+  (q [db query a b c d e f]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f))
+  (q [db query a b c d e f g]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g))
+  (q [db query a b c d e f g h]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h))
+  (q [db query a b c d e f g h i]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i))
+  (q [db query a b c d e f g h i j]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j))
+  (q [db query a b c d e f g h i j k]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k))
+  (q [db query a b c d e f g h i j k l]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l))
+  (q [db query a b c d e f g h i j k l m]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l m))
+  (q [db query a b c d e f g h i j k l m n]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l m n))
+  (q [db query a b c d e f g h i j k l m n o]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l m n o))
+  (q [db query a b c d e f g h i j k l m n o p]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l m n o p))
+  (q [db query a b c d e f g h i j k l m n o p r]
+    (q* config :history (pr-str query) (hist-prefix config) a b c d e f g h i j k l m n o p r)))
 
 (comment
 
