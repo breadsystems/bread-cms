@@ -10,14 +10,15 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
   (:import
-    [java.lang IllegalArgumentException]))
+    [java.lang IllegalArgumentException]
+    [java.util UUID]))
 
 (defprotocol CliParam
   (-to-param [x]))
 
 (extend-protocol CliParam
-  clojure.lang.Keyword
-  (-to-param [k] (name k))
+  java.util.UUID
+  (-to-param [uuid] (pr-str (str uuid)))
 
   java.lang.Object
   (-to-param [x] (str x)))
