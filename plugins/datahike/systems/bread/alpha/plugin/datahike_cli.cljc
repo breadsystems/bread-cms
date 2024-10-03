@@ -22,9 +22,13 @@
   java.lang.Object
   (-to-param [x] (str x)))
 
-(defn- dthk [{:cli/keys [dthk-path]} & cmd]
-  (prn (apply list 'sh dthk-path (map -to-param cmd)))
-  (apply sh dthk-path (map -to-param cmd)))
+(comment
+  (pr-str (UUID/randomUUID))
+  (-to-param (UUID/randomUUID)))
+
+(defn- dthk [{:cli/keys [dthk-path]} cmd & args]
+  (prn (apply list 'sh dthk-path (name cmd) (map -to-param args)))
+  (apply sh dthk-path (name cmd) (map -to-param args)))
 
 (defn- q* [config & cmd]
   (let [{:keys [out err exit] :as result} (apply dthk config cmd)]
