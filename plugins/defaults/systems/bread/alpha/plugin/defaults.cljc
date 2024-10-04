@@ -252,11 +252,13 @@
              :action/description "Sensible defaults for Ring responses"
              :default-content-type default-content-type}]
            ::bread/attrs
-           [{:action/name ::attrs
-             :action/description "Add db attrs as raw maps"}]
+           (when (not (false? db))
+             [{:action/name ::attrs
+               :action/description "Add db attrs as raw maps"}])
            ::bread/attrs-map
-           [{:action/name ::attrs-map
-             :action/description "All db attrs, indexed by :db/ident"}]}}]]
+           (when (not (false? db))
+             [{:action/name ::attrs-map
+               :action/description "All db attrs, indexed by :db/ident"}])}}]]
     (concat
       (filter identity configured-plugins)
       plugins)))
