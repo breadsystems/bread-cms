@@ -47,10 +47,6 @@
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
 
-;; TODO move this to a tooling ns
-(defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
-  (hashers/derive pw {:alg algo}))
-
 (defc login-page
   [{:keys [session] :as data}]
   {}
