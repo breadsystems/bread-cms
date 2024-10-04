@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.plugin.auth
   (:require
-    [aero.core :as aero]
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.edn :as edn]
