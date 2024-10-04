@@ -207,6 +207,7 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
+  (mapcat val (::bread/hooks (:bread/app @system)))
 
   (alter-var-root #'bread/*profile-hooks* not)
 
