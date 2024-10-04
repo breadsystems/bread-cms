@@ -8,6 +8,10 @@
  {:store/type :datalog
   :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
+ :websocket
+ {:port 13120
+  :wrap-defaults #ig/ref :ring/wrap-defaults
+  :app #ig/ref :bread/app}
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
@@ -18,9 +22,7 @@
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
                         :route/name :page}}}
-  :plugins [{:effects
-             [{:effect/name :systems.bread.alpha.cms.main/hello
-               :effect/data-key :hello}]}]}
+  :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
   :store {:backend :mem
@@ -37,7 +39,7 @@
              #_#_ ;; Uncomment to enable 2FA
              :user/two-factor-key "AWWMEFM4ADBSQRET"
              :user/failed-login-count 0
-             :user/lang :en-US
+             :user/preferences "{:lang :en}"
              :user/roles
              #{{:role/key :author
                 :role/abilities

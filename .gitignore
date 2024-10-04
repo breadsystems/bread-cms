@@ -1,3 +1,5 @@
+.direnv
+.envrc
 .cpcache
 .calva
 .idea
@@ -24,6 +26,9 @@ inputFiles.lst
 /*.iml
 /.nrepl-port
 /.idea
+/.yarn
 
-.direnv
-.envrc
+/resources/editor/js
+/marx/out
+
+*storybook.log
