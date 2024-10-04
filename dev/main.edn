@@ -1,14 +1,4 @@
-{:http {:port 1312
-        :handler #ig/ref :bread/handler
-        :wrap-defaults #ig/ref :ring/wrap-defaults}
- :ring/wrap-defaults {:ring-defaults :site-defaults
-                      [:session :store] #ig/ref :ring/session-store
-                      [:security :anti-forgery] false}
- :ring/session-store
- {:store/type :datalog
-  :store/db #ig/ref :bread/db}
- :bread/handler #ig/ref :bread/app
- :bread/app
+{:bread/app
  {:db #ig/ref :bread/db
   :auth {:lock-seconds 10}
   :i18n {:supported-langs #{:en :fr}}
@@ -17,10 +7,8 @@
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
-                        :route/name :page}}}
-  :plugins [{:effects
-             [{:effect/name :systems.bread.alpha.cms.main/hello
-               :effect/data-key :hello}]}]}
+                        :route/name :page}}}}
+
  :bread/db
  {:db/type :datahike
   :store {:backend :mem
@@ -44,6 +32,7 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
+
  :bread/router
  #reitit/router
  [[["/login"
@@ -70,14 +59,4 @@
      {:name :page!
       :dispatcher/type :dispatcher.type/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
-  {:conflicts nil}]
- :bread/profilers
- [#_{:hook #{:systems.bread.alpha.core/response}
-     :action/name #{:systems.bread.alpha.cms.defaults/response}
-     :f #var systems.bread.alpha.cms.main/log-hook!}]
- #_#_
- :bread/debugger
- {:http
-  {:port 1313
-   :docroot "public/debugger"
-   :middleware [#var systems.bread.alpha.cms.main/wrap-debug]}}}
+  {:conflicts nil}]}

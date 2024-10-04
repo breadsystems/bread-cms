@@ -5,10 +5,18 @@ Notes on potential ideas for Bread. Almost all of this is entirely hypothetical,
 ## Progress
 
 - native-image with Markdown: BLOCKED
-- native-image with Datahike: BLOCKED
+- native-image with Datahike: WIP
 - Babashka with Datahike: BLOCKED
 - JVM on Heroku: ???
 - JVM on Fly.io: ???
+
+## CGI
+
+https://www.cgi101.com/book/ch3/text.html
+
+```
+REQUEST_URL=/en/hello REMOTE_ADDR=127.0.0.1 CONTENT_TYPE='*/*' clojure -M:cms -m systems.bread.alpha.cms.cgi --file bread.cgi.edn
+```
 
 ## bread.main
 

@@ -6,12 +6,9 @@
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
     [integrant.core :as ig]
-    [org.httpkit.server :as http]
     [reitit.core :as reitit]
     [reitit.ring]
-    [ring.middleware.defaults :as ring]
     [sci.core :as sci]
-    ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
@@ -19,11 +16,11 @@
     [systems.bread.alpha.plugin.defaults :as defaults]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.reitit]
+    [systems.bread.alpha.cms.config.server]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.reitit])
   (:import
-    [java.time LocalDateTime]
     [java.util Properties])
   (:gen-class))
 
@@ -38,7 +35,7 @@
    ["-p" "--port PORT" "Port number to run the HTTP server on."
     :parse-fn #(Integer/parseInt %)
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536."]]
-   ["-f" "--file FILE" "Config file path. Ignored if --file is passed."
+   ["-f" "--file FILE" "Config file path. Ignored if --config is passed."
     :default "config.edn"]
    ["-c" "--config EDN"
     "Full configuration data as EDN. Causes other args to be ignored."
@@ -88,110 +85,25 @@
 
 (defn start! [config]
   (let [config (assoc config
-                      :initial-config config
-                      ;; These will be initialized by Integrant:
-                      ;; TODO bread version
+                      :bread/initial-config config
+                      ;; These will be initialized by Integrant...
                       :clojure-version nil
-                      :started-at nil)]
+                      ;; TODO bread version
+                      :bread/started-at nil)]
     (reset! system (ig/init config))))
+
+(defmethod ig/init-key :clojure-version [_ _]
+  (clojure-version))
 
 (defn stop! []
   (when-let [sys @system]
     (ig/halt! sys)
     (reset! system nil)))
 
-(defmethod ig/init-key :initial-config [_ config]
-  config)
-
-(defmethod ig/init-key :clojure-version [_ _]
-  (clojure-version))
-
-(defmethod ig/init-key :started-at [_ _]
-  (LocalDateTime/now))
-
-(defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
-  (println "Starting HTTP server on port" port)
-  (let [handler (if wrap-defaults
-                  (ring/wrap-defaults handler wrap-defaults)
-                  handler)]
-    (http/run-server handler {:port port})))
-
-(defmethod ig/halt-key! :http [_ stop-server]
-  (when-let [prom (stop-server :timeout 100)]
-    @prom))
-
-(defmethod ig/init-key :ring/wrap-defaults [_ value]
-  (let [default-configs {:api-defaults ring/api-defaults
-                         :site-defaults ring/site-defaults
-                         :secure-api-defaults ring/secure-api-defaults
-                         :secure-site-defaults ring/secure-api-defaults}
-        k (if (keyword? value) value (get value :ring-defaults))
-        defaults (get default-configs k)
-        defaults (if (map? value)
-                   (reduce #(assoc-in %1 (key %2) (val %2))
-                           defaults (dissoc value :ring-defaults))
-                   defaults)]
-    defaults))
-
-(defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :db/connection} :store/db}]
-  ;; TODO extend with a multimethod??
-  (when (= :datalog store-type)
-    (auth/session-store conn)))
-
-(defmethod ig/init-key :bread/db
-  [_ {:keys [recreate? force?] :as db-config}]
-  ;; TODO call datahike API directly
-  (db/create! db-config {:force? force?})
-  (assoc db-config :db/connection (db/connect db-config)))
-
-(defmethod ig/halt-key! :bread/db
-  [_ {:keys [recreate?] :as db-config}]
-  ;; TODO call datahike API directly
-  (when recreate? (db/delete! db-config)))
-
-(defmethod ig/init-key :bread/router [_ router]
-  router)
-
-(defmethod ig/init-key :bread/app [_ app-config]
-  (bread/load-app (defaults/app app-config)))
-
-(defmethod ig/halt-key! :bread/app [_ app]
-  (bread/shutdown app))
-
-(defmethod ig/init-key :bread/handler [_ app]
-  (bread/handler app))
-
-(defn log-hook! [invocation]
-  (let [{:keys [hook action result]} invocation]
-    (prn (:action/name action) (select-keys result
-                                            [:params
-                                             :headers
-                                             :status
-                                             :session]))))
-
-(defmethod ig/init-key :bread/profilers [_ profilers]
-  ;; Enable hook profiling.
-  (alter-var-root #'bread/*profile-hooks* (constantly true))
-  (map
-    (fn [{h :hook act :action/name f :f :as profiler}]
-      (let [tap (bread/add-profiler
-                  (fn [{{:keys [action hook] :as invocation} ::bread/profile}]
-                    (if (and (or (nil? (seq h)) ((set h)
-                                                 hook))
-                             (or (nil? (seq act)) ((set act)
-                                                   (:action/name action))))
-                      (f invocation))))]
-        (assoc profiler :tap tap)))
-    profilers))
-
-(defmethod bread/effect ::hello [effect data]
-  (throw (ex-info "oh no!" {}))
-  (future "HELLO!"))
-
-(defmethod ig/halt-key! :bread/profilers [_ profilers]
-  (doseq [{:keys [tap]} profilers]
-    (remove-tap tap)))
+(defn get-merged-config [path]
+  (merge
+    (aero/read-config (io/resource "default.main.edn"))
+    (aero/read-config path)))
 
 (defn restart! [config]
   (stop!)
@@ -200,7 +112,17 @@
 (comment
   (set! *print-namespace-maps* false)
 
-  (restart! (-> "dev/main.edn" aero/read-config))
+  (merge
+    (-> "default.main.edn" io/resource aero/read-config)
+    (-> "dev/main.edn" aero/read-config))
+  (get-merged-config "dev/main.edn")
+
+  (try (restart! (get-merged-config "dev/main.edn"))
+       (catch clojure.lang.ExceptionInfo e
+         (-> e ex-cause ((juxt (comp :action/name :action ex-data)
+                               (comp ex-message ex-cause)
+                               (comp :out ex-data ex-cause)
+                               (comp :reason ex-data))))))
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
@@ -504,7 +426,7 @@
       config (start! config)
       file (if-not (.exists (io/file file))
              (show-errors {:errors [(str "No such file: " file)]})
-             (let [config (-> file aero/read-config
+             (let [config (-> file get-merged-config
                               (update-in [:http :port] #(if port port %)))]
                (start! config)))
       :else (show-help cli-env))))

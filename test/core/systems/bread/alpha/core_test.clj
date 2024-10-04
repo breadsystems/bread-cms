@@ -447,7 +447,6 @@
     (is (thrown-with-msg? ExceptionInfo #"something bad happened"
                           (bread/hook app :throw)))
     (is (= {:hook :throw
-            :app app
             :action {:action/name ::throw :ex ex}
             :args [1 2 3]
             ::bread/core? true}

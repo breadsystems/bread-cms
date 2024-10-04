@@ -95,6 +95,11 @@
         ks (migration-keys db)]
     (contains? ks (migration-key migration))))
 
+(defn unmet-deps [db migration]
+  (let [deps (:migration/dependencies (meta migration))]
+    (when (seq deps)
+      (filter (complement (migration-keys db)) deps))))
+
 (defmethod bread/effect ::transact
   [{:keys [conn txs]} _]
   (transact conn {:tx-data txs}))
@@ -127,12 +132,11 @@
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
-            unmet-deps (filter
-                         (complement (migration-keys db))
-                         (:migration/dependencies (meta migration)))]
-        (when (seq unmet-deps)
+            unmet (unmet-deps db migration)]
+        (when (seq unmet)
           (throw (ex-info "Migration has one or more unmet dependencies!"
-                          {:unmet-deps (set unmet-deps)})))
+                          {:migration migration
+                           :unmet-deps (set unmet)})))
         (when-not (migration-ran? (database app) migration)
           (transact conn migration)))))
   app)
@@ -192,8 +196,12 @@
         :db/as-of-tx? as-of-tx?}
        :hooks
        {::bread/init
-        [{:action/name ::migrate :migrations migrations}
-         {:action/name ::transact-initial :txs initial-txns}]
+        [{:action/name ::migrate
+          :action/description "Run database schema migrations."
+          :migrations migrations}
+         {:action/name ::transact-initial
+          :action/description "Transact initial data into the database."
+          :txs initial-txns}]
         ::timepoint
         [{:action/name ::timepoint
           :action/description

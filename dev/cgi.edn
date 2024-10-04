@@ -1,35 +1,68 @@
-{:bread/handler #ig/ref :bread/app
- :bread/app {:db false
-             :i18n false
-             :routes
-             {:router #ig/ref :bread/router}
-             :plugins []}
+{:bread/app
+ {:db #ig/ref :bread/db
+  :auth {:lock-seconds 10}
+  :i18n {:supported-langs #{:en :fr}}
+  :routes {:router #ig/ref :bread/router}
+  :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
+  :navigation {:menus {:main-nav
+                       {:menu/type :systems.bread.alpha.navigation/location
+                        :menu/location :primary
+                        :route/name :page}}}}
+
+ :bread/db
+ {:db/type :datahike-cli
+  :store {:backend :file
+          :path "/home/tamayo/projects/bread-cms/dthk.db",
+          :config {:in-place? true}}
+  :recreate? true
+  :force? true
+  :attribute-refs? true
+  :keep-history? true,
+  :schema-flexibility :write,
+  :cli/dthk-path "/home/tamayo/bin/dthk",
+  :cli/config-path "/home/tamayo/projects/bread-cms/dthk.edn"
+  :db/initial-txns
+  #concat [#deref #var systems.bread.alpha.plugin.defaults/initial-data
+           [{:user/username "coby"
+             :user/name "Coby Tamayo"
+             :user/email "coby@bread.systems"
+             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
+             #_#_ ;; Uncomment to enable 2FA
+             :user/two-factor-key "AWWMEFM4ADBSQRET"
+             :user/failed-login-count 0
+             :user/lang :en-US
+             :user/roles
+             #{{:role/key :author
+                :role/abilities
+                #{{:ability/key :publish-posts}
+                  {:ability/key :edit-posts}
+                  {:ability/key :delete-posts}}}}}]]}
+
+ ;; TODO routes.edn ?
  :bread/router
- #router
- [["/:lang"
-   [""
-    {:name :home
-        :bread/dispatcher
-        {:dispatcher/type :systems.bread.alpha.cms.scratch/static
-         :dispatcher/component
-         #var systems.bread.alpha.cms.scratch/home-page}}]
-   ["/articles"
-    {:name :articles
-     :bread/dispatcher
-     {:dispatcher/type :systems.bread.alpha.cms.blog/article
-      ;; TODO article component
-      :dispatcher/component
-      #var systems.bread.alpha.cms.scratch/interior-page}}]
-   ["/article/:slug"
-    {:name :article
-     :bread/dispatcher
-     {:dispatcher/type :systems.bread.alpha.cms.blog/article
-      :dispatcher/component
-      #var systems.bread.alpha.cms.scratch/interior-page}}]
-   ["/:slug"
-    {:name :page
-     :bread/dispatcher
-     {:dispatcher/type :systems.bread.alpha.cms.scratch/static
-      :dispatcher/component
-      #var systems.bread.alpha.cms.scratch/home-page}}]]
+ #reitit/router
+ [[["/login"
+    {:name :login
+     :dispatcher/type :systems.bread.alpha.plugin.auth/login
+     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}]
+   ["/assets/*"
+    #invoke [reitit.ring/create-resource-handler
+             {:param :filename}]]
+   ["/{field/lang}"
+    [""
+     {:name :home
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
+    ["/tag/{thing/slug}"
+     {:name :tag
+      :dispatcher/type :dispatcher.type/tag
+      :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
+    ["/{thing/slug*}"
+     {:name :page
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
+    ["/page/{thing/slug*}"
+     {:name :page!
+      :dispatcher/type :dispatcher.type/page
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
   {:conflicts nil}]}
