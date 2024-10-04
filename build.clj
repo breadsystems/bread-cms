@@ -31,7 +31,7 @@
 
    :defaults
    {:lib 'systems.bread/bread-plugin-defaults
-    :aliases [:defaults]
+    :aliases [:cms]
     :src-dirs PLUGIN-DIRS}
 
    :datahike
