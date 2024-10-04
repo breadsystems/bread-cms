@@ -62,6 +62,10 @@
   [req {:keys [router]} _]
   (bread/match router req))
 
+(defmethod bread/action ::request-match
+  [req _ _]
+  (assoc-in req [::bread/data :route/match] (bread/match (router req) req)))
+
 (defmethod bread/action ::dispatcher-matched
   [_ {:keys [router]} [match]]
   (bread/dispatcher router match))
@@ -102,7 +106,10 @@
 
 (defn plugin [{:keys [router]}]
   {:hooks
-   {::router
+   {::bread/expand
+    [{:action/name ::request-match
+      :action/description "Record the route Match in ::data"}]
+    ::router
     [{:action/name ::bread/value :action/value router}]
     ::path
     [{:action/name ::path :router router}]
