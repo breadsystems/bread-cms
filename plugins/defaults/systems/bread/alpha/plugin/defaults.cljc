@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.plugin.defaults
   (:require
+    #_
     [systems.bread.alpha.cache :as cache]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
@@ -231,6 +232,7 @@
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))
+         #_
          (when (not (false? cache))
            (cache/plugin (or cache {:router router
                                     :cache/strategy :html})))
