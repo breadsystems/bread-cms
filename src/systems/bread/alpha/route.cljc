@@ -110,16 +110,31 @@
     [{:action/name ::request-match
       :action/description "Record the route Match in ::data"}]
     ::router
-    [{:action/name ::bread/value :action/value router}]
+    [{:action/name ::bread/value
+      :action/description "The router instance for the app."
+      :action/value router}]
     ::path
-    [{:action/name ::path :router router}]
+    [{:action/name ::path
+      :action/description "The URI path for the given path name and params."
+      :router router}]
     ::match
-    [{:action/name ::match :router router}]
+    [{:action/name ::match
+      :action/description "The route Match for the current request."
+      :router router}]
     ::dispatcher-matched
-    [{:action/name ::dispatcher-matched :router router}]
+    [{:action/name ::dispatcher-matched
+      :action/description
+      "Dispatcher for handling the current request, as defined in the route."
+      :router router}]
     ::params
-    [{:action/name ::params :router router}]
+    [{:action/name ::params
+      :action/description "The route params for the current request."
+      :router router}]
     ::bread/route
-    [{:action/name ::dispatch :router router}]
+    [{:action/name ::dispatch
+      :action/description "Set the ::bread/dispatchers for the current request."
+      :router router}]
     ::uri
-    [{:action/name ::uri :router router}]}})
+    [{:action/name ::uri
+      :action/description "The URI for the given path name and Thing."
+      :router router}]}})
