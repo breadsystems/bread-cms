@@ -54,6 +54,10 @@
                          :dispatcher/pull (component/query component))]
     (bread/hook req ::dispatcher dispatcher')))
 
+(defn router [app]
+  "Returns the Router configured for the given app"
+  (bread/hook app ::router))
+
 (defmethod bread/action ::path
   [_ {:keys [router]} [_path route-name params]]
   (bread/path router route-name params))
@@ -77,10 +81,6 @@
 (defmethod bread/action ::dispatch
   [req _ _]
   (assoc req ::bread/dispatcher (dispatcher req)))
-
-(defn router [app]
-  "Returns the Router configured for the given app"
-  (bread/hook app ::router))
 
 (defn path-params [router route-name route-data]
   (let [;; OK, so turns out we still need to EITHER:
