@@ -58,10 +58,6 @@
   "Returns the Router configured for the given app"
   (bread/hook app ::router))
 
-(defmethod bread/action ::path
-  [_ {:keys [router]} [_path route-name params]]
-  (bread/path router route-name params))
-
 (defmethod bread/action ::match
   [req {:keys [router]} _]
   (bread/match router req))
@@ -113,10 +109,6 @@
     [{:action/name ::bread/value
       :action/description "The router instance for the app."
       :action/value router}]
-    ::path
-    [{:action/name ::path
-      :action/description "The URI path for the given path name and params."
-      :router router}]
     ::match
     [{:action/name ::match
       :action/description "The route Match for the current request."
