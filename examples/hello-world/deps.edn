@@ -1,0 +1,7 @@
+{:paths ["src"]
+ :deps {org.clojure/clojure                 {:mvn/version "1.12.0"}
+        http-kit/http-kit                   {:mvn/version "2.6.0"}
+        metosin/reitit                      {:mvn/version "0.7.0"}
+        systems.bread/bread-core            {:mvn/version "0.7.1534"}
+        ;systems.bread/bread-plugin-reitit   {:mvn/version "0.7.1525"}
+        systems.bread/bread-plugin-defaults {:mvn/version "0.7.1527"}}}
