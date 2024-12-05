@@ -114,7 +114,7 @@
   (with-meta
     [{:db/id  "migration.users"
       :migration/key :bread.migration/users
-      :migration/description  "Migration for users and roles schema"}
+      :migration/description  "Migration for users schema"}
      {:db/ident :user/email
       :attr/label "Email"
       :db/doc "User account email"
@@ -133,37 +133,48 @@
       :db/doc "The user's preferred language, as a keyword"
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
+      :attr/migration "migration.users"}]
 
-     ;; Roles
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations}}))
+
+(def
+  ^{:doc "Schema for roles and authorization."}
+  roles
+  (with-meta
+    [{:db/id "migration.roles"
+      :migration/key :bread.migration/roles
+      :migration/description "Migration for authorization schema"}
      {:db/ident :user/roles
       :attr/label "Roles"
       :db/doc "User roles. Used for mapping to abilities for authorization"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.users"}
+      :attr/migration "migration.roles"}
      {:db/ident :role/key
       :attr/label "Role Key"
       :db/doc "The machine-readable key for a role"
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
+      :attr/migration "migration.roles"}
      {:db/ident :role/abilities
       :attr/label "Role Abilities"
       :db/doc "All abilities assigned to a give role"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.users"}
+      :attr/migration "migration.roles"}
      {:db/ident :ability/key
       :attr/label "Ability Key"
       :db/doc "The keyword identifier for an ability (for role-based authorization)"
       :db/valueType :db.type/keyword
       :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}]
+      :attr/migration "migration.roles"}
+     ]
 
     {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations}}))
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/users}}))
 
 (def
   ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
@@ -367,6 +378,7 @@
      posts
      taxons
      ;; TODO move these into plugins...
+     roles
      menus
      revisions
      comments]
