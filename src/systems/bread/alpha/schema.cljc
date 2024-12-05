@@ -375,7 +375,7 @@
 
 ;; TODO move this into tooling
 (defmethod print-method :bread/schema [schema writer]
-  (.write writer (str "#schema[" {:bread/schema (:bread/schema schema)
+  (.write writer (str "#schema[" {:bread/schema (:bread/schema (meta schema))
                                   :migration-count (count schema)} "]")))
 
 (comment
