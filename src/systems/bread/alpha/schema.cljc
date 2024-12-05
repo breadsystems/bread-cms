@@ -109,7 +109,7 @@
      :migration/dependencies #{:bread.migration/migrations}}))
 
 (def
-  ^{:doc "Schema for users, roles, and sessions."}
+  ^{:doc "Schema for users."}
   users
   (with-meta
     [{:db/id  "migration.users"
@@ -159,21 +159,6 @@
       :db/doc "The keyword identifier for an ability (for role-based authorization)"
       :db/valueType :db.type/keyword
       :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-
-     ;; Sessions
-     {:db/ident :session/uuid
-      :attr/label "Session UUID"
-      :db/doc "Session identifier."
-      :db/valueType :db.type/uuid
-      :db/unique :db.unique/identity
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :session/data
-      :attr/label "Session Data"
-      :db/doc "Arbitrary session data."
-      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}]
 

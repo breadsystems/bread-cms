@@ -297,6 +297,21 @@
       :db/doc "Number of consecutive unsuccessful attempts"
       :db/valueType :db.type/number
       :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+
+     ;; Sessions
+     {:db/ident :session/uuid
+      :attr/label "Session UUID"
+      :db/doc "Session identifier."
+      :db/valueType :db.type/uuid
+      :db/unique :db.unique/identity
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :session/data
+      :attr/label "Session Data"
+      :db/doc "Arbitrary session data."
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}]
 
     {:type :bread/migration
