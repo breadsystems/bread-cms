@@ -177,6 +177,7 @@
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
+                migrations schema/initial
                 connection
                 (try
                   (connect config)
