@@ -122,8 +122,9 @@
       result)))
 
 (defmethod bread/action ::migrate
-  [app {:keys [migrations]} _]
-  (let [conn (connection app)]
+  [app {:keys [initial]} _]
+  (let [migrations (bread/hook app ::migrations initial)
+        conn (connection app)]
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
@@ -190,7 +191,7 @@
         :db/as-of-tx? as-of-tx?}
        :hooks
        {::bread/init
-        [{:action/name ::migrate :migrations migrations}
+        [{:action/name ::migrate :initial migrations}
          {:action/name ::transact-initial :txs initial-txns}]
         ::timepoint
         [{:action/name ::timepoint
