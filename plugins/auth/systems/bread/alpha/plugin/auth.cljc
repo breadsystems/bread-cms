@@ -260,6 +260,52 @@
 
       :default {})))
 
+(def
+  ^{:doc "Schema for authentication."}
+  schema
+  (with-meta
+    [{:db/id "migration.authentication"
+      :migration/key :bread.migration/authentication
+      :migration/description "User credentials and security mechanisms"}
+     {:db/ident :user/username
+      :attr/label "Username"
+      :db/doc "Username they use to login"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :db/unique :db.unique/identity
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/password
+      :attr/label "Password"
+      :db/doc "User account password hash"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/two-factor-key
+      :attr/label "2FA key"
+      :db/doc "User's 2FA secret key"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/locked-at
+      :attr/label "Account Locked-at Time"
+      :db/doc "When the user's account was locked for security purposes (if at all)"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/failed-login-count
+      :attr/label "Failed Login Count"
+      :db/doc "Number of consecutive unsuccessful attempts"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}]
+
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/users}}))
+
+(defmethod bread/action ::migrations [_ {:keys [schema] :as hook} [migrations]]
+  (concat migrations [schema]))
+
 (defn plugin
   ([]
    (plugin {}))
@@ -268,7 +314,13 @@
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
           lock-seconds 3600}}]
-   {:config
+   {:hooks
+    {::db/migrations
+     [{:action/name ::migrations
+       :action/description
+       "Add schema for authentication to the list of migrations to be run."
+       :schema schema}]}
+    :config
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
      :auth/lock-seconds lock-seconds}}))
