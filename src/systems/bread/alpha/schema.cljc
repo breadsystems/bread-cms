@@ -122,37 +122,6 @@
       :db/cardinality :db.cardinality/many
       :db/unique :db.unique/value
       :attr/migration "migration.users"}
-     {:db/ident :user/username
-      :attr/label "Username"
-      :db/doc "Username they use to login"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :db/unique :db.unique/identity
-      :attr/migration "migration.users"}
-     {:db/ident :user/password
-      :attr/label "Password"
-      :db/doc "User account password hash"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/two-factor-key
-      :attr/label "2FA key"
-      :db/doc "User's 2FA secret key"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/locked-at
-      :attr/label "Account Locked-at Time"
-      :db/doc "When the user's account was locked for security purposes (if at all)"
-      :db/valueType :db.type/instant
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/failed-login-count
-      :attr/label "Failed Login Count"
-      :db/doc "How many times in a row the user has attempted to login"
-      :db/valueType :db.type/number
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
      {:db/ident :user/name
       :attr/label "Full Name"
       :db/doc "User's name"
@@ -210,6 +179,49 @@
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
+
+(def
+  ^{:doc "Schema for authentication."}
+  authentication
+  (with-meta
+    [{:db/id "migration.authentication"
+      :migration/key :bread.migration/authentication
+      :migration/description "User credentials and security mechanisms"}
+     {:db/ident :user/username
+      :attr/label "Username"
+      :db/doc "Username they use to login"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :db/unique :db.unique/identity
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/password
+      :attr/label "Password"
+      :db/doc "User account password hash"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/two-factor-key
+      :attr/label "2FA key"
+      :db/doc "User's 2FA secret key"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/locked-at
+      :attr/label "Account Locked-at Time"
+      :db/doc "When the user's account was locked for security purposes (if at all)"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :user/failed-login-count
+      :attr/label "Failed Login Count"
+      :db/doc "Number of consecutive unsuccessful attempts"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}]
+
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/users}}))
 
 (def
   ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
@@ -410,6 +422,7 @@
      things
      i18n
      users
+     authentication
      posts
      taxons
      menus
