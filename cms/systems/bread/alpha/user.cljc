@@ -37,11 +37,10 @@
   (db/q (db/database req)
         '{:find [(pull ?e [:db/id
                            :thing/uuid
-                           :user/username
+                           :thing/slug
                            :user/email
                            :user/name
                            :user/lang
-                           :thing/slug
                            {:user/roles [:role/key
                                          {:role/abilities
                                           [:ability/key]}]}]) .]
