@@ -280,7 +280,7 @@
 
 (deftest test-log-attempt
   (let [!NOW! (Date.)
-        app (plugins->loaded [(db/plugin config)])
+        app (plugins->loaded [(db/plugin config) (auth/plugin)])
         conn (db/connection app)
         get-user (fn [username]
                    (db/q @conn
@@ -377,7 +377,7 @@
       )))
 
 (deftest test-session-store
-  (let [app (plugins->loaded [(db/plugin config)])
+  (let [app (plugins->loaded [(db/plugin config) (auth/plugin)])
         conn (db/connection app)
         session-store (auth/session-store conn)
         get-session-data (fn [sk]
