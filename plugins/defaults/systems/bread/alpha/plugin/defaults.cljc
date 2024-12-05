@@ -12,6 +12,7 @@
     [systems.bread.alpha.user :as user] ;; TODO y u no include
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.rum :as rum]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.datalog :as datalog]))
 
 (comment
@@ -227,7 +228,8 @@
         [(dispatcher/plugin)
          (expansion/plugin)
          (component/plugin components)
-         (when (not (false? db)) (db/plugin db))
+         (when (not (false? db)) (db/plugin
+                                   (merge {:db/migrations schema/initial} db)))
          (when (not (false? routes)) (route/plugin routes))
          (when (not (false? i18n)) (i18n/plugin i18n))
          (when (not (false? navigation)) (nav/plugin navigation))
