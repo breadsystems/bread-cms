@@ -34,18 +34,18 @@
   )
 
 (defn fetch [req id]
-  (db/q (db/database req)
-        '{:find [(pull ?e [:db/id
-                           :thing/uuid
-                           :thing/slug
-                           :user/email
-                           :user/name
-                           :user/lang
-                           {:user/roles [:role/key
-                                         {:role/abilities
-                                          [:ability/key]}]}]) .]
-          :in [$ ?e]}
-        id))
+  (let [user-pull (bread/hook req ::pull [:db/id
+                                          :thing/uuid
+                                          :user/email
+                                          :user/name
+                                          :user/lang
+                                          :thing/slug
+                                          {:user/roles [:role/key
+                                                        {:role/abilities
+                                                         [:ability/key]}]}])
+        query {:find [(list 'pull '?e user-pull) '.]
+               :in '[$ ?e]}]
+    (db/q (db/database req) query id)))
 
 (defmethod bread/action ::query [req {:keys [data-key]} _]
   (if-let [uid (->> req :session :user (bread/hook req ::from-session) :db/id)]
