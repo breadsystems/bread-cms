@@ -366,6 +366,7 @@
      users
      posts
      taxons
+     ;; TODO move these into plugins...
      menus
      revisions
      comments]
