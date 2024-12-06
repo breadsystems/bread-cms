@@ -11,6 +11,7 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user] ;; TODO y u no include
     [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.datalog :as datalog]))
@@ -87,7 +88,49 @@
        :field/content "Hello!"}
       {:field/key :title
        :field/lang :fr
-       :field/content "Bonjour!"}}}
+       :field/content "Bonjour!"}
+      {:field/key :rte
+       :field/lang :en
+       :field/format :edn
+       :field/content
+       (pr-str [:<>
+                [:h1 "This will be demoted to a <p> by default"]
+                ;; TODO headings...?
+                [:h2 "This is a heading"]
+                [:p "This is some paragraph text."]
+                #_ ;; TODO parse imgs
+                [:img {:src "/assets/cat.jpeg" :alt "It's a kitty!"}]
+                [:ul
+                 [:li "some"]
+                 [:li "list"]
+                 [:li "items"]]
+                [:hr]
+                [:ol
+                 [:li "some"]
+                 [:li "numbered"]
+                 [:li "list"]
+                 [:li "items"]]
+                [:p
+                 "This isn't code but "
+                 [:code "this is some inline code."]]
+                [:p "And here's a code block:"]
+                [:pre [:code "(println \"Hello, World!\")"]]
+                [:p
+                 "Here is some prose with "
+                 [:sup "superscript"]
+                 " and some with "
+                 [:sub "subscript"]
+                 ". Now, here is some "
+                 [:del "struck text"]
+                 " and some "
+                 [:mark "highlighted text"]
+                 "."]
+                [:p
+                 "Here is a paragraph"
+                 [:br]
+                 "with some line breaks"
+                 [:br]
+                 "in the middle of it."]])}}}
    {:db/id "page.grandchild"
     :post/type :post.type/page
     :thing/slug "grandchild-page"
@@ -214,6 +257,7 @@
 (defn plugins [{:keys [db
                        routes
                        i18n
+                       marx
                        navigation
                        cache
                        components
@@ -240,6 +284,7 @@
          (when (not (false? renderer)) (rum/plugin))
          (when (not (false? auth)) (auth/plugin auth))
          (when (not (false? users)) (user/plugin users))
+         (when (not (false? marx)) (marx/plugin marx))
          {:hooks
           {::bread/expand
            [{:action/name ::request-data

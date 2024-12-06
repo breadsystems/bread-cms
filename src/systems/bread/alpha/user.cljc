@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.user
   (:require
+    [clojure.edn :as edn]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
   (:gen-class))
@@ -33,13 +34,14 @@
   (can? $user :something-else)
   )
 
-(defn fetch [req id]
+(defn id->user [req id]
   (let [user-pull (bread/hook req ::pull [:db/id
                                           :thing/uuid
+                                          :thing/slug
                                           :user/email
                                           :user/name
                                           :user/lang
-                                          :thing/slug
+                                          :user/preferences
                                           {:user/roles [:role/key
                                                         {:role/abilities
                                                          [:ability/key]}]}])
@@ -50,7 +52,8 @@
 (defmethod bread/action ::query [req {:keys [data-key]} _]
   (if-let [uid (->> req :session :user (bread/hook req ::from-session) :db/id)]
     (as-> uid $
-      (fetch req $)
+      (id->user req $)
+      (update $ :user/preferences edn/read-string)
       (assoc $ :user/abilities (abilities $))
       (assoc-in req [::bread/data data-key] (bread/hook req ::current $)))
     req))

@@ -72,17 +72,26 @@
   "Takes a sequence of translatable fields and compacts it down to a single map,
   using :field/key and :field/content as the map keys and values, respectively."
   [fields]
-  (into {} (map (juxt :field/key :field/content)) fields))
+  (with-meta
+    (into {} (map (juxt :field/key :field/content)) fields)
+    (into {} (map (juxt :field/key identity)) fields)))
 
-(defmulti format-field-content :field/format)
+(defmulti deserialize :field/format)
+(defmulti serialize :field/format)
 
-(defmethod format-field-content :default [field]
+(defmethod deserialize :default [field]
   (:field/content field))
 
-(defmethod format-field-content :edn [field]
+(defmethod serialize :default [field]
+  (:field/content field))
+
+(defmethod deserialize :edn [field]
   (edn/read-string (:field/content field)))
 
-(defmethod format-field-content ::uri
+(defmethod serialize :edn [field]
+  (pr-str (:field/content field)))
+
+(defmethod deserialize ::uri
   [{content :field/content :as field}]
   (->> content
        edn/read-string
@@ -90,12 +99,15 @@
        (cons "") ;; ensure a leading slash
        (string/join "/")))
 
+(defn with-serialized [field]
+  (assoc field :field/content (serialize field)))
+
 (defn format-fields
   "Formats each field's :field/content according to :field/format (by calling
-  format-field-content)."
+  deserialize)."
   [context fields]
   (map (fn [field]
-         (->> (merge context field) format-field-content
+         (->> (merge context field) deserialize
               (assoc field :field/content)))
        fields))
 

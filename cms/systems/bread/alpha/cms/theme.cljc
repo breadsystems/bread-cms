@@ -2,6 +2,7 @@
 (ns systems.bread.alpha.cms.theme
   (:require
     [systems.bread.alpha.user :as user]
+    [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.component :refer [defc]]))
 
 (defn- nav-menu-item [{:keys [children uri]
@@ -17,17 +18,22 @@
    [:ul
     (map nav-menu-item items)]])
 
-(defc MainLayout [{:keys [lang content]
-               {:keys [main-nav]} :menus}]
+(defc MainLayout [{:keys [lang content user]
+                   {:keys [main-nav]} :menus
+                   :as data}]
   {}
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
+    [:meta {:name "marx-editor"
+            :content (pr-str {:post/id 123})}]
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
     (nav-menu main-nav)
-    content]])
+    content
+    (marx/render-bar data)
+    [:script {:src "/js/marx.js"}]]])
 
 (defc NotFoundPage
   [{:keys [lang]}]
@@ -63,18 +69,20 @@
    [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
-  [{{fields :translatable/fields tags :post/taxons} :post
-    {:keys [main-nav]} :menus
-    hello :hello}]
+  [{{fields :translatable/fields tags :post/taxons :as post} :post
+    {:keys [main-nav]} :menus}]
   {:extends MainLayout
    :key :post
    :query '[{:translatable/fields [*]}
             {:post/taxons [{:translatable/fields [*]}]}]}
-  [:main
-   [:h1 (:title fields)]
-   [:p "Hello result: " (pr-str @hello)]
-   [:p "Hello error: " (-> hello meta :errors first (.getMessage))]
-   [:div.tags-list
-    (map (fn [{tag :translatable/fields}]
-           [:span.tag (:name tag)])
-         tags)]])
+  [:<>
+   [:main
+    [:h1 (:title fields)]
+    [:h2 (:db/id post)]
+    ;; TODO don't compact?
+    (marx/render-field (:rte (meta fields)) :rich-text)
+    [:div.tags-list
+     [:p "TAGS"]
+     (map (fn [{tag :translatable/fields}]
+            [:span.tag (:name tag)])
+          tags)]]])
