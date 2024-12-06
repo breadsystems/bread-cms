@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.plugin.auth
   (:require
-    [aero.core :as aero]
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.edn :as edn]
@@ -46,10 +45,6 @@
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
-
-;; TODO move this to a tooling ns
-(defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
-  (hashers/derive pw {:alg algo}))
 
 (defc login-page
   [{:keys [session] :as data}]
