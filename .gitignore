@@ -15,6 +15,7 @@ inputFiles.lst
 /bread
 /ref
 /dist
+dthk.edn
 *.local.edn
 
 /public/js
