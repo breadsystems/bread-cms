@@ -34,6 +34,11 @@
     :aliases [:defaults]
     :src-dirs PLUGIN-DIRS}
 
+   :auth
+   {:lib 'systems.bread/bread-plugin-auth
+    :aliases [:auth]
+    :src-dirs ["plugins/auth"]}
+
    :datahike
    {:lib 'systems.bread/bread-plugin-datahike
     :aliases [:datahike]
