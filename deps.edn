@@ -64,8 +64,7 @@
 
   :auth
   {:extra-paths ["plugins/auth"]
-   :extra-deps {buddy/buddy-hashers {:mvn/version "2.0.167"}
-                clj-totp/clj-totp   {:mvn/version "0.1.0"}}}
+   :extra-deps {clj-totp/clj-totp   {:mvn/version "0.1.0"}}}
 
   :marx
   {:extra-paths ["marx" "marx/out"]
