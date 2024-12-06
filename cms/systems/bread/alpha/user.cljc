@@ -34,7 +34,7 @@
   (can? $user :something-else)
   )
 
-(defn fetch [req id]
+(defn id->user [req id]
   (let [user-pull (bread/hook req ::pull [:db/id
                                           :thing/uuid
                                           :thing/slug
@@ -52,7 +52,7 @@
 (defmethod bread/action ::query [req {:keys [data-key]} _]
   (if-let [uid (->> req :session :user (bread/hook req ::from-session) :db/id)]
     (as-> uid $
-      (fetch req $)
+      (id->user req $)
       (update $ :user/preferences edn/read-string)
       (assoc $ :user/abilities (abilities $))
       (assoc-in req [::bread/data data-key] (bread/hook req ::current $)))
