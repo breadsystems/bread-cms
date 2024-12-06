@@ -18,6 +18,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.defaults :as defaults]
     [systems.bread.alpha.cms.config.bread]
+    [systems.bread.alpha.cms.config.buddy]
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
