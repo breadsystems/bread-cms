@@ -241,15 +241,9 @@
          (when (not (false? marx)) (marx/plugin marx))
          {:hooks
           {::bread/expand
-           [{:action/name ::ring/request-data
-             :action/description "Include standard request data"}
-            {:action/name ::hook-fn
+           [{:action/name ::hook-fn
              :action/priority 1000
              :action/description "Include a hook closure fn in ::bread/data"}]
-           ::bread/response
-           [{:action/name ::ring/response
-             :action/description "Sensible defaults for Ring responses"
-             :default-content-type default-content-type}]
            ::bread/attrs
            [{:action/name ::datalog/attrs
              :action/description "Add db attrs as raw maps"}]
