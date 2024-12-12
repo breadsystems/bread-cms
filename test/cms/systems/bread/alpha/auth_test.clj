@@ -5,7 +5,8 @@
     [clojure.test :refer [deftest are is testing]]
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.plugin.defaults :as defaults]
+    [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.plugin.defaults :as defaults*]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
@@ -66,18 +67,18 @@
             :action/description
             "Return a hard-coded dispatcher for testing purposes"}]}}
         app-config {:db config
-                    :plugins [route-plugin]
-                    :cache false
-                    :navigation false
-                    :routes false
-                    :i18n false
-                    :renderer false}
+                    :users false
+                    :routes false}
         ->handler (fn [auth-config]
-                    (-> app-config
-                        (assoc :auth auth-config)
-                        defaults/app
-                        bread/load-app
-                        bread/handler))
+                    (let [app-config (assoc app-config :auth auth-config)
+                          plugins (concat
+                                    (defaults/plugins app-config)
+                                    (defaults*/plugins app-config)
+                                    [route-plugin])]
+                      (-> {:plugins plugins}
+                          bread/app
+                          bread/load-app
+                          bread/handler)))
         ;; What matters is a combination of view data, session, headers, and
         ;; status; so get that stuff to evaluate against.
         ->auth-data (fn [{::bread/keys [data] :keys [headers status session]}]

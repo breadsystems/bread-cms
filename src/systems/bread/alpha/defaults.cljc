@@ -1,0 +1,20 @@
+(ns systems.bread.alpha.defaults
+  (:require
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.expansion :as expansion]
+    [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.user :as user]
+    [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.util.datalog :as datalog]))
+
+(defn plugins [{:keys [components db i18n routes]}]
+  [(dispatcher/plugin)
+   (expansion/plugin)
+   (when-not (false? components) (component/plugin components))
+   (when-not (false? db) (db/plugin (merge {:db/migrations schema/initial} db)))
+   (when-not (false? i18n) (i18n/plugin i18n))
+   (when-not (false? routes) (route/plugin routes))])
