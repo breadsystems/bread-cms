@@ -79,6 +79,7 @@
                        ::bread/expansions)))
 
       [{:expansion/name ::db/query
+        :expansion/description "Query for pages matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args
@@ -110,6 +111,7 @@
 
       ;; Post type, status are dynamic.
       [{:expansion/name ::db/query
+        :expansion/description "Query for pages matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args

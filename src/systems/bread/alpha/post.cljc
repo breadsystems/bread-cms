@@ -85,10 +85,11 @@
             (where [['?type :post/type post-type]
                     ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)
-        ;; TODO query description
         page-query {:expansion/name ::db/query
                     :expansion/key query-key
                     :expansion/db (db/database req)
-                    :expansion/args page-args}
+                    :expansion/args page-args
+                    :expansion/description
+                    "Query for pages matching the current request URI"}
         expansions (bread/hook req ::i18n/expansions page-query)]
     {:expansions expansions}))
