@@ -233,14 +233,7 @@
          (when (not (false? renderer)) (rum/plugin))
          (when (not (false? auth)) (auth/plugin auth))
          (when (not (false? users)) (user/plugin users))
-         (when (not (false? marx)) (marx/plugin marx))
-         {:hooks
-          {::bread/attrs
-           [{:action/name ::datalog/attrs
-             :action/description "Add db attrs as raw maps"}]
-           ::bread/attrs-map
-           [{:action/name ::datalog/attrs-map
-             :action/description "All db attrs, indexed by :db/ident"}]}}]]
+         (when (not (false? marx)) (marx/plugin marx))]]
     (concat
       (filter identity configured-plugins)
       plugins)))
