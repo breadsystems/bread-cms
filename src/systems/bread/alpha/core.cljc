@@ -102,12 +102,6 @@
                     {:extra-args extra}))
     (update app ::config #(apply assoc % k v extra))))
 
-(defn load-plugins
-  "Runs all plugin functions currently in app, in the order they were specified
-  in :plugins when the app was created."
-  [app]
-  (reduce (fn [app plugin] (plugin app)) app (::plugins app)))
-
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
