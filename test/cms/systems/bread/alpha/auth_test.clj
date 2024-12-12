@@ -6,12 +6,12 @@
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.plugin.defaults :as defaults*]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
+                                              plugins->handler
                                               use-db]])
   (:import
     [java.util Date UUID]))
@@ -60,25 +60,16 @@
    (= 123456 code)))
 
 (deftest test-authentication-flow
-  (let [route-plugin
-        {:hooks
-         {::bread/route
-          [{:action/name ::route
-            :action/description
-            "Return a hard-coded dispatcher for testing purposes"}]}}
-        app-config {:db config
-                    :users false
-                    :routes false}
-        ->handler (fn [auth-config]
-                    (let [app-config (assoc app-config :auth auth-config)
-                          plugins (concat
-                                    (defaults/plugins app-config)
-                                    (defaults*/plugins app-config)
-                                    [route-plugin])]
-                      (-> {:plugins plugins}
-                          bread/app
-                          bread/load-app
-                          bread/handler)))
+  (let [->handler (fn [auth-config]
+                    (plugins->handler
+                      (conj
+                        (defaults/plugins {:db config
+                                           :routes false})
+                        {:hooks
+                         {::bread/route
+                          [{:action/name ::route
+                            :action/description "Hard-code the dispatcher."}]}}
+                        (auth/plugin auth-config))))
         ;; What matters is a combination of view data, session, headers, and
         ;; status; so get that stuff to evaluate against.
         ->auth-data (fn [{::bread/keys [data] :keys [headers status session]}]
