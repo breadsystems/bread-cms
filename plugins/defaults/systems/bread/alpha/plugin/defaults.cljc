@@ -8,6 +8,7 @@
     [systems.bread.alpha.navigation :as nav]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user] ;; TODO y u no include
     [systems.bread.alpha.plugin.auth :as auth]
@@ -216,35 +217,10 @@
     :field/key :not-found
     :field/content "404 Pas Trouvé"}])
 
-(defmethod bread/action ::request-data
-  [req _ _]
-  (let [req-keys [:uri
-                  :query-string
-                  :remote-addr
-                  :headers
-                  :server-port
-                  :server-name
-                  :content-length
-                  :content-type
-                  :scheme
-                  :request-method]]
-    (as-> req $
-        (update $ ::bread/data merge (select-keys req req-keys))
-        (assoc-in $ [::bread/data :session] (:session req))
-        ;; Reset headers - we're working on a response now.
-        (apply dissoc $ req-keys)
-        (assoc $ :headers {}))))
-
 (defmethod bread/action ::hook-fn
   [req _ _]
   (assoc-in req [::bread/data :hook] (fn [h & args]
                                        (apply bread/hook req h args))))
-
-(defmethod bread/action ::response
-  [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
-  (-> res
-      (update :status #(or % (if (:not-found? data) 404 200)))
-      (update-in [:headers "content-type"] #(or % default-content-type))))
 
 (defn plugins [{:keys [db
                        routes
@@ -265,13 +241,13 @@
          (when (not (false? marx)) (marx/plugin marx))
          {:hooks
           {::bread/expand
-           [{:action/name ::request-data
+           [{:action/name ::ring/request-data
              :action/description "Include standard request data"}
             {:action/name ::hook-fn
              :action/priority 1000
              :action/description "Include a hook closure fn in ::bread/data"}]
            ::bread/response
-           [{:action/name ::response
+           [{:action/name ::ring/response
              :action/description "Sensible defaults for Ring responses"
              :default-content-type default-content-type}]
            ::bread/attrs
