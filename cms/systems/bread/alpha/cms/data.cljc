@@ -1,32 +1,8 @@
-(ns systems.bread.alpha.plugin.defaults
+(ns systems.bread.alpha.cms.data
   (:require
-    [systems.bread.alpha.cache :as cache]
-    [systems.bread.alpha.component :as component]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.navigation :as nav]
-    [systems.bread.alpha.expansion :as expansion]
-    [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.ring :as ring]
-    [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.user :as user] ;; TODO y u no include
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.marx :as marx]
-    [systems.bread.alpha.plugin.rum :as rum]
-    [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.util.datalog :as datalog]))
+    [systems.bread.alpha.i18n :as i18n]))
 
-(comment
-  (let [config {:a true :b false}]
-    (filter identity [:one
-                      :two
-                      (when (:a config) :a)
-                      (when (:b config) :b)
-                      (when (:c config) :c)
-                      (when (not (false? (:d config))) :d)])))
-
-(def initial-data
+(def initial
   [{:db/id "page.home"
     :post/type :post.type/page
     :thing/slug ""
@@ -216,25 +192,3 @@
    {:field/lang :es
     :field/key :not-found
     :field/content "404 Pas Trouvé"}])
-
-(defn plugins [{:keys [db
-                       routes
-                       i18n
-                       marx
-                       renderer
-                       auth
-                       users
-                       plugins]}]
-  (let [router (:router routes)
-        {:keys [default-content-type]
-         :or {default-content-type "text/html"}} renderer
-        configured-plugins
-        [;; TODO refine default rendering options...
-         (when (not (false? renderer)) (rum/plugin))
-         (when (not (false? auth)) (auth/plugin auth))
-         (when (not (false? users)) (user/plugin users))
-         (when (not (false? marx)) (marx/plugin marx))]]
-    (concat configured-plugins plugins)))
-
-(defn app [config]
-  (bread/app {:plugins (plugins config)}))
