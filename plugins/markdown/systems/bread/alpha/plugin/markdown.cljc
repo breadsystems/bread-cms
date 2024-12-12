@@ -35,7 +35,7 @@
         (when html
           (assoc metadata :html html))))))
 
-(defmethod dispatcher/dispatch :dispatcher.type/static
+(defmethod bread/dispatch :dispatcher.type/static
   [{::bread/keys [dispatcher config] :as req}]
   (let [params (:route/params dispatcher)
         opts (-> config

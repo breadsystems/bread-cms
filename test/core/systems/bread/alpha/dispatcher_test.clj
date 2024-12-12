@@ -6,7 +6,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
-(defmethod dispatcher/dispatch ::passthru [{::bread/keys [dispatcher]}]
+(defmethod bread/dispatch ::passthru [{::bread/keys [dispatcher]}]
   (:v dispatcher))
 
 (deftest test-dispatch
