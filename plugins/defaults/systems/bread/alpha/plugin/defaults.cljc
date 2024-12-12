@@ -234,9 +234,7 @@
          (when (not (false? auth)) (auth/plugin auth))
          (when (not (false? users)) (user/plugin users))
          (when (not (false? marx)) (marx/plugin marx))]]
-    (concat
-      (filter identity configured-plugins)
-      plugins)))
+    (concat configured-plugins plugins)))
 
 (defn app [config]
   (bread/app {:plugins (plugins config)}))
