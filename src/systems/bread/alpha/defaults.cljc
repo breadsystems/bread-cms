@@ -6,6 +6,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.dispatcher :as dispatcher]
+    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.schema :as schema]
@@ -17,4 +18,12 @@
    (when-not (false? components) (component/plugin components))
    (when-not (false? db) (db/plugin (merge {:db/migrations schema/initial} db)))
    (when-not (false? i18n) (i18n/plugin i18n))
-   (when-not (false? routes) (route/plugin routes))])
+   (when-not (false? routes) (route/plugin routes))
+   {:hooks
+    {::bread/expand
+     [{:action/name ::ring/request-data
+       :action/description "Include standard request data"}]
+     ::bread/response
+     [{:action/name ::ring/response
+       :action/description "Sensible defaults for Ring responses"
+       :default-content-type "text/html"}]}}])
