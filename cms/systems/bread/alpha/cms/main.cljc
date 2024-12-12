@@ -15,6 +15,8 @@
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
+    [systems.bread.alpha.cms.data]
+    [systems.bread.alpha.post]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.user :as user]
