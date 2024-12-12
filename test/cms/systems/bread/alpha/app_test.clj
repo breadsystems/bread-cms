@@ -11,7 +11,7 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [use-db]]
-    [systems.bread.alpha.plugin.defaults :as defaults]))
+    [systems.bread.alpha.plugin.defaults :as defaults*]))
 
 (def config {:db/type :datahike
              :store {:backend :mem
@@ -188,11 +188,14 @@
                      (:route/params match))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
-          app (defaults/app {:db config
-                             :components {:not-found not-found}
-                             :routes {:router router}
-                             :i18n {:supported-langs #{:en :fr}}
-                             :renderer false})
+          app (bread/app {:plugins (concat
+                                     []
+                                     (defaults*/plugins
+                                       {:db config
+                                        :components {:not-found not-found}
+                                        :routes {:router router}
+                                        :i18n {:supported-langs #{:en :fr}}
+                                        :renderer false}))})
           handler (bread/load-handler app)]
       (are
         [expected req]
