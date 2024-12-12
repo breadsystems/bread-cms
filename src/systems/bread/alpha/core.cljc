@@ -136,6 +136,9 @@
 
 (defmulti infer-param (fn infer* [k _] k))
 
+(defmulti dispatch (fn [req]
+                     (get-in req [::dispatcher :dispatcher/type])))
+
 (defmethod infer-param :default [k thing]
   (get thing k))
 

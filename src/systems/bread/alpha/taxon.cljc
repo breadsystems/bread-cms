@@ -16,7 +16,7 @@
                  (or (nil? post-status) (= post-status (:post/status post)))) prn))
           (get-in data [k :post/_taxons])))
 
-(defmethod dispatcher/dispatch :dispatcher.type/taxon
+(defmethod bread/dispatch :dispatcher.type/taxon
   [{::bread/keys [dispatcher] :as req}]
   (let [{k :dispatcher/key
          params :route/params
@@ -53,9 +53,9 @@
                       :expansion/db (db/database req)
                       :expansion/args [query taxonomy (:slug params)]}))}))
 
-(defmethod dispatcher/dispatch :dispatcher.type/tag
+(defmethod bread/dispatch :dispatcher.type/tag
   [{::bread/keys [dispatcher] :as req}]
   (let [dispatcher (assoc dispatcher
                           :dispatcher/type :dispatcher.type/taxon
                           :taxon/taxonomy :taxon.taxonomy/tag)]
-    (dispatcher/dispatch (assoc req ::bread/dispatcher dispatcher))))
+    (bread/dispatch (assoc req ::bread/dispatcher dispatcher))))

@@ -112,7 +112,7 @@
   ;;
   )
 
-(defmethod dispatcher/dispatch ::edit!
+(defmethod bread/dispatch ::edit!
   [{:marx/keys [edit] :as app}]
   (let [txs (edit->transactions edit)
         txs (if (:revision? edit)

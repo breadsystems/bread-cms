@@ -68,7 +68,7 @@
     (assoc post :post/fields fields)))
 
 ;; TODO ::page
-(defmethod dispatcher/dispatch :dispatcher.type/page
+(defmethod bread/dispatch :dispatcher.type/page
   [{{pull :dispatcher/pull
      post-type :post/type
      post-status :post/status

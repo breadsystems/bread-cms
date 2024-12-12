@@ -24,11 +24,6 @@
   [{:dispatcher/keys [pull]}]
   (vec (if (some #{:db/id} pull) pull (cons :db/id pull))))
 
-;; TODO mv to core
-(defmulti dispatch
-  (fn [req]
-    (get-in req [::bread/dispatcher :dispatcher/type])))
-
 (defn- merge-with-concat [& maps]
   (apply merge-with concat maps))
 
@@ -38,7 +33,7 @@
     ;; We have a vanilla fn handler:
     ;; Short-circuit the rest of the lifecycle.
     (dispatcher req)
-    (let [{:keys [expansions data effects hooks]} (dispatch req)
+    (let [{:keys [expansions data effects hooks]} (bread/dispatch req)
           ;; TODO short-circuit here if we got a response...?
           hooks (filter (comp seq val) hooks)
           data (assoc data
