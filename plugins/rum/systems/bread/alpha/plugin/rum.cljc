@@ -9,6 +9,8 @@
 
 (defn plugin
   ([]
+   (plugin {}))
+  ([_]
    {:hooks
     {::bread/render
      [{:action/name ::render
