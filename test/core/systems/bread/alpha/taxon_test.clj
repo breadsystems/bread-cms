@@ -41,14 +41,14 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/category
          "some-tag"]}]
-      {:dispatcher/type :dispatcher.type/taxon
+      {:dispatcher/type ::taxon/taxon
        :dispatcher/pull [:thing/slug]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
-      ;; :dispatcher.type/tag
+      ;; ::taxon/tag
       [{:expansion/name ::db/query
         :expansion/key :tag
         :expansion/db ::FAKEDB
@@ -59,7 +59,7 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}]
-      {:dispatcher/type :dispatcher.type/tag
+      {:dispatcher/type ::taxon/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
        :route/params {:lang "en" :slug "some-tag"}}
@@ -76,7 +76,7 @@
                    [?e :thing/slug ?slug]]}
          :taxon.taxonomy/tag
          "some-tag"]}]
-      {:dispatcher/type :dispatcher.type/tag
+      {:dispatcher/type ::taxon/tag
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
        :post/status :post.status/draft
@@ -106,7 +106,7 @@
         :compact? true
         :recur-attrs #{}
         :spaths [[:thing/fields]]}]
-      {:dispatcher/type :dispatcher.type/taxon
+      {:dispatcher/type ::taxon/taxon
        :dispatcher/pull [:thing/slug
                          {:thing/fields [:field/key
                                          :field/content]}]
@@ -144,7 +144,7 @@
         :expansion/key :tag-with-posts
         :post/type :post.type/page
         :post/status :post.status/published}]
-      {:dispatcher/type :dispatcher.type/tag
+      {:dispatcher/type ::taxon/tag
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
@@ -182,7 +182,7 @@
         :expansion/key :tag-with-posts
         :post/type :post.type/article
         :post/status :post.status/draft}]
-      {:dispatcher/type :dispatcher.type/tag
+      {:dispatcher/type ::taxon/tag
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
