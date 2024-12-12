@@ -250,9 +250,6 @@
                        routes
                        i18n
                        marx
-                       navigation
-                       cache
-                       components
                        renderer
                        auth
                        users
@@ -261,18 +258,7 @@
         {:keys [default-content-type]
          :or {default-content-type "text/html"}} renderer
         configured-plugins
-        [(dispatcher/plugin)
-         (expansion/plugin)
-         (component/plugin components)
-         (when (not (false? db)) (db/plugin
-                                   (merge {:db/migrations schema/initial} db)))
-         (when (not (false? routes)) (route/plugin routes))
-         (when (not (false? i18n)) (i18n/plugin i18n))
-         (when (not (false? navigation)) (nav/plugin navigation))
-         (when (not (false? cache))
-           (cache/plugin (or cache {:router router
-                                    :cache/strategy :html})))
-         ;; TODO refine default rendering options...
+        [;; TODO refine default rendering options...
          (when (not (false? renderer)) (rum/plugin))
          (when (not (false? auth)) (auth/plugin auth))
          (when (not (false? users)) (user/plugin users))
