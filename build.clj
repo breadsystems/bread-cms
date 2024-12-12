@@ -6,7 +6,6 @@
 (def PLUGIN-DIRS
   ["plugins/auth"
    "plugins/datahike"
-   "plugins/defaults"
    "plugins/markdown"
    "plugins/reitit"
    "plugins/rum"])
@@ -28,11 +27,6 @@
   {:core
    {:lib 'systems.bread/bread-core
     :src-dirs ["src"]}
-
-   :defaults
-   {:lib 'systems.bread/bread-plugin-defaults
-    :aliases [:defaults]
-    :src-dirs PLUGIN-DIRS}
 
    :auth
    {:lib 'systems.bread/bread-plugin-auth

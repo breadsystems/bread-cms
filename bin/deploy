@@ -4,14 +4,12 @@ clojure -T:build clean
 
 clojure -T:build jar :lib :auth
 clojure -T:build jar :lib :core
-clojure -T:build jar :lib :defaults
 clojure -T:build jar :lib :datahike
 clojure -T:build jar :lib :reitit
 clojure -T:build jar :lib :rum
 
 clojure -T:build deploy :lib :auth
 clojure -T:build deploy :lib :core
-clojure -T:build deploy :lib :defaults
 clojure -T:build deploy :lib :datahike
 clojure -T:build deploy :lib :reitit
 clojure -T:build deploy :lib :rum
