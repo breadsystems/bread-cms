@@ -17,14 +17,15 @@
     [systems.bread.alpha.cms.theme]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.plugin.defaults :as defaults*]
+    [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.buddy]
     [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.marx :as marx]
-    [systems.bread.alpha.plugin.reitit])
+    [systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.plugin.rum :as rum])
   (:import
     [java.time LocalDateTime]
     [java.util Properties UUID])
@@ -188,7 +189,9 @@
 (defmethod ig/init-key :bread/app [_ app-config]
   (let [plugins (concat
                   (defaults/plugins app-config)
-                  (defaults*/plugins app-config))]
+                  [(auth/plugin (:auth app-config))
+                   (marx/plugin (:marx app-config))
+                   (rum/plugin)])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
