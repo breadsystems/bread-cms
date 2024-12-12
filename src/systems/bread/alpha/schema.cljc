@@ -30,7 +30,7 @@
      :migration/dependencies #{}}))
 
 (def
-  ^{:doc "Schema for generic db entities AKA \"things\" that can have children,
+  ^{:doc "Schema for generic db entities AKA \"Things\" that can have children,
          slugs, sort order, and a UUID."}
   things
   (with-meta
@@ -68,12 +68,12 @@
      :migration/dependencies #{:bread.migration/migrations}}))
 
 (def
-  ^{:doc "Schema for (site-wide) internationalization (AKA i18n) strings."}
-  i18n
+  ^{:doc "Schema for arbitrary fields"}
+  fields
   (with-meta
-    [{:db/id "migration.i18n"
-      :migration/key :bread.migration/i18n
-      :migration/description "Migration for global translation strings"}
+    [{:db/id "migration.fields"
+      :migration/key :bread.migration/fields
+      :migration/description "Migration for arbitrary fields attached to Things"}
      {:db/ident :field/key
       :attr/label "Field Key"
       :db/doc "Unique-per-entity keyword for this field"
@@ -92,12 +92,6 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
-     {:db/ident :field/lang
-      :attr/label "Field Language"
-      :db/doc "Language this field is written in"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
      {:db/ident :field/type
       :attr/label "Field Type"
       :db/doc "The user experience provided for this field in the Marx editor"
@@ -113,6 +107,24 @@
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
+
+(def
+  ^{:doc "Schema for translatable content."}
+  i18n
+  (with-meta
+    [{:db/id "migration.i18n"
+      :migration/key :bread.migration/i18n
+      :migration/description "Migration for making arbitrary field content translatable"}
+     {:db/ident :field/lang
+      :attr/label "Field Language"
+      :db/doc "Language this field is written in"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.i18n"}]
+
+    {:type :bread/migration
+     :migration/dependencies #{:bread.migration/migrations
+                               :bread.migration/fields}}))
 
 (def
   ^{:doc "Schema for users."}
@@ -384,6 +396,7 @@
   (with-meta
     [migrations
      things
+     fields
      i18n
      users
      posts
