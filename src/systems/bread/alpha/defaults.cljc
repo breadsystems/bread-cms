@@ -29,4 +29,10 @@
      ::bread/response
      [{:action/name ::ring/response
        :action/description "Sensible defaults for Ring responses"
-       :default-content-type "text/html"}]}}])
+       :default-content-type "text/html"}]
+     ::bread/attrs
+     [{:action/name ::datalog/attrs
+       :action/description "Add db attrs as raw maps"}]
+     ::bread/attrs-map
+     [{:action/name ::datalog/attrs-map
+       :action/description "All db attrs, indexed by :db/ident"}]}}])
