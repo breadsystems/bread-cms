@@ -174,6 +174,14 @@
              :where [[?e :migration/key ?key ?inst]
                      [?e :migration/description ?desc]]})))
 
+(defmethod bread/action ::attrs
+  [req _ _]
+  (attrs (db/database req)))
+
+(defmethod bread/action ::attrs-map
+  [req _ _]
+  (into {} (map (juxt :db/ident identity)) (bread/hook req ::bread/attrs)))
+
 (comment
 
   ;; Do some minimal setup to get an example database instance.
