@@ -191,7 +191,7 @@
                   (defaults/plugins app-config)
                   [(auth/plugin (:auth app-config))
                    (marx/plugin (:marx app-config))
-                   (rum/plugin)])]
+                   (rum/plugin (:renderer app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
