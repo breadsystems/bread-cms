@@ -56,7 +56,7 @@
                           :db/id
                           :post/type
                           :post/status
-                          {:translatable/fields [*]}
+                          {:thing/fields [*]}
                           {:thing/_children [:thing/slug {:thing/_children ...}]}
                           {:thing/children ...}])]
          :in [$ ?type [?status ...]]
@@ -72,7 +72,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -102,7 +102,7 @@
       ['{:find [(pull ?e [:db/id
                           :post/type
                           :post/status
-                          {:translatable/fields [*]}
+                          {:thing/fields [*]}
                           {:thing/_children [:thing/slug {:thing/_children ...}]}
                           {:thing/children 3}])]
          :in [$ ?type [?status ...]]
@@ -118,7 +118,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -152,7 +152,7 @@
                           :db/id
                           :post/type
                           :post/status
-                          {:translatable/fields [*]}
+                          {:thing/fields [*]}
                           {:thing/_children [:thing/slug {:thing/_children ...}]}
                           {:thing/children ...}])]
          :in [$ ?type [?status ...]]
@@ -168,7 +168,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -176,7 +176,7 @@
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})
       :field/key #{:b}
-      :sort-by [:translatable/fields :title]}]
+      :sort-by [:thing/fields :title]}]
     {:menus
      {:basic-nav
       {:menu/type ::navigation/posts
@@ -184,7 +184,7 @@
        :post/status :post.status/draft
        :route/name ::park
        :field/key :b
-       :sort-by [:translatable/fields :title]}}}
+       :sort-by [:thing/fields :title]}}}
     {:field/lang "en"}
 
     ;; Global menu; custom menus-key.
@@ -204,10 +204,10 @@
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
-                            {:translatable/fields [*]}
+                            {:thing/fields [*]}
                             {:thing/_children [:thing/slug
                                               {:thing/_children ...}]}]}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?key]
          :where [[?m :menu/key ?key]
                  [?m :menu/items ?i]]}
@@ -219,8 +219,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
-               [s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
+               [s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:my/menus :global-nav :menu/items]
       :field/key nil
@@ -254,10 +254,10 @@
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
-                            {:translatable/fields [*]}
+                            {:thing/fields [*]}
                             {:thing/_children [:thing/slug
                                               {:thing/_children ...}]}]}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?location]
          :where [[?m :menu/locations ?location]
                  [?m :menu/items ?i]]}
@@ -269,8 +269,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
-               [s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
+               [s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:my/menus :location-nav :menu/items]
       :field/key nil
@@ -304,10 +304,10 @@
                           {:menu.item/entity
                            [:db/id
                             :thing/slug
-                            {:translatable/fields [*]}
+                            {:thing/fields [*]}
                             {:thing/_children [:thing/slug
                                               {:thing/_children ...}]}]}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?location]
          :where [[?m :menu/locations ?location]
                  [?m :menu/items ?i]]}
@@ -319,8 +319,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :translatable/fields]
-               [s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
+               [s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :location-nav :menu/items]
       :field/key #{:a}
@@ -356,7 +356,7 @@
                           {:thing/_children [:thing/slug
                                              {:thing/_children ...}]}
                           {:thing/children ...}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/tag]}
@@ -367,7 +367,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key nil
@@ -400,7 +400,7 @@
                           {:thing/_children [:thing/slug
                                              {:thing/_children ...}]}
                           {:thing/children 2}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?taxonomy]
          :where [[?e :taxon/taxonomy ?taxonomy]]}
        :taxon.taxonomy/category]}
@@ -411,7 +411,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
@@ -446,7 +446,7 @@
                           {:thing/_children [:thing/slug
                                              {:thing/_children ...}]}
                           {:thing/children 2}
-                          {:translatable/fields [*]}])]
+                          {:thing/fields [*]}])]
          :in [$ ?taxonomy ?slug]
          :where [[?e :taxon/taxonomy ?taxonomy]
                  [?e :thing/slug ?slug]]}
@@ -459,11 +459,11 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :translatable/fields]]}
+      :spaths [[s/ALL s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
-      :sort-by [:translatable/fields :title]
+      :sort-by [:thing/fields :title]
       :route/name ::my-route
       :route/params {:field/lang "en"}
       :router (MockRouter. {:field/lang "en"})}]
@@ -475,7 +475,7 @@
        :thing/slug "my-lovely-cat"
        :field/key [:x :y :z]
        :recursion-limit 2
-       :sort-by [:translatable/fields :title]}}}
+       :sort-by [:thing/fields :title]}}}
     {:field/lang "en"}
 
     ;;
@@ -508,34 +508,34 @@
 
     ;; Basic menu items; no :field/key filtering.
     [{:uri "/abc"
-      :translatable/fields {:uri "/abc" :my/field "My Field"}
+      :thing/fields {:uri "/abc" :my/field "My Field"}
       :thing/children []}
      {:uri "/xyz"
-      :translatable/fields {:uri "/xyz" :other/field "Other"}
+      :thing/fields {:uri "/xyz" :other/field "Other"}
       :thing/children []}]
     {:expansion/name ::navigation/items
      :expansion/key [:menus :#nofilter :menu/items]
      :router (MockRouter. {})
      :field/key nil
      :sort-by [:thing/order]}
-    {:menus {:#nofilter {:menu/items [[{:translatable/fields
+    {:menus {:#nofilter {:menu/items [[{:thing/fields
                                         {:uri "/abc"
                                          :my/field "My Field"}}]
-                                      [{:translatable/fields
+                                      [{:thing/fields
                                         {:uri "/xyz"
                                          :other/field "Other"}}]]}}}
 
     ;; Basic menu items with related entities.
     [{:uri "/en/xyz"
-      :translatable/fields {}
+      :thing/fields {}
       :thing/children []}
      {:uri "/en/abc"
-      :translatable/fields {:my/field "Override"
-                            :other/field "Another override"}
+      :thing/fields {:my/field "Override"
+                     :other/field "Another override"}
       :thing/children []}
      {:uri "/en/parent/child"
-      :translatable/fields {:my/field "Post field"
-                            :other/field "Another post field"}
+      :thing/fields {:my/field "Post field"
+                     :other/field "Another post field"}
       :thing/children []}]
     {:expansion/name ::navigation/items
      :expansion/key [:menus :my-nav :menu/items]
@@ -550,44 +550,44 @@
               [[{:thing/order 2
                  :menu.item/entity
                  {:thing/slug "abc"
-                  :translatable/fields {:extra "This gets filtered out..."
-                                        :my/field "My Field"
-                                        :other/field "Other"}}
-                 :translatable/fields {:more "...and so does this"
-                                       :my/field "Override"
-                                       :other/field "Another override"}}]
+                  :thing/fields {:extra "This gets filtered out..."
+                                 :my/field "My Field"
+                                 :other/field "Other"}}
+                 :thing/fields {:more "...and so does this"
+                                :my/field "Override"
+                                :other/field "Another override"}}]
                [{:thing/order 3
                  :menu.item/entity
                  {:thing/slug "child"
-                  :translatable/fields {:extra "This gets filtered out..."
-                                        :my/field "Post field"
-                                        :other/field "Another post field"}
+                  :thing/fields {:extra "This gets filtered out..."
+                                 :my/field "Post field"
+                                 :other/field "Another post field"}
                   ;; Post ancestry.
                   :thing/_children
                   [{:thing/slug "parent"}]}
-                 :translatable/fields {:more "...and so does this"}}]
+                 :thing/fields {:more "...and so does this"}}]
                [{:thing/order 1
                  ;; no post
-                 :translatable/fields {:uri "/en/xyz"}}]]}}}
+                 :thing/fields {:uri "/en/xyz"}}]]}}}
 
     ;; :merge-entities? false; recursive.
     [{:uri "/en/xyz"
-      :translatable/fields {}
+      :thing/fields {}
       :thing/children
       [{:uri "/en/xyz/123"
-        :translatable/fields {:my/field "Daughter"}
+        :thing/fields {:my/field "Daughter"}
         :thing/children []}
        {:uri "/en/xyz/456"
-        :translatable/fields {:my/field "Child"}
+        :thing/fields {:my/field "Child"}
         :thing/children [{:uri "/en/xyz/456/789"
-                          :translatable/fields {:my/field "Grandchild"}
+                          :thing/fields {:my/field "Grandchild"}
                           :thing/children []}]}]}
      {:uri "/en/abc"
-      :translatable/fields {:my/field "Override"
-                            :other/field "Another override"}
+      :thing/fields {:my/field "Override"
+                     :other/field "Another override"}
       :thing/children []}
      {:uri "/en/parent/child"
-      :translatable/fields {}
+      :thing/fields {}
       :thing/children []}]
     {:expansion/name ::navigation/items
      :expansion/key [:menus :my-nav :menu/items]
@@ -601,36 +601,36 @@
              {:menu/items
               [[{:thing/order 2
                  :menu.item/entity {:thing/slug "abc"
-                                    :translatable/fields
+                                    :thing/fields
                                     {:extra "This gets filtered out..."
                                      :my/field "My Field"
                                      :other/field "Other"}}
-                 :translatable/fields {:more "...and so does this"
-                                       :my/field "Override"
-                                       :other/field "Another override"}}]
+                 :thing/fields {:more "...and so does this"
+                                :my/field "Override"
+                                :other/field "Another override"}}]
                [{:thing/order 3
                  :menu.item/entity {:thing/slug "child"
-                                    :translatable/fields
+                                    :thing/fields
                                     {:extra "This gets filtered out..."
                                      :my/field "Post field"
                                      :other/field "Another post field"}
                                     ;; Post ancestry.
                                     :thing/_children [{:thing/slug "parent"}]}
-                 :translatable/fields {:more "...and so does this"}}]
+                 :thing/fields {:more "...and so does this"}}]
                [{:thing/order 1
                  ;; No entity.
-                 :translatable/fields {:uri "/en/xyz"}
+                 :thing/fields {:uri "/en/xyz"}
                  :thing/children
                  [{:thing/order 1
-                   :translatable/fields {:uri "/en/xyz/456"
-                                         :my/field "Child"}
+                   :thing/fields {:uri "/en/xyz/456"
+                                  :my/field "Child"}
                    :thing/children
                    [{:thing/order 0
-                     :translatable/fields {:uri "/en/xyz/456/789"
-                                           :my/field "Grandchild"}}]}
+                     :thing/fields {:uri "/en/xyz/456/789"
+                                    :my/field "Grandchild"}}]}
                   {:thing/order 0
-                   :translatable/fields {:uri "/en/xyz/123"
-                                         :my/field "Daughter"}}]}]]}}}
+                   :thing/fields {:uri "/en/xyz/123"
+                                  :my/field "Daughter"}}]}]]}}}
 
     ;;
     ))

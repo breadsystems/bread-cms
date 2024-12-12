@@ -317,7 +317,7 @@
                         {:thing/_children [:thing/slug
                                            {:thing/_children ...}]}
                         {:thing/children ...}
-                        {:translatable/fields [*]}])]
+                        {:thing/fields [*]}])]
        :in [$ ?taxonomy]
        :where [[?e :taxon/taxonomy ?taxonomy]]}
      :taxon.taxonomy/tag)
@@ -327,7 +327,7 @@
                         :db/id
                         :post/type
                         :post/status
-                        {:translatable/fields [*]}
+                        {:thing/fields [*]}
                         {:thing/_children [:thing/slug {:thing/_children ...}]}
                         {:thing/children ...}])]
        :in [$ ?type [?status ...]]

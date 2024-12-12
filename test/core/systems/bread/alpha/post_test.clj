@@ -60,8 +60,8 @@
     5))
 
 (deftest test-post-dispatcher
-  (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/taxons         {:db/cardinality :db.cardinality/many}}
+  (let [attrs-map {:thing/fields {:db/cardinality :db.cardinality/many}
+                   :post/taxons  {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
@@ -84,7 +84,7 @@
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:translatable/fields [*]}]) .]
+                            {:thing/fields [*]}]) .]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
@@ -98,13 +98,13 @@
        {:expansion/name ::i18n/fields
         :expansion/key :post
         :expansion/description "Process translatable fields."
-        :spaths [[:translatable/fields]]
+        :spaths [[:thing/fields]]
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
+       :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
        :route/params {:lang "en" :thing/slug* "hello"}}
 
@@ -115,7 +115,7 @@
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:translatable/fields [*]}]) .]
+                            {:thing/fields [*]}]) .]
            :where [(post-ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
@@ -129,13 +129,13 @@
        {:expansion/name ::i18n/fields
         :expansion/key :post
         :expansion/description "Process translatable fields."
-        :spaths [[:translatable/fields]]
+        :spaths [[:thing/fields]]
         :field/lang :en
         :format? true
         :compact? true
         :recur-attrs #{}}]
       {:dispatcher/type :dispatcher.type/page
-       :dispatcher/pull '[:thing/slug {:translatable/fields [*]}]
+       :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
        :route/params {:lang "en" :thing/slug* "hello"}
        :post/status :post.status/draft

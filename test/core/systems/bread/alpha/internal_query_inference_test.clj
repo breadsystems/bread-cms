@@ -139,78 +139,78 @@
 
     ;; querying for fields with a wildcard binding
     {:bindings [{:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
-                 :binding-path [0 :translatable/fields]
-                 :relation [:translatable/fields]}]}
-    :translatable/fields
+                 :binding-path [0 :thing/fields]
+                 :relation [:thing/fields]}]}
+    :thing/fields
     i18n/translatable-binding?
-    '{:find [(pull ?e [{:translatable/fields [*]}])]
+    '{:find [(pull ?e [{:thing/fields [*]}])]
       :in [$ ?slug]
       :where [[?e :thing/slug ?slug]]}
 
     ;; querying for fields with key & content bindings
     {:bindings [{:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
-                 :binding-path [0 :translatable/fields]
-                 :relation [:translatable/fields]}]}
-    :translatable/fields
+                 :binding-path [0 :thing/fields]
+                 :relation [:thing/fields]}]}
+    :thing/fields
     i18n/translatable-binding?
-    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+    '{:find [(pull ?e [{:thing/fields [:field/key :field/content]}])]
       :in [$ ?slug]
       :where [[?e :thing/slug ?slug]]}
 
     ;; when construct returns a vector-style query
     {:bindings [{:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
-                 :binding-path [0 :translatable/fields]
-                 :relation [:translatable/fields]}]}
-    :translatable/fields
+                 :binding-path [0 :thing/fields]
+                 :relation [:thing/fields]}]}
+    :thing/fields
     i18n/translatable-binding?
-    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}])]
+    '{:find [(pull ?e [{:thing/fields [:field/key :field/content]}])]
       :in [$ ?slug]
       :where [[?e :thing/slug ?slug]]}
 
     ;; querying for a menu with deeply nested fields clause
     {:bindings [{:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
                  :binding-path [0 :menu/items
                                 0 :menu.item/entity
-                                0 :translatable/fields]
+                                0 :thing/fields]
                  :relation [:menu/items
                             :menu.item/entity
-                            :translatable/fields]}]}
-    :translatable/fields
+                            :thing/fields]}]}
+    :thing/fields
     i18n/translatable-binding?
     '{:find [(pull ?e [{:menu/items
                         [{:menu.item/entity
-                          [{:translatable/fields
+                          [{:thing/fields
                             [:field/key :field/content]}]}]}])]
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}
 
     ;; querying for menu item AND entity fields...
     {:bindings [{:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
                  :binding-path [0 :menu.item/entity
-                                0 :translatable/fields]
+                                0 :thing/fields]
                  :relation [:menu.item/entity
-                            :translatable/fields]}
+                            :thing/fields]}
                 {:binding-sym '?e
-                 :attr :translatable/fields
+                 :attr :thing/fields
                  :entity-index 0
-                 :binding-path [1 :translatable/fields]
-                 :relation [:translatable/fields]}]}
-    :translatable/fields
+                 :binding-path [1 :thing/fields]
+                 :relation [:thing/fields]}]}
+    :thing/fields
     i18n/translatable-binding?
     '{:find [(pull ?e [{:menu.item/entity
-                        [{:translatable/fields
+                        [{:thing/fields
                           [:field/key :field/content]}]}
-                       {:translatable/fields
+                       {:thing/fields
                         [:field/key :field/content]}])]
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}
@@ -224,7 +224,7 @@
     keyword? ;; any keyword key
     (fn [b]
       (or (= '... b) (integer? b)))
-    '{:find [(pull ?e [{:translatable/fields [:field/key :field/content]}
+    '{:find [(pull ?e [{:thing/fields [:field/key :field/content]}
                        {:thing/children ...}])]
       :in [$ ?menu-key]
       :where [[?e :menu/key ?menu-key]]}

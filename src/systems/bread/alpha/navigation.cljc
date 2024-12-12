@@ -21,18 +21,18 @@
     route-name :route/name
     route-params :route/params
     :as opts}
-   {fields :translatable/fields
+   {fields :thing/fields
     children :thing/children
-    {thing-fields :translatable/fields :as thing} :menu.item/entity
+    {thing-fields :thing/fields :as thing} :menu.item/entity
     :as item}]
   (let [route-data (merge route-params thing)
         path-params (route/path-params router route-name route-data)
         fields (if (:merge-entities? opts)
                  (merge thing-fields fields)
                  fields)]
-    {:translatable/fields (if (seq (:field/key opts))
-                            (select-keys fields (:field/key opts))
-                            fields)
+    {:thing/fields (if (seq (:field/key opts))
+                     (select-keys fields (:field/key opts))
+                     fields)
      :uri (or (:uri fields) (bread/path router route-name path-params))
      :thing/children (->items opts children)}))
 
@@ -79,7 +79,7 @@
         :expansion/db (db/database req)
         :expansion/args [{:find [(list 'pull '?e
                                        [:db/id :post/type :post/status
-                                        {:translatable/fields '[*]}
+                                        {:thing/fields '[*]}
                                         ;; We need full ancestry for
                                         ;; constructing URLs.
                                         {:thing/_children
@@ -124,7 +124,7 @@
                                    [:thing/slug {:thing/_children '...}]}
                                   {:thing/children
                                    recursion-limit}
-                                  {:translatable/fields '[*]}])]
+                                  {:thing/fields '[*]}])]
           :in '[$ ?taxonomy]
           :where '[[?e :taxon/taxonomy ?taxonomy]]}
          taxonomy]]
@@ -180,11 +180,11 @@
                                                   {:menu.item/entity
                                                    [:db/id
                                                     :thing/slug
-                                                    {:translatable/fields '[*]}
+                                                    {:thing/fields '[*]}
                                                     {:thing/_children
                                                      [:thing/slug
                                                       {:thing/_children '...}]}]}
-                                                  {:translatable/fields '[*]}])]
+                                                  {:thing/fields '[*]}])]
                           :in '[$ ?key]
                           :where '[[?m :menu/key ?key]
                                    [?m :menu/items ?i]]}
@@ -228,11 +228,11 @@
                                                   {:menu.item/entity
                                                    [:db/id
                                                     :thing/slug
-                                                    {:translatable/fields '[*]}
+                                                    {:thing/fields '[*]}
                                                     {:thing/_children
                                                      [:thing/slug
                                                       {:thing/_children '...}]}]}
-                                                  {:translatable/fields '[*]}])]
+                                                  {:thing/fields '[*]}])]
                           :in '[$ ?location]
                           :where '[[?m :menu/locations ?location]
                                    [?m :menu/items ?i]]}

@@ -11,8 +11,8 @@
                                               plugins->loaded]]))
 
 (deftest test-dispatch-taxon-expansions
-  (let [attrs-map {:translatable/fields {:db/cardinality :db.cardinality/many}
-                   :post/taxons         {:db/cardinality :db.cardinality/many}}
+  (let [attrs-map {:thing/fields {:db/cardinality :db.cardinality/many}
+                   :post/taxons  {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
@@ -84,14 +84,14 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
-      ;; Query includes :translatable/field as a map.
+      ;; Query includes :thing/field as a map.
       [{:expansion/name ::db/query
         :expansion/key :taxon
         :expansion/db ::FAKEDB
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             :thing/slug
-                            {:translatable/fields
+                            {:thing/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -105,11 +105,11 @@
         :format? true
         :compact? true
         :recur-attrs #{}
-        :spaths [[:translatable/fields]]}]
+        :spaths [[:thing/fields]]}]
       {:dispatcher/type :dispatcher.type/taxon
        :dispatcher/pull [:thing/slug
-                         {:translatable/fields [:field/key
-                                                :field/content]}]
+                         {:thing/fields [:field/key
+                                         :field/content]}]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
        :route/params {:lang "en" :slug "some-tag"}}
@@ -122,9 +122,9 @@
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
-                             [{:translatable/fields
+                             [{:thing/fields
                                [:db/id :field/lang :field/key :field/content]}]}
-                            {:translatable/fields
+                            {:thing/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -138,16 +138,16 @@
         :format? true
         :compact? true
         :recur-attrs #{}
-        :spaths [[:post/_taxons s/ALL :translatable/fields]
-                 [:translatable/fields]]}
+        :spaths [[:post/_taxons s/ALL :thing/fields]
+                 [:thing/fields]]}
        {:expansion/name ::taxon/filter-posts
         :expansion/key :tag-with-posts
         :post/type :post.type/page
         :post/status :post.status/published}]
       {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}
-                         {:translatable/fields [:field/key :field/content]}]
+       :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
+                                                         :field/content]}]}
+                         {:thing/fields [:field/key :field/content]}]
        :dispatcher/key :tag-with-posts
        :route/params {:lang "en" :slug "some-tag"}}
 
@@ -160,9 +160,9 @@
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
-                             [{:translatable/fields
+                             [{:thing/fields
                                [:db/id :field/lang :field/key :field/content]}]}
-                            {:translatable/fields
+                            {:thing/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
@@ -176,16 +176,16 @@
         :format? true
         :compact? true
         :recur-attrs #{}
-        :spaths [[:post/_taxons s/ALL :translatable/fields]
-                 [:translatable/fields]]}
+        :spaths [[:post/_taxons s/ALL :thing/fields]
+                 [:thing/fields]]}
        {:expansion/name ::taxon/filter-posts
         :expansion/key :tag-with-posts
         :post/type :post.type/article
         :post/status :post.status/draft}]
       {:dispatcher/type :dispatcher.type/tag
-       :dispatcher/pull [{:post/_taxons [{:translatable/fields [:field/key
-                                                                :field/content]}]}
-                         {:translatable/fields [:field/key :field/content]}]
+       :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
+                                                         :field/content]}]}
+                         {:thing/fields [:field/key :field/content]}]
        :dispatcher/key :tag-with-posts
        :route/params {:lang "en" :slug "some-tag"}
        :post/type :post.type/article
