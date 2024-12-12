@@ -31,7 +31,7 @@
   :force? true
   :db/migrations #deref #var systems.bread.alpha.schema/initial
   :db/initial-txns
-  #concat [#deref #var systems.bread.alpha.plugin.defaults/initial-data
+  #concat [#deref #var systems.bread.alpha.cms.data/initial
            [{:user/username "coby"
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
