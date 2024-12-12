@@ -12,13 +12,14 @@
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.datalog :as datalog]))
 
-(defn plugins [{:keys [components db i18n routes]}]
+(defn plugins [{:keys [components db i18n routes user]}]
   [(dispatcher/plugin)
    (expansion/plugin)
    (when-not (false? components) (component/plugin components))
    (when-not (false? db) (db/plugin (merge {:db/migrations schema/initial} db)))
    (when-not (false? i18n) (i18n/plugin i18n))
    (when-not (false? routes) (route/plugin routes))
+   (when-not (false? user) (user/plugin user))
    {:hooks
     {::bread/expand
      [{:action/name ::ring/request-data
