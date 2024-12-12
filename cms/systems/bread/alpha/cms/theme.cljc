@@ -70,7 +70,8 @@
 
 (defc InteriorPage
   [{{fields :thing/fields tags :post/taxons :as post} :post
-    {:keys [main-nav]} :menus}]
+    {:keys [main-nav]} :menus
+    :keys [hook]}]
   {:extends MainLayout
    :key :post
    :query '[{:thing/fields [*]}
@@ -79,6 +80,7 @@
    [:main
     [:h1 (:title fields)]
     [:h2 (:db/id post)]
+    [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
     (marx/render-field (:rte (meta fields)) :rich-text)
     [:div.tags-list
