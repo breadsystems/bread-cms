@@ -293,6 +293,8 @@
   "Creates a new Bread app. Optionally accepts an options map. A single option
   is supported, :plugins, a sequence of plugins to load."
   {:arglist '([] [opts])}
+  ([]
+   (app {}))
   ([{:keys [plugins]}]
    (with-meta
      {::plugins (or plugins [])
@@ -307,9 +309,7 @@
       ::expansions []
       ::config  {}
       ::data    {}}
-     {:type ::app}))
-  ([]
-   (app {})))
+     {:type ::app})))
 
 (defmethod print-method ::app
   [app ^java.io.Writer writer]
