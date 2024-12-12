@@ -4,15 +4,14 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.database :as db] ;; TODO ???
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [use-db]]
-    [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.plugin.defaults :as defaults*]))
+    [systems.bread.alpha.defaults :as defaults]))
 
 (def config {:db/type :datahike
              :store {:backend :mem
@@ -189,20 +188,13 @@
                      (:route/params match))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
-          app (bread/app {:plugins (concat
-                                     (defaults/plugins
-                                       {:db config
-                                        :components {:not-found not-found}
-                                        :routes {:router router}
-                                        :i18n {:supported-langs #{:en :fr}}
-                                        :renderer false})
-                                     (defaults*/plugins
-                                       {:db config
-                                        :components {:not-found not-found}
-                                        :routes {:router router}
-                                        :i18n {:supported-langs #{:en :fr}}
-                                        :renderer false}))})
-          handler (bread/load-handler app)]
+          plugins (defaults/plugins
+                    {:db config
+                     :components {:not-found not-found}
+                     :routes {:router router}
+                     :i18n {:supported-langs #{:en :fr}}
+                     :renderer false})
+          handler (bread/load-handler (bread/app {:plugins plugins}))]
       (are
         [expected req]
         (= expected (-> req handler (select-keys [:body :status])))
