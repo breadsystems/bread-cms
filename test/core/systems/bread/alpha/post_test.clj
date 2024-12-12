@@ -104,7 +104,7 @@
         :format? true
         :compact? true
         :recur-attrs #{}}]
-      {:dispatcher/type :dispatcher.type/page
+      {:dispatcher/type ::post/page
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
        :route/params {:lang "en" :thing/slug* "hello"}}
@@ -136,7 +136,7 @@
         :format? true
         :compact? true
         :recur-attrs #{}}]
-      {:dispatcher/type :dispatcher.type/page
+      {:dispatcher/type ::post/page
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
        :route/params {:lang "en" :thing/slug* "hello"}
