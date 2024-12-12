@@ -30,7 +30,7 @@
     :post/type :post.type/page
     :thing/slug ""
     :post/status :post.status/published
-    :translatable/fields
+    :thing/fields
     #{{:field/key :title
        :field/lang :en
        :field/content "The Title"}
@@ -50,7 +50,7 @@
     :thing/slug "child-page"
     :post/status :post.status/published
     :thing/children ["page.grandchild"]
-    :translatable/fields
+    :thing/fields
     #{{:field/key :title
        :field/lang :en
        :field/content "Child"}
@@ -69,7 +69,7 @@
     :post/type :post.type/page
     :thing/slug "daughter-page"
     :post/status :post.status/draft
-    :translatable/fields
+    :thing/fields
     #{{:field/key :title
        :field/lang :en
        :field/content "Daughter Page"}
@@ -82,7 +82,7 @@
     :thing/children ["page.child" "page.daughter"]
     :post/taxons ["tag.one" "tag.two"]
     :post/status :post.status/published
-    :translatable/fields
+    :thing/fields
     #{{:field/key :title
        :field/lang :en
        :field/content "Hello!"}
@@ -135,7 +135,7 @@
     :post/type :post.type/page
     :thing/slug "grandchild-page"
     :post/status :post.status/published
-    :translatable/fields
+    :thing/fields
     #{{:field/key :title
        :field/lang :en
        :field/content "Grandchild Page"}
@@ -145,7 +145,7 @@
    {:db/id "tag.one"
     :thing/slug "one"
     :taxon/taxonomy :taxon.taxonomy/tag
-    :translatable/fields
+    :thing/fields
     [{:field/key :name
       :field/content "One"
       :field/lang :en}
@@ -155,7 +155,7 @@
    {:db/id "tag.two"
     :thing/slug "two"
     :taxon/taxonomy :taxon.taxonomy/tag
-    :translatable/fields
+    :thing/fields
     [{:field/key :name
       :field/content "Two"
       :field/lang :en}
@@ -169,7 +169,7 @@
     :thing/order 1
     :post/type :post.type/menu-item
     :thing/children ["menu-item.child"]
-    :translatable/fields
+    :thing/fields
     [{:field/key :title
       :field/content "Thing One"
       :field/lang :en}
@@ -182,7 +182,7 @@
    {:db/id "menu-item.two"
     :thing/order 2
     :post/type :post.type/menu-item
-    :translatable/fields
+    :thing/fields
     [{:field/key :title
       :field/content "Thing Two"
       :field/lang :en}
@@ -193,13 +193,13 @@
       :field/format ::i18n/uri
       :field/content (pr-str [:field/lang "thing-two"])}]}
    {:db/id "menu-item.child"
-    :translatable/fields
+    :thing/fields
     [{:field/key :uri
       :field/lang :en
       :field/content "/en/child-item"}]
     :thing/children ["menu-item.grandchild"]}
    {:db/id "menu-item.grandchild"
-    :translatable/fields
+    :thing/fields
     [{:field/key :uri
       :field/lang :en
       :field/content "/en/grandchild-item"}]

@@ -45,7 +45,7 @@
                 :where [[?e :field/key ?key]
                         [?e :field/content ?content]
                         [?e :field/lang ?lang]
-                        (not-join [?e] [_ :translatable/fields ?e])]}
+                        (not-join [?e] [_ :thing/fields ?e])]}
               lang)
         (into {})
         (bread/hook req ::strings))))
@@ -131,7 +131,7 @@
             (if (seq recur-attrs)
               ;; Query is recursive:
               ;; Wrap our process chain in a recursive transform.
-              (let [walker (qi/attrs-walker :translatable/fields recur-attrs)]
+              (let [walker (qi/attrs-walker :thing/fields recur-attrs)]
                 [#(s/transform walker process* %) (map butlast spaths)])
               ;; Non-recursive query.
               [process* spaths])]
@@ -150,7 +150,7 @@
   original query."
   (let [dbq (first (:expansion/args query))
         {:keys [bindings]} (qi/infer-query-bindings
-                             :translatable/fields
+                             :thing/fields
                              translatable-binding?
                              dbq)
         {recursive-specs :bindings} (qi/infer-query-bindings
@@ -212,7 +212,7 @@
                          :where [[?e :field/key ?key]
                                  [?e :field/content ?content]
                                  [?e :field/lang ?lang]
-                                 (not-join [?e] [_ :translatable/fields ?e])]}
+                                 (not-join [?e] [_ :thing/fields ?e])]}
                        (lang req)]}))
 
 (defmethod bread/action ::add-lang-query

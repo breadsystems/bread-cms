@@ -98,7 +98,7 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.i18n"}
-     {:db/ident :translatable/fields
+     {:db/ident :thing/fields
       :attr/label "Translatable Fields"
       :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
       :db/valueType :db.type/ref

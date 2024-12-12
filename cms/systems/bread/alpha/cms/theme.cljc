@@ -6,7 +6,7 @@
     [systems.bread.alpha.component :refer [defc]]))
 
 (defn- nav-menu-item [{:keys [children uri]
-                       {:keys [title] :as fields} :translatable/fields
+                       {:keys [title] :as fields} :thing/fields
                        :as item}]
   [:li
    [:div
@@ -48,33 +48,33 @@
    :query '[:thing/children
             :thing/slug
             :post/authors
-            {:translatable/fields [*]}]}
+            {:thing/fields [*]}]}
   {:content
    [:main {:role :main}
-    [:h1 (:title (:translatable/fields post))]
+    [:h1 (:title (:thing/fields post))]
     [:pre (pr-str post)]
     [:pre (pr-str (user/can? user :edit-posts))]]})
 
 (defc Tag
-  [{{fields :translatable/fields :as tag} :tag}]
+  [{{fields :thing/fields :as tag} :tag}]
   {:extends MainLayout
    :key :tag
    :query '[:thing/slug
-            {:translatable/fields [*]}
+            {:thing/fields [*]}
             {:post/_taxons
              [{:post/authors [*]}
-              {:translatable/fields [*]}]}]}
+              {:thing/fields [*]}]}]}
   [:main
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
-  [{{fields :translatable/fields tags :post/taxons :as post} :post
+  [{{fields :thing/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus}]
   {:extends MainLayout
    :key :post
-   :query '[{:translatable/fields [*]}
-            {:post/taxons [{:translatable/fields [*]}]}]}
+   :query '[{:thing/fields [*]}
+            {:post/taxons [{:thing/fields [*]}]}]}
   [:<>
    [:main
     [:h1 (:title fields)]
@@ -83,6 +83,6 @@
     (marx/render-field (:rte (meta fields)) :rich-text)
     [:div.tags-list
      [:p "TAGS"]
-     (map (fn [{tag :translatable/fields}]
+     (map (fn [{tag :thing/fields}]
             [:span.tag (:name tag)])
           tags)]]])

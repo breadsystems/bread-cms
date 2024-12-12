@@ -22,7 +22,7 @@
                :post/type :post.type/page
                :thing/slug ""
                :post/status :post.status/published
-               :translatable/fields
+               :thing/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/format :edn
@@ -44,7 +44,7 @@
                :thing/slug "parent-page"
                :post/status :post.status/published
                :thing/children ["page.child"]
-               :translatable/fields
+               :thing/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/format :edn
@@ -67,7 +67,7 @@
                :post/type :post.type/page
                :thing/slug "child-page"
                :post/status :post.status/published
-               :translatable/fields
+               :thing/fields
                #{{:field/key :title
                   :field/lang :en
                   :field/format :edn
@@ -103,19 +103,19 @@
    content])
 
 (defc home [{:keys [post]}]
-  {:query '[{:translatable/fields [*]}]
+  {:query '[{:thing/fields [*]}]
    :key :post
    :extends layout}
-  (let [{:keys [title simple]} (:translatable/fields post)]
+  (let [{:keys [title simple]} (:thing/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
 (defc page [{:keys [post]}]
-  {:query '[{:translatable/fields [*]}]
+  {:query '[{:thing/fields [*]}]
    :key :post
    :extends layout}
-  (let [{:keys [title simple]} (:translatable/fields post)]
+  (let [{:keys [title simple]} (:thing/fields post)]
     [:main.interior-page
      [:h1 title]
      [:p (:hello simple)]]))

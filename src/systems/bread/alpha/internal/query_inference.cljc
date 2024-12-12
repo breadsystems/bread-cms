@@ -94,26 +94,26 @@
 (comment
   (binding-clauses
     '{:find [(pull ?e [:thing/slug
-                       {:translatable/fields [*]}])]}
-    :translatable/fields
+                       {:thing/fields [*]}])]}
+    :thing/fields
     (constantly false))
 
   (binding-clauses
     '{:find [(pull ?e [:thing/slug
-                       {:translatable/fields [*]}])
+                       {:thing/fields [*]}])
              (pull ?e [:thing/slug
-                       {:translatable/fields
+                       {:thing/fields
                         [:field/key :field/content]}])]}
-    :translatable/fields
+    :thing/fields
     #(some #{'* :field/content} %))
 
   (relation->spath {:x {:db/cardinality :db.cardinality/many}} [:x :y])
 
   (infer-query-bindings
-    :translatable/fields
+    :thing/fields
     #(some #{'* :field/content} %)
     '{:find [(pull ?e [:thing/slug
-                       {:translatable/fields
+                       {:thing/fields
                         [:field/key :field/content]}])]
       :in [$ ?slug]
       :where [[?e :thing/slug ?slug]]})
