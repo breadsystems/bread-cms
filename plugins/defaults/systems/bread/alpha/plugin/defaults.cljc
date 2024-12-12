@@ -217,11 +217,6 @@
     :field/key :not-found
     :field/content "404 Pas Trouvé"}])
 
-(defmethod bread/action ::hook-fn
-  [req _ _]
-  (assoc-in req [::bread/data :hook] (fn [h & args]
-                                       (apply bread/hook req h args))))
-
 (defn plugins [{:keys [db
                        routes
                        i18n
@@ -240,11 +235,7 @@
          (when (not (false? users)) (user/plugin users))
          (when (not (false? marx)) (marx/plugin marx))
          {:hooks
-          {::bread/expand
-           [{:action/name ::hook-fn
-             :action/priority 1000
-             :action/description "Include a hook closure fn in ::bread/data"}]
-           ::bread/attrs
+          {::bread/attrs
            [{:action/name ::datalog/attrs
              :action/description "Add db attrs as raw maps"}]
            ::bread/attrs-map

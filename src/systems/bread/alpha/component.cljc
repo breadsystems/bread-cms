@@ -126,6 +126,11 @@
                :else nil)]
     (assoc res :body body)))
 
+(defmethod bread/action ::hook-fn
+  [req _ _]
+  (assoc-in req [::bread/data :hook] (fn [h & args]
+                                       (apply bread/hook req h args))))
+
 (defn plugin
   ([]
    (plugin {}))
