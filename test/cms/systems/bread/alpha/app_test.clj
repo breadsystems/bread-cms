@@ -128,54 +128,54 @@
 
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component home}
                    :bread/component home
                    :route/params {:field/lang "en"}}
                   "/fr"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component home}
                    :bread/component home
                    :route/params {:field/lang "fr"}}
                   "/en/parent-page"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page
                    :route/params {:field/lang "en"
                                   :thing/slug* "parent-page"}}
                   "/en/parent-page/child-page"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page
                    :route/params {:field/lang "en"
                                   :thing/slug* "parent-page/child-page"}}
                   "/fr/parent-page"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page
                    :route/params {:field/lang "fr"
                                   :thing/slug* "parent-page"}}
                   "/fr/parent-page/child-page"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page
                    :route/params {:field/lang "fr"
                                   :thing/slug* "parent-page/child-page"}}
                   "/en/404"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page
                    :route/params {:field/lang "en"
                                   :thing/slug* "not-found"}}
                   "/fr/404"
-                  {:bread/dispatcher {:dispatcher/type :dispatcher.type/page
+                  {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
                                       :dispatcher/component page}
                    :bread/component page

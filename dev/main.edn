@@ -58,19 +58,19 @@
    ["/{field/lang}"
     [""
      {:name :home
-      :dispatcher/type :dispatcher.type/page
+      :dispatcher/type :systems.bread.alpha.post/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
     ["/tag/{thing/slug}"
      {:name :tag
-      :dispatcher/type :dispatcher.type/tag
+      :dispatcher/type :systems.bread.alpha.post/tag
       :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
     ["/{thing/slug*}"
      {:name :page
-      :dispatcher/type :dispatcher.type/page
+      :dispatcher/type :systems.bread.alpha.post/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
     ["/page/{thing/slug*}"
      {:name :page!
-      :dispatcher/type :dispatcher.type/page
+      :dispatcher/type :systems.bread.alpha.post/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
   {:conflicts nil}]
  :bread/profilers
