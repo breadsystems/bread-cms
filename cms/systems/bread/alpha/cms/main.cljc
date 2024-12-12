@@ -16,7 +16,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.plugin.defaults :as defaults]
+    [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.plugin.defaults :as defaults*]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.buddy]
     [systems.bread.alpha.cms.config.reitit]
@@ -185,7 +186,10 @@
   router)
 
 (defmethod ig/init-key :bread/app [_ app-config]
-  (bread/load-app (defaults/app app-config)))
+  (let [plugins (concat
+                  (defaults/plugins app-config)
+                  (defaults*/plugins app-config))]
+    (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
   (bread/shutdown app))
