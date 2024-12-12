@@ -297,18 +297,18 @@
    (app {}))
   ([{:keys [plugins]}]
    (with-meta
-     {::plugins (or plugins [])
-      ::hooks   {::load-plugins
-                 [{:action/name ::load-plugins
-                   :action/description
-                   "Load hooks declared in all plugins"}]
-                 ::effects!
-                 [{:action/name ::effects!
-                   :action/description
-                   "Do side effects"}]}
+     {::plugins    (or plugins [])
+      ::hooks      {::load-plugins
+                    [{:action/name ::load-plugins
+                      :action/description
+                      "Load hooks declared in all plugins"}]
+                    ::effects!
+                    [{:action/name ::effects!
+                      :action/description
+                      "Do side effects"}]}
       ::expansions []
-      ::config  {}
-      ::data    {}}
+      ::config     {}
+      ::data       {}}
      {:type ::app})))
 
 (defmethod print-method ::app
