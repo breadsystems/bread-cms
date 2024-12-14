@@ -191,7 +191,7 @@
         :spaths
         (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
                    (partial qi/relation->spath
-                            (bread/hook req ::bread/attrs-map))
+                            (bread/hook req ::bread/attrs-map nil))
                    :relation)
              bindings)}]
       [query])))

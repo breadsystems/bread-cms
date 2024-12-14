@@ -14,10 +14,10 @@
   (string/join "/" (ancestry thing)))
 
 (defn match [req]
-  (bread/hook req ::match))
+  (bread/hook req ::match nil))
 
 (defn params [req match]
-  (bread/hook req ::params match))
+  (bread/hook req ::params nil match))
 
 (defn dispatcher [req]
   "Get the full dispatcher for the given request. Router implementations should
@@ -27,7 +27,7 @@
                  :post/type :post.type/page}
         match (match req)
         ;; Get the matched dispatcher from the Router.
-        declared (bread/hook req ::dispatcher-matched match)
+        declared (bread/hook req ::dispatcher-matched nil match)
         component (bread/hook req ::component (:dispatcher/component declared))
         {:dispatcher/keys [defaults?]} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
@@ -63,11 +63,11 @@
   (bread/match router req))
 
 (defmethod bread/action ::dispatcher-matched
-  [_ {:keys [router]} [match]]
+  [_ {:keys [router]} [_ match]]
   (bread/dispatcher router match))
 
 (defmethod bread/action ::params
-  [_ {:keys [router]} [match]]
+  [_ {:keys [router]} [_ match]]
   (bread/params router match))
 
 (defmethod bread/action ::dispatch
@@ -76,7 +76,7 @@
 
 (defn router [app]
   "Returns the Router configured for the given app"
-  (bread/hook app ::router))
+  (bread/hook app ::router nil))
 
 (defn path-params [router route-name route-data]
   (let [;; OK, so turns out we still need to EITHER:
@@ -91,14 +91,14 @@
         route-keys (filter keyword? (bread/route-spec router route))]
     (zipmap route-keys (map #( bread/infer-param % route-data) route-keys))))
 
-(defmethod bread/action ::uri [req {router :router} [route-name thing]]
+(defmethod bread/action ::uri [req {router :router} [_ route-name thing]]
   (->> thing
        (merge (params req (match req)))
        (path-params router route-name)
        (bread/path router route-name)))
 
 (defn uri [app route-name thing]
-  (bread/hook app ::uri route-name thing))
+  (bread/hook app ::uri nil route-name thing))
 
 (defn plugin [{:keys [router]}]
   {:hooks

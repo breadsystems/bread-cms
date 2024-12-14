@@ -69,7 +69,7 @@
 
 (defn match [{::bread/keys [data dispatcher] :as res}]
   (if (:not-found? data)
-    (bread/hook res ::not-found)
+    (bread/hook res ::not-found nil)
     (bread/hook res ::match (:dispatcher/component dispatcher))))
 
 (defn- render-parent [component data content]

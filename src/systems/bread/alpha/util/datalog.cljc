@@ -180,7 +180,7 @@
 
 (defmethod bread/action ::attrs-map
   [req _ _]
-  (into {} (map (juxt :db/ident identity)) (bread/hook req ::bread/attrs)))
+  (into {} (map (juxt :db/ident identity)) (bread/hook req ::bread/attrs nil)))
 
 (comment
 
