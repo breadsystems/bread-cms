@@ -27,6 +27,30 @@
     ;;
     ))
 
+(deftest test-params*
+  (are
+    [expected routes req]
+    (= expected (bread/params* (reitit/router routes) req))
+
+    nil nil {}
+    nil [] {}
+    nil ["/:slug" {:name :post}] {}
+
+    {:slug "abc"}
+    [["/:slug" {:name :post}]]
+    {:uri "/abc"}
+
+    {:slug "xyz"}
+    [["/:slug" {:name :post}]]
+    {:uri "/xyz"}
+
+    {:field/lang "en" :thing/slug "xyz"}
+    [["/{field/lang}/{thing/slug}" {:name :post}]]
+    {:uri "/en/xyz"}
+
+    ;;
+    ))
+
 (deftest test-match
   (are
     [expected routes uri]
@@ -113,6 +137,39 @@
     {:name ::page :dispatcher/type ::page}
     []
     {:data {:name ::page :dispatcher/type ::page}}
+
+    ;;
+    ))
+
+(deftest test-dispatcher*
+  (are
+    [expected routes req]
+    (= expected (let [router (reitit/router routes)]
+                  (bread/dispatcher* router req)))
+
+    nil nil nil
+    nil nil {}
+    nil [] {}
+    nil ["/:slug" {:name :page}] nil
+    nil ["/:slug" {:name :page}] {}
+
+    {:name :page}
+    ["/:slug" {:name :page}]
+    {:uri "/:slug"}
+
+    {:name :page}
+    ["/:slug" {:name :page}]
+    {:uri "/:slug" :request-method :get}
+
+    {:name :GET}
+    ["/:slug" {:get {:handler {:name :GET}}
+               :post {:handler {:name :POST}}}]
+    {:uri "/:slug" :request-method :get}
+
+    {:name :POST}
+    ["/:slug" {:get {:handler {:name :GET}}
+               :post {:handler {:name :POST}}}]
+    {:uri "/:slug" :request-method :post}
 
     ;;
     ))
