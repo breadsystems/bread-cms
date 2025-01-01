@@ -29,14 +29,27 @@
 
 (use-db :each config)
 
-(defmethod bread/action ::naive-params
-  [{:keys [uri] :as req} _ _]
+(defn- naive-params [uri]
   (let [[lang & slugs] (filter (complement empty?)
                                (string/split (or uri "") #"/"))]
-    {:field/lang lang :slugs slugs}))
+    {:field/lang lang :thing/slugs* slugs}))
+
+(defmethod bread/action ::naive-params
+  [{:keys [uri]} _ _]
+  (naive-params uri))
 
 (def naive-plugin
   {:hooks {::route/params [{:action/name ::naive-params}]}})
+
+(def $naive-router (reify bread/Router
+                     (bread/match [this req]
+                       {:uri (:uri req)})
+                     (bread/dispatcher [_ _])
+                     (bread/dispatcher* [_ _])
+                     (bread/params [this match]
+                       (naive-params (:uri match)))
+                     (bread/params* [this req]
+                       (naive-params (:uri req)))))
 
 (defn- load-app [i18n-config]
   (plugins->loaded [(db/plugin config)
@@ -57,9 +70,11 @@
 (deftest test-lang
   (are
     [lang uri]
-    (= lang (i18n/lang ((bread/handler
-                          (load-app {:supported-langs #{:en :es}}))
-                        {:uri uri})))
+    (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en :es}
+                                             :query-strings? false})
+                               (route/plugin {:router $naive-router})]
+                              plugins->loaded bread/handler)]
+              (i18n/lang (handler {:uri uri}))))
 
     :en "/" ;; No lang route; Defaults to :en.
     :en "/qwerty" ;; Ditto.
@@ -67,7 +82,8 @@
     :en "/en/qwerty"
     :es "/es"
     :es "/es/qwerty"
-    :en "/fr" ;; Default to :en, since there's no :fr in the database.
+    :en "/fr" ;; Default to :en, since :fr is not in supported-langs
+    :en "/de" ;; Default to :en, since :de is not in supported-langs
 
     ))
 
@@ -167,6 +183,7 @@
          (let [app (plugins->loaded
                      [(i18n/plugin {:supported-langs
                                     #{:en :fr :ru :es :de}
+                                    :query-strings? false
                                     :format-fields? format-fields?
                                     :compact-fields? compact-fields?})
                       ;; Set up an ad-hoc plugin to hard-code lang.
