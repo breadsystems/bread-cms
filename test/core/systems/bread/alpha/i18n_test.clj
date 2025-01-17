@@ -125,7 +125,7 @@
   (let [app (plugins->loaded [(db/plugin config)
                               (i18n/plugin {:supported-langs #{:en :es}})
                               (expansion/plugin)
-                              naive-plugin])]
+                              (route/plugin {:router $naive-router})])]
     (are
       [strings uri]
       (= strings (get-in ((bread/handler app) {:uri uri})
@@ -196,6 +196,7 @@
                                     :query-strings? false
                                     :format-fields? format-fields?
                                     :compact-fields? compact-fields?})
+                      (route/plugin {:router $naive-router})
                       ;; Set up an ad-hoc plugin to hard-code lang.
                       {:hooks
                        {::i18n/lang [{:action/name ::bread/value
