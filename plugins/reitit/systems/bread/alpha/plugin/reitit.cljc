@@ -59,9 +59,9 @@
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
   (bread/match [router req]
-    (reitit/match-by-path router (:uri req)))
-  (bread/route-spec [router match]
-    (template->spec (:template match)))
+    (throw (Exception. "match is deprecated")))
+  (bread/route-spec [router req]
+    (->> req :uri (reitit/match-by-path router) :template template->spec))
   (bread/params [router match]
     (:path-params match))
   (bread/params* [router req]
