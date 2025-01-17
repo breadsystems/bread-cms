@@ -60,7 +60,11 @@
 (deftest test-supported-langs
   (are
     [langs supported]
-    (= langs (-> {:supported-langs supported} load-app i18n/supported-langs))
+    (= langs (let [handler (-> [(db/plugin config)
+                                (i18n/plugin {:supported-langs supported})
+                                (route/plugin {:router $naive-router})]
+                               plugins->loaded bread/handler)]
+               (i18n/supported-langs (handler {:uri ""}))))
 
     nil nil
     #{} #{}
@@ -90,7 +94,11 @@
 (deftest test-strings-for
   (are
     [strings lang]
-    (= strings (i18n/strings (load-app {:supported-langs #{:en :es}}) lang))
+    (= strings (let [handler (-> [(db/plugin config)
+                                  (i18n/plugin {:supported-langs #{:en :es}})
+                                  (route/plugin {:router $naive-router})]
+                                 plugins->loaded bread/handler)]
+                 (i18n/strings (handler {:uri ""}) lang)))
 
     {:one "Uno" :two "Dos"} :es
     {:one "One" :two "Two"} :en
@@ -100,9 +108,11 @@
 (deftest test-strings
   (are
     [strings uri]
-    (= strings (i18n/strings ((bread/handler
-                                (load-app {:supported-langs #{:en :es}}))
-                              {:uri uri})))
+    (= strings (let [handler (-> [(db/plugin config)
+                                  (i18n/plugin {:supported-langs #{:en :es}})
+                                  (route/plugin {:router $naive-router})]
+                                 plugins->loaded bread/handler)]
+                 (i18n/strings (handler {:uri uri}))))
 
     {:one "Uno" :two "Dos"} "/es"
     {:one "One" :two "Two"} "/en"
@@ -140,34 +150,34 @@
       :en "/de")))
 
 (deftest test-fallback
-  (let [load-app #(plugins->loaded
-                    [(db/plugin config)
-                     (i18n/plugin (merge {:supported-langs #{:en :es}} %))
-                     (expansion/plugin)
-                     naive-plugin])]
-    (are
-      [strings fallback-lang]
-      (= strings
-         (get-in ((bread/handler (load-app fallback-lang)) {:uri "/"})
-                 [::bread/data :i18n]))
+  (are
+    [strings i18n-config]
+    (= strings
+       (let [handler (-> [(db/plugin config)
+                          (i18n/plugin (merge {:supported-langs #{:en :es}}
+                                              i18n-config))
+                          (expansion/plugin)
+                          (route/plugin {:router $naive-router})]
+                         plugins->loaded bread/handler)]
+         (get-in (handler {:uri "/"}) [::bread/data :i18n])))
 
-      {:one "Uno" :two "Dos"} {:fallback-lang :es}
-      {:one "One" :two "Two"} {:fallback-lang :en}
+    {:one "Uno" :two "Dos"} {:fallback-lang :es}
+    {:one "One" :two "Two"} {:fallback-lang :en}
 
-      ;; English is the fallback fallback.
-      {:one "One" :two "Two"} {}
-      {:one "One" :two "Two"} nil
+    ;; English is the fallback fallback.
+    {:one "One" :two "Two"} {}
+    {:one "One" :two "Two"} nil
 
-      ;; Nothing in the database for the configured fallback lang.
-      {} {:fallback-lang :fr}
-      {} {:fallback-lang :de}
+    ;; Nothing in the database for the configured fallback lang.
+    {} {:fallback-lang :fr}
+    {} {:fallback-lang :de}
 
-      ;; Support disabling fallback lang.
-      {} {:fallback-lang false}
+    ;; Support disabling fallback lang.
+    {} {:fallback-lang false}
 
-      ;; NOTE: when fallback lang is nil, bread/expand gets a nil result for the
-      ;; strings query, and therefore sets :i18n to false.
-      false {:fallback-lang nil})))
+    ;; NOTE: when fallback lang is nil, bread/expand gets a nil result for the
+    ;; strings query, and therefore sets :i18n to false.
+    false {:fallback-lang nil}))
 
 (deftest ^:kaocha/skip test-lang-param-config)
 
