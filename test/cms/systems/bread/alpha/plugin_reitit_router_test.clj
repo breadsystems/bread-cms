@@ -29,39 +29,6 @@
     ;;
     ))
 
-#_
-(deftest test-match
-  (are
-    [expected routes uri]
-    (= (when expected
-         (reitit/map->Match expected))
-       (let [router (reitit/router routes)]
-         (bread/match router {:uri uri})))
-
-    nil nil ""
-    nil [] ""
-    nil ["/:slug" {:name :post}] ""
-    nil ["/:slug" {:name :post}] "/"
-
-    {:data {:name :post}
-     :path "/abc"
-     :path-params {:slug "abc"}
-     :template "/:slug"
-     :result nil}
-    ["/:slug" {:name :post}]
-    "/abc"
-
-    {:data {:name :post}
-     :path "/a/b/c"
-     :path-params {:slug "a/b/c"}
-     :template "/{*slug}"
-     :result nil}
-    ["/{*slug}" {:name :post}]
-    "/a/b/c"
-
-    ;;
-    ))
-
 (deftest test-route-spec
   (are
     [expected routes uri]

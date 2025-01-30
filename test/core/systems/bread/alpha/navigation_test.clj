@@ -15,8 +15,7 @@
 (defrecord MockRouter [params]
   bread/Router
   (bread/route-params [this _] params)
-  (bread/match [this _])
-  (bread/route-spec [this match]
+  (bread/route-spec [this _]
     [:field/lang :thing/slug*])
   (bread/path [this route-name params]
     (let [route (get {::page [:field/lang :thing/slug*]} route-name)]

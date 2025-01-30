@@ -182,8 +182,6 @@
                    :route/params {:field/lang "fr"
                                   :thing/slug* "not-found"}}}
           router (reify bread/Router
-                   (bread/match [router req]
-                     (get routes (:uri req)))
                    (bread/route-params [router req]
                      (:route/params (get routes (:uri req))))
                    (bread/dispatcher [router match]

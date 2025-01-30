@@ -347,14 +347,6 @@
      #{:post.status/published})
 
   (slurp (io/resource "public/assets/hi.txt"))
-  (bread/match (:bread/router @system) {:uri "/assets/hi.txt"
-                                        :request-method :get})
-  (bread/match (:bread/router @system) {:uri "/en"
-                                        :request-method :get})
-  (bread/match (:bread/router @system) {:uri "/login"
-                                        :request-method :get})
-  (bread/match (:bread/router @system) {:uri "/login"
-                                        :request-method :post})
 
   (response ((:bread/handler @system) {:uri "/en"}))
   (response ((:bread/handler @system) {:uri "/en/hello"}))
@@ -443,8 +435,6 @@
     (reitit/match-by-name $router :page {:field/lang :en :thing/slug* "x"}))
 
   (bread/routes $router)
-  (let [req (->app $req)]
-    (bread/match (route/router req) req))
   (bread/route-params $router $req)
 
   ;; route/uri infers params and then just calls bread/path under the hood...
