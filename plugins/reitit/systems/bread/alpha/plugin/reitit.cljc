@@ -64,7 +64,7 @@
     (->> req :uri (reitit/match-by-path router) :template template->spec))
   (bread/params [router match]
     (:path-params match))
-  (bread/params* [router req]
+  (bread/route-params [router req]
     (some->> req :uri (reitit/match-by-path router) :path-params))
   (bread/dispatcher [router match]
     (:data match))

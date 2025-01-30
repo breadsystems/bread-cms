@@ -27,10 +27,10 @@
     ;;
     ))
 
-(deftest test-params*
+(deftest test-route-params
   (are
     [expected routes req]
-    (= expected (bread/params* (reitit/router routes) req))
+    (= expected (bread/route-params (reitit/router routes) req))
 
     nil nil {}
     nil [] {}

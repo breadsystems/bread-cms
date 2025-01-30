@@ -186,7 +186,7 @@
                      (get routes (:uri req)))
                    (bread/params [router match]
                      (:route/params match))
-                   (bread/params* [router req]
+                   (bread/route-params [router req]
                      (naive-params (:uri req)))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
