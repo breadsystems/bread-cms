@@ -9,6 +9,8 @@
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
+                                              naive-plugin
+                                              naive-router
                                               use-db]]))
 
 (def config {:db/type :datahike
@@ -29,28 +31,6 @@
 
 (use-db :each config)
 
-(defn- naive-params [uri]
-  (let [[lang & slugs] (filter (complement empty?)
-                               (string/split (or uri "") #"/"))]
-    {:field/lang lang :thing/slugs* slugs}))
-
-(defmethod bread/action ::naive-params
-  [{:keys [uri]} _ _]
-  (naive-params uri))
-
-(def naive-plugin
-  {:hooks {::route/params [{:action/name ::naive-params}]}})
-
-(def $naive-router (reify bread/Router
-                     (bread/match [this req]
-                       {:uri (:uri req)})
-                     (bread/dispatcher [_ _])
-                     (bread/dispatcher* [_ _])
-                     (bread/params [this match]
-                       (naive-params (:uri match)))
-                     (bread/params* [this req]
-                       (naive-params (:uri req)))))
-
 (defn- load-app [i18n-config]
   (plugins->loaded [(db/plugin config)
                     (i18n/plugin i18n-config)
@@ -62,7 +42,7 @@
     [langs supported]
     (= langs (let [handler (-> [(db/plugin config)
                                 (i18n/plugin {:supported-langs supported})
-                                (route/plugin {:router $naive-router})]
+                                (route/plugin {:router (naive-router)})]
                                plugins->loaded bread/handler)]
                (i18n/supported-langs (handler {:uri ""}))))
 
@@ -76,7 +56,7 @@
     [lang uri]
     (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en :es}
                                              :query-strings? false})
-                               (route/plugin {:router $naive-router})]
+                               (route/plugin {:router (naive-router)})]
                               plugins->loaded bread/handler)]
               (i18n/lang (handler {:uri uri}))))
 
@@ -96,7 +76,7 @@
     [strings lang]
     (= strings (let [handler (-> [(db/plugin config)
                                   (i18n/plugin {:supported-langs #{:en :es}})
-                                  (route/plugin {:router $naive-router})]
+                                  (route/plugin {:router (naive-router)})]
                                  plugins->loaded bread/handler)]
                  (i18n/strings (handler {:uri ""}) lang)))
 
@@ -110,7 +90,7 @@
     [strings uri]
     (= strings (let [handler (-> [(db/plugin config)
                                   (i18n/plugin {:supported-langs #{:en :es}})
-                                  (route/plugin {:router $naive-router})]
+                                  (route/plugin {:router (naive-router)})]
                                  plugins->loaded bread/handler)]
                  (i18n/strings (handler {:uri uri}))))
 
@@ -125,7 +105,7 @@
   (let [app (plugins->loaded [(db/plugin config)
                               (i18n/plugin {:supported-langs #{:en :es}})
                               (expansion/plugin)
-                              (route/plugin {:router $naive-router})])]
+                              (route/plugin {:router (naive-router)})])]
     (are
       [strings uri]
       (= strings (get-in ((bread/handler app) {:uri uri})
@@ -157,7 +137,7 @@
                           (i18n/plugin (merge {:supported-langs #{:en :es}}
                                               i18n-config))
                           (expansion/plugin)
-                          (route/plugin {:router $naive-router})]
+                          (route/plugin {:router (naive-router)})]
                          plugins->loaded bread/handler)]
          (get-in (handler {:uri "/"}) [::bread/data :i18n])))
 
@@ -196,7 +176,7 @@
                                     :query-strings? false
                                     :format-fields? format-fields?
                                     :compact-fields? compact-fields?})
-                      (route/plugin {:router $naive-router})
+                      (route/plugin {:router (naive-router)})
                       ;; Set up an ad-hoc plugin to hard-code lang.
                       {:hooks
                        {::i18n/lang [{:action/name ::bread/value
