@@ -184,8 +184,6 @@
           router (reify bread/Router
                    (bread/route-params [router req]
                      (:route/params (get routes (:uri req))))
-                   (bread/dispatcher [router match]
-                     (:bread/dispatcher match))
                    (bread/route-dispatcher [router req]
                      (:bread/dispatcher (get routes (:uri req)))))
           plugins (defaults/plugins

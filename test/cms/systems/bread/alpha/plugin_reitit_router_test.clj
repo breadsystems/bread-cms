@@ -64,29 +64,6 @@
     ;;
     ))
 
-(deftest test-dispatcher
-  (are
-    [expected routes match]
-    (= expected (let [router (reitit/router routes)]
-                  (bread/dispatcher router match)))
-
-    nil nil nil
-    nil nil {}
-    nil [] {}
-    nil ["/:slug" {:name :post}] nil
-    nil ["/:slug" {:name :post}] {}
-
-    {:name :x}
-    []
-    {:data {:name :x}}
-
-    {:name ::page :dispatcher/type ::page}
-    []
-    {:data {:name ::page :dispatcher/type ::page}}
-
-    ;;
-    ))
-
 (deftest test-route-dispatcher
   (are
     [expected routes req]
