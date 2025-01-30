@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.test-helpers
   (:require
+    [clojure.string :as string]
     [clojure.tools.logging :as log]
     [clojure.test :as t]
     [systems.bread.alpha.core :as bread]
@@ -60,6 +61,22 @@
 
 (comment
   (macroexpand '(use-db :each {:my :config})))
+
+(defn- naive-params [uri]
+  (let [[lang & slugs] (filter (complement empty?)
+                               (string/split (or uri "") #"/"))]
+    {:field/lang lang :thing/slugs* slugs}))
+
+(defn naive-router []
+  (reify bread/Router
+    (bread/match [this req]
+      {:uri (:uri req)})
+    (bread/dispatcher [_ _])
+    (bread/dispatcher* [_ _])
+    (bread/params [this match]
+      (naive-params (:uri match)))
+    (bread/params* [this req]
+      (naive-params (:uri req)))))
 
 (defn map->router [routes]
   "Takes a map m like:
