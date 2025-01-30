@@ -80,8 +80,6 @@
       {:uri (:uri req)})
     (bread/dispatcher [_ _])
     (bread/route-dispatcher [_ _])
-    (bread/params [this match]
-      (naive-params (:uri match)))
     (bread/route-params [this req]
       (naive-params (:uri req)))))
 
@@ -109,8 +107,6 @@
       (get routes (:uri req)))
     (bread/route-spec [_ match]
       (:route/spec match))
-    (bread/params [_ match]
-      (:route/params match))
     (bread/route-params [_ req]
       (:route/params (get routes (:uri req))))
     (bread/dispatcher [_ match]

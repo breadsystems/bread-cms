@@ -5,28 +5,6 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.plugin.reitit]))
 
-(deftest test-params
-  (are
-    [expected routes match]
-    (= expected (let [router (reitit/router routes)]
-                  (bread/params router match)))
-
-    nil nil {}
-    nil [] {}
-    nil [] {:thing/slug "x"}
-    nil ["/:slug" {:name :post}] {}
-
-    {:slug "abc"}
-    [["/:slug" {:name :post}]]
-    {:path-params {:slug "abc"}}
-
-    {:slug "xyz" :lang :en}
-    [["/:slug" {:name :post}]]
-    {:path-params {:slug "xyz" :lang :en}}
-
-    ;;
-    ))
-
 (deftest test-route-params
   (are
     [expected routes req]

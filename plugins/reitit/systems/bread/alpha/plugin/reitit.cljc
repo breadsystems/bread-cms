@@ -62,8 +62,6 @@
     (throw (Exception. "match is deprecated")))
   (bread/route-spec [router req]
     (->> req :uri (reitit/match-by-path router) :template template->spec))
-  (bread/params [router match]
-    (:path-params match))
   (bread/route-params [router req]
     (some->> req :uri (reitit/match-by-path router) :path-params))
   (bread/dispatcher [router match]

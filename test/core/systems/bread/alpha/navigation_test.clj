@@ -14,7 +14,6 @@
 
 (defrecord MockRouter [params]
   bread/Router
-  (bread/params [this _] params)
   (bread/route-params [this _] params)
   (bread/match [this _])
   (bread/route-spec [this match]
