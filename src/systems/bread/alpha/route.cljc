@@ -19,6 +19,10 @@
 (defn params [req match]
   (bread/hook req ::params nil match))
 
+(defn router [app]
+  "Returns the Router configured for the given app"
+  (bread/hook app ::router nil))
+
 (defn dispatcher [req]
   "Get the full dispatcher for the given request. Router implementations should
   call this function."
@@ -73,10 +77,6 @@
 (defmethod bread/action ::dispatch
   [req _ _]
   (assoc req ::bread/dispatcher (dispatcher req)))
-
-(defn router [app]
-  "Returns the Router configured for the given app"
-  (bread/hook app ::router nil))
 
 (defn path-params [router route-name route-data]
   (let [;; OK, so turns out we still need to EITHER:
