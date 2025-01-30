@@ -85,11 +85,11 @@
   "Takes a map m like:
 
   {\"/first/route\"
-   {:bread/dispatcher :dispatcher.type/first
+   {:dispatcher/type ::first
     :bread/component 'first-component
     :route/params ...}
    \"/second/route\"
-   {:bread/dispatcher :dispatcher.type/second
+   {:dispatcher/type ::second
     :bread/component 'second-component
     :route/params ...}}
 
@@ -101,8 +101,8 @@
                 (when (= route-name (:name route))
                   (reduced path)))
               nil routes))
-    (bread/route-spec [_ match]
-      (:route/spec match))
+    (bread/route-spec [_ req]
+      (:route/spec (get routes (:uri req))))
     (bread/route-params [_ req]
       (:route/params (get routes (:uri req))))
     (bread/dispatcher [_ match]
@@ -116,11 +116,11 @@
   "Takes a map m like:
 
   {\"/first/route\"
-   {:bread/dispatcher :dispatcher.type/first
+   {:dispatcher/type ::first
     :bread/component 'first-component
     :route/params ...}
    \"/second/route\"
-   {:bread/dispatcher :dispatcher.type/second
+   {:dispatcher/type ::second
     :bread/component 'second-component
     :route/params ...}}
 
