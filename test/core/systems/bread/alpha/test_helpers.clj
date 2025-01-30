@@ -76,8 +76,6 @@
 
 (defn naive-router []
   (reify bread/Router
-    (bread/match [this req]
-      {:uri (:uri req)})
     (bread/dispatcher [_ _])
     (bread/route-dispatcher [_ _])
     (bread/route-params [this req]
@@ -103,8 +101,6 @@
                 (when (= route-name (:name route))
                   (reduced path)))
               nil routes))
-    (bread/match [_ req]
-      (get routes (:uri req)))
     (bread/route-spec [_ match]
       (:route/spec match))
     (bread/route-params [_ req]

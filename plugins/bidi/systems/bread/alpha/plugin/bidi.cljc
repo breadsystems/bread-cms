@@ -8,10 +8,6 @@
   (bread/path [this route-name params]
     (let [params (interleave (keys params) (vals params))]
       (apply bidi/path-for routes route-name params)))
-  (bread/match [this req]
-    (let [ks (filter (complement namespace) (keys req))
-          options (interleave ks (map req ks))]
-      (apply bidi/match-route routes (:uri req) options)))
   (bread/dispatcher [this match]
     (get dispatchers (:handler match)))
   (bread/params [this match]
@@ -29,14 +25,7 @@
 
   (c/match {::bread/dispatcher {:dispatcher/component :THIS}})
 
-  (let [router (BidiRouter. $routes $dispatchers)]
-    (for [route ["/en" "/en/abc" "/en/abc/xyz" "/en/blog" "/en/blog/qwerty"]]
-      (let [match (bread/match router {:uri route})]
-        [route (bread/dispatcher router match) (bread/params router match)])))
-
   (bidi/match-route $routes "/en")
-  (let [router (BidiRouter. $routes {})]
-    (bread/match router {:uri "/en"}))
 
   (do
     (def $routes

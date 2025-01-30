@@ -58,8 +58,6 @@
               reitit/match->path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
-  (bread/match [router req]
-    (throw (Exception. "match is deprecated")))
   (bread/route-spec [router req]
     (->> req :uri (reitit/match-by-path router) :template template->spec))
   (bread/route-params [router req]

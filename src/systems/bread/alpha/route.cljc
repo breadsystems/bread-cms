@@ -54,10 +54,6 @@
   [_ {:keys [router]} [_path route-name params]]
   (bread/path router route-name params))
 
-(defmethod bread/action ::match
-  [req {:keys [router]} _]
-  (bread/match router req))
-
 (defmethod bread/action ::params
   [req {:keys [router]} _]
   (bread/route-params router req))
