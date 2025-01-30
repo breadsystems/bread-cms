@@ -79,7 +79,7 @@
     (bread/match [this req]
       {:uri (:uri req)})
     (bread/dispatcher [_ _])
-    (bread/dispatcher* [_ _])
+    (bread/route-dispatcher [_ _])
     (bread/params [this match]
       (naive-params (:uri match)))
     (bread/route-params [this req]
@@ -113,6 +113,7 @@
       (:route/params match))
     (bread/dispatcher [_ match]
       match)
+    (bread/route-dispatcher [_ req])
     (bread/routes [_]
       routes)))
 

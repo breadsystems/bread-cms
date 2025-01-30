@@ -29,7 +29,7 @@
   (params [this match])
   (route-params [this req])
   (dispatcher [this match])
-  (dispatcher* [this req])
+  (route-dispatcher [this req])
   (routes [this]))
 
 (defprotocol WatchableRoute

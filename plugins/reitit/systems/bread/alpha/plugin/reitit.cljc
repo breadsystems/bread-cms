@@ -68,7 +68,7 @@
     (some->> req :uri (reitit/match-by-path router) :path-params))
   (bread/dispatcher [router match]
     (:data match))
-  (bread/dispatcher* [router req]
+  (bread/route-dispatcher [router req]
     (let [method (:request-method req)
           match-data (some->> req :uri (reitit/match-by-path router) :data)]
       (if-let [handler (-> match-data (get method) :handler)] handler match-data)))
