@@ -187,11 +187,11 @@
                    (bread/params [router match]
                      (:route/params match))
                    (bread/route-params [router req]
-                     (naive-params (:uri req)))
+                     (:route/params (get routes (:uri req))))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match))
                    (bread/route-dispatcher [router req]
-                     (get routes (:uri req))))
+                     (:bread/dispatcher (get routes (:uri req)))))
           plugins (defaults/plugins
                     {:db config
                      :components {:not-found not-found}

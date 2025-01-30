@@ -100,7 +100,7 @@
         :expansion/description "Process post menu item data."
         :router (route/router req)
         :route/name route-name
-        :route/params (route/params req (route/match req)) ;; TODO
+        :route/params (bread/route-params (route/router req) req)
         :field/key (field-keys fks)
         :sort-by sort-key}])))
 
@@ -149,7 +149,7 @@
         :sort-by sort-key
         :router (route/router req)
         :route/name route-name
-        :route/params (route/params req (route/match req))}])))
+        :route/params (bread/route-params (route/router req) req)}])))
 
 (defmethod menu-expansions ::global
   menu-expansions?type=global
@@ -196,7 +196,7 @@
         :sort-by sort-key
         :router (route/router req)
         :route/name route-name
-        :route/params (route/params req (route/match req))}])))
+        :route/params (bread/route-params (route/router req) req)}])))
 
 (defmethod menu-expansions ::location
   menu-expansions?type=location
@@ -244,7 +244,7 @@
         :sort-by sort-key
         :router (route/router req)
         :route/name route-name
-        :route/params (route/params req (route/match req))}])))
+        :route/params (bread/route-params (route/router req) req)}])))
 
 (defmethod bread/action ::add-menu-expansions
   add-menu-expansions-action

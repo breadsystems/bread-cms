@@ -111,7 +111,8 @@
       (:route/spec match))
     (bread/params [_ match]
       (:route/params match))
-    (bread/route-params [_ _])
+    (bread/route-params [_ req]
+      (:route/params (get routes (:uri req))))
     (bread/dispatcher [_ match]
       match)
     (bread/route-dispatcher [_ req]
