@@ -34,6 +34,7 @@
          ctx {:keyword? false}]
     (case c
       nil params
+      ;; TODO support keyword-style :route/:params syntax
       \{ (recur cs "" params {:keyword? true})
       \} (recur cs "" (conj params (keyword param)) {:keyword? false})
       \/ (let [param? (seq param)
@@ -49,7 +50,6 @@
 
 (extend-protocol Router
   reitit.core.Router
-  ;; TODO route-name
   (bread/path [router route-name params]
     (let [;; Dash-encode all string params
           params (into {} (map (juxt key (comp dash-encode val)) params))]
@@ -68,6 +68,5 @@
       (if-let [handler (-> match-data (get method) :handler)] handler match-data)))
   (bread/routes [router]
     (into {} (map (fn [[template route]]
-                    [(route-name route)
-                     (assoc route :template template)])
+                    [(route-name route) (assoc route :template template)])
                   (reitit/compiled-routes router)))))
