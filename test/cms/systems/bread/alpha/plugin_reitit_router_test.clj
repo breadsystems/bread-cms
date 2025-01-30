@@ -142,11 +142,11 @@
     ;;
     ))
 
-(deftest test-dispatcher*
+(deftest test-route-dispatcher
   (are
     [expected routes req]
     (= expected (let [router (reitit/router routes)]
-                  (bread/dispatcher* router req)))
+                  (bread/route-dispatcher router req)))
 
     nil nil nil
     nil nil {}
