@@ -67,6 +67,13 @@
                                (string/split (or uri "") #"/"))]
     {:field/lang lang :thing/slugs* slugs}))
 
+(defmethod bread/action ::naive-params
+  [{:keys [uri]} _ _]
+  (naive-params uri))
+
+(defn naive-plugin []
+  {:hooks {::route/params [{:action/name ::naive-params}]}})
+
 (defn naive-router []
   (reify bread/Router
     (bread/match [this req]
