@@ -82,7 +82,7 @@
     (bread/dispatcher* [_ _])
     (bread/params [this match]
       (naive-params (:uri match)))
-    (bread/params* [this req]
+    (bread/route-params [this req]
       (naive-params (:uri req)))))
 
 (defn map->router [routes]

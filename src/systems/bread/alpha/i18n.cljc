@@ -20,7 +20,7 @@
 (defn lang
   "High-level fn for getting the language for the current request."
   [req]
-  (let [params (bread/params* (route/router req) req)
+  (let [params (bread/route-params (route/router req) req)
         lang-param (bread/config req :i18n/lang-param)
         supported (get (supported-langs req) (keyword (lang-param params)))
         fallback (bread/config req :i18n/fallback-lang)

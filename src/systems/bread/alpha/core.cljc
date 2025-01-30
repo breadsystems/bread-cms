@@ -27,7 +27,7 @@
   (match [this req])
   (route-spec [this match])
   (params [this match])
-  (params* [this req])
+  (route-params [this req])
   (dispatcher [this match])
   (dispatcher* [this req])
   (routes [this]))
