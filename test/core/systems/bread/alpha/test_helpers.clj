@@ -62,7 +62,7 @@
 (comment
   (macroexpand '(use-db :each {:my :config})))
 
-(defn- naive-params [uri]
+(defn naive-params [uri]
   (let [[lang & slugs] (filter (complement empty?)
                                (string/split (or uri "") #"/"))]
     {:field/lang lang :thing/slugs* slugs}))
