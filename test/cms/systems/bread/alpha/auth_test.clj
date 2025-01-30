@@ -8,9 +8,11 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.time :as t]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.test-helpers :refer [plugins->loaded
+    [systems.bread.alpha.test-helpers :refer [naive-router
+                                              plugins->loaded
                                               plugins->handler
                                               use-db]])
   (:import
@@ -65,6 +67,7 @@
                       (conj
                         (defaults/plugins {:db config
                                            :routes false})
+                        (route/plugin {:router (naive-router)})
                         {:hooks
                          {::bread/route
                           [{:action/name ::route

@@ -10,7 +10,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :refer [use-db]]
+    [systems.bread.alpha.test-helpers :refer [naive-params use-db]]
     [systems.bread.alpha.defaults :as defaults]))
 
 (def config {:db/type :datahike
@@ -186,6 +186,8 @@
                      (get routes (:uri req)))
                    (bread/params [router match]
                      (:route/params match))
+                   (bread/params* [router req]
+                     (naive-params (:uri req)))
                    (bread/dispatcher [router match]
                      (:bread/dispatcher match)))
           plugins (defaults/plugins

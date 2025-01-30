@@ -5,9 +5,11 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.route :as route]
     [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [db->plugin
+                                              naive-router
                                               plugins->loaded]]))
 
 (deftest test-dispatch-taxon-expansions
@@ -17,6 +19,7 @@
                               (i18n/plugin {:query-strings? false
                                             :query-lang? false})
                               (dispatcher/plugin)
+                              (route/plugin {:router (naive-router)})
                               {:hooks
                                {::bread/attrs-map
                                 [{:action/name ::bread/value
