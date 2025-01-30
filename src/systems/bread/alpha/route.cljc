@@ -75,7 +75,7 @@
         route-keys (filter keyword? (bread/route-spec router route))]
     (zipmap route-keys (map #( bread/infer-param % route-data) route-keys))))
 
-(defmethod bread/action ::uri [req {router :router} [_ route-name thing]]
+(defmethod bread/action ::uri [req {:keys [router]} [_ route-name thing]]
   (->> thing
        (merge (bread/route-params router req))
        (path-params router route-name)
