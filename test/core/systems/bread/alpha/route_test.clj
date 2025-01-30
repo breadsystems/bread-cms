@@ -60,10 +60,7 @@
           :dispatcher/key :page
           :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
-                         :slug "empty-dispatcher-map"}
-          :route/match {:dispatcher/component Page
-                        :route/params {:lang "en"
-                                       :slug "empty-dispatcher-map"}}}
+                         :slug "empty-dispatcher-map"}}
          "/en/empty-dispatcher-map"
 
          {:dispatcher/type :dispatcher.type/page
@@ -72,10 +69,7 @@
           :dispatcher/key :page
           :dispatcher/pull [:db/id :thing/slug]
           :post/type :post.type/page
-          :route/params {:lang nil :slug "overridden"}
-          :route/match {:dispatcher/i18n? false
-                        :route/params {:lang nil :slug "overridden"}
-                        :dispatcher/component Page}}
+          :route/params {:lang nil :slug "overridden"}}
          "/overridden"
 
          {:dispatcher/type :whatevs
@@ -84,12 +78,7 @@
           :dispatcher/key :page
           :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
-                         :slug "no-defaults"}
-          :route/match {:dispatcher/type :whatevs
-                        :dispatcher/defaults? false
-                        :dispatcher/component Page
-                        :route/params {:lang "en"
-                                       :slug "no-defaults"}}}
+                         :slug "no-defaults"}}
          "/en/no-defaults"
 
          {:dispatcher/type :whatevs
@@ -99,11 +88,7 @@
           :post/type :post.type/page
           :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
-                         :slug "not-found"}
-          :route/match {:dispatcher/type :whatevs
-                        :dispatcher/component Page
-                        :route/params {:lang "en"
-                                       :slug "not-found"}}}
+                         :slug "not-found"}}
          "/en/not-found"
 
          {:dispatcher/type :whatevs
@@ -113,10 +98,7 @@
           :dispatcher/pull nil
           :post/type :post.type/page
           :route/params {:lang "en"
-                         :slug "no-component"}
-          :route/match {:dispatcher/type :whatevs
-                        :route/params {:lang "en"
-                                       :slug "no-component"}}}
+                         :slug "no-component"}}
          "/en/no-component"
 
         ;;

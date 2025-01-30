@@ -13,12 +13,6 @@
 (defmethod bread/infer-param :thing/slug* [_ thing]
   (string/join "/" (ancestry thing)))
 
-(defn match [req]
-  (bread/hook req ::match nil))
-
-(defn params [req match]
-  (bread/hook req ::params nil match))
-
 (defn router [app]
   "Returns the Router configured for the given app"
   (bread/hook app ::router nil))
@@ -29,9 +23,8 @@
   (let [default {:dispatcher/i18n? true
                  :dispatcher/type :dispatcher.type/page
                  :post/type :post.type/page}
-        match (match req)
-        ;; Get the matched dispatcher from the Router.
-        declared (bread/hook req ::dispatcher-matched nil match)
+        declared (bread/hook req ::route-dispatcher
+                             (bread/route-dispatcher (router req) req))
         component (bread/hook req ::component (:dispatcher/component declared))
         {:dispatcher/keys [defaults?]} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
@@ -49,10 +42,9 @@
                    declared)
         ;; defaults? can only be turned off *explicitly* with false
         dispatcher' (assoc (if (not (false? defaults?))
-                           (merge default declared)
-                           declared)
-                         :route/match match
-                         :route/params (params req match)
+                             (merge default declared)
+                             declared)
+                         :route/params (bread/hook req ::params nil)
                          :dispatcher/component component
                          :dispatcher/key (component/query-key component)
                          :dispatcher/pull (component/query component))]
@@ -66,13 +58,9 @@
   [req {:keys [router]} _]
   (bread/match router req))
 
-(defmethod bread/action ::dispatcher-matched
-  [_ {:keys [router]} [_ match]]
-  (bread/dispatcher router match))
-
 (defmethod bread/action ::params
-  [_ {:keys [router]} [_ match]]
-  (bread/params router match))
+  [req {:keys [router]} _]
+  (bread/route-params router req))
 
 (defmethod bread/action ::dispatch
   [req _ _]
@@ -93,7 +81,7 @@
 
 (defmethod bread/action ::uri [req {router :router} [_ route-name thing]]
   (->> thing
-       (merge (params req (match req)))
+       (merge (bread/route-params router req))
        (path-params router route-name)
        (bread/path router route-name)))
 
@@ -106,10 +94,6 @@
     [{:action/name ::bread/value :action/value router}]
     ::path
     [{:action/name ::path :router router}]
-    ::match
-    [{:action/name ::match :router router}]
-    ::dispatcher-matched
-    [{:action/name ::dispatcher-matched :router router}]
     ::params
     [{:action/name ::params :router router}]
     ::bread/route
