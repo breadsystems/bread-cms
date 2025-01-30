@@ -8,8 +8,6 @@
   (bread/path [this route-name params]
     (let [params (interleave (keys params) (vals params))]
       (apply bidi/path-for routes route-name params)))
-  (bread/dispatcher [this match]
-    (get dispatchers (:handler match)))
   (bread/params [this match]
     (:route-params match))
   (bread/routes [this]
