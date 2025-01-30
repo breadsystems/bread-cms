@@ -445,7 +445,7 @@
   (bread/routes $router)
   (let [req (->app $req)]
     (bread/match (route/router req) req))
-  (bread/params $router (bread/match $router $req))
+  (bread/route-params $router $req)
 
   ;; route/uri infers params and then just calls bread/path under the hood...
   (bread/path $router :page {:field/lang :en :thing/slug* "a/b/c"})
