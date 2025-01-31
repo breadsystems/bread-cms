@@ -64,8 +64,12 @@
     (some->> req :uri (reitit/match-by-path router) :path-params))
   (bread/route-dispatcher [router req]
     (let [method (:request-method req)
-          match-data (some->> req :uri (reitit/match-by-path router) :data)]
-      (if-let [handler (-> match-data (get method) :handler)] handler match-data)))
+          match-data (some->> req :uri (reitit/match-by-path router) :data)
+          method-handler (-> match-data (get method) :handler)]
+      (cond
+        method-handler method-handler
+        (fn? (:handler match-data)) (:handler match-data)
+        :else match-data)))
   (bread/routes [router]
     (into {} (map (fn [[template route]]
                     [(route-name route) (assoc route :template template)])

@@ -3,7 +3,9 @@
     [clojure.test :refer [deftest are is]]
     [reitit.core :as reitit]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.plugin.reitit]))
+    [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.plugin.reitit]
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
 (deftest test-route-params
   (are
@@ -64,6 +66,8 @@
     ;;
     ))
 
+(defn- handler [_])
+
 (deftest test-route-dispatcher
   (are
     [expected routes req]
@@ -93,6 +97,50 @@
     ["/:slug" {:get {:handler {:name :GET}}
                :post {:handler {:name :POST}}}]
     {:uri "/:slug" :request-method :post}
+
+    handler
+    ["/:slug" {:get {:handler handler}}]
+    {:uri "/abc" :request-method :get}
+
+    #'handler
+    ["/:slug" {:get {:handler #'handler}}]
+    {:uri "/abc" :request-method :get}
+
+    ;;
+    ))
+
+(deftest test-route-lifecycle-hook
+  (are
+    [expected routes req]
+    (= expected (let [router (reitit/router routes)
+                      app (plugins->loaded [(route/plugin {:router router})])]
+                  (-> (merge app req)
+                      (bread/hook ::bread/route)
+                      ::bread/dispatcher)))
+
+    {:dispatcher/type ::hello
+     :dispatcher/component nil
+     :dispatcher/i18n? true
+     :dispatcher/key nil
+     :dispatcher/pull nil
+     :post/type :post.type/page
+     :route/params {:slug "abc"}}
+    ["/:slug" {:dispatcher/type ::hello}]
+    {:uri "/abc"}
+
+    {:dispatcher/type ::hello
+     :dispatcher/component nil
+     :dispatcher/i18n? true
+     :dispatcher/key nil
+     :dispatcher/pull nil
+     :post/type :post.type/page
+     :route/params {:slug "abc"}}
+    ["/:slug" {:get {:handler {:dispatcher/type ::hello}}}]
+    {:uri "/abc" :request-method :get}
+
+    handler
+    ["/:slug" handler]
+    {:uri "/abc"}
 
     ;;
     ))
