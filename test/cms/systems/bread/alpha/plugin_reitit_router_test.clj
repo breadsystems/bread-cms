@@ -142,6 +142,14 @@
     ["/:slug" handler]
     {:uri "/abc"}
 
+    handler
+    ["/:slug" {:handler handler}]
+    {:uri "/abc"}
+
+    handler
+    ["/:slug" {:handler #'handler}]
+    {:uri "/abc"}
+
     ;;
     ))
 
