@@ -15,6 +15,8 @@
   {:key :page
    :query [:db/id :thing/slug]})
 
+(defn- handler [_])
+
 (deftest test-route-dispatch
   (let [;; Plugin a simplistic router with hard-coded uri->match logic.
         routes {"/en/home"
@@ -23,28 +25,27 @@
                  :route/params {:lang "en"}}
                 "/en/empty-dispatcher-map"
                 {:dispatcher/component Page
-                 :route/params {:lang "en"
-                                :slug "empty-dispatcher-map"}}
+                 :route/params {:lang "en" :slug "empty-dispatcher-map"}}
                 "/en/no-defaults"
                 {:dispatcher/type :whatevs
                  :dispatcher/component Page
                  :dispatcher/defaults? false
-                 :route/params {:lang "en"
-                                :slug "no-defaults"}}
+                 :route/params {:lang "en" :slug "no-defaults"}}
                 "/en/no-component"
                 {:dispatcher/type :whatevs
-                 :route/params {:lang "en"
-                                :slug "no-component"}}
+                 :route/params {:lang "en" :slug "no-component"}}
                 "/en/not-found"
                 {:dispatcher/type :whatevs
                  :dispatcher/component Page
-                 :route/params {:lang "en"
-                                :slug "not-found"}}
+                 :route/params {:lang "en" :slug "not-found"}}
                 "/overridden"
                 {:dispatcher/i18n? false
                  :dispatcher/component Page
-                 :route/params {:lang nil
-                                :slug "overridden"}}}
+                 :route/params {:lang nil :slug "overridden"}}
+                "/function"
+                handler
+                "/var"
+                #'handler}
         app (plugins->loaded [(map->route-plugin routes)])]
 
     (are [dispatcher uri] (= dispatcher
@@ -100,6 +101,12 @@
           :route/params {:lang "en"
                          :slug "no-component"}}
          "/en/no-component"
+
+         handler
+         "/function"
+
+         #'handler
+         "/var"
 
         ;;
         )

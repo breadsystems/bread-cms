@@ -26,7 +26,8 @@
         declared (bread/hook req ::route-dispatcher
                              (bread/route-dispatcher (router req) req))
         component (bread/hook req ::component (:dispatcher/component declared))
-        {:dispatcher/keys [defaults?]} declared
+        ;; defaults? can only be turned off *explicitly* with logical false
+        {:dispatcher/keys [defaults?] :or {defaults? true}} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
                        :dispatcher.type/page :dispatcher.type/page}
         declared (cond
@@ -40,15 +41,19 @@
                    {:dispatcher/type declared}
                    :else
                    declared)
-        ;; defaults? can only be turned off *explicitly* with false
-        dispatcher' (assoc (if (not (false? defaults?))
-                             (merge default declared)
-                             declared)
-                         :route/params (bread/hook req ::params nil)
-                         :dispatcher/component component
-                         :dispatcher/key (component/query-key component)
-                         :dispatcher/pull (component/query component))]
-    (bread/hook req ::dispatcher dispatcher')))
+        dispatcher (cond
+                     (var? declared) declared
+                     (fn? declared) declared
+                     defaults? (merge default declared)
+                     :else declared)
+        dispatcher (if (map? dispatcher)
+                     (assoc dispatcher
+                            :route/params (bread/hook req ::params nil)
+                            :dispatcher/component component
+                            :dispatcher/key (component/query-key component)
+                            :dispatcher/pull (component/query component))
+                     dispatcher)]
+    (bread/hook req ::dispatcher dispatcher)))
 
 (defmethod bread/action ::path
   [_ {:keys [router]} [_path route-name params]]
