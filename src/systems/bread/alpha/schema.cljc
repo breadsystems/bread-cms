@@ -57,6 +57,18 @@
       :db/valueType :db.type/number
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.things"}
+     {:db/ident :thing/created-at
+      :attr/label "Created at"
+      :db/doc "Instant at which this thing was created. Up to the application to include this in transactions."
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.things"}
+     {:db/ident :thing/updated-at
+      :attr/label "Updated at"
+      :db/doc "Instant at which this thing was last updated. Up to the application to include this in transactions."
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.things"}
      {:db/ident :thing/children
       :attr/label "Children"
       :db/doc "Entity IDs of child things, if any"
@@ -214,12 +226,6 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
-     {:db/ident :post/created-at
-      :attr/label "Post Creation Time"
-      :db/doc "Date/time this post was created"
-      :db/valueType :db.type/instant
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
      {:db/ident :post/publish-date
       :attr/label "Post Publish Date"
       :db/doc "Date/time this post was/is scheduled to go live"
@@ -367,12 +373,6 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.comments"}
-     {:db/ident :comment/created-at
-      :attr/label "Comment Creation Time"
-      :db/doc "When this comment was written"
-      :db/valueType :db.type/instant
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.comments"}
      {:db/ident :comment/status
       :attr/label "Comment Status"
       :db/doc "The status of this comment (pending, approved, spam, etc.)"
@@ -381,7 +381,7 @@
       :attr/migration "migration.comments"}
      {:db/ident :comment/replies
       :attr/label "Comment Replies"
-      :db/doc "Zero or more replies (comment entity IDs) to this comment. Order by :comment/created-at to build a comment thread."
+      :db/doc "Zero or more replies (comment entity IDs) to this comment. Order by :thing/created-at to build a comment thread."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.comments"}]
