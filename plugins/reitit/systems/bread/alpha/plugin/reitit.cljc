@@ -69,6 +69,7 @@
       (cond
         method-handler method-handler
         (fn? (:handler match-data)) (:handler match-data)
+        (var? (:handler match-data)) @(:handler match-data)
         :else match-data)))
   (bread/routes [router]
     (into {} (map (fn [[template route]]
