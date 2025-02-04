@@ -7,7 +7,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.expansion :as expansion]
-    [systems.bread.alpha.util.datalog :refer [where pull-query ensure-db-id]]))
+    [systems.bread.alpha.util.datalog :refer [where ensure-db-id]]))
 
 (defn- syms
   ([prefix]
@@ -85,11 +85,10 @@
             (where [['?type :post/type post-type]
                     ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)
-        page-query {:expansion/name ::db/query
-                    :expansion/key query-key
-                    :expansion/db (db/database req)
-                    :expansion/args page-args
-                    :expansion/description
-                    "Query for pages matching the current request URI"}
-        expansions (bread/hook req ::i18n/expansions page-query)]
-    {:expansions expansions}))
+        page-expansion {:expansion/name ::db/query
+                        :expansion/key query-key
+                        :expansion/db (db/database req)
+                        :expansion/args page-args
+                        :expansion/description
+                        "Query for pages matching the current request URI"}]
+    {:expansions (bread/hook req ::i18n/expansions page-expansion)}))
