@@ -217,10 +217,8 @@
     (fn [{h :hook act :action/name f :f :as profiler}]
       (let [tap (bread/add-profiler
                   (fn [{{:keys [action hook] :as invocation} ::bread/profile}]
-                    (if (and (or (nil? (seq h)) ((set h)
-                                                 hook))
-                             (or (nil? (seq act)) ((set act)
-                                                   (:action/name action))))
+                    (if (and (or (nil? (seq h)) ((set h) hook))
+                             (or (nil? (seq act)) ((set act) (:action/name action))))
                       (f invocation))))]
         (assoc profiler :tap tap)))
     profilers))
