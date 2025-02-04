@@ -55,7 +55,7 @@
   (are
     [lang uri]
     (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en :es}
-                                             :query-strings? false})
+                                             :query-global-strings? false})
                                (route/plugin {:router (naive-router)})]
                               plugins->loaded bread/handler)]
               (i18n/lang (handler {:uri uri}))))
@@ -173,7 +173,7 @@
          (let [app (plugins->loaded
                      [(i18n/plugin {:supported-langs
                                     #{:en :fr :ru :es :de}
-                                    :query-strings? false
+                                    :query-global-strings? false
                                     :format-fields? format-fields?
                                     :compact-fields? compact-fields?})
                       (route/plugin {:router (naive-router)})

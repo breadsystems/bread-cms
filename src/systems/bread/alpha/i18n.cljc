@@ -225,12 +225,12 @@
   ([]
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs
-            query-strings? query-lang? format-fields? compact-fields?]
+            query-global-strings? query-lang? format-fields? compact-fields?]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
           ;; TODO query-global-strings?
-          query-strings?  true
+          query-global-strings?  true
           query-lang?     true
           format-fields?  true
           compact-fields? true}}]
@@ -248,7 +248,7 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     [(when query-strings?
+     [(when query-global-strings?
         {:action/name ::add-strings-query
          :action/description "Add global strings query"})
       (when query-lang?

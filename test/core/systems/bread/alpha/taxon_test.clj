@@ -16,7 +16,7 @@
   (let [attrs-map {:thing/fields {:db/cardinality :db.cardinality/many}
                    :post/taxons  {:db/cardinality :db.cardinality/many}}
         app (plugins->loaded [(db->plugin ::FAKEDB)
-                              (i18n/plugin {:query-strings? false
+                              (i18n/plugin {:query-global-strings? false
                                             :query-lang? false})
                               (dispatcher/plugin)
                               (route/plugin {:router (naive-router)})
