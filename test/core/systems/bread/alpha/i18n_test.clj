@@ -168,8 +168,8 @@
                    :post/taxons    {:db/cardinality :db.cardinality/many}
                    :post/_taxons   {:db/cardinality :db.cardinality/many}}]
     (are
-      [expansions query lang format-fields? compact-fields?]
-      (= expansions
+      [expected expansion lang format-fields? compact-fields?]
+      (= expected
          (let [app (plugins->loaded
                      [(i18n/plugin {:supported-langs
                                     #{:en :fr :ru :es :de}
@@ -184,7 +184,7 @@
                         ::bread/attrs-map [{:action/name ::bread/value
                                             :action/value attrs-map}]}}])
                counter (atom 0)]
-           (bread/hook app ::i18n/expansions query)))
+           (bread/hook app ::i18n/expansions expansion)))
 
       ;; No translatable content; noop.
       [{:expansion/name ::db/query

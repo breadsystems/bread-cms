@@ -20,7 +20,7 @@
 (defn dispatcher [req]
   "Get the full dispatcher for the given request. Router implementations should
   call this function."
-  (let [default {:dispatcher/i18n? true
+  (let [default {:dispatcher/i18n? true ;; TODO get default from config??
                  :dispatcher/type :dispatcher.type/page
                  :post/type :post.type/page}
         declared (bread/hook req ::route-dispatcher

@@ -114,6 +114,7 @@
                   args)
         result (when (every? some? args)
                  (apply q db args))
+        ;; TODO many? => (map first result)
         ;; If nothing is found, set explicit false so we don't try to write
         ;; nested data to the query key (e.g. at [:post :post/fields]).
         result (or result false)]

@@ -229,6 +229,7 @@
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
+          ;; TODO query-global-strings?
           query-strings?  true
           query-lang?     true
           format-fields?  true
