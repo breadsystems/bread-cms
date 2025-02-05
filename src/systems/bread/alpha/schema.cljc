@@ -158,6 +158,12 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :user/lang
+      :attr/label "User's language"
+      :db/doc "Users's preferred language"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/preferences
       :attr/label "User Preferences"
       :db/doc "The user's preferences, as an EDN-encoded string"
