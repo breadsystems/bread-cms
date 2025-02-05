@@ -7,6 +7,7 @@
   (let [req-keys [:uri
                   :query-string
                   :remote-addr
+                  :flash
                   :headers
                   :server-port
                   :server-name
