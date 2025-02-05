@@ -70,6 +70,13 @@
     {:action/name ::ring/redirect
      :to "http://careful.xxx/sus"}
 
+    {:status 301
+     :headers {"Location" "/permanent"}}
+    {:status 200}
+    {:action/name ::ring/redirect
+     :permanent? true
+     :to "/permanent"}
+
     ;;
     ))
 
