@@ -13,7 +13,8 @@
                         (select-keys [:status :headers :flash :session])))
 
     {:status 302
-     :headers {"Location" "/destination"}}
+     :headers {"Location" "/destination"}
+     :flash nil}
     {}
     {:action/name ::ring/redirect
      :to "/destination"}
@@ -22,7 +23,8 @@
     {:status 302
      :headers {"X-Marco" :polo
                "Location" "/destination"}
-     :session {:user {:db/id 123}}}
+     :session {:user {:db/id 123}}
+     :flash nil}
     {:session {:user {:db/id 123}}
      :headers {"X-Marco" :polo}}
     {:action/name ::ring/redirect
@@ -31,7 +33,8 @@
     {:status 302
      :headers {"Content-Type" "text/html"
                "Location" "/somewhere"}
-     :session {:user {:user/username "bob"}}}
+     :session {:user {:user/username "bob"}}
+     :flash nil}
     {:status 404
      :session {:user {:user/username "bob"}}
      :headers {"Content-Type" "text/html"}}
@@ -60,7 +63,8 @@
     {:status 302
      :headers {"Content-Type" "text/html"
                "Location" "http://careful.xxx/sus"}
-     :session {:user {:user/username "bob"}}}
+     :session {:user {:user/username "bob"}}
+     :flash nil}
     {:status 200
      :session {:user {:user/username "bob"}}
      :headers {"Content-Type" "text/html"}
@@ -71,7 +75,8 @@
      :to "http://careful.xxx/sus"}
 
     {:status 301
-     :headers {"Location" "/permanent"}}
+     :headers {"Location" "/permanent"}
+     :flash nil}
     {:status 200}
     {:action/name ::ring/redirect
      :permanent? true
@@ -79,11 +84,31 @@
 
     ;; Explicit permanent? false case.
     {:status 302
-     :headers {"Location" "/temporary"}}
+     :headers {"Location" "/temporary"}
+     :flash nil}
     {:status 200}
     {:action/name ::ring/redirect
      :permanent? false
      :to "/temporary"}
+
+    ;; Support flash.
+    {:status 302
+     :headers {"Location" "/flash"}
+     :flash {:a :b}}
+    {:status 200}
+    {:action/name ::ring/redirect
+     :flash {:a :b}
+     :to "/flash"}
+
+    ;; An explicit :flash will overwrite any previous one.
+    {:status 302
+     :headers {"Location" "/flash"}
+     :flash {:a :b}}
+    {:status 200
+     :flash {:previous :data}}
+    {:action/name ::ring/redirect
+     :flash {:a :b}
+     :to "/flash"}
 
     ;;
     ))
