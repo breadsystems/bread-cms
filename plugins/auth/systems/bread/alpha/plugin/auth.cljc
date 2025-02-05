@@ -101,6 +101,17 @@
            [:button {:type :submit}
             "Login"]]]])]]))
 
+(defmethod bread/action ::require-auth
+  [{:keys [headers session uri] :as req} _ _]
+  (let [protected? (bread/hook req ::protected-route? true)
+        anonymous? (empty? (:user session))
+        login-uri (bread/config req :auth/login-uri)]
+    (if (and protected? anonymous? (not= login-uri uri))
+      (assoc req
+             :status 302
+             :headers (assoc headers "Location" "/login"))
+      req)))
+
 (defmethod bread/action ::set-session
   [{::bread/keys [data] :keys [session] :as res}
    {:keys [max-failed-login-count]} _]
@@ -347,7 +358,13 @@
      [{:action/name ::migrations
        :action/description
        "Add schema for authentication to the list of migrations to be run."
-       :schema schema}]}
+       :schema schema}]
+     ;; NOTE: we hook into ::bread/expand to require auth because
+     ;; if we do it before that, the :headers may get wiped out.
+     ::bread/expand
+     [{:action/name ::require-auth
+       :action/description
+       "Require login for privileged routes (all routes by default)."}]}
     :config
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
