@@ -77,6 +77,14 @@
      :permanent? true
      :to "/permanent"}
 
+    ;; Explicit permanent? false case.
+    {:status 302
+     :headers {"Location" "/temporary"}}
+    {:status 200}
+    {:action/name ::ring/redirect
+     :permanent? false
+     :to "/temporary"}
+
     ;;
     ))
 
