@@ -4,17 +4,17 @@
 
 (defmethod bread/action ::request-data
   [req _ _]
-  (let [req-keys [:uri
-                  :query-string
-                  :remote-addr
+  (let [req-keys [:content-length
+                  :content-type
                   :flash
                   :headers
-                  :server-port
-                  :server-name
-                  :content-length
-                  :content-type
+                  :query-string
+                  :remote-addr
+                  :request-method
                   :scheme
-                  :request-method]]
+                  :server-name
+                  :server-port
+                  :uri]]
     (as-> req $
         (update $ ::bread/data merge (select-keys req req-keys))
         (assoc-in $ [::bread/data :session] (:session req))
