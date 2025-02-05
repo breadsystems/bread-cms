@@ -104,9 +104,9 @@
 
 (defmethod bread/expand ::query
   query-db
-  [{:expansion/keys [db args] :as query} data]
-  "Run the given query against db. If :expansion/into is present, returns
-  (into into-val query-result)."
+  [{:expansion/keys [db args] :as expansion} data]
+  "Run the query given as :expansion/args against db.
+  If :expansion/into is present, returns (into into-val query-result)."
   (let [args (map (fn [arg]
                     (if (data-path? arg)
                       (get-in data (rest arg))
@@ -116,10 +116,10 @@
                  (apply q db args))
         ;; TODO many? => (map first result)
         ;; If nothing is found, set explicit false so we don't try to write
-        ;; nested data to the query key (e.g. at [:post :post/fields]).
+        ;; nested data to the expansion key (e.g. at [:post :post/fields]).
         result (or result false)]
-    (if (and (:expansion/into query) (seqable? result))
-      (into (:expansion/into query) result)
+    (if (and (:expansion/into expansion) (seqable? result))
+      (into (:expansion/into expansion) result)
       result)))
 
 (defmethod bread/action ::migrate
