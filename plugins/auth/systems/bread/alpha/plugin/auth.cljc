@@ -3,12 +3,14 @@
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.edn :as edn]
+    [ring.middleware.session.store :as ss :refer [SessionStore]]
+
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.internal.time :as t]
-    [ring.middleware.session.store :as ss :refer [SessionStore]])
+    [systems.bread.alpha.ring :as ring])
   (:import
     [java.util UUID]))
 
@@ -152,7 +154,6 @@
   (-> res
       (assoc :session nil :status 302)
       (assoc-in [::bread/data :session] nil)
-      ;; TODO configure redirect
       (assoc-in [:headers "Location"] "/login")))
 
 (defmethod bread/effect ::log-attempt
@@ -196,7 +197,8 @@
         lock-seconds (bread/config req :auth/lock-seconds)
         post? (= :post request-method)
         logout? (= "logout" (:submit params))
-        two-factor? (= :two-factor step)]
+        two-factor? (= :two-factor step)
+        redirect-to (:next params)]
     (cond
       ;; Logout - destroy session
       (and post? logout?)
@@ -216,7 +218,13 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response"
-          :max-failed-login-count max-failed-login-count}]}}
+          :max-failed-login-count max-failed-login-count}]
+        ::bread/render
+        [(when redirect-to
+           {:action/name ::ring/redirect
+            :action/description
+            "Redirect user to original destination from before login redirect"
+            :to redirect-to})]}}
 
       ;; Login
       post?
@@ -251,7 +259,13 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response."
-          :max-failed-login-count max-failed-login-count}]}}
+          :max-failed-login-count max-failed-login-count}]
+        ::bread/render
+        [(when redirect-to
+           {:action/name ::ring/redirect
+            :action/description
+            "Redirect user to original destination from before login redirect"
+            :to redirect-to})]}}
 
       :default {})))
 
