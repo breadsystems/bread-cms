@@ -196,6 +196,19 @@
       {:request-method :post
        :params {:username "bobby" :password "pantherz" :next "/destination"}}
 
+      ;; POST with correct password & redirect, with custom :next-param
+      {:status 302
+       :headers {"Location" "/destination"
+                 "content-type" "text/html"}
+       :session {:user bobby
+                 :auth/step :logged-in}
+       ::bread/data {:session {:user bobby
+                               :auth/step :logged-in}
+                     :auth/result {:update false :valid true :user bobby}}}
+      {:next-param :special}
+      {:request-method :post
+       :params {:username "bobby" :password "pantherz" :special "/destination"}}
+
       ;; POST with correct password; custom hash algo
       {:status 302
        :headers {"Location" "/login"
@@ -294,6 +307,22 @@
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"
                 :next "/destination"}}
+
+      ;; Successful 2FA with redirect & custom :next-param
+      {:status 302
+       :headers {"Location" "/destination"
+                 "content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :logged-in}
+       ::bread/data {:session {:user douglass
+                               :auth/step :logged-in}
+                     :auth/result {:valid true :user douglass}}}
+      {:next-param :special}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :two-factor}
+       :params {:two-factor-code "123456"
+                :special "/destination"}}
 
       ;; Logout
       {:status 302
