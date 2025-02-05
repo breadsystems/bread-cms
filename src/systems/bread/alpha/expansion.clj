@@ -56,7 +56,7 @@
   (populate-in data (:expansion/key expansion) (bread/expand expansion data)))
 
 (defmethod bread/action ::expand
-  [{::bread/keys [dispatcher expansions data] :as req} _ _]
+  [{::bread/keys [expansions data] :as req} _ _]
   (->> expansions
        (filter identity)
        (reduce expand data)
