@@ -93,22 +93,50 @@
                             (update-in [::bread/data :auth/result :user] dissoc :db/id))
                         data))))
 
+      ;; Requesting any page anonymously.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/login"}
+       :session nil
+       ::bread/data {:session nil}}
+      nil
+      {:request-method :get
+       :uri "/"}
+
       ;; Requesting the login page.
+      #_#_#_
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
        ::bread/data {:session nil}}
       nil
-      {:request-method :get}
+      {:request-method :get
+       :uri "/login"}
 
+      ;; Requesting the login page; empty auth config map.
+      #_#_#_
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
        ::bread/data {:session nil}}
       {}
-      {:request-method :get}
+      {:request-method :get
+       :uri "/login"}
+
+      ;; Requesting the login page; custom :login-uri.
+      ;; This matters because it's what the ::auth/require-auth hook uses
+      ;; to check against the current URI, to avoid redirect loops.
+      #_#_#_
+      {:status 200
+       :headers {"content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:login-uri "/custom"}
+      {:request-method :get
+       :uri "/custom"}
 
       ;; POST with no data
+      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -118,6 +146,7 @@
       {:request-method :post}
 
       ;; POST with missing password
+      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -128,6 +157,7 @@
        :params {:username "no one"}}
 
       ;; POST with missing password
+      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -138,6 +168,7 @@
        :params {:username "no one" :password nil}}
 
       ;; POST with bad username AND password
+      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -148,6 +179,7 @@
        :params {:username "no one" :password "nothing"}}
 
       ;; POST with bad password
+      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -171,6 +203,7 @@
        :params {:username "angela" :password "abolition4lyfe"}}
 
       ;; POST with correct password
+      #_#_#_
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
