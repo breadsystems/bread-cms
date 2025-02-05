@@ -118,7 +118,8 @@
       (-> res
           (assoc :status 302 :session session)
           (assoc-in [::bread/data :session] session)
-          (assoc-in [:headers "Location"] "/login")))))
+          ;; NOTE: this may get overwritten when a :next param is present.
+          (assoc-in [:headers "Location"] (bread/config res :auth/login-uri))))))
 
 (defn- account-locked? [now locked-at seconds]
   (< (inst-ms now) (+ (inst-ms locked-at) seconds)))
@@ -334,12 +335,13 @@
   ([]
    (plugin {}))
   ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds
-            next-param]
+            next-param login-uri]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
           lock-seconds 3600
-          next-param :next}}]
+          next-param :next
+          login-uri "/login"}}]
    {:hooks
     {::db/migrations
      [{:action/name ::migrations
@@ -350,4 +352,5 @@
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
      :auth/lock-seconds lock-seconds
-     :auth/next-param next-param}}))
+     :auth/next-param next-param
+     :auth/login-uri login-uri}}))
