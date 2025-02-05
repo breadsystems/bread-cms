@@ -30,12 +30,12 @@
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
 (defmethod bread/action ::redirect
-  [{:as res :keys [headers]} {:as action :keys [to]} _]
+  [{:as res :keys [headers]} {:as action :keys [permanent? to]} _]
   (if-let [allowed-to? (bread/hook res ::allow-redirect?
                                    (clojure.string/starts-with? to "/")
                                    action)]
     (let [headers (assoc headers "Location" to)]
       (assoc res
-             :status 302
+             :status (if permanent? 301 302)
              :headers headers))
     res))
