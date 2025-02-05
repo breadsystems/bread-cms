@@ -198,7 +198,7 @@
         post? (= :post request-method)
         logout? (= "logout" (:submit params))
         two-factor? (= :two-factor step)
-        redirect-to (:next params)]
+        redirect-to (get params (bread/config req :auth/next-param))]
     (cond
       ;; Logout - destroy session
       (and post? logout?)
@@ -333,11 +333,13 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds]
+  ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds
+            next-param]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
-          lock-seconds 3600}}]
+          lock-seconds 3600
+          next-param :next}}]
    {:hooks
     {::db/migrations
      [{:action/name ::migrations
@@ -347,4 +349,5 @@
     :config
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
-     :auth/lock-seconds lock-seconds}}))
+     :auth/lock-seconds lock-seconds
+     :auth/next-param next-param}}))
