@@ -180,6 +180,7 @@
                                      :succeeded? false
                                      :retried 0}))
               retry-count (:retried (meta e))
+              ;; TODO :effect/key
               {data-key :effect/data-key max-retries :effect/retries} e
               [result ex] (try
                             [(effect e data) nil]
