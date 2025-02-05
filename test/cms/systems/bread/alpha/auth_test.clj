@@ -292,6 +292,21 @@
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"}}
 
+      ;; Successful 2FA with custom :login-uri
+      {:status 302
+       :headers {"Location" "/custom"
+                 "content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :logged-in}
+       ::bread/data {:session {:user douglass
+                               :auth/step :logged-in}
+                     :auth/result {:valid true :user douglass}}}
+      {:login-uri "/custom"}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :two-factor}
+       :params {:two-factor-code "123456"}}
+
       ;; Successful 2FA with redirect
       {:status 302
        :headers {"Location" "/destination"
