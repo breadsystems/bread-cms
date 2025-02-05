@@ -28,3 +28,10 @@
       (update :status #(or % (if (:not-found? data) 404 200)))
       ;; TODO content negotiation
       (update-in [:headers "content-type"] #(or % default-content-type))))
+
+(defmethod bread/action ::redirect
+  [{:as res :keys [headers]} {:keys [to]} _]
+  (let [headers (assoc headers "Location" to)]
+    (assoc res
+           :status 302
+           :headers headers)))
