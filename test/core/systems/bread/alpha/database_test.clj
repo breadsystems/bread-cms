@@ -52,6 +52,29 @@
       [[:some :fake :transactions] {:description "Custom description"
                                     :key 1234}])))
 
+(deftest test-query
+  (let [mock-db (fn [mock-result]
+                  (reify db/TemporalDatabase (q [_ _] mock-result)))]
+    (are
+      [expected expansion]
+      (= expected (do (prn 'EXPANSION expansion) (bread/expand expansion {})))
+
+      nil
+      {:expansion/name ::db/query
+       :expansion/db (mock-db nil)}
+
+      nil
+      {:expansion/name ::db/query
+       :expansion/db (mock-db nil) :expansion/into {}}
+
+      [{:db/id 1} {:db/id 2}]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [{:db/id 1} {:db/id 2}])
+       :expansion/into {}}
+
+      ;;
+      )))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))
