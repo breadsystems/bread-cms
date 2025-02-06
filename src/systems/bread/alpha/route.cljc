@@ -20,32 +20,17 @@
 (defn dispatcher [req]
   "Get the full dispatcher for the given request. Router implementations should
   call this function."
-  (let [declared (bread/hook req ::route-dispatcher
-                             (bread/route-dispatcher (router req) req))
-        component (bread/hook req ::component (:dispatcher/component declared))
-        keyword->type {:dispatcher.type/home :dispatcher.type/page
-                       :dispatcher.type/page :dispatcher.type/page}
-        declared (cond
-                   ;; Support keyword shorthands.
-                   (keyword->type declared)
-                   {:dispatcher/type (keyword->type declared)}
-                   ;; Support dispatchers declared as arbitrary keywords.
-                   (keyword? declared)
-                   {:dispatcher/type declared}
-                   :else
-                   declared)
-        dispatcher (cond
-                     (var? declared) declared
-                     (fn? declared) declared
-                     :else declared)
-        dispatcher (if (map? dispatcher)
-                     (assoc dispatcher
-                            :route/params (bread/hook req ::params nil)
-                            :dispatcher/component component
-                            :dispatcher/key (component/query-key component)
-                            :dispatcher/pull (component/query component))
-                     dispatcher)]
-    (bread/hook req ::dispatcher dispatcher)))
+  (let [disp (bread/hook req ::route-dispatcher
+                         (bread/route-dispatcher (router req) req))
+        component (bread/hook req ::component (:dispatcher/component disp))
+        disp (if (map? disp)
+               (assoc disp
+                      :route/params (bread/hook req ::params nil)
+                      :dispatcher/component component
+                      :dispatcher/key (component/query-key component)
+                      :dispatcher/pull (component/query component))
+               disp)]
+    (bread/hook req ::dispatcher disp)))
 
 (defmethod bread/action ::path
   [_ {:keys [router]} [_path route-name params]]
