@@ -63,8 +63,8 @@
 
 (deftest test-ancestralize
   (are
-    [expected query-args slugs]
-    (= expected (thing/ancestralize query-args slugs))
+    [expected query-args slugs args]
+    (= expected (apply thing/ancestralize query-args slugs args))
 
     ;; Querying for a top-level thing should just assert that
     ;; that thing has no parent.
@@ -81,6 +81,7 @@
        :where []}
       ::DB]
     ["a"]
+    nil
 
     ;; Existing :in and :where should be left intact.
     '[{:find [?e]
@@ -99,6 +100,7 @@
       ::DB
       :published]
     ["a"]
+    nil
 
     ;; Querying for a level-2 thing asserts a single level of ancestry.
     '[{:find [?e]
@@ -118,6 +120,7 @@
        :where []}
       ::DB]
     ["a" "b"]
+    nil
 
     ;; Level-3, etc.
     '[{:find [?e]
@@ -140,6 +143,26 @@
        :where []}
       ::DB]
     ["a" "b" "c"]
+    nil
+
+    ;; Supports specifying an entity symbol.
+    '[{:find [?EEEEE]
+       :in [$ ?status % ?slug_0]
+       :where [[?EEEEE :post/status ?status]
+               (ancestry ?EEEEE ?slug_0)]}
+      ::DB
+      :published
+      [[(ancestry ?child ?slug_0)
+        [?child :thing/slug ?slug_0]
+        (not-join [?child] [?_ :thing/children ?child])]]
+      "a"]
+    '[{:find [?EEEEE]
+       :in [$ ?status]
+       :where [[?EEEEE :post/status ?status]]}
+      ::DB
+      :published]
+    ["a"]
+    [:e-sym '?EEEEE]
 
     ;;
     ))

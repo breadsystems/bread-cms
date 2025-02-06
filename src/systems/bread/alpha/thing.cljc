@@ -25,7 +25,8 @@
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
-(defn ancestralize [query-args slugs]
+(defn ancestralize [query-args slugs & {e :e-sym
+                                        :or {e '?e}}]
   "Given ::db/query args vector and a list of slugs, returns an args vector
   asserting that the ancestry of things corresponding to each :thing/slug is an
   unbroken chain of :thing/children ancestors."
@@ -34,7 +35,7 @@
         ;; Place slug input args in ancestral order (earliest ancestor first),
         ;; since that is the order in which they appear in the URL.
         input-syms (reverse slug-syms)
-        rule-invocation (apply list 'ancestry '?e slug-syms)
+        rule-invocation (apply list 'ancestry e slug-syms)
         rule (create-ancestry-rule depth)]
     (apply conj
            (-> query-args
