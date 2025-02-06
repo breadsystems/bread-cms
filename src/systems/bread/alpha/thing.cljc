@@ -24,3 +24,18 @@
                                       (rest slug-syms))))
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
+
+(defn ancestralize [query slugs]
+  (let [depth (count slugs)
+        slug-syms (take depth (syms "?slug_"))
+        ;; Place slug input args in ancestral order (earliest ancestor first),
+        ;; since that is the order in which they appear in the URL.
+        input-syms (reverse slug-syms)
+        rule-invocation (apply list 'ancestry '?e slug-syms)
+        rule (create-ancestry-rule depth)]
+    (apply conj
+           (-> query
+               (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
+               (update-in [0 :where] conj rule-invocation)
+               (conj [rule]))
+           slugs)))
