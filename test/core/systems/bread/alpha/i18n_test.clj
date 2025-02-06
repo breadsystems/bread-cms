@@ -232,6 +232,45 @@
       true ;; this has no effect without translatable fields present
       true ;; ditto
 
+      ;; Explicitly opting out with :expansion/i18n? false
+      [{:expansion/i18n? false
+        :expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
+        ['{:find [(pull ?e [:db/id
+                            :thing/slug
+                            {:thing/fields [;; should add id, key, lang
+                                            :field/content]}
+                            {:post/_taxons [:thing/slug
+                                            :taxon/taxonomy
+                                            {:thing/fields [*]}]}])]
+           :in [$ ?slug ?type]
+           :where [[?e :thing/slug ?slug]
+                   [?e :post/type ?type]]}
+         "my-post"
+         :post.type/page]}]
+      {:expansion/i18n? false
+       :expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/fields [;; should add id, key, lang
+                                           :field/content]}
+                           {:post/_taxons [:thing/slug
+                                           :taxon/taxonomy
+                                           {:thing/fields [*]}]}])]
+          :in [$ ?slug ?type]
+          :where [[?e :thing/slug ?slug]
+                  [?e :post/type ?type]]}
+        "my-post"
+        :post.type/page]}
+      :en
+      false
+      false
+
       ;; With deeply nested, mixed implicit & explicit :field/content;
       ;; no formatting; no compaction; querying many.
       [{:expansion/name ::db/query

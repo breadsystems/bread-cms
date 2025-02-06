@@ -143,58 +143,60 @@
 
 (defmethod bread/action ::expansions
   i18n-queries
-  [req _ [{:expansion/keys [db] :as query}]]
+  [req _ [{:as query :expansion/keys [db i18n?] :or {i18n? true}}]]
   "Internationalizes the given db query, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
-  (let [dbq (first (:expansion/args query))
-        {:keys [bindings]} (qi/infer-query-bindings
-                             :thing/fields
-                             translatable-binding?
-                             dbq)
-        {recursive-specs :bindings} (qi/infer-query-bindings
-                                      keyword?
-                                      #(or (integer? %) (= '... %))
-                                      dbq)
-        ;; We only care about recursive specs at the same "level" or higher as
-        ;; any of the field bindings, because if there's recursion at a lower
-        ;; level than the fields', then by definition they don't include field
-        ;; data and we don't need to worry about them.
-        coincidental-paths (reduce (fn [tree b]
-                                     (assoc-in tree (:relation b) true))
-                                   {} bindings)
-        recur-attrs (->> recursive-specs
-                         (filter (fn [{rel :relation}]
-                                   (get-in coincidental-paths (butlast rel))))
-                         (map :attr) set)
-        querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
-    (if (seq bindings)
-      [(reduce
-         (fn [query {:keys [binding-path relation entity-index]}]
-           (s/transform (concat [:expansion/args 0 ;; datalog query
-                                 :find             ;; find clause
-                                 entity-index      ;; find position
-                                 s/LAST]           ;; pull-expr
-                                binding-path)      ;; within pull-expr
-                        (partial d/ensure-attrs
-                                 [:field/lang :field/key :db/id])
-                        query))
-         query bindings)
-       {:expansion/name ::fields
-        :expansion/key (:expansion/key query)
-        :expansion/description "Process translatable fields."
-        :field/lang (lang req)
-        :compact? (bread/config req :i18n/compact-fields?)
-        :format? (bread/config req :i18n/format-fields?)
-        :recur-attrs recur-attrs
-        :spaths
-        (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
-                   (partial qi/relation->spath
-                            (bread/hook req ::bread/attrs-map nil))
-                   :relation)
-             bindings)}]
-      [query])))
+  (if i18n?
+    (let [dbq (first (:expansion/args query))
+          {:keys [bindings]} (qi/infer-query-bindings
+                               :thing/fields
+                               translatable-binding?
+                               dbq)
+          {recursive-specs :bindings} (qi/infer-query-bindings
+                                        keyword?
+                                        #(or (integer? %) (= '... %))
+                                        dbq)
+          ;; We only care about recursive specs at the same "level" or higher as
+          ;; any of the field bindings, because if there's recursion at a lower
+          ;; level than the fields', then by definition they don't include field
+          ;; data and we don't need to worry about them.
+          coincidental-paths (reduce (fn [tree b]
+                                       (assoc-in tree (:relation b) true))
+                                     {} bindings)
+          recur-attrs (->> recursive-specs
+                           (filter (fn [{rel :relation}]
+                                     (get-in coincidental-paths (butlast rel))))
+                           (map :attr) set)
+          querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
+      (if (seq bindings)
+        [(reduce
+           (fn [query {:keys [binding-path relation entity-index]}]
+             (s/transform (concat [:expansion/args 0 ;; datalog query
+                                   :find             ;; find clause
+                                   entity-index      ;; find position
+                                   s/LAST]           ;; pull-expr
+                                  binding-path)      ;; within pull-expr
+                          (partial d/ensure-attrs
+                                   [:field/lang :field/key :db/id])
+                          query))
+           query bindings)
+         {:expansion/name ::fields
+          :expansion/key (:expansion/key query)
+          :expansion/description "Process translatable fields."
+          :field/lang (lang req)
+          :compact? (bread/config req :i18n/compact-fields?)
+          :format? (bread/config req :i18n/format-fields?)
+          :recur-attrs recur-attrs
+          :spaths
+          (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
+                     (partial qi/relation->spath
+                              (bread/hook req ::bread/attrs-map nil))
+                     :relation)
+               bindings)}]
+        [query]))
+    [query]))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
