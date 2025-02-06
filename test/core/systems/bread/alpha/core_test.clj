@@ -221,83 +221,83 @@
     {} [{:effect/name ::passthru
          :v "whatever"}]
     {} [{:effect/name ::passthru
-         :effect/data-key nil
+         :effect/key nil
          :v "won't show up"}]
 
     {:a "A"} [{:effect/name ::passthru
-               :effect/data-key :a
+               :effect/key :a
                :v "A"}]
 
     ;; nil values should still come through.
     {:a nil} [{:effect/name ::passthru
-               :effect/data-key :a}]
+               :effect/key :a}]
     {:a nil} [{:effect/name ::passthru
-               :effect/data-key :a :v nil}]
+               :effect/key :a :v nil}]
 
     ;; Effects are cumulative.
     {:a 1 :b 2} [{:effect/name ::passthru
-                  :effect/data-key :a
+                  :effect/key :a
                   :v 1}
                  {:effect/name ::passthru
-                  :effect/data-key :b
+                  :effect/key :b
                   :v 2}]
 
     ;; Effects can overwrite each other.
     {:a 2} [{:effect/name ::passthru
-             :effect/data-key :a
+             :effect/key :a
              :v 1}
             {:effect/name ::passthru
-             :effect/data-key :a
+             :effect/key :a
              :v 2}]
     {:a nil} [{:effect/name ::passthru
-               :effect/data-key :a
+               :effect/key :a
                :v 1}
               {:effect/name ::passthru
-               :effect/data-key :a
+               :effect/key :a
                :v nil}]
 
     ;; Support any IDeref, including those that don't already extend IObj...
 
     {:a "I AM FROM THE FUTURE"}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (future "I AM FROM THE FUTURE")}]
 
     {:a "I was...delayed"}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (delay "I was...delayed")}]
 
     {:a "Up and atom!"}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (atom "Up and atom!")}]
 
     {:a "my var value"}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (do (def my-var "my var value") (var my-var))}]
 
     {:a "referenced value"}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (ref "referenced value")}]
 
     {:a "As promised."}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (doto (promise) (deliver "As promised."))}]
 
     ))
 
 (defmethod bread/effect ::chain.one
   [_ _]
-  {:effects [{:effect/name ::chain.two :effect/data-key :two}]})
+  {:effects [{:effect/name ::chain.two :effect/key :two}]})
 
 (defmethod bread/effect ::chain.two
   [_ _]
-  {:effects [{:effect/name ::chain.three :effect/data-key :three}
-             {:effect/name ::chain.four :effect/data-key :four}]})
+  {:effects [{:effect/name ::chain.three :effect/key :three}
+             {:effect/name ::chain.four :effect/key :four}]})
 
 (defmethod bread/effect ::chain.three [_ _] 3)
 
@@ -311,23 +311,23 @@
                 (fn [acc [k v]] (assoc acc k (deref v))) {}
                 (::bread/data (bread/hook app ::bread/effects!)))))
 
-    {:one {:effects [{:effect/data-key :two :effect/name ::chain.two}]}
-     :two {:effects [{:effect/data-key :three :effect/name ::chain.three}
-                     {:effect/data-key :four :effect/name ::chain.four}]}
+    {:one {:effects [{:effect/key :two :effect/name ::chain.two}]}
+     :two {:effects [{:effect/key :three :effect/name ::chain.three}
+                     {:effect/key :four :effect/name ::chain.four}]}
      :three 3
      :four 4}
-    [{:effect/data-key :one :effect/name ::chain.one}]
+    [{:effect/key :one :effect/name ::chain.one}]
 
     {:ZERO 0
      :FINAL 3.1415926535
-     :one {:effects [{:effect/data-key :two :effect/name ::chain.two}]}
-     :two {:effects [{:effect/data-key :three :effect/name ::chain.three}
-                     {:effect/data-key :four :effect/name ::chain.four}]}
+     :one {:effects [{:effect/key :two :effect/name ::chain.two}]}
+     :two {:effects [{:effect/key :three :effect/name ::chain.three}
+                     {:effect/key :four :effect/name ::chain.four}]}
      :three 3
      :four 4}
-    [{:effect/data-key :ZERO :effect/name ::passthru :v 0}
-     {:effect/data-key :one :effect/name ::chain.one}
-     {:effect/data-key :FINAL :effect/name ::passthru :v 3.1415926535}]
+    [{:effect/key :ZERO :effect/name ::passthru :v 0}
+     {:effect/key :one :effect/name ::chain.one}
+     {:effect/key :FINAL :effect/name ::passthru :v 3.1415926535}]
 
     ))
 
@@ -350,14 +350,14 @@
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (future "I AM FROM THE FUTURE")}]
 
     {:a {:succeeded? true
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v nil}]
 
     ;; NOTE: If a Derefable effect can throw an exception,
@@ -366,7 +366,7 @@
          :errors []
          :retried 0}}
     [{:effect/name ::passthru
-      :effect/data-key :a
+      :effect/key :a
       :v (future (throw (Exception. "ERROR")))}]
 
     ;; Any errors thrown during an effect should be caught and stored in
@@ -375,14 +375,14 @@
          :errors [thrown-in-effect]
          :retried 0}}
     [{:effect/name ::throw
-      :effect/data-key :a}]
+      :effect/key :a}]
 
     ;; Same is true of retried errors.
     {:a {:succeeded? false
          :errors [thrown-in-effect thrown-in-effect thrown-in-effect]
          :retried 2}}
     [{:effect/name ::throw
-      :effect/data-key :a
+      :effect/key :a
       :effect/retries 2}]
 
     ))

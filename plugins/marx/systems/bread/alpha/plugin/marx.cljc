@@ -121,7 +121,7 @@
     {:effects
      [{:effect/name ::db/transact
        :effect/description "Persist edits."
-       :effect/data-key (:edit/key edit)
+       :effect/key (:edit/key edit)
        :conn (db/connection app)
        :txs (bread/hook app ::transactions txs edit)}]}))
 
