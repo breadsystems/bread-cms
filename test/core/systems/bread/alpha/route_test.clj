@@ -54,22 +54,17 @@
                                  (bread/hook ::bread/route)
                                  ::bread/dispatcher))
 
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? true
-          :post/type :post.type/page
-          :dispatcher/component Page
+         {:dispatcher/component Page
           :dispatcher/key :page
           :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
                          :slug "empty-dispatcher-map"}}
          "/en/empty-dispatcher-map"
 
-         {:dispatcher/type :dispatcher.type/page
-          :dispatcher/i18n? false
+         {:dispatcher/i18n? false
           :dispatcher/component Page
           :dispatcher/key :page
           :dispatcher/pull [:db/id :thing/slug]
-          :post/type :post.type/page
           :route/params {:lang nil :slug "overridden"}}
          "/overridden"
 
@@ -83,21 +78,17 @@
          "/en/no-defaults"
 
          {:dispatcher/type :whatevs
-          :dispatcher/i18n? true
           :dispatcher/component Page
           :dispatcher/key :page
-          :post/type :post.type/page
           :dispatcher/pull [:db/id :thing/slug]
           :route/params {:lang "en"
                          :slug "not-found"}}
          "/en/not-found"
 
          {:dispatcher/type :whatevs
-          :dispatcher/i18n? true
           :dispatcher/component nil
           :dispatcher/key nil
           :dispatcher/pull nil
-          :post/type :post.type/page
           :route/params {:lang "en"
                          :slug "no-component"}}
          "/en/no-component"

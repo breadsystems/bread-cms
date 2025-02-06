@@ -120,20 +120,16 @@
 
     {:dispatcher/type ::hello
      :dispatcher/component nil
-     :dispatcher/i18n? true
      :dispatcher/key nil
      :dispatcher/pull nil
-     :post/type :post.type/page
      :route/params {:slug "abc"}}
     ["/:slug" {:dispatcher/type ::hello}]
     {:uri "/abc"}
 
     {:dispatcher/type ::hello
      :dispatcher/component nil
-     :dispatcher/i18n? true
      :dispatcher/key nil
      :dispatcher/pull nil
-     :post/type :post.type/page
      :route/params {:slug "abc"}}
     ["/:slug" {:get {:handler {:dispatcher/type ::hello}}}]
     {:uri "/abc" :request-method :get}

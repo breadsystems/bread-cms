@@ -20,19 +20,12 @@
 (defn dispatcher [req]
   "Get the full dispatcher for the given request. Router implementations should
   call this function."
-  (let [default {:dispatcher/i18n? true ;; TODO get default from config??
-                 :dispatcher/type :dispatcher.type/page
-                 :post/type :post.type/page}
-        declared (bread/hook req ::route-dispatcher
+  (let [declared (bread/hook req ::route-dispatcher
                              (bread/route-dispatcher (router req) req))
         component (bread/hook req ::component (:dispatcher/component declared))
-        ;; defaults? can only be turned off *explicitly* with logical false
-        {:dispatcher/keys [defaults?] :or {defaults? true}} declared
         keyword->type {:dispatcher.type/home :dispatcher.type/page
                        :dispatcher.type/page :dispatcher.type/page}
         declared (cond
-                   (= :default declared)
-                   default
                    ;; Support keyword shorthands.
                    (keyword->type declared)
                    {:dispatcher/type (keyword->type declared)}
@@ -44,7 +37,6 @@
         dispatcher (cond
                      (var? declared) declared
                      (fn? declared) declared
-                     defaults? (merge default declared)
                      :else declared)
         dispatcher (if (map? dispatcher)
                      (assoc dispatcher
