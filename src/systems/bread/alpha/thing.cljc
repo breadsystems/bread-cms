@@ -25,7 +25,10 @@
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
-(defn ancestralize [query slugs]
+(defn ancestralize [query-args slugs]
+  "Given ::db/query args vector and a list of slugs, returns an args vector
+  asserting that the ancestry of things corresponding to each :thing/slug is an
+  unbroken chain of :thing/children ancestors."
   (let [depth (count slugs)
         slug-syms (take depth (syms "?slug_"))
         ;; Place slug input args in ancestral order (earliest ancestor first),
@@ -34,7 +37,7 @@
         rule-invocation (apply list 'ancestry '?e slug-syms)
         rule (create-ancestry-rule depth)]
     (apply conj
-           (-> query
+           (-> query-args
                (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
                (update-in [0 :where] conj rule-invocation)
                (conj [rule]))
