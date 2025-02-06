@@ -25,6 +25,11 @@
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
+(defn- update-inputs [query-args input-syms rule-def]
+  (-> query-args
+      (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
+      (conj [rule-def])))
+
 (defn ancestralize [query-args slugs & {e :e-sym
                                         :or {e '?e}}]
   "Given ::db/query args vector and a list of slugs, returns an args vector
@@ -36,10 +41,9 @@
         ;; since that is the order in which they appear in the URL.
         input-syms (reverse slug-syms)
         rule-invocation (apply list 'ancestry e slug-syms)
-        rule (create-ancestry-rule depth)]
+        rule-def (create-ancestry-rule depth)]
     (apply conj
            (-> query-args
-               (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
-               (update-in [0 :where] conj rule-invocation)
-               (conj [rule]))
+               (update-inputs input-syms rule-def)
+               (update-in [0 :where] conj rule-invocation))
            slugs)))
