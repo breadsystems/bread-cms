@@ -7,56 +7,8 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.expansion :as expansion]
+    [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.util.datalog :refer [where ensure-db-id]]))
-
-(defn- syms
-  ([prefix]
-   (syms prefix 0))
-  ([prefix start]
-   (for [n (range)] (symbol (str prefix (+ start n))))))
-
-(comment
-  (take 5 (syms "?slug_"))
-  (take 5 (syms "?slug_" 1))
-
-  (create-post-ancestry-rule 1)
-  (create-post-ancestry-rule 2)
-  (create-post-ancestry-rule 5)
-
-  ;;
-  )
-
-(defn create-post-ancestry-rule [depth]
-  (let [slug-syms (take depth (syms "?slug_"))
-        descendant-syms (take depth (cons '?child (syms "?ancestor_" 1)))
-        earliest-ancestor-sym (last descendant-syms)]
-    (vec (concat
-           [(apply list 'post-ancestry '?child slug-syms)]
-           [['?child :thing/slug (first slug-syms)]]
-           (mapcat
-             (fn [[ancestor-sym descendant-sym slug-sym]]
-               [[ancestor-sym :thing/children descendant-sym]
-                [ancestor-sym :thing/slug slug-sym]])
-             (partition 3 (interleave (rest descendant-syms)
-                                      (butlast descendant-syms)
-                                      (rest slug-syms))))
-           [(list 'not-join [earliest-ancestor-sym]
-                  ['?_ :thing/children earliest-ancestor-sym])]))))
-
-(defn- ancestralize [query slugs]
-  (let [depth (count slugs)
-        slug-syms (take depth (syms "?slug_"))
-        ;; Place slug input args in ancestral order (earliest ancestor first),
-        ;; since that is the order in which they appear in the URL.
-        input-syms (reverse slug-syms)
-        rule-invocation (apply list 'post-ancestry '?e slug-syms)
-        rule (create-post-ancestry-rule depth)]
-    (apply conj
-           (-> query
-               (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
-               (update-in [0 :where] conj rule-invocation)
-               (conj [rule]))
-           slugs)))
 
 (defn expand-post [result]
   (let [post (ffirst result)
@@ -81,7 +33,7 @@
         (-> [{:find [(list 'pull '?e (ensure-db-id pull)) '.]
               :in '[$]
               :where []}]
-            (ancestralize (string/split (:thing/slug* params "") #"/"))
+            (thing/ancestralize (string/split (:thing/slug* params "") #"/"))
             (where [['?type :post/type post-type]
                     ['?status :post/status post-status]]))
         query-key (or (:dispatcher/key dispatcher) :post)

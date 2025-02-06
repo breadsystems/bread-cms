@@ -11,56 +11,6 @@
                                               naive-router
                                               plugins->loaded]]))
 
-(deftest test-create-post-ancestry-rule
-  (are
-    [rule n]
-    (= rule (post/create-post-ancestry-rule n))
-
-    '[(post-ancestry ?child ?slug_0)
-      [?child :thing/slug ?slug_0]
-      (not-join [?child] [?_ :thing/children ?child])]
-    1
-
-    '[(post-ancestry ?child ?slug_0 ?slug_1)
-      [?child :thing/slug ?slug_0]
-      [?ancestor_1 :thing/children ?child]
-      [?ancestor_1 :thing/slug ?slug_1]
-      (not-join [?ancestor_1] [?_ :thing/children ?ancestor_1])]
-    2
-
-    '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2)
-      [?child :thing/slug ?slug_0]
-      [?ancestor_1 :thing/children ?child]
-      [?ancestor_1 :thing/slug ?slug_1]
-      [?ancestor_2 :thing/children ?ancestor_1]
-      [?ancestor_2 :thing/slug ?slug_2]
-      (not-join [?ancestor_2] [?_ :thing/children ?ancestor_2])]
-    3
-
-    '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2 ?slug_3)
-      [?child :thing/slug ?slug_0]
-      [?ancestor_1 :thing/children ?child]
-      [?ancestor_1 :thing/slug ?slug_1]
-      [?ancestor_2 :thing/children ?ancestor_1]
-      [?ancestor_2 :thing/slug ?slug_2]
-      [?ancestor_3 :thing/children ?ancestor_2]
-      [?ancestor_3 :thing/slug ?slug_3]
-      (not-join [?ancestor_3] [?_ :thing/children ?ancestor_3])]
-    4
-
-    '[(post-ancestry ?child ?slug_0 ?slug_1 ?slug_2 ?slug_3 ?slug_4)
-      [?child :thing/slug ?slug_0]
-      [?ancestor_1 :thing/children ?child]
-      [?ancestor_1 :thing/slug ?slug_1]
-      [?ancestor_2 :thing/children ?ancestor_1]
-      [?ancestor_2 :thing/slug ?slug_2]
-      [?ancestor_3 :thing/children ?ancestor_2]
-      [?ancestor_3 :thing/slug ?slug_3]
-      [?ancestor_4 :thing/children ?ancestor_3]
-      [?ancestor_4 :thing/slug ?slug_4]
-      (not-join [?ancestor_4] [?_ :thing/children ?ancestor_4])]
-    5))
-
 (deftest test-post-dispatcher
   (let [attrs-map {:thing/fields {:db/cardinality :db.cardinality/many}
                    :post/taxons  {:db/cardinality :db.cardinality/many}}
@@ -89,11 +39,11 @@
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:thing/fields [*]}]) .]
-           :where [(post-ancestry ?e ?slug_0)
+           :where [(ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
            :in [$ % ?slug_0 ?type ?status]}
-         '[[(post-ancestry ?child ?slug_0)
+         '[[(ancestry ?child ?slug_0)
             [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :thing/children ?child])]]
          "hello"
@@ -121,11 +71,11 @@
         ['{:find [(pull ?e [:db/id
                             :thing/slug
                             {:thing/fields [*]}]) .]
-           :where [(post-ancestry ?e ?slug_0)
+           :where [(ancestry ?e ?slug_0)
                    [?e :post/type ?type]
                    [?e :post/status ?status]]
            :in [$ % ?slug_0 ?type ?status]}
-         '[[(post-ancestry ?child ?slug_0)
+         '[[(ancestry ?child ?slug_0)
             [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :thing/children ?child])]]
          "hello"
