@@ -61,6 +61,89 @@
       (not-join [?ancestor_4] [?_ :thing/children ?ancestor_4])]
     5))
 
+(deftest test-ancestralize
+  (are
+    [expected query-args slugs]
+    (= expected (thing/ancestralize query-args slugs))
+
+    ;; Querying for a top-level thing should just assert that
+    ;; that thing has no parent.
+    '[{:find [?e]
+       :in [$ % ?slug_0]
+       :where [(ancestry ?e ?slug_0)]}
+      ::DB
+      [[(ancestry ?child ?slug_0)
+        [?child :thing/slug ?slug_0]
+        (not-join [?child] [?_ :thing/children ?child])]]
+      "a"]
+    '[{:find [?e]
+       :in [$]
+       :where []}
+      ::DB]
+    ["a"]
+
+    ;; Existing :in and :where should be left intact.
+    '[{:find [?e]
+       :in [$ ?status % ?slug_0]
+       :where [[?e :post/status ?status]
+               (ancestry ?e ?slug_0)]}
+      ::DB
+      :published
+      [[(ancestry ?child ?slug_0)
+        [?child :thing/slug ?slug_0]
+        (not-join [?child] [?_ :thing/children ?child])]]
+      "a"]
+    '[{:find [?e]
+       :in [$ ?status]
+       :where [[?e :post/status ?status]]}
+      ::DB
+      :published]
+    ["a"]
+
+    ;; Querying for a level-2 thing asserts a single level of ancestry.
+    '[{:find [?e]
+       ;; NOTE: URL-ordering of slugs is preserved here.
+       :in [$ % ?slug_1 ?slug_0]
+       :where [(ancestry ?e ?slug_0 ?slug_1)]}
+      ::DB
+      [[(ancestry ?child ?slug_0 ?slug_1)
+        [?child :thing/slug ?slug_0]
+        [?ancestor_1 :thing/children ?child]
+        [?ancestor_1 :thing/slug ?slug_1]
+        (not-join [?ancestor_1] [?_ :thing/children ?ancestor_1])]]
+      "a"
+      "b"]
+    '[{:find [?e]
+       :in [$]
+       :where []}
+      ::DB]
+    ["a" "b"]
+
+    ;; Level-3, etc.
+    '[{:find [?e]
+       ;; NOTE: URL-ordering of slugs is preserved here.
+       :in [$ % ?slug_2 ?slug_1 ?slug_0]
+       :where [(ancestry ?e ?slug_0 ?slug_1 ?slug_2)]}
+      ::DB
+      [[(ancestry ?child ?slug_0 ?slug_1 ?slug_2)
+        [?child :thing/slug ?slug_0]
+        [?ancestor_1 :thing/children ?child]
+        [?ancestor_1 :thing/slug ?slug_1]
+        [?ancestor_2 :thing/children ?ancestor_1]
+        [?ancestor_2 :thing/slug ?slug_2]
+        (not-join [?ancestor_2] [?_ :thing/children ?ancestor_2])]]
+      "a"
+      "b"
+      "c"]
+    '[{:find [?e]
+       :in [$]
+       :where []}
+      ::DB]
+    ["a" "b" "c"]
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
