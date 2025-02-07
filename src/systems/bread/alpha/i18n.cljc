@@ -22,9 +22,8 @@
   [req]
   (let [params (bread/route-params (route/router req) req)
         lang-param (bread/config req :i18n/lang-param)
-        supported (get (supported-langs req) (keyword (lang-param params)))
-        fallback (bread/config req :i18n/fallback-lang)
-        lang (or supported fallback)]
+        supported (get (supported-langs req) (keyword (get params lang-param)))
+        lang (or supported (bread/config req :i18n/fallback-lang))]
     (bread/hook req ::lang lang)))
 
 (defn lang-supported?
@@ -143,13 +142,13 @@
 
 (defmethod bread/action ::expansions
   i18n-queries
-  [req _ [{:as query :expansion/keys [db i18n?] :or {i18n? true}}]]
-  "Internationalizes the given db query, returning a vector of queries for
+  [req _ [{:as expansion :expansion/keys [db i18n?] :or {i18n? true}}]]
+  "Internationalizes the given db expansion, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
   original query."
   (if i18n?
-    (let [dbq (first (:expansion/args query))
+    (let [dbq (first (:expansion/args expansion))
           {:keys [bindings]} (qi/infer-query-bindings
                                :thing/fields
                                translatable-binding?
@@ -181,9 +180,9 @@
                           (partial d/ensure-attrs
                                    [:field/lang :field/key :db/id])
                           query))
-           query bindings)
+           expansion bindings)
          {:expansion/name ::fields
-          :expansion/key (:expansion/key query)
+          :expansion/key (:expansion/key expansion)
           :expansion/description "Process translatable fields."
           :field/lang (lang req)
           :compact? (bread/config req :i18n/compact-fields?)
@@ -195,8 +194,8 @@
                               (bread/hook req ::bread/attrs-map nil))
                      :relation)
                bindings)}]
-        [query]))
-    [query]))
+        [expansion]))
+    [expansion]))
 
 (defmethod bread/action ::path-params
   [req _ [params]]
