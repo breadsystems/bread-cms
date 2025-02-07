@@ -25,11 +25,20 @@
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
+(defn- add-rule-def [query-args idx rule-def]
+  (if idx
+    (update query-args (inc idx) conj rule-def)
+    (conj query-args [rule-def])))
+
 (defn- update-inputs [query-args input-syms rule-def]
-  (let [sym (symbol "%")]
+  (let [sym (symbol "%")
+        in (get-in query-args [0 :in])
+        rules-idx (first (keep-indexed #(when (= sym %2) %1) in))]
     (-> query-args
-        (update-in [0 :in] #(apply conj % sym input-syms))
-        (conj [rule-def]))))
+        (update-in [0 :in] #(if rules-idx % (conj % sym)))
+        (update-in [0 :in] concat input-syms)
+        (update-in [0 :in] vec)
+        (add-rule-def rules-idx rule-def))))
 
 (defn ancestralize [query-args slugs & {e :e-sym
                                         :or {e '?e}}]
