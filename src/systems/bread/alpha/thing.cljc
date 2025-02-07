@@ -82,12 +82,17 @@
   by-id=>
   [{:as req ::bread/keys [dispatcher]}]
   "Dispatch req by the db/id in :route/params"
-  (let [k (:params-key dispatcher :db/id)
-        id (Integer. (get (:route/params dispatcher) k))
-        query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
-               :in '[$ ?e]}
-        expansion {:expansion/key (:dispatcher/key dispatcher)
-                   :expansion/name ::db/query
-                   :expansion/db (db/database req)
-                   :expansion/args [query id]}]
-    {:expansions (bread/hook req ::i18n/expansions expansion)}))
+  (try
+    (let [k (:params-key dispatcher :db/id)
+          id (Integer. (get (:route/params dispatcher) k))
+          query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+                 :in '[$ ?e]}
+          expansion {:expansion/key (:dispatcher/key dispatcher)
+                     :expansion/name ::db/query
+                     :expansion/db (db/database req)
+                     :expansion/args [query id]}]
+      {:expansions (bread/hook req ::i18n/expansions expansion)})
+    (catch java.lang.NumberFormatException e
+      {:expansions [{:expansion/name ::bread/value
+                     :expansion/key (:dispatcher/key dispatcher)
+                     :expansion/value false}]})))
