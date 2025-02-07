@@ -31,17 +31,18 @@
     (conj query-args [rule-def])))
 
 (defn- update-inputs [query-args input-syms rule-def]
-  (let [sym (symbol "%")
+  (let [SYM (symbol "%")
         in (get-in query-args [0 :in])
-        rules-idx (first (keep-indexed #(when (= sym %2) %1) in))]
+        rules-idx (first (keep-indexed #(when (= SYM %2) %1) in))
+        ;; If we add the special rule input %, ensure that it gets inserted at
+        ;; the correct index. Also ensure :in remains a vector, otherwise
+        ;; subsequent conj/concat operations could break!
+        in (-> (if rules-idx in (conj in SYM)) (concat input-syms) vec)]
     (-> query-args
-        (update-in [0 :in] #(if rules-idx % (conj % sym)))
-        (update-in [0 :in] concat input-syms)
-        (update-in [0 :in] vec)
+        (assoc-in [0 :in] in)
         (add-rule-def rules-idx rule-def))))
 
-(defn ancestralize [query-args slugs & {e :e-sym
-                                        :or {e '?e}}]
+(defn ancestralize [query-args slugs & {e :e-sym :or {e '?e}}]
   "Given ::db/query args vector and a list of slugs, returns an args vector
   asserting that the ancestry of things corresponding to each :thing/slug is an
   unbroken chain of :thing/children ancestors."
