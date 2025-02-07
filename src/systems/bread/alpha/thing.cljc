@@ -78,21 +78,22 @@
                    :expansion/args [query uuid]}]
     {:expansions (bread/hook req ::i18n/expansions expansion)}))
 
+(defn- ->int [x]
+  (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
+
 (defmethod bread/dispatch ::by-id=>
   by-id=>
   [{:as req ::bread/keys [dispatcher]}]
   "Dispatch req by the db/id in :route/params"
-  (try
-    (let [k (:params-key dispatcher :db/id)
-          id (Integer. (get (:route/params dispatcher) k))
-          query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
-                 :in '[$ ?e]}
-          expansion {:expansion/key (:dispatcher/key dispatcher)
-                     :expansion/name ::db/query
-                     :expansion/db (db/database req)
-                     :expansion/args [query id]}]
-      {:expansions (bread/hook req ::i18n/expansions expansion)})
-    (catch java.lang.NumberFormatException e
+  (let [k (:params-key dispatcher :db/id)]
+    (if-let [id (->int (get (:route/params dispatcher) k))]
+      (let [query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+                   :in '[$ ?e]}
+            expansion {:expansion/key (:dispatcher/key dispatcher)
+                       :expansion/name ::db/query
+                       :expansion/db (db/database req)
+                       :expansion/args [query id]}]
+        {:expansions (bread/hook req ::i18n/expansions expansion)})
       {:expansions [{:expansion/name ::bread/value
                      :expansion/key (:dispatcher/key dispatcher)
                      :expansion/value false}]})))
