@@ -285,6 +285,17 @@
      :dispatcher/pull '[*]
      :route/params {:db/id "123"}}
 
+    ;; Test with an invalid id; should 404;
+    {:expansions
+     [{:expansion/name ::bread/value
+       :expansion/key :k
+       :expansion/value false}]}
+    {:dispatcher/type ::thing/by-id=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:db/id "invalid int"}}
+
     ;; Get id from custom :params-key if specified.
     {:expansions
      [{:expansion/name ::db/query
