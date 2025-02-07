@@ -26,9 +26,10 @@
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
 (defn- update-inputs [query-args input-syms rule-def]
-  (-> query-args
-      (update-in [0 :in] #(apply conj % (symbol "%") input-syms))
-      (conj [rule-def])))
+  (let [sym (symbol "%")]
+    (-> query-args
+        (update-in [0 :in] #(apply conj % sym input-syms))
+        (conj [rule-def]))))
 
 (defn ancestralize [query-args slugs & {e :e-sym
                                         :or {e '?e}}]
