@@ -164,6 +164,33 @@
     ["a"]
     [:e-sym '?EEEEE]
 
+    ;; Should find existing % input and place rules in the correct input slots.
+    '[{:find [?e]
+       :in [$ ?status % ?type ?slug_0]
+       :where [[?e :post/status ?status]
+               (my-type-rule ?type)
+               (ancestry ?e ?slug_0)]}
+      ::DB
+      :published
+      [[(my-type-rule ?type)
+        [?e :post/type ?type]]
+       [(ancestry ?child ?slug_0)
+        [?child :thing/slug ?slug_0]
+        (not-join [?child] [?_ :thing/children ?child])]]
+      :my-type
+      "a"]
+    '[{:find [?e]
+       :in [$ ?status % ?type]
+       :where [[?e :post/status ?status]
+               (my-type-rule ?type)]}
+      ::DB
+      :published
+      [[(my-type-rule ?type)
+        [?e :post/type ?type]]]
+      :my-type]
+    ["a"]
+    nil
+
     ;;
     ))
 
