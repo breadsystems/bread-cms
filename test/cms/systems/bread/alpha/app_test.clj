@@ -97,31 +97,31 @@
 
 (use-db :each config)
 
-(defc layout [{:keys [content]}]
+(defc Layout [{:keys [content]}]
   {}
   [:body
    content])
 
-(defc home [{:keys [post]}]
+(defc Home [{:keys [post]}]
   {:query '[{:thing/fields [*]}]
    :key :post
-   :extends layout}
+   :extends Layout}
   (let [{:keys [title simple]} (:thing/fields post)]
     [:main
      [:h1 title]
      [:p (:hello simple)]]))
 
-(defc page [{:keys [post]}]
+(defc Page [{:keys [post]}]
   {:query '[{:thing/fields [*]}]
    :key :post
-   :extends layout}
+   :extends Layout}
   (let [{:keys [title simple]} (:thing/fields post)]
     [:main.interior-page
      [:h1 title]
      [:p (:hello simple)]]))
 
-(defc not-found [{:keys [i18n]}]
-  {:extends layout}
+(defc NotFound [{:keys [i18n]}]
+  {:extends Layout}
   [:main (:not-found i18n)])
 
 (deftest test-app-lifecycle
@@ -130,55 +130,55 @@
     (let [routes {"/en"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component home}
-                   :bread/component home
+                                      :dispatcher/component Home}
+                   :bread/component Home
                    :route/params {:field/lang "en"}}
                   "/fr"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component home}
-                   :bread/component home
+                                      :dispatcher/component Home}
+                   :bread/component Home
                    :route/params {:field/lang "fr"}}
                   "/en/parent-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "en"
                                   :thing/slug* "parent-page"}}
                   "/en/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "en"
                                   :thing/slug* "parent-page/child-page"}}
                   "/fr/parent-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "fr"
                                   :thing/slug* "parent-page"}}
                   "/fr/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "fr"
                                   :thing/slug* "parent-page/child-page"}}
                   "/en/404"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "en"
                                   :thing/slug* "not-found"}}
                   "/fr/404"
                   {:bread/dispatcher {:dispatcher/type ::post/page
                                       :dispatcher/key :post
-                                      :dispatcher/component page}
-                   :bread/component page
+                                      :dispatcher/component Page}
+                   :bread/component Page
                    :route/params {:field/lang "fr"
                                   :thing/slug* "not-found"}}}
           router (reify bread/Router
@@ -188,7 +188,7 @@
                      (:bread/dispatcher (get routes (:uri req)))))
           plugins (defaults/plugins
                     {:db config
-                     :components {:not-found not-found}
+                     :components {:not-found NotFound}
                      :routes {:router router}
                      :i18n {:supported-langs #{:en :fr}}
                      :renderer false})
