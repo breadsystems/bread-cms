@@ -263,6 +263,69 @@
     ;;
     ))
 
+(deftest test-by-id-dispatcher
+  (are
+    [expected dispatcher]
+    (= expected (let [router (reify bread/Router
+                               (route-params [_ _] nil))
+                      req (-> (plugins->loaded [(route/plugin {:router router})
+                                                (i18n/plugin)
+                                                (db->plugin ::FAKEDB)])
+                              (assoc ::bread/dispatcher dispatcher))]
+                  (bread/dispatch req)))
+
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [*]) .] :in [$ ?e]} 123]}]}
+    {:dispatcher/type ::thing/by-id=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:db/id "123"}}
+
+    ;; Get id from custom :params-key if specified.
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [*]) .] :in [$ ?e]} 123]}]}
+    {:dispatcher/type ::thing/by-id=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:custom "123"}
+     :params-key :custom}
+
+    ;; Test that queries get properly internationalized.
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
+                                                           :field/key
+                                                           :field/lang
+                                                           :field/content]}]) .]
+                          :in [$ ?e]}
+                        123]}
+      {:expansion/name ::i18n/fields
+       :expansion/description "Process translatable fields."
+       :expansion/key :k
+       :field/lang :en
+       :compact? true
+       :format? true
+       :recur-attrs #{}
+       :spaths [[:thing/fields]]}]}
+    {:dispatcher/type ::thing/by-id=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[{:thing/fields [:field/content]}]
+     :route/params {:db/id "123"}}
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
