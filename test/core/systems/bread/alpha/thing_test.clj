@@ -8,7 +8,6 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [db->plugin
-                                              naive-router
                                               plugins->loaded]]))
 
 (deftest test-create-ancestry-rule
@@ -190,6 +189,76 @@
       :my-type]
     ["a"]
     nil
+
+    ;;
+    ))
+
+(deftest test-by-uuid-dispatcher
+  (are
+    [expected dispatcher]
+    (= expected (let [router (reify bread/Router
+                               (route-params [_ _] nil))
+                      req (-> (plugins->loaded [(route/plugin {:router router})
+                                                (i18n/plugin)
+                                                (db->plugin ::FAKEDB)])
+                              (assoc ::bread/dispatcher dispatcher))]
+                  (bread/dispatch req)))
+
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [*]) .]
+                          :in [$ ?uuid]
+                          :where [[?e :thing/uuid ?uuid]]}
+                        #uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"]}]}
+    {:dispatcher/type ::thing/by-uuid=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:thing/uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"}}
+
+    ;; Get UUID from custom :params-key if specified.
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [*]) .]
+                          :in [$ ?uuid]
+                          :where [[?e :thing/uuid ?uuid]]}
+                        #uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"]}]}
+    {:dispatcher/type ::thing/by-uuid=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:custom-key "313be3ec-f849-42e7-b4b6-4493807bdc3c"}
+     :params-key :custom-key}
+
+    ;; Test that queries get properly internationalized.
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/key :k
+       :expansion/db ::FAKEDB
+       :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
+                                                           :field/key
+                                                           :field/lang
+                                                           :field/content]}]) .]
+                          :in [$ ?uuid]
+                          :where [[?e :thing/uuid ?uuid]]}
+                        #uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"]}
+      {:expansion/name ::i18n/fields
+       :expansion/description "Process translatable fields."
+       :expansion/key :k
+       :field/lang :en
+       :compact? true
+       :format? true
+       :recur-attrs #{}
+       :spaths [[:thing/fields]]}]}
+    {:dispatcher/type ::thing/by-uuid=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[{:thing/fields [:field/content]}]
+     :route/params {:thing/uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"}}
 
     ;;
     ))
