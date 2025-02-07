@@ -1,6 +1,10 @@
 (ns systems.bread.alpha.thing
   (:require
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.i18n :as i18n])
+  (:import
+    [java.util UUID]))
 
 (defn- syms
   ([prefix]
@@ -58,3 +62,18 @@
                (update-inputs input-syms rule-def)
                (update-in [0 :where] conj rule-invocation))
            slugs)))
+
+(defmethod bread/dispatch ::by-uuid=>
+  by-uuid=>
+  [{:as req ::bread/keys [dispatcher]}]
+  "Dispatch req by the UUID in :route/params"
+  (let [k (:params-key dispatcher :thing/uuid)
+        uuid (UUID/fromString (get (:route/params dispatcher) k))
+        query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+               :in '[$ ?uuid]
+               :where '[[?e :thing/uuid ?uuid]]}
+        expansion {:expansion/key (:dispatcher/key dispatcher)
+                   :expansion/name ::db/query
+                   :expansion/db (db/database req)
+                   :expansion/args [query uuid]}]
+    {:expansions (bread/hook req ::i18n/expansions expansion)}))
