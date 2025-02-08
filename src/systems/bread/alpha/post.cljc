@@ -8,7 +8,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.thing :as thing]
-    [systems.bread.alpha.util.datalog :refer [where ensure-db-id]]))
+    [systems.bread.alpha.util.datalog :as datalog]))
 
 (defn expand-post [result]
   (let [post (ffirst result)
@@ -29,23 +29,16 @@
   the options in ::bread/dispatcher, which may specify:
   - :post/type (default nil, meaning all types)
   - :post/status (default :post.status/published)"
-  (let [params (:route/params dispatcher)
-        ;; Ensure we always have :db/id
-        pull (ensure-db-id (:dispatcher/pull dispatcher))
-        where-post-type (when post-type ['?type :post/type post-type])
-        args (-> [{:find [(list 'pull '?e pull) '.]
-                   :in '[$]
-                   :where []}]
-                 (thing/ancestralize (string/split (:thing/slug* params "") #"/"))
-                 (where (filter seq [where-post-type
-                                     ['?status :post/status post-status]])))
-        query-key (or (:dispatcher/key dispatcher) :post)]
-    {:expansion/name ::db/query
-     :expansion/key query-key
-     :expansion/db (db/database req)
-     :expansion/args args
-     :expansion/description
-     "Query for a single post matching the current request URI"}))
+  (let [{:as expansion args :expansion/args} (thing/by-slug*-expansion req)
+        args (->> [(when post-type ['?type :post/type post-type])
+                   ['?status :post/status post-status]]
+                  (filter seq)
+                  (datalog/where args))]
+    (assoc expansion
+           :expansion/key (:dispatcher/key dispatcher :post)
+           :expansion/args args
+           :expansion/description
+           "Query for a single post matching the current request URI")))
 
 (defmethod bread/dispatch ::post=>
   post=>
