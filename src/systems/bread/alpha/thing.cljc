@@ -63,20 +63,26 @@
                (update-in [0 :where] conj rule-invocation))
            slugs)))
 
+(defn- ->uuid [x]
+  (try (UUID/fromString x) (catch java.lang.NullPointerException _ nil)))
+
 (defmethod bread/dispatch ::by-uuid=>
   by-uuid=>
   [{:as req ::bread/keys [dispatcher]}]
   "Dispatch req by the UUID in :route/params"
-  (let [k (:params-key dispatcher :thing/uuid)
-        uuid (UUID/fromString (get (:route/params dispatcher) k))
-        query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
-               :in '[$ ?uuid]
-               :where '[[?e :thing/uuid ?uuid]]}
-        expansion {:expansion/key (:dispatcher/key dispatcher)
-                   :expansion/name ::db/query
-                   :expansion/db (db/database req)
-                   :expansion/args [query uuid]}]
-    {:expansions (bread/hook req ::i18n/expansions expansion)}))
+  (let [k (:params-key dispatcher :thing/uuid)]
+    (if-let [uuid (->uuid (get (:route/params dispatcher) k))]
+      (let [query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+                   :in '[$ ?uuid]
+                   :where '[[?e :thing/uuid ?uuid]]}
+            expansion {:expansion/key (:dispatcher/key dispatcher)
+                       :expansion/name ::db/query
+                       :expansion/db (db/database req)
+                       :expansion/args [query uuid]}]
+        {:expansions (bread/hook req ::i18n/expansions expansion)})
+      {:expansions [{:expansion/key (:dispatcher/key dispatcher)
+                     :expansion/name ::bread/value
+                     :expansion/value false}]})))
 
 (defn- ->int [x]
   (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
