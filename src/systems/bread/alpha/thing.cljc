@@ -2,7 +2,8 @@
   (:require
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.i18n :as i18n])
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.util.datalog :as datalog])
   (:import
     [java.util UUID]))
 
@@ -72,7 +73,8 @@
   "Dispatch req by the UUID in :route/params"
   (let [k (:params-key dispatcher :thing/uuid)]
     (if-let [uuid (->uuid (get (:route/params dispatcher) k))]
-      (let [query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+      (let [pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
+            query {:find [(list 'pull '?e pull) '.]
                    :in '[$ ?uuid]
                    :where '[[?e :thing/uuid ?uuid]]}
             expansion {:expansion/key (:dispatcher/key dispatcher)
@@ -94,7 +96,8 @@
   "Dispatch req by the db/id in :route/params"
   (let [k (:params-key dispatcher :db/id)]
     (if-let [id (->int (get (:route/params dispatcher) k))]
-      (let [query {:find [(list 'pull '?e (:dispatcher/pull dispatcher)) '.]
+      (let [pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
+            query {:find [(list 'pull '?e pull) '.]
                    :in '[$ ?e]}
             expansion {:expansion/key (:dispatcher/key dispatcher)
                        :expansion/name ::db/query
