@@ -19,7 +19,7 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
-(defmethod bread/dispatch ::page
+(defmethod bread/dispatch ::page=>
   [{{pull :dispatcher/pull
      post-type :post/type
      post-status :post/status
