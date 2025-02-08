@@ -19,6 +19,35 @@
                  (map second result))]
     (assoc post :post/fields fields)))
 
+(defmethod bread/dispatch ::post=>
+  dispatch-post
+  "Dispatcher for a single post. Optionally specify:
+  - :post/type (default nil, meaning all types)
+  - :post/status (default :post.status/published)"
+  [{{post-type :post/type
+     post-status :post/status
+     :or {post-status :post.status/published}
+     :as dispatcher} ::bread/dispatcher
+    :as req}]
+  (let [params (:route/params dispatcher)
+        ;; Ensure we always have :db/id
+        pull (ensure-db-id (:dispatcher/pull dispatcher))
+        where-post-type (when post-type ['?type :post/type post-type])
+        args (-> [{:find [(list 'pull '?e pull) '.]
+                   :in '[$]
+                   :where []}]
+                 (thing/ancestralize (string/split (:thing/slug* params "") #"/"))
+                 (where (filter seq [where-post-type
+                                     ['?status :post/status post-status]])))
+        query-key (or (:dispatcher/key dispatcher) :post)
+        page-expansion {:expansion/name ::db/query
+                        :expansion/key query-key
+                        :expansion/db (db/database req)
+                        :expansion/args args
+                        :expansion/description
+                        "Query for posts matching the current request URI"}]
+    {:expansions (bread/hook req ::i18n/expansions page-expansion)}))
+
 (defmethod bread/dispatch ::page=>
   [{{pull :dispatcher/pull
      post-type :post/type
