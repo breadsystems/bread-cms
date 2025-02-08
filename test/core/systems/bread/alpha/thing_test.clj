@@ -193,6 +193,35 @@
     ;;
     ))
 
+(deftest test-by-slug*-expansion
+  (let [app (plugins->loaded [(db->plugin ::FAKEDB)])]
+
+    (are
+      [expansion dispatcher]
+      (= expansion
+         (thing/by-slug*-expansion (assoc app ::bread/dispatcher dispatcher)))
+
+      {:expansion/name ::db/query
+       :expansion/description "Query for a single thing matching the current request URI"
+       :expansion/key :thing
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/fields [*]}]) .]
+          :where [(ancestry ?e ?slug_0)]
+          :in [$ % ?slug_0]}
+        '[[(ancestry ?child ?slug_0)
+           [?child :thing/slug ?slug_0]
+           (not-join [?child] [?_ :thing/children ?child])]]
+        "hello"]}
+      {:dispatcher/type ::thing/thing=>
+       :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
+       :dispatcher/key :thing
+       :route/params {:lang "en" :thing/slug* "hello"}}
+
+      )))
+
 (deftest test-by-uuid-dispatcher
   (are
     [expected dispatcher]

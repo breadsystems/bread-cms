@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.thing
   (:require
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
@@ -63,6 +64,29 @@
                (update-inputs input-syms rule-def)
                (update-in [0 :where] conj rule-invocation))
            slugs)))
+
+(defn by-slug*-expansion
+  [{{post-type :post/type
+     post-status :post/status
+     :or {post-status :post.status/published}
+     :as dispatcher} ::bread/dispatcher
+    :as req}]
+  "Returns an expansion for querying a single thing matching the ancestry
+  (according to :thing/children) given by the :thing/slug* from the route."
+  (let [params (:route/params dispatcher)
+        ;; Ensure we always have :db/id
+        pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
+        args (-> [{:find [(list 'pull '?e pull) '.]
+                   :in '[$]
+                   :where []}]
+                 (ancestralize (string/split (:thing/slug* params "") #"/")))
+        query-key (or (:dispatcher/key dispatcher) :thing)]
+    {:expansion/name ::db/query
+     :expansion/key query-key
+     :expansion/db (db/database req)
+     :expansion/args args
+     :expansion/description
+     "Query for a single thing matching the current request URI"}))
 
 (defn- ->uuid [x]
   (try (UUID/fromString x) (catch java.lang.NullPointerException _ nil)))
