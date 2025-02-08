@@ -253,7 +253,8 @@
        :expansion/description "Query by :thing/uuid."
        :expansion/key :k
        :expansion/db ::FAKEDB
-       :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
+       :expansion/args ['{:find [(pull ?e [:db/id
+                                           {:thing/fields [:db/id
                                                            :field/key
                                                            :field/lang
                                                            :field/content]}]) .]
@@ -331,7 +332,8 @@
        :expansion/description "Query by :db/id."
        :expansion/key :k
        :expansion/db ::FAKEDB
-       :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
+       :expansion/args ['{:find [(pull ?e [:db/id
+                                           {:thing/fields [:db/id
                                                            :field/key
                                                            :field/lang
                                                            :field/content]}]) .]
