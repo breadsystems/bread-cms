@@ -15,8 +15,7 @@
         fields (reduce
                  (fn [fields {:field/keys [key content]}]
                    (assoc fields key (edn/read-string content)))
-                 {}
-                 (map second result))]
+                 {} (map second result))]
     (assoc post :post/fields fields)))
 
 (defn by-slug*-expansion
