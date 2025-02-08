@@ -11,6 +11,37 @@
                                               naive-router
                                               plugins->loaded]]))
 
+(deftest test-by-slug*-expansion
+  (let [app (plugins->loaded [(db->plugin ::FAKEDB)])]
+
+    (are
+      [expansion dispatcher]
+      (= expansion
+         (post/by-slug*-expansion (assoc app ::bread/dispatcher dispatcher)))
+
+      {:expansion/name ::db/query
+       :expansion/description "Query for a single post matching the current request URI"
+       :expansion/key :post
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/fields [*]}]) .]
+          :where [(ancestry ?e ?slug_0)
+                  [?e :post/status ?status]]
+          :in [$ % ?slug_0 ?status]}
+        '[[(ancestry ?child ?slug_0)
+           [?child :thing/slug ?slug_0]
+           (not-join [?child] [?_ :thing/children ?child])]]
+        "hello"
+        :post.status/published]}
+      {:dispatcher/type ::post/post=>
+       :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
+       :dispatcher/key :post
+       :route/params {:lang "en" :thing/slug* "hello"}}
+
+      )))
+
 (deftest test-post-dispatcher
   (let [attrs-map {:thing/fields {:db/cardinality :db.cardinality/many}
                    :post/taxons  {:db/cardinality :db.cardinality/many}}
@@ -26,13 +57,12 @@
 
     (are
       [expansions dispatcher]
-      (= expansions (let [counter (atom 0)]
-                   (-> (assoc app ::bread/dispatcher dispatcher)
-                       (bread/hook ::bread/dispatch)
-                       ::bread/expansions)))
+      (= expansions (-> (assoc app ::bread/dispatcher dispatcher)
+                        (bread/hook ::bread/dispatch)
+                        ::bread/expansions))
 
       [{:expansion/name ::db/query
-        :expansion/description "Query for posts matching the current request URI"
+        :expansion/description "Query for a single post matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args
@@ -61,7 +91,7 @@
        :route/params {:lang "en" :thing/slug* "hello"}}
 
       [{:expansion/name ::db/query
-        :expansion/description "Query for pages matching the current request URI"
+        :expansion/description "Query for a single page matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args
@@ -93,7 +123,7 @@
 
       ;; Post type, status are dynamic.
       [{:expansion/name ::db/query
-        :expansion/description "Query for posts matching the current request URI"
+        :expansion/description "Query for a single post matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args
