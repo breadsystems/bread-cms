@@ -206,6 +206,7 @@
 
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :thing/uuid."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [*]) .]
@@ -232,6 +233,7 @@
     ;; Get UUID from custom :params-key if specified.
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :thing/uuid."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [*]) .]
@@ -248,6 +250,7 @@
     ;; Test that queries get properly internationalized.
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :thing/uuid."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
@@ -287,6 +290,7 @@
 
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :db/id."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [*]) .] :in [$ ?e]} 123]}]}
@@ -310,6 +314,7 @@
     ;; Get id from custom :params-key if specified.
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :db/id."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [*]) .] :in [$ ?e]} 123]}]}
@@ -323,6 +328,7 @@
     ;; Test that queries get properly internationalized.
     {:expansions
      [{:expansion/name ::db/query
+       :expansion/description "Query by :db/id."
        :expansion/key :k
        :expansion/db ::FAKEDB
        :expansion/args ['{:find [(pull ?e [{:thing/fields [:db/id
