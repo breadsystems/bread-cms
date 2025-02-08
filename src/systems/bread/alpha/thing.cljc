@@ -132,3 +132,9 @@
       {:expansions [{:expansion/name ::bread/value
                      :expansion/key (:dispatcher/key dispatcher)
                      :expansion/value false}]})))
+
+(defmethod bread/dispatch ::thing=>
+  by-slug*=>
+  [req]
+  "Dispatch req by the :thing/slug* in the URI."
+  {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})

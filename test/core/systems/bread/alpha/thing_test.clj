@@ -222,6 +222,69 @@
 
       )))
 
+(deftest test-thing-dispatcher
+  (are
+    [expansions dispatcher]
+    (= expansions (let [router (reify bread/Router
+                                 (route-params [_ _] nil))
+                        req (-> (plugins->loaded [(route/plugin {:router router})
+                                                  (i18n/plugin)
+                                                  (db->plugin ::FAKEDB)])
+                                (assoc ::bread/dispatcher dispatcher))]
+                    (bread/dispatch req)))
+
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/description "Query for a single thing matching the current request URI"
+       :expansion/key :thing
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id :thing/slug *]) .]
+          :where [(ancestry ?e ?slug_0)]
+          :in [$ % ?slug_0]}
+        '[[(ancestry ?child ?slug_0)
+           [?child :thing/slug ?slug_0]
+           (not-join [?child] [?_ :thing/children ?child])]]
+        "hello"]}]}
+    {:dispatcher/type ::thing/thing=>
+     :dispatcher/pull '[:thing/slug *]
+     :dispatcher/key :thing
+     :route/params {:lang "en" :thing/slug* "hello"}}
+
+    {:expansions
+     [{:expansion/name ::db/query
+       :expansion/description "Query for a single thing matching the current request URI"
+       :expansion/key :thing
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/fields [:db/id
+                                           :field/key
+                                           :field/lang
+                                           :field/content]}]) .]
+          :where [(ancestry ?e ?slug_0)]
+          :in [$ % ?slug_0]}
+        '[[(ancestry ?child ?slug_0)
+           [?child :thing/slug ?slug_0]
+           (not-join [?child] [?_ :thing/children ?child])]]
+        "hello"]}
+      {:expansion/name ::i18n/fields
+       :expansion/description "Process translatable fields."
+       :expansion/key :thing
+       :field/lang :en
+       :compact? true
+       :format? true
+       :recur-attrs #{}
+       :spaths [[:thing/fields]]}]}
+    {:dispatcher/type ::thing/thing=>
+     :dispatcher/pull '[:thing/slug {:thing/fields [:field/content]}]
+     :dispatcher/key :thing
+     :route/params {:lang "en" :thing/slug* "hello"}}
+
+    ;;
+    ))
+
 (deftest test-by-uuid-dispatcher
   (are
     [expected dispatcher]
