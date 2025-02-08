@@ -218,6 +218,17 @@
      :dispatcher/pull '[*]
      :route/params {:thing/uuid "313be3ec-f849-42e7-b4b6-4493807bdc3c"}}
 
+    ;; Test with an invalid UUID; should 404;
+    {:expansions
+     [{:expansion/name ::bread/value
+       :expansion/key :k
+       :expansion/value false}]}
+    {:dispatcher/type ::thing/by-uuid=>
+     :dispatcher/key :k
+     :dispatcher/component 'Component
+     :dispatcher/pull '[*]
+     :route/params {:db/id "invalid UUID"}}
+
     ;; Get UUID from custom :params-key if specified.
     {:expansions
      [{:expansion/name ::db/query
