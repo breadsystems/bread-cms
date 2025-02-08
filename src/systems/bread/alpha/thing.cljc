@@ -77,6 +77,7 @@
                    :where '[[?e :thing/uuid ?uuid]]}
             expansion {:expansion/key (:dispatcher/key dispatcher)
                        :expansion/name ::db/query
+                       :expansion/description "Query by :thing/uuid."
                        :expansion/db (db/database req)
                        :expansion/args [query uuid]}]
         {:expansions (bread/hook req ::i18n/expansions expansion)})
@@ -97,6 +98,7 @@
                    :in '[$ ?e]}
             expansion {:expansion/key (:dispatcher/key dispatcher)
                        :expansion/name ::db/query
+                       :expansion/description "Query by :db/id."
                        :expansion/db (db/database req)
                        :expansion/args [query id]}]
         {:expansions (bread/hook req ::i18n/expansions expansion)})
