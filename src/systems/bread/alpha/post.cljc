@@ -20,15 +20,15 @@
     (assoc post :post/fields fields)))
 
 (defmethod bread/dispatch ::post=>
-  dispatch-post
-  "Dispatcher for a single post. Optionally specify:
-  - :post/type (default nil, meaning all types)
-  - :post/status (default :post.status/published)"
+  post=>
   [{{post-type :post/type
      post-status :post/status
      :or {post-status :post.status/published}
      :as dispatcher} ::bread/dispatcher
     :as req}]
+  "Dispatcher for a single post. Optionally specify:
+  - :post/type (default nil, meaning all types)
+  - :post/status (default :post.status/published)"
   (let [params (:route/params dispatcher)
         ;; Ensure we always have :db/id
         pull (ensure-db-id (:dispatcher/pull dispatcher))
@@ -40,15 +40,16 @@
                  (where (filter seq [where-post-type
                                      ['?status :post/status post-status]])))
         query-key (or (:dispatcher/key dispatcher) :post)
-        page-expansion {:expansion/name ::db/query
+        post-expansion {:expansion/name ::db/query
                         :expansion/key query-key
                         :expansion/db (db/database req)
                         :expansion/args args
                         :expansion/description
                         "Query for posts matching the current request URI"}]
-    {:expansions (bread/hook req ::i18n/expansions page-expansion)}))
+    {:expansions (bread/hook req ::i18n/expansions post-expansion)}))
 
 (defmethod bread/dispatch ::page=>
+  page=>
   [{{pull :dispatcher/pull
      post-type :post/type
      post-status :post/status
@@ -56,6 +57,9 @@
           post-status :post.status/published}
      :as dispatcher} ::bread/dispatcher
     :as req}]
+  "Dispatcher for a single page Optionally specify:
+  - :post/type (default nil, meaning all types)
+  - :post/status (default :post.status/published)"
   (let [params (:route/params dispatcher)
         ;; Ensure we always have :db/id
         page-args

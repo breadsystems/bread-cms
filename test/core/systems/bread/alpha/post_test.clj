@@ -93,7 +93,7 @@
 
       ;; Post type, status are dynamic.
       [{:expansion/name ::db/query
-        :expansion/description "Query for pages matching the current request URI"
+        :expansion/description "Query for posts matching the current request URI"
         :expansion/key :post
         :expansion/db ::FAKEDB
         :expansion/args
@@ -118,7 +118,7 @@
         :format? true
         :compact? true
         :recur-attrs #{}}]
-      {:dispatcher/type ::post/page=>
+      {:dispatcher/type ::post/post=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
        :route/params {:lang "en" :thing/slug* "hello"}
