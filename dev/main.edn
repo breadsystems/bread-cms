@@ -60,6 +60,10 @@
      {:name :home
       :dispatcher/type :systems.bread.alpha.post/page
       :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
+    ["/i/{db/id}"
+     {:name :id
+      :dispatcher/type :systems.bread.alpha.thing/by-id=>
+      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
     ["/tag/{thing/slug}"
      {:name :tag
       :dispatcher/type :systems.bread.alpha.post/tag
