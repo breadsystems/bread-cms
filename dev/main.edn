@@ -58,7 +58,7 @@
    ["/{field/lang}"
     [""
      {:name :home
-      :dispatcher/type :systems.bread.alpha.post/page
+      :dispatcher/type :systems.bread.alpha.post/page=>
       :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
     ["/i/{db/id}"
      {:name :id
@@ -70,11 +70,11 @@
       :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
     ["/{thing/slug*}"
      {:name :page
-      :dispatcher/type :systems.bread.alpha.post/page
+      :dispatcher/type :systems.bread.alpha.post/page=>
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
     ["/page/{thing/slug*}"
      {:name :page!
-      :dispatcher/type :systems.bread.alpha.post/page
+      :dispatcher/type :systems.bread.alpha.post/page=>
       :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
   {:conflicts nil}]
  :bread/profilers
