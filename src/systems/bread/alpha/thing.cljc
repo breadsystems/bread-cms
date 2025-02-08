@@ -133,8 +133,10 @@
                      :expansion/key (:dispatcher/key dispatcher)
                      :expansion/value false}]})))
 
-(defmethod bread/dispatch ::thing=>
+(defmethod bread/dispatch ::by-slug*=>
   by-slug*=>
   [req]
   "Dispatch req by the :thing/slug* in the URI."
   {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})
+
+(derive ::thing=> ::by-slug*=>)
