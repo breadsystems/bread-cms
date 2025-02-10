@@ -57,19 +57,28 @@
                   (reify db/TemporalDatabase (q [_ _] mock-result)))]
     (are
       [expected expansion]
-      (= expected (do (prn 'EXPANSION expansion) (bread/expand expansion {})))
+      (= expected (bread/expand expansion {}))
 
-      nil
+      false
       {:expansion/name ::db/query
-       :expansion/db (mock-db nil)}
+       :expansion/db (mock-db nil)
+       :expansion/args [{}]}
 
-      nil
+      false
       {:expansion/name ::db/query
-       :expansion/db (mock-db nil) :expansion/into {}}
+       :expansion/db (mock-db nil)
+       :expansion/into {}
+       :expansion/args [{}]}
 
       [{:db/id 1} {:db/id 2}]
       {:expansion/name ::db/query
        :expansion/db (mock-db [{:db/id 1} {:db/id 2}])
+       :expansion/args [{}]}
+
+      {:one 1 :two 2}
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[:one 1] [:two 2]])
+       :expansion/args [{}]
        :expansion/into {}}
 
       ;;
