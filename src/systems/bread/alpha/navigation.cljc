@@ -64,7 +64,7 @@
         recursion-limit :recursion-limit
         fks :field/key
         sort-key :sort-by
-        :or {post-type :post.type/page
+        :or {post-type :page
              post-status :post.status/published
              recursion-limit '...}}]
   (let [menus-key (bread/config req :navigation/menus-key)]

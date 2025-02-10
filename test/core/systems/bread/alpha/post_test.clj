@@ -135,7 +135,7 @@
             [?child :thing/slug ?slug_0]
             (not-join [?child] [?_ :thing/children ?child])]]
          "hello"
-         :post.type/page
+         :page
          :post.status/published]}
        {:expansion/name ::i18n/fields
         :expansion/key :post

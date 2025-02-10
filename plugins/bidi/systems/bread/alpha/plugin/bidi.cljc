@@ -37,7 +37,7 @@
     (def $dispatchers
       {:index {:dispatcher/type :post.type/article
                :dispatcher/component :INDEX}
-       :page {:dispatcher/type :post.type/page
+       :page {:dispatcher/type :page
               :dispatcher/component :PAGE}})
     (for [route ["/en" "/en/abc" "/en/abc/xyz" "/en/blog" "/en/blog/qwerty"]]
       [route (bidi/match-route $routes route)])))

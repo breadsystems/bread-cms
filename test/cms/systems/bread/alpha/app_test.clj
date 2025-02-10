@@ -19,7 +19,7 @@
              :db/initial-txns
              [;; init post content
               {:db/id "page.home"
-               :post/type :post.type/page
+               :post/type :page
                :thing/slug ""
                :post/status :post.status/published
                :thing/fields
@@ -40,7 +40,7 @@
                   :field/format :edn
                   :field/content (pr-str {:hello "Allo!"})}}}
               {:db/id "page.parent"
-               :post/type :post.type/page
+               :post/type :page
                :thing/slug "parent-page"
                :post/status :post.status/published
                :thing/children ["page.child"]
@@ -64,7 +64,7 @@
                   :field/content
                   (pr-str {:hello "Bonjour de parent"})}}}
               {:db/id "page.child"
-               :post/type :post.type/page
+               :post/type :page
                :thing/slug "child-page"
                :post/status :post.status/published
                :thing/fields

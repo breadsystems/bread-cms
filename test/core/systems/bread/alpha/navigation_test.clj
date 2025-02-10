@@ -44,7 +44,7 @@
       :expansion/key [:menus :basic-nav]
       :expansion/description "Basic initial info for this posts menu."
       :expansion/value {:menu/type ::navigation/posts
-                    :post/type :post.type/page}}
+                    :post/type :page}}
      {:expansion/name ::db/query
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Recursively query for posts of a specific type."
@@ -62,7 +62,7 @@
          :where [[?e :post/type ?type]
                  [?e :post/status ?status]
                  (not-join [?e] [?_ :thing/children ?e])]}
-       :post.type/page
+       :page
        #{:post.status/published}]}
      {:expansion/name ::i18n/fields
       :expansion/key [:menus :basic-nav :menu/items]
@@ -92,7 +92,7 @@
       :expansion/key [:menus :basic-nav]
       :expansion/description "Basic initial info for this posts menu."
       :expansion/value {:menu/type ::navigation/posts
-                    :post/type :post.type/page}}
+                    :post/type :page}}
      {:expansion/name ::db/query
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Recursively query for posts of a specific type."
@@ -108,7 +108,7 @@
          :where [[?e :post/type ?type]
                  [?e :post/status ?status]
                  (not-join [?e] [?_ :thing/children ?e])]}
-       :post.type/page
+       :page
        #{:post.status/published :post.status/draft}]}
      {:expansion/name ::i18n/fields
       :expansion/key [:menus :basic-nav :menu/items]

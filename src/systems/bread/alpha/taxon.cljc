@@ -23,7 +23,7 @@
          taxonomy :taxon/taxonomy
          post-type :post/type
          post-status :post/status
-         :or {post-type :post.type/page
+         :or {post-type :page
               post-status :post.status/published}} dispatcher
         pull-spec (vec (dispatcher/pull-spec dispatcher))
         query {:find [(list 'pull '?e pull-spec) '.]

@@ -4,7 +4,7 @@
 
 (def initial
   [{:db/id "page.home"
-    :post/type :post.type/page
+    :post/type :page
     :thing/slug ""
     :post/status :post.status/published
     :thing/fields
@@ -23,7 +23,7 @@
        :field/format :edn
        :field/content (pr-str [{:a "le content" :b "et plus"}])}}}
    {:db/id "page.child"
-    :post/type :post.type/page
+    :post/type :page
     :thing/slug "child-page"
     :post/status :post.status/published
     :thing/children ["page.grandchild"]
@@ -43,7 +43,7 @@
        :field/format :edn
        :field/content (pr-str [{:a "loreme ipsumee" :b "dolore siter amet"}])}}}
    {:db/id "page.daughter"
-    :post/type :post.type/page
+    :post/type :page
     :thing/slug "daughter-page"
     :post/status :post.status/draft
     :thing/fields
@@ -54,7 +54,7 @@
        :field/lang :fr
        :field/content "La Page Fille"}}}
    {:db/id "page.parent"
-    :post/type :post.type/page
+    :post/type :page
     :thing/slug "hello"
     :thing/children ["page.child" "page.daughter"]
     :post/taxons ["tag.one" "tag.two"]
@@ -109,7 +109,7 @@
                  [:br]
                  "in the middle of it."]])}}}
    {:db/id "page.grandchild"
-    :post/type :post.type/page
+    :post/type :page
     :thing/slug "grandchild-page"
     :post/status :post.status/published
     :thing/fields

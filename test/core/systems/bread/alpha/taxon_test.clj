@@ -145,7 +145,7 @@
                  [:thing/fields]]}
        {:expansion/name ::taxon/filter-posts
         :expansion/key :tag-with-posts
-        :post/type :post.type/page
+        :post/type :page
         :post/status :post.status/published}]
       {:dispatcher/type ::taxon/tag
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key

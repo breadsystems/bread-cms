@@ -312,7 +312,7 @@
      "one")
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
        :in [$ ?slug]
-       :where [[?p :post/type :post.type/page]
+       :where [[?p :post/type :page]
                [?p :thing/slug ?slug]]}
      "hello")
 
@@ -341,7 +341,7 @@
        :where [[?e :post/type ?type]
                [?e :post/status ?status]
                (not-join [?e] [?_ :thing/children ?e])]}
-     :post.type/page
+     :page
      #{:post.status/published})
 
   (slurp (io/resource "public/assets/hi.txt"))

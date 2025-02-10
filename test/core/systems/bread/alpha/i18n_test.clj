@@ -194,7 +194,7 @@
         ['{:find [(pull ?e [:db/id :thing/slug])]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
-         :post.type/page]}]
+         :page]}]
       {:expansion/name ::db/query
        :expansion/key :post
        :expansion/db ::FAKEDB
@@ -202,7 +202,7 @@
        ['{:find [(pull ?e [:db/id :thing/slug])]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
-        :post.type/page]}
+        :page]}
       :whatever
       true ;; this has no effect without translatable fields present
       true ;; ditto
@@ -217,7 +217,7 @@
                             {:thing/fields [:field/key :field/lang]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
-         :post.type/page]}]
+         :page]}]
       {:expansion/name ::db/query
        :expansion/key :post
        :expansion/db ::FAKEDB
@@ -227,7 +227,7 @@
                            {:thing/fields [:field/key :field/lang]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
-        :post.type/page]}
+        :page]}
       :whatever
       true ;; this has no effect without translatable fields present
       true ;; ditto
@@ -249,7 +249,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}]
+         :page]}]
       {:expansion/i18n? false
        :expansion/name ::db/query
        :expansion/key :post-with-taxons-and-field-content
@@ -266,7 +266,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       false
       false
@@ -290,7 +290,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -315,7 +315,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       false
       false
@@ -339,7 +339,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -364,7 +364,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       false
       false
@@ -380,7 +380,7 @@
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-content
         :expansion/description  "Process translatable fields."
@@ -399,7 +399,7 @@
                             [:field/key :field/content]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
-        :post.type/page]}
+        :page]}
       :fr
       false
       false
@@ -415,7 +415,7 @@
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?type]
            :where [[?e :post/type ?type]]}
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-content
         :expansion/description "Process translatable fields."
@@ -434,7 +434,7 @@
                             [:field/key :field/content]}]) .]
           :in [$ ?type]
           :where [[?e :post/type ?type]]}
-        :post.type/page]}
+        :page]}
       :fr
       false
       true
@@ -456,7 +456,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -480,7 +480,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       true
       true
@@ -504,7 +504,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -533,7 +533,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       true
       true
@@ -555,7 +555,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -580,7 +580,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       true
       true
@@ -603,7 +603,7 @@
            :where [[?e :thing/slug ?slug]
                    [?e :post/type ?type]]}
          "my-post"
-         :post.type/page]}
+         :page]}
        {:expansion/name ::i18n/fields
         :expansion/key :post-with-taxons-and-field-content
         :expansion/description  "Process translatable fields."
@@ -631,7 +631,7 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
-        :post.type/page]}
+        :page]}
       :en
       true
       true

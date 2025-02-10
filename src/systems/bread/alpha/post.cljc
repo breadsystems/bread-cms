@@ -56,7 +56,7 @@
   - :post/status (default :post.status/published)"
   (let [page-expansion
         (-> req
-            (assoc-in [::bread/dispatcher :post/type] :post.type/page)
+            (assoc-in [::bread/dispatcher :post/type] :page)
             by-slug*-expansion
             (assoc :expansion/description
                    "Query for a single page matching the current request URI"))]
