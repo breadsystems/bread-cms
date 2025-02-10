@@ -39,13 +39,15 @@
            :expansion/description
            "Query for a single post matching the current request URI")))
 
-(defmethod bread/dispatch ::post=>
+(defmethod bread/dispatch ::by-slug*=>
   post=>
   [req]
   "Dispatcher for a single post. Optionally specify:
   - :post/type (default nil, meaning all types)
   - :post/status (default :post.status/published)"
   {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})
+
+(derive ::post=> ::by-slug*=>)
 
 (defmethod bread/dispatch ::page=>
   page=>

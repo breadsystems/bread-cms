@@ -85,6 +85,35 @@
         :format? true
         :compact? true
         :recur-attrs #{}}]
+      {:dispatcher/type ::post/by-slug*=>
+       :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
+       :dispatcher/key :post
+       :route/params {:lang "en" :thing/slug* "hello"}}
+
+      [{:expansion/name ::db/query
+        :expansion/description "Query for a single post matching the current request URI"
+        :expansion/key :post
+        :expansion/db ::FAKEDB
+        :expansion/args
+        ['{:find [(pull ?e [:db/id
+                            :thing/slug
+                            {:thing/fields [*]}]) .]
+           :where [(ancestry ?e ?slug_0)
+                   [?e :post/status ?status]]
+           :in [$ % ?slug_0 ?status]}
+         '[[(ancestry ?child ?slug_0)
+            [?child :thing/slug ?slug_0]
+            (not-join [?child] [?_ :thing/children ?child])]]
+         "hello"
+         :post.status/published]}
+       {:expansion/name ::i18n/fields
+        :expansion/key :post
+        :expansion/description "Process translatable fields."
+        :spaths [[:thing/fields]]
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{}}]
       {:dispatcher/type ::post/post=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
