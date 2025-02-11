@@ -124,7 +124,7 @@
       req)))
 
 (defmethod bread/action ::set-session
-  [{::bread/keys [data] :keys [params session] :as res}
+  [{::bread/keys [data] :keys [params query-string session] :as res}
    {:keys [max-failed-login-count]} _]
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
@@ -144,9 +144,17 @@
                                  (assoc :user user :auth/step next-step)
                                  (dissoc :auth/user)))
         next-param (bread/config res :auth/next-param)
+        next-uri (get params next-param)
         login-uri (bread/config res :auth/login-uri)
         ;; Don't redirect to destination prematurely!
-        redirect-to (if logged-in? (get params next-param login-uri) login-uri)]
+        redirect-to (cond
+                      (and next-uri logged-in?) next-uri
+                      next-uri (str login-uri "?"
+                                    (name next-param) "="
+                                    (URLEncoder/encode next-uri))
+                      logged-in? login-uri
+                      :else login-uri)]
+    (when (and valid (not logged-in?) ) (prn next-param next-uri))
     (if-not valid
       (assoc res :status 401)
       (-> res

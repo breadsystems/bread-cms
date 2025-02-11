@@ -370,10 +370,10 @@
        :params {:username "douglass" :password "liber4tion"}
        :uri "/login"}
 
-      ;; Successful username/password login requiring 2FA step,
-      ;; next param present. Should not redirect or set session user yet!
+      ;; Successful username/password login requiring 2FA step, next param
+      ;; Should not redirect or set session user yet!
       {:status 302
-       :headers {"Location" "/login"
+       :headers {"Location" "/login?next=%2Fdest2fa"
                  "content-type" "text/html"}
        :session {:auth/user douglass
                  :auth/step :two-factor}
@@ -383,6 +383,38 @@
       {}
       {:request-method :post
        :params {:username "douglass" :password "liber4tion" :next "/dest2fa"}
+       :uri "/login"}
+
+      ;; Successful username/password login requiring 2FA step, custom next
+      ;; param present. Should not redirect or set session user yet!
+      {:status 302
+       :headers {"Location" "/login?special=%2Fdest2fa"
+                 "content-type" "text/html"}
+       :session {:auth/user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:update false :valid true :user douglass}}}
+      {:next-param :special}
+      {:request-method :post
+       :params {:username "douglass" :password "liber4tion" :special "/dest2fa"}
+       :uri "/login"}
+
+      ;; Successful username/password login requiring 2FA step, custom next
+      ;; param present. Should not redirect or set session user yet!
+      {:status 302
+       :headers {"Location" "/login?special=%2Fdest2fa%3Fquery%3Dstring%26a%3D1"
+                 "content-type" "text/html"}
+       :session {:auth/user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:update false :valid true :user douglass}}}
+      {:next-param :special}
+      {:request-method :post
+       :params {:username "douglass"
+                :password "liber4tion"
+                :special "/dest2fa?query=string&a=1"}
        :uri "/login"}
 
       ;; 2FA with blank code. Should not set session user.
