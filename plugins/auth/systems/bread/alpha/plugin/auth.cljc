@@ -128,16 +128,27 @@
    {:keys [max-failed-login-count]} _]
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
+        two-factor-step? (= :two-factor current-step)
         two-factor-enabled? (boolean (:user/two-factor-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
-        session (cond-> nil
-                  valid (assoc :user user :auth/step next-step)
-                  locked? (assoc :locked? true))
+        two-factor-next? (and valid (= :two-factor next-step))
+        logged-in? (and valid (or two-factor-enabled?
+                                  (and (not two-factor-enabled?)
+                                       (nil? current-step))))
+        session (cond
+                  two-factor-next? (assoc session :auth/user user)
+                  logged-in? (-> session
+                                 (assoc :user user :auth/step next-step)
+                                 (dissoc :auth/user)))
         next-param (bread/config res :auth/next-param)
         login-uri (bread/config res :auth/login-uri)
         redirect-to (get params next-param login-uri)]
+    (when (and valid two-factor-next?)
+      (prn 'logged-in? logged-in? )
+      #_
+      (prn redirect-to '=> (-> session (update :user (complement empty?)) (update :auth/user (complement empty?)))))
     (if-not valid
       (assoc res :status 401)
       (-> res
@@ -245,7 +256,7 @@
       {:expansions
        [{:expansion/name ::authenticate-two-factor
          :expansion/key :auth/result
-         :user user
+         :user (:auth/user session)
          :two-factor-code (:two-factor-code params)}]
        :hooks
        {::bread/expand
