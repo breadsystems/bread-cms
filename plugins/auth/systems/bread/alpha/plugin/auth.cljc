@@ -166,7 +166,7 @@
   (-> res
       (assoc :session nil :status 302)
       (assoc-in [::bread/data :session] nil)
-      (assoc-in [:headers "Location"] "/login")))
+      (assoc-in [:headers "Location"] (bread/config res :auth/login-uri))))
 
 (defmethod bread/effect ::log-attempt
   [{:keys [conn max-failed-login-count lock-seconds]}
