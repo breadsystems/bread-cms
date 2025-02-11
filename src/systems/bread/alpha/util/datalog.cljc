@@ -4,7 +4,8 @@
     [clojure.walk :as walk]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as db]))
+    [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.internal.datalog :as impl]))
 
 ;; TODO replace with datalog-pull
 (defn empty-query []
@@ -39,21 +40,7 @@
     query
     constraints))
 
-(defn normalize-query
-  "Normalize a datalog query to map form. Treats lists as vectors."
-  [query]
-  (if (map? query)
-    query
-    (first (reduce (fn [[query k ks] x]
-                     (prn x k ks)
-                     (print "  ")
-                     (doto (cond
-                       (= k x) [(assoc query k []) k ks]
-                       (keyword? x) [(assoc query x []) x (disj ks x)]
-                       :else [(update query k conj x) k ks])
-                       (->> (prn '->))))
-                   [{} :find #{:in :where}]
-                   (seq query)))))
+(def normalize-query impl/normalize-query)
 
 (defn relation-reversed? [k]
   (string/starts-with? (name k) "_"))
