@@ -103,6 +103,16 @@
       {:request-method :get
        :uri "/"}
 
+      ;; Requesting any page anonymously with a custom login page.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:login-uri "/custom"}
+      {:request-method :get
+       :uri "/"}
+
       ;; Requesting the login page.
       {:status 200
        :headers {"content-type" "text/html"}
