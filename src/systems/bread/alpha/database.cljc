@@ -107,20 +107,25 @@
   [{:expansion/keys [db args] :as expansion} data]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
-  (let [args (map (fn [arg]
+  (let [[query & args] args
+        find-scalar? (some #{'.} (:find query))
+        flatten-many? (:flatten-many? expansion (not find-scalar?))
+        args (map (fn [arg]
                     (if (data-path? arg)
                       (get-in data (rest arg))
                       arg))
                   args)
         result (when (every? some? args)
-                 (apply q db args))
-        ;; TODO many? => (map first result)
+                 (apply q db query args))
         ;; If nothing is found, set explicit false so we don't try to write
         ;; nested data to the expansion key (e.g. at [:post :post/fields]).
-        result (or result false)]
-    (if (and (:expansion/into expansion) (seqable? result))
+        result (or result false)
+        results? (seqable? result)]
+    (cond
+      (and (:expansion/into expansion) results?)
       (into (:expansion/into expansion) result)
-      result)))
+      (and flatten-many? results?) (map first result)
+      :else result)))
 
 (defmethod bread/action ::migrate
   [app {:keys [initial]} _]

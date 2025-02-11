@@ -70,16 +70,31 @@
        :expansion/into {}
        :expansion/args [{}]}
 
-      [{:db/id 1} {:db/id 2}]
-      {:expansion/name ::db/query
-       :expansion/db (mock-db [{:db/id 1} {:db/id 2}])
-       :expansion/args [{}]}
-
       {:one 1 :two 2}
       {:expansion/name ::db/query
        :expansion/db (mock-db [[:one 1] [:two 2]])
        :expansion/args [{}]
        :expansion/into {}}
+
+      ;; Flatten result sequence of sequences into sequence of maps.
+      [{:db/id 1} {:db/id 2}]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1}] [{:db/id 2}]])
+       :expansion/args [{}]}
+
+      ;; Flatten result sequence of sequences into sequence of maps.
+      [{:db/id 1 :thing/slug "one"} {:db/id 2 :thing/slug "two"}]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
+                               [{:db/id 2 :thing/slug "two"}]])
+       :expansion/args ['{:find [(pull ?e [...])]}]}
+
+      ;; find-scalar (.) present in query, so no flattening.
+      [[{:db/id 1 :thing/slug "one"}] [{:db/id 2 :thing/slug "two"}]]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
+                               [{:db/id 2 :thing/slug "two"}]])
+       :expansion/args ['{:find [(pull ?e [...]) .]}]}
 
       ;;
       )))
