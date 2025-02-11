@@ -109,7 +109,7 @@
     (if (and protected? anonymous? (not= login-uri uri))
       (assoc req
              :status 302
-             :headers (assoc headers "Location" "/login"))
+             :headers (assoc headers "Location" login-uri))
       req)))
 
 (defmethod bread/action ::set-session
