@@ -14,9 +14,10 @@
     ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.cms.theme]
+    [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.cms.data]
-    [systems.bread.alpha.post]
+    [systems.bread.alpha.post :as post]
+    [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.user :as user]
@@ -98,7 +99,8 @@
                       ;; These will be initialized by Integrant:
                       ;; TODO bread version
                       :clojure-version nil
-                      :started-at nil)]
+                      :started-at nil
+                      :bread/router nil)]
     (reset! system (ig/init config))))
 
 (defn stop! []
@@ -185,8 +187,43 @@
   ;; TODO call datahike API directly
   (when recreate? (db/delete! db-config)))
 
+(defn not-found [req]
+  (prn req)
+  {:body "not found"
+   :status 404})
+
 (defmethod ig/init-key :bread/router [_ router]
-  router)
+  (reitit/router
+    [["/login"
+      {:name :login
+       :dispatcher/type :systems.bread.alpha.plugin.auth/login
+       :dispatcher/component #'auth/LoginPage}]
+     ["/assets/*"
+      (reitit.ring/create-resource-handler
+        {:parameter :filename
+         :not-found-handler #'not-found})]
+     ["/{field/lang}"
+      [""
+       {:name :home
+        :dispatcher/type ::page=>
+        :dispatcher/component #'theme/HomePage}]
+      ["/i/{db/id}"
+       {:name :id
+        :dispatcher/type ::thing/by-id=>
+        :dispatcher/component #'theme/InteriorPage}]
+      ["/tag/{thing/slug}"
+       {:name :tag
+        :dispatcher/type ::post/tag ;; TODO
+        :dispatcher/component #'theme/Tag}]
+      ["/{thing/slug*}"
+       {:name :page
+        :dispatcher/type ::post/page=>
+        :dispatcher/component #'theme/InteriorPage}]
+      ["/page/{thing/slug*}" ;; TODO
+       {:name :page!
+        :dispatcher/type ::post/page=>
+        :dispatcher/component #'theme/InteriorPage}]]]
+     {:conflicts nil}))
 
 (defmethod ig/init-key :bread/app [_ app-config]
   (let [plugins (concat
