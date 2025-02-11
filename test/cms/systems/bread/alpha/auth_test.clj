@@ -104,7 +104,6 @@
        :uri "/"}
 
       ;; Requesting the login page.
-      #_#_#_
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
@@ -114,7 +113,6 @@
        :uri "/login"}
 
       ;; Requesting the login page; empty auth config map.
-      #_#_#_
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
@@ -126,7 +124,6 @@
       ;; Requesting the login page; custom :login-uri.
       ;; This matters because it's what the ::auth/require-auth hook uses
       ;; to check against the current URI, to avoid redirect loops.
-      #_#_#_
       {:status 200
        :headers {"content-type" "text/html"}
        :session nil
@@ -136,17 +133,6 @@
        :uri "/custom"}
 
       ;; POST with no data
-      #_#_#_
-      {:status 401
-       :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
-                     :auth/result {:update false :valid false :user nil}}}
-      {}
-      {:request-method :post}
-
-      ;; POST with missing password
-      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -154,10 +140,9 @@
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
-       :params {:username "no one"}}
+       :uri "/login"}
 
       ;; POST with missing password
-      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -165,10 +150,21 @@
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
-       :params {:username "no one" :password nil}}
+       :params {:username "no one"}
+       :uri "/login"}
+
+      ;; POST with missing password
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user nil}
+       ::bread/data {:session {:user nil}
+                     :auth/result {:update false :valid false :user nil}}}
+      {}
+      {:request-method :post
+       :params {:username "no one" :password nil}
+       :uri "/login"}
 
       ;; POST with bad username AND password
-      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -176,10 +172,10 @@
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
-       :params {:username "no one" :password "nothing"}}
+       :params {:username "no one" :password "nothing"}
+       :uri "/login"}
 
       ;; POST with bad password
-      #_#_#_
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:user nil}
@@ -187,7 +183,8 @@
                      :auth/result {:update false :valid false :user angela}}}
       {}
       {:request-method :post
-       :params {:username "angela" :password "wrongpassword"}}
+       :params {:username "angela" :password "wrongpassword"}
+       :uri "/login"}
 
       ;; POST with correct password
       {:status 302
@@ -200,10 +197,10 @@
                      :auth/result {:update false :valid true :user angela}}}
       {}
       {:request-method :post
-       :params {:username "angela" :password "abolition4lyfe"}}
+       :params {:username "angela" :password "abolition4lyfe"}
+       :uri "/login"}
 
       ;; POST with correct password
-      #_#_#_
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
@@ -214,7 +211,8 @@
                      :auth/result {:update false :valid true :user bobby}}}
       {}
       {:request-method :post
-       :params {:username "bobby" :password "pantherz"}}
+       :params {:username "bobby" :password "pantherz"}
+       :uri "/login"}
 
       ;; POST with correct password & redirect
       {:status 302
@@ -227,7 +225,8 @@
                      :auth/result {:update false :valid true :user bobby}}}
       {}
       {:request-method :post
-       :params {:username "bobby" :password "pantherz" :next "/destination"}}
+       :params {:username "bobby" :password "pantherz" :next "/destination"}
+       :uri "/login"}
 
       ;; POST with correct password & redirect, with custom :next-param
       {:status 302
@@ -240,7 +239,8 @@
                      :auth/result {:update false :valid true :user bobby}}}
       {:next-param :special}
       {:request-method :post
-       :params {:username "bobby" :password "pantherz" :special "/destination"}}
+       :params {:username "bobby" :password "pantherz" :special "/destination"}
+       :uri "/login"}
 
       ;; POST with correct password; custom hash algo
       {:status 302
@@ -266,7 +266,8 @@
                      :auth/result {:update false :valid true :user douglass}}}
       {}
       {:request-method :post
-       :params {:username "douglass" :password "liber4tion"}}
+       :params {:username "douglass" :password "liber4tion"}
+       :uri "/login"}
 
       ;; 2FA with blank code
       {:status 401
@@ -280,7 +281,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code ""}}
+       :params {:two-factor-code ""}
+       :uri  "/login"}
 
       ;; 2FA with invalid code
       {:status 401
@@ -294,7 +296,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "wpeovwoeginawge"}}
+       :params {:two-factor-code "wpeovwoeginawge"}
+       :uri  "/login"}
 
       ;; Unsuccessful 2FA
       {:status 401
@@ -308,7 +311,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "654321"}}
+       :params {:two-factor-code "654321"}
+       :uri  "/login"}
 
       ;; Successful 2FA
       {:status 302
@@ -323,7 +327,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "123456"}}
+       :params {:two-factor-code "123456"}
+       :uri  "/login"}
 
       ;; Successful 2FA with custom :login-uri
       {:status 302
@@ -338,7 +343,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "123456"}}
+       :params {:two-factor-code "123456"}
+       :uri  "/custom"}
 
       ;; Successful 2FA with redirect
       {:status 302
@@ -354,7 +360,8 @@
        :session {:user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"
-                :next "/destination"}}
+                :next "/destination"}
+       :uri  "/login"}
 
       ;; Successful 2FA with redirect & custom :next-param
       {:status 302
@@ -370,7 +377,8 @@
        :session {:user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"
-                :special "/destination"}}
+                :special "/destination"}
+       :uri  "/login"}
 
       ;; Logout
       {:status 302
@@ -382,7 +390,8 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :logged-in}
-       :params {:submit "logout"}}
+       :params {:submit "logout"}
+       :uri  "/logout"}
 
       ;;
       )))
