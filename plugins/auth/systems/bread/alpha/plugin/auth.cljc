@@ -3,6 +3,7 @@
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
     [systems.bread.alpha.component :as component :refer [defc]]
@@ -167,6 +168,13 @@
       (assoc :session nil :status 302)
       (assoc-in [::bread/data :session] nil)
       (assoc-in [:headers "Location"] (bread/config res :auth/login-uri))))
+
+(defmethod bread/action ::matches-protected-prefix?
+  [{:keys [uri]} {:keys [protected-prefixes]} [protected?]]
+  (and protected? (reduce (fn [_ prefix]
+                            (when (string/starts-with? uri prefix)
+                              (reduced true)))
+                          false protected-prefixes)))
 
 (defmethod bread/effect ::log-attempt
   [{:keys [conn max-failed-login-count lock-seconds]}
@@ -346,7 +354,7 @@
   ([]
    (plugin {}))
   ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds
-            next-param login-uri]
+            next-param login-uri protected-prefixes]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
@@ -364,7 +372,13 @@
      ::bread/expand
      [{:action/name ::require-auth
        :action/description
-       "Require login for privileged routes (all routes by default)."}]}
+       "Require login for privileged routes (all routes by default)."}]
+     ::protected-route?
+     [(when (seq protected-prefixes)
+        {:action/name ::matches-protected-prefix?
+         :action/descripion
+         "A collection of route prefixes requiring an auth session."
+         :protected-prefixes protected-prefixes})]}
     :config
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count

@@ -113,6 +113,51 @@
       {:request-method :get
        :uri "/"}
 
+      ;; Requesting anonymously with protected route prefixes configured.
+      ;; Non-protected URI is ignored.
+      {:status 200
+       :headers {"content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}}
+      {:request-method :get
+       :uri "/not-matching"}
+
+      ;; Requesting login page anonymously with a custom login page and
+      ;; protected route prefixes configured. Non-protected URI is ignored.
+      {:status 200
+       :headers {"content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"}
+      {:request-method :get
+       :uri "/"}
+
+      ;; Requesting anonymously with protected route prefixes configured.
+      ;; Protected URIs should get redirected.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"}
+      {:request-method :get
+       :uri "/protected"}
+
+      ;; Requesting anonymously with protected route prefixes configured.
+      ;; Protected URIs should get redirected.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"}
+      {:request-method :get
+       :uri "/protected/sub-route"}
+
       ;; Requesting the login page.
       {:status 200
        :headers {"content-type" "text/html"}
