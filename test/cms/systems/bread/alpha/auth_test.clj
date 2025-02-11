@@ -308,7 +308,8 @@
                      :auth/result {:update false :valid true :user crenshaw}}}
       {:auth/hash-algorithm :argon2id}
       {:request-method :post
-       :params {:username "crenshaw" :password "intersectionz"}}
+       :params {:username "crenshaw" :password "intersectionz"}
+       :uri "/login"}
 
       ;; Successful username/password login requiring 2FA step
       {:status 302
