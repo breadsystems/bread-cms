@@ -51,7 +51,7 @@
  [[["/login"
     {:name :login
      :dispatcher/type :systems.bread.alpha.plugin.auth/login
-     :dispatcher/component #var systems.bread.alpha.plugin.auth/login-page}]
+     :dispatcher/component #var systems.bread.alpha.plugin.auth/LoginPage}]
    ["/assets/*"
     #invoke [reitit.ring/create-resource-handler
              {:param :filename}]]

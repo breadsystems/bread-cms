@@ -54,7 +54,7 @@
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
 
-(defc login-page
+(defc LoginPage
   [{:keys [session] :as data}]
   {}
   (let [user (:user session)
