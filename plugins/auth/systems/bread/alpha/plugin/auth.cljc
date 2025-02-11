@@ -103,10 +103,10 @@
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session uri] :as req} _ _]
-  (let [protected? (bread/hook req ::protected-route? true)
-        anonymous? (empty? (:user session))
-        login-uri (bread/config req :auth/login-uri)]
-    (if (and protected? anonymous? (not= login-uri uri))
+  (let [login-uri (bread/config req :auth/login-uri)
+        protected? (bread/hook req ::protected-route? (not= login-uri uri))
+        anonymous? (empty? (:user session))]
+    (if (and protected? anonymous?)
       (assoc req
              :status 302
              :headers (assoc headers "Location" login-uri))
