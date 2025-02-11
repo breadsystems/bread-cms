@@ -13,6 +13,7 @@
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
+    [java.net URLEncoder]
     [java.util UUID]))
 
 (defn- ->uuid [x]
@@ -43,6 +44,10 @@
   (DatalogSessionStore. conn))
 
 (comment
+  (URLEncoder/encode "/")
+  (URLEncoder/encode "/destination")
+  (URLEncoder/encode "/destination?param=1")
+  (URLEncoder/encode "/destination?param=1&b=2")
   (str (UUID/fromString "6713c8ff-cca2-4e28-a2ac-a34f3745487b"))
   (->uuid nil)
   (def totp-spec
@@ -103,14 +108,19 @@
             "Login"]]]])]]))
 
 (defmethod bread/action ::require-auth
-  [{:keys [headers session uri] :as req} _ _]
+  [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
         protected? (bread/hook req ::protected-route? (not= login-uri uri))
-        anonymous? (empty? (:user session))]
+        anonymous? (empty? (:user session))
+        next-param (name (bread/config req :auth/next-param))
+        next-uri (URLEncoder/encode (if (seq query-string)
+                                      (str uri "?" query-string)
+                                      uri))
+        redirect-uri (str login-uri "?" next-param "=" next-uri)]
     (if (and protected? anonymous?)
       (assoc req
              :status 302
-             :headers (assoc headers "Location" login-uri))
+             :headers (assoc headers "Location" redirect-uri))
       req)))
 
 (defmethod bread/action ::set-session

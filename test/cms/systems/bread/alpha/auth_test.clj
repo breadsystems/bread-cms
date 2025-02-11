@@ -96,7 +96,7 @@
       ;; Requesting any page anonymously.
       {:status 302
        :headers {"content-type" "text/html"
-                 "Location" "/login"}
+                 "Location" "/login?next=%2F"}
        :session nil
        ::bread/data {:session nil}}
       nil
@@ -106,7 +106,7 @@
       ;; Requesting any page anonymously with a custom login page.
       {:status 302
        :headers {"content-type" "text/html"
-                 "Location" "/custom"}
+                 "Location" "/custom?next=%2F"}
        :session nil
        ::bread/data {:session nil}}
       {:login-uri "/custom"}
@@ -138,7 +138,7 @@
       ;; Protected URIs should get redirected.
       {:status 302
        :headers {"content-type" "text/html"
-                 "Location" "/custom"}
+                 "Location" "/custom?next=%2Fprotected"}
        :session nil
        ::bread/data {:session nil}}
       {:protected-prefixes #{"/protected"}
@@ -146,11 +146,55 @@
       {:request-method :get
        :uri "/protected"}
 
+      ;; Requesting anonymously with protected route prefixes AND a custom
+      ;; next-params configured. Protected URIs should get redirected with the
+      ;; proper query string.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom?special=%2Fprotected"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"
+       :next-param :special}
+      {:request-method :get
+       :uri "/protected"}
+
+      ;; Requesting anonymously with protected route prefixes AND a custom
+      ;; next-params configured. Protected URIs should get redirected with the
+      ;; proper query string, also including the destination query string.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom?special=%2Fprotected%3Fasdf%3Dqwerty%26a%3D123"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"
+       :next-param :special}
+      {:request-method :get
+       :query-string "asdf=qwerty&a=123"
+       :uri "/protected"}
+
+      ;; Requesting anonymously with protected route prefixes AND a custom
+      ;; next-params configured. Protected URIs should get redirected with the
+      ;; proper query string, also including the destination query string.
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/custom?special=%2Fprotected%3Fmatz%3D%E3%81%BE%E3%81%A4%E3%82%82%E3%81%A8%E3%82%86%E3%81%8D%E3%81%B2%E3%82%8D"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:protected-prefixes #{"/protected"}
+       :login-uri "/custom"
+       :next-param :special}
+      {:request-method :get
+       :query-string "matz=まつもとゆきひろ"
+       :uri "/protected"}
+
       ;; Requesting anonymously with protected route prefixes configured.
       ;; Protected URIs should get redirected.
       {:status 302
        :headers {"content-type" "text/html"
-                 "Location" "/custom"}
+                 "Location" "/custom?next=%2Fprotected%2Fsub-route"}
        :session nil
        ::bread/data {:session nil}}
       {:protected-prefixes #{"/protected"}
