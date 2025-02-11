@@ -89,12 +89,28 @@
                                [{:db/id 2 :thing/slug "two"}]])
        :expansion/args ['{:find [(pull ?e [...])]}]}
 
+      ;; Normalize from a vector-style query.
+      ;; Flatten result sequence of sequences into sequence of maps.
+      [{:db/id 1 :thing/slug "one"} {:db/id 2 :thing/slug "two"}]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
+                               [{:db/id 2 :thing/slug "two"}]])
+       :expansion/args ['[:find [(pull ?e [...])] :in $ :where ...]]}
+
       ;; find-scalar (.) present in query, so no flattening.
       [[{:db/id 1 :thing/slug "one"}] [{:db/id 2 :thing/slug "two"}]]
       {:expansion/name ::db/query
        :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
                                [{:db/id 2 :thing/slug "two"}]])
        :expansion/args ['{:find [(pull ?e [...]) .]}]}
+
+      ;; Normalize from a vector style query.
+      ;; find-scalar (.) present in query, so no flattening.
+      [[{:db/id 1 :thing/slug "one"}] [{:db/id 2 :thing/slug "two"}]]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
+                               [{:db/id 2 :thing/slug "two"}]])
+       :expansion/args ['[:find [(pull ?e [...])] .]]}
 
       ;;
       )))
