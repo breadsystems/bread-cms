@@ -3,7 +3,8 @@
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.schema :as schema]))
+    [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.internal.datalog :as datalog]))
 
 (defmulti connect :db/type)
 (defmulti create! (fn [config & _]
@@ -108,6 +109,7 @@
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
+        query (datalog/normalize-query query)
         find-scalar? (some #{'.} (:find query))
         flatten-many? (:flatten-many? expansion (not find-scalar?))
         args (map (fn [arg]
