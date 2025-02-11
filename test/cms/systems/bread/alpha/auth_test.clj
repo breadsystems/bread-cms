@@ -285,7 +285,7 @@
        :params {:username "angela" :password "wrongpassword"}
        :uri "/login"}
 
-      ;; POST with correct password
+      ;; POST with correct username & password, no 2FA. Sets session user.
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
@@ -299,7 +299,7 @@
        :params {:username "angela" :password "abolition4lyfe"}
        :uri "/login"}
 
-      ;; POST with correct password
+      ;; POST with correct username & password, no 2FA. Sets session user.
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
@@ -313,9 +313,10 @@
        :params {:username "bobby" :password "pantherz"}
        :uri "/login"}
 
-      ;; POST with correct password & redirect
+      ;; POST with correct password, no 2FA, next param present.
+      ;; Sets session user and redirects.
       {:status 302
-       :headers {"Location" "/destination"
+       :headers {"Location" "/successful-login"
                  "content-type" "text/html"}
        :session {:user bobby
                  :auth/step :logged-in}
@@ -324,12 +325,13 @@
                      :auth/result {:update false :valid true :user bobby}}}
       {}
       {:request-method :post
-       :params {:username "bobby" :password "pantherz" :next "/destination"}
+       :params {:username "bobby" :password "pantherz" :next "/successful-login"}
        :uri "/login"}
 
-      ;; POST with correct password & redirect, with custom :next-param
+      ;; POST with correct password & redirect, with custom :next-param.
+      ;; Sets session user and redirects the URI according to the custom param.
       {:status 302
-       :headers {"Location" "/destination"
+       :headers {"Location" "/successful-login-next"
                  "content-type" "text/html"}
        :session {:user bobby
                  :auth/step :logged-in}
@@ -338,10 +340,10 @@
                      :auth/result {:update false :valid true :user bobby}}}
       {:next-param :special}
       {:request-method :post
-       :params {:username "bobby" :password "pantherz" :special "/destination"}
+       :params {:username "bobby" :password "pantherz" :special "/successful-login-next"}
        :uri "/login"}
 
-      ;; POST with correct password; custom hash algo
+      ;; POST with correct password; custom hash algo; no 2FA. Sets session user.
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
@@ -355,111 +357,142 @@
        :params {:username "crenshaw" :password "intersectionz"}
        :uri "/login"}
 
-      ;; Successful username/password login requiring 2FA step
+      ;; Successful username/password login requiring 2FA step. Should not
+      ;; set session user.
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       ::bread/data {:session {:auth/step :two-factor}
                      :auth/result {:update false :valid true :user douglass}}}
       {}
       {:request-method :post
        :params {:username "douglass" :password "liber4tion"}
        :uri "/login"}
 
-      ;; 2FA with blank code
+      ;; Successful username/password login requiring 2FA step,
+      ;; next param present. Should not redirect or set session user yet!
+      {:status 302
+       :headers {"Location" "/login"
+                 "content-type" "text/html"}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
+                     :auth/result {:update false :valid true :user douglass}}}
+      {}
+      {:request-method :post
+       :params {:username "douglass" :password "liber4tion" :next "/dest2fa"}
+       :uri "/login"}
+
+      ;; 2FA with blank code. Should not set session user.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code ""}
        :uri  "/login"}
 
-      ;; 2FA with blank code, next param present
+      ;; 2FA with blank code, next param present. Should not set session user.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "" :next "/destination"}
+       :params {:two-factor-code "" :next "/blank-code"}
        :uri  "/login"}
 
-      ;; 2FA with invalid code
+      ;; 2FA with invalid code. Should not set session user.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "wpeovwoeginawge"}
        :uri  "/login"}
 
-      ;; 2FA with invalid code, next param present
+      ;; 2FA with invalid code, next param present. Should not redirect or set
+      ;; session user yet.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "wpeovwoeginawge" :next "/destination"}
+       :params {:two-factor-code "wpeovwoeginawge" :next "/invalid-code"}
        :uri  "/login"}
 
-      ;; Unsuccessful 2FA
+      ;; Unsuccessful 2FA. Should not set session user.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "654321"}
        :uri  "/login"}
 
-      ;; Unsuccessful 2FA, next param present
+      ;; Unsuccessful 2FA, next param present. Should not redirect or set
+      ;; session user yet.
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user douglass
-                 :auth/step :two-factor}
-       ::bread/data {:session {:user douglass
-                               :auth/step :two-factor}
+       :session {:auth/user douglass
+                 :auth/step :two-factor
+                 :user nil}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor
+                               :user nil}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "654321" :next "/destination"}
+       :params {:two-factor-code "654321" :next "/unsuccessful-2fa"}
        :uri  "/login"}
 
-      ;; Successful 2FA
+      ;; Successful 2FA. Sets session user.
       {:status 302
        :headers {"Location" "/login"
                  "content-type" "text/html"}
@@ -470,30 +503,32 @@
                      :auth/result {:valid true :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"}
        :uri  "/login"}
 
-      ;; Successful 2FA with custom :login-uri
+      ;; Successful 2FA with custom :login-uri. Sets session user and redirects
+      ;; to login-uri.
       {:status 302
-       :headers {"Location" "/custom"
+       :headers {"Location" "/successful-custom"
                  "content-type" "text/html"}
        :session {:user douglass
                  :auth/step :logged-in}
        ::bread/data {:session {:user douglass
                                :auth/step :logged-in}
                      :auth/result {:valid true :user douglass}}}
-      {:login-uri "/custom"}
+      {:login-uri "/successful-custom"}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"}
-       :uri  "/custom"}
+       :uri  "/successful-custom"}
 
-      ;; Successful 2FA with redirect
+      ;; Successful 2FA with redirect. Sets session user and redirects to
+      ;; correct destination.
       {:status 302
-       :headers {"Location" "/destination"
+       :headers {"Location" "/successful-2fa-redirect"
                  "content-type" "text/html"}
        :session {:user douglass
                  :auth/step :logged-in}
@@ -502,14 +537,15 @@
                      :auth/result {:valid true :user douglass}}}
       {}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "123456" :next "/destination"}
+       :params {:two-factor-code "123456" :next "/successful-2fa-redirect"}
        :uri  "/login"}
 
-      ;; Successful 2FA with redirect & custom :next-param
+      ;; Successful 2FA with redirect & custom :next-param. Sets session user
+      ;; and redirects correctly.
       {:status 302
-       :headers {"Location" "/destination"
+       :headers {"Location" "/successful-2fa-custom-next"
                  "content-type" "text/html"}
        :session {:user douglass
                  :auth/step :logged-in}
@@ -518,10 +554,10 @@
                      :auth/result {:valid true :user douglass}}}
       {:next-param :special}
       {:request-method :post
-       :session {:user douglass
+       :session {:auth/user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "123456"
-                :special "/destination"}
+                :special "/successful-2fa-custom-next"}
        :uri  "/login"}
 
       ;; Logout
