@@ -19,10 +19,7 @@
         (update $ ::bread/data merge (select-keys req req-keys))
         (assoc-in $ [::bread/data :session] (:session req))
         ;; Reset headers - we're working on a response now.
-        (apply dissoc $ req-keys)
-        (assoc $ :headers {}
-               ;; Preserve URI for convenience
-               :uri (:uri req)))))
+        (assoc $ :headers {}))))
 
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
