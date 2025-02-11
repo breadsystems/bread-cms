@@ -124,7 +124,7 @@
       req)))
 
 (defmethod bread/action ::set-session
-  [{::bread/keys [data] :keys [session] :as res}
+  [{::bread/keys [data] :keys [params session] :as res}
    {:keys [max-failed-login-count]} _]
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
@@ -134,14 +134,17 @@
                     :logged-in)
         session (cond-> nil
                   valid (assoc :user user :auth/step next-step)
-                  locked? (assoc :locked? true))]
+                  locked? (assoc :locked? true))
+        next-param (bread/config res :auth/next-param)
+        login-uri (bread/config res :auth/login-uri)
+        redirect-to (get params next-param login-uri)]
     (if-not valid
       (assoc res :status 401)
       (-> res
           (assoc :status 302 :session session)
           (assoc-in [::bread/data :session] session)
           ;; NOTE: this may get overwritten when a :next param is present.
-          (assoc-in [:headers "Location"] (bread/config res :auth/login-uri))))))
+          (assoc-in [:headers "Location"] redirect-to)))))
 
 (defn- account-locked? [now locked-at seconds]
   (< (inst-ms now) (+ (inst-ms locked-at) seconds)))
@@ -248,13 +251,7 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response"
-          :max-failed-login-count max-failed-login-count}]
-        ::bread/render
-        [(when redirect-to
-           {:action/name ::ring/redirect
-            :action/description
-            "Redirect user to original destination from before login redirect"
-            :to redirect-to})]}}
+          :max-failed-login-count max-failed-login-count}]}}
 
       ;; Login
       post?
@@ -289,13 +286,7 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response."
-          :max-failed-login-count max-failed-login-count}]
-        ::bread/render
-        [(when redirect-to
-           {:action/name ::ring/redirect
-            :action/description
-            "Redirect user to original destination from before login redirect"
-            :to redirect-to})]}}
+          :max-failed-login-count max-failed-login-count}]}}
 
       :default {})))
 
