@@ -393,6 +393,19 @@
        :params {:submit "logout"}
        :uri  "/logout"}
 
+      ;; Logout with custom :login-uri
+      {:status 302
+       :headers {"Location" "/custom"
+                 "content-type" "text/html"}
+       :session nil
+       ::bread/data {:session nil}}
+      {:login-uri "/custom"}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :logged-in}
+       :params {:submit "logout"}
+       :uri  "/whatever"}
+
       ;;
       )))
 
