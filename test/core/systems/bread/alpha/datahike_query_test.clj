@@ -138,10 +138,8 @@
 
        ;; with explicit input args (for i18n)
        {:post {:thing/slug "parent-post"
-               :post/fields [[{:field/key :thingy
-                               :field/content "thing"}]
-                             [{:field/key :stuff
-                              :field/content "hello"}]]}
+               :post/fields [{:field/key :thingy :field/content "thing"}
+                             {:field/key :stuff :field/content "hello"}]}
         :not-found? false}
        [{:expansion/name ::db/query
          :expansion/key :post
@@ -164,10 +162,8 @@
 
        ;; deriving input args from previous data (for i18n)
        {:post {:db/id 100 :thing/slug "parent-post"
-               :post/fields [[{:field/key :thingy
-                               :field/content "thing"}]
-                             [{:field/key :stuff
-                               :field/content "hello"}]]}
+               :post/fields [{:field/key :thingy :field/content "thing"}
+                             {:field/key :stuff :field/content "hello"}]}
         :not-found? false}
        [{:expansion/name ::db/query
          :expansion/key :post
