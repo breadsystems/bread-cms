@@ -253,8 +253,8 @@
       ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
+       :session nil
+       ::bread/data {:session nil
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
@@ -264,8 +264,8 @@
       ;; POST with bad username AND password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
+       :session nil
+       ::bread/data {:session nil
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
@@ -275,8 +275,8 @@
       ;; POST with bad password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
+       :session nil
+       ::bread/data {:session nil
                      :auth/result {:update false :valid false :user angela}}}
       {}
       {:request-method :post
@@ -362,7 +362,8 @@
                  "content-type" "text/html"}
        :session {:auth/user douglass
                  :auth/step :two-factor}
-       ::bread/data {:session {:auth/step :two-factor}
+       ::bread/data {:session {:auth/user douglass
+                               :auth/step :two-factor}
                      :auth/result {:update false :valid true :user douglass}}}
       {}
       {:request-method :post

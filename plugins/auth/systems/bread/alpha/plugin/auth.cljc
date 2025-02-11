@@ -128,27 +128,25 @@
    {:keys [max-failed-login-count]} _]
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
+        login-step? (nil? current-step)
         two-factor-step? (= :two-factor current-step)
         two-factor-enabled? (boolean (:user/two-factor-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
         two-factor-next? (and valid (= :two-factor next-step))
-        logged-in? (and valid (or two-factor-enabled?
-                                  (and (not two-factor-enabled?)
-                                       (nil? current-step))))
+        logged-in? (and valid (or (and two-factor-step? two-factor-enabled?)
+                                  (and login-step? (not two-factor-enabled?))))
         session (cond
-                  two-factor-next? (assoc session :auth/user user)
+                  two-factor-next?
+                  (assoc session :auth/user user :auth/step next-step)
                   logged-in? (-> session
                                  (assoc :user user :auth/step next-step)
                                  (dissoc :auth/user)))
         next-param (bread/config res :auth/next-param)
         login-uri (bread/config res :auth/login-uri)
-        redirect-to (get params next-param login-uri)]
-    (when (and valid two-factor-next?)
-      (prn 'logged-in? logged-in? )
-      #_
-      (prn redirect-to '=> (-> session (update :user (complement empty?)) (update :auth/user (complement empty?)))))
+        ;; Don't redirect to destination prematurely!
+        redirect-to (if logged-in? (get params next-param login-uri) login-uri)]
     (if-not valid
       (assoc res :status 401)
       (-> res
