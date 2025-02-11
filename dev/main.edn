@@ -46,37 +46,6 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
- :bread/router
- #reitit/router
- [[["/login"
-    {:name :login
-     :dispatcher/type :systems.bread.alpha.plugin.auth/login
-     :dispatcher/component #var systems.bread.alpha.plugin.auth/LoginPage}]
-   ["/assets/*"
-    #invoke [reitit.ring/create-resource-handler
-             {:param :filename}]]
-   ["/{field/lang}"
-    [""
-     {:name :home
-      :dispatcher/type :systems.bread.alpha.post/page=>
-      :dispatcher/component #var systems.bread.alpha.cms.theme/HomePage}]
-    ["/i/{db/id}"
-     {:name :id
-      :dispatcher/type :systems.bread.alpha.thing/by-id=>
-      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
-    ["/tag/{thing/slug}"
-     {:name :tag
-      :dispatcher/type :systems.bread.alpha.post/tag
-      :dispatcher/component #var systems.bread.alpha.cms.theme/Tag}]
-    ["/{thing/slug*}"
-     {:name :page
-      :dispatcher/type :systems.bread.alpha.post/page=>
-      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]
-    ["/page/{thing/slug*}"
-     {:name :page!
-      :dispatcher/type :systems.bread.alpha.post/page=>
-      :dispatcher/component #var systems.bread.alpha.cms.theme/InteriorPage}]]]
-  {:conflicts nil}]
  :bread/profilers
  [#_{:hook #{:systems.bread.alpha.core/response}
      :action/name #{:systems.bread.alpha.cms.defaults/response}
