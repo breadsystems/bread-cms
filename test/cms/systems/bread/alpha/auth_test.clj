@@ -384,6 +384,21 @@
        :params {:two-factor-code ""}
        :uri  "/login"}
 
+      ;; 2FA with blank code, next param present
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      {}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :two-factor}
+       :params {:two-factor-code "" :next "/destination"}
+       :uri  "/login"}
+
       ;; 2FA with invalid code
       {:status 401
        :headers {"content-type" "text/html"}
@@ -399,6 +414,21 @@
        :params {:two-factor-code "wpeovwoeginawge"}
        :uri  "/login"}
 
+      ;; 2FA with invalid code, next param present
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      {}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :two-factor}
+       :params {:two-factor-code "wpeovwoeginawge" :next "/destination"}
+       :uri  "/login"}
+
       ;; Unsuccessful 2FA
       {:status 401
        :headers {"content-type" "text/html"}
@@ -412,6 +442,21 @@
        :session {:user douglass
                  :auth/step :two-factor}
        :params {:two-factor-code "654321"}
+       :uri  "/login"}
+
+      ;; Unsuccessful 2FA, next param present
+      {:status 401
+       :headers {"content-type" "text/html"}
+       :session {:user douglass
+                 :auth/step :two-factor}
+       ::bread/data {:session {:user douglass
+                               :auth/step :two-factor}
+                     :auth/result {:valid false :user douglass}}}
+      {}
+      {:request-method :post
+       :session {:user douglass
+                 :auth/step :two-factor}
+       :params {:two-factor-code "654321" :next "/destination"}
        :uri  "/login"}
 
       ;; Successful 2FA
@@ -459,8 +504,7 @@
       {:request-method :post
        :session {:user douglass
                  :auth/step :two-factor}
-       :params {:two-factor-code "123456"
-                :next "/destination"}
+       :params {:two-factor-code "123456" :next "/destination"}
        :uri  "/login"}
 
       ;; Successful 2FA with redirect & custom :next-param
