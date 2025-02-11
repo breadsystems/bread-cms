@@ -3,6 +3,7 @@
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.test :refer [deftest are is testing]]
+    [clojure.walk :as walk]
     [ring.middleware.session.store :as ss]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
@@ -87,10 +88,7 @@
                     (let [handler (->handler auth-config)
                           data (-> req handler ->auth-data)]
                       (if (get-in data [::bread/data :auth/result])
-                        (-> data
-                            (update-in [:session :user] dissoc :db/id)
-                            (update-in [::bread/data :session :user] dissoc :db/id)
-                            (update-in [::bread/data :auth/result :user] dissoc :db/id))
+                        (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
                         data))))
 
       ;; Requesting any page anonymously.
@@ -234,8 +232,8 @@
       ;; POST with no data
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
+       :session nil
+       ::bread/data {:session nil
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
@@ -244,8 +242,8 @@
       ;; POST with missing password
       {:status 401
        :headers {"content-type" "text/html"}
-       :session {:user nil}
-       ::bread/data {:session {:user nil}
+       :session nil
+       ::bread/data {:session nil
                      :auth/result {:update false :valid false :user nil}}}
       {}
       {:request-method :post
@@ -377,11 +375,9 @@
        :headers {"Location" "/login"
                  "content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:update false :valid true :user douglass}}}
       {}
       {:request-method :post
@@ -392,11 +388,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
@@ -409,11 +403,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
@@ -426,11 +418,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
@@ -444,11 +434,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
@@ -461,11 +449,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
@@ -479,11 +465,9 @@
       {:status 401
        :headers {"content-type" "text/html"}
        :session {:auth/user douglass
-                 :auth/step :two-factor
-                 :user nil}
+                 :auth/step :two-factor}
        ::bread/data {:session {:auth/user douglass
-                               :auth/step :two-factor
-                               :user nil}
+                               :auth/step :two-factor}
                      :auth/result {:valid false :user douglass}}}
       {}
       {:request-method :post
