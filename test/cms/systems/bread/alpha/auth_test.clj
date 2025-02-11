@@ -552,5 +552,8 @@
                  :in [$ ?sk]
                  :where [[?e :session/data]]})
 
+  (require '[taoensso.timbre :as timbre])
+  (timbre/merge-config! {:min-level :info})
+
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
