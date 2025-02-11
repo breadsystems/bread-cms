@@ -104,6 +104,14 @@
                                [{:db/id 2 :thing/slug "two"}]])
        :expansion/args ['{:find [(pull ?e [...]) .]}]}
 
+      ;; :flatten-many? is logical false, so no flattening.
+      [[{:db/id 1 :thing/slug "one"}] [{:db/id 2 :thing/slug "two"}]]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :thing/slug "one"}]
+                               [{:db/id 2 :thing/slug "two"}]])
+       :expansion/args ['{:find [(pull ?e [...])]}]
+       :flatten-many? nil}
+
       ;; Normalize from a vector style query.
       ;; find-scalar (.) present in query, so no flattening.
       [[{:db/id 1 :thing/slug "one"}] [{:db/id 2 :thing/slug "two"}]]
