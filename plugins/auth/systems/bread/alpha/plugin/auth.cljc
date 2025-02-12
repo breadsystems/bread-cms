@@ -253,8 +253,10 @@
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
-  [{:keys [user two-factor-code]} _]
-  (let [code (try
+  [{:keys [two-factor-code]} {user :auth/result}]
+  (let [;; Don't store password data in session
+        user (dissoc user :user/password)
+        code (try
                (Integer. two-factor-code)
                (catch java.lang.NumberFormatException _ 0))
         valid (totp/valid-code? (:user/two-factor-key user) code)]
@@ -315,32 +317,12 @@
         post? (= :post request-method)
         logout? (= "logout" (:submit params))
         two-factor? (= :two-factor step)
-        redirect-to (get params (bread/config req :auth/next-param))]
-    (cond
-      ;; Logout - destroy session
-      (and post? logout?)
-      {:hooks
-       {::bread/response
-        [{:action/name ::logout
-          :action/description "Unset :session in Ring response."}]}}
-
-      ;; 2FA
-      (and post? two-factor?)
-      {:expansions
-       [{:expansion/name ::authenticate-two-factor
-         :expansion/key :auth/result
-         :user (:auth/user session)
-         :two-factor-code (:two-factor-code params)}]
-       :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response"
-          :max-failed-login-count max-failed-login-count}]}}
-
-      ;; Login
-      post?
-      {:expansions
-       [{:expansion/name ::db/query
+        redirect-to (get params (bread/config req :auth/next-param))
+        username (if two-factor?
+                   (:user/username (:auth/user session))
+                   (:username params))
+        user-expansion
+        {:expansion/name ::db/query
          :expansion/key :auth/result
          :expansion/description "Find a user with the given username"
          :expansion/db (db/database req)
@@ -354,7 +336,39 @@
                              :user/failed-login-count]) .]
             :in [$ ?username]
             :where [[?e :user/username ?username]]}
-          (:username params)]}
+          username]}]
+    (cond
+      ;; Logout - destroy session
+      (and post? logout?)
+      {:hooks
+       {::bread/response
+        [{:action/name ::logout
+          :action/description "Unset :session in Ring response."}]}}
+
+      ;; 2FA
+      (and post? two-factor?)
+      {:expansions
+       [user-expansion
+        {:expansion/name ::authenticate-two-factor
+         :expansion/key :auth/result
+         :two-factor-code (:two-factor-code params)}]
+       :effects
+       [{:effect/name ::log-attempt
+         :effect/description
+         "Record this login attempt, locking account after too many."
+         ;; Get :user from data, since it may not be in session data yet.
+         :max-failed-login-count max-failed-login-count
+         :conn (db/connection req)}]
+       :hooks
+       {::bread/expand
+        [{:action/name ::set-session
+          :action/description "Set :session in Ring response"
+          :max-failed-login-count max-failed-login-count}]}}
+
+      ;; Login
+      post?
+      {:expansions
+       [user-expansion
         {:expansion/name ::authenticate
          :expansion/key :auth/result
          :lock-seconds lock-seconds
