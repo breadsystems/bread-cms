@@ -321,21 +321,21 @@
         username (if two-factor?
                    (:user/username (:auth/user session))
                    (:username params))
+        user-keys [:db/id
+                   :user/username
+                   :user/two-factor-key
+                   :user/locked-at
+                   :user/failed-login-count]
+        user-keys (if two-factor? user-keys (concat user-keys [:user/password]))
         user-expansion
         {:expansion/name ::db/query
          :expansion/key :auth/result
          :expansion/description "Find a user with the given username"
          :expansion/db (db/database req)
          :expansion/args
-         ['{:find [(pull ?e [:db/id
-                             :user/username
-                             ;; TODO protect pw/key in schema
-                             :user/password
-                             :user/two-factor-key
-                             :user/locked-at
-                             :user/failed-login-count]) .]
-            :in [$ ?username]
-            :where [[?e :user/username ?username]]}
+         [{:find [(list 'pull '?e user-keys) '.]
+           :in '[$ ?username]
+           :where '[[?e :user/username ?username]]}
           username]}]
     (cond
       ;; Logout - destroy session
