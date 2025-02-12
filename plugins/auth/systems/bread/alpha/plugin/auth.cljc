@@ -55,57 +55,124 @@
   (totp/valid-code? (:secret-key totp-spec) 414903))
 
 (defc LoginPage
-  [{:keys [session] :as data}]
+  [{:keys [hook session] :auth/keys [result] :as data}]
   {}
   (let [user (:user session)
-        step (:auth/step session)]
-    [:html {:lang "en"}
+        step (:auth/step session)
+        error? (false? (:valid result))]
+    [:html {:lang "en"} ;; TODO
      [:head
       [:meta {:content-type "utf-8"}]
-      [:title "Login | BreadCMS"]
-      #_ ;; TODO styles lol
-      [:link {:href "/css/style.css" :rel :stylesheet}]]
+      (hook ::html.title [:title "Login | BreadCMS"])
+      (hook
+        ::html.style
+        [:<>
+         [:style
+          "
+          :root {
+            --color-text-body: hsl(120, 32.6%, 81.4%);
+            --color-emphasis: hsl(157.6, 85.6%, 49%);
+            --color-lighter hsl(157.6, 85.6%, 49%);
+            --color-bg: hsl(264, 41.7%, 4.7%);
+          }
+          body {
+            width: 50ch;
+            margin: 5em auto;
+            font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+            line-height: 1.5;
+
+            color: var(--color-text-body);
+            background: var(--color-bg);
+          }
+          h1, h2, p {
+            margin: 0;
+          }
+          form {
+            display: flex;
+            flex-flow: column nowrap;
+            gap: 1em;
+            width: 100%;
+          }
+          .field {
+            display: flex;
+            flex-flow: row nowrap;
+            gap: 3ch;
+            justify-content: space-between;
+          }
+          .field label, field button {
+            flex: 1;
+          }
+          .field input {
+            flex: 2;
+          }
+          input {
+            padding: 5px;
+            border: 2px solid var(--color-text-body);
+          }
+          button, input {
+            color: var(--color-text-body);
+            background: var(--color-bg);
+            border: 2px solid var(--color-text-body);
+            border-radius: 0;
+          }
+          button {
+            padding: 4px 10px;
+            cursor: pointer;
+          }
+          button:focus, input:focus {
+            outline: 2px solid var(--color-emphasis);
+            border-color: transparent;
+          }
+          button:hover {
+            border-color: transparent;
+            outline: 2px dashed var(--color-emphasis);
+            color: var(--color-emphasis);
+          }
+          "]])]
      [:body
       (cond
         (:locked? session)
         [:main
-         [:h2 "LOCKED"]]
+         (hook ::html.locked-heading
+               [:h2 "Account locked"])
+         (hook ::html.locked-explanation
+               [:p "You have made too many attempts to log in. Please try again later."])]
 
         (= :logged-in step)
         [:main
-         [:h2 "Welcome, " (:user/username (:user session))]
          [:form {:name :bread-logout :method :post}
-          [:div
-           [:button {:type :submit :name :submit :value "logout"}
-            "Logout"]]]]
+          [:h2 "Welcome, " (:user/username (:user session))]
+          [:div.field
+           [:button {:type :submit :name :submit :value "logout"} "Logout"]]]]
 
         (= :two-factor step)
         [:main
          [:form {:name :bread-logout :method :post}
-          [:h2 "2-Factor Authentication"]
-          [:div
-           [:label {:for :two-factor-code}
-            "Code"]
-           [:input {:id :two-factor-code :type :number :name :two-factor-code}]]
-          [:div
-           [:button {:type :submit :name :submit :value "verify"}
-            "Verify"]]]]
+          (hook ::html.login-heading [:h1 "Login to Bread"])
+          (hook ::html.enter-2fa-code
+                [:p "Please enter the one-time code from your authenticator app."])
+          [:div.field.two-factor
+           [:input {:id :two-factor-code :type :number :name :two-factor-code}]
+           [:button {:type :submit :name :submit :value "verify"} "Verify"]]
+          (when error?
+            [:div.error
+             [:p "Invalid code. Please try again."]])]]
 
         :default
         [:main
-         [:h1 "Login"]
          [:form {:name :bread-login :method :post}
-          [:div
-           [:label {:for :user}
-            "Username"]
+          (hook ::html.login-heading
+                [:h1 "Login to Bread"])
+          (hook ::html.enter-username
+                [:p.instruct "Please enter your username and password."])
+          [:div.field
+           [:label {:for :user} "Username"]
            [:input {:id :user :type :text :name :username}]]
-          [:div
-           [:label {:for :password}
-            "Password"]
+          [:div.field
+           [:label {:for :password} "Password"]
            [:input {:id :password :type :password :name :password}]]
           [:div
-           [:button {:type :submit}
-            "Login"]]]])]]))
+           [:button {:type :submit} "Login"]]]])]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
