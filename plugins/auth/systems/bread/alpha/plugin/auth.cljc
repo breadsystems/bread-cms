@@ -131,7 +131,7 @@
           "]])]
      [:body
       (cond
-        (:locked? session)
+        (:locked? result)
         [:main
          (hook ::html.locked-heading
                [:h2 "Account locked"])
@@ -221,7 +221,6 @@
                                     (URLEncoder/encode next-uri))
                       logged-in? login-uri
                       :else login-uri)]
-    (when (and valid (not logged-in?) ) (prn next-param next-uri))
     (if-not valid
       (assoc res :status 401)
       (-> res
@@ -230,8 +229,18 @@
           ;; NOTE: this may get overwritten when a :next param is present.
           (assoc-in [:headers "Location"] redirect-to)))))
 
+(comment
+  (def $now #inst "2025-01-01T00:00:00")
+  (def $locked-at #inst "2025-01-01T00:30:00")
+  (/ (inst-ms $now) 1000.0)
+  (/ (inst-ms $locked-at) 1000.0)
+  (account-locked? $now $locked-at 3600))
+
 (defn- account-locked? [now locked-at seconds]
-  (< (inst-ms now) (+ (inst-ms locked-at) seconds)))
+  (let [now-seconds (/ (inst-ms now) 1000.0)
+        locked-at-seconds (/ (inst-ms locked-at) 1000.0)
+        unlock-at-seconds (+ locked-at-seconds seconds)]
+    (> unlock-at-seconds now-seconds)))
 
 (defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
@@ -253,14 +262,18 @@
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
-  [{:keys [two-factor-code]} {user :auth/result}]
+  [{:keys [two-factor-code lock-seconds]} {user :auth/result}]
   (let [;; Don't store password data in session
         user (dissoc user :user/password)
-        code (try
-               (Integer. two-factor-code)
-               (catch java.lang.NumberFormatException _ 0))
-        valid (totp/valid-code? (:user/two-factor-key user) code)]
-    {:valid valid :user user}))
+        locked? (and (:user/locked-at user)
+                     (account-locked? (t/now) (:user/locked-at user) lock-seconds))]
+    (if locked?
+      {:valid false :locked? true :user user}
+      (let [code (try
+                   (Integer. two-factor-code)
+                   (catch java.lang.NumberFormatException _ 0))
+            valid (totp/valid-code? (:user/two-factor-key user) code)]
+        {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
   (-> res
@@ -311,7 +324,7 @@
 
 (defmethod bread/dispatch ::login
   [{:keys [params request-method session] :as req}]
-  (let [{:auth/keys [step locked?] :keys [user]} session
+  (let [{:auth/keys [step]} session
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
         lock-seconds (bread/config req :auth/lock-seconds)
         post? (= :post request-method)
@@ -351,13 +364,15 @@
        [user-expansion
         {:expansion/name ::authenticate-two-factor
          :expansion/key :auth/result
-         :two-factor-code (:two-factor-code params)}]
+         :two-factor-code (:two-factor-code params)
+         :lock-seconds lock-seconds}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
          "Record this login attempt, locking account after too many."
          ;; Get :user from data, since it may not be in session data yet.
          :max-failed-login-count max-failed-login-count
+         :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
        {::bread/expand
@@ -379,6 +394,7 @@
          "Record this login attempt, locking account after too many."
          ;; Get :user from data, since it may not be in session data yet.
          :max-failed-login-count max-failed-login-count
+         :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
        {::bread/expand
