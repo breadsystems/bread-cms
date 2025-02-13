@@ -136,6 +136,7 @@
           button {
             padding: 4px 8px;
             cursor: pointer;
+            font-weight: 700;
           }
           button:focus, input:focus {
             outline: 2px solid var(--color-emphasis);
