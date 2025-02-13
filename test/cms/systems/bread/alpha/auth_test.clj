@@ -34,7 +34,7 @@
 (def douglass
   {:user/username "douglass"
    :user/failed-login-count 0
-   :user/two-factor-key "fake"})
+   :user/totp-key "fake"})
 
 (def config
   {:db/type :datahike
