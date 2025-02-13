@@ -326,7 +326,7 @@
         (db/transact conn [(assoc transaction
                                   :user/failed-login-count incremented)])))))
 
-(defmethod bread/dispatch ::login
+(defmethod bread/dispatch ::login=>
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step]} session
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
