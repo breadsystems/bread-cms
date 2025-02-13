@@ -201,6 +201,12 @@
   [req _ [params]]
   (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
+(defmethod bread/action ::expand-global-strings
+  [req {:keys [global-strings]} _]
+  (expansion/add req {:expansion/key :i18n
+                      :expansion/name ::bread/value
+                      :expansion/value global-strings}))
+
 (defmethod bread/action ::add-strings-query
   [req _ _]
   (expansion/add req {:expansion/name ::db/query
@@ -225,11 +231,12 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang supported-langs
+  ([{:keys [lang-param fallback-lang supported-langs global-strings
             query-global-strings? query-lang? format-fields? compact-fields?]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
+          global-strings {}
           query-global-strings?  true
           query-lang?     true
           format-fields?  true
@@ -248,7 +255,11 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     [(when query-global-strings?
+     [(when global-strings
+        {:action/name ::expand-global-strings
+         :action/description "Add an expansion for globally configured strings."
+         :global-strings global-strings})
+      (when query-global-strings?
         {:action/name ::add-strings-query
          :action/description "Add global strings query"})
       (when query-lang?
