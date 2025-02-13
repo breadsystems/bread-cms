@@ -194,10 +194,11 @@
 
 (defmethod ig/init-key :bread/router [_ router]
   (reitit/router
-    [["/login"
-      {:name :login
-       :dispatcher/type :systems.bread.alpha.plugin.auth/login
-       :dispatcher/component #'auth/LoginPage}]
+    [["/~"
+      ["/login"
+       {:name :login
+        :dispatcher/type ::auth/login
+        :dispatcher/component #'auth/LoginPage}]]
      ["/assets/*"
       (reitit.ring/create-resource-handler
         {:parameter :filename
