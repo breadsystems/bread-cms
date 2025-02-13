@@ -114,10 +114,10 @@
             font-weight: 700;
             color: var(--color-text-error);
             border: 2px dashed var(--color-text-error);
-            padding: 4px 8px;
+            padding: 8px;
           }
           input {
-            padding: 5px;
+            padding: 8px;
             border: 2px solid var(--color-text-body);
           }
           button, input {
@@ -127,7 +127,7 @@
             border-radius: 0;
           }
           button {
-            padding: 4px 10px;
+            padding: 4px 8px;
             cursor: pointer;
           }
           button:focus, input:focus {
