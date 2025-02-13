@@ -499,7 +499,7 @@
           max-failed-login-count 5
           lock-seconds 3600
           next-param :next
-          login-uri "/~/login"}}]
+          login-uri "/login"}}]
    {:hooks
     {::db/migrations
      [{:action/name ::migrations
