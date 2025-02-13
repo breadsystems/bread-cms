@@ -206,7 +206,7 @@
      ["/{field/lang}"
       [""
        {:name :home
-        :dispatcher/type ::page=>
+        :dispatcher/type ::post/page=>
         :dispatcher/component #'theme/HomePage}]
       ["/i/{db/id}"
        {:name :id
