@@ -77,8 +77,15 @@
             --color-text-body: hsl(120, 32.6%, 81.4%);
             --color-text-error: hsl(284.3, 75.5%, 79.2%);
             --color-emphasis: hsl(157.6, 85.6%, 49%);
-            --color-lighter hsl(157.6, 85.6%, 49%);
             --color-bg: hsl(264, 41.7%, 4.7%);
+          }
+          @media (prefers-color-scheme: light) {
+            :root {
+              --color-text-body: hsl(263.9, 79%, 24.3%);
+              --color-text-error: hsl(309.4, 73.8%, 37.5%);
+              --color-emphasis: hsl(157.4, 64.9%, 25.7%);
+              --color-bg: hsl(115.4, 61.9%, 95.9%);
+            }
           }
           body {
             width: 50ch;
