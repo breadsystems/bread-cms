@@ -75,6 +75,7 @@
           "
           :root {
             --color-text-body: hsl(120, 32.6%, 81.4%);
+            --color-text-error: hsl(284.3, 75.5%, 79.2%);
             --color-emphasis: hsl(157.6, 85.6%, 49%);
             --color-lighter hsl(157.6, 85.6%, 49%);
             --color-bg: hsl(264, 41.7%, 4.7%);
@@ -108,6 +109,12 @@
           }
           .field input {
             flex: 2;
+          }
+          .error {
+            font-weight: 700;
+            color: var(--color-text-error);
+            border: 2px dashed var(--color-text-error);
+            padding: 4px 8px;
           }
           input {
             padding: 5px;
@@ -159,8 +166,9 @@
            [:input {:id :two-factor-code :type :number :name :two-factor-code}]
            [:button {:type :submit :name :submit :value "verify"} "Verify"]]
           (when error?
-            [:div.error
-             [:p "Invalid code. Please try again."]])]]
+            (hook ::html.invalid-code
+                  [:div.error
+                   [:p "Invalid code. Please try again."]]))]]
 
         :default
         [:main
@@ -175,6 +183,10 @@
           [:div.field
            [:label {:for :password} "Password"]
            [:input {:id :password :type :password :name :password}]]
+          (when error?
+            (hook ::html.invalid-login
+                  [:div.error
+                   [:p "Invalid username or password."]]))
           [:div
            [:button {:type :submit} "Login"]]]])]]))
 
