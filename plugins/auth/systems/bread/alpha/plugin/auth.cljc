@@ -13,11 +13,14 @@
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
+    [java.lang IllegalArgumentException]
     [java.net URLEncoder]
     [java.util UUID]))
 
 (defn- ->uuid [x]
-  (if (string? x) (UUID/fromString x) x))
+  (if (string? x)
+    (try (UUID/fromString x) (catch IllegalArgumentException _ nil))
+    x))
 
 (deftype DatalogSessionStore [conn]
   SessionStore
@@ -48,7 +51,8 @@
   (URLEncoder/encode "/destination")
   (URLEncoder/encode "/destination?param=1")
   (URLEncoder/encode "/destination?param=1&b=2")
-  (str (UUID/fromString "6713c8ff-cca2-4e28-a2ac-a34f3745487b"))
+  (->uuid "bad")
+  (->uuid (str (UUID/fromString "6713c8ff-cca2-4e28-a2ac-a34f3745487b") "-extra"))
   (->uuid nil)
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
