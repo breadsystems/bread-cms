@@ -197,7 +197,7 @@
         current-step (:auth/step session)
         login-step? (nil? current-step)
         two-factor-step? (= :two-factor current-step)
-        two-factor-enabled? (boolean (:user/two-factor-key user))
+        two-factor-enabled? (boolean (:user/totp-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
@@ -272,7 +272,7 @@
       (let [code (try
                    (Integer. two-factor-code)
                    (catch java.lang.NumberFormatException _ 0))
-            valid (totp/valid-code? (:user/two-factor-key user) code)]
+            valid (totp/valid-code? (:user/totp-key user) code)]
         {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
@@ -336,7 +336,7 @@
                    (:username params))
         user-keys [:db/id
                    :user/username
-                   :user/two-factor-key
+                   :user/totp-key
                    :user/locked-at
                    :user/failed-login-count]
         user-keys (if two-factor? user-keys (concat user-keys [:user/password]))
@@ -424,9 +424,9 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}
-     {:db/ident :user/two-factor-key
-      :attr/label "2FA key"
-      :db/doc "User's 2FA secret key"
+     {:db/ident :user/totp-key
+      :attr/label "TOTP key"
+      :db/doc "User's secret key for the Time-based One-Time Password algorithm"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}
