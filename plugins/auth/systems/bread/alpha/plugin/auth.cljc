@@ -169,7 +169,7 @@
          [:form {:name :bread-logout :method :post}
           (hook ::html.login-heading [:h1 "Login to Bread"])
           (hook ::html.enter-2fa-code
-                [:p "Please enter the one-time code from your authenticator app."])
+                [:p.instruct "Please enter the one-time code from your authenticator app."])
           [:div.field.two-factor
            [:input {:id :two-factor-code :type :number :name :two-factor-code}]
            [:button {:type :submit :name :submit :value "verify"} "Verify"]]
