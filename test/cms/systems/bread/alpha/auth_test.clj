@@ -54,7 +54,7 @@
 
 (defmethod bread/action ::route
   [req _ _]
-  (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login}))
+  (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
 
 (defn fake-2fa-validator
   ([^String _ ^long code]

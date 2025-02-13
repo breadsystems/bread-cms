@@ -197,7 +197,7 @@
     [["/~"
       ["/login"
        {:name :login
-        :dispatcher/type ::auth/login
+        :dispatcher/type ::auth/login=>
         :dispatcher/component #'auth/LoginPage}]]
      ["/assets/*"
       (reitit.ring/create-resource-handler
