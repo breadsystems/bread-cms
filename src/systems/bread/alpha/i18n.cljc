@@ -14,17 +14,71 @@
   "Checks all supported languages in the database. Returns supported langs
   as a set of keywords."
   [req]
-  (bread/hook req ::supported-langs
-              (bread/config req :i18n/supported-langs)))
+  (bread/hook req ::supported-langs (bread/config req :i18n/supported-langs)))
+
+(comment
+  (->double "0.4")
+  (->double "1.4234")
+  (->double "1.4234x")
+  (accepted-lang-ranges "*")
+  (accepted-lang-ranges "; DROP TABLE users;--")
+  ;;
+  )
+
+(defn- ->double [x]
+  (try
+    (Double. (str x))
+    (catch java.lang.NumberFormatException _)))
+
+(defn- accepted-lang-ranges [header]
+  (when header
+    (->> (string/split header #",")
+         (map (fn [lang-range]
+                (let [[lang-range quality]
+                      (map string/trim (string/split lang-range #";q="))]
+                  {:lang (keyword lang-range) :quality (or (->double quality) 1)})))
+         ;; TODO formalize validation
+         (filter #(< 1 (count (name (:lang %))) 7))
+         (sort-by :quality)
+         (reverse)
+         (map :lang))))
+
+(defn- accept-first [candidates lang-ranges]
+  (when (seq lang-ranges)
+    (reduce (fn
+              ([] nil)
+              ([_ lang-range]
+               (cond
+                 (contains? candidates lang-range) (reduced lang-range)
+                 (re-find #"-" (name lang-range))
+                 (reduced (keyword (first (string/split (name lang-range) #"-")))))))
+            [] lang-ranges)))
 
 (defn lang
   "High-level fn for getting the language for the current request."
-  [req]
+  [{:as req :keys [headers]}]
   (let [params (bread/route-params (route/router req) req)
         lang-param (bread/config req :i18n/lang-param)
-        supported (get (supported-langs req) (keyword (get params lang-param)))
-        lang (or supported (bread/config req :i18n/fallback-lang))]
+        candidates (supported-langs req)
+        supported (get candidates (keyword (get params lang-param)))
+        ;; TODO support sublangs
+        accept-langs (accepted-lang-ranges (get headers "accept-language"))
+        lang (or supported
+                 (accept-first candidates accept-langs)
+                 (bread/config req :i18n/fallback-lang))]
     (bread/hook req ::lang lang)))
+
+(defn rtl?
+  "Whether the lang for the current request is written right-to-left according
+  to :i18n/rtl-langs config."
+  [req]
+  (contains? (bread/config req :i18n/rtl-langs) (lang req)))
+
+(defn dir
+  "Whether the lang for the current request is written right-to-left according
+  to :i18n/rtl-langs config."
+  [req]
+  (if (rtl? req) :rtl :ltr))
 
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
@@ -201,6 +255,18 @@
   [req _ [params]]
   (assoc params (bread/config req :i18n/lang-param) (lang req)))
 
+(defmethod bread/action ::expand-global-strings
+  [req {:keys [global-strings]} _]
+  (let [strings (bread/hook req ::global-strings
+                            (get global-strings (lang req) {}))]
+    (expansion/add req {:expansion/key :i18n
+                        :expansion/name ::bread/value
+                        :expansion/value strings})))
+
+(defmethod bread/action ::merge-global-strings
+  [req {:keys [strings]} [req-strings]]
+  (merge req-strings (get strings (lang req))))
+
 (defmethod bread/action ::add-strings-query
   [req _ _]
   (expansion/add req {:expansion/name ::db/query
@@ -216,6 +282,18 @@
                                  (not-join [?e] [_ :thing/fields ?e])]}
                        (lang req)]}))
 
+(defmethod bread/action ::add-rtl-expansion
+  [req _ _]
+  (expansion/add req {:expansion/name ::bread/value
+                      :expansion/key :rtl?
+                      :expansion/value (rtl? req)}))
+
+(defmethod bread/action ::add-dir-expansion
+  [req _ _]
+  (expansion/add req {:expansion/name ::bread/value
+                      :expansion/key :dir
+                      :expansion/value (if (rtl? req) :rtl :ltr)}))
+
 (defmethod bread/action ::add-lang-query
   [req _ _]
   (expansion/add req {:expansion/name ::bread/value
@@ -225,22 +303,26 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [lang-param fallback-lang supported-langs
-            query-global-strings? query-lang? format-fields? compact-fields?]
+  ([{:keys [lang-param fallback-lang supported-langs global-strings
+            query-global-strings? query-lang? format-fields? compact-fields?
+            rtl-langs]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
-          ;; TODO query-global-strings?
+          global-strings {}
           query-global-strings?  true
           query-lang?     true
           format-fields?  true
-          compact-fields? true}}]
+          compact-fields? true
+          rtl-langs #{:ar :he :fa :ur :ps :yi :ku
+                      :sy :arc :dv :ug :sd :brh}}}]
    {:config
     {:i18n/lang-param      lang-param
      :i18n/fallback-lang   fallback-lang
      :i18n/supported-langs supported-langs
      :i18n/format-fields?  format-fields?
-     :i18n/compact-fields? compact-fields?}
+     :i18n/compact-fields? compact-fields?
+     :i18n/rtl-langs       rtl-langs}
     :hooks
     {::expansions
      [{:action/name ::expansions
@@ -249,7 +331,17 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     [(when query-global-strings?
+     [(when rtl-langs
+        {:action/name ::add-rtl-expansion
+         :action/description "Add an expansion for whether req lang is RTL."})
+      (when rtl-langs
+        {:action/name ::add-dir-expansion
+         :action/description "Add an expansion for req text direction."})
+      (when global-strings
+        {:action/name ::expand-global-strings
+         :action/description "Add an expansion for globally configured strings."
+         :global-strings global-strings})
+      (when query-global-strings?
         {:action/name ::add-strings-query
          :action/description "Add global strings query"})
       (when query-lang?

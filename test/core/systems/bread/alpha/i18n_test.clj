@@ -5,6 +5,7 @@
     [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
@@ -53,21 +54,92 @@
 
 (deftest test-lang
   (are
-    [lang uri]
-    (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en :es}
+    [lang req]
+    (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en-GB :en :es}
                                              :query-global-strings? false})
                                (route/plugin {:router (naive-router)})]
                               plugins->loaded bread/handler)]
-              (i18n/lang (handler {:uri uri}))))
+              (i18n/lang (handler req))))
 
-    :en "/" ;; No lang route; Defaults to :en.
-    :en "/qwerty" ;; Ditto.
-    :en "/en"
-    :en "/en/qwerty"
-    :es "/es"
-    :es "/es/qwerty"
-    :en "/fr" ;; Default to :en, since :fr is not in supported-langs
-    :en "/de" ;; Default to :en, since :de is not in supported-langs
+    :en {:uri "/"} ;; No lang route; Defaults to :en.
+    :en {:uri "/qwerty"} ;; Ditto.
+    :en {:uri "/en"}
+    :en {:uri "/en/qwerty"}
+    :es {:uri "/es"}
+    :es {:uri "/es/qwerty"}
+    :en {:uri "/fr"} ;; Default to :en, since :fr is not in supported-langs
+    :en {:uri "/de"} ;; Default to :en, since :de is not in supported-langs
+
+    ;; No lang route; defaults to pref.
+    :es {:uri "/" :headers {"accept-language" "es"}}
+    :es {:uri "/" :headers {"accept-language" "de, es;q=0.8"}}
+    :en-GB {:uri "/" :headers {"accept-language" "en-GB, en;q=0.9"}}
+
+    ;; Supported global codes (es) should match tagged ranges (es-AR)
+    :es {:uri "/" :headers {"accept-language" "es-AR, en;q=0.9"}}
+    :en {:uri "/" :headers {"accept-language" "en-US, es;q=0.9"}}
+
+    ;; Test that languages are evaluated in order of preference.
+    :en {:uri "/" :headers {"accept-language" "de, es;q=0.8, en;q=0.9"}}
+    :en {:uri "/" :headers {"accept-language" "de;q=0.8, es;q=0.9, en"}}
+    :en-GB {:uri "/" :headers {"accept-language" "es;q=0.8, en;q=0.8, en-GB;q=1"}}
+
+    ;; Wildcard just means default.
+    :en {:uri "/qwerty" :headers {"accept-language" "de, fr;q=0.5, *"}}
+    :en {:uri "/qwerty" :headers {"accept-language" "*"}}
+
+    ;; We don't support their preferred langs :'(
+    :en {:uri "/qwerty" :headers {"accept-language" "de, fr;q=0.5"}}
+
+    ))
+
+(deftest test-rtl?
+  (are
+    [rtl? uri]
+    (= rtl? (let [handler (-> [(i18n/plugin {:supported-langs
+                                             #{:en :es :ar :he}
+                                             :query-global-strings? false})
+                               (route/plugin {:router (naive-router)})]
+                              plugins->loaded bread/handler)]
+              (i18n/rtl? (handler {:uri uri}))))
+
+    false "/" ;; No lang route; Defaults to :en.
+    false "/qwerty" ;; Ditto.
+    false "/en"
+    false "/en/qwerty"
+    false "/es"
+    false "/es/qwerty"
+    false "/fr" ;; Default to :en, since :fr is not in supported-langs
+    false "/de" ;; Default to :en, since :de is not in supported-langs
+    true "/ar"
+    true "/ar/qwerty"
+    true "/he"
+    true "/he/qwerty"
+
+    ))
+
+(deftest test-dir
+  (are
+    [dir uri]
+    (= dir (let [handler (-> [(i18n/plugin {:supported-langs
+                                            #{:en :es :ar :he}
+                                            :query-global-strings? false})
+                              (route/plugin {:router (naive-router)})]
+                             plugins->loaded bread/handler)]
+             (i18n/dir (handler {:uri uri}))))
+
+    :ltr "/" ;; No lang route; Defaults to :ltr (:en)
+    :ltr "/qwerty" ;; Ditto.
+    :ltr "/en"
+    :ltr "/en/qwerty"
+    :ltr "/es"
+    :ltr "/es/qwerty"
+    :ltr "/fr" ;; Default to :en, since :fr is not in supported-langs
+    :ltr "/de" ;; Default to :en, since :de is not in supported-langs
+    :rtl "/ar"
+    :rtl "/ar/qwerty"
+    :rtl "/he"
+    :rtl "/he/qwerty"
 
     ))
 
@@ -99,6 +171,101 @@
     ;; These default to :en.
     {:one "One" :two "Two"} "/fr"
     {:one "One" :two "Two"} "/de"))
+
+(deftest test-global-strings-hook
+  (are
+    [strings config req extra-plugin]
+    (= strings (let [i18n-config (merge config {:query-global-strings? false
+                                                :query-lang? false
+                                                :supported-langs #{:fr :es :en}})]
+                 (-> (plugins->loaded [(expansion/plugin)
+                                       (route/plugin {:router (naive-router)})
+                                       (i18n/plugin i18n-config)
+                                       extra-plugin])
+                     (merge req)
+                     (bread/hook ::bread/route)
+                     (bread/hook ::bread/dispatch)
+                     (bread/hook ::bread/expand)
+                     (get-in [::bread/data :i18n]))))
+
+    ;; Passing nil, strings exiplicitly disabled.
+    nil {:global-strings nil} {:uri "/en/_"} nil
+
+    ;; Passing map, strings exiplicitly disabled.
+    nil {:global-strings nil} {:uri "/en/_"} nil
+    nil {:global-strings nil} {:uri "/en/_"} nil
+    nil {:global-strings nil} {:uri "/es/_"} nil
+    nil {:global-strings nil} {:uri "/fr/_"} nil
+
+    ;; Any logical false works to disable the setting.
+    nil {:global-strings false} {:uri "/en/_"} nil
+    nil {:global-strings false} {:uri "/es/_"} nil
+    nil {:global-strings false} {:uri "/fr/_"} nil
+
+    ;; No global-strings hook is called when setting is disabled.
+    nil {:global-strings false} {:uri "/en/_"}
+    {:hooks {::i18n/global-strings
+             [{:action/name ::bread/value
+               :action/value {:some :data}}]}}
+
+    ;; When enabled, it should pick the right language for the request.
+    ;; Here the current request is for Español...
+    {:one "Uno"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/es/_"}
+    nil
+
+    ;; ...and here, for Français...
+    {:one "Un"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/fr/_"}
+    nil
+
+    ;; ...and for English.
+    {:one "One"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/en/_"}
+    nil
+
+    ;; For an unsupported lang, it defaults back to fallback-lang.
+    {:one "One"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/nah/_"}
+    nil
+
+    ;; Test that ::global-strings gets called when building the expansion.
+    ;; This also tests the ::merge-global-strings convenience hook.
+    {:one "Uno" :my/string "¡Hola!"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/es/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:es {:my/string "¡Hola!"}
+                  :en {:my/string "Hello!"}}}]}}
+
+    ;; This time with English...
+    {:one "One" :my/string "Hello!"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/en/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:es {:my/string "¡Hola!"}
+                  :en {:my/string "Hello!"}}}]}}
+
+    ;; Merging unsupported or irrelevant languages should have no effect.
+    {:one "Un"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/fr/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:jabbertalky
+                  {:one "TWO THE VORPAL BLADE WENT SKICKER-SNACK!"}}}]}}
+
+    ;;
+    ))
 
 ;; i18n/plugin loads I18n strings for the given language automatically.
 (deftest test-add-i18n-query

@@ -34,7 +34,7 @@
 (def douglass
   {:user/username "douglass"
    :user/failed-login-count 0
-   :user/two-factor-key "fake"})
+   :user/totp-key "fake"})
 
 (def config
   {:db/type :datahike
@@ -54,7 +54,7 @@
 
 (defmethod bread/action ::route
   [req _ _]
-  (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login}))
+  (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
 
 (defn fake-2fa-validator
   ([^String _ ^long code]

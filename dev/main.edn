@@ -14,8 +14,10 @@
   :app #ig/ref :bread/app}
  :bread/app
  {:db #ig/ref :bread/db
-  :auth {:lock-seconds 3600}
-  :i18n {:supported-langs #{:en :fr}}
+  :auth {:login-uri "/~/login"}
+  :i18n {:query-global-strings? false
+         :supported-langs #{:en :fr :es :ar}
+         :fallback-lang :ar}
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
   :navigation {:menus {:main-nav
@@ -37,7 +39,7 @@
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
              ;#_#_ ;; Uncomment to enable 2FA
-             :user/two-factor-key "AWWMEFM4ADBSQRET"
+             :user/totp-key "AWWMEFM4ADBSQRET"
              :user/failed-login-count 0
              :user/preferences "{:lang :en}"
              :user/roles
