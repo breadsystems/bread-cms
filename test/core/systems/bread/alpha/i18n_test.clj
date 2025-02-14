@@ -5,6 +5,7 @@
     [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
@@ -99,6 +100,59 @@
     ;; These default to :en.
     {:one "One" :two "Two"} "/fr"
     {:one "One" :two "Two"} "/de"))
+
+(deftest test-global-strings-hook
+  (are
+    [strings config req]
+    (= strings (let [i18n-config (merge config {:query-global-strings? false
+                                                :query-lang? false
+                                                :supported-langs #{:fr :es :en}})]
+                 (-> (plugins->loaded [(expansion/plugin)
+                                       (route/plugin {:router (naive-router)})
+                                       (i18n/plugin i18n-config)])
+                     (merge req)
+                     (bread/hook ::bread/route)
+                     (bread/hook ::bread/dispatch)
+                     (bread/hook ::bread/expand)
+                     (get-in [::bread/data :i18n]))))
+
+    ;; Passing nil, strings exiplicitly disabled.
+    nil {:global-strings nil} {:uri "/en/_"}
+
+    ;; Passing map, strings exiplicitly disabled.
+    nil {:global-strings nil} {:uri "/en/_"}
+    nil {:global-strings nil} {:uri "/en/_"}
+    nil {:global-strings nil} {:uri "/es/_"}
+    nil {:global-strings nil} {:uri "/fr/_"}
+
+    ;; Any logical false works to disable the setting.
+    nil {:global-strings false} {:uri "/en/_"}
+    nil {:global-strings false} {:uri "/es/_"}
+    nil {:global-strings false} {:uri "/fr/_"}
+
+    ;; When enabled, it should pick the right language for the request.
+    ;; Here the current request is for Español...
+    {:one "Uno"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/es/_"}
+
+    ;; ...and here, for Français...
+    {:one "Un"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/fr/_"}
+
+    ;; ...and for English.
+    {:one "One"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/en/_"}
+
+    ;; For an unsupported lang, it defaults back to fallback-lang.
+    {:one "One"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/nah/_"}
+
+    ;;
+    ))
 
 ;; i18n/plugin loads I18n strings for the given language automatically.
 (deftest test-add-i18n-query
