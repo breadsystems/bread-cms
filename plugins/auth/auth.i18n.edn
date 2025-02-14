@@ -1,0 +1,37 @@
+{:ar
+ #:auth{
+        :account-locked "تم قفل الحساب"
+        :enter-totp "يرجى إدخال الرمز المكون لمرة واحدة من تطبيق المصادقة."
+        :enter-username-password "يرجى إدخال اسم المستخدم وكلمة المرور."
+        :invalid-totp "رمز غير صالح. يرجى المحاولة مرة أخرى."
+        :invalid-username-password "اسم المستخدم أو كلمة المرور غير صحيحة."
+        :login "تسجيل الدخول"
+        :logout "تسجيل الخروج"
+        :login-to-bread "تسجيل الدخول إلى Bread"
+        :password "كلمة المرور"
+        :too-many-attempts "لقد قمت بعدد كبير جدًا من محاولات تسجيل الدخول. يرجى المحاولة لاحقًا."
+        :username "اسم المستخدم"
+        :verify "تحقق"
+        :welcome "مرحبًا"
+        }
+ :en
+ #:auth{
+        :account-locked "Account locked"
+        :enter-totp "Please enter the one-time code from your authenticator app."
+        :enter-username-password "Please enter your username and password."
+        :invalid-totp "Invalid code. Please try again."
+        :invalid-username-password "Invalid username or password."
+        :login "Login"
+        :logout "Logout"
+        :login-to-bread "Login to Bread"
+        :password "Password"
+        :too-many-attempts "You have made too many attempts to log in. Please try again later."
+        :username "Username"
+        :verify "Verify"
+        :welcome "Welcome"
+        }
+ :es
+ #:auth{
+        :welcome "Bienvenido"
+        }
+ }

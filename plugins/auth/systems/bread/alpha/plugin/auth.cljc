@@ -61,12 +61,13 @@
   (totp/valid-code? (:secret-key totp-spec) 414903))
 
 (defc LoginPage
-  [{:keys [hook i18n session] :auth/keys [result] :as data}]
+  [{:keys [hook i18n session rtl? dir] :auth/keys [result] :as data}]
   {}
   (let [user (:user session)
         step (:auth/step session)
         error? (false? (:valid result))]
-    [:html {:lang "en"} ;; TODO
+    [:html {:lang (:field/lang data)
+            :dir dir}
      [:head
       [:meta {:content-type "utf-8"}]
       (hook ::html.title [:title (str (:auth/login i18n) " | Bread")])
