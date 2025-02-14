@@ -32,6 +32,12 @@
   [req]
   (contains? (bread/config req :i18n/rtl-langs) (lang req)))
 
+(defn dir
+  "Whether the lang for the current request is written right-to-left according
+  to :i18n/rtl-langs config."
+  [req]
+  (if (rtl? req) :rtl :ltr))
+
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
   indicate that all translatable strings have translations for lang."
@@ -240,6 +246,12 @@
                       :expansion/key :rtl?
                       :expansion/value (rtl? req)}))
 
+(defmethod bread/action ::add-dir-expansion
+  [req _ _]
+  (expansion/add req {:expansion/name ::bread/value
+                      :expansion/key :dir
+                      :expansion/value (if (rtl? req) :rtl :ltr)}))
+
 (defmethod bread/action ::add-lang-query
   [req _ _]
   (expansion/add req {:expansion/name ::bread/value
@@ -280,6 +292,9 @@
      [(when rtl-langs
         {:action/name ::add-rtl-expansion
          :action/description "Add an expansion for whether req lang is RTL."})
+      (when rtl-langs
+        {:action/name ::add-dir-expansion
+         :action/description "Add an expansion for req text direction."})
       (when global-strings
         {:action/name ::expand-global-strings
          :action/description "Add an expansion for globally configured strings."
