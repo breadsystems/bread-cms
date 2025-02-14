@@ -203,9 +203,15 @@
 
 (defmethod bread/action ::expand-global-strings
   [req {:keys [global-strings]} _]
-  (expansion/add req {:expansion/key :i18n
-                      :expansion/name ::bread/value
-                      :expansion/value (get global-strings (lang req) {})}))
+  (let [strings (bread/hook req ::global-strings
+                            (get global-strings (lang req) {}))]
+    (expansion/add req {:expansion/key :i18n
+                        :expansion/name ::bread/value
+                        :expansion/value strings})))
+
+(defmethod bread/action ::merge-global-strings
+  [req {:keys [strings]} [req-strings]]
+  (merge req-strings (get strings (lang req))))
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
