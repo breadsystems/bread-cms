@@ -97,6 +97,31 @@
 
     ))
 
+(deftest test-dir
+  (are
+    [dir uri]
+    (= dir (let [handler (-> [(i18n/plugin {:supported-langs
+                                            #{:en :es :ar :he}
+                                            :query-global-strings? false})
+                              (route/plugin {:router (naive-router)})]
+                             plugins->loaded bread/handler)]
+             (i18n/dir (handler {:uri uri}))))
+
+    :ltr "/" ;; No lang route; Defaults to :ltr (:en)
+    :ltr "/qwerty" ;; Ditto.
+    :ltr "/en"
+    :ltr "/en/qwerty"
+    :ltr "/es"
+    :ltr "/es/qwerty"
+    :ltr "/fr" ;; Default to :en, since :fr is not in supported-langs
+    :ltr "/de" ;; Default to :en, since :de is not in supported-langs
+    :rtl "/ar"
+    :rtl "/ar/qwerty"
+    :rtl "/he"
+    :rtl "/he/qwerty"
+
+    ))
+
 (deftest test-strings-for
   (are
     [strings lang]
