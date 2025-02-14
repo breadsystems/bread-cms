@@ -26,6 +26,12 @@
         lang (or supported (bread/config req :i18n/fallback-lang))]
     (bread/hook req ::lang lang)))
 
+(defn rtl?
+  "Whether the lang for the current request is written right-to-left according
+  to :i18n/rtl-langs config."
+  [req]
+  (contains? (bread/config req :i18n/rtl-langs) (lang req)))
+
 (defn lang-supported?
   "Whether lang has any translatable strings available. Does not necessarily
   indicate that all translatable strings have translations for lang."
@@ -238,7 +244,8 @@
   ([]
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs global-strings
-            query-global-strings? query-lang? format-fields? compact-fields?]
+            query-global-strings? query-lang? format-fields? compact-fields?
+            rtl-langs]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
@@ -246,13 +253,16 @@
           query-global-strings?  true
           query-lang?     true
           format-fields?  true
-          compact-fields? true}}]
+          compact-fields? true
+          rtl-langs #{:ar :he :fa :ur :ps :yi :ku
+                      :sy :arc :dv :ug :sd :brh}}}]
    {:config
     {:i18n/lang-param      lang-param
      :i18n/fallback-lang   fallback-lang
      :i18n/supported-langs supported-langs
      :i18n/format-fields?  format-fields?
-     :i18n/compact-fields? compact-fields?}
+     :i18n/compact-fields? compact-fields?
+     :i18n/rtl-langs       rtl-langs}
     :hooks
     {::expansions
      [{:action/name ::expansions
