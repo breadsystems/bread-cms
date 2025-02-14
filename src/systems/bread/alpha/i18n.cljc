@@ -234,6 +234,12 @@
                                  (not-join [?e] [_ :thing/fields ?e])]}
                        (lang req)]}))
 
+(defmethod bread/action ::add-rtl-expansion
+  [req _ _]
+  (expansion/add req {:expansion/name ::bread/value
+                      :expansion/key :rtl?
+                      :expansion/value (rtl? req)}))
+
 (defmethod bread/action ::add-lang-query
   [req _ _]
   (expansion/add req {:expansion/name ::bread/value
@@ -271,7 +277,10 @@
      [{:action/name ::path-params
        :action/description "Get internationalized path params from route"}]
      ::bread/dispatch
-     [(when global-strings
+     [(when rtl-langs
+        {:action/name ::add-rtl-expansion
+         :action/description "Add an expansion for whether req lang is RTL."})
+      (when global-strings
         {:action/name ::expand-global-strings
          :action/description "Add an expansion for globally configured strings."
          :global-strings global-strings})
