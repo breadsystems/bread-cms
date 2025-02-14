@@ -14,16 +14,58 @@
   "Checks all supported languages in the database. Returns supported langs
   as a set of keywords."
   [req]
-  (bread/hook req ::supported-langs
-              (bread/config req :i18n/supported-langs)))
+  (bread/hook req ::supported-langs (bread/config req :i18n/supported-langs)))
+
+(comment
+  (->double "0.4")
+  (->double "1.4234")
+  (->double "1.4234x")
+  (accepted-lang-ranges "*")
+  (accepted-lang-ranges "; DROP TABLE users;--")
+  ;;
+  )
+
+(defn- ->double [x]
+  (try
+    (Double. (str x))
+    (catch java.lang.NumberFormatException _)))
+
+(defn- accepted-lang-ranges [header]
+  (when header
+    (->> (string/split header #",")
+         (map (fn [lang-range]
+                (let [[lang-range quality]
+                      (map string/trim (string/split lang-range #";q="))]
+                  {:lang (keyword lang-range) :quality (or (->double quality) 1)})))
+         ;; TODO formalize validation
+         (filter #(< 1 (count (name (:lang %))) 7))
+         (sort-by :quality)
+         (reverse)
+         (map :lang))))
+
+(defn- accept-first [candidates lang-ranges]
+  (when (seq lang-ranges)
+    (reduce (fn
+              ([] nil)
+              ([_ lang-range]
+               (cond
+                 (contains? candidates lang-range) (reduced lang-range)
+                 (re-find #"-" (name lang-range))
+                 (reduced (keyword (first (string/split (name lang-range) #"-")))))))
+            [] lang-ranges)))
 
 (defn lang
   "High-level fn for getting the language for the current request."
-  [req]
+  [{:as req :keys [headers]}]
   (let [params (bread/route-params (route/router req) req)
         lang-param (bread/config req :i18n/lang-param)
-        supported (get (supported-langs req) (keyword (get params lang-param)))
-        lang (or supported (bread/config req :i18n/fallback-lang))]
+        candidates (supported-langs req)
+        supported (get candidates (keyword (get params lang-param)))
+        ;; TODO support sublangs
+        accept-langs (accepted-lang-ranges (get headers "accept-language"))
+        lang (or supported
+                 (accept-first candidates accept-langs)
+                 (bread/config req :i18n/fallback-lang))]
     (bread/hook req ::lang lang)))
 
 (defn rtl?

@@ -54,21 +54,42 @@
 
 (deftest test-lang
   (are
-    [lang uri]
-    (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en :es}
+    [lang req]
+    (= lang (let [handler (-> [(i18n/plugin {:supported-langs #{:en-GB :en :es}
                                              :query-global-strings? false})
                                (route/plugin {:router (naive-router)})]
                               plugins->loaded bread/handler)]
-              (i18n/lang (handler {:uri uri}))))
+              (i18n/lang (handler req))))
 
-    :en "/" ;; No lang route; Defaults to :en.
-    :en "/qwerty" ;; Ditto.
-    :en "/en"
-    :en "/en/qwerty"
-    :es "/es"
-    :es "/es/qwerty"
-    :en "/fr" ;; Default to :en, since :fr is not in supported-langs
-    :en "/de" ;; Default to :en, since :de is not in supported-langs
+    :en {:uri "/"} ;; No lang route; Defaults to :en.
+    :en {:uri "/qwerty"} ;; Ditto.
+    :en {:uri "/en"}
+    :en {:uri "/en/qwerty"}
+    :es {:uri "/es"}
+    :es {:uri "/es/qwerty"}
+    :en {:uri "/fr"} ;; Default to :en, since :fr is not in supported-langs
+    :en {:uri "/de"} ;; Default to :en, since :de is not in supported-langs
+
+    ;; No lang route; defaults to pref.
+    :es {:uri "/" :headers {"accept-language" "es"}}
+    :es {:uri "/" :headers {"accept-language" "de, es;q=0.8"}}
+    :en-GB {:uri "/" :headers {"accept-language" "en-GB, en;q=0.9"}}
+
+    ;; Supported global codes (es) should match tagged ranges (es-AR)
+    :es {:uri "/" :headers {"accept-language" "es-AR, en;q=0.9"}}
+    :en {:uri "/" :headers {"accept-language" "en-US, es;q=0.9"}}
+
+    ;; Test that languages are evaluated in order of preference.
+    :en {:uri "/" :headers {"accept-language" "de, es;q=0.8, en;q=0.9"}}
+    :en {:uri "/" :headers {"accept-language" "de;q=0.8, es;q=0.9, en"}}
+    :en-GB {:uri "/" :headers {"accept-language" "es;q=0.8, en;q=0.8, en-GB;q=1"}}
+
+    ;; Wildcard just means default.
+    :en {:uri "/qwerty" :headers {"accept-language" "de, fr;q=0.5, *"}}
+    :en {:uri "/qwerty" :headers {"accept-language" "*"}}
+
+    ;; We don't support their preferred langs :'(
+    :en {:uri "/qwerty" :headers {"accept-language" "de, fr;q=0.5"}}
 
     ))
 
