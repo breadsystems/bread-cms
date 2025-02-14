@@ -205,7 +205,7 @@
   [req {:keys [global-strings]} _]
   (expansion/add req {:expansion/key :i18n
                       :expansion/name ::bread/value
-                      :expansion/value global-strings}))
+                      :expansion/value (get global-strings (lang req) {})}))
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
