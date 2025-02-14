@@ -72,6 +72,31 @@
 
     ))
 
+(deftest test-rtl?
+  (are
+    [rtl? uri]
+    (= rtl? (let [handler (-> [(i18n/plugin {:supported-langs
+                                             #{:en :es :ar :he}
+                                             :query-global-strings? false})
+                               (route/plugin {:router (naive-router)})]
+                              plugins->loaded bread/handler)]
+              (i18n/rtl? (handler {:uri uri}))))
+
+    false "/" ;; No lang route; Defaults to :en.
+    false "/qwerty" ;; Ditto.
+    false "/en"
+    false "/en/qwerty"
+    false "/es"
+    false "/es/qwerty"
+    false "/fr" ;; Default to :en, since :fr is not in supported-langs
+    false "/de" ;; Default to :en, since :de is not in supported-langs
+    true "/ar"
+    true "/ar/qwerty"
+    true "/he"
+    true "/he/qwerty"
+
+    ))
+
 (deftest test-strings-for
   (are
     [strings lang]
