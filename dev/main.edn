@@ -15,7 +15,8 @@
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:login-uri "/~/login"}
-  :i18n {:supported-langs #{:en :fr}}
+  :i18n {:query-global-strings? false
+         :supported-langs #{:en :fr :es}}
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
   :navigation {:menus {:main-nav

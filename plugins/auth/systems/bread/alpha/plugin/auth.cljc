@@ -3,6 +3,7 @@
     [buddy.hashers :as hashers]
     [clj-totp.core :as totp]
     [clojure.edn :as edn]
+    [clojure.java.io :as io]
     [clojure.string :as string]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
@@ -10,6 +11,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
@@ -59,7 +61,7 @@
   (totp/valid-code? (:secret-key totp-spec) 414903))
 
 (defc LoginPage
-  [{:keys [hook session] :auth/keys [result] :as data}]
+  [{:keys [hook i18n session] :auth/keys [result] :as data}]
   {}
   (let [user (:user session)
         step (:auth/step session)
@@ -67,7 +69,7 @@
     [:html {:lang "en"} ;; TODO
      [:head
       [:meta {:content-type "utf-8"}]
-      (hook ::html.title [:title "Login | BreadCMS"])
+      (hook ::html.title [:title (str (:auth/login i18n) " | Bread")])
       (hook
         ::html.style
         [:<>
@@ -152,51 +154,50 @@
       (cond
         (:locked? result)
         [:main
-         (hook ::html.locked-heading
-               [:h2 "Account locked"])
-         (hook ::html.locked-explanation
-               [:p "You have made too many attempts to log in. Please try again later."])]
+         (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
+         (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]
 
         (= :logged-in step)
         [:main
          [:form {:name :bread-logout :method :post}
-          [:h2 "Welcome, " (:user/username (:user session))]
+          ;; TODO figure out what to do about this page...redirect to / by default?
+          [:h2 (:auth/welcome i18n) " " (:user/username (:user session))]
           [:div.field
-           [:button {:type :submit :name :submit :value "logout"} "Logout"]]]]
+           [:button {:type :submit :name :submit :value "logout"}
+            (:auth/logout i18n)]]]]
 
         (= :two-factor step)
         [:main
          [:form {:name :bread-logout :method :post}
-          (hook ::html.login-heading [:h1 "Login to Bread"])
+          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-2fa-code
-                [:p.instruct "Please enter the one-time code from your authenticator app."])
+                [:p.instruct (:auth/enter-totp i18n)])
           [:div.field.two-factor
            [:input {:id :two-factor-code :type :number :name :two-factor-code}]
-           [:button {:type :submit :name :submit :value "verify"} "Verify"]]
+           [:button {:type :submit :name :submit :value "verify"}
+            (:auth/verify i18n)]]
           (when error?
             (hook ::html.invalid-code
                   [:div.error
-                   [:p "Invalid code. Please try again."]]))]]
+                   [:p (:auth/invalid-totp i18n)]]))]]
 
         :default
         [:main
          [:form {:name :bread-login :method :post}
-          (hook ::html.login-heading
-                [:h1 "Login to Bread"])
+          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-username
-                [:p.instruct "Please enter your username and password."])
+                [:p.instruct (:auth/enter-username-password i18n)])
           [:div.field
-           [:label {:for :user} "Username"]
+           [:label {:for :user} (:auth/username i18n)]
            [:input {:id :user :type :text :name :username}]]
           [:div.field
-           [:label {:for :password} "Password"]
+           [:label {:for :password} (:auth/password i18n)]
            [:input {:id :password :type :password :name :password}]]
           (when error?
             (hook ::html.invalid-login
-                  [:div.error
-                   [:p "Invalid username or password."]]))
+                  [:div.error [:p (:auth/invalid-username-password i18n)]]))
           [:div
-           [:button {:type :submit} "Login"]]]])]]))
+           [:button {:type :submit} (:auth/login i18n)]]]])]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
@@ -517,7 +518,11 @@
         {:action/name ::matches-protected-prefix?
          :action/descripion
          "A collection of route prefixes requiring an auth session."
-         :protected-prefixes protected-prefixes})]}
+         :protected-prefixes protected-prefixes})]
+     ::i18n/global-strings
+     [{:action/name ::i18n/merge-global-strings
+       :action/description "Merge strings for auth into global i18n strings."
+       :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
     :config
     {:auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
