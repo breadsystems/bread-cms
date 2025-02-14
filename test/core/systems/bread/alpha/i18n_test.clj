@@ -103,13 +103,14 @@
 
 (deftest test-global-strings-hook
   (are
-    [strings config req]
+    [strings config req extra-plugin]
     (= strings (let [i18n-config (merge config {:query-global-strings? false
                                                 :query-lang? false
                                                 :supported-langs #{:fr :es :en}})]
                  (-> (plugins->loaded [(expansion/plugin)
                                        (route/plugin {:router (naive-router)})
-                                       (i18n/plugin i18n-config)])
+                                       (i18n/plugin i18n-config)
+                                       extra-plugin])
                      (merge req)
                      (bread/hook ::bread/route)
                      (bread/hook ::bread/dispatch)
@@ -117,39 +118,80 @@
                      (get-in [::bread/data :i18n]))))
 
     ;; Passing nil, strings exiplicitly disabled.
-    nil {:global-strings nil} {:uri "/en/_"}
+    nil {:global-strings nil} {:uri "/en/_"} nil
 
     ;; Passing map, strings exiplicitly disabled.
-    nil {:global-strings nil} {:uri "/en/_"}
-    nil {:global-strings nil} {:uri "/en/_"}
-    nil {:global-strings nil} {:uri "/es/_"}
-    nil {:global-strings nil} {:uri "/fr/_"}
+    nil {:global-strings nil} {:uri "/en/_"} nil
+    nil {:global-strings nil} {:uri "/en/_"} nil
+    nil {:global-strings nil} {:uri "/es/_"} nil
+    nil {:global-strings nil} {:uri "/fr/_"} nil
 
     ;; Any logical false works to disable the setting.
+    nil {:global-strings false} {:uri "/en/_"} nil
+    nil {:global-strings false} {:uri "/es/_"} nil
+    nil {:global-strings false} {:uri "/fr/_"} nil
+
+    ;; No global-strings hook is called when setting is disabled.
     nil {:global-strings false} {:uri "/en/_"}
-    nil {:global-strings false} {:uri "/es/_"}
-    nil {:global-strings false} {:uri "/fr/_"}
+    {:hooks {::i18n/global-strings
+             [{:action/name ::bread/value
+               :action/value {:some :data}}]}}
 
     ;; When enabled, it should pick the right language for the request.
     ;; Here the current request is for Español...
     {:one "Uno"}
     {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
     {:uri "/es/_"}
+    nil
 
     ;; ...and here, for Français...
     {:one "Un"}
     {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
     {:uri "/fr/_"}
+    nil
 
     ;; ...and for English.
     {:one "One"}
     {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
     {:uri "/en/_"}
+    nil
 
     ;; For an unsupported lang, it defaults back to fallback-lang.
     {:one "One"}
     {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
     {:uri "/nah/_"}
+    nil
+
+    ;; Test that ::global-strings gets called when building the expansion.
+    ;; This also tests the ::merge-global-strings convenience hook.
+    {:one "Uno" :my/string "¡Hola!"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/es/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:es {:my/string "¡Hola!"}
+                  :en {:my/string "Hello!"}}}]}}
+
+    ;; This time with English...
+    {:one "One" :my/string "Hello!"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/en/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:es {:my/string "¡Hola!"}
+                  :en {:my/string "Hello!"}}}]}}
+
+    ;; Merging unsupported or irrelevant languages should have no effect.
+    {:one "Un"}
+    {:global-strings {:es {:one "Uno"} :fr {:one "Un"} :en {:one "One"}}}
+    {:uri "/fr/_"}
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :strings {:jabbertalky
+                  {:one "TWO THE VORPAL BLADE WENT SKICKER-SNACK!"}}}]}}
 
     ;;
     ))
