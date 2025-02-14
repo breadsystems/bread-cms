@@ -28,7 +28,8 @@
     (= data (-> (plugins->loaded [(db->plugin ::FAKEDB)
                                   (route/plugin {:router (MockRouter.
                                                            req-params)})
-                                  (i18n/plugin {:global-strings nil
+                                  (i18n/plugin {:rtl-langs nil
+                                                :global-strings nil
                                                 :query-global-strings? false
                                                 :query-lang? false})
                                   (navigation/plugin config)])
