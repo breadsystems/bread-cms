@@ -190,7 +190,8 @@
                     {:db config
                      :components {:not-found NotFound}
                      :routes {:router router}
-                     :i18n {:supported-langs #{:en :fr}}
+                     :i18n {:global-strings nil
+                            :supported-langs #{:en :fr}}
                      :renderer false})
           handler (bread/load-handler (bread/app {:plugins plugins}))]
       (are

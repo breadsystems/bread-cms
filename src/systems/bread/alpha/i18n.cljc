@@ -259,7 +259,7 @@
   [req {:keys [global-strings]} _]
   (let [strings (bread/hook req ::global-strings
                             (get global-strings (lang req) {}))]
-    (expansion/add req {:expansion/key :i18n
+    (expansion/add req {:expansion/key :i18n/global-strings
                         :expansion/name ::bread/value
                         :expansion/value strings})))
 
@@ -299,6 +299,17 @@
   (expansion/add req {:expansion/name ::bread/value
                       :expansion/key :field/lang
                       :expansion/value (lang req)}))
+
+(defmethod bread/expand ::merge-all-strings
+  [_ {:as data :i18n/keys [global-strings]}]
+  global-strings)
+
+(defmethod bread/action ::add-merge-all-expansion
+  [req _ _]
+  (expansion/add req {:expansion/name ::merge-all-strings
+                      :expansion/key :i18n
+                      :expansion/description
+                      "Merge global-strings with strings from the db."}))
 
 (defn plugin
   ([]
@@ -344,6 +355,10 @@
       (when query-global-strings?
         {:action/name ::add-strings-query
          :action/description "Add global strings query"})
+      (when (or global-strings query-global-strings?)
+        {:action/name ::add-merge-all-expansion
+         :action/description
+         "Add expansion to merge global strings with db strings."})
       (when query-lang?
         {:action/name ::add-lang-query
          :action/description "Add lang value query"})]}}))

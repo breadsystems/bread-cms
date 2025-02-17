@@ -186,7 +186,7 @@
                      (bread/hook ::bread/route)
                      (bread/hook ::bread/dispatch)
                      (bread/hook ::bread/expand)
-                     (get-in [::bread/data :i18n]))))
+                     (get-in [::bread/data :i18n/global-strings]))))
 
     ;; Passing nil, strings exiplicitly disabled.
     nil {:global-strings nil} {:uri "/en/_"} nil
