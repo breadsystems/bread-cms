@@ -488,9 +488,6 @@
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/users}}))
 
-(defmethod bread/action ::migrations [_ {:keys [schema] :as hook} [migrations]]
-  (concat migrations [schema]))
-
 (defn plugin
   ([]
    (plugin {}))
@@ -504,10 +501,10 @@
           login-uri "/login"}}]
    {:hooks
     {::db/migrations
-     [{:action/name ::migrations
+     [{:action/name ::db/add-schema-migration
        :action/description
-       "Add schema for authentication to the list of migrations to be run."
-       :schema schema}]
+       "Add schema for authentication to the sequence of migrations to be run."
+       :schema-txs schema}]
      ;; NOTE: we hook into ::bread/expand to require auth because
      ;; if we do it before that, the :headers may get wiped out.
      ::bread/expand
