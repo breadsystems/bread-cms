@@ -146,6 +146,12 @@
           (transact conn migration)))))
   app)
 
+(defmethod bread/action ::add-schema-migration
+  [_ {:keys [schema-txs]} [migrations]]
+  "Adds schema-txs, a vector of txs defining the desired schema, to the
+  sequence of migrations to be run."
+  (concat migrations [schema-txs]))
+
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
