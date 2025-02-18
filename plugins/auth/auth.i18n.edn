@@ -25,6 +25,7 @@
         :logout "Logout"
         :login-to-bread "Login to Bread"
         :password "Password"
+        :password-confirmation "Password confirmation"
         :too-many-attempts "You have made too many attempts to log in. Please try again later."
         :username "Username"
         :verify "Verify"
