@@ -8,6 +8,7 @@
                                                  :content-type
                                                  :flash
                                                  :headers
+                                                 :params
                                                  :query-string
                                                  :remote-addr
                                                  :request-method
