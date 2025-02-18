@@ -80,9 +80,11 @@
       @media (prefers-color-scheme: light) {
         :root {
           --color-text-body: hsl(263.9, 79%, 24.3%);
+          --color-text-emphasis: hsl(281.1, 74.7%, 32.5%);
+          --color-stroke-emphasis: hsl(300.8, 83.1%, 34.7%);
           --color-text-error: hsl(309.4, 73.8%, 37.5%);
-          --color-emphasis: hsl(157.4, 64.9%, 25.7%);
-          --color-bg: hsl(115.4, 61.9%, 95.9%);
+          --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
+          --color-bg: hsl(300, 12.8%, 92.4%);
         }
       }
       body {
