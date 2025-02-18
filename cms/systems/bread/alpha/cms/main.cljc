@@ -28,7 +28,8 @@
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit]
-    [systems.bread.alpha.plugin.rum :as rum])
+    [systems.bread.alpha.plugin.rum :as rum]
+    [systems.bread.alpha.plugin.signup :as signup])
   (:import
     [java.time LocalDateTime]
     [java.util Properties UUID])
@@ -198,7 +199,11 @@
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
-        :dispatcher/component #'auth/LoginPage}]]
+        :dispatcher/component #'auth/LoginPage}]
+      ["/signup"
+       {:name :signup
+        :dispatcher/type ::signup/signup=>
+        :dispatcher/component #'signup/SignupPage}]]
      ["/assets/*"
       (reitit.ring/create-resource-handler
         {:parameter :filename
@@ -230,6 +235,7 @@
   (let [plugins (concat
                   (defaults/plugins app-config)
                   [(auth/plugin (:auth app-config))
+                   (signup/plugin (:signup app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
@@ -406,11 +412,20 @@
                           :user/name
                           :user/email
                           :user/preferences
-                          {:user/roles [:role/key
-                                        {:role/abilities [:ability/key]}]}]) .]
+                          {:user/roles
+                           [:role/key
+                            {:role/abilities [:ability/key]}]}
+                          {:invitation/_redeemer
+                           [:db/id
+                            :invitation/code
+                            {:invitation/invited-by
+                             [:db/id :user/username]}]}]) .]
          :in [$ ?username]
          :where [[?e :user/username ?username]]}
-       "coby"))
+       "abc"))
+
+  (q '{:find [(pull ?e [:db/id *])]
+       :where [[?e :invitation/code]]})
   (user/can? coby :edit-posts)
   (defn retraction [{e :db/id :as entity}]
     (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
