@@ -26,7 +26,8 @@
     [:html {:lang (:field/lang data) :dir dir}
      [:head
       [:meta {:content-type "utf-8"}]
-      (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])]
+      (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
+      (auth/LoginStyle data)]
      [:body
       [:pre (pr-str config)]
       [:pre (pr-str session)]
@@ -73,7 +74,7 @@
 
         multi-factor-step?
         [:main
-         "TODO"]
+         ]
 
         ;;
         )]]))
