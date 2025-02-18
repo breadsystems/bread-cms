@@ -70,9 +70,11 @@
       :root {
         --body-max-width: 65ch;
         --border-width: 2px;
-        --color-text-body: hsl(120, 32.6%, 81.4%);
-        --color-text-error: hsl(284.3, 75.5%, 79.2%);
-        --color-emphasis: hsl(157.6, 85.6%, 49%);
+        --color-text-body: hsl(308.6, 12%, 89.6%);
+        --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
+        --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
+        --color-text-error: hsl(284.2, 43.2%, 82.7%);
+        --color-stroke-error: hsl(300.7, 38.3%, 55.5%);
         --color-bg: hsl(264, 41.7%, 4.7%);
       }
       @media (prefers-color-scheme: light) {
@@ -118,7 +120,7 @@
       .error {
         font-weight: 700;
         color: var(--color-text-error);
-        border: var(--border-width) dashed var(--color-text-error);
+        border: var(--border-width) dashed var(--color-stroke-error);
         padding: 12px;
       }
       input {
@@ -135,15 +137,16 @@
         padding: 8px 12px;
         cursor: pointer;
         font-weight: 700;
+        font-size: 1rem;
       }
       button:focus, input:focus {
-        outline: var(--border-width) solid var(--color-emphasis);
+        outline: var(--border-width) solid var(--color-stroke-emphasis);
         border-color: transparent;
       }
       button:hover {
         border-color: transparent;
-        outline: var(--border-width) dashed var(--color-emphasis);
-        color: var(--color-emphasis);
+        outline: var(--border-width) dashed var(--color-stroke-emphasis);
+        color: var(--color-text-emphasis);
       }
       "]]))
 
