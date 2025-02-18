@@ -33,6 +33,10 @@
       [:pre (pr-str session)]
       [:pre (pr-str params)]
       (cond
+        (and signup-step? invite-only? (not (:code params)))
+        [:main
+         [:p "This site is invite-only."]]
+
         (and signup-step? invite-only? (not invitation))
         [:main
          [:p "This invitation link is either invalid or has been redeemed."]]
