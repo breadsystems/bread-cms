@@ -69,6 +69,7 @@
       "
       :root {
         --body-max-width: 65ch;
+        --border-width: 2px;
         --color-text-body: hsl(120, 32.6%, 81.4%);
         --color-text-error: hsl(284.3, 75.5%, 79.2%);
         --color-emphasis: hsl(157.6, 85.6%, 49%);
@@ -116,31 +117,31 @@
       .error {
         font-weight: 700;
         color: var(--color-text-error);
-        border: 2px dashed var(--color-text-error);
-        padding: 8px;
+        border: var(--border-width) dashed var(--color-text-error);
+        padding: 12px;
       }
       input {
-        padding: 8px;
-        border: 2px solid var(--color-text-body);
+        padding: 12px;
+        border: var(--border-width) solid var(--color-text-body);
       }
       button, input {
         color: var(--color-text-body);
         background: var(--color-bg);
-        border: 2px solid var(--color-text-body);
+        border: var(--border-width) solid var(--color-text-body);
         border-radius: 0;
       }
       button {
-        padding: 4px 8px;
+        padding: 8px 12px;
         cursor: pointer;
         font-weight: 700;
       }
       button:focus, input:focus {
-        outline: 2px solid var(--color-emphasis);
+        outline: var(--border-width) solid var(--color-emphasis);
         border-color: transparent;
       }
       button:hover {
         border-color: transparent;
-        outline: 2px dashed var(--color-emphasis);
+        outline: var(--border-width) dashed var(--color-emphasis);
         color: var(--color-emphasis);
       }
       "]]))
