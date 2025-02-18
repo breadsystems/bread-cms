@@ -68,6 +68,7 @@
      [:style
       "
       :root {
+        --body-max-width: 65ch;
         --color-text-body: hsl(120, 32.6%, 81.4%);
         --color-text-error: hsl(284.3, 75.5%, 79.2%);
         --color-emphasis: hsl(157.6, 85.6%, 49%);
@@ -82,7 +83,8 @@
         }
       }
       body {
-        width: 50ch;
+        width: var(--body-max-width);
+        max-width: 96%;
         margin: 5em auto;
         font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
         line-height: 1.5;
