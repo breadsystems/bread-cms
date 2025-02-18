@@ -93,6 +93,7 @@
         min-length (bread/config res :signup/min-password-length)
         max-length (bread/config res :signup/max-password-length)
         password-fields-match? (= password password-confirmation)
+        password? (seq password)
         password-meets-min? (>= (count password) min-length)
         password-meets-max? (<= (count password) max-length)
         valid-password? (bread/hook res ::valid-password?
@@ -107,6 +108,8 @@
         error (when-not valid?
                 (cond
                   ;; TODO i18n
+                  (not password?)
+                  "Password is required."
                   (not password-fields-match?)
                   "Password fields must match."
                   (not password-meets-min?)
