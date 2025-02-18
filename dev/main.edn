@@ -15,6 +15,9 @@
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:login-uri "/~/login"}
+  :signup {:signup-uri "/~/signup"
+           :invite-only? true
+           :require-multi-factor? true}
   :i18n {:query-global-strings? false
          :supported-langs #{:en :fr :es :ar}
          :fallback-lang :ar}
@@ -34,7 +37,10 @@
   :db/migrations #deref #var systems.bread.alpha.schema/initial
   :db/initial-txns
   #concat [#deref #var systems.bread.alpha.cms.data/initial
-           [{:user/username "coby"
+           [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
+             :invitation/invited-by "user.coby"}
+            {:db/id "user.coby"
+             :user/username "coby"
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
