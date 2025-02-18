@@ -48,7 +48,7 @@
          [:form {:name :bread-login :method :post}
           (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
           (hook ::html.enter-username
-                [:p.instruct "Please choose a username"])
+                [:p.instruct "Please choose a username and password."])
           [:div.field
            [:label {:for :user} (:auth/username i18n)]
            [:input {:id :user :type :text :name :username :value (:username params)}]]

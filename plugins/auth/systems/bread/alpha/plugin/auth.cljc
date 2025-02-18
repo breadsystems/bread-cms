@@ -99,7 +99,7 @@
       form {
         display: flex;
         flex-flow: column nowrap;
-        gap: 1em;
+        gap: 1.5em;
         width: 100%;
       }
       .field {
@@ -107,6 +107,7 @@
         flex-flow: row nowrap;
         gap: 3ch;
         justify-content: space-between;
+        align-items: center;
       }
       .field label, field button {
         flex: 1;
