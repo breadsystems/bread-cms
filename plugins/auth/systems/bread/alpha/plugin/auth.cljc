@@ -68,78 +68,78 @@
      [:style
       "
       :root {
-      --color-text-body: hsl(120, 32.6%, 81.4%);
-      --color-text-error: hsl(284.3, 75.5%, 79.2%);
-      --color-emphasis: hsl(157.6, 85.6%, 49%);
-      --color-bg: hsl(264, 41.7%, 4.7%);
+        --color-text-body: hsl(120, 32.6%, 81.4%);
+        --color-text-error: hsl(284.3, 75.5%, 79.2%);
+        --color-emphasis: hsl(157.6, 85.6%, 49%);
+        --color-bg: hsl(264, 41.7%, 4.7%);
       }
       @media (prefers-color-scheme: light) {
-      :root {
-      --color-text-body: hsl(263.9, 79%, 24.3%);
-      --color-text-error: hsl(309.4, 73.8%, 37.5%);
-      --color-emphasis: hsl(157.4, 64.9%, 25.7%);
-      --color-bg: hsl(115.4, 61.9%, 95.9%);
-      }
+        :root {
+          --color-text-body: hsl(263.9, 79%, 24.3%);
+          --color-text-error: hsl(309.4, 73.8%, 37.5%);
+          --color-emphasis: hsl(157.4, 64.9%, 25.7%);
+          --color-bg: hsl(115.4, 61.9%, 95.9%);
+        }
       }
       body {
-      width: 50ch;
-      margin: 5em auto;
-      font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
-      line-height: 1.5;
+        width: 50ch;
+        margin: 5em auto;
+        font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+        line-height: 1.5;
 
-      color: var(--color-text-body);
-      background: var(--color-bg);
+        color: var(--color-text-body);
+        background: var(--color-bg);
       }
       h1, h2, p {
-      margin: 0;
+        margin: 0;
       }
       form {
-      display: flex;
-      flex-flow: column nowrap;
-      gap: 1em;
-      width: 100%;
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 1em;
+        width: 100%;
       }
       .field {
-      display: flex;
-      flex-flow: row nowrap;
-      gap: 3ch;
-      justify-content: space-between;
+        display: flex;
+        flex-flow: row nowrap;
+        gap: 3ch;
+        justify-content: space-between;
       }
       .field label, field button {
-      flex: 1;
+        flex: 1;
       }
       .field input {
-      flex: 2;
+        flex: 2;
       }
       .error {
-      font-weight: 700;
-      color: var(--color-text-error);
-      border: 2px dashed var(--color-text-error);
-      padding: 8px;
+        font-weight: 700;
+        color: var(--color-text-error);
+        border: 2px dashed var(--color-text-error);
+        padding: 8px;
       }
       input {
-      padding: 8px;
-      border: 2px solid var(--color-text-body);
+        padding: 8px;
+        border: 2px solid var(--color-text-body);
       }
       button, input {
-      color: var(--color-text-body);
-      background: var(--color-bg);
-      border: 2px solid var(--color-text-body);
-      border-radius: 0;
+        color: var(--color-text-body);
+        background: var(--color-bg);
+        border: 2px solid var(--color-text-body);
+        border-radius: 0;
       }
       button {
-      padding: 4px 8px;
-      cursor: pointer;
-      font-weight: 700;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-weight: 700;
       }
       button:focus, input:focus {
-      outline: 2px solid var(--color-emphasis);
-      border-color: transparent;
+        outline: 2px solid var(--color-emphasis);
+        border-color: transparent;
       }
       button:hover {
-      border-color: transparent;
-      outline: 2px dashed var(--color-emphasis);
-      color: var(--color-emphasis);
+        border-color: transparent;
+        outline: 2px dashed var(--color-emphasis);
+        color: var(--color-emphasis);
       }
       "]]))
 
