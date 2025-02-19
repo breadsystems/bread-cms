@@ -145,31 +145,19 @@
           (assoc-in [::bread/data :valid?] false)
           (assoc-in [::bread/data :error] error)))))
 
-(comment
-
-  (let [params (:params $effect)
-        algo :bcrypt+blake2b-512
-        now (Date.)
-        tx {:thing/created-at now
-            :thing/updated-at now
-            :user/username (:username params)
-            :user/password (hashers/derive (:password params) {:alg algo})}]
-    [tx])
-
-  (db/transact (:db $effect) [{:thing/created-at (Date.)
-                               :user/username (:username )}])
-
-  ;;
-  )
-
 (defmethod bread/effect ::enact-valid-signup
   [{:keys [conn user]} {:keys [valid? invitation]}]
   (when valid?
     (if invitation
-      (let [code (:invitation/code invitation)]
-        (db/transact conn [{:invitation/code code
-                            :invitation/redeemer user}]))
-      (db/transact conn [user]))))
+      {:effects [{:effect/name ::db/transact
+                  :conn conn
+                  :effect/description "Redeem invitation and create user."
+                  :txs [{:invitation/code (:invitation/code invitation)
+                         :invitation/redeemer user}]}]}
+      {:effects [{:effect/name ::db/transact
+                  :conn conn
+                  :effect/description "Create user"
+                  :txs [user]}]})))
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method session] :as req}]
