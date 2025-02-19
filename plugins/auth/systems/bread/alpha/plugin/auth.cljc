@@ -5,6 +5,7 @@
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
+    [crypto.random :as random]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
     [systems.bread.alpha.component :as component :refer [defc]]
@@ -16,46 +17,36 @@
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
-    [java.net URLEncoder]
-    [java.util UUID]))
-
-(defn- ->uuid [x]
-  (if (string? x)
-    (try (UUID/fromString x) (catch IllegalArgumentException _ nil))
-    x))
+    [java.net URLEncoder]))
 
 (deftype DatalogSessionStore [conn]
   SessionStore
   (ss/delete-session [_ sk]
-    (let [sk (->uuid sk)]
-      (db/transact conn [[:db/retract [:session/uuid sk] :session/uuid]
-                         [:db/retract [:session/uuid sk] :session/data]])
-      sk))
+    (db/transact conn [[:db/retract [:session/id sk] :session/id]
+                       [:db/retract [:session/id sk] :session/data]])
+    sk)
   (ss/read-session [_ sk]
-    (let [sk (->uuid sk)
-          data (db/q @conn
+    (let [data (db/q @conn
                         '{:find [?data .]
                           :in [$ ?sk]
                           :where [[?e :session/data ?data]
-                                  [?e :session/uuid ?sk]]}
+                                  [?e :session/id ?sk]]}
                         sk)]
       (edn/read-string data)))
   (ss/write-session [_ sk data]
-    (let [sk (or (->uuid sk) (UUID/randomUUID))]
-      (db/transact conn [{:session/uuid sk :session/data (pr-str data)}])
+    (let [sk (or sk (random/base64 512))]
+      (db/transact conn [{:session/id sk :session/data (pr-str data)}])
       sk)))
 
 (defn session-store [conn]
   (DatalogSessionStore. conn))
 
 (comment
+  (random/base64 512)
   (URLEncoder/encode "/")
   (URLEncoder/encode "/destination")
   (URLEncoder/encode "/destination?param=1")
   (URLEncoder/encode "/destination?param=1&b=2")
-  (->uuid "bad")
-  (->uuid (str (UUID/fromString "6713c8ff-cca2-4e28-a2ac-a34f3745487b") "-extra"))
-  (->uuid nil)
   (def totp-spec
     (totp/generate-key "Breadbox" "coby@tamayo.email"))
   (totp/valid-code? (:secret-key totp-spec) 414903))
@@ -483,10 +474,10 @@
       :attr/migration "migration.authentication"}
 
      ;; Sessions
-     {:db/ident :session/uuid
-      :attr/label "Session UUID"
+     {:db/ident :session/id
+      :attr/label "Session ID"
       :db/doc "Session identifier."
-      :db/valueType :db.type/uuid
+      :db/valueType :db.type/string
       :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}

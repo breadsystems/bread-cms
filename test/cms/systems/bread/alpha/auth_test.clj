@@ -5,6 +5,7 @@
     [clojure.test :refer [deftest are is testing]]
     [clojure.walk :as walk]
     [ring.middleware.session.store :as ss]
+    [crypto.random :as random]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
@@ -17,7 +18,7 @@
                                               plugins->handler
                                               use-db]])
   (:import
-    [java.util Date UUID]))
+    [java.util Date]))
 
 (def angela
   {:user/username "angela"
@@ -712,25 +713,19 @@
                            (db/q @conn
                                  '{:find [?data .]
                                    :in [$ ?sk]
-                                   :where [[?e :session/uuid ?sk]
+                                   :where [[?e :session/id ?sk]
                                            [?e :session/data ?data]]}
                                  sk))]
 
     (testing "write-session"
-      (testing "passing a UUID"
-        (let [sk (ss/write-session session-store (UUID/randomUUID) {:a :b})]
-          (is (uuid? sk))
-          (is (= "{:a :b}" (get-session-data sk)))))
-
-      (testing "passing a UUID-formatted string"
-        (let [uuid (UUID/randomUUID)
-              sk (ss/write-session session-store (str uuid) {:a :b})]
-          (is (uuid? sk))
+      (testing "passing a random string for session key"
+        (let [sk (ss/write-session session-store (random/base64 512) {:a :b})]
+          (is (string? sk))
           (is (= "{:a :b}" (get-session-data sk)))))
 
       (testing "passing nil session key"
         (let [sk (ss/write-session session-store nil {:a :b})]
-          (is (uuid? sk))
+          (is (string? sk))
           (is (= "{:a :b}" (get-session-data sk))))))
 
     (testing "read-session"
