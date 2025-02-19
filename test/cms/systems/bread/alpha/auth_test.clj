@@ -85,12 +85,11 @@
 (deftest test-authentication-flow
   (are
     [expected auth-config req]
-    (= expected (with-redefs [totp/valid-code? fake-2fa-validator]
-                  (let [handler (config->handler auth-config)
-                        data (-> req handler ->auth-data)]
-                    (if (get-in data [::bread/data :auth/result])
-                      (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
-                      data))))
+    (= expected (let [handler (config->handler auth-config)
+                      data (-> req handler ->auth-data)]
+                  (if (get-in data [::bread/data :auth/result])
+                    (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
+                    data)))
 
     ;; Requesting any page anonymously.
     {:status 302
@@ -284,7 +283,7 @@
      :params {:username "angela" :password "wrongpassword"}
      :uri "/login"}
 
-    ;; POST with correct username & password, no 2FA. Sets session user.
+    ;; POST with correct username & password. Sets session user.
     {:status 302
      :headers {"Location" "/login"
                "content-type" "text/html"}
@@ -298,7 +297,7 @@
      :params {:username "angela" :password "abolition4lyfe"}
      :uri "/login"}
 
-    ;; POST with correct username & password, no 2FA. Sets session user.
+    ;; POST with correct username & password. Sets session user.
     {:status 302
      :headers {"Location" "/login"
                "content-type" "text/html"}
@@ -312,7 +311,7 @@
      :params {:username "bobby" :password "pantherz"}
      :uri "/login"}
 
-    ;; POST with correct password, no 2FA, next param present.
+    ;; POST with correct password.
     ;; Sets session user and redirects.
     {:status 302
      :headers {"Location" "/successful-login"
@@ -342,7 +341,7 @@
      :params {:username "bobby" :password "pantherz" :special "/successful-login-next"}
      :uri "/login"}
 
-    ;; POST with correct password; custom hash algo; no 2FA. Sets session user.
+    ;; POST with correct password; custom hash algo. Sets session user.
     {:status 302
      :headers {"Location" "/login"
                "content-type" "text/html"}
@@ -355,6 +354,45 @@
     {:request-method :post
      :params {:username "crenshaw" :password "intersectionz"}
      :uri "/login"}
+
+    ;; Logout
+    {:status 302
+     :headers {"Location" "/login"
+               "content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}}
+    {}
+    {:request-method :post
+     :session {:user douglass
+               :auth/step :logged-in}
+     :params {:submit "logout"}
+     :uri  "/logout"}
+
+    ;; Logout with custom :login-uri
+    {:status 302
+     :headers {"Location" "/custom"
+               "content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}}
+    {:login-uri "/custom"}
+    {:request-method :post
+     :session {:user douglass
+               :auth/step :logged-in}
+     :params {:submit "logout"}
+     :uri  "/whatever"}
+
+    ;;
+    ))
+
+(deftest test-authentication-flow-with-mfa
+  (are
+    [expected auth-config req]
+    (= expected (with-redefs [totp/valid-code? fake-2fa-validator]
+                  (let [handler (config->handler auth-config)
+                        data (-> req handler ->auth-data)]
+                    (if (get-in data [::bread/data :auth/result])
+                      (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
+                      data))))
 
     ;; Successful username/password login requiring 2FA step. Should not
     ;; set session user.
@@ -577,32 +615,6 @@
      :params {:two-factor-code "123456"
               :special "/successful-2fa-custom-next"}
      :uri  "/login"}
-
-    ;; Logout
-    {:status 302
-     :headers {"Location" "/login"
-               "content-type" "text/html"}
-     :session nil
-     ::bread/data {:session nil}}
-    {}
-    {:request-method :post
-     :session {:user douglass
-               :auth/step :logged-in}
-     :params {:submit "logout"}
-     :uri  "/logout"}
-
-    ;; Logout with custom :login-uri
-    {:status 302
-     :headers {"Location" "/custom"
-               "content-type" "text/html"}
-     :session nil
-     ::bread/data {:session nil}}
-    {:login-uri "/custom"}
-    {:request-method :post
-     :session {:user douglass
-               :auth/step :logged-in}
-     :params {:submit "logout"}
-     :uri  "/whatever"}
 
     ;;
     ))
