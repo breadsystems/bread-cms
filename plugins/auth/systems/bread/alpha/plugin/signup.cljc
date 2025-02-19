@@ -113,7 +113,7 @@
                                     (and password-fields-match?
                                          password-meets-min?
                                          password-meets-max?))
-        existing-user (get-in res [::bread/data :signup/existing-username])
+        existing-user (get-in res [::bread/data :existing-username])
         username-available? (false? existing-user)
         ;; TODO
         valid-code? true
@@ -199,10 +199,10 @@
                    require-mfa? (assoc :user/totp-key totp-key))]
         {:expansions (concat expansions
                              [invitation-query
-                              {:expansion/name ::db/query
+                              {:expansion/key :existing-username
+                               :expansion/name ::db/query
                                :expansion/description
                                "Check for existing users by username."
-                               :expansion/key :signup/existing-username
                                :expansion/db (db/database req)
                                :expansion/args
                                ['{:find [?e .]
