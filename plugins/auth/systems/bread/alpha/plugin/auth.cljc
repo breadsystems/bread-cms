@@ -328,7 +328,7 @@
     (cond
       (not user) nil
 
-      ;; User still needs to verify 2FA, so don't reset the count yet.
+      ;; User still needs to verify MFA, so don't reset the count yet.
       (and valid (= :two-factor (:auth/step result)))
       nil
 
@@ -388,7 +388,7 @@
         [{:action/name ::logout
           :action/description "Unset :session in Ring response."}]}}
 
-      ;; 2FA
+      ;; MFA
       (and post? two-factor?)
       {:expansions
        [user-expansion
