@@ -21,6 +21,7 @@
 (defc SignupPage
   [{:as data
     :keys [error hook i18n invitation session rtl? dir params]
+    [valid? error-key] :validation
     :signup/keys [config effect]}]
   {}
   [:html {:lang (:field/lang data) :dir dir}
@@ -63,11 +64,14 @@
                   :type :password
                   :name :password-confirmation
                   :maxlength (:max-password-length config)}]]
-        (when error
+        (when error-key
           (hook ::html.invalid-signup
-                [:div.error [:p error]]))
+                [:div.error [:p (if (sequential? error-key)
+                                  (let [[k & args] error-key]
+                                    (apply format (get i18n k) args))
+                                  (get i18n error-key))]]))
         [:div
-         [:button {:type :submit} "Create my account"]]]]
+         [:button {:type :submit} (:signup/create-account i18n)]]]]
 
       ;; Open signup
       :default
@@ -75,28 +79,32 @@
        [:pre (pr-str @effect)]
        [:p "open"]]
 
-      #_#_
-      mfa-step?
-      [:main
-       [:form {:name :bread-signup :method :post}
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        (hook ::html.setup-mfa
-              [:p.instruct "Multi-factor authentication is required. Please scan the QR code in your authenticator app, and enter the code below."])
-        [:div "QR CODE HERE"]
-        [:div.field
-         [:label {:for :password} (:auth/password i18n)]
-         [:input {:id :password
-                  :type :password
-                  :name :password
-                  :maxlength (:max-password-length config)}]]
-        (when error
-          (hook ::html.invalid-login
-                [:div.error [:p error]]))
-        [:div
-         [:button {:type :submit} "Create my account"]]]]
-
       ;;
       )]])
+
+(defmethod bread/expand ::validate
+  [{{:auth/keys [min-password-length max-password-length]} :config
+    {:keys [username password password-confirmation]} :params}
+   {:as data :keys [existing-username invitation]}]
+  (let [password? (seq password)
+        password-fields-match? (= password password-confirmation)
+        password-gte-min? (>= (count password) min-password-length)
+        password-lte-max? (<= (count password) max-password-length)
+        valid-password? (and password-fields-match?
+                             password-gte-min?
+                             password-lte-max?)
+        username-available? (false? existing-username)
+        valid-code? true ;; TODO consider require-mfa?
+        valid? (and username-available? valid-password? valid-code?)
+        error (when-not valid?
+                (cond
+                  (not password?) :auth/password-required
+                  (not password-fields-match?) :auth/passwords-must-match
+                  (not password-gte-min?)
+                  [:auth/password-must-be-at-least min-password-length]
+                  (not password-lte-max?)
+                  [:auth/password-must-be-at-most max-password-length]))]
+    [valid? error]))
 
 (defmethod bread/action ::validate
   [{:as res
@@ -148,7 +156,7 @@
           (assoc-in [::bread/data :error] error)))))
 
 (defmethod bread/effect ::enact-valid-signup
-  [{:keys [conn user]} {:keys [valid? invitation]}]
+  [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
   (when valid?
     (if invitation
       {:effects [{:effect/name ::db/transact
@@ -211,13 +219,18 @@
                                ['{:find [?e .]
                                   :in [$ ?username]
                                   :where [[?e :user/username ?username]]}
-                                (:username params)]}])
+                                (:username params)]}
+                              {:expansion/key :validation
+                               :expansion/name ::validate
+                               :params params
+                               :config (::bread/config req)}])
          :effects
          [{:effect/name ::enact-valid-signup
            :effect/key :signup/effect
            :effect/description "If the signup is valid, create the account."
            :user user
            :conn (db/connection req)}]
+         #_#_
          :hooks
          {::bread/expand
           [{:action/name ::validate
