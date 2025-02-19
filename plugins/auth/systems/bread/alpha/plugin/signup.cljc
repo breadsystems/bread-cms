@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.plugin.signup
   (:require
     [buddy.hashers :as hashers]
+    [one-time.core :as ot]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.database :as db]
@@ -16,8 +18,8 @@
 
 (defc SignupPage
   [{:as data
-    :keys [error hook i18n session rtl? dir params]
-    :signup/keys [config effect invitation]}]
+    :keys [error hook i18n invitation session rtl? dir params]
+    :signup/keys [config effect]}]
   {}
   (let [step (:signup/step session)
         signup-step? (nil? step)
@@ -165,18 +167,13 @@
   )
 
 (defmethod bread/effect ::enact-valid-signup
-  [{:keys [params conn hash-algorithm]} {:keys [valid?] :signup/keys [invitation]}]
+  [{:keys [conn user]} {:keys [valid? invitation]}]
   (when valid?
-    (let [password-hash (hashers/derive (:password params) {:alg hash-algorithm})
-          now (Date.)
-          user {:user/username (:username params)
-                :user/password password-hash
-                :thing/created-at now}]
-      (if invitation
-        (let [code (:invitation/code invitation)]
-          (db/transact conn [{:invitation/code code
-                              :invitation/redeemer user}]))
-        (db/transact conn [user])))))
+    (if invitation
+      (let [code (:invitation/code invitation)]
+        (db/transact conn [{:invitation/code code
+                            :invitation/redeemer user}]))
+      (db/transact conn [user]))))
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method session] :as req}]
@@ -195,7 +192,7 @@
                            {:expansion/name ::db/query
                             :expansion/description
                             "Check for valid invite code."
-                            :expansion/key :signup/invitation
+                            :expansion/key :invitation
                             :expansion/db (db/database req)
                             :expansion/args
                             ['{:find [(pull ?e [:invitation/code]) .]
@@ -214,30 +211,36 @@
 
       ;; Submitting new username/password
       (and post? signup-step?)
-      {:expansions (concat expansions
-                           [invitation-query
-                            {:expansion/name ::db/query
-                             :expansion/description
-                             "Check for existing users by username."
-                             :expansion/key :signup/existing-username
-                             :expansion/db (db/database req)
-                             :expansion/args
-                             ['{:find [?e .]
-                                :in [$ ?username]
-                                :where [[?e :user/username ?username]]}
-                              (:username params)]}])
-       :effects
-       [{:effect/name ::enact-valid-signup
-         :effect/key :signup/effect
-         :effect/description "If the signup is valid, create the account."
-         :params params
-         :conn (db/connection req)
-         :hash-algorithm (bread/config req :auth/hash-algorithm)}]
-       :hooks
-       {::bread/expand
-        [{:action/name ::validate
-          :action/description "Set :session in Ring response"
-          :config config}]}}
+      (let [hash-algo (bread/config req :auth/hash-algorithm)
+            password-hash (hashers/derive (:password params) {:alg hash-algo})
+            totp-key (when require-multi-factor? (ot/generate-secret-key))
+            user (cond-> {:user/username (:username params)
+                          :user/password password-hash
+                          :thing/created-at (Date.)}
+                   require-multi-factor? (assoc :user/totp-key totp-key))]
+        {:expansions (concat expansions
+                             [invitation-query
+                              {:expansion/name ::db/query
+                               :expansion/description
+                               "Check for existing users by username."
+                               :expansion/key :signup/existing-username
+                               :expansion/db (db/database req)
+                               :expansion/args
+                               ['{:find [?e .]
+                                  :in [$ ?username]
+                                  :where [[?e :user/username ?username]]}
+                                (:username params)]}])
+         :effects
+         [{:effect/name ::enact-valid-signup
+           :effect/key :signup/effect
+           :effect/description "If the signup is valid, create the account."
+           :user user
+           :conn (db/connection req)}]
+         :hooks
+         {::bread/expand
+          [{:action/name ::validate
+            :action/description "Set :session in Ring response"
+            :config config}]}})
 
       ;; MFA required, rendering QR code
       (and get? mfa-step?)
