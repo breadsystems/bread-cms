@@ -20,9 +20,8 @@
 
 (defc SignupPage
   [{:as data
-    :keys [error hook i18n invitation session rtl? dir params]
-    [valid? error-key] :validation
-    :signup/keys [config effect]}]
+    :keys [config error hook i18n invitation rtl? dir params]
+    [valid? error-key] :validation}]
   {}
   [:html {:lang (:field/lang data) :dir dir}
    [:head
@@ -31,19 +30,19 @@
     (auth/LoginStyle data)]
    [:body
     (cond
-      (and (:invite-only? config) (not (:code params)))
+      (and (:signup/invite-only? config) (not (:code params)))
       [:main
        [:form
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p "This site is invite-only."]]]
 
-      (and (:invite-only? config) (not invitation))
+      (and (:signup/invite-only? config) (not invitation))
       [:main
        [:form
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p "This invitation link is either invalid or has been redeemed."]]]
 
-      (:invite-only? config)
+      (:signup/invite-only? config)
       [:main
        [:form {:name :bread-signup :method :post}
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
@@ -57,13 +56,13 @@
          [:input {:id :password
                   :type :password
                   :name :password
-                  :maxlength (:max-password-length config)}]]
+                  :maxlength (:auth/max-password-length config)}]]
         [:div.field
          [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
          [:input {:id :password-confirmation
                   :type :password
                   :name :password-confirmation
-                  :maxlength (:max-password-length config)}]]
+                  :maxlength (:auth/max-password-length config)}]]
         (when error-key
           (hook ::html.invalid-signup
                 [:div.error [:p (if (sequential? error-key)
@@ -76,7 +75,6 @@
       ;; Open signup
       :default
       [:main
-       [:pre (pr-str @effect)]
        [:p "open"]]
 
       ;;
@@ -86,7 +84,8 @@
   [{{:auth/keys [min-password-length max-password-length]} :config
     {:keys [username password password-confirmation]} :params}
    {:as data :keys [existing-username invitation]}]
-  (let [password? (seq password)
+  (let [username? (seq username)
+        password? (seq password)
         password-fields-match? (= password password-confirmation)
         password-gte-min? (>= (count password) min-password-length)
         password-lte-max? (<= (count password) max-password-length)
@@ -98,7 +97,7 @@
         valid? (and username-available? valid-password? valid-code?)
         error (when-not valid?
                 (cond
-                  (not password?) :auth/password-required
+                  (or (not username?) (not password?)) :signup/all-fields-required
                   (not password-fields-match?) :auth/passwords-must-match
                   (not password-gte-min?)
                   [:auth/password-must-be-at-least min-password-length]
@@ -170,13 +169,8 @@
                   :txs [user]}]})))
 
 (defmethod bread/dispatch ::signup=>
-  [{:keys [params request-method session] :as req}]
-  (let [invite-only? (bread/config req :signup/invite-only?)
-        require-mfa? (bread/config req :auth/require-mfa?)
-        config {:invite-only? (bread/config req :signup/invite-only?)
-                :require-mfa? (bread/config req :auth/require-mfa?)
-                :min-password-length (bread/config req :auth/min-password-length)
-                :max-password-length (bread/config req :auth/max-password-length)}
+  [{:keys [params request-method] :as req}]
+  (let [require-mfa? (bread/config req :auth/require-mfa?)
         invitation-query (when (:code params)
                            {:expansion/name ::db/query
                             :expansion/description
@@ -189,11 +183,10 @@
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
                              (->uuid (:code params))]})
-        expansions [{;; TODO ::bread/config
+        expansions [{:expansion/key :config
                      :expansion/name ::bread/value
                      :expansion/description "Signup config"
-                     :expansion/key :signup/config
-                     :expansion/value config}]]
+                     :expansion/value (::bread/config req)}]]
     (cond
       ;; Viewing signup page
       (= :get request-method)
@@ -233,31 +226,9 @@
          #_#_
          :hooks
          {::bread/expand
-          [{:action/name ::validate
-            :action/description "Set :session in Ring response"
-            :config config}]}})
-
-      #_#_
-      ;; MFA required, rendering QR code
-      (and get? mfa-step?)
-      {;; render QR code
-       ;; save TOTP key in session?
-       :expansions (concat expansions [])}
-
-      #_#_
-      ;; MFA required, saving TOTP key
-      (and post? mfa-step?)
-      {:expansions (concat expansions [])
-       ;; validate TOTP
-       ;; save TOTP key
-       ;; reset session
-       :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response"
-          :config config}]}}
-
-      )))
+          [{:action/name ::redirect
+            :action/description "Redirect to login"
+            :config (::bread/config req)}]}}))))
 
 (def
   ^{:doc "Schema for invitations"}
