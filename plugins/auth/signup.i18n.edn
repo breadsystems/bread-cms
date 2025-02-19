@@ -1,0 +1,8 @@
+{
+ :en
+ #:signup{
+          :error "Account locked"
+          :signup "Signup"
+          :create-account "Create account"
+          }
+ }
