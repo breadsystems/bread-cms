@@ -165,8 +165,8 @@
         require-mfa? (bread/config req :auth/require-mfa?)
         config {:invite-only? (bread/config req :signup/invite-only?)
                 :require-mfa? (bread/config req :auth/require-mfa?)
-                :min-password-length (bread/config req :signup/min-password-length)
-                :max-password-length (bread/config req :signup/max-password-length)}
+                :min-password-length (bread/config req :auth/min-password-length)
+                :max-password-length (bread/config req :auth/max-password-length)}
         invitation-query (when (:code params)
                            {:expansion/name ::db/query
                             :expansion/description
@@ -291,13 +291,8 @@
   ([]
    (plugin {}))
   ([{:keys [;; TODO email as a normal hook
-            invite-only? min-password-length max-password-length
-            invitation-expiration-seconds signup-uri require-mfa?
-            mfa-issuer]
+            invite-only? invitation-expiration-seconds signup-uri]
      :or {invite-only? false
-          require-mfa? false
-          min-password-length 12
-          max-password-length 72
           invitation-expiration-seconds (* 72 60 60)
           signup-uri "/signup"}}]
    {:hooks
@@ -315,8 +310,5 @@
        :strings {:en #:signup{:signup "Signup"}}}]}
     :config
     {:signup/invite-only? invite-only?
-     :signup/min-password-length min-password-length
-     :signup/max-password-length max-password-length
      :signup/invitation-expiration-seconds invitation-expiration-seconds
-     :signup/signup-uri signup-uri
-     :signup/mfa-issuer mfa-issuer}}))
+     :signup/signup-uri signup-uri}}))
