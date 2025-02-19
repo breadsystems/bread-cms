@@ -21,84 +21,82 @@
     :keys [error hook i18n invitation session rtl? dir params]
     :signup/keys [config effect]}]
   {}
-  (let [step (:signup/step session)
-        signup-step? (nil? step)
-        mfa-step? (= :multi-factor step)
-        {:keys [invite-only? require-mfa?]} config]
-    [:html {:lang (:field/lang data) :dir dir}
-     [:head
-      [:meta {:content-type "utf-8"}]
-      (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
-      (auth/LoginStyle data)]
-     [:body
-      [:pre (pr-str config)]
-      [:pre (pr-str session)]
-      [:pre (pr-str params)]
-      (cond
-        (and signup-step? invite-only? (not (:code params)))
-        [:main
-         [:p "This site is invite-only."]]
+  [:html {:lang (:field/lang data) :dir dir}
+   [:head
+    [:meta {:content-type "utf-8"}]
+    (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
+    (auth/LoginStyle data)]
+   [:body
+    (cond
+      (and (:invite-only? config) (not (:code params)))
+      [:main
+       [:form
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        [:p "This site is invite-only."]]]
 
-        (and signup-step? invite-only? (not invitation))
-        [:main
-         [:p "This invitation link is either invalid or has been redeemed."]]
+      (and (:invite-only? config) (not invitation))
+      [:main
+       [:form
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        [:p "This invitation link is either invalid or has been redeemed."]]]
 
-        (and signup-step? invite-only?)
-        [:main
-         [:p (:code params)]
-         [:pre (pr-str invitation)]
-         [:form {:name :bread-signup :method :post}
-          (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-          (hook ::html.enter-username
-                [:p.instruct "Please choose a username and password."])
-          [:div.field
-           [:label {:for :user} (:auth/username i18n)]
-           [:input {:id :user :type :text :name :username :value (:username params)}]]
-          [:div.field
-           [:label {:for :password} (:auth/password i18n)]
-           [:input {:id :password
-                    :type :password
-                    :name :password
-                    :maxlength (:max-password-length config)}]]
-          [:div.field
-           [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
-           [:input {:id :password-confirmation
-                    :type :password
-                    :name :password-confirmation
-                    :maxlength (:max-password-length config)}]]
-          (when error
-            (hook ::html.invalid-signup
-                  [:div.error [:p error]]))
-          [:div
-           [:button {:type :submit} "Create my account"]]]]
+      (:invite-only? config)
+      [:main
+       [:p (:code params)]
+       [:pre (pr-str invitation)]
+       [:form {:name :bread-signup :method :post}
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        (hook ::html.enter-username
+              [:p.instruct "Please choose a username and password."])
+        [:div.field
+         [:label {:for :user} (:auth/username i18n)]
+         [:input {:id :user :type :text :name :username :value (:username params)}]]
+        [:div.field
+         [:label {:for :password} (:auth/password i18n)]
+         [:input {:id :password
+                  :type :password
+                  :name :password
+                  :maxlength (:max-password-length config)}]]
+        [:div.field
+         [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+         [:input {:id :password-confirmation
+                  :type :password
+                  :name :password-confirmation
+                  :maxlength (:max-password-length config)}]]
+        (when error
+          (hook ::html.invalid-signup
+                [:div.error [:p error]]))
+        [:div
+         [:button {:type :submit} "Create my account"]]]]
 
-        ;; Open signup
-        signup-step?
-        [:main
-         [:pre (pr-str @effect)]
-         [:p "open"]]
+      ;; Open signup
+      :default
+      [:main
+       [:pre (pr-str @effect)]
+       [:p "open"]]
 
-        mfa-step?
-        [:main
-         [:form {:name :bread-signup :method :post}
-          (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-          (hook ::html.setup-mfa
-                [:p.instruct "Multi-factor authentication is required. Please scan the QR code in your authenticator app, and enter the code below."])
-          [:div "QR CODE HERE"]
-          [:div.field
-           [:label {:for :password} (:auth/password i18n)]
-           [:input {:id :password
-                    :type :password
-                    :name :password
-                    :maxlength (:max-password-length config)}]]
-          (when error
-            (hook ::html.invalid-login
-                  [:div.error [:p error]]))
-          [:div
-           [:button {:type :submit} "Create my account"]]]]
+      #_#_
+      mfa-step?
+      [:main
+       [:form {:name :bread-signup :method :post}
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        (hook ::html.setup-mfa
+              [:p.instruct "Multi-factor authentication is required. Please scan the QR code in your authenticator app, and enter the code below."])
+        [:div "QR CODE HERE"]
+        [:div.field
+         [:label {:for :password} (:auth/password i18n)]
+         [:input {:id :password
+                  :type :password
+                  :name :password
+                  :maxlength (:max-password-length config)}]]
+        (when error
+          (hook ::html.invalid-login
+                [:div.error [:p error]]))
+        [:div
+         [:button {:type :submit} "Create my account"]]]]
 
-        ;;
-        )]]))
+      ;;
+      )]])
 
 (defmethod bread/action ::validate
   [{:as res
