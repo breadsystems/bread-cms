@@ -236,6 +236,8 @@
         logged-in? (and valid (or (and two-factor-step? two-factor-enabled?)
                                   (and login-step? (not two-factor-enabled?))))
         session (cond
+                  (and require-mfa? (not (:user/totp-key user)))
+                  (assoc session :auth/user user :auth/step :setup-two-factor)
                   two-factor-next?
                   (assoc session :auth/user user :auth/step next-step)
                   logged-in? (-> session

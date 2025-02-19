@@ -420,9 +420,9 @@
      :headers {"Location" "/login?next=%2Fsetup-mfa"
                "content-type" "text/html"}
      :session {:auth/user crenshaw
-               :auth/step :two-factor}
+               :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw
-                             :auth/step :two-factor}
+                             :auth/step :setup-two-factor}
                    :auth/result {:update false
                                  :valid true
                                  :user crenshaw}}}
