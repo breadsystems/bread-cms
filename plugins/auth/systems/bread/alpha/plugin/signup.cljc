@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.plugin.signup
   (:require
     [buddy.hashers :as hashers]
+    [clojure.edn :as edn]
+    [clojure.java.io :as io]
     [one-time.core :as ot]
 
     [systems.bread.alpha.core :as bread]
@@ -179,7 +181,8 @@
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
                              (->uuid (:code params))]})
-        expansions [{:expansion/name ::bread/value
+        expansions [{;; TODO ::bread/config
+                     :expansion/name ::bread/value
                      :expansion/description "Signup config"
                      :expansion/key :signup/config
                      :expansion/value config}]]
@@ -307,7 +310,7 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for signup into global strings."
-       :strings {:en #:signup{:signup "Signup"}}}]}
+       :strings (edn/read-string (slurp (io/resource "signup.i18n.edn")))}]}
     :config
     {:signup/invite-only? invite-only?
      :signup/invitation-expiration-seconds invitation-expiration-seconds
