@@ -44,8 +44,8 @@
              :user/name "Coby Tamayo"
              :user/email "coby@bread.systems"
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
-             ;#_#_ ;; Uncomment to enable 2FA
-             :user/totp-key "AWWMEFM4ADBSQRET"
+             ;#_#_ ;; Uncomment to enable MFA
+             :user/totp-key "B67CWTTTP7UQ5KWT"
              :user/failed-login-count 0
              :user/preferences "{:lang :en}"
              :user/roles

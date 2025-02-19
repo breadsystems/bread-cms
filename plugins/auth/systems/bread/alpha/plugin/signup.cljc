@@ -21,7 +21,7 @@
   {}
   (let [step (:signup/step session)
         signup-step? (nil? step)
-        multi-factor-step? (= :multi-factor step)
+        mfa-step? (= :multi-factor step)
         {:keys [invite-only? require-multi-factor?]} config]
     [:html {:lang (:field/lang data) :dir dir}
      [:head
@@ -45,7 +45,7 @@
         [:main
          [:p (:code params)]
          [:pre (pr-str invitation)]
-         [:form {:name :bread-login :method :post}
+         [:form {:name :bread-signup :method :post}
           (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
           (hook ::html.enter-username
                 [:p.instruct "Please choose a username and password."])
@@ -65,7 +65,7 @@
                     :name :password-confirmation
                     :maxlength (:max-password-length config)}]]
           (when error
-            (hook ::html.invalid-login
+            (hook ::html.invalid-signup
                   [:div.error [:p error]]))
           [:div
            [:button {:type :submit} "Create my account"]]]]
@@ -76,9 +76,24 @@
          [:pre (pr-str @effect)]
          [:p "open"]]
 
-        multi-factor-step?
+        mfa-step?
         [:main
-         ]
+         [:form {:name :bread-signup :method :post}
+          (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+          (hook ::html.setup-multi-factor
+                [:p.instruct "Multi-factor authentication is required. Please scan the QR code in your authenticator app, and enter the code below."])
+          [:div "QR CODE HERE"]
+          [:div.field
+           [:label {:for :password} (:auth/password i18n)]
+           [:input {:id :password
+                    :type :password
+                    :name :password
+                    :maxlength (:max-password-length config)}]]
+          (when error
+            (hook ::html.invalid-login
+                  [:div.error [:p error]]))
+          [:div
+           [:button {:type :submit} "Create my account"]]]]
 
         ;;
         )]]))
