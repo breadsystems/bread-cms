@@ -42,8 +42,6 @@
 
       (:invite-only? config)
       [:main
-       [:p (:code params)]
-       [:pre (pr-str invitation)]
        [:form {:name :bread-signup :method :post}
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         (hook ::html.enter-username
@@ -175,13 +173,8 @@
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method session] :as req}]
-  (let [{:signup/keys [step]} session
-        invite-only? (bread/config req :signup/invite-only?)
+  (let [invite-only? (bread/config req :signup/invite-only?)
         require-mfa? (bread/config req :auth/require-mfa?)
-        post? (= :post request-method)
-        get? (= :get request-method)
-        signup-step? (nil? step)
-        mfa-step? (= :multi-factor step)
         config {:invite-only? (bread/config req :signup/invite-only?)
                 :require-mfa? (bread/config req :auth/require-mfa?)
                 :min-password-length (bread/config req :signup/min-password-length)
@@ -204,11 +197,11 @@
                      :expansion/value config}]]
     (cond
       ;; Viewing signup page
-      (and get? signup-step?)
+      (= :get request-method)
       {:expansions (concat expansions [invitation-query])}
 
       ;; Submitting new username/password
-      (and post? signup-step?)
+      (= :post request-method)
       (let [hash-algo (bread/config req :auth/hash-algorithm)
             password-hash (hashers/derive (:password params) {:alg hash-algo})
             totp-key (when require-mfa? (ot/generate-secret-key))
@@ -240,12 +233,14 @@
             :action/description "Set :session in Ring response"
             :config config}]}})
 
+      #_#_
       ;; MFA required, rendering QR code
       (and get? mfa-step?)
       {;; render QR code
        ;; save TOTP key in session?
        :expansions (concat expansions [])}
 
+      #_#_
       ;; MFA required, saving TOTP key
       (and post? mfa-step?)
       {:expansions (concat expansions [])
