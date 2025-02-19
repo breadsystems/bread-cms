@@ -299,6 +299,7 @@
   (def $req {:uri "/en/404" :request-method :get})
 
   (do
+    (def $req {:uri "/~/signup" :request-method :get})
     (require '[flow-storm.api :as flow]
              '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
     (def ->app (partial util/->app (:bread/app @system)))
