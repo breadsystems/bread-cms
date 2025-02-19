@@ -17,8 +17,7 @@
   :auth {:login-uri "/~/login"
          :require-mfa? true}
   :signup {:signup-uri "/~/signup"
-           :invite-only? true
-           :require-multi-factor? true}
+           :invite-only? true}
   :i18n {:query-global-strings? false
          :supported-langs #{:en :fr :es :ar}
          :fallback-lang :ar}
