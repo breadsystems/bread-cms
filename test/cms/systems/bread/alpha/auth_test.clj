@@ -4,8 +4,10 @@
     [clj-totp.core :as totp]
     [clojure.test :refer [deftest are is testing]]
     [clojure.walk :as walk]
-    [ring.middleware.session.store :as ss]
     [crypto.random :as random]
+    [one-time.core :as ot]
+    [ring.middleware.session.store :as ss]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
@@ -58,9 +60,9 @@
   (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
 
 (defn fake-2fa-validator
-  ([^String _ ^long code]
+  ([^long code ^String _]
    (= 123456 code))
-  ([^String _ ^long code ^long t]
+  ([^long code ^String _ ^long t]
    (= 123456 code)))
 
 (defn- config->handler [auth-config]
@@ -387,7 +389,7 @@
 (deftest test-authentication-flow-with-mfa
   (are
     [expected auth-config req]
-    (= expected (with-redefs [totp/valid-code? fake-2fa-validator]
+    (= expected (with-redefs [ot/is-valid-totp-token? fake-2fa-validator]
                   (let [handler (config->handler auth-config)
                         data (-> req handler ->auth-data)]
                     (if (get-in data [::bread/data :auth/result])

@@ -1,11 +1,11 @@
 (ns systems.bread.alpha.plugin.auth
   (:require
     [buddy.hashers :as hashers]
-    [clj-totp.core :as totp]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
+    [one-time.core :as ot]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
     [systems.bread.alpha.component :as component :refer [defc]]
@@ -47,9 +47,10 @@
   (URLEncoder/encode "/destination")
   (URLEncoder/encode "/destination?param=1")
   (URLEncoder/encode "/destination?param=1&b=2")
-  (def totp-spec
-    (totp/generate-key "Breadbox" "coby@tamayo.email"))
-  (totp/valid-code? (:secret-key totp-spec) 414903))
+  (def $secret (ot/generate-secret-key))
+  (ot/get-totp-token $secret)
+  (ot/is-valid-totp-token? 812211 $secret)
+  (ot/is-valid-totp-token? (ot/get-totp-token $secret) $secret))
 
 (defc LoginStyle [{:keys [hook]}]
   {}
@@ -302,7 +303,7 @@
       (let [code (try
                    (Integer. two-factor-code)
                    (catch java.lang.NumberFormatException _ 0))
-            valid (totp/valid-code? (:user/totp-key user) code)]
+            valid (ot/is-valid-totp-token? code (:user/totp-key user))]
         {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
