@@ -1,6 +1,7 @@
 {
  :en
  #:signup{
+          :all-fields-required "All fields are required."
           :error "Account locked"
           :signup "Signup"
           :create-account "Create account"
