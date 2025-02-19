@@ -409,6 +409,7 @@
   (def coby
     (q '{:find [(pull ?e [:db/id
                           :user/username
+                          :user/totp-key
                           :user/name
                           :user/email
                           :user/preferences
