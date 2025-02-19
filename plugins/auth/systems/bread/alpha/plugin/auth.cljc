@@ -495,9 +495,11 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds
-            next-param login-uri protected-prefixes require-mfa?]
-     :or {session-backend :db
+  ([{:keys [hash-algorithm max-failed-login-count lock-seconds
+            next-param login-uri protected-prefixes require-mfa?
+            min-password-length max-password-length]
+     :or {min-password-length 12
+          max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
           lock-seconds 3600
@@ -529,6 +531,8 @@
     {:auth/require-mfa? require-mfa?
      :auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
+     :auth/min-password-length min-password-length
+     :auth/max-password-length max-password-length
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
      :auth/login-uri login-uri}}))
