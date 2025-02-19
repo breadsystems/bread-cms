@@ -22,6 +22,8 @@
   (:import
     [java.util Date]))
 
+(def SECRET "keep it secret, keep it safe")
+
 (def angela
   {:user/username "angela"
    :user/failed-login-count 0})
@@ -37,7 +39,7 @@
 (def douglass
   {:user/username "douglass"
    :user/failed-login-count 0
-   :user/totp-key "fake"})
+   :user/totp-key SECRET})
 
 (def config
   {:db/type :datahike
@@ -58,12 +60,6 @@
 (defmethod bread/action ::route
   [req _ _]
   (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
-
-(defn fake-2fa-validator
-  ([^long code ^String _]
-   (= 123456 code))
-  ([^long code ^String _ ^long t]
-   (= 123456 code)))
 
 (defn- config->handler [auth-config]
   (plugins->handler
@@ -386,10 +382,17 @@
     ;;
     ))
 
+(defn valid-code?
+  ([^long code ^String secret]
+   (and (= 123456 code) (= SECRET secret)))
+  ([^long code ^String secret ^long _]
+   (and (= 123456 code) (= SECRET secret))))
+
 (deftest test-authentication-flow-with-mfa
   (are
     [expected auth-config req]
-    (= expected (with-redefs [ot/is-valid-totp-token? fake-2fa-validator]
+    (= expected (with-redefs [ot/is-valid-totp-token? valid-code?
+                              ot/generate-secret-key (constantly SECRET)]
                   (let [handler (config->handler auth-config)
                         data (-> req handler ->auth-data)]
                     (if (get-in data [::bread/data :auth/result])
