@@ -70,7 +70,7 @@
       :root {
         --body-max-width: 65ch;
         --border-width: 2px;
-        --color-text-body: hsl(308.6, 12%, 89.6%);
+        --color-text-body: hsl(300, 100%, 98.6%);
         --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
         --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
         --color-text-error: hsl(284.2, 43.2%, 82.7%);
