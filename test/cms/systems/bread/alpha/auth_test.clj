@@ -414,6 +414,23 @@
      :params {:username "douglass" :password "liber4tion"}
      :uri "/login"}
 
+    ;; Successful username/password login requiring 2FA site-wide, with
+    ;; :user/totp-key missing. Should not redirect or set session user yet!
+    {:status 302
+     :headers {"Location" "/login?next=%2Fsetup-mfa"
+               "content-type" "text/html"}
+     :session {:auth/user crenshaw
+               :auth/step :two-factor}
+     ::bread/data {:session {:auth/user crenshaw
+                             :auth/step :two-factor}
+                   :auth/result {:update false
+                                 :valid true
+                                 :user crenshaw}}}
+    {:require-mfa? true}
+    {:request-method :post
+     :params {:username "crenshaw" :password "intersectionz" :next "/setup-mfa"}
+     :uri "/login"}
+
     ;; Successful username/password login requiring 2FA step, next param
     ;; Should not redirect or set session user yet!
     {:status 302

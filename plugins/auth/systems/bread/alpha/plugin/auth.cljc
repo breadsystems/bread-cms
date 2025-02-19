@@ -223,12 +223,12 @@
 
 (defmethod bread/action ::set-session
   [{::bread/keys [data] :keys [params query-string session] :as res}
-   {:keys [max-failed-login-count]} _]
+   {:keys [max-failed-login-count require-mfa?]} _]
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
         login-step? (nil? current-step)
         two-factor-step? (= :two-factor current-step)
-        two-factor-enabled? (boolean (:user/totp-key user))
+        two-factor-enabled? (or require-mfa? (:user/totp-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
@@ -356,6 +356,7 @@
 (defmethod bread/dispatch ::login=>
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step]} session
+        require-mfa? (bread/config req :auth/require-mfa?)
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
         lock-seconds (bread/config req :auth/lock-seconds)
         post? (= :post request-method)
@@ -409,6 +410,7 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response"
+          :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
 
       ;; Login
@@ -417,6 +419,7 @@
        [user-expansion
         {:expansion/name ::authenticate
          :expansion/key :auth/result
+         :require-mfa? require-mfa?
          :lock-seconds lock-seconds
          :plaintext-password (:password params)}]
        :effects
@@ -431,6 +434,7 @@
        {::bread/expand
         [{:action/name ::set-session
           :action/description "Set :session in Ring response."
+          :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
 
       :default {})))
