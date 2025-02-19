@@ -186,7 +186,7 @@
         post? (= :post request-method)
         get? (= :get request-method)
         signup-step? (nil? step)
-        multi-factor-step? (= :multi-factor step)
+        mfa-step? (= :multi-factor step)
         config {:invite-only? (bread/config req :signup/invite-only?)
                 :require-multi-factor? (bread/config req :signup/require-multi-factor?)
                 :min-password-length (bread/config req :signup/min-password-length)
@@ -240,14 +240,13 @@
           :config config}]}}
 
       ;; MFA required, rendering QR code
-      (and get? multi-factor-step?)
-      {
-       ;; render QR code
+      (and get? mfa-step?)
+      {;; render QR code
        ;; save TOTP key in session?
        :expansions (concat expansions [])}
 
       ;; MFA required, saving TOTP key
-      (and post? multi-factor-step?)
+      (and post? mfa-step?)
       {:expansions (concat expansions [])
        ;; validate TOTP
        ;; save TOTP key
@@ -308,8 +307,9 @@
   ([]
    (plugin {}))
   ([{:keys [;; TODO email as a normal hook
-            invite-only? require-multi-factor? min-password-length
-            max-password-length invitation-expiration-seconds signup-uri]
+            invite-only? min-password-length max-password-length
+            invitation-expiration-seconds signup-uri require-multi-factor?
+            mfa-issuer]
      :or {invite-only? false
           require-multi-factor? false
           min-password-length 12
@@ -335,4 +335,5 @@
      :signup/min-password-length min-password-length
      :signup/max-password-length max-password-length
      :signup/invitation-expiration-seconds invitation-expiration-seconds
-     :signup/signup-uri signup-uri}}))
+     :signup/signup-uri signup-uri
+     :signup/mfa-issuer mfa-issuer}}))
