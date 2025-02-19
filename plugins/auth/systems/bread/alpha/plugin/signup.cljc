@@ -24,7 +24,7 @@
   (let [step (:signup/step session)
         signup-step? (nil? step)
         mfa-step? (= :multi-factor step)
-        {:keys [invite-only? require-multi-factor?]} config]
+        {:keys [invite-only? require-mfa?]} config]
     [:html {:lang (:field/lang data) :dir dir}
      [:head
       [:meta {:content-type "utf-8"}]
@@ -82,7 +82,7 @@
         [:main
          [:form {:name :bread-signup :method :post}
           (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-          (hook ::html.setup-multi-factor
+          (hook ::html.setup-mfa
                 [:p.instruct "Multi-factor authentication is required. Please scan the QR code in your authenticator app, and enter the code below."])
           [:div "QR CODE HERE"]
           [:div.field
@@ -135,9 +135,9 @@
                   (not password-meets-max?)
                   (format "Password must be at most %d characters long."
                           max-length)))
-        require-multi-factor? (bread/config res :signup/require-multi-factor?)]
+        require-mfa? (bread/config res :auth/require-mfa?)]
     (cond
-      (and signup-step? valid? require-multi-factor?)
+      (and signup-step? valid? require-mfa?)
       (-> res
           (assoc :status 302
                  :headers (assoc headers "Location" signup-uri)
@@ -179,13 +179,13 @@
   [{:keys [params request-method session] :as req}]
   (let [{:signup/keys [step]} session
         invite-only? (bread/config req :signup/invite-only?)
-        require-multi-factor? (bread/config req :signup/require-multi-factor?)
+        require-mfa? (bread/config req :auth/require-mfa?)
         post? (= :post request-method)
         get? (= :get request-method)
         signup-step? (nil? step)
         mfa-step? (= :multi-factor step)
         config {:invite-only? (bread/config req :signup/invite-only?)
-                :require-multi-factor? (bread/config req :signup/require-multi-factor?)
+                :require-mfa? (bread/config req :auth/require-mfa?)
                 :min-password-length (bread/config req :signup/min-password-length)
                 :max-password-length (bread/config req :signup/max-password-length)}
         invitation-query (when (:code params)
@@ -213,11 +213,11 @@
       (and post? signup-step?)
       (let [hash-algo (bread/config req :auth/hash-algorithm)
             password-hash (hashers/derive (:password params) {:alg hash-algo})
-            totp-key (when require-multi-factor? (ot/generate-secret-key))
+            totp-key (when require-mfa? (ot/generate-secret-key))
             user (cond-> {:user/username (:username params)
                           :user/password password-hash
                           :thing/created-at (Date.)}
-                   require-multi-factor? (assoc :user/totp-key totp-key))]
+                   require-mfa? (assoc :user/totp-key totp-key))]
         {:expansions (concat expansions
                              [invitation-query
                               {:expansion/name ::db/query
@@ -311,10 +311,10 @@
    (plugin {}))
   ([{:keys [;; TODO email as a normal hook
             invite-only? min-password-length max-password-length
-            invitation-expiration-seconds signup-uri require-multi-factor?
+            invitation-expiration-seconds signup-uri require-mfa?
             mfa-issuer]
      :or {invite-only? false
-          require-multi-factor? false
+          require-mfa? false
           min-password-length 12
           max-password-length 72
           invitation-expiration-seconds (* 72 60 60)
@@ -334,7 +334,6 @@
        :strings {:en #:signup{:signup "Signup"}}}]}
     :config
     {:signup/invite-only? invite-only?
-     :signup/require-multi-factor? require-multi-factor?
      :signup/min-password-length min-password-length
      :signup/max-password-length max-password-length
      :signup/invitation-expiration-seconds invitation-expiration-seconds

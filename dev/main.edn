@@ -14,7 +14,8 @@
   :app #ig/ref :bread/app}
  :bread/app
  {:db #ig/ref :bread/db
-  :auth {:login-uri "/~/login"}
+  :auth {:login-uri "/~/login"
+         :require-mfa? true}
   :signup {:signup-uri "/~/signup"
            :invite-only? true
            :require-multi-factor? true}

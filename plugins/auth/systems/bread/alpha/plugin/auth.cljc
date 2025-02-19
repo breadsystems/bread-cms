@@ -505,7 +505,7 @@
   ([]
    (plugin {}))
   ([{:keys [session-backend hash-algorithm max-failed-login-count lock-seconds
-            next-param login-uri protected-prefixes]
+            next-param login-uri protected-prefixes require-mfa?]
      :or {session-backend :db
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
@@ -535,7 +535,8 @@
        :action/description "Merge strings for auth into global i18n strings."
        :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
     :config
-    {:auth/hash-algorithm hash-algorithm
+    {:auth/require-mfa? require-mfa?
+     :auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
