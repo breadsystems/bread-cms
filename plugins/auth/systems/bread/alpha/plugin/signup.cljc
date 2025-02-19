@@ -168,6 +168,16 @@
                   :effect/description "Create user"
                   :txs [user]}]})))
 
+(defmethod bread/action ::redirect
+  [{:as res {[valid? _] :validation} ::bread/data} _ _]
+  (prn 'valid? valid?)
+  (when valid? (prn 'REDIRECT... (bread/config res :auth/login-uri)))
+  (if valid?
+    (-> res
+        (assoc :status 302)
+        (assoc-in [:headers "Location"] (bread/config res :auth/login-uri)))
+    res))
+
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
   (let [require-mfa? (bread/config req :auth/require-mfa?)
@@ -219,16 +229,14 @@
                                :config (::bread/config req)}])
          :effects
          [{:effect/name ::enact-valid-signup
-           :effect/key :signup/effect
+           :effect/key :new-user
            :effect/description "If the signup is valid, create the account."
            :user user
            :conn (db/connection req)}]
-         #_#_
          :hooks
-         {::bread/expand
+         {::bread/render
           [{:action/name ::redirect
-            :action/description "Redirect to login"
-            :config (::bread/config req)}]}}))))
+            :action/description "Redirect to login"}]}}))))
 
 (def
   ^{:doc "Schema for invitations"}
