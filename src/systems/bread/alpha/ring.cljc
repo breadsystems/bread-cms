@@ -40,3 +40,9 @@
              :status (if permanent? 301 302)
              :headers headers))
     res))
+
+(defmethod bread/action ::set-session
+  [res {:keys [session]} _]
+  (-> res
+      (assoc :session session)
+      (assoc-in [::bread/data :session] session)))
