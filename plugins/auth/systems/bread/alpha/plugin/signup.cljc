@@ -206,11 +206,9 @@
       (= :post request-method)
       (let [hash-algo (bread/config req :auth/hash-algorithm)
             password-hash (hashers/derive (:password params) {:alg hash-algo})
-            totp-key (when require-mfa? (ot/generate-secret-key))
-            user (cond-> {:user/username (:username params)
-                          :user/password password-hash
-                          :thing/created-at (Date.)}
-                   require-mfa? (assoc :user/totp-key totp-key))]
+            user {:user/username (:username params)
+                  :user/password password-hash
+                  :thing/created-at (Date.)}]
         {:expansions (concat expansions
                              [invitation-query
                               {:expansion/key :existing-username
