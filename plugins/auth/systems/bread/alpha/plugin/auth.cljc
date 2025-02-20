@@ -175,7 +175,7 @@
 
         (= :two-factor step)
         [:main
-         [:form {:name :bread-logout :method :post}
+         [:form {:name :bread-login :method :post}
           (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-2fa-code
                 [:p.instruct (:auth/enter-totp i18n)])
