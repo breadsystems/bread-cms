@@ -17,7 +17,8 @@
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
-    [java.net URLEncoder]))
+    [java.net URLEncoder]
+    [java.util Date]))
 
 (deftype DatalogSessionStore [conn]
   SessionStore
@@ -361,6 +362,7 @@
         require-mfa? (bread/config req :auth/require-mfa?)
         max-failed-login-count (bread/config req :auth/max-failed-login-count)
         lock-seconds (bread/config req :auth/lock-seconds)
+        get? (= :get request-method)
         post? (= :post request-method)
         logout? (= "logout" (:submit params))
         setup-two-factor? (= :setup-two-factor step)
@@ -416,6 +418,35 @@
           :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
 
+      (and get? setup-two-factor?)
+      {:expansions
+       [{:expansion/key :totp-key
+         :expansion/name ::bread/value
+         :expansion/value (ot/generate-secret-key)
+         :expansion/description "Generate a TOTP key for MFA setup"}]}
+
+      (and post? setup-two-factor?)
+      (let [totp-key (:totp-key params)
+            user (-> session :auth/user (assoc :user/totp-key totp-key))
+            tx {:user/username [:user/username (:user/username user)]
+                :user/totp-key totp-key
+                :thing/updated-at (Date.)}
+            session {:auth/user user :auth/step :two-factor}]
+        {:expansions
+         [{:expansion/key :session
+           :expansion/name ::bread/value
+           :expansion/value session
+           :expansion/description "Place session in data"}]
+         :effects
+         [{:effect/name ::db/transact
+           :txs [tx]
+           :effect/description "Persist TOTP key"}]
+         :hooks
+         {::bread/expand
+          [{:action/name ::ring/set-session
+            :action/description "Update :session in Ring response"
+            :session session}]}})
+
       ;; Login
       post?
       {:expansions
@@ -439,13 +470,6 @@
           :action/description "Set :session in Ring response."
           :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
-
-      setup-two-factor?
-      {:expansions
-       [{:expansion/key :totp-key
-         :expansion/name ::bread/value
-         :expansion/value (ot/generate-secret-key)
-         :expansion/description "Generate a TOTP key for MFA setup"}]}
 
       :default {})))
 

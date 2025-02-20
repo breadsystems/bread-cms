@@ -490,6 +490,19 @@
               :special "/dest2fa?query=string&a=1"}
      :uri "/login"}
 
+    ;; Setting new TOTP key.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session {:auth/user (assoc crenshaw :user/totp-key SECRET)
+               :auth/step :two-factor}
+     ::bread/data {:session {:auth/user (assoc crenshaw :user/totp-key SECRET)
+                             :auth/step :two-factor}}}
+    {:require-mfa? true :login-uri "/setup-two-factor"}
+    {:request-method :post
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     :params {:totp-key SECRET}
+     :uri "/setup-two-factor"}
+
     ;; 2FA with blank code. Should not set session user.
     {:status 401
      :headers {"content-type" "text/html"}
