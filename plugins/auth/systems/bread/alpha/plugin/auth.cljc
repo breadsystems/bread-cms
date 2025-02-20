@@ -371,12 +371,12 @@
         username (if two-factor?
                    (:user/username (:auth/user session))
                    (:username params))
-        user-keys [:db/id
-                   :user/username
-                   :user/totp-key
-                   :user/locked-at
-                   :user/failed-login-count]
-        user-keys (if two-factor? user-keys (concat user-keys [:user/password]))
+        user-keys (cond-> [:db/id
+                           :user/username
+                           :user/totp-key
+                           :user/locked-at
+                           :user/failed-login-count]
+                    (not two-factor?) (concat [:user/password]))
         user-expansion
         {:expansion/name ::db/query
          :expansion/key :auth/result
