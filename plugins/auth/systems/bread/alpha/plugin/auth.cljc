@@ -363,6 +363,7 @@
         lock-seconds (bread/config req :auth/lock-seconds)
         post? (= :post request-method)
         logout? (= "logout" (:submit params))
+        setup-two-factor? (= :setup-two-factor step)
         two-factor? (= :two-factor step)
         redirect-to (get params (bread/config req :auth/next-param))
         username (if two-factor?
@@ -438,6 +439,13 @@
           :action/description "Set :session in Ring response."
           :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
+
+      setup-two-factor?
+      {:expansions
+       [{:expansion/key :totp-key
+         :expansion/name ::bread/value
+         :expansion/value (ot/generate-secret-key)
+         :expansion/description "Generate a TOTP key for MFA setup"}]}
 
       :default {})))
 

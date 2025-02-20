@@ -74,8 +74,7 @@
       (auth/plugin auth-config))))
 
 (defn- ->auth-data [{::bread/keys [data] :keys [headers status session]}]
-  {::bread/data (select-keys data [:session
-                                   :auth/result])
+  {::bread/data (select-keys data [:session :auth/result :totp-key])
    :session session
    :headers headers
    :status status})
@@ -429,6 +428,19 @@
     {:require-mfa? true}
     {:request-method :post
      :params {:username "crenshaw" :password "intersectionz" :next "/setup-mfa"}
+     :uri "/login"}
+
+    ;; Redirected after a successful username/password login, before the user
+    ;; has set up *REQUIRED* MFA. Should generate a TOTP secret for the user.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session {:auth/user crenshaw
+               :auth/step :setup-two-factor}
+     ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
+                   :totp-key SECRET}}
+    {:require-mfa? true}
+    {:request-method :get
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :uri "/login"}
 
     ;; Successful username/password login requiring 2FA step, next param
@@ -804,4 +816,5 @@
   (timbre/merge-config! {:min-level :info})
 
   (require '[kaocha.repl :as k])
+  (k/run #'test-authentication-flow-with-mfa {:color? false})
   (k/run {:color? false}))
