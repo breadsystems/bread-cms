@@ -436,7 +436,7 @@
                              [:db/id :user/username]}]}]) .]
          :in [$ ?username]
          :where [[?e :user/username ?username]]}
-       "abc"))
+       "coby"))
 
   (q '{:find [(pull ?e [:db/id *])]
        :where [[?e :invitation/code]]})
