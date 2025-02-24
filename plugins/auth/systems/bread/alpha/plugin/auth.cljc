@@ -19,8 +19,7 @@
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
-    [java.net URLEncoder]
-    [java.util Date]))
+    [java.util Base64 Date]))
 
 (deftype DatalogSessionStore [conn]
   SessionStore
@@ -149,17 +148,21 @@
       }
       "]]))
 
-(defn- qr-svg [data & {:keys [size] :or {size 300}}]
-  (when-let [otp-uri (try (oturi/totp-uri data)
-                          (catch Throwable _ nil))]
-    (format "https://api.qrserver.com/v1/create-qr-code/?data=%s&size=%s&format=svg"
-            (URLEncoder/encode otp-uri)
-            (str size "x" size))))
+(defn qr-datauri [data]
+  (when-let [stream (try (qr/totp-stream (assoc data :image-type :PNG))
+                         (catch Throwable _ nil))]
+    (def $stream stream)
+    (->> stream
+         (.toByteArray)
+         (.encodeToString (Base64/getEncoder))
+         (str "data:image/png;base64,"))))
 
 (defc LoginPage
-  [{:keys [hook i18n session rtl? dir totp-key save-totp] :auth/keys [result] :as data}]
+  [{:as data
+    :keys [hook i18n session rtl? dir totp-key save-totp]
+    :auth/keys [result]}]
   {}
-  (let [user (:user session)
+  (let [user (or (:user session) (:auth/user session))
         step (:auth/step session)
         error? (false? (:valid result))]
     [:html {:lang (:field/lang data)
@@ -185,16 +188,21 @@
             (:auth/logout i18n)]]]]
 
         (= :setup-two-factor step)
-        [:main
-         [:form {:name :setup-mfa :method :post}
-          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
-          [:p "Please scan the QR code to finish setting up multi-factor authentication."]
-          [:img {:src (qr-svg {:label "Bread" :user "TEST" :secret totp-key})
-                 :width 300}]
-          [:input {:type :hidden :name :totp-key :value totp-key}]
-          [:div.field
-           [:button {:type :submit :name :submit}
-            "I scanned the code"]]]]
+        (let [data-uri (qr-datauri {:label "Bread" ;; TODO issuer
+                                    :user (:user/username user)
+                                    :secret totp-key})]
+          [:main
+           [:form {:name :setup-mfa :method :post}
+            (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
+            [:p.instruct "Please scan the QR code to finish setting up multi-factor authentication."]
+            [:img {:src data-uri :width 150 :alt "QR code"}]
+            [:p.instruct "Or, enter the key manually:"]
+            [:h2 totp-key]
+            [:input {:type :hidden :name :totp-key :value totp-key}]
+            [:div.field
+             [:span.spacer]
+             [:button {:type :submit :name :submit}
+              "Continue"]]]])
 
         (= :two-factor step)
         [:main
