@@ -426,6 +426,7 @@
                           :user/name
                           :user/email
                           :user/preferences
+                          :user/failed-login-count
                           {:user/roles
                            [:role/key
                             {:role/abilities [:ability/key]}]}
