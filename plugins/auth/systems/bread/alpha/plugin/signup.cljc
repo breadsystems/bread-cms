@@ -34,20 +34,20 @@
       [:main
        [:form
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p "This site is invite-only."]]]
+        [:p (:signup/site-invite-only i18n)]]]
 
       (and (:signup/invite-only? config) (not invitation))
       [:main
        [:form
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p "This invitation link is either invalid or has been redeemed."]]]
+        [:p (:signup/invitation-invalid i18n)]]]
 
       :default
       [:main
        [:form {:name :bread-signup :method :post}
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         (hook ::html.enter-username
-              [:p.instruct "Please choose a username and password."])
+              [:p.instruct (:signup/please-choose-username-password i18n)])
         [:div.field
          [:label {:for :user} (:auth/username i18n)]
          [:input {:id :user :type :text :name :username :value (:username params)}]]
