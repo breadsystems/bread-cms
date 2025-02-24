@@ -368,9 +368,8 @@
       nil
 
       ;; User successfully logged in; reset count.
-      (and valid (= :logged-in (:auth/step result)))
-      (db/transact conn [(assoc transaction
-                                :user/failed-login-count 0)])
+      valid
+      (db/transact conn [(assoc transaction :user/failed-login-count 0)])
 
       (and (:user/locked-at user)
            (account-locked? (t/now) (:user/locked-at user) lock-seconds))
