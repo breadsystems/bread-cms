@@ -73,7 +73,7 @@
       (auth/plugin auth-config))))
 
 (defn- ->auth-data [{::bread/keys [data] :keys [headers status session]}]
-  {::bread/data (select-keys data [:session :auth/result :totp-key])
+  {::bread/data (select-keys data [:session :auth/result :totp])
    :session session
    :headers headers
    :status status})
@@ -436,11 +436,25 @@
      :session {:auth/user crenshaw
                :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
-                   :totp-key SECRET}}
+                   :totp {:totp-key SECRET :issuer "example.com"}}}
     {:require-mfa? true}
     {:request-method :get
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
-     :uri "/login"}
+     :uri "/login"
+     :server-name "example.com"}
+
+    ;; Required MFA with a configured MFA issuer.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session {:auth/user crenshaw
+               :auth/step :setup-two-factor}
+     ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
+                   :totp {:totp-key SECRET :issuer "BREAD"}}}
+    {:require-mfa? true :mfa-issuer "BREAD"}
+    {:request-method :get
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     :uri "/login"
+     :server-name "example.com"}
 
     ;; Successful username/password login requiring 2FA step, next param
     ;; Should not redirect or set session user yet!
