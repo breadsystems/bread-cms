@@ -42,7 +42,7 @@
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p "This invitation link is either invalid or has been redeemed."]]]
 
-      (:signup/invite-only? config)
+      :default
       [:main
        [:form {:name :bread-signup :method :post}
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
@@ -70,18 +70,11 @@
                                     (apply format (get i18n k) args))
                                   (get i18n error-key))]]))
         [:div
-         [:button {:type :submit} (:signup/create-account i18n)]]]]
-
-      ;; Open signup
-      :default
-      [:main
-       [:p "open"]]
-
-      ;;
-      )]])
+         [:button {:type :submit} (:signup/create-account i18n)]]]])]])
 
 (defmethod bread/expand ::validate
-  [{{:auth/keys [min-password-length max-password-length]} :config
+  [{{:auth/keys [min-password-length max-password-length]
+     :signup/keys [invite-only?]} :config
     {:keys [username password password-confirmation]} :params}
    {:as data :keys [existing-username invitation]}]
   (let [username? (seq username)
@@ -93,8 +86,8 @@
                              password-gte-min?
                              password-lte-max?)
         username-available? (false? existing-username)
-        valid-code? true ;; TODO consider require-mfa?
-        valid? (and username-available? valid-password? valid-code?)
+        invited? (or (not invite-only?) (boolean invitation))
+        valid? (and username-available? valid-password? invited?)
         error (when-not valid?
                 (cond
                   (or (not username?) (not password?)) :signup/all-fields-required
