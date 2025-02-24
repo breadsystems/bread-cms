@@ -168,10 +168,11 @@
 
 (defc LoginPage
   [{:as data
-    :keys [hook i18n session rtl? dir totp-key save-totp]
+    :keys [hook i18n session rtl? dir totp]
     :auth/keys [result]}]
   {}
-  (let [user (or (:user session) (:auth/user session))
+  (let [{:keys [totp-key issuer]} totp
+        user (or (:user session) (:auth/user session))
         step (:auth/step session)
         error? (false? (:valid result))]
     [:html {:lang (:field/lang data)
@@ -198,7 +199,7 @@
             (:auth/logout i18n)]]]]
 
         (= :setup-two-factor step)
-        (let [data-uri (qr-datauri {:label "Bread" ;; TODO issuer
+        (let [data-uri (qr-datauri {:label issuer
                                     :user (:user/username user)
                                     :secret totp-key
                                     :image-type :PNG})]
@@ -466,9 +467,11 @@
 
       (and get? setup-two-factor?)
       {:expansions
-       [{:expansion/key :totp-key
+       [{:expansion/key :totp
          :expansion/name ::bread/value
-         :expansion/value (ot/generate-secret-key)
+         :expansion/value {:totp-key (ot/generate-secret-key)
+                           :issuer (or (bread/config req :auth/mfa-issuer)
+                                       (:server-name req))}
          :expansion/description "Generate a TOTP key for MFA setup"}]}
 
       (and post? setup-two-factor?)
@@ -588,7 +591,7 @@
   ([]
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds
-            next-param login-uri protected-prefixes require-mfa?
+            next-param login-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?]
      :or {min-password-length 12
           max-password-length 72
@@ -622,6 +625,7 @@
        :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
     :config
     {:auth/require-mfa? require-mfa?
+     :auth/mfa-issuer mfa-issuer
      :auth/generous-totp-window? generous-totp-window?
      :auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
