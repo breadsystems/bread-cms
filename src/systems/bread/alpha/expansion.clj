@@ -50,7 +50,22 @@
 
   (butlast [:x])
   (populate-in {} [:x] :y)
-  (populate-in {:a :A} [:x] :y))
+  (populate-in {:a :A} [:x] :y)
+
+  (defn- do-effect* [data {k :effect/key :as effect}]
+    (let [result (bread/effect effect data)]
+      (if k
+        (assoc data k result)
+        data)))
+
+  (defn- apply-expansion* [data expansion]
+    (let [{:keys [expansions effects] :as expanded} (bread/expand expansion data)]
+      (as-> data $
+        (reduce apply-expansion* $ expansions)
+        (reduce do-effect* $ effects))))
+
+  ;;
+  )
 
 (defn- expand [data expansion]
   (populate-in data (:expansion/key expansion) (bread/expand expansion data)))
