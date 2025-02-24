@@ -98,55 +98,6 @@
                   [:auth/password-must-be-at-most max-password-length]))]
     [valid? error]))
 
-(defmethod bread/action ::validate
-  [{:as res
-    :keys [headers session]
-    {:keys [code username password password-confirmation]} :params} _ _]
-  (let [{:signup/keys [step]} session
-        signup-step? (nil? step)
-        signup-uri (bread/config res :signup/signup-uri)
-        min-length (bread/config res :signup/min-password-length)
-        max-length (bread/config res :signup/max-password-length)
-        password-fields-match? (= password password-confirmation)
-        password? (seq password)
-        password-meets-min? (>= (count password) min-length)
-        password-meets-max? (<= (count password) max-length)
-        valid-password? (bread/hook res ::valid-password?
-                                    (and password-fields-match?
-                                         password-meets-min?
-                                         password-meets-max?))
-        existing-user (get-in res [::bread/data :existing-username])
-        username-available? (false? existing-user)
-        ;; TODO
-        valid-code? true
-        valid? (and username-available? valid-password? valid-code?)
-        error (when-not valid?
-                (cond
-                  ;; TODO i18n
-                  (not password?)
-                  "Password is required."
-                  (not password-fields-match?)
-                  "Password fields must match."
-                  (not password-meets-min?)
-                  (format "Password must be at least %d characters long."
-                          min-length)
-                  (not password-meets-max?)
-                  (format "Password must be at most %d characters long."
-                          max-length)))
-        require-mfa? (bread/config res :auth/require-mfa?)]
-    (cond
-      (and signup-step? valid? require-mfa?)
-      (-> res
-          (assoc :status 302
-                 :headers (assoc headers "Location" signup-uri)
-                 :session {:signup/step :multi-factor})
-          (assoc-in [::bread/data :valid?] true))
-      :invalid
-      (-> res
-          (assoc :status 400)
-          (assoc-in [::bread/data :valid?] false)
-          (assoc-in [::bread/data :error] error)))))
-
 (defmethod bread/effect ::enact-valid-signup
   [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
   (when valid?
@@ -163,8 +114,6 @@
 
 (defmethod bread/action ::redirect
   [{:as res {[valid? _] :validation} ::bread/data} _ _]
-  (prn 'valid? valid?)
-  (when valid? (prn 'REDIRECT... (bread/config res :auth/login-uri)))
   (if valid?
     (-> res
         (assoc :status 302)
