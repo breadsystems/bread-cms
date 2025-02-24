@@ -69,7 +69,8 @@
                                   (let [[k & args] error-key]
                                     (apply format (get i18n k) args))
                                   (get i18n error-key))]]))
-        [:div
+        [:div.field
+         [:span.spacer]
          [:button {:type :submit} (:signup/create-account i18n)]]]])]])
 
 (defmethod bread/expand ::validate
