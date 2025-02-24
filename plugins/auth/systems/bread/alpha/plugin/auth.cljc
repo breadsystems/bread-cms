@@ -149,7 +149,7 @@
       "]]))
 
 (defn qr-datauri [data]
-  (when-let [stream (try (qr/totp-stream (assoc data :image-type :PNG))
+  (when-let [stream (try (qr/totp-stream data)
                          (catch Throwable _ nil))]
     (def $stream stream)
     (->> stream
@@ -190,12 +190,13 @@
         (= :setup-two-factor step)
         (let [data-uri (qr-datauri {:label "Bread" ;; TODO issuer
                                     :user (:user/username user)
-                                    :secret totp-key})]
+                                    :secret totp-key
+                                    :image-type :PNG})]
           [:main
            [:form {:name :setup-mfa :method :post}
             (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
             [:p.instruct "Please scan the QR code to finish setting up multi-factor authentication."]
-            [:img {:src data-uri :width 150 :alt "QR code"}]
+            [:img {:src data-uri :width 125 :alt "QR code"}]
             [:p.instruct "Or, enter the key manually:"]
             [:h2 totp-key]
             [:input {:type :hidden :name :totp-key :value totp-key}]
