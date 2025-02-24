@@ -6,6 +6,8 @@
     [clojure.string :as string]
     [crypto.random :as random]
     [one-time.core :as ot]
+    [one-time.uri :as oturi]
+    [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
     [systems.bread.alpha.component :as component :refer [defc]]
@@ -147,8 +149,15 @@
       }
       "]]))
 
+(defn- qr-svg [data & {:keys [size] :or {size 300}}]
+  (when-let [otp-uri (try (oturi/totp-uri data)
+                          (catch Throwable _ nil))]
+    (format "https://api.qrserver.com/v1/create-qr-code/?data=%s&size=%s&format=svg"
+            (URLEncoder/encode otp-uri)
+            (str size "x" size))))
+
 (defc LoginPage
-  [{:keys [hook i18n session rtl? dir] :auth/keys [result] :as data}]
+  [{:keys [hook i18n session rtl? dir totp-key save-totp] :auth/keys [result] :as data}]
   {}
   (let [user (:user session)
         step (:auth/step session)
@@ -174,6 +183,18 @@
           [:div.field
            [:button {:type :submit :name :submit :value "logout"}
             (:auth/logout i18n)]]]]
+
+        (= :setup-two-factor step)
+        [:main
+         [:form {:name :setup-mfa :method :post}
+          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
+          [:p "Please scan the QR code to finish setting up multi-factor authentication."]
+          [:img {:src (qr-svg {:label "Bread" :user "TEST" :secret totp-key})
+                 :width 300}]
+          [:input {:type :hidden :name :totp-key :value totp-key}]
+          [:div.field
+           [:button {:type :submit :name :submit}
+            "I scanned the code"]]]]
 
         (= :two-factor step)
         [:main
@@ -430,7 +451,7 @@
       (and post? setup-two-factor?)
       (let [totp-key (:totp-key params)
             user (-> session :auth/user (assoc :user/totp-key totp-key))
-            tx {:user/username [:user/username (:user/username user)]
+            tx {:user/username (:user/username user)
                 :user/totp-key totp-key
                 :thing/updated-at (Date.)}
             session {:auth/user user :auth/step :two-factor}]
@@ -442,6 +463,7 @@
          :effects
          [{:effect/name ::db/transact
            :txs [tx]
+           :conn (db/connection req)
            :effect/description "Persist TOTP key"}]
          :hooks
          {::bread/expand
