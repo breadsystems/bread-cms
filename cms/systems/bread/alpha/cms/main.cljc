@@ -407,6 +407,17 @@
 
   ;; AUTH
 
+  (->> (q '{:find [(pull ?e [:db/id
+                            :thing/created-at
+                            :thing/updated-at
+                            :session/id
+                            :session/data
+                            {:user/_sessions
+                             [:db/id :user/username]}])]
+           :in [$]
+           :where [[?e :session/id]]})
+      (map (comp #(update % :session/data edn/read-string) first)))
+
   (def coby
     (q '{:find [(pull ?e [:db/id
                           :thing/created-at
