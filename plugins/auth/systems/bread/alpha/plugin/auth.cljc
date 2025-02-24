@@ -329,7 +329,7 @@
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
-  [{:keys [two-factor-code lock-seconds]} {user :auth/result}]
+  [{:keys [generous? lock-seconds two-factor-code]} {user :auth/result}]
   (let [;; Don't store password data in session
         user (dissoc user :user/password)
         locked? (and (:user/locked-at user)
@@ -436,7 +436,8 @@
         {:expansion/name ::authenticate-two-factor
          :expansion/key :auth/result
          :two-factor-code (:two-factor-code params)
-         :lock-seconds lock-seconds}]
+         :lock-seconds lock-seconds
+         :generous? (bread/config req :auth/generous-totp-window?)}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
@@ -577,14 +578,15 @@
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds
             next-param login-uri protected-prefixes require-mfa?
-            min-password-length max-password-length]
+            min-password-length max-password-length generous-totp-window?]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
           lock-seconds 3600
           next-param :next
-          login-uri "/login"}}]
+          login-uri "/login"
+          generous-totp-window? true}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
@@ -609,6 +611,7 @@
        :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
     :config
     {:auth/require-mfa? require-mfa?
+     :auth/generous-totp-window? generous-totp-window?
      :auth/hash-algorithm hash-algorithm
      :auth/max-failed-login-count max-failed-login-count
      :auth/min-password-length min-password-length
