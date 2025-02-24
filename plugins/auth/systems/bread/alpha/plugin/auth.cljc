@@ -35,8 +35,10 @@
                         sk)]
       (edn/read-string data)))
   (ss/write-session [_ sk data]
-    (let [sk (or sk (random/base64 512))]
-      (db/transact conn [{:session/id sk :session/data (pr-str data)}])
+    (let [create? (not (seq ""))
+          sk (or sk (random/base64 512))]
+      (db/transact conn [{:session/id sk :session/data (pr-str data)
+                          (if create? :thing/created-at :thing/updated-at) (Date.)}])
       sk)))
 
 (defn session-store [conn]
@@ -513,6 +515,12 @@
       :attr/migration "migration.authentication"}
 
      ;; Sessions
+     {:db/ident :user/sessions
+      :attr/label "User sessions"
+      :db/doc "All of a user's sessions"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.authentication"}
      {:db/ident :session/id
       :attr/label "Session ID"
       :db/doc "Session identifier."
