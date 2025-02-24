@@ -205,15 +205,16 @@
           [:main
            [:form {:name :setup-mfa :method :post}
             (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
-            [:p.instruct "Please scan the QR code to finish setting up multi-factor authentication."]
-            [:img {:src data-uri :width 125 :alt "QR code"}]
-            [:p.instruct "Or, enter the key manually:"]
+            (hook ::html.scan-qr-instructions
+                  [:p.instruct (:auth/please-scan-qr-code i18n)])
+            [:img {:src data-uri :width 125 :alt (:auth/qr-code i18n)}]
+            [:p.instruct (:auth/or-enter-key-manually i18n)]
             [:h2 totp-key]
             [:input {:type :hidden :name :totp-key :value totp-key}]
             [:div.field
              [:span.spacer]
              [:button {:type :submit :name :submit}
-              "Continue"]]]])
+              (:auth/continue i18n)]]]])
 
         (= :two-factor step)
         [:main

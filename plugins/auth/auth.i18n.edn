@@ -17,6 +17,7 @@
  :en
  #:auth{
         :account-locked "Account locked"
+        :continue "Continue"
         :enter-totp "Please enter the one-time code from your authenticator app."
         :enter-username-password "Please enter your username and password."
         :invalid-totp "Invalid code. Please try again."
@@ -24,12 +25,15 @@
         :login "Login"
         :logout "Logout"
         :login-to-bread "Login to Bread"
+        :or-enter-key-manually "Or, enter the key manually:"
         :password "Password"
         :password-confirmation "Password confirmation"
         :passwords-must-match "Password and confirmation must match."
         :password-must-be-at-least "Password must be at least %d characters."
         :password-must-be-at-most "Password must be at most %d characters."
         :password-required "Password is required."
+        :please-scan-qr-code"Please scan the QR code to finish setting up multi-factor authentication."
+        :qr-code "QR code"
         :too-many-attempts "You have made too many attempts to log in. Please try again later."
         :username "Username"
         :verify "Verify"
