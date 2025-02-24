@@ -65,13 +65,14 @@
      [:style
       "
       :root {
-        --body-max-width: 65ch;
+        --body-max-width: 70ch;
         --border-width: 2px;
         --color-text-body: hsl(300, 100%, 98.6%);
         --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
         --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
         --color-text-error: hsl(284.2, 43.2%, 82.7%);
         --color-stroke-error: hsl(300.7, 38.3%, 55.5%);
+        --color-text-secondary: hsl(300, 21.9%, 70.4%);
         --color-bg: hsl(264, 41.7%, 4.7%);
       }
       @media (prefers-color-scheme: light) {
@@ -81,6 +82,7 @@
           --color-stroke-emphasis: hsl(300.8, 83.1%, 34.7%);
           --color-text-error: hsl(309.4, 73.8%, 37.5%);
           --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
+          --color-text-secondary: hsl(280.3, 42.7%, 36.3%);
           --color-bg: hsl(300, 12.8%, 92.4%);
         }
       }
@@ -116,11 +118,17 @@
       .field input {
         flex: 2;
       }
+      .instruct {
+        color: var(--color-text-secondary);
+      }
       .error {
         font-weight: 700;
         color: var(--color-text-error);
         border: var(--border-width) dashed var(--color-stroke-error);
         padding: 12px;
+      }
+      label {
+        font-weight: 700;
       }
       input {
         padding: 12px;
@@ -176,8 +184,9 @@
       (cond
         (:locked? result)
         [:main
-         (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
-         (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]
+         [:form
+          (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
+          (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
         (= :logged-in step)
         [:main
@@ -236,7 +245,8 @@
           (when error?
             (hook ::html.invalid-login
                   [:div.error [:p (:auth/invalid-username-password i18n)]]))
-          [:div
+          [:div.field
+           [:span.spacer]
            [:button {:type :submit} (:auth/login i18n)]]]])]]))
 
 (defmethod bread/action ::require-auth
