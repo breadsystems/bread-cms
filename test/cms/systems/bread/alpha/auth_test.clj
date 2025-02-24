@@ -384,7 +384,7 @@
 (defn valid-code?
   ([^long code ^String secret]
    (and (= 123456 code) (= SECRET secret)))
-  ([^long code ^String secret ^long _]
+  ([^long code ^String secret _]
    (and (= 123456 code) (= SECRET secret))))
 
 (deftest test-authentication-flow-with-mfa
