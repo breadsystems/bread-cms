@@ -338,7 +338,9 @@
       (let [code (try
                    (Integer. two-factor-code)
                    (catch java.lang.NumberFormatException _ 0))
-            valid (ot/is-valid-totp-token? code (:user/totp-key user))]
+            valid (or (ot/is-valid-totp-token? code (:user/totp-key user))
+                      (ot/is-valid-totp-token? code (:user/totp-key user)
+                                               {:time-step-offset -1}))]
         {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
