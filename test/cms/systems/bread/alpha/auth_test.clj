@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.auth-test
   (:require
     [buddy.hashers :as hashers]
-    [clj-totp.core :as totp]
     [clojure.test :refer [deftest are is testing]]
     [clojure.walk :as walk]
     [crypto.random :as random]

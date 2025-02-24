@@ -45,7 +45,6 @@
                  "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
                 buddy/buddy-hashers         {:mvn/version "2.0.167"}
-                clj-totp/clj-totp           {:mvn/version "0.1.0"} ;; TODO REMOVE
                 fi.metosin/reitit           {:mvn/version "0.7.0-alpha6"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
@@ -74,7 +73,6 @@
   :auth
   {:extra-paths ["plugins/auth"]
    :extra-deps {buddy/buddy-hashers {:mvn/version "2.0.167"}
-                clj-totp/clj-totp   {:mvn/version "0.1.0"} ;; TODO REMOVE
                 one-time/one-time   {:mvn/version "0.8.0"}}}
 
   :bidi
