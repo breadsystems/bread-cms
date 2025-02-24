@@ -19,6 +19,7 @@
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
+    [java.net URLEncoder]
     [java.util Base64 Date]))
 
 (deftype DatalogSessionStore [conn]
