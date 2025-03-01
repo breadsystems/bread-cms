@@ -19,6 +19,7 @@
         :account-locked "Account locked"
         :continue "Continue"
         :enter-totp "Please enter the one-time code from your authenticator app."
+        :enter-totp-next "Next, enter the one-time code from your authenticator app."
         :enter-username-password "Please enter your username and password."
         :invalid-totp "Invalid code. Please try again."
         :invalid-username-password "Invalid username or password."

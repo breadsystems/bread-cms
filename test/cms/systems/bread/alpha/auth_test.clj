@@ -417,10 +417,8 @@
     {:status 302
      :headers {"Location" "/login?next=%2Fsetup-mfa"
                "content-type" "text/html"}
-     :session {:auth/user crenshaw
-               :auth/step :setup-two-factor}
-     ::bread/data {:session {:auth/user crenshaw
-                             :auth/step :setup-two-factor}
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
                    :auth/result {:update false
                                  :valid true
                                  :user crenshaw}}}
@@ -503,18 +501,50 @@
               :special "/dest2fa?query=string&a=1"}
      :uri "/login"}
 
-    ;; Setting new TOTP key.
-    {:status 200
+    ;; Setting new TOTP key, submitting a blank code.
+    ;; Should show an error and not redirect.
+    {:status 401
      :headers {"content-type" "text/html"}
-     :session {:auth/user (assoc crenshaw :user/totp-key SECRET)
-               :auth/step :two-factor}
-     ::bread/data {:session {:auth/user (assoc crenshaw :user/totp-key SECRET)
-                             :auth/step :two-factor}}}
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
+                   :auth/result {:valid false :user crenshaw}
+                   :totp {:totp-key SECRET :issuer "example.com"}}}
     {:require-mfa? true :login-uri "/setup-two-factor"}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
-     :params {:totp-key SECRET}
-     :uri "/setup-two-factor"}
+     :params {:totp-key SECRET :two-factor-code ""}
+     :uri "/setup-two-factor"
+     :server-name "example.com"}
+
+    ;; Setting new TOTP key, submitting an invalid code.
+    ;; Should show an error and not redirect.
+    {:status 401
+     :headers {"content-type" "text/html"}
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
+                   :auth/result {:valid false :user crenshaw}
+                   :totp {:totp-key SECRET :issuer "example.com"}}}
+    {:require-mfa? true :login-uri "/setup-two-factor"}
+    {:request-method :post
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     :params {:totp-key SECRET :two-factor-code "999999"}
+     :uri "/setup-two-factor"
+     :server-name "example.com"}
+
+    ;; Setting new TOTP key with a valid code. Sets the session user.
+    (let [user (assoc crenshaw :user/totp-key SECRET)
+          session {:user user :auth/step :logged-in}]
+      {:status 302
+       :headers {"content-type" "text/html"
+                 "Location" "/setup-mfa-redirect"}
+       :session session
+       ::bread/data {:session session
+                     :auth/result {:valid true :user user}}})
+    {:require-mfa? true :login-uri "/setup-mfa-redirect"}
+    {:request-method :post
+     :session {:auth/user crenshaw :auth/step :setup-two-factor}
+     :params {:totp-key SECRET :two-factor-code "123456"}
+     :uri "/setup-mfa-redirect"}
 
     ;; 2FA with blank code. Should not set session user.
     {:status 401
