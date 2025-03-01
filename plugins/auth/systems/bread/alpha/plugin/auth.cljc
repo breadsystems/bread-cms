@@ -53,7 +53,7 @@
   (URLEncoder/encode "/destination?param=1")
   (URLEncoder/encode "/destination?param=1&b=2")
   (def $secret (ot/generate-secret-key))
-  (ot/get-totp-token $secret)
+  (map (partial ot/get-totp-token $secret) [{:time-step 30} {:time-step 19} {:time-step 60}])
   (ot/is-valid-totp-token? 812211 $secret)
   (ot/is-valid-totp-token? (ot/get-totp-token $secret) $secret))
 
@@ -70,6 +70,7 @@
         --color-text-body: hsl(300, 100%, 98.6%);
         --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
         --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
+        --color-stroke-secondary: hsl(300, 75%, 12.5%);
         --color-text-error: hsl(284.2, 43.2%, 82.7%);
         --color-stroke-error: hsl(300.7, 38.3%, 55.5%);
         --color-text-secondary: hsl(300, 21.9%, 70.4%);
@@ -141,7 +142,7 @@
         border-radius: 0;
       }
       button {
-        padding: 8px 12px;
+        padding: 10px 12px;
         cursor: pointer;
         font-weight: 700;
         font-size: 1rem;
@@ -154,6 +155,18 @@
         border-color: transparent;
         outline: var(--border-width) dashed var(--color-stroke-emphasis);
         color: var(--color-text-emphasis);
+      }
+      .center {
+        display: flex;
+        justify-content: center;
+      }
+      hr {
+        width: 100%;
+        border: 2px solid var(--color-stroke-secondary);
+      }
+      .totp-key {
+        font-family: monospace;
+        letter-spacing: 5;
       }
       "]]))
 
@@ -208,14 +221,20 @@
             (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
             (hook ::html.scan-qr-instructions
                   [:p.instruct (:auth/please-scan-qr-code i18n)])
-            [:img {:src data-uri :width 125 :alt (:auth/qr-code i18n)}]
+            [:div.center [:img {:src data-uri :width 125 :alt (:auth/qr-code i18n)}]]
             [:p.instruct (:auth/or-enter-key-manually i18n)]
-            [:h2 totp-key]
+            [:div.center [:h2.totp-key totp-key]]
             [:input {:type :hidden :name :totp-key :value totp-key}]
-            [:div.field
-             [:span.spacer]
-             [:button {:type :submit :name :submit}
-              (:auth/continue i18n)]]]])
+            [:hr]
+            [:p.instruct (:auth/enter-totp-next i18n)]
+            [:div.field.two-factor
+             [:input {:id :two-factor-code :type :number :name :two-factor-code}]
+             [:button {:type :submit :name :submit :value "verify"}
+              (:auth/verify i18n)]]
+            (when error?
+              (hook ::html.invalid-code
+                    [:div.error
+                     [:p (:auth/invalid-totp i18n)]]))]])
 
         (= :two-factor step)
         [:main
@@ -273,15 +292,19 @@
   (let [{{:keys [valid user locked?]} :auth/result} data
         current-step (:auth/step session)
         login-step? (nil? current-step)
+        setting-up-two-factor? (= :setup-two-factor (:auth/step session))
         two-factor-step? (= :two-factor current-step)
         two-factor-enabled? (or require-mfa? (:user/totp-key user))
         next-step (if (and (not= :two-factor current-step) two-factor-enabled?)
                     :two-factor
                     :logged-in)
         two-factor-next? (and valid (= :two-factor next-step))
-        logged-in? (and valid (or (and two-factor-step? two-factor-enabled?)
+        logged-in? (and valid (or setting-up-two-factor?
+                                  (and two-factor-step? two-factor-enabled?)
                                   (and login-step? (not two-factor-enabled?))))
         session (cond
+                  (and valid setting-up-two-factor?)
+                  {:user user :auth/step :logged-in}
                   (and require-mfa? (not (:user/totp-key user)))
                   (assoc session :auth/user user :auth/step :setup-two-factor)
                   two-factor-next?
@@ -476,26 +499,43 @@
 
       (and post? setup-two-factor?)
       (let [totp-key (:totp-key params)
-            user (-> session :auth/user (assoc :user/totp-key totp-key))
+            code (try
+                   (Integer. (:two-factor-code params))
+                   (catch java.lang.NumberFormatException _ 0))
+            valid? (ot/is-valid-totp-token? code totp-key)
+            user (cond-> (:auth/user session)
+                   valid? (assoc :user/totp-key totp-key))
             tx {:user/username (:user/username user)
                 :user/totp-key totp-key
                 :thing/updated-at (Date.)}
-            session {:auth/user user :auth/step :two-factor}]
+            session (if valid? session {:auth/user user :auth/step :two-factor})
+            totp-expansion
+            (when-not valid?
+              {:expansion/key :totp
+               :expansion/name ::bread/value
+               :expansion/value {:totp-key (:totp-key params)
+                                 :issuer (or (bread/config req :auth/mfa-issuer)
+                                             (:server-name req))}})]
         {:expansions
-         [{:expansion/key :session
+         [totp-expansion
+          {:expansion/key :auth/result
+           :expansion/name ::bread/value
+           :expansion/value {:valid valid? :user user}}
+          {:expansion/key :session
            :expansion/name ::bread/value
            :expansion/value session
            :expansion/description "Place session in data"}]
          :effects
-         [{:effect/name ::db/transact
-           :txs [tx]
-           :conn (db/connection req)
-           :effect/description "Persist TOTP key"}]
+         [(when valid? {:effect/name ::db/transact
+                        :txs [tx]
+                        :conn (db/connection req)
+                        :effect/description "Persist TOTP key"})]
          :hooks
          {::bread/expand
-          [{:action/name ::ring/set-session
-            :action/description "Update :session in Ring response"
-            :session session}]}})
+          [{:action/name ::set-session
+            :action/description "Set :session in Ring response."
+            :require-mfa? require-mfa?
+            :max-failed-login-count max-failed-login-count}]}})
 
       ;; Login
       post?
