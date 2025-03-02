@@ -424,7 +424,7 @@
                           :user/username
                           :user/totp-key
                           :user/name
-                          :user/email
+                          {:user/email [*]}
                           :user/preferences
                           :user/failed-login-count
                           {:user/roles
