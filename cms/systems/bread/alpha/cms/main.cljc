@@ -231,13 +231,25 @@
         :dispatcher/component #'theme/InteriorPage}]]]
      {:conflicts nil}))
 
+(defmethod bread/action ::enrich-session
+  [{:as req :keys [headers remote-addr session]} _ _]
+  (if session
+    (update req :session assoc
+            :user-agent (get headers "user-agent")
+            :remote-addr remote-addr)
+    req))
+
 (defmethod ig/init-key :bread/app [_ app-config]
   (let [plugins (concat
                   (defaults/plugins app-config)
                   [(auth/plugin (:auth app-config))
                    (signup/plugin (:signup app-config))
                    (marx/plugin (:marx app-config))
-                   (rum/plugin (:renderer app-config))])]
+                   (rum/plugin (:renderer app-config))
+                   {:hooks
+                    {::bread/route
+                     [{:action/name ::enrich-session
+                       :action/description "Add session metadata"}]}}])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
@@ -419,25 +431,29 @@
       (map (comp #(update % :session/data edn/read-string) first)))
 
   (def coby
-    (q '{:find [(pull ?e [:db/id
-                          :thing/created-at
-                          :user/username
-                          :user/totp-key
-                          :user/name
-                          {:user/email [*]}
-                          :user/preferences
-                          :user/failed-login-count
-                          {:user/roles
-                           [:role/key
-                            {:role/abilities [:ability/key]}]}
-                          {:invitation/_redeemer
-                           [:db/id
-                            :invitation/code
-                            {:invitation/invited-by
-                             [:db/id :user/username]}]}]) .]
-         :in [$ ?username]
-         :where [[?e :user/username ?username]]}
-       "coby"))
+    (-> (q '{:find [(pull ?e [:db/id
+                              :thing/created-at
+                              :user/username
+                              :user/totp-key
+                              :user/name
+                              {:user/email [*]}
+                              :user/preferences
+                              :user/failed-login-count
+                              {:user/roles
+                               [:role/key
+                                {:role/abilities [:ability/key]}]}
+                              {:invitation/_redeemer
+                               [:db/id
+                                :invitation/code
+                                {:invitation/invited-by
+                                 [:db/id :user/username]}]}
+                              {:user/sessions [*]}]) .]
+             :in [$ ?username]
+             :where [[?e :user/username ?username]]}
+           "coby")
+        (update :user/sessions (fn [sessions]
+                                 (map #(update % :session/data edn/read-string)
+                                      sessions)))))
 
   (q '{:find [(pull ?e [:db/id *])]
        :where [[?e :invitation/code]]})
