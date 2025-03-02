@@ -15,7 +15,7 @@
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:login-uri "/~/login"
-         :require-mfa? true
+         ;:require-mfa? true
          :min-password-length 4}
   :signup {:signup-uri "/~/signup"
            :invite-only? true}
@@ -56,9 +56,9 @@
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
  :bread/profilers
- [#_{:hook #{:systems.bread.alpha.core/response}
-     :action/name #{:systems.bread.alpha.cms.defaults/response}
-     :f #var systems.bread.alpha.cms.main/log-hook!}]
+ [{:hook #{:systems.bread.alpha.core/request}
+   ;:action/name #{:systems.bread.alpha.cms.defaults/response}
+   :f #var systems.bread.alpha.cms.main/log-hook!}]
  #_#_
  :bread/debugger
  {:http
