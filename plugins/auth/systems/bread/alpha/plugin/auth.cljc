@@ -36,11 +36,15 @@
                                   [?e :session/id ?sk]]}
                         sk)]
       (edn/read-string data)))
-  (ss/write-session [_ sk data]
-    (let [create? (not (seq ""))
-          sk (or sk (random/base64 512))]
-      (db/transact conn [{:session/id sk :session/data (pr-str data)
-                          (if create? :thing/created-at :thing/updated-at) (Date.)}])
+  (ss/write-session [_ sk {:keys [user] :as data}]
+    (let [create? (not (seq sk))
+          sk (or sk (random/base64 512))
+          session {:session/id sk
+                   :session/data (pr-str data)
+                   (if create? :thing/created-at :thing/updated-at) (Date.)}
+          tx {:db/id (:db/id user)
+              :user/sessions [session]}]
+      (db/transact conn [tx])
       sk)))
 
 (defn session-store [conn]
