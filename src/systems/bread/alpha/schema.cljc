@@ -148,9 +148,27 @@
      {:db/ident :user/email
       :attr/label "Email"
       :db/doc "User account email"
-      :db/valueType :db.type/string
+      :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :db/unique :db.unique/value
+      :attr/migration "migration.users"}
+     {:db/ident :email/address
+      :attr/label "Email address"
+      :db/doc "The actual email address, as a string"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :email/code
+      :attr/label "Confirmation code"
+      :db/doc "Secure confirmation code for this email"
+      :db/valueType :db.type/uuid
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :email/confirmed-at
+      :attr/label "Confirmed at"
+      :db/doc "When this email was confirmed, if ever"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
      {:db/ident :user/name
       :attr/label "Full Name"
