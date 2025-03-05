@@ -545,7 +545,8 @@
      :uri "/setup-two-factor"
      :server-name "example.com"}
 
-    ;; Setting new TOTP key with a valid code. Sets the session user.
+    ;; Setting new TOTP key with a valid code. Sets the session user
+    ;; and redirects to account-uri.
     (let [user (assoc crenshaw :user/totp-key SECRET)
           session {:user user :auth/step :logged-in}]
       {:status 302
@@ -554,7 +555,7 @@
        :session session
        ::bread/data {:session session
                      :auth/result {:valid true :user user}}})
-    {:require-mfa? true :login-uri "/setup-mfa-redirect"}
+    {:require-mfa? true :account-uri "/setup-mfa-redirect"}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :params {:totp-key SECRET :two-factor-code "123456"}
@@ -654,7 +655,7 @@
 
     ;; Successful 2FA. Sets session user.
     {:status 302
-     :headers {"Location" "/login"
+     :headers {"Location" "/account"
                "content-type" "text/html"}
      :session {:user douglass
                :auth/step :logged-in}
@@ -668,8 +669,8 @@
      :params {:two-factor-code "123456"}
      :uri  "/login"}
 
-    ;; Successful 2FA with custom :login-uri. Sets session user and redirects
-    ;; to login-uri.
+    ;; Successful 2FA with custom :account-uri Sets session user and redirects
+    ;; to account-uri.
     {:status 302
      :headers {"Location" "/successful-custom"
                "content-type" "text/html"}
@@ -678,7 +679,7 @@
      ::bread/data {:session {:user douglass
                              :auth/step :logged-in}
                    :auth/result {:valid true :user douglass}}}
-    {:login-uri "/successful-custom"}
+    {:account-uri "/successful-custom"}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -887,5 +888,5 @@
 
   (require '[kaocha.repl :as k])
   (k/run #'test-authentication-flow-with-mfa {:color? false})
-  (k/run #'test-authentication-flow {:color? false})
+  (k/run #'test-authentication-flow #'test-authentication-flow-with-mfa {:color? false})
   (k/run {:color? false}))
