@@ -56,6 +56,7 @@
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
                   {:ability/key :delete-posts}}}}}]]}
+ #_#_
  :bread/profilers
  [{:hook #{:systems.bread.alpha.core/request}
    ;:action/name #{:systems.bread.alpha.cms.defaults/response}
