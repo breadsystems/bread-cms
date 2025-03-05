@@ -4,6 +4,7 @@
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
+    [com.rpl.specter :as s]
     [crypto.random :as random]
     [one-time.core :as ot]
     [one-time.uri :as oturi]
@@ -20,6 +21,7 @@
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
+    [java.text SimpleDateFormat]
     [java.util Base64 Date]))
 
 (deftype DatalogSessionStore [conn]
@@ -62,11 +64,6 @@
   (ot/is-valid-totp-token? 812211 $secret)
   (ot/is-valid-totp-token? (ot/get-totp-token $secret) $secret))
 
-(defc AccountPage
-  [{:as data}]
-  {}
-  [:p data])
-
 (defc LoginStyle [{:keys [hook]}]
   {}
   (hook
@@ -77,10 +74,11 @@
       :root {
         --body-max-width: 70ch;
         --border-width: 2px;
-        --color-text-body: hsl(300, 100%, 98.6%);
+        --color-text-body: hsl(300, 80%, 95%);
         --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
         --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
         --color-stroke-secondary: hsl(300, 75%, 12.5%);
+        --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
         --color-text-error: hsl(284.2, 43.2%, 82.7%);
         --color-stroke-error: hsl(300.7, 38.3%, 55.5%);
         --color-text-secondary: hsl(300, 21.9%, 70.4%);
@@ -91,29 +89,46 @@
           --color-text-body: hsl(263.9, 79%, 24.3%);
           --color-text-emphasis: hsl(281.1, 74.7%, 32.5%);
           --color-stroke-emphasis: hsl(300.8, 83.1%, 34.7%);
+          --color-stroke-secondary: hsl(300, 75%, 12.5%);
           --color-text-error: hsl(309.4, 73.8%, 37.5%);
           --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
           --color-text-secondary: hsl(280.3, 42.7%, 36.3%);
+          --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
           --color-bg: hsl(300, 12.8%, 92.4%);
         }
       }
       body {
-        width: var(--body-max-width);
-        max-width: 96%;
-        margin: 5em auto;
+        margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
         line-height: 1.5;
 
         color: var(--color-text-body);
         background: var(--color-bg);
       }
+      header {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+
+        padding: 1em;
+        border-bottom: 2px dashed var(--color-stroke-emphasis);
+      }
+      main {
+        width: var(--body-max-width);
+        max-width: 96%;
+        margin: 5em auto;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: var(--color-text-emphasis);
+      }
       h1, h2, p {
         margin: 0;
       }
-      main, form {
-        width: 100%;
+      form {
+        margin: 0;
       }
-      .flex-col {
+      main, .flex-col {
         display: flex;
         flex-flow: column nowrap;
         gap: 1.5em;
@@ -125,10 +140,10 @@
         justify-content: space-between;
         align-items: center;
       }
-      .field label, field button {
+      .field label {
         flex: 1;
       }
-      .field input {
+      .field :is(input, select) {
         flex: 2;
       }
       .instruct {
@@ -143,11 +158,14 @@
       label {
         font-weight: 700;
       }
-      input {
+      select {
+        cursor: pointer;
+      }
+      input, select {
         padding: 12px;
         border: var(--border-width) solid var(--color-text-body);
       }
-      button, input {
+      button, input, select {
         color: var(--color-text-body);
         background: var(--color-bg);
         border: var(--border-width) solid var(--color-text-body);
@@ -180,6 +198,22 @@
         font-family: monospace;
         letter-spacing: 5;
       }
+
+      .user-sessions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5em;
+      }
+      .user-session {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        align-items: start;
+
+        margin: 0;
+        padding: 1em;
+        border: 2px dashed var(--color-stroke-tertiary);
+      }
       "]]))
 
 (defn qr-datauri [data]
@@ -203,7 +237,7 @@
     [:html {:lang (:field/lang data)
             :dir dir}
      [:head
-      [:meta {:content-type "utf-8"}]
+      [:meta {:content-type :utf-8}]
       (hook ::html.title [:title (str (:auth/login i18n) " | Bread")])
       (LoginStyle data)]
      [:body
@@ -272,6 +306,89 @@
           [:div.field
            [:span.spacer]
            [:button {:type :submit} (:auth/login i18n)]]]])]]))
+
+(defn- ua->browser [ua]
+  (let [normalized (string/lower-case ua)]
+    (cond
+      (re-find #"firefox" normalized) "Firefox"
+      (re-find #"chrome" normalized) "Google Chrome"
+      (re-find #"safari" normalized) "Safari"
+      :default "Unknown browser")))
+
+(defn- ua->os [ua]
+  (let [normalized (string/lower-case ua)]
+    (cond
+      (re-find #"linux" normalized) "Linux"
+      (re-find #"macintosh" normalized) "Mac"
+      (re-find #"windows" normalized) "Windows"
+      :default "Unknown OS")))
+
+(def fmt (SimpleDateFormat. "EEE, LLL d 'at' h:mm a"))
+
+(defc AccountPage
+  [{:as data
+    :keys [hook i18n lang-names rtl? dir session supported-langs]
+    {:as user :user/keys [preferences sessions roles]} :user
+    :or {preferences {:lang "en"}}}]
+  {:query '[:db/id
+            :thing/created-at
+            :user/username
+            {:user/email [*]}
+            :user/name
+            :user/preferences
+            {:user/roles [:role/key {:role/abilities [:ability/key]}]}
+            {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
+            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
+  [:html {:lang (:field/lang data) :dir dir}
+   [:head
+    [:meta {:content-type :utf-8}]
+    (hook ::html.title [:title (str (:user/username user) " | Bread")])
+    (LoginStyle data)
+    (hook ::html.account-page-head [:<>])]
+   [:body
+    [:header
+     [:span (:user/username user)]
+     [:form.logout-form {:method :post :action "/~/login"} ;; TODO config
+      [:button {:type :submit :name :submit :value "logout"}
+       (:auth/logout i18n)]]]
+    [:main
+     [:form.flex-col {:method :post}
+      (hook ::html.account-details-heading [:h3 (:auth/account-details i18n)])
+      [:.field
+       [:label {:for :name} (:auth/name i18n)]
+       [:input {:id :name :name :name :value (:user/name user)}]]
+      (when (> (count supported-langs) 1)
+        [:.field
+         [:label {:for :lang} (:auth/preferred-language i18n)]
+         [:select {:id :lang :name :lang}
+          (map (fn [k]
+                 [:option {:selected (= k (:lang preferences)) :value k}
+                  (get lang-names k (name k))])
+               (sort-by name (seq supported-langs)))]])]
+     [:section.flex-col
+      (hook ::html.account-sessions-heading [:h3 (:auth/your-sessions i18n)])
+      [:.user-sessions
+       (map (fn [{:as user-session
+                  {:keys [user-agent remote-addr]} :session/data
+                  :thing/keys [created-at updated-at]}]
+              (if (= (:db/id session) (:db/id user-session))
+                [:div.user-session.current
+                 [:div
+                  [:div (ua->browser user-agent)]
+                  [:div (ua->os user-agent)]]
+                 [:div [:span.instruct "This session"]]]
+                [:form.user-session {:method :post}
+                 [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
+                 [:div
+                  (when created-at
+                    [:div (.format fmt created-at)])
+                  [:div (ua->browser user-agent)]
+                  [:div (ua->os user-agent)]]
+                 [:div
+                  [:button {:type :submit :name :action :value "delete-session"}
+                   (:auth/logout i18n)]]]))
+            sessions)]]
+     [:pre (with-out-str (clojure.pprint/pprint user))]]]])
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
@@ -577,6 +694,60 @@
        {::bread/expand
         [{:action/name ::=>account
           :action/description "Redirect to account page"}]}})))
+
+(defmethod bread/expand ::user [_ {:keys [user]}]
+  ;; TODO infer from query/schema...
+  (as-> user $
+      (update $ :user/preferences edn/read-string)
+      (s/transform [:user/sessions s/ALL :session/data] edn/read-string $)))
+
+(defmulti account-action (fn [{:keys [params]}] (keyword (:action params))))
+
+(defmethod account-action :delete-session [{:keys [params]}]
+  (when-let [id (try (Integer. (:dbid params)) (catch Throwable _ nil))]
+    [[:db/retract id :session/id]
+     [:db/retract id :session/data]
+     [:db/retract id :thing/created-at]
+     [:db/retract id :thing/updated-at]]))
+
+(defmethod bread/dispatch ::account=>
+  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+  (cond
+    (= :post request-method)
+    {:effects
+     [(when-let [txs (account-action req)]
+        {:effect/name ::db/transact
+         :conn (db/connection req)
+         :txs txs})]
+     :hooks
+     {::bread/expand
+      [{:action/name ::=>account
+        :action/description
+        "Redirect to account page after taking an account action"}]}}
+
+    :default
+    (let [id (:db/id (:user session))
+          pull (:dispatcher/pull dispatcher)]
+      {:expansions
+       [{:expansion/key :user
+         :expansion/name ::db/query
+         :expansion/description "Query for all user account data"
+         :expansion/db (db/database req)
+         :expansion/args [{:find [(list 'pull '?e pull) '.]
+                           :in '[$ ?e]}
+                          id]}
+        {:expansion/key :user
+         :expansion/name ::user
+         :expansion/description "Expand user data"}
+        {;; TODO => i18n
+         :expansion/key :supported-langs
+         :expansion/name ::bread/value
+         :expansion/value (i18n/supported-langs req)
+         :expansion/description "Supported languages"}
+        {;; TODO => i18n
+         :expansion/key :lang-names
+         :expansion/name ::bread/value
+         :expansion/value (bread/config req :i18n/lang-names)}]})))
 
 (def
   ^{:doc "Schema for authentication."}
