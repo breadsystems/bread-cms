@@ -19,6 +19,8 @@
         :account-details "Account details"
         :account-locked "Account locked"
         :continue "Continue"
+        :datetime-format-default "EEE, LLL d 'at' h:mm a"
+        :date-format-default "EEE, LLL d"
         :enter-totp "Please enter the one-time code from your authenticator app."
         :enter-totp-next "Next, enter the one-time code from your authenticator app."
         :enter-username-password "Please enter your username and password."
