@@ -213,15 +213,6 @@
           (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
           (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
-        (= :logged-in step)
-        [:main
-         [:form.flex-col {:name :bread-logout :method :post}
-          ;; TODO figure out what to do about this page...redirect to / by default?
-          [:h2 (:auth/welcome i18n) " " (:user/username (:user session))]
-          [:div.field
-           [:button {:type :submit :name :submit :value "logout"}
-            (:auth/logout i18n)]]]]
-
         (= :setup-two-factor step)
         (let [data-uri (qr-datauri {:label issuer
                                     :user (:user/username user)
@@ -437,6 +428,13 @@
         (db/transact conn [(assoc transaction
                                   :user/failed-login-count incremented)])))))
 
+(defmethod bread/action ::=>account
+  [{:as req :keys [session]} _ _]
+  (if (:user session)
+    (assoc req :status 302
+           :headers {"Location" (bread/config req :auth/account-uri)})
+    req))
+
 (defmethod bread/dispatch ::login=>
   [{:keys [params request-method session] :as req}]
   (let [{:auth/keys [step]} session
@@ -573,7 +571,11 @@
           :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
 
-      :default {})))
+      :default
+      {:hooks
+       {::bread/expand
+        [{:action/name ::=>account
+          :action/description "Redirect to account page"}]}})))
 
 (def
   ^{:doc "Schema for authentication."}
