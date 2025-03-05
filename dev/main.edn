@@ -15,6 +15,7 @@
  :bread/app
  {:db #ig/ref :bread/db
   :auth {:login-uri "/~/login"
+         :account-uri "/~/account"
          ;:require-mfa? true
          :min-password-length 4}
   :signup {:signup-uri "/~/signup"
