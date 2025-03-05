@@ -305,7 +305,7 @@
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs global-strings
             query-global-strings? query-lang? format-fields? compact-fields?
-            rtl-langs]
+            rtl-langs lang-names]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
@@ -315,14 +315,19 @@
           format-fields?  true
           compact-fields? true
           rtl-langs #{:ar :he :fa :ur :ps :yi :ku
-                      :sy :arc :dv :ug :sd :brh}}}]
+                      :sy :arc :dv :ug :sd :brh}
+          lang-names {:ar "عربي"
+                      :en "English"
+                      :es "Español"
+                      :fr "Français"}}}]
    {:config
     {:i18n/lang-param      lang-param
      :i18n/fallback-lang   fallback-lang
      :i18n/supported-langs supported-langs
      :i18n/format-fields?  format-fields?
      :i18n/compact-fields? compact-fields?
-     :i18n/rtl-langs       rtl-langs}
+     :i18n/rtl-langs       rtl-langs
+     :i18n/lang-names      lang-names}
     :hooks
     {::expansions
      [{:action/name ::expansions
