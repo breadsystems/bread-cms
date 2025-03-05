@@ -365,6 +365,28 @@
      :params {:username "crenshaw" :password "intersectionz"}
      :uri "/login"}
 
+    ;; GET when already logged in. Redirect to account-uri.
+    {:status 302
+     :headers {"Location" "/account"
+               "content-type" "text/html"}
+     :session {:user crenshaw}
+     ::bread/data {:session {:user crenshaw}}}
+    {}
+    {:request-method :get
+     :session {:user crenshaw}
+     :uri "/login"}
+
+    ;; GET when already logged in. Redirect to custom account-uri.
+    {:status 302
+     :headers {"Location" "/custom-account-redirect"
+               "content-type" "text/html"}
+     :session {:user crenshaw}
+     ::bread/data {:session {:user crenshaw}}}
+    {:account-uri "/custom-account-redirect"}
+    {:request-method :get
+     :session {:user crenshaw}
+     :uri "/login"}
+
     ;; Logout
     {:status 302
      :headers {"Location" "/login"
