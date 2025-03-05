@@ -29,19 +29,20 @@
                        [:db/retract [:session/id sk] :session/data]])
     sk)
   (ss/read-session [_ sk]
-    (let [data (db/q @conn
-                        '{:find [?data .]
-                          :in [$ ?sk]
-                          :where [[?e :session/data ?data]
-                                  [?e :session/id ?sk]]}
-                        sk)]
-      (edn/read-string data)))
-  (ss/write-session [_ sk {:keys [user] :as data}]
-    (let [create? (not (seq sk))
-          sk (or sk (random/base64 512))
+    (let [{id :db/id data :session/data}
+          (db/q @conn
+                '{:find [(pull ?e [:db/id :session/data]) .]
+                  :in [$ ?sk]
+                  :where [[?e :session/id ?sk]]}
+                sk)]
+      (when id (-> data edn/read-string (assoc :db/id id)))))
+  (ss/write-session [this sk {:keys [user] :as data}]
+    (let [exists? (and sk (ss/read-session this sk))
+          sk (if exists? sk (random/base64 512))
+          date-key (if exists? :thing/created-at :thing/updated-at)
           session {:session/id sk
                    :session/data (pr-str data)
-                   (if create? :thing/created-at :thing/updated-at) (Date.)}
+                   date-key (Date.)}
           tx {:db/id (:db/id user)
               :user/sessions [session]}]
       (db/transact conn [tx])
