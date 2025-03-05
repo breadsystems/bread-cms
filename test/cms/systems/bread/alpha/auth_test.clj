@@ -281,7 +281,7 @@
 
     ;; POST with correct username & password. Sets session user.
     {:status 302
-     :headers {"Location" "/login"
+     :headers {"Location" "/account"
                "content-type" "text/html"}
      :session {:user angela
                :auth/step :logged-in}
@@ -295,7 +295,7 @@
 
     ;; POST with correct username & password. Sets session user.
     {:status 302
-     :headers {"Location" "/login"
+     :headers {"Location" "/account"
                "content-type" "text/html"}
      :session {:user bobby
                :auth/step :logged-in}
@@ -307,8 +307,8 @@
      :params {:username "bobby" :password "pantherz"}
      :uri "/login"}
 
-    ;; POST with correct password.
-    ;; Sets session user and redirects.
+    ;; POST with correct password & next param.
+    ;; Sets session user and redirects to account page.
     {:status 302
      :headers {"Location" "/successful-login"
                "content-type" "text/html"}
@@ -337,9 +337,23 @@
      :params {:username "bobby" :password "pantherz" :special "/successful-login-next"}
      :uri "/login"}
 
+    ;; POST with correct password & redirect, with custom :account-uri.
+    ;; Sets session user and redirects the URI according to the custom param.
+    {:status 302
+     :headers {"Location" "/custom-account"
+               "content-type" "text/html"}
+     :session {:user bobby
+               :auth/step :logged-in}
+     ::bread/data {:session {:user bobby :auth/step :logged-in}
+                   :auth/result {:update false :valid true :user bobby}}}
+    {:account-uri "/custom-account"}
+    {:request-method :post
+     :params {:username "bobby" :password "pantherz"}
+     :uri "/login"}
+
     ;; POST with correct password; custom hash algo. Sets session user.
     {:status 302
-     :headers {"Location" "/login"
+     :headers {"Location" "/account"
                "content-type" "text/html"}
      :session {:user crenshaw
                :auth/step :logged-in}
@@ -873,4 +887,5 @@
 
   (require '[kaocha.repl :as k])
   (k/run #'test-authentication-flow-with-mfa {:color? false})
+  (k/run #'test-authentication-flow {:color? false})
   (k/run {:color? false}))

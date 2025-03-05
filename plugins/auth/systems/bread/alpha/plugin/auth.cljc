@@ -61,6 +61,11 @@
   (ot/is-valid-totp-token? 812211 $secret)
   (ot/is-valid-totp-token? (ot/get-totp-token $secret) $secret))
 
+(defc AccountPage
+  [{:as data}]
+  {}
+  [:p data])
+
 (defc LoginStyle [{:keys [hook]}]
   {}
   (hook
@@ -104,11 +109,13 @@
       h1, h2, p {
         margin: 0;
       }
-      form {
+      main, form {
+        width: 100%;
+      }
+      .flex-col {
         display: flex;
         flex-flow: column nowrap;
         gap: 1.5em;
-        width: 100%;
       }
       .field {
         display: flex;
@@ -202,13 +209,13 @@
       (cond
         (:locked? result)
         [:main
-         [:form
+         [:form.flex-col
           (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
           (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
         (= :logged-in step)
         [:main
-         [:form {:name :bread-logout :method :post}
+         [:form.flex-col {:name :bread-logout :method :post}
           ;; TODO figure out what to do about this page...redirect to / by default?
           [:h2 (:auth/welcome i18n) " " (:user/username (:user session))]
           [:div.field
@@ -221,7 +228,7 @@
                                     :secret totp-key
                                     :image-type :PNG})]
           [:main
-           [:form {:name :setup-mfa :method :post}
+           [:form.flex-col {:name :setup-mfa :method :post}
             (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
             (hook ::html.scan-qr-instructions
                   [:p.instruct (:auth/please-scan-qr-code i18n)])
@@ -242,7 +249,7 @@
 
         (= :two-factor step)
         [:main
-         [:form {:name :bread-login :method :post}
+         [:form.flex-col {:name :bread-login :method :post}
           (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-2fa-code
                 [:p.instruct (:auth/enter-totp i18n)])
@@ -257,7 +264,7 @@
 
         :default
         [:main
-         [:form {:name :bread-login :method :post}
+         [:form.flex-col {:name :bread-login :method :post}
           (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-username
                 [:p.instruct (:auth/enter-username-password i18n)])
@@ -319,13 +326,14 @@
         next-param (bread/config res :auth/next-param)
         next-uri (get params next-param)
         login-uri (bread/config res :auth/login-uri)
+        account-uri (bread/config res :auth/account-uri)
         ;; Don't redirect to destination prematurely!
         redirect-to (cond
                       (and next-uri logged-in?) next-uri
                       next-uri (str login-uri "?"
                                     (name next-param) "="
                                     (URLEncoder/encode next-uri))
-                      logged-in? login-uri
+                      logged-in? account-uri
                       :else login-uri)]
     (if-not valid
       (assoc res :status 401)
@@ -634,8 +642,8 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hash-algorithm max-failed-login-count lock-seconds
-            next-param login-uri protected-prefixes require-mfa? mfa-issuer
+  ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
+            account-uri login-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?]
      :or {min-password-length 12
           max-password-length 72
@@ -644,6 +652,7 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
+          account-uri "/account"
           generous-totp-window? true}}]
    {:hooks
     {::db/migrations
@@ -677,4 +686,5 @@
      :auth/max-password-length max-password-length
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
-     :auth/login-uri login-uri}}))
+     :auth/login-uri login-uri
+     :auth/account-uri account-uri}}))

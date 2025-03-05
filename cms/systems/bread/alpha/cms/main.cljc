@@ -203,7 +203,11 @@
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'signup/SignupPage}]]
+        :dispatcher/component #'signup/SignupPage}]
+      ["/account"
+       {:name :account
+        :dispatcher/type ::auth/account=>
+        :dispatcher/component #'auth/AccountPage}]]
      ["/assets/*"
       (reitit.ring/create-resource-handler
         {:parameter :filename
