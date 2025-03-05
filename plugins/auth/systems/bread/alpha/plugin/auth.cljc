@@ -199,11 +199,6 @@
         letter-spacing: 5;
       }
 
-      .user-sessions {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5em;
-      }
       .user-session {
         display: flex;
         flex-flow: row wrap;
@@ -323,8 +318,6 @@
       (re-find #"windows" normalized) "Windows"
       :default "Unknown OS")))
 
-(def fmt (SimpleDateFormat. "EEE, LLL d 'at' h:mm a"))
-
 (defc AccountPage
   [{:as data
     :keys [hook i18n lang-names rtl? dir session supported-langs]
@@ -339,56 +332,62 @@
             {:user/roles [:role/key {:role/abilities [:ability/key]}]}
             {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
             {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (hook ::html.title [:title (str (:user/username user) " | Bread")])
-    (LoginStyle data)
-    (hook ::html.account-page-head [:<>])]
-   [:body
-    [:header
-     [:span (:user/username user)]
-     [:form.logout-form {:method :post :action "/~/login"} ;; TODO config
-      [:button {:type :submit :name :submit :value "logout"}
-       (:auth/logout i18n)]]]
-    [:main
-     [:form.flex-col {:method :post}
-      (hook ::html.account-details-heading [:h3 (:auth/account-details i18n)])
-      [:.field
-       [:label {:for :name} (:auth/name i18n)]
-       [:input {:id :name :name :name :value (:user/name user)}]]
-      (when (> (count supported-langs) 1)
+  (let [date-fmt (SimpleDateFormat. (:auth/date-format-default i18n "d LLL"))]
+    [:html {:lang (:field/lang data) :dir dir}
+     [:head
+      [:meta {:content-type :utf-8}]
+      (hook ::html.title [:title (str (:user/username user) " | Bread")])
+      (LoginStyle data)
+      (hook ::html.account-page-head [:<>])]
+     [:body
+      [:header
+       [:span (:user/username user)]
+       [:form.logout-form {:method :post :action "/~/login"} ;; TODO config
+        [:button {:type :submit :name :submit :value "logout"}
+         (:auth/logout i18n)]]]
+      [:main
+       [:form.flex-col {:method :post}
+        (hook ::html.account-details-heading [:h3 (:auth/account-details i18n)])
         [:.field
-         [:label {:for :lang} (:auth/preferred-language i18n)]
-         [:select {:id :lang :name :lang}
-          (map (fn [k]
-                 [:option {:selected (= k (:lang preferences)) :value k}
-                  (get lang-names k (name k))])
-               (sort-by name (seq supported-langs)))]])]
-     [:section.flex-col
-      (hook ::html.account-sessions-heading [:h3 (:auth/your-sessions i18n)])
-      [:.user-sessions
-       (map (fn [{:as user-session
-                  {:keys [user-agent remote-addr]} :session/data
-                  :thing/keys [created-at updated-at]}]
-              (if (= (:db/id session) (:db/id user-session))
-                [:div.user-session.current
-                 [:div
-                  [:div (ua->browser user-agent)]
-                  [:div (ua->os user-agent)]]
-                 [:div [:span.instruct "This session"]]]
-                [:form.user-session {:method :post}
-                 [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
-                 [:div
-                  (when created-at
-                    [:div (.format fmt created-at)])
-                  [:div (ua->browser user-agent)]
-                  [:div (ua->os user-agent)]]
-                 [:div
-                  [:button {:type :submit :name :action :value "delete-session"}
-                   (:auth/logout i18n)]]]))
-            sessions)]]
-     [:pre (with-out-str (clojure.pprint/pprint user))]]]])
+         [:label {:for :name} (:auth/name i18n)]
+         [:input {:id :name :name :name :value (:user/name user)}]]
+        (when (> (count supported-langs) 1)
+          [:.field
+           [:label {:for :lang} (:auth/preferred-language i18n)]
+           [:select {:id :lang :name :lang}
+            (map (fn [k]
+                   [:option {:selected (= k (:lang preferences)) :value k}
+                    (get lang-names k (name k))])
+                 (sort-by name (seq supported-langs)))]])]
+       [:section.flex-col
+        (hook ::html.account-sessions-heading [:h3 (:auth/your-sessions i18n)])
+        [:.flex-col
+         (map (fn [{:as user-session
+                    {:keys [user-agent remote-addr]} :session/data
+                    :thing/keys [created-at updated-at]}]
+                (if (= (:db/id session) (:db/id user-session))
+                  [:div.user-session.current
+                   [:div
+                    [:div (ua->browser user-agent)]
+                    [:div (ua->os user-agent)]
+                    [:div (.format date-fmt created-at)]
+                    (when updated-at
+                      [:div "Last active at " (.format date-fmt updated-at)])]
+                   [:div [:span.instruct "This session"]]]
+                  [:form.user-session {:method :post}
+                   [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
+                   [:div
+                    [:div (ua->browser user-agent)]
+                    [:div (ua->os user-agent)]
+                    [:div (.format date-fmt created-at)]
+                    (when updated-at
+                      [:div "Last active at " (.format date-fmt updated-at)])]
+                   [:div
+                    [:button {:type :submit :name :action :value "delete-session"}
+                     (:auth/logout i18n)]]]))
+              sessions)]]
+       #_
+       [:pre (with-out-str (clojure.pprint/pprint user))]]]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
