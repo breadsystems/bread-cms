@@ -31,13 +31,14 @@
                        [:db/retract [:session/id sk] :session/data]])
     sk)
   (ss/read-session [_ sk]
-    (let [{id :db/id data :session/data}
-          (db/q @conn
-                '{:find [(pull ?e [:db/id :session/data]) .]
-                  :in [$ ?sk]
-                  :where [[?e :session/id ?sk]]}
-                sk)]
-      (when id (-> data edn/read-string (assoc :db/id id)))))
+    (when sk
+      (let [{id :db/id data :session/data}
+            (db/q @conn
+                  '{:find [(pull ?e [:db/id :session/data]) .]
+                    :in [$ ?sk]
+                    :where [[?e :session/id ?sk]]}
+                  sk)]
+        (when id (-> data edn/read-string (assoc :db/id id))))))
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
           sk (if exists? sk (random/base64 512))
