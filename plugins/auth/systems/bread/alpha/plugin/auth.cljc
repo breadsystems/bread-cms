@@ -419,8 +419,7 @@
                    [:div
                     [:button {:type :submit :name :action :value "delete-session"}
                      (:auth/logout i18n)]]]))
-              sessions)]]
-       [:pre (with-out-str (clojure.pprint/pprint user))]]]]))
+              sessions)]]]]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
