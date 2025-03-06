@@ -75,12 +75,12 @@
         --body-max-width: 70ch;
         --border-width: 2px;
         --color-text-body: hsl(300, 80%, 95%);
-        --color-text-emphasis: hsl(300.8, 63.8%, 77.3%);
-        --color-stroke-emphasis: hsl(300.7, 38.3%, 55.5%);
+        --color-text-emphasis: hsl(286.9, 92.7%, 78.6%);
+        --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
         --color-stroke-secondary: hsl(300, 75%, 12.5%);
         --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
-        --color-text-error: hsl(284.2, 43.2%, 82.7%);
-        --color-stroke-error: hsl(300.7, 38.3%, 55.5%);
+        --color-text-error: hsl(326, 68.3%, 62.9%);
+        --color-stroke-error: hsl(314.9, 52.7%, 46.5%);
         --color-text-secondary: hsl(300, 21.9%, 70.4%);
         --color-bg: hsl(264, 41.7%, 4.7%);
       }
@@ -148,6 +148,12 @@
       }
       .instruct {
         color: var(--color-text-secondary);
+      }
+      .emphasis {
+        font-weight: 700;
+        color: var(--color-text-emphasis);
+        border: var(--border-width) dashed var(--color-stroke-emphasis);
+        padding: 12px;
       }
       .error {
         font-weight: 700;
@@ -318,16 +324,22 @@
       (re-find #"windows" normalized) "Windows"
       :default "Unknown OS")))
 
+(defn- i18n-format [i18n k]
+  (if (sequential? k) ;; TODO tongue
+    (let [[k & args] k]
+      (apply format (get i18n k) args))
+    (get i18n k)))
+
 (defc AccountPage
   [{:as data
-    :keys [hook i18n lang-names rtl? dir session supported-langs]
-    {:as user :user/keys [preferences sessions roles]} :user
-    :or {preferences {:lang "en"}}}]
+    :keys [config flash hook i18n lang-names rtl? dir session supported-langs]
+    {:as user :user/keys [sessions roles]} :user}]
   {:query '[:db/id
             :thing/created-at
             :user/username
             {:user/email [*]}
             :user/name
+            :user/lang
             :user/preferences
             {:user/roles [:role/key {:role/abilities [:ability/key]}]}
             {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
@@ -342,12 +354,16 @@
      [:body
       [:header
        [:span (:user/username user)]
-       [:form.logout-form {:method :post :action "/~/login"} ;; TODO config
+       [:form.logout-form {:method :post :action (:auth/login-uri config)}
         [:button {:type :submit :name :submit :value "logout"}
          (:auth/logout i18n)]]]
       [:main
        [:form.flex-col {:method :post}
         (hook ::html.account-details-heading [:h3 (:auth/account-details i18n)])
+        (when-let [success-key (:success-key flash)]
+          (hook ::html.account-flash [:.emphasis [:p (i18n-format i18n success-key)]]))
+        (when-let [error-key (:error-key flash)]
+          (hook ::html.account-error [:.error [:p (i18n-format i18n error-key)]]))
         [:.field
          [:label {:for :name} (:auth/name i18n)]
          [:input {:id :name :name :name :value (:user/name user)}]]
@@ -356,9 +372,26 @@
            [:label {:for :lang} (:auth/preferred-language i18n)]
            [:select {:id :lang :name :lang}
             (map (fn [k]
-                   [:option {:selected (= k (:lang preferences)) :value k}
+                   [:option {:selected (= k (:user/lang user)) :value k}
                     (get lang-names k (name k))])
-                 (sort-by name (seq supported-langs)))]])]
+                 (sort-by name (seq supported-langs)))]])
+        [:p.instruct (:auth/leave-passwords-blank i18n)]
+        [:.field
+         [:label {:for :password} (:auth/password i18n)]
+         [:input {:id :password
+                  :type :password
+                  :name :password
+                  :maxlength (:auth/max-password-length config)}]]
+        [:.field
+         [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+         [:input {:id :password-confirmation
+                  :type :password
+                  :name :password-confirmation
+                  :maxlength (:auth/max-password-length config)}]]
+        [:.field
+         [:span.spacer]
+         [:button {:type :submit :name :action :value "update"}
+          (:auth/save i18n)]]]
        [:section.flex-col
         (hook ::html.account-sessions-heading [:h3 (:auth/your-sessions i18n)])
         [:.flex-col
@@ -386,7 +419,6 @@
                     [:button {:type :submit :name :action :value "delete-session"}
                      (:auth/logout i18n)]]]))
               sessions)]]
-       #_
        [:pre (with-out-str (clojure.pprint/pprint user))]]]]))
 
 (defmethod bread/action ::require-auth
@@ -546,10 +578,12 @@
                                   :user/failed-login-count incremented)])))))
 
 (defmethod bread/action ::=>account
-  [{:as req :keys [session]} _ _]
+  [{:as req :keys [session]} {:keys [flash]} _]
   (if (:user session)
-    (assoc req :status 302
-           :headers {"Location" (bread/config req :auth/account-uri)})
+    (assoc req
+           :status 302
+           :headers {"Location" (bread/config req :auth/account-uri)}
+           :flash flash)
     req))
 
 (defmethod bread/dispatch ::login=>
@@ -709,26 +743,68 @@
      [:db/retract id :thing/created-at]
      [:db/retract id :thing/updated-at]]))
 
-(defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+(defn validate-password-fields
+  [{:auth/keys [min-password-length max-password-length]}
+   {:keys [password password-confirmation]}]
+  "Returns an error code as a keyword if the :password and/or :password-confirmation
+  params are invalid."
   (cond
-    (= :post request-method)
-    {:effects
-     [(when-let [txs (account-action req)]
-        {:effect/name ::db/transact
-         :conn (db/connection req)
-         :txs txs})]
-     :hooks
-     {::bread/expand
-      [{:action/name ::=>account
-        :action/description
-        "Redirect to account page after taking an account action"}]}}
+    (empty? password) :auth/password-required
+    (not= password password-confirmation) :auth/passwords-must-match
+    (< (count password) min-password-length)
+    [:auth/password-must-be-at-least min-password-length]
+    (> (count password) max-password-length)
+    [:auth/password-must-be-at-most max-password-length]))
 
-    :default
+(defmethod account-action :update [{:as req :keys [params session] ::bread/keys [config]}]
+  (let [{:keys [password password-confirmation]} params
+        update-password? (seq password)
+        error-key (when update-password? (validate-password-fields config params))
+        hash-algo (when update-password? (:auth/hash-algorithm config))]
+    (when error-key (throw (ex-info "Invalid password" {:error-key error-key})))
+    [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
+       (:lang params) (assoc :user/lang (keyword (:lang params)))
+       update-password? (assoc :user/password
+                               (hashers/derive password {:alg hash-algo})))]))
+
+(defmethod bread/dispatch ::account=>
+  [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
+  (if (= :post request-method)
+    ;; Account update.
+    (let [action (keyword (:action params))
+          account-update? (= :update action)
+          [txs error-key] (try
+                            [(account-action req) nil]
+                            (catch clojure.lang.ExceptionInfo e
+                              [nil (-> e ex-data :error-key)]))
+          success-key (cond
+                        account-update? :account-updated)]
+      (prn txs error-key)
+      (prn '=> (db/txs->effect req txs :effect/description "Update account details"))
+      (if txs
+        {:effects
+         [(db/txs->effect req txs :effect/description "Update account details")]
+         :hooks
+         {::bread/expand
+          [{:action/name ::=>account
+            :flash (when account-update? {:success-key :auth/account-updated})
+            :action/description
+            "Redirect to account page after taking an account action"}]}}
+        {:hooks
+         {::bread/expand
+          [{:action/name ::=>account
+            :flash (when account-update? {:error-key error-key})
+            :action/description
+            "Redirect to account page after an error"}]}}))
+    ;; Rendering the account page.
     (let [id (:db/id (:user session))
           pull (:dispatcher/pull dispatcher)]
       {:expansions
-       [{:expansion/key :user
+       [{:expansion/key :config
+         :expansion/name ::bread/value
+         :expansion/description "App config"
+         :expansion/value (::bread/config req)}
+        {:expansion/key :user
          :expansion/name ::db/query
          :expansion/description "Query for all user account data"
          :expansion/db (db/database req)

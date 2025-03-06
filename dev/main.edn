@@ -49,7 +49,8 @@
              #_#_ ;; Uncomment to enable MFA
              :user/totp-key "B67CWTTTP7UQ5KWT"
              :user/failed-login-count 0
-             :user/preferences "{:lang :en}"
+             :user/preferences "{}"
+             :user/lang :en
              :user/roles
              #{{:role/key :author
                 :role/abilities
