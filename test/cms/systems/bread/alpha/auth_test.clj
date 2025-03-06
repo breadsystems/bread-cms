@@ -870,7 +870,10 @@
     (testing "read-session"
       (let [sk (ss/write-session session-store nil {:a :b})]
         (is (= {:a :b} (dissoc (ss/read-session session-store sk) :db/id)))
-        (is (= {:a :b} (dissoc (ss/read-session session-store (str sk)) :db/id)))))
+        (is (= {:a :b} (dissoc (ss/read-session session-store (str sk)) :db/id))))
+
+      (testing "passing nil session key"
+        (is (nil? (ss/read-session session-store nil)))))
 
     (testing "delete-session"
       (testing "passing a UUID"
