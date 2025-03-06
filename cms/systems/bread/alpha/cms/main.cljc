@@ -120,9 +120,7 @@
 
 (defn- wrap-clear-flash [f]
   (fn [req]
-    (prn '<== (:flash req))
     (let [res (f req)]
-      (prn '==> (:flash res))
       (cond
         (:clear? (:flash res)) (dissoc res :flash)
         (:flash res) (assoc-in res [:flash :clear?] true)
