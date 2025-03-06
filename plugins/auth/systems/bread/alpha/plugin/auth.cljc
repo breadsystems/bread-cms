@@ -726,7 +726,7 @@
       {:hooks
        {::bread/expand
         [{:action/name ::=>account
-          :action/description "Redirect to account page"}]}})))
+          :action/description "Redirect to account page after login"}]}})))
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
@@ -779,20 +779,20 @@
                               [nil (-> e ex-data :error-key)]))
           success-key (cond
                         account-update? :account-updated)]
-      (prn txs error-key)
-      (prn '=> (db/txs->effect req txs :effect/description "Update account details"))
       (if txs
         {:effects
          [(db/txs->effect req txs :effect/description "Update account details")]
          :hooks
          {::bread/expand
-          [{:action/name ::=>account
+          [{:action/name ::ring/redirect
+            :to (bread/config req :auth/account-uri)
             :flash (when account-update? {:success-key :auth/account-updated})
             :action/description
             "Redirect to account page after taking an account action"}]}}
         {:hooks
          {::bread/expand
-          [{:action/name ::=>account
+          [{:action/name ::ring/redirect
+            :to (bread/config req :auth/account-uri)
             :flash (when account-update? {:error-key error-key})
             :action/description
             "Redirect to account page after an error"}]}}))
