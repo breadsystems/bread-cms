@@ -65,7 +65,7 @@
                   :maxlength (:auth/max-password-length config)}]]
         (when error-key
           (hook ::html.invalid-signup
-                [:div.error [:p (if (sequential? error-key)
+                [:div.error [:p (if (sequential? error-key) ;; TODO tongue?
                                   (let [[k & args] error-key]
                                     (apply format (get i18n k) args))
                                   (get i18n error-key))]]))

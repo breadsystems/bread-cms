@@ -18,6 +18,7 @@
  #:auth{
         :account-details "Account details"
         :account-locked "Account locked"
+        :account-updated "Account details have been updated."
         :continue "Continue"
         :datetime-format-default "EEE, LLL d 'at' h:mm a"
         :date-format-default "EEE, LLL d"
@@ -26,6 +27,7 @@
         :enter-username-password "Please enter your username and password."
         :invalid-totp "Invalid code. Please try again."
         :invalid-username-password "Invalid username or password."
+        :leave-passwords-blank "Leave password fields blank to keep your current password."
         :login "Login"
         :logout "Logout"
         :login-to-bread "Login to Bread"
@@ -40,6 +42,7 @@
         :preferred-language "Preferred language"
         :please-scan-qr-code"Please scan the QR code to finish setting up multi-factor authentication."
         :qr-code "QR code"
+        :save "Save"
         :too-many-attempts "You have made too many attempts to log in. Please try again later."
         :username "Username"
         :verify "Verify"
