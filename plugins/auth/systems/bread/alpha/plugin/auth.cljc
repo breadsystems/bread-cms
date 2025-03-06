@@ -730,9 +730,10 @@
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
-  (as-> user $
+  (when user
+    (as-> user $
       (update $ :user/preferences edn/read-string)
-      (s/transform [:user/sessions s/ALL :session/data] edn/read-string $)))
+      (s/transform [:user/sessions s/ALL :session/data] edn/read-string $))))
 
 (defmulti account-action (fn [{:keys [params]}] (keyword (:action params))))
 
