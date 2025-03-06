@@ -141,6 +141,12 @@
   "Pass-through expansion that simply returns the value given by :expansion/value."
   value)
 
+(defn value->expansion [k value & {desc :expansion/description}]
+  {:expansion/key k
+   :expansion/name ::value
+   :expansion/value value
+   :expansion/description desc})
+
 (defn hooks-for
   "Returns all hooks for h."
   [app h]
