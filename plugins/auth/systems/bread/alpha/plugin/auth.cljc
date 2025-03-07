@@ -76,7 +76,7 @@
         --body-max-width: 70ch;
         --border-width: 2px;
         --color-text-body: hsl(300, 80%, 95%);
-        --color-text-emphasis: hsl(286.9, 92.7%, 78.6%);
+        --color-text-emphasis: hsl(300.7, 95.3%, 83.1%);
         --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
         --color-stroke-secondary: hsl(300, 75%, 12.5%);
         --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
@@ -88,8 +88,8 @@
       @media (prefers-color-scheme: light) {
         :root {
           --color-text-body: hsl(263.9, 79%, 24.3%);
-          --color-text-emphasis: hsl(281.1, 74.7%, 32.5%);
-          --color-stroke-emphasis: hsl(300.8, 83.1%, 34.7%);
+          --color-text-emphasis: hsl(280.9, 52.6%, 42.2%);
+          --color-stroke-emphasis: hsl(290, 33.3%, 49.4%);
           --color-stroke-secondary: hsl(300, 75%, 12.5%);
           --color-text-error: hsl(309.4, 73.8%, 37.5%);
           --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
@@ -184,7 +184,7 @@
         font-weight: 700;
         font-size: 1rem;
       }
-      button:focus, input:focus {
+      :is(button, input, select):focus {
         outline: var(--border-width) solid var(--color-stroke-emphasis);
         border-color: transparent;
       }
