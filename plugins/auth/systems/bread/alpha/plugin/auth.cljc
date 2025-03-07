@@ -241,7 +241,8 @@
      [:head
       [:meta {:content-type :utf-8}]
       (hook ::html.title [:title (str (:auth/login i18n) " | Bread")])
-      (LoginStyle data)]
+      (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
+      (->> [:<>] (hook ::html.head) (hook ::html.login.head))]
      [:body
       (cond
         (:user/locked-at user)
@@ -349,9 +350,9 @@
     [:html {:lang (:field/lang data) :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
-      (hook ::html.title [:title (str (:user/username user) " | Bread")])
-      (LoginStyle data)
-      (hook ::html.account-page-head [:<>])]
+      (hook ::html.account.title [:title (str (:user/username user) " | Bread")])
+      (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
+      (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
      [:body
       [:header
        [:span (:user/username user)]
@@ -360,11 +361,12 @@
          (:auth/logout i18n)]]]
       [:main
        [:form.flex-col {:method :post}
-        (hook ::html.account-details-heading [:h3 (:auth/account-details i18n)])
+        (hook ::html.account.details-form.begin [:<>])
+        (hook ::html.account.details-heading [:h3 (:auth/account-details i18n)])
         (when-let [success-key (:success-key flash)]
-          (hook ::html.account-flash [:.emphasis [:p (i18n-format i18n success-key)]]))
+          (hook ::html.account.flash [:.emphasis [:p (i18n-format i18n success-key)]]))
         (when-let [error-key (:error-key flash)]
-          (hook ::html.account-error [:.error [:p (i18n-format i18n error-key)]]))
+          (hook ::html.account.error [:.error [:p (i18n-format i18n error-key)]]))
         [:.field
          [:label {:for :name} (:auth/name i18n)]
          [:input {:id :name :name :name :value (:user/name user)}]]
@@ -392,9 +394,11 @@
         [:.field
          [:span.spacer]
          [:button {:type :submit :name :action :value "update"}
-          (:auth/save i18n)]]]
+          (:auth/save i18n)]]
+        (hook ::html.account.details-form.end [:<>])]
        [:section.flex-col
-        (hook ::html.account-sessions-heading [:h3 (:auth/your-sessions i18n)])
+        (hook ::html.account.sessions.begin [:<>])
+        (hook ::html.account.sessions-heading [:h3 (:auth/your-sessions i18n)])
         [:.flex-col
          (map (fn [{:as user-session
                     {:keys [user-agent remote-addr]} :session/data
@@ -419,7 +423,8 @@
                    [:div
                     [:button {:type :submit :name :action :value "delete-session"}
                      (:auth/logout i18n)]]]))
-              sessions)]]]]]))
+              sessions)]
+        (hook ::html.account.sessions.end [:<>])]]]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]

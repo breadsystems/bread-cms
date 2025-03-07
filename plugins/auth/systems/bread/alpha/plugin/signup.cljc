@@ -27,7 +27,8 @@
    [:head
     [:meta {:content-type "utf-8"}]
     (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
-    (auth/LoginStyle data)]
+    (->> (auth/LoginStyle data) (hook ::auth/html.stylesheet) (hook ::html.signup.stylesheet))
+    (->> [:<>] (hook ::auth/html.head) (hook ::html.signup.head))]
    [:body
     (cond
       (and (:signup/invite-only? config) (not (:code params)))
