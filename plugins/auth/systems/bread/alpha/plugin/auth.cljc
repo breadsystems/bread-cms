@@ -355,10 +355,12 @@
       (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
      [:body
       [:header
-       [:span (:user/username user)]
+       (->> [:<>] (hook ::html.header.begin))
+       (hook ::html.username [:span (:user/username user)])
        [:form.logout-form {:method :post :action (:auth/login-uri config)}
         [:button {:type :submit :name :submit :value "logout"}
-         (:auth/logout i18n)]]]
+         (:auth/logout i18n)]]
+       (->> [:<>] (hook ::html.header.end))]
       [:main
        [:form.flex-col {:method :post}
         (hook ::html.account.details-form.begin [:<>])
