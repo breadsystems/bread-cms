@@ -501,7 +501,7 @@
   (let [encrypted (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
     (cond
-      (not user) {:valid false :update false :user nil}
+      (not user) {:valid false :user nil}
 
       ;; Don't bother authenticating if the account is locked.
       (and (:user/locked-at user)
@@ -512,7 +512,7 @@
       (let [result (try
                      (hashers/verify plaintext-password encrypted)
                      (catch clojure.lang.ExceptionInfo e
-                       {:valid false :update false}))]
+                       {:valid false}))]
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
