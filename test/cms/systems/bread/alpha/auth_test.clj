@@ -233,7 +233,7 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:update false :valid false :user nil}}}
+                   :auth/result {:valid false :user nil}}}
     {}
     {:request-method :post
      :uri "/login"}
@@ -243,7 +243,7 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:update false :valid false :user nil}}}
+                   :auth/result {:valid false :user nil}}}
     {}
     {:request-method :post
      :params {:username "no one"}
@@ -254,7 +254,7 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:update false :valid false :user nil}}}
+                   :auth/result {:valid false :user nil}}}
     {}
     {:request-method :post
      :params {:username "no one" :password nil}
@@ -265,7 +265,7 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:update false :valid false :user nil}}}
+                   :auth/result {:valid false :user nil}}}
     {}
     {:request-method :post
      :params {:username "no one" :password "nothing"}
