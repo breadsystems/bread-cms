@@ -357,9 +357,10 @@
       [:header
        (->> [:<>] (hook ::html.header.begin))
        (hook ::html.username [:span (:user/username user)])
-       [:form.logout-form {:method :post :action (:auth/login-uri config)}
-        [:button {:type :submit :name :submit :value "logout"}
-         (:auth/logout i18n)]]
+       (hook ::html.logout-form
+             [:form.logout-form {:method :post :action (:auth/login-uri config)}
+              [:button {:type :submit :name :submit :value "logout"}
+               (:auth/logout i18n)]])
        (->> [:<>] (hook ::html.header.end))]
       [:main
        [:form.flex-col {:method :post}
