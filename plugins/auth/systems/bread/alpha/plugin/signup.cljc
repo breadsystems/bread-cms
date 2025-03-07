@@ -32,19 +32,19 @@
     (cond
       (and (:signup/invite-only? config) (not (:code params)))
       [:main
-       [:form
+       [:form.flex-col
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p (:signup/site-invite-only i18n)]]]
 
       (and (:signup/invite-only? config) (not invitation))
       [:main
-       [:form
+       [:form.flex-col
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p (:signup/invitation-invalid i18n)]]]
 
       :default
       [:main
-       [:form {:name :bread-signup :method :post}
+       [:form.flex-col {:name :bread-signup :method :post}
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         (hook ::html.enter-username
               [:p.instruct (:signup/please-choose-username-password i18n)])
