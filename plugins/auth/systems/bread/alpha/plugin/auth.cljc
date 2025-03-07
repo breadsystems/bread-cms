@@ -244,7 +244,7 @@
       (LoginStyle data)]
      [:body
       (cond
-        (:locked? result)
+        (:user/locked-at user)
         [:main
          [:form.flex-col
           (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
@@ -440,7 +440,7 @@
 (defmethod bread/action ::set-session
   [{::bread/keys [data] :keys [params query-string session] :as res}
    {:keys [max-failed-login-count require-mfa?]} _]
-  (let [{{:keys [valid user locked?]} :auth/result} data
+  (let [{{:keys [valid user]} :auth/result} data
         current-step (:auth/step session)
         login-step? (nil? current-step)
         setting-up-two-factor? (= :setup-two-factor (:auth/step session))
@@ -462,7 +462,8 @@
                   (assoc session :auth/user user :auth/step next-step)
                   logged-in? (-> session
                                  (assoc :user user :auth/step next-step)
-                                 (dissoc :auth/user)))
+                                 (dissoc :auth/user))
+                  user (assoc session :auth/user user))
         next-param (bread/config res :auth/next-param)
         next-uri (get params next-param)
         login-uri (bread/config res :auth/login-uri)
@@ -475,13 +476,12 @@
                                     (URLEncoder/encode next-uri))
                       logged-in? account-uri
                       :else login-uri)]
-    (if-not valid
-      (assoc res :status 401)
-      (-> res
-          (assoc :status 302 :session session)
-          (assoc-in [::bread/data :session] session)
-          ;; NOTE: this may get overwritten when a :next param is present.
-          (assoc-in [:headers "Location"] redirect-to)))))
+    (cond-> (-> res
+                (assoc :session session)
+                (assoc-in [::bread/data :session] session))
+      valid (assoc :status 302)
+      valid (assoc-in [:headers "Location"] redirect-to)
+      (not valid) (assoc :status 401))))
 
 (comment
   (def $now #inst "2025-01-01T00:00:00")
