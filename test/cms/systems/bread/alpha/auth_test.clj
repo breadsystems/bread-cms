@@ -274,8 +274,8 @@
     ;; POST with bad password
     {:status 401
      :headers {"content-type" "text/html"}
-     :session nil
-     ::bread/data {:session nil
+     :session {:auth/user angela}
+     ::bread/data {:session {:auth/user angela}
                    :auth/result {:update false :valid false :user angela}}}
     {}
     {:request-method :post
