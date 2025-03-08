@@ -106,7 +106,7 @@
         color: var(--color-text-body);
         background: var(--color-bg);
       }
-      header {
+      nav {
         align-items: center;
 
         padding: 1em;
@@ -126,13 +126,14 @@
       form {
         margin: 0;
       }
-      main, .flex-col {
+      .flex {
         display: flex;
-        flex-flow: column nowrap;
         gap: 1.5em;
       }
-      .flex-row {
-        display: flex;
+      .col {
+        flex-flow: column nowrap;
+      }
+      .row {
         flex-flow: row nowrap;
         gap: 1em;
         justify-content: space-between;
@@ -252,8 +253,8 @@
      [:body
       (cond
         (:user/locked-at user)
-        [:main
-         [:form.flex-col
+        [:main.flex.col
+         [:form.flex.col
           (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
           (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
@@ -262,8 +263,8 @@
                                     :user (:user/username user)
                                     :secret totp-key
                                     :image-type :PNG})]
-          [:main
-           [:form.flex-col {:name :setup-mfa :method :post}
+          [:main.flex.col
+           [:form.flex.col {:name :setup-mfa :method :post}
             (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
             (hook ::html.scan-qr-instructions
                   [:p.instruct (:auth/please-scan-qr-code i18n)])
@@ -283,8 +284,8 @@
                      [:p (:auth/invalid-totp i18n)]]))]])
 
         (= :two-factor step)
-        [:main
-         [:form.flex-col {:name :bread-login :method :post}
+        [:main.flex.col
+         [:form.flex.col {:name :bread-login :method :post}
           (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-2fa-code
                 [:p.instruct (:auth/enter-totp i18n)])
@@ -298,8 +299,8 @@
                    [:p (:auth/invalid-totp i18n)]]))]]
 
         :default
-        [:main
-         [:form.flex-col {:name :bread-login :method :post}
+        [:main.flex.col
+         [:form.flex.col {:name :bread-login :method :post}
           (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
           (hook ::html.enter-username
                 [:p.instruct (:auth/enter-username-password i18n)])
@@ -368,10 +369,10 @@
       (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
       (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
      [:body
-      [:header.flex-row
+      [:nav.flex.row
        (map (partial Section data) (:auth/html.account.header config))]
-      [:main
-       [:form.flex-col {:method :post}
+      [:main.flex.col
+       [:form.flex.col {:method :post}
         (hook ::html.account.details-heading [:h3 (:auth/account-details i18n)])
         (when-let [success-key (:success-key flash)]
           (hook ::html.account.flash [:.emphasis [:p (i18n-format i18n success-key)]]))
@@ -405,9 +406,9 @@
          [:span.spacer]
          [:button {:type :submit :name :action :value "update"}
           (:auth/save i18n)]]]
-       [:section.flex-col
+       [:section.flex.col
         (hook ::html.account.sessions-heading [:h3 (:auth/your-sessions i18n)])
-        [:.flex-col
+        [:.flex.col
          (map (fn [{:as user-session
                     {:keys [user-agent remote-addr]} :session/data
                     :thing/keys [created-at updated-at]}]
