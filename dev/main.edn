@@ -13,7 +13,7 @@
   :wrap-defaults #ig/ref :ring/wrap-defaults
   :app #ig/ref :bread/app}
  :bread/app
- {:site-name "Breadbox"
+ {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
   :auth {:login-uri "/~/login"
          :account-uri "/~/account"

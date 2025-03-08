@@ -15,9 +15,14 @@
 (defmethod bread/action ::config [{:as req ::bread/keys [config]} _ _]
   (update req ::bread/data assoc :config config))
 
-(defn plugins [{:keys [components db i18n routes site-name user]
-                :or {site-name "Bread"}}]
-  [(dispatcher/plugin)
+(defn site-plugin [{site-name :name
+                    :or {site-name "Bread"}}]
+  {:config
+   {:site/name site-name}})
+
+(defn plugins [{:keys [components db i18n routes site user]}]
+  [(site-plugin site)
+   (dispatcher/plugin)
    (expansion/plugin)
    (when-not (false? components) (component/plugin components))
    (when-not (false? db) (db/plugin (merge {:db/migrations schema/initial} db)))
@@ -42,6 +47,4 @@
        :action/description "Add db attrs as raw maps"}]
      ::bread/attrs-map
      [{:action/name ::datalog/attrs-map
-       :action/description "All db attrs, indexed by :db/ident"}]}
-    :config
-    {:site/name site-name}}])
+       :action/description "All db attrs, indexed by :db/ident"}]}}])
