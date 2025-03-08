@@ -236,7 +236,7 @@
 
 (defc LoginPage
   [{:as data
-    :keys [hook i18n session rtl? dir totp]
+    :keys [config hook i18n session rtl? dir totp]
     :auth/keys [result]}]
   {}
   (let [{:keys [totp-key issuer]} totp
@@ -247,7 +247,7 @@
             :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
-      (hook ::html.title [:title (str (:auth/login i18n) " | Bread")])
+      (hook ::html.title [:title (str (:auth/login i18n) " | " (:site/name config))])
       (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
       (->> [:<>] (hook ::html.head) (hook ::html.login.head))]
      [:body
@@ -365,7 +365,7 @@
     [:html {:lang (:field/lang data) :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
-      (hook ::html.account.title [:title (str (:user/username user) " | Bread")])
+      (hook ::html.account.title [:title (str (:user/username user) " | " (:site/name config))])
       (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
       (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
      [:body

@@ -13,7 +13,8 @@
   :wrap-defaults #ig/ref :ring/wrap-defaults
   :app #ig/ref :bread/app}
  :bread/app
- {:db #ig/ref :bread/db
+ {:site-name "Breadbox"
+  :db #ig/ref :bread/db
   :auth {:login-uri "/~/login"
          :account-uri "/~/account"
          ;:require-mfa? true
