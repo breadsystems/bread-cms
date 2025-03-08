@@ -11,7 +11,7 @@
     [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
-    [systems.bread.alpha.component :as component :refer [defc]]
+    [systems.bread.alpha.component :as component :refer [defc Section]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
@@ -107,9 +107,6 @@
         background: var(--color-bg);
       }
       header {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: space-between;
         align-items: center;
 
         padding: 1em;
@@ -133,6 +130,15 @@
         display: flex;
         flex-flow: column nowrap;
         gap: 1.5em;
+      }
+      .flex-row {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: 1em;
+        justify-content: space-between;
+      }
+      .spacer {
+        flex: 1;
       }
       .field {
         display: flex;
@@ -332,6 +338,14 @@
       (apply format (get i18n k) args))
     (get i18n k)))
 
+(defmethod Section ::username [{:keys [hook user]} _]
+  [:span.username (:user/username user)])
+
+(defn LogoutForm [{:keys [config i18n]}]
+  [:form.logout-form {:method :post :action (:auth/login-uri config)}
+   [:button {:type :submit :name :submit :value "logout"}
+    (:auth/logout i18n)]])
+
 (defc AccountPage
   [{:as data
     :keys [config flash hook i18n lang-names rtl? dir session supported-langs]
@@ -354,17 +368,10 @@
       (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
       (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
      [:body
-      [:header
-       (->> [:<>] (hook ::html.header.begin))
-       (hook ::html.username [:span (:user/username user)])
-       (hook ::html.logout-form
-             [:form.logout-form {:method :post :action (:auth/login-uri config)}
-              [:button {:type :submit :name :submit :value "logout"}
-               (:auth/logout i18n)]])
-       (->> [:<>] (hook ::html.header.end))]
+      [:header.flex-row
+       (map (partial Section data) (:auth/html.account.header config))]
       [:main
        [:form.flex-col {:method :post}
-        (hook ::html.account.details-form.begin [:<>])
         (hook ::html.account.details-heading [:h3 (:auth/account-details i18n)])
         (when-let [success-key (:success-key flash)]
           (hook ::html.account.flash [:.emphasis [:p (i18n-format i18n success-key)]]))
@@ -397,10 +404,8 @@
         [:.field
          [:span.spacer]
          [:button {:type :submit :name :action :value "update"}
-          (:auth/save i18n)]]
-        (hook ::html.account.details-form.end [:<>])]
+          (:auth/save i18n)]]]
        [:section.flex-col
-        (hook ::html.account.sessions.begin [:<>])
         (hook ::html.account.sessions-heading [:h3 (:auth/your-sessions i18n)])
         [:.flex-col
          (map (fn [{:as user-session
@@ -426,8 +431,7 @@
                    [:div
                     [:button {:type :submit :name :action :value "delete-session"}
                      (:auth/logout i18n)]]]))
-              sessions)]
-        (hook ::html.account.sessions.end [:<>])]]]]))
+              sessions)]]]]]))
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
@@ -902,7 +906,8 @@
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
             account-uri login-uri protected-prefixes require-mfa? mfa-issuer
-            min-password-length max-password-length generous-totp-window?]
+            min-password-length max-password-length generous-totp-window?
+            html-account-header]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -911,7 +916,8 @@
           next-param :next
           login-uri "/login"
           account-uri "/account"
-          generous-totp-window? true}}]
+          generous-totp-window? true
+          html-account-header [::username :spacer LogoutForm]}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
@@ -945,4 +951,5 @@
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
      :auth/login-uri login-uri
-     :auth/account-uri account-uri}}))
+     :auth/account-uri account-uri
+     :auth/html.account.header html-account-header}}))

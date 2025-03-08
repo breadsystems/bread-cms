@@ -12,6 +12,14 @@
         :else node))
     tree))
 
+(defmulti Section (fn [_data section-type] section-type))
+
+(defmethod Section :default [data section]
+  (if (fn? section) (section data) section))
+
+(defmethod Section :spacer [_ _]
+  [:.spacer])
+
 (defmacro defc [sym arglist metadata & exprs]
   (let [vmeta (assoc metadata :name (name sym))
         expr (cons 'list (list
