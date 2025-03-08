@@ -33,6 +33,14 @@
   :extend-via-metadata true
   (watch-config [this]))
 
+(extend-protocol Router
+  clojure.lang.Var
+  (path [v route-name params] (path (deref v) route-name params))
+  (route-spec [v req] (route-spec (deref v) req))
+  (route-params [v req] (route-params (deref v) req))
+  (route-dispatcher [v req] (route-dispatcher (deref v) req))
+  (routes [v] (routes (deref v))))
+
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
