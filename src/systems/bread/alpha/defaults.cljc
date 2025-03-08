@@ -12,7 +12,11 @@
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.datalog :as datalog]))
 
-(defn plugins [{:keys [components db i18n routes user]}]
+(defmethod bread/action ::config [{:as req ::bread/keys [config]} _ _]
+  (update req ::bread/data assoc :config config))
+
+(defn plugins [{:keys [components db i18n routes site-name user]
+                :or {site-name "Bread"}}]
   [(dispatcher/plugin)
    (expansion/plugin)
    (when-not (false? components) (component/plugin components))
@@ -26,7 +30,9 @@
        :action/description "Include standard request data"}
       {:action/name ::component/hook-fn
        :action/priority 1000
-       :action/description "Include a hook closure fn in ::bread/data"}]
+       :action/description "Include a hook closure fn in ::bread/data"}
+      {:action/name ::config
+       :action/description "Include global config in ::bread/data"}]
      ::bread/response
      [{:action/name ::ring/response
        :action/description "Sensible defaults for Ring responses"
@@ -36,4 +42,6 @@
        :action/description "Add db attrs as raw maps"}]
      ::bread/attrs-map
      [{:action/name ::datalog/attrs-map
-       :action/description "All db attrs, indexed by :db/ident"}]}}])
+       :action/description "All db attrs, indexed by :db/ident"}]}
+    :config
+    {:site/name site-name}}])
