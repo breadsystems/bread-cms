@@ -35,16 +35,16 @@
   )
 
 (defn id->user [req id]
-  (let [user-pull (bread/hook req ::pull [:db/id
-                                          :thing/uuid
-                                          :thing/slug
-                                          :user/email
-                                          :user/name
-                                          :user/lang
-                                          :user/preferences
-                                          {:user/roles [:role/key
-                                                        {:role/abilities
-                                                         [:ability/key]}]}])
+  (let [user-pull (bread/hook req ::pull '[:db/id
+                                           :thing/uuid
+                                           :thing/slug
+                                           {:user/email [*]}
+                                           :user/name
+                                           :user/lang
+                                           :user/preferences
+                                           {:user/roles [:role/key
+                                                         {:role/abilities
+                                                          [:ability/key]}]}])
         query {:find [(list 'pull '?e user-pull) '.]
                :in '[$ ?e]}]
     (db/q (db/database req) query id)))

@@ -44,7 +44,9 @@
             {:db/id "user.coby"
              :user/username "coby"
              :user/name "Coby Tamayo"
-             :user/email [{:email/address "coby@bread.systems"}]
+             :user/email [{:email/address "coby@bread.systems"
+                           :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
+                           :email/primary? true}]
              :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
              #_#_ ;; Uncomment to enable MFA
              :user/totp-key "B67CWTTTP7UQ5KWT"

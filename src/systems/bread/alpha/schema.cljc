@@ -170,6 +170,12 @@
       :db/valueType :db.type/instant
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
+     {:db/ident :email/primary?
+      :attr/label "Primary"
+      :db/doc "Whether this address is the user's primary email"
+      :db/valueType :db.type/boolean
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/name
       :attr/label "Full Name"
       :db/doc "User's name"
