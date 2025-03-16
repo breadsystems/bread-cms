@@ -236,15 +236,14 @@
 
 (defc LoginPage
   [{:as data
-    :keys [config hook i18n session rtl? dir totp]
+    :keys [config hook i18n session dir totp]
     :auth/keys [result]}]
   {}
   (let [{:keys [totp-key issuer]} totp
         user (or (:user session) (:auth/user session))
         step (:auth/step session)
         error? (false? (:valid result))]
-    [:html {:lang (:field/lang data)
-            :dir dir}
+    [:html {:lang (:field/lang data) :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
       (hook ::html.title [:title (str (:auth/login i18n) " | " (:site/name config))])
@@ -339,7 +338,7 @@
       (apply format (get i18n k) args))
     (get i18n k)))
 
-(defmethod Section ::username [{:keys [hook user]} _]
+(defmethod Section ::username [{:keys [user]} _]
   [:span.username (:user/username user)])
 
 (defn LogoutForm [{:keys [config i18n]}]
@@ -347,10 +346,91 @@
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
 
+;; TODO move this to account plugin?
+(defmethod Section ::account-heading [{:keys [i18n]} _]
+  [:h3 (:auth/account-details i18n)])
+
+(defmethod Section :flash [{:keys [flash i18n]} _]
+  [:<>
+   (when-let [success-key (:success-key flash)]
+     [:.emphasis [:p (i18n-format i18n success-key)]])
+   (when-let [error-key (:error-key flash)]
+     [:.error [:p (i18n-format i18n error-key)]])])
+
+(defmethod Section ::name [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :name} (:auth/name i18n)]
+   [:input {:id :name :name :name :value (:user/name user)}]])
+
+(defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
+  (when (> (count supported-langs) 1)
+    [:.field
+     [:label {:for :lang} (:auth/preferred-language i18n)]
+     [:select {:id :lang :name :lang}
+      (map (fn [k]
+             [:option {:selected (= k (:user/lang user)) :value k}
+              (get lang-names k (name k))])
+           (sort-by name (seq supported-langs)))]]))
+
+(defmethod Section ::password [{:keys [i18n user config]} _]
+  [:<>
+   [:p.instruct (:auth/leave-passwords-blank i18n)]
+   [:.field
+    [:label {:for :password} (:auth/password i18n)]
+    [:input {:id :password
+             :type :password
+             :name :password
+             :maxlength (:auth/max-password-length config)}]]
+   [:.field
+    [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+    [:input {:id :password-confirmation
+             :type :password
+             :name :password-confirmation
+             :maxlength (:auth/max-password-length config)}]]])
+
+(defmethod Section :save [{:keys [i18n]} _]
+  [:.field
+   [:span.spacer]
+   [:button {:type :submit :name :action :value "update"}
+    (:auth/save i18n)]])
+
+(defmethod Section ::account-form [{:as data :keys [config]} _]
+  [:form.flex.col {:method :post}
+   (map (partial Section data) (:auth/html.account.form config))])
+
+(defmethod Section ::sessions [{:keys [i18n session user]} _]
+  (let [date-fmt (SimpleDateFormat. (:auth/date-format-default i18n "d LLL"))]
+    (prn (:user/sessions user))
+    [:section.flex.col
+     [:h3 (:auth/your-sessions i18n)]
+     [:.flex.col
+      (map (fn [{:as user-session
+                 {:keys [user-agent remote-addr]} :session/data
+                 :thing/keys [created-at updated-at]}]
+             (if (= (:db/id session) (:db/id user-session))
+               [:div.user-session.current
+                [:div
+                 [:div (ua->browser user-agent)]
+                 [:div (ua->os user-agent)]
+                 [:div (.format date-fmt created-at)]
+                 (when updated-at
+                   [:div "Last active at " (.format date-fmt updated-at)])]
+                [:div [:span.instruct "This session"]]]
+               [:form.user-session {:method :post}
+                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
+                [:div
+                 [:div (ua->browser user-agent)]
+                 [:div (ua->os user-agent)]
+                 [:div (.format date-fmt created-at)]
+                 (when updated-at
+                   [:div "Last active at " (.format date-fmt updated-at)])]
+                [:div
+                 [:button {:type :submit :name :action :value "delete-session"}
+                  (:auth/logout i18n)]]]))
+           (:user/sessions user))]]))
+
 (defc AccountPage
-  [{:as data
-    :keys [config flash hook i18n lang-names rtl? dir session supported-langs]
-    {:as user :user/keys [sessions roles]} :user}]
+  [{:as data :keys [config hook dir user]}]
   {:query '[:db/id
             :thing/created-at
             :user/username
@@ -361,78 +441,18 @@
             {:user/roles [:role/key {:role/abilities [:ability/key]}]}
             {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
             {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
-  (let [date-fmt (SimpleDateFormat. (:auth/date-format-default i18n "d LLL"))]
-    [:html {:lang (:field/lang data) :dir dir}
-     [:head
-      [:meta {:content-type :utf-8}]
-      (hook ::html.account.title [:title (str (:user/username user) " | " (:site/name config))])
-      (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
-      (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
-     [:body
-      [:nav.flex.row
-       (map (partial Section data) (:auth/html.account.header config))]
-      [:main.flex.col
-       [:form.flex.col {:method :post}
-        (hook ::html.account.details-heading [:h3 (:auth/account-details i18n)])
-        (when-let [success-key (:success-key flash)]
-          (hook ::html.account.flash [:.emphasis [:p (i18n-format i18n success-key)]]))
-        (when-let [error-key (:error-key flash)]
-          (hook ::html.account.error [:.error [:p (i18n-format i18n error-key)]]))
-        [:.field
-         [:label {:for :name} (:auth/name i18n)]
-         [:input {:id :name :name :name :value (:user/name user)}]]
-        (when (> (count supported-langs) 1)
-          [:.field
-           [:label {:for :lang} (:auth/preferred-language i18n)]
-           [:select {:id :lang :name :lang}
-            (map (fn [k]
-                   [:option {:selected (= k (:user/lang user)) :value k}
-                    (get lang-names k (name k))])
-                 (sort-by name (seq supported-langs)))]])
-        [:p.instruct (:auth/leave-passwords-blank i18n)]
-        [:.field
-         [:label {:for :password} (:auth/password i18n)]
-         [:input {:id :password
-                  :type :password
-                  :name :password
-                  :maxlength (:auth/max-password-length config)}]]
-        [:.field
-         [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
-         [:input {:id :password-confirmation
-                  :type :password
-                  :name :password-confirmation
-                  :maxlength (:auth/max-password-length config)}]]
-        [:.field
-         [:span.spacer]
-         [:button {:type :submit :name :action :value "update"}
-          (:auth/save i18n)]]]
-       [:section.flex.col
-        (hook ::html.account.sessions-heading [:h3 (:auth/your-sessions i18n)])
-        [:.flex.col
-         (map (fn [{:as user-session
-                    {:keys [user-agent remote-addr]} :session/data
-                    :thing/keys [created-at updated-at]}]
-                (if (= (:db/id session) (:db/id user-session))
-                  [:div.user-session.current
-                   [:div
-                    [:div (ua->browser user-agent)]
-                    [:div (ua->os user-agent)]
-                    [:div (.format date-fmt created-at)]
-                    (when updated-at
-                      [:div "Last active at " (.format date-fmt updated-at)])]
-                   [:div [:span.instruct "This session"]]]
-                  [:form.user-session {:method :post}
-                   [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
-                   [:div
-                    [:div (ua->browser user-agent)]
-                    [:div (ua->os user-agent)]
-                    [:div (.format date-fmt created-at)]
-                    (when updated-at
-                      [:div "Last active at " (.format date-fmt updated-at)])]
-                   [:div
-                    [:button {:type :submit :name :action :value "delete-session"}
-                     (:auth/logout i18n)]]]))
-              sessions)]]]]]))
+  [:html {:lang (:field/lang data) :dir dir}
+   [:head
+    [:meta {:content-type :utf-8}]
+    (hook ::html.account.title [:title (str (:user/username user) " | " (:site/name config))])
+    (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
+    (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
+   [:body
+    [:nav.flex.row
+     (map (partial Section data) (:auth/html.account.header config))]
+    [:main.flex.col
+     (map (partial Section data) (:auth/html.account.sections config))]]])
+;; /TODO
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
@@ -908,7 +928,7 @@
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
             account-uri login-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
-            html-account-header]
+            html-account-header html-account-sections html-account-form]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -918,7 +938,20 @@
           login-uri "/login"
           account-uri "/account"
           generous-totp-window? true
-          html-account-header [::username :spacer LogoutForm]}}]
+          ;; TODO -> account plugin?
+          html-account-header [::username :spacer LogoutForm]
+          html-account-form [::account-heading
+                             :flash
+                             ::name
+                             ::lang
+                             #_::pronouns
+                             #_::timezone
+                             ::password
+                             :save]
+          html-account-sections [::account-form
+                                 ::sessions
+                                 #_::roles ; TODO
+                                 ]}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
@@ -953,4 +986,6 @@
      :auth/next-param next-param
      :auth/login-uri login-uri
      :auth/account-uri account-uri
-     :auth/html.account.header html-account-header}}))
+     :auth/html.account.header html-account-header
+     :auth/html.account.sections html-account-sections
+     :auth/html.account.form html-account-form}}))
