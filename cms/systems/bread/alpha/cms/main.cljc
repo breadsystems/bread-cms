@@ -203,7 +203,7 @@
   {:body "not found"
    :status 404})
 
-(defmethod ig/init-key :bread/router [_ router]
+(def router
   (reitit/router
     [["/~"
       ["/login"
@@ -243,7 +243,10 @@
        {:name :page!
         :dispatcher/type ::post/page=>
         :dispatcher/component #'theme/InteriorPage}]]]
-     {:conflicts nil}))
+    {:conflicts nil}))
+
+(defmethod ig/init-key :bread/router [_ router]
+  #'router)
 
 (defmethod bread/action ::enrich-session
   [{:as req :keys [headers remote-addr session]} _ _]
