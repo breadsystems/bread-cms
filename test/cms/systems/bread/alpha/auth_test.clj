@@ -284,7 +284,7 @@
 
     ;; POST with correct username & password. Sets session user.
     {:status 302
-     :headers {"Location" "/account"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user angela
                :auth/step :logged-in}
@@ -298,7 +298,7 @@
 
     ;; POST with correct username & password. Sets session user.
     {:status 302
-     :headers {"Location" "/account"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user bobby
                :auth/step :logged-in}
@@ -340,23 +340,9 @@
      :params {:username "bobby" :password "pantherz" :special "/successful-login-next"}
      :uri "/login"}
 
-    ;; POST with correct password & redirect, with custom :account-uri.
-    ;; Sets session user and redirects the URI according to the custom param.
-    {:status 302
-     :headers {"Location" "/custom-account"
-               "content-type" "text/html"}
-     :session {:user bobby
-               :auth/step :logged-in}
-     ::bread/data {:session {:user bobby :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user bobby}}}
-    {:account-uri "/custom-account"}
-    {:request-method :post
-     :params {:username "bobby" :password "pantherz"}
-     :uri "/login"}
-
     ;; POST with correct password; custom hash algo. Sets session user.
     {:status 302
-     :headers {"Location" "/account"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user crenshaw
                :auth/step :logged-in}
@@ -368,9 +354,9 @@
      :params {:username "crenshaw" :password "intersectionz"}
      :uri "/login"}
 
-    ;; GET when already logged in. Redirect to account-uri.
+    ;; GET when already logged in. Redirect to / by default.
     {:status 302
-     :headers {"Location" "/account"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user crenshaw}
      ::bread/data {:session {:user crenshaw}}}
@@ -379,13 +365,13 @@
      :session {:user crenshaw}
      :uri "/login"}
 
-    ;; GET when already logged in. Redirect to custom account-uri.
+    ;; GET when already logged in. Redirect to custom /
     {:status 302
-     :headers {"Location" "/custom-account-redirect"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user crenshaw}
      ::bread/data {:session {:user crenshaw}}}
-    {:account-uri "/custom-account-redirect"}
+    {}
     {:request-method :get
      :session {:user crenshaw}
      :uri "/login"}
@@ -571,20 +557,20 @@
      :server-name "example.com"}
 
     ;; Setting new TOTP key with a valid code. Sets the session user
-    ;; and redirects to account-uri.
+    ;; and redirects to /.
     (let [user (assoc crenshaw :user/totp-key SECRET)
           session {:user user :auth/step :logged-in}]
       {:status 302
        :headers {"content-type" "text/html"
-                 "Location" "/setup-mfa-redirect"}
+                 "Location" "/"}
        :session session
        ::bread/data {:session session
                      :auth/result {:valid true :user user}}})
-    {:require-mfa? true :account-uri "/setup-mfa-redirect"}
+    {:require-mfa? true}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :params {:totp-key SECRET :two-factor-code "123456"}
-     :uri "/setup-mfa-redirect"}
+     :uri "/login"}
 
     ;; 2FA with blank code. Should not set session user.
     {:status 401
@@ -680,7 +666,7 @@
 
     ;; Successful 2FA. Sets session user.
     {:status 302
-     :headers {"Location" "/account"
+     :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user douglass
                :auth/step :logged-in}
@@ -693,23 +679,6 @@
                :auth/step :two-factor}
      :params {:two-factor-code "123456"}
      :uri  "/login"}
-
-    ;; Successful 2FA with custom :account-uri Sets session user and redirects
-    ;; to account-uri.
-    {:status 302
-     :headers {"Location" "/successful-custom"
-               "content-type" "text/html"}
-     :session {:user douglass
-               :auth/step :logged-in}
-     ::bread/data {:session {:user douglass
-                             :auth/step :logged-in}
-                   :auth/result {:valid true :user douglass}}}
-    {:account-uri "/successful-custom"}
-    {:request-method :post
-     :session {:auth/user douglass
-               :auth/step :two-factor}
-     :params {:two-factor-code "123456"}
-     :uri  "/successful-custom"}
 
     ;; Successful 2FA with redirect. Sets session user and redirects to
     ;; correct destination.

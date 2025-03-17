@@ -29,7 +29,8 @@
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
-    [systems.bread.alpha.plugin.signup :as signup])
+    [systems.bread.alpha.plugin.signup :as signup]
+    [systems.bread.alpha.plugin.account :as account])
   (:import
     [java.time LocalDateTime]
     [java.util Properties UUID])
@@ -216,8 +217,8 @@
         :dispatcher/component #'signup/SignupPage}]
       ["/account"
        {:name :account
-        :dispatcher/type ::auth/account=>
-        :dispatcher/component #'auth/AccountPage}]]
+        :dispatcher/type ::account/account=>
+        :dispatcher/component #'account/AccountPage}]]
      ["/assets/*"
       (reitit.ring/create-resource-handler
         {:parameter :filename
@@ -261,6 +262,7 @@
                   (defaults/plugins app-config)
                   [(auth/plugin (:auth app-config))
                    (signup/plugin (:signup app-config))
+                   (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))
                    {:hooks

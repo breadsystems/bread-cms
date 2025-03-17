@@ -4,14 +4,13 @@
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
-    [com.rpl.specter :as s]
     [crypto.random :as random]
     [one-time.core :as ot]
     [one-time.uri :as oturi]
     [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss :refer [SessionStore]]
 
-    [systems.bread.alpha.component :as component :refer [defc Section]]
+    [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
@@ -21,7 +20,6 @@
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
-    [java.text SimpleDateFormat]
     [java.util Base64 Date]))
 
 (deftype DatalogSessionStore [conn]
@@ -316,143 +314,10 @@
            [:span.spacer]
            [:button {:type :submit} (:auth/login i18n)]]]])]]))
 
-(defn- ua->browser [ua]
-  (let [normalized (string/lower-case ua)]
-    (cond
-      (re-find #"firefox" normalized) "Firefox"
-      (re-find #"chrome" normalized) "Google Chrome"
-      (re-find #"safari" normalized) "Safari"
-      :default "Unknown browser")))
-
-(defn- ua->os [ua]
-  (let [normalized (string/lower-case ua)]
-    (cond
-      (re-find #"linux" normalized) "Linux"
-      (re-find #"macintosh" normalized) "Mac"
-      (re-find #"windows" normalized) "Windows"
-      :default "Unknown OS")))
-
-(defn- i18n-format [i18n k]
-  (if (sequential? k) ;; TODO tongue
-    (let [[k & args] k]
-      (apply format (get i18n k) args))
-    (get i18n k)))
-
-(defmethod Section ::username [{:keys [user]} _]
-  [:span.username (:user/username user)])
-
 (defn LogoutForm [{:keys [config i18n]}]
   [:form.logout-form {:method :post :action (:auth/login-uri config)}
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
-
-;; TODO move this to account plugin?
-(defmethod Section ::account-heading [{:keys [i18n]} _]
-  [:h3 (:auth/account-details i18n)])
-
-(defmethod Section :flash [{:keys [flash i18n]} _]
-  [:<>
-   (when-let [success-key (:success-key flash)]
-     [:.emphasis [:p (i18n-format i18n success-key)]])
-   (when-let [error-key (:error-key flash)]
-     [:.error [:p (i18n-format i18n error-key)]])])
-
-(defmethod Section ::name [{:keys [user i18n]} _]
-  [:.field
-   [:label {:for :name} (:auth/name i18n)]
-   [:input {:id :name :name :name :value (:user/name user)}]])
-
-(defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
-  (when (> (count supported-langs) 1)
-    [:.field
-     [:label {:for :lang} (:auth/preferred-language i18n)]
-     [:select {:id :lang :name :lang}
-      (map (fn [k]
-             [:option {:selected (= k (:user/lang user)) :value k}
-              (get lang-names k (name k))])
-           (sort-by name (seq supported-langs)))]]))
-
-(defmethod Section ::password [{:keys [i18n user config]} _]
-  [:<>
-   [:p.instruct (:auth/leave-passwords-blank i18n)]
-   [:.field
-    [:label {:for :password} (:auth/password i18n)]
-    [:input {:id :password
-             :type :password
-             :name :password
-             :maxlength (:auth/max-password-length config)}]]
-   [:.field
-    [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
-    [:input {:id :password-confirmation
-             :type :password
-             :name :password-confirmation
-             :maxlength (:auth/max-password-length config)}]]])
-
-(defmethod Section :save [{:keys [i18n]} _]
-  [:.field
-   [:span.spacer]
-   [:button {:type :submit :name :action :value "update"}
-    (:auth/save i18n)]])
-
-(defmethod Section ::account-form [{:as data :keys [config]} _]
-  [:form.flex.col {:method :post}
-   (map (partial Section data) (:auth/html.account.form config))])
-
-(defmethod Section ::sessions [{:keys [i18n session user]} _]
-  (let [date-fmt (SimpleDateFormat. (:auth/date-format-default i18n "d LLL"))]
-    (prn (:user/sessions user))
-    [:section.flex.col
-     [:h3 (:auth/your-sessions i18n)]
-     [:.flex.col
-      (map (fn [{:as user-session
-                 {:keys [user-agent remote-addr]} :session/data
-                 :thing/keys [created-at updated-at]}]
-             (if (= (:db/id session) (:db/id user-session))
-               [:div.user-session.current
-                [:div
-                 [:div (ua->browser user-agent)]
-                 [:div (ua->os user-agent)]
-                 [:div (.format date-fmt created-at)]
-                 (when updated-at
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div [:span.instruct "This session"]]]
-               [:form.user-session {:method :post}
-                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
-                [:div
-                 [:div (ua->browser user-agent)]
-                 [:div (ua->os user-agent)]
-                 [:div (.format date-fmt created-at)]
-                 (when updated-at
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div
-                 [:button {:type :submit :name :action :value "delete-session"}
-                  (:auth/logout i18n)]]]))
-           (:user/sessions user))]]))
-
-(defc AccountPage
-  [{:as data :keys [config hook dir user]}]
-  {:query '[:db/id
-            :thing/created-at
-            :user/username
-            {:user/email [*]}
-            :user/name
-            :user/lang
-            :user/preferences
-            {:user/roles [:role/key {:role/abilities [:ability/key]}]}
-            {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
-            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (hook ::html.account.title [:title (str (:user/username user) " | " (:site/name config))])
-    (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
-    (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:auth/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:auth/html.account.sections config))]]])
-;; /TODO
 
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
@@ -500,14 +365,13 @@
         next-param (bread/config res :auth/next-param)
         next-uri (get params next-param)
         login-uri (bread/config res :auth/login-uri)
-        account-uri (bread/config res :auth/account-uri)
         ;; Don't redirect to destination prematurely!
         redirect-to (cond
                       (and next-uri logged-in?) next-uri
                       next-uri (str login-uri "?"
                                     (name next-param) "="
                                     (URLEncoder/encode next-uri))
-                      logged-in? account-uri
+                      logged-in? (bread/hook res ::logged-in-uri "/")
                       :else login-uri)]
     (cond-> (-> res
                 (assoc :session session)
@@ -610,12 +474,12 @@
         (db/transact conn [(assoc transaction
                                   :user/failed-login-count incremented)])))))
 
-(defmethod bread/action ::=>account
+(defmethod bread/action ::=>logged-in
   [{:as req :keys [session]} {:keys [flash]} _]
   (if (:user session)
     (assoc req
            :status 302
-           :headers {"Location" (bread/config req :auth/account-uri)}
+           :headers {"Location" (bread/hook req ::logged-in-uri "/")}
            :flash flash)
     req))
 
@@ -758,105 +622,8 @@
       :default
       {:hooks
        {::bread/expand
-        [{:action/name ::=>account
-          :action/description "Redirect to account page after login"}]}})))
-
-(defmethod bread/expand ::user [_ {:keys [user]}]
-  ;; TODO infer from query/schema...
-  (when user
-    (as-> user $
-      (update $ :user/preferences edn/read-string)
-      (s/transform [:user/sessions s/ALL :session/data] edn/read-string $))))
-
-(defmulti account-action (fn [{:keys [params]}] (keyword (:action params))))
-
-(defmethod account-action :delete-session [{:keys [params]}]
-  (when-let [id (try (Integer. (:dbid params)) (catch Throwable _ nil))]
-    [[:db/retract id :session/id]
-     [:db/retract id :session/data]
-     [:db/retract id :thing/created-at]
-     [:db/retract id :thing/updated-at]]))
-
-(defn validate-password-fields
-  [{:auth/keys [min-password-length max-password-length]}
-   {:keys [password password-confirmation]}]
-  "Returns an error code as a keyword if the :password and/or :password-confirmation
-  params are invalid."
-  (cond
-    (empty? password) :auth/password-required
-    (not= password password-confirmation) :auth/passwords-must-match
-    (< (count password) min-password-length)
-    [:auth/password-must-be-at-least min-password-length]
-    (> (count password) max-password-length)
-    [:auth/password-must-be-at-most max-password-length]))
-
-(defmethod account-action :update [{:as req :keys [params session] ::bread/keys [config]}]
-  (let [{:keys [password password-confirmation]} params
-        update-password? (seq password)
-        error-key (when update-password? (validate-password-fields config params))
-        hash-algo (when update-password? (:auth/hash-algorithm config))]
-    (when error-key (throw (ex-info "Invalid password" {:error-key error-key})))
-    [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
-       (:lang params) (assoc :user/lang (keyword (:lang params)))
-       update-password? (assoc :user/password
-                               (hashers/derive password {:alg hash-algo})))]))
-
-(defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
-  (if (= :post request-method)
-    ;; Account update.
-    (let [action (keyword (:action params))
-          account-update? (= :update action)
-          [txs error-key] (try
-                            [(account-action req) nil]
-                            (catch clojure.lang.ExceptionInfo e
-                              [nil (-> e ex-data :error-key)]))
-          success-key (cond
-                        account-update? :account-updated)]
-      (if txs
-        {:effects
-         [(db/txs->effect req txs :effect/description "Update account details")]
-         :hooks
-         {::bread/expand
-          [{:action/name ::ring/redirect
-            :to (bread/config req :auth/account-uri)
-            :flash (when account-update? {:success-key :auth/account-updated})
-            :action/description
-            "Redirect to account page after taking an account action"}]}}
-        {:hooks
-         {::bread/expand
-          [{:action/name ::ring/redirect
-            :to (bread/config req :auth/account-uri)
-            :flash (when account-update? {:error-key error-key})
-            :action/description
-            "Redirect to account page after an error"}]}}))
-    ;; Rendering the account page.
-    (let [id (:db/id (:user session))
-          pull (:dispatcher/pull dispatcher)]
-      {:expansions
-       [{:expansion/key :config
-         :expansion/name ::bread/value
-         :expansion/description "App config"
-         :expansion/value (::bread/config req)}
-        {:expansion/key :user
-         :expansion/name ::db/query
-         :expansion/description "Query for all user account data"
-         :expansion/db (db/database req)
-         :expansion/args [{:find [(list 'pull '?e pull) '.]
-                           :in '[$ ?e]}
-                          id]}
-        {:expansion/key :user
-         :expansion/name ::user
-         :expansion/description "Expand user data"}
-        {;; TODO => i18n
-         :expansion/key :supported-langs
-         :expansion/name ::bread/value
-         :expansion/value (i18n/supported-langs req)
-         :expansion/description "Supported languages"}
-        {;; TODO => i18n
-         :expansion/key :lang-names
-         :expansion/name ::bread/value
-         :expansion/value (bread/config req :i18n/lang-names)}]})))
+        [{:action/name ::=>logged-in
+          :action/description "Redirect after login"}]}})))
 
 (def
   ^{:doc "Schema for authentication."}
@@ -926,9 +693,8 @@
   ([]
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
-            account-uri login-uri protected-prefixes require-mfa? mfa-issuer
-            min-password-length max-password-length generous-totp-window?
-            html-account-header html-account-sections html-account-form]
+            login-uri protected-prefixes require-mfa? mfa-issuer
+            min-password-length max-password-length generous-totp-window?]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -936,22 +702,7 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
-          account-uri "/account"
-          generous-totp-window? true
-          ;; TODO -> account plugin?
-          html-account-header [::username :spacer LogoutForm]
-          html-account-form [::account-heading
-                             :flash
-                             ::name
-                             ::lang
-                             #_::pronouns
-                             #_::timezone
-                             ::password
-                             :save]
-          html-account-sections [::account-form
-                                 ::sessions
-                                 #_::roles ; TODO
-                                 ]}}]
+          generous-totp-window? true}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
@@ -984,8 +735,4 @@
      :auth/max-password-length max-password-length
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
-     :auth/login-uri login-uri
-     :auth/account-uri account-uri
-     :auth/html.account.header html-account-header
-     :auth/html.account.sections html-account-sections
-     :auth/html.account.form html-account-form}}))
+     :auth/login-uri login-uri}}))
