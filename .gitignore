@@ -2,6 +2,7 @@
 .envrc
 .cpcache
 .calva
+.env
 .idea
 .lsp
 .clj-kondo
