@@ -60,6 +60,14 @@
    [:label {:for :name} (:account/name i18n)]
    [:input {:id :name :name :name :value (:user/name user)}]])
 
+(defmethod Section ::pronouns [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :pronouns} (:account/pronouns i18n)]
+   [:input {:id :pronouns
+            :name :pronouns
+            :value (:pronouns (:user/preferences user))
+            :placeholder (:account/pronouns-example i18n)}]])
+
 (defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
   (when (> (count supported-langs) 1)
     [:.field
@@ -121,6 +129,7 @@
                  [:div (ua->os user-agent)]
                  [:div (.format date-fmt created-at)]
                  (when updated-at
+                   ;; TODO i18n
                    [:div "Last active at " (.format date-fmt updated-at)])]
                 [:div [:span.instruct "This session"]]]
                [:form.user-session {:method :post}
@@ -277,9 +286,8 @@
                     html-account-form [::heading
                                        :flash
                                        ::name
-                                       ::lang
-                                       #_ ;; TODO
                                        ::pronouns
+                                       ::lang
                                        ::timezone
                                        ::password
                                        :save]

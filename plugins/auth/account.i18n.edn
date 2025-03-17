@@ -10,6 +10,8 @@
            :leave-passwords-blank "Leave password fields blank to keep your current password."
            :name "Name"
            :preferred-language "Preferred language"
+           :pronouns "Pronouns"
+           :pronouns-example "they/them/theirs"
            :save "Save"
            :timezone "Timezone"
            :your-sessions "Your login sessions"
