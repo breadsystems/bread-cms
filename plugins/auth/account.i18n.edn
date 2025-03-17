@@ -1,0 +1,19 @@
+{:ar
+ #:account{
+           }
+ :en
+ #:account{
+           :account-details "Account details"
+           :account-updated "Account details have been updated."
+           :datetime-format-default "EEE, LLL d 'at' h:mm a"
+           :date-format-default "EEE, LLL d"
+           :leave-passwords-blank "Leave password fields blank to keep your current password."
+           :name "Name"
+           :preferred-language "Preferred language"
+           :save "Save"
+           :your-sessions "Your login sessions"
+           }
+ :es
+ #:account{
+           }
+ }

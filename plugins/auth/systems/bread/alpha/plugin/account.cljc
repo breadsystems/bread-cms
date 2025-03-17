@@ -3,6 +3,7 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [com.rpl.specter :as s]
+    [clojure.java.io :as io]
     [clojure.string :as string]
 
     [systems.bread.alpha.component :refer [defc Section]]
@@ -40,7 +41,7 @@
   [:span.username (:user/username user)])
 
 (defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:auth/account-details i18n)])
+  [:h3 (:account/account-details i18n)])
 
 (defmethod Section :flash [{:keys [flash i18n]} _]
   [:<>
@@ -51,13 +52,13 @@
 
 (defmethod Section ::name [{:keys [user i18n]} _]
   [:.field
-   [:label {:for :name} (:auth/name i18n)]
+   [:label {:for :name} (:account/name i18n)]
    [:input {:id :name :name :name :value (:user/name user)}]])
 
 (defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
   (when (> (count supported-langs) 1)
     [:.field
-     [:label {:for :lang} (:auth/preferred-language i18n)]
+     [:label {:for :lang} (:account/preferred-language i18n)]
      [:select {:id :lang :name :lang}
       (map (fn [k]
              [:option {:selected (= k (:user/lang user)) :value k}
@@ -66,7 +67,7 @@
 
 (defmethod Section ::password [{:keys [i18n user config]} _]
   [:<>
-   [:p.instruct (:auth/leave-passwords-blank i18n)]
+   [:p.instruct (:account/leave-passwords-blank i18n)]
    [:.field
     [:label {:for :password} (:auth/password i18n)]
     [:input {:id :password
@@ -84,16 +85,17 @@
   [:.field
    [:span.spacer]
    [:button {:type :submit :name :action :value "update"}
-    (:auth/save i18n)]])
+    ;; TODO :account
+    (:account/save i18n)]])
 
 (defmethod Section ::form [{:as data :keys [config]} _]
   [:form.flex.col {:method :post}
-   (map (partial Section data) (:auth/html.account.form config))])
+   (map (partial Section data) (:account/html.account.form config))])
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
-  (let [date-fmt (SimpleDateFormat. (:auth/date-format-default i18n "d LLL"))]
+  (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
     [:section.flex.col
-     [:h3 (:auth/your-sessions i18n)]
+     [:h3 (:account/your-sessions i18n)]
      [:.flex.col
       (map (fn [{:as user-session
                  {:keys [user-agent remote-addr]} :session/data
@@ -141,9 +143,9 @@
     (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
    [:body
     [:nav.flex.row
-     (map (partial Section data) (:auth/html.account.header config))]
+     (map (partial Section data) (:account/html.account.header config))]
     [:main.flex.col
-     (map (partial Section data) (:auth/html.account.sections config))]]])
+     (map (partial Section data) (:account/html.account.sections config))]]])
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
@@ -204,7 +206,7 @@
          {::bread/expand
           [{:action/name ::ring/redirect
             :to (bread/config req :account/account-uri)
-            :flash (when account-update? {:success-key :auth/account-updated})
+            :flash (when account-update? {:success-key :account/account-updated})
             :action/description
             "Redirect to account page after taking an account action"}]}}
         {:hooks
@@ -263,9 +265,13 @@
    {::auth/logged-in-uri
     [{:action/name ::bread/value
       :action/value account-uri
-      :action/description "Redirect to account page after login."}]}
+      :action/description "Redirect to account page after login."}]
+    ::i18n/global-strings
+    [{:action/name ::i18n/merge-global-strings
+      :action/description "Merge strings for account page into global i18n strings."
+      :strings (edn/read-string (slurp (io/resource "account.i18n.edn")))}]}
    :config
    {:account/account-uri account-uri
-    :auth/html.account.header html-account-header
-    :auth/html.account.sections html-account-sections
-    :auth/html.account.form html-account-form}})
+    :account/html.account.header html-account-header
+    :account/html.account.sections html-account-sections
+    :account/html.account.form html-account-form}})
