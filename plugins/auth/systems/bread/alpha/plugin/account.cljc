@@ -15,6 +15,11 @@
   (:import
     [java.text SimpleDateFormat]))
 
+;; TODO move to generic ui ns
+(defn Option [labels selected-value value]
+  [:option {:value value :selected (= selected-value value)}
+   (get labels value)])
+
 (defn- ua->browser [ua]
   (let [normalized (string/lower-case ua)]
     (cond
@@ -64,6 +69,16 @@
              [:option {:selected (= k (:user/lang user)) :value k}
               (get lang-names k (name k))])
            (sort-by name (seq supported-langs)))]]))
+
+(defmethod Section ::timezone [{:keys [config i18n user]} _]
+  (let [options (:account/timezone-options config)
+        ;; TODO proper localization...
+        labels (map #(string/replace % "_" " ") options)
+        tz (:timezone (:user/preferences user))]
+    [:.field
+     [:label {:for :timezone} (:account/timezone i18n)]
+     [:select {:id :timezone}
+      (map (partial Option (zipmap options labels) tz) options)]]))
 
 (defmethod Section ::password [{:keys [i18n user config]} _]
   [:<>
@@ -245,8 +260,13 @@
          :expansion/value (bread/config req :i18n/lang-names)}]})))
 
 (defn plugin [{:keys [account-uri html-account-header html-account-form
-                      html-account-sections]
+                      html-account-sections timezone-options]
                :or {account-uri "/account"
+                    ;; TODO MURCA
+                    timezone-options ["America/Los_Angeles"
+                                      "America/Denver"
+                                      "America/Chicago"
+                                      "America/New_York"]
                     html-account-header [::username :spacer auth/LogoutForm]
                     html-account-form [::heading
                                        :flash
@@ -254,7 +274,6 @@
                                        ::lang
                                        #_ ;; TODO
                                        ::pronouns
-                                       #_ ;; TODO
                                        ::timezone
                                        ::password
                                        :save]
@@ -267,11 +286,13 @@
       :action/value account-uri
       :action/description "Redirect to account page after login."}]
     ::i18n/global-strings
-    [{:action/name ::i18n/merge-global-strings
+    [;; TODO timezone strs...?
+     {:action/name ::i18n/merge-global-strings
       :action/description "Merge strings for account page into global i18n strings."
       :strings (edn/read-string (slurp (io/resource "account.i18n.edn")))}]}
    :config
    {:account/account-uri account-uri
+    :account/timezone-options timezone-options
     :account/html.account.header html-account-header
     :account/html.account.sections html-account-sections
     :account/html.account.form html-account-form}})

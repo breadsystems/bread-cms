@@ -11,6 +11,7 @@
            :name "Name"
            :preferred-language "Preferred language"
            :save "Save"
+           :timezone "Timezone"
            :your-sessions "Your login sessions"
            }
  :es
