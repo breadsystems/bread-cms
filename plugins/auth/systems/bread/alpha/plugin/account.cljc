@@ -77,7 +77,7 @@
         tz (:timezone (:user/preferences user))]
     [:.field
      [:label {:for :timezone} (:account/timezone i18n)]
-     [:select {:id :timezone}
+     [:select {:id :timezone :name :timezone}
       (map (partial Option (zipmap options labels) tz) options)]]))
 
 (defmethod Section ::password [{:keys [i18n user config]} _]
@@ -100,7 +100,6 @@
   [:.field
    [:span.spacer]
    [:button {:type :submit :name :action :value "update"}
-    ;; TODO :account
     (:account/save i18n)]])
 
 (defmethod Section ::form [{:as data :keys [config]} _]
@@ -191,17 +190,24 @@
     (> (count password) max-password-length)
     [:auth/password-must-be-at-most max-password-length]))
 
+(defn- hook-preference [req [k v]]
+  [k (bread/hook req [::preference k] v)])
+
 (defmethod account-action :update [{:as req :keys [params session] ::bread/keys [config]}]
   (let [{:keys [password password-confirmation]} params
         update-password? (seq password)
         error-key (when update-password? (validate-password-fields config params))
-        hash-algo (when update-password? (:auth/hash-algorithm config))]
+        hash-algo (when update-password? (:auth/hash-algorithm config))
+        preferences (dissoc params :action :name :lang :password :password-confirmation)]
     (when error-key (throw (ex-info "Invalid password" {:error-key error-key})))
     [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
        (:lang params) (assoc :user/lang (keyword (:lang params)))
        update-password? (assoc :user/password
-                               (hashers/derive password {:alg hash-algo})))]))
-
+                               (hashers/derive password {:alg hash-algo}))
+       (seq preferences)  (assoc :user/preferences (->> preferences
+                                                        (map (partial hook-preference req))
+                                                        (into {})
+                                                        pr-str)))]))
 (defmethod bread/dispatch ::account=>
   [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
   (if (= :post request-method)
