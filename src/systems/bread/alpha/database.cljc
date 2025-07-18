@@ -101,11 +101,13 @@
   (transact conn {:tx-data txs}))
 
 (defn txs->effect [req txs & {desc :effect/description
+                              k :effect/key
                               :or {desc "Run database transactions"}}]
   {:effect/name ::transact
    :conn (connection req)
    :txs txs
-   :effect/description desc})
+   :effect/description desc
+   :effect/key k})
 
 (defn- data-path? [x]
   (and (sequential? x) (= ::bread/data (first x))))
