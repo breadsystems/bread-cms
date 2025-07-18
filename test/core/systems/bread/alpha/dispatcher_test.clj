@@ -89,6 +89,11 @@
     (is (= response
            (-> (plugins->loaded [(dispatcher/plugin)])
                (assoc ::bread/dispatcher (constantly response))
+               (bread/hook ::bread/dispatch))))
+    (is (= response
+           (-> (plugins->loaded [(dispatcher/plugin)])
+               (assoc ::bread/dispatcher (constantly response))
+               (bread/hook ::bread/route)
                (bread/hook ::bread/dispatch))))))
 
 (deftest test-dispatch-hooks
