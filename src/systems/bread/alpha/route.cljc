@@ -45,17 +45,8 @@
   (assoc req ::bread/dispatcher (dispatcher req)))
 
 (defn path-params [router route-name route-data]
-  (let [;; OK, so turns out we still need to EITHER:
-        ;;
-        ;; 1. implement a match-by-name protocol method so we can lookup the
-        ;;    route template by name alone, OR
-        ;; 2. compile the template inside bread/routes impl
-        ;;
-        ;; Currently we opt for #2, to keep the Router protocol as small as
-        ;; possible. Should this change?
-        route (get (bread/routes router) route-name)
-        route-keys (filter keyword? (bread/route-spec router route))]
-    (zipmap route-keys (map #( bread/infer-param % route-data) route-keys))))
+  (let [route-keys (filter keyword? (bread/route-spec router route-name))]
+    (zipmap route-keys (map #(bread/infer-param % route-data) route-keys))))
 
 (defmethod bread/action ::uri [req {:keys [router]} [_ route-name thing]]
   (->> thing

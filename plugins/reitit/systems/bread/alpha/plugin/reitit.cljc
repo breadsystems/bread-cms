@@ -58,8 +58,10 @@
               reitit/match->path
               ;; Decode the URL-/dash-encoded string.
               (string/replace #"-%2F" "/"))))
-  (bread/route-spec [router req]
-    (->> req :uri (reitit/match-by-path router) :template template->spec))
+  (bread/route-spec [router req-or-name]
+    (if (keyword? req-or-name)
+      (->> req-or-name (reitit/match-by-name router) :template template->spec)
+      (->> req-or-name :uri (reitit/match-by-path router) :template template->spec)))
   (bread/route-params [router req]
     (some->> req :uri (reitit/match-by-path router) :path-params))
   (bread/route-dispatcher [router req]

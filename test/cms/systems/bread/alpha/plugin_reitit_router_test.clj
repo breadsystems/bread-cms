@@ -186,6 +186,54 @@
     ;;
     ))
 
+(deftest test-uri
+  (are
+    [expected routes route-name path-params]
+    (= expected (let [router (reitit/router routes)
+                      app (plugins->loaded [(route/plugin {:router router})])]
+                  (route/uri app route-name path-params)))
+
+    "/en"
+    ["/{field/lang}" {:name :home}]
+    :home
+    {:field/lang :en}
+
+    "/es"
+    ["/{field/lang}" {:name :home}]
+    :home
+    {:field/lang :es}
+
+    "/en"
+    ["/{field/lang}"
+     ["" {:name :home}]
+     ["/{thing/slug}" {}]]
+    :home
+    {:field/lang :en}
+
+    "/en/foo"
+    ["/{field/lang}"
+     ["" {:name :home}]
+     ["/{thing/slug}" {:name :page}]]
+    :page
+    {:field/lang :en :thing/slug "foo"}
+
+    "/en/p/foo"
+    ["/{field/lang}"
+     ["" {:name :home}]
+     ["/p/{thing/slug}" {:name :page}]]
+    :page
+    {:field/lang :en :thing/slug "foo"}
+
+    "/es/p/foo"
+    ["/{field/lang}"
+     ["" {:name :home}]
+     ["/p/{thing/slug}" {:name :page}]]
+    :page
+    {:field/lang :es :thing/slug "foo"}
+
+    ;;
+    ))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run))
