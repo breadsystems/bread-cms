@@ -194,8 +194,7 @@
                                      :succeeded? false
                                      :retried 0}))
               retry-count (:retried (meta e))
-              ;; TODO :effect/key
-              {data-key :effect/key max-retries :effect/retries} e
+              {k :effect/key max-retries :effect/retries} e
               [result ex] (try
                             [(effect e data) nil]
                             (catch Throwable ex
@@ -205,8 +204,8 @@
           (cond
             (nil? ex)
             (recur (concat more-effects effects)
-                   (if data-key
-                     (assoc data data-key (success result true))
+                   (if k
+                     (assoc data k (success result true))
                      data)
                    (conj completed (success e true)))
             (and ex max-retries (> max-retries retry-count))
@@ -217,8 +216,8 @@
                    data completed)
             ex
             (recur effects
-                   (if data-key
-                     (assoc data data-key (add-error (success result false) ex))
+                   (if k
+                     (assoc data k (add-error (success result false) ex))
                      data)
                    (conj completed (-> e
                                        (add-error ex)
