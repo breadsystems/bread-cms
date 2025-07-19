@@ -5,6 +5,7 @@
     [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.internal.query-inference :as qi]
@@ -300,12 +301,22 @@
                       :expansion/key :field/lang
                       :expansion/value (lang req)}))
 
+(defmethod bread/dispatch ::lang=> [req]
+  (let [home-route (bread/config req :i18n/home-route)
+        lang-param (bread/config req :i18n/lang-param)
+        redirect-to (route/uri req home-route {lang-param (lang req)})]
+    (when redirect-to
+      {:hooks
+       {::bread/expand
+        [{:action/name ::ring/redirect
+          :to redirect-to}]}})))
+
 (defn plugin
   ([]
    (plugin {}))
   ([{:keys [lang-param fallback-lang supported-langs global-strings
             query-global-strings? query-lang? format-fields? compact-fields?
-            rtl-langs lang-names]
+            rtl-langs lang-names home-route]
      :or {lang-param      :field/lang
           fallback-lang   :en
           supported-langs #{:en}
@@ -319,7 +330,8 @@
           lang-names {:ar "عربي"
                       :en "English"
                       :es "Español"
-                      :fr "Français"}}}]
+                      :fr "Français"}
+          home-route :field/lang}}]
    {:config
     {:i18n/lang-param      lang-param
      :i18n/fallback-lang   fallback-lang
@@ -327,7 +339,8 @@
      :i18n/format-fields?  format-fields?
      :i18n/compact-fields? compact-fields?
      :i18n/rtl-langs       rtl-langs
-     :i18n/lang-names      lang-names}
+     :i18n/lang-names      lang-names
+     :i18n/home-route      home-route}
     :hooks
     {::expansions
      [{:action/name ::expansions

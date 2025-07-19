@@ -15,13 +15,15 @@
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:login-uri "/~/login"
+  :auth {:protected-prefixes ["_____"]
+         :login-uri "/~/login"
          ;:require-mfa? true
          :min-password-length 4}
   :signup {:signup-uri "/~/signup"
            :invite-only? true}
   :account {:account-uri "/~/account"}
-  :i18n {:query-global-strings? false
+  :i18n {:home-route :home
+         :query-global-strings? false
          :supported-langs #{:en :fr :es :ar}
          :fallback-lang :ar}
   :routes {:router #ig/ref :bread/router}

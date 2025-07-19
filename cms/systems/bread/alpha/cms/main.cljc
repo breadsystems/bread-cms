@@ -16,6 +16,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.cms.data]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
@@ -206,7 +207,9 @@
 
 (def router
   (reitit/router
-    [["/~"
+    ["/"
+     ["" {:dispatcher/type ::i18n/lang=>}]
+     ["~"
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
@@ -219,11 +222,11 @@
        {:name :account
         :dispatcher/type ::account/account=>
         :dispatcher/component #'account/AccountPage}]]
-     ["/assets/*"
+     ["assets/*"
       (reitit.ring/create-resource-handler
         {:parameter :filename
          :not-found-handler #'not-found})]
-     ["/{field/lang}"
+     ["{field/lang}"
       [""
        {:name :home
         :dispatcher/type ::post/page=>
