@@ -16,15 +16,15 @@
     nil [] {}
     nil ["/:slug" {:name :post}] {}
 
-    {:slug "abc"}
+    {:slug "abc" :route/name :post}
     [["/:slug" {:name :post}]]
     {:uri "/abc"}
 
-    {:slug "xyz"}
+    {:slug "xyz" :route/name :post}
     [["/:slug" {:name :post}]]
     {:uri "/xyz"}
 
-    {:field/lang "en" :thing/slug "xyz"}
+    {:field/lang "en" :thing/slug "xyz" :route/name :post}
     [["/{field/lang}/{thing/slug}" {:name :post}]]
     {:uri "/en/xyz"}
 
@@ -122,16 +122,17 @@
      :dispatcher/component nil
      :dispatcher/key nil
      :dispatcher/pull nil
-     :route/params {:slug "abc"}}
-    ["/:slug" {:dispatcher/type ::hello}]
+     :route/params {:slug "abc" :route/name :hello}
+     :name :hello}
+    ["/:slug" {:dispatcher/type ::hello :name :hello}]
     {:uri "/abc"}
 
     {:dispatcher/type ::hello
      :dispatcher/component nil
      :dispatcher/key nil
      :dispatcher/pull nil
-     :route/params {:slug "abc"}}
-    ["/:slug" {:get {:handler {:dispatcher/type ::hello}}}]
+     :route/params {:slug "abc" :route/name :hello}}
+    ["/:slug" {:name :hello :get {:handler {:dispatcher/type ::hello}}}]
     {:uri "/abc" :request-method :get}
 
     handler
