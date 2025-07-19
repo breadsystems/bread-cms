@@ -39,11 +39,11 @@
                       :query/pull (:dispatcher/pull dispatcher)
                       :query/key (:dispatcher/key dispatcher)
                       :route/params (:route/params dispatcher))]
-          (-> req
-              (update ::bread/data merge data)
-              (update ::bread/expansions concat expansions)
-              (update ::bread/effects concat effects)
-              (update ::bread/hooks merge-with-concat hooks)))))
+      (-> req
+          (update ::bread/data merge data)
+          (update ::bread/expansions concat expansions)
+          (update ::bread/effects concat effects)
+          (update ::bread/hooks merge-with-concat hooks)))))
 
 (defn plugin []
   {:hooks
