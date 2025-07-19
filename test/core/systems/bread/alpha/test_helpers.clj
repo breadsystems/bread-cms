@@ -74,11 +74,30 @@
 (defn naive-plugin []
   {:hooks {::route/params [{:action/name ::naive-params}]}})
 
-(defn naive-router []
-  (reify bread/Router
-    (bread/route-dispatcher [_ _])
-    (bread/route-params [this req]
-      (naive-params (:uri req)))))
+(defn naive-router
+  ([]
+   (naive-router {}))
+  ([routes]
+   (reify bread/Router
+     (bread/path [_ route-name params]
+       (let [route (reduce (fn [_ [_ route]]
+                             (when (= route-name (:name route))
+                               (reduced route)))
+                           routes)
+             spec (:route/spec route)]
+         (str "/" (clojure.string/join "/" (map params spec)))))
+     (bread/route-dispatcher [_ _])
+     (bread/route-params [this req]
+       (naive-params (:uri req)))
+     (bread/route-spec [_ req]
+       (let [route (if (keyword? req)
+                     (reduce (fn [_ [_ route]]
+                               (when (= req (:name route))
+                                 (reduced route)))
+                             routes)
+                     (get routes (:uri req)))]
+         (:route/spec route)))
+     (bread/routes [_] routes))))
 
 (defn map->router [routes]
   "Takes a map m like:
