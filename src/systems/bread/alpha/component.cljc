@@ -139,6 +139,10 @@
   (assoc-in req [::bread/data :hook] (fn [h & args]
                                        (apply bread/hook req h args))))
 
+;; Support implicit dispatchers in routes that only define a :dispatcher/component.
+(defmethod bread/dispatch nil [_])
+(defmethod bread/dispatch ::standalone=> [_])
+
 (defn plugin
   ([]
    (plugin {}))
