@@ -38,7 +38,8 @@
           hooks (filter (comp seq val) hooks)
           data (assoc data
                       :query/pull (:dispatcher/pull dispatcher)
-                      :query/key (:dispatcher/key dispatcher))]
+                      :query/key (:dispatcher/key dispatcher)
+                      :route/params (:route/params dispatcher))]
       (-> req
           (update ::bread/data merge data)
           (update ::bread/expansions concat expansions)

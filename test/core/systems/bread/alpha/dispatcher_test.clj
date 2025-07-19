@@ -20,60 +20,70 @@
                                                 ::bread/expansions
                                                 ::bread/effects]))))
 
-    {::bread/data {:query/pull nil :query/key nil}
+    {::bread/data {:query/pull nil :query/key nil :route/params nil}
      ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :v {}}
 
     {::bread/data {:query/pull [:db/id :thing/slug]
-                   :query/key :post}
+                   :query/key :post
+                   :route/params {:thing/slug "hi"}}
      ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
+     :route/params {:thing/slug "hi"}
      :v {}}
 
     {::bread/data {:x :Y
                    :query/pull [:db/id :thing/slug]
-                   :query/key :post}
+                   :query/key :post
+                   :route/params {}}
      ::bread/expansions []
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
+     :route/params {}
      :v {:data {:x :Y}}}
 
     {::bread/data {:query/pull [:db/id :thing/slug]
-                   :query/key :post}
+                   :query/key :post
+                   :route/params {}}
      ::bread/expansions [[:key "yo"]]
      ::bread/effects []}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
+     :route/params {}
      :v {:expansions [[:key "yo"]]}}
 
     {::bread/data {:query/pull [:db/id :thing/slug]
-                   :query/key :post}
+                   :query/key :post
+                   :route/params {}}
      ::bread/expansions []
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
+     :route/params {}
      :v {:effects [{:effect/name :do-stuff
                     :effect/description "Example effect"}]}}
 
     {::bread/data {:key "value"
                    :query/pull [:db/id :thing/slug]
-                   :query/key :post}
+                   :query/key :post
+                   :route/params  {}}
      ::bread/expansions [[:key "example query"]]
      ::bread/effects [{:effect/name :do-stuff
                        :effect/description "Example effect"}]}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
+     :route/params {}
      :v {:data {:key "value"}
          :expansions [[:key "example query"]]
          :effects [{:effect/name :do-stuff
@@ -142,4 +152,5 @@
       )))
 
 (comment
-  (k/run))
+  (require '[kaocha.repl :as k])
+  (k/run {:color? false}))
