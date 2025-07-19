@@ -33,18 +33,17 @@
     ;; We have a vanilla fn handler:
     ;; Short-circuit the rest of the lifecycle.
     (dispatcher req)
-    (let [{:keys [expansions data effects hooks]} (bread/dispatch req)
-          ;; TODO short-circuit here if we got a response...?
+    (let [{:as res :keys [expansions data effects hooks]} (bread/dispatch req)
           hooks (filter (comp seq val) hooks)
           data (assoc data
                       :query/pull (:dispatcher/pull dispatcher)
                       :query/key (:dispatcher/key dispatcher)
                       :route/params (:route/params dispatcher))]
-      (-> req
-          (update ::bread/data merge data)
-          (update ::bread/expansions concat expansions)
-          (update ::bread/effects concat effects)
-          (update ::bread/hooks merge-with-concat hooks)))))
+          (-> req
+              (update ::bread/data merge data)
+              (update ::bread/expansions concat expansions)
+              (update ::bread/effects concat effects)
+              (update ::bread/hooks merge-with-concat hooks)))))
 
 (defn plugin []
   {:hooks

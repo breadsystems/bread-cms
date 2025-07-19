@@ -18,7 +18,22 @@
                                   (bread/hook ::bread/dispatch)
                                   (select-keys [::bread/data
                                                 ::bread/expansions
-                                                ::bread/effects]))))
+                                                ::bread/effects
+                                                :status
+                                                :body
+                                                :headers]))))
+
+    {:status 400}
+    (fn [_]
+      {:status 400})
+
+    {:status 404 :body "not found"}
+    (fn [_]
+      {:status 404 :body "not found"})
+
+    {:status 301 :body "redirecting" :headers {"location" "/"}}
+    (fn [_]
+      {:status 301 :body "redirecting" :headers {"location" "/"}})
 
     {::bread/data {:query/pull nil :query/key nil :route/params nil}
      ::bread/expansions []
