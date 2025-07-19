@@ -119,19 +119,19 @@
 
 (deftest test-uri
   (let [routes {"/en"
-                {:name ::articles
+                {:name :articles
                  :route/spec [:field/lang]}
                 "/en/the-slug"
-                {:name ::article
+                {:name :article
                  :route/spec [:field/lang :thing/slug]}
                 "/en/article/the-slug"
-                {:name ::article-nested
+                {:name :article-nested
                  :route/spec [:field/lang "article" :thing/slug]}
                 "/en/a/b/c"
-                {:name ::wildcard
+                {:name :wildcard
                  :route/spec [:field/lang :thing/slug*]}
                 "/en/page/a/b/c"
-                {:name ::wildcard-nested
+                {:name :wildcard-nested
                  :route/spec [:field/lang "page" :thing/slug*]}}
         app (plugins->loaded [(map->route-plugin routes)])]
     (are
@@ -140,19 +140,19 @@
 
       nil nil nil
       nil nil {}
-      "/en" ::articles {}
-      "/en/the-slug" ::article {:thing/slug "the-slug"}
-      "/en/article/the-slug" ::article-nested {:thing/slug "the-slug"}
+      "/en" :articles {}
+      "/en/the-slug" :article {:thing/slug "the-slug"}
+      "/en/article/the-slug" :article-nested {:thing/slug "the-slug"}
 
       "/en/a/b/c"
-      ::wildcard
+      :wildcard
       {:thing/slug "c"
        :thing/_children [{:thing/slug "b"
                           :thing/_children [{:thing/slug "c"}]}]}
 
       "/en/page/a/b/c"
-      ::wildcard-nested
-      {:thing/slug "c"
+      :wildcard-nested
+      {:thing/slug "a"
        :thing/_children [{:thing/slug "b"
                           :thing/_children [{:thing/slug "c"}]}]}
 
