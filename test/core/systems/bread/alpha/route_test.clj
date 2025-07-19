@@ -5,7 +5,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
-                                              map->route-plugin]]))
+                                              map->route-plugin
+                                              naive-router]]))
 
 (defc Home [_]
   {:key :home
@@ -155,6 +156,62 @@
       {:thing/slug "a"
        :thing/_children [{:thing/slug "b"
                           :thing/_children [{:thing/slug "c"}]}]}
+
+      ;;
+      )))
+
+(deftest test-uri-helper
+  (let [home-route {:name :home :route/spec [:field/lang]}
+        page-route {:name :page :route/spec [:field/lang :thing/slug]}
+        page-action-route {:name :page-action
+                           :route/spec [:field/lang :thing/slug "action"]}
+        routes {"/en" (assoc home-route :route/params {:field/lang :en})
+                "/es" (assoc home-route :route/params {:field/lang :es})
+                "/en/123"
+                (assoc page-route :route/params {:field/lang :en :thing/slug "123"})
+                "/en/456"
+                (assoc page-route :route/params {:field/lang :en :thing/slug "456"})
+                "/es/123"
+                (assoc page-route :route/params {:field/lang :es :thing/slug "123"})
+                "/es/456"
+                (assoc page-route :route/params {:field/lang :es :thing/slug "456"})
+                "/en/123/action"
+                (assoc page-action-route :route/params {:field/lang :en :thing/slug "123"})
+                "/en/456/action"
+                (assoc page-action-route :route/params {:field/lang :en :thing/slug "456"})
+                "/es/123/action"
+                (assoc page-action-route :route/params {:field/lang :es :thing/slug "123"})
+                "/es/456/action"
+                (assoc page-action-route :route/params {:field/lang :es :thing/slug "456"})}
+        router (naive-router routes)
+        app (plugins->loaded [(route/plugin {:router router})])
+        ->helper (fn [uri]
+                   (let [handler (bread/handler app)
+                         res (handler {:uri uri})]
+                     (-> res ::bread/data :route/uri)))]
+    (are
+      [expected uri args]
+      (= expected (apply (->helper uri) args))
+
+      ;; The naive-router implementation will return "/" if route is not found.
+      "/" "/en" [:missing]
+      "/" "/es" [:missing]
+
+      "/en" "/en" [:home]
+      ;; NOTE: params override the request.
+      ;; This is so that we can render e.g. a link to /es from an English page.
+      "/es" "/en" [:home {:field/lang "es"}]
+      "/es" "/en/blah" [:home {:field/lang "es"}]
+      "/en" "/es/blah" [:home {:field/lang "en"}]
+      "/en/123" "/es" [:page {:field/lang "en" :thing/slug "123"}]
+      "/es/123" "/en" [:page {:field/lang "es" :thing/slug "123"}]
+      "/es/123/action" "/en" [:page-action {:field/lang "es" :thing/slug "123"}]
+
+      ;; Let :field/lang default.
+      "/es/123" "/es" [:page {:thing/slug "123"}]
+      "/en/123" "/en" [:page {:thing/slug "123"}]
+      "/en/123/action" "/en" [:page-action {:thing/slug "123"}]
+      "/es/123/action" "/es" [:page-action {:thing/slug "123"}]
 
       ;;
       )))

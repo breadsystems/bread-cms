@@ -57,6 +57,12 @@
 (defn uri [app route-name thing]
   (bread/hook app ::uri nil route-name thing))
 
+(defmethod bread/action ::uri-helper [req _ _]
+  (let [uri-helper (fn
+                     ([route-name] (uri req route-name {}))
+                     ([route-name params] (uri req route-name params)))]
+    (assoc-in req [::bread/data :route/uri] uri-helper)))
+
 (defn plugin [{:keys [router]}]
   {:hooks
    {::router
@@ -67,5 +73,8 @@
     [{:action/name ::params :router router}]
     ::bread/route
     [{:action/name ::dispatch :router router}]
+    ::bread/dispatch
+    [{:action/name ::uri-helper
+      :action/description "Provide a :route/uri helper fn in ::data."}]
     ::uri
     [{:action/name ::uri :router router}]}})

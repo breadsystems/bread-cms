@@ -85,7 +85,7 @@
                                (reduced route)))
                            routes)
              spec (:route/spec route)]
-         (str "/" (clojure.string/join "/" (map params spec)))))
+         (str "/" (clojure.string/join "/" (map #(get params % %) spec)))))
      (bread/route-dispatcher [_ _])
      (bread/route-params [this req]
        (naive-params (:uri req)))
