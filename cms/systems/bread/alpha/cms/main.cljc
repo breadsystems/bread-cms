@@ -8,7 +8,7 @@
     [integrant.core :as ig]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
-    [reitit.ring]
+    [reitit.ring :as rr]
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
     ;; TODO ring middlewares
@@ -128,10 +128,22 @@
         (:flash res) (assoc-in res [:flash :clear?] true)
         :default res))))
 
+(defn- wrap-errors [f]
+  (fn [req]
+    (try
+      (f req)
+      (catch Throwable e
+        (prn e)
+        {:status 500
+         :body (with-out-str (clojure.pprint/pprint e))
+         :headers {"content-type" "text/plain"}}))))
+
 (defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
   (println "Starting HTTP server on port" port)
-  (let [handler (if wrap-defaults
+  (let [_ (prn 'handler handler)
+        handler (if wrap-defaults
                   (-> handler
+                      (wrap-errors)
                       (wrap-clear-flash)
                       (ring/wrap-defaults wrap-defaults))
                   handler)]
@@ -205,8 +217,16 @@
   {:body "not found"
    :status 404})
 
+(defn- ->handler [disp]
+  (prn disp)
+  {:body "TODO"
+   :status 200})
+
 (def router
   (reitit/router
+    [["/one" (fn [_] {:body "1" :status 200 :headers {"content-type" "text/html"}})]
+     ["/two" (fn [_] {:body "2" :status 200})]]
+    #_
     ["/"
      ["" {:dispatcher/type ::i18n/lang=>}]
      ["~"
@@ -222,15 +242,11 @@
        {:name :account
         :dispatcher/type ::account/account=>
         :dispatcher/component #'account/AccountPage}]]
-     ["assets/*"
-      (reitit.ring/create-resource-handler
-        {:parameter :filename
-         :not-found-handler #'not-found})]
      ["{field/lang}"
       [""
-       {:name :home
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/HomePage}]
+       (->handler {:name :home
+                   :dispatcher/type ::post/page=>
+                   :dispatcher/component #'theme/HomePage})]
       ["/i/{db/id}"
        {:name :id
         :dispatcher/type ::thing/by-id=>
@@ -278,7 +294,9 @@
   (bread/shutdown app))
 
 (defmethod ig/init-key :bread/handler [_ app]
-  (bread/handler app))
+  (rr/ring-handler
+    router
+    (rr/redirect-trailing-slash-handler {:method :strip})))
 
 (defn log-hook! [invocation]
   (let [{:keys [hook action result]} invocation]
@@ -532,6 +550,9 @@
 
   (def $router (route/router (->app $req)))
 
+  (reitit/match-by-path router "/one")
+  (reitit/match-by-path router "/two")
+  ((:bread/handler @system) {:uri "/one"})
   (reitit/match->path
     (reitit/match-by-path $router "/en/a/b/c")
     {:field/lang :en :thing/slug* "a/b/c"})
