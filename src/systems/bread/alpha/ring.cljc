@@ -41,6 +41,13 @@
              :headers headers))
     res))
 
+(defn redirect=> [redir]
+  {:hooks
+   {::bread/expand
+    [(merge {:action/name ::redirect
+             :action/description "Redirect to destination"}
+            redir)]}})
+
 (defmethod bread/action ::set-session
   [res {:keys [session]} _]
   (-> res

@@ -306,10 +306,7 @@
         lang-param (bread/config req :i18n/lang-param)
         redirect-to (route/uri req home-route {lang-param (lang req)})]
     (when redirect-to
-      {:hooks
-       {::bread/expand
-        [{:action/name ::ring/redirect
-          :to redirect-to}]}})))
+      (ring/redirect=> {:to redirect-to}))))
 
 (defn plugin
   ([]
