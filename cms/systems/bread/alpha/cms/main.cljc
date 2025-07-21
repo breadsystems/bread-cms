@@ -44,11 +44,14 @@
    500 "Internal Server Error"})
 
 (def cli-options
-  [["-h" "--help" "Show this usage text."]
-   ["-p" "--port PORT" "Port number to run the HTTP server on."
+  [["-h" "--help"
+    "Show this usage text."]
+   ["-p" "--port PORT"
+    "Port number to run the HTTP server on."
     :parse-fn #(Integer/parseInt %)
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536."]]
-   ["-f" "--file FILE" "Config file path. Ignored if --file is passed."
+   ["-f" "--file FILE"
+    "Config file path. Ignored if --file is passed."
     :default "config.edn"]
    ["-c" "--config EDN"
     "Full configuration data as EDN. Causes other args to be ignored."
