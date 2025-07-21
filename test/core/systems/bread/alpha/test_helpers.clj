@@ -13,9 +13,6 @@
 (defn plugins->loaded [plugins]
   (-> plugins plugins->app bread/load-app))
 
-(defn plugins->handler [plugins]
-  (-> plugins plugins->app bread/load-app bread/handler))
-
 (defn db-config->app [config]
   (plugins->app [(db/plugin config)]))
 

@@ -17,7 +17,6 @@
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.test-helpers :refer [naive-router
                                               plugins->loaded
-                                              plugins->handler
                                               use-db]])
   (:import
     [java.util Date]))
@@ -63,17 +62,16 @@
   [req _ _]
   (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
 
-(defn- config->handler [auth-config]
-  (plugins->handler
-    (conj
-      (defaults/plugins {:db config
-                         :routes false})
-      (route/plugin {:router (naive-router)})
-      {:hooks
-       {::bread/route
-        [{:action/name ::route
-          :action/description "Hard-code the dispatcher."}]}}
-      (auth/plugin auth-config))))
+(defn- config->plugins [auth-config]
+  (conj
+    (defaults/plugins {:db config
+                       :routes false})
+    (route/plugin {:router (naive-router)})
+    {:hooks
+     {::bread/route
+      [{:action/name ::route
+        :action/description "Hard-code the dispatcher."}]}}
+    (auth/plugin auth-config)))
 
 (defn- ->auth-data [{::bread/keys [data] :keys [headers status session]}]
   {::bread/data (select-keys data [:session :auth/result :totp])
@@ -84,7 +82,7 @@
 (deftest test-authentication-flow
   (are
     [expected auth-config req]
-    (= expected (let [handler (config->handler auth-config)
+    (= expected (let [handler (-> auth-config config->plugins plugins->loaded bread/handler)
                       data (-> req handler ->auth-data)]
                   (if (get-in data [::bread/data :auth/result])
                     (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
@@ -416,7 +414,7 @@
     [expected auth-config req]
     (= expected (with-redefs [ot/is-valid-totp-token? valid-code?
                               ot/generate-secret-key (constantly SECRET)]
-                  (let [handler (config->handler auth-config)
+                  (let [handler (-> auth-config config->plugins plugins->loaded bread/handler)
                         data (-> req handler ->auth-data)]
                     (if (get-in data [::bread/data :auth/result])
                       (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)

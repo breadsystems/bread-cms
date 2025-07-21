@@ -2,8 +2,7 @@
   (:require
     [clojure.test :refer [are deftest is testing use-fixtures]]
     [kaocha.repl :as k]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.test-helpers :refer [plugins->handler]]))
+    [systems.bread.alpha.core :as bread]))
 
 (def invocations (atom #{}))
 (defn record-invocation [m]
