@@ -192,7 +192,7 @@
                      :routes {:router router}
                      :i18n {:supported-langs #{:en :fr}}
                      :renderer false})
-          handler (bread/load-handler (bread/app {:plugins plugins}))]
+          handler (->> {:plugins plugins} bread/app bread/load-app (partial bread/handle))]
       (are
         [expected req]
         (= expected (-> req handler (select-keys [:body :status])))

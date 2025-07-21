@@ -341,19 +341,23 @@
                    (str (namespace k)) "systems.bread")))]
     (apply dissoc (hook app ::shutdown) (filter bread-key? (keys app)))))
 
+(defn handle [app req]
+  "Takes a Ring request and threads it through the Bread request/response lifecycle."
+  (-> app
+      (merge req)
+      (hook ::request)
+      (hook ::route)       ; -> ::dispatcher
+      (hook ::dispatch)    ; -> ::expansions, ::data, ::effects
+      (hook ::expand)      ; -> more ::data
+      (hook ::effects!)    ; -> possibly more ::data
+      (hook ::render)      ; -> standard Ring keys: :status, :headers, :body
+      (hook ::response)))
+
 (defn handler
   "Returns a handler function that takes a Ring request and threads it
   through the Bread request/response lifecycle."
   [app]
-  (fn [req]
-    (-> (merge req app)
-        (hook ::request)
-        (hook ::route)       ; -> ::dispatcher
-        (hook ::dispatch)    ; -> ::expansions, ::data, ::effects
-        (hook ::expand)      ; -> more ::data
-        (hook ::effects!)    ; -> possibly more ::data
-        (hook ::render)      ; -> standard Ring keys: :status, :headers, :body
-        (hook ::response))))
+  (partial handle app))
 
 (defn load-handler
   "Loads the given app, returning a Ring handler that wraps the loaded app."
