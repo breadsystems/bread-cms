@@ -74,6 +74,12 @@
       :C :c
       nil :something)))
 
+(deftest test-load-plugins-adds-expansions
+  (let [app (plugins->loaded [{:expansions [{:expansion/name :expand}
+                                            {:expansion/name :contract}]}])]
+    (is (= [{:expansion/name :expand} {:expansion/name :contract}]
+           (::bread/expansions app)))))
+
 (deftest test-load-plugins-adds-effects
   (let [app (plugins->loaded [{:effects [{:effect/name :alpha}
                                          {:effect/name :omega}]}])]
@@ -492,4 +498,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))
