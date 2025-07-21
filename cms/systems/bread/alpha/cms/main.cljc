@@ -56,6 +56,9 @@
    ["-c" "--config EDN"
     "Full configuration data as EDN. Causes other args to be ignored."
     :parse-fn edn/read-string]
+   ["-i" "--install"
+    "Install Bread."
+    :default false]
    ["-g" "--cgi"
     "Run Bread as a CGI script"
     :default false]])
@@ -65,6 +68,12 @@
 
 (defn show-errors [{:keys [errors]}]
   (println (string/join "\n" errors)))
+
+(defn get-config [{:keys [config file port]}]
+  (cond
+    config config
+    (.exists (io/file file)) (-> file aero/read-config (update-in [:http :port] #(if port port %)))
+    :default (show-errors {:errors [(str "No such file: " file)]})))
 
 (defn run-as-cgi [{:keys [options]}]
   (try
@@ -98,6 +107,9 @@
       (System/exit 1))))
 
 (defonce system (atom nil))
+
+(defn run-install [{:keys [options]}]
+  (println 'install (get-config options)))
 
 (defn start! [config]
   (let [config (assoc config
@@ -629,12 +641,13 @@
 
 (defn -main [& args]
   (let [{:keys [options errors] :as cli-env} (cli/parse-opts args cli-options)
-        {:keys [help port file config cgi]} options
+        {:keys [help port cgi install config file]} options
         cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))]
     (cond
       errors (show-errors cli-env)
       help (show-help cli-env)
       cgi (run-as-cgi cli-env)
+      install (run-install cli-env)
       config (start! config)
       file (if-not (.exists (io/file file))
              (show-errors {:errors [(str "No such file: " file)]})
