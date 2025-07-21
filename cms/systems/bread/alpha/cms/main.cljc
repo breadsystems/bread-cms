@@ -52,7 +52,7 @@
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536."]]
    ["-f" "--file FILE"
     "Config file path. Ignored if --file is passed."
-    :default "config.edn"]
+    :default "bread.edn"]
    ["-c" "--config EDN"
     "Full configuration data as EDN. Causes other args to be ignored."
     :parse-fn edn/read-string]
