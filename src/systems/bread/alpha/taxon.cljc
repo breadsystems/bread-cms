@@ -11,9 +11,8 @@
 (defmethod bread/expand ::filter-posts
   [{k :expansion/key post-type :post/type post-status :post/status} data]
   (filter (fn [post]
-            (prn post-type post-status '? ((juxt :post/type :post/status) post))
-            (doto (and (or (nil? post-type)   (= post-type   (:post/type post)))
-                 (or (nil? post-status) (= post-status (:post/status post)))) prn))
+            (and (or (nil? post-type)   (= post-type   (:post/type post)))
+                 (or (nil? post-status) (= post-status (:post/status post)))))
           (get-in data [k :post/_taxons])))
 
 (defmethod bread/dispatch ::taxon
