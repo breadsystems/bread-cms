@@ -358,10 +358,3 @@
   through the Bread request/response lifecycle."
   [app]
   (partial handle app))
-
-(defn load-handler
-  "Loads the given app, returning a Ring handler that wraps the loaded app."
-  [app]
-  (-> app
-      (load-app)
-      (handler)))
