@@ -57,13 +57,13 @@
         two {:action/name :a/two
              :action/description "desc two"}
         app (plugins->loaded [{:hooks {:hook/a [one two]}}])]
-    (is (= [one two] (bread/hooks-for app :hook/a))))
+    (is (= [one two] (get-in app [::bread/hooks :hook/a]))))
 
   (let [one {:action/name :sorted :action/priority 1}
         two {:action/name :sorted :action/priority 2}
         three {:action/name :sorted :action/priority 3}
         app (plugins->loaded [{:hooks {:sorted [three one two]}}])]
-    (is (= [one two three] (bread/hooks-for app :sorted)))))
+    (is (= [one two three] (get-in app [::bread/hooks :sorted])))))
 
 (deftest test-load-plugins-applies-config-map
   (let [app (plugins->loaded [{:config {:a :A :b :B :c :C}}])]
@@ -90,15 +90,6 @@
   (let [app (plugins->loaded [{:effects
                                [nil {:effect/name :xyz} false nil]}])]
     (is (= [{:effect/name :xyz}] (::bread/effects app)))))
-
-(deftest test-hooks-for
-
-  (testing "it returns data for a specific hook"
-    (let [app {::bread/hooks {:bread/x [{::bread/precedence 2 ::bread/f dec}
-                                        {::bread/precedence 0 ::bread/f inc}]}}]
-      (is (= [{::bread/precedence 2 ::bread/f dec}
-              {::bread/precedence 0 ::bread/f inc}]
-             (bread/hooks-for app :bread/x))))))
 
 (deftest test-value-action
 
@@ -477,7 +468,7 @@
           response (handler {:url "/"})]
       (is (= [{:action/name ::my.action
                :action/description "Example action"}]
-             (bread/hooks-for response :my/hook)))))
+             (get-in response [::bread/hooks :my/hook])))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)

@@ -155,11 +155,6 @@
    :expansion/value value
    :expansion/description desc})
 
-(defn hooks-for
-  "Returns all hooks for h."
-  [app h]
-  (get-in app [::hooks h]))
-
 (defn add-effect
   "Adds e as an Effect to be run during the apply-effects lifecycle phase."
   [req e]
