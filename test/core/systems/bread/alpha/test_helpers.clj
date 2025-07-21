@@ -14,7 +14,7 @@
   (-> plugins plugins->app bread/load-app))
 
 (defn plugins->handler [plugins]
-  (-> plugins plugins->app bread/load-handler))
+  (-> plugins plugins->app bread/load-app bread/handler))
 
 (defn db-config->app [config]
   (plugins->app [(db/plugin config)]))
@@ -36,7 +36,7 @@
   (-> config db-config->app bread/load-app))
 
 (defn db-config->handler [config]
-  (-> config db-config->app bread/load-handler))
+  (-> config db-config->app bread/load-app bread/handler))
 
 (defn distill-hooks
   "Returns a subset of the keys in each hook (map) in (the vector of) hooks.

@@ -4,7 +4,6 @@
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [distill-hooks
-                                              plugins->handler
                                               plugins->loaded]])
   (:import (clojure.lang ExceptionInfo)))
 
@@ -467,14 +466,14 @@
   [_ {:keys [response]} _]
   response)
 
-(deftest test-load-handler
+(deftest test-handler
 
   (testing "it returns a function that loads plugins"
     (let [my-plugin {:hooks {:my/hook
                              [{:action/name ::my.action
                                :action/description "Example action"}]}}
           app (bread/app {:plugins [my-plugin]})
-          handler (bread/load-handler app)
+          handler (-> app bread/load-app bread/handler)
           response (handler {:url "/"})]
       (is (= [{:action/name ::my.action
                :action/description "Example action"}]
@@ -485,8 +484,7 @@
     (let [configurator-plugin
           {:config
            {:my/config :it's-configured!}}
-          handler
-          (bread/load-handler (bread/app {:plugins [configurator-plugin]}))]
+          handler (-> {:plugins [configurator-plugin]} bread/app bread/load-app bread/handler)]
       (is (= :it's-configured!
              (bread/config (handler {:url "/"}) :my/config)))))
 
@@ -496,10 +494,10 @@
                            {::bread/render
                             [{:action/name ::render
                               :response res}]}}
-          handler (plugins->handler [renderer-plugin])]
+          handler (-> {:plugins [renderer-plugin]} bread/app bread/load-app bread/handler)]
       (is (= res (handler {})))))
 
-  )
+  ,)
 
 (comment
   (require '[kaocha.repl :as k])

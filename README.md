@@ -67,13 +67,15 @@ Bread's (planned) high-level feature set:
   [{:string/key :hello :string/lang :en :string/value "Hello"}
    {:string/key :hello :string/lang :fr :string/value "Bonjour"}])
 
-(def handler
-  (bread/load-handler (defaults/app {:router router
-                                     :db {:db/type :datahike
-                                          :store {; datahike config
-                                                  :backend :mem
-                                                  :id "hello-bread"}
-                                          :initial-txns data}})))
+(def app-config
+  {:router router
+   :db {:db/type :datahike
+        :store {; datahike config
+                :backend :mem
+                :id "hello-bread"}
+        :initial-txns data}})
+
+(def handler (-> app-config defaults/app bread/load bread/handler))
 
 (handler {:uri "/en/hello/Breadsters"})
 ;; => [:p "Hello, Breadsters!"]
@@ -159,12 +161,14 @@ Bread's (planned) high-level feature set:
                            :field/format  :edn
                            :field/content "\"Lorem ipsum dolor sit amet\""}]}])
 
-(def handler
-  (bread/load-handler (defaults/app {:router router
-                                     :db {:db/type :datahike
-                                          :store {; datahike config
-                                                  :backend :mem
-                                                  :id "bread-blog-db"}}})))
+(def app-config
+  {:router router
+   :db {:db/type :datahike
+        :store {; datahike config
+                :backend :mem
+                :id "bread-blog-db"}}})))
+
+(def handler (-> app-config defaults/app bread/load bread/handler))
 
 (handler {:uri "/en/"})
 ;; => [:html {:lang "en"}
