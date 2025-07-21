@@ -241,7 +241,7 @@
                          e#))))))
 
 (defn- load-plugin [app {:keys [config hooks expansions effects] :as plugin}]
-  (letfn [(configure [config app]
+  (letfn [(configure [app config]
             (if config
               (apply set-config app (mapcat (juxt key val) config))
               app))
@@ -249,17 +249,17 @@
             (update-in app [::hooks hook]
                        (comp (partial sort-by :action/priority) concat)
                        (filter identity actions)))
-          (add-expansions [expansions app]
+          (append-hooks [app hooks]
+            (reduce append-hook app hooks))
+          (add-expansions [app expansions]
             (update app ::expansions concat (filter identity expansions)))
           (add-effects [app effects]
             (update app ::effects concat (filter identity effects)))]
-    (let [loaded (->> effects
-                   (add-effects app ,)
-                   (add-expansions expansions)
-                   (configure config ,)
-                   )]
-      (reduce append-hook loaded hooks))
-    ))
+    (-> app
+      (configure config)
+      (append-hooks hooks)
+      (add-expansions expansions)
+      (add-effects effects))))
 
 (defmethod action ::load-plugins
   [{::keys [plugins] :as app} _ _]
