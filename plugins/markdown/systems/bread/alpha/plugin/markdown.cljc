@@ -6,7 +6,6 @@
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.java.io :as io]
-    [juxt.dirwatch :as watch]
     [markdown.core :as md]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.dispatcher :as dispatcher]))
@@ -100,35 +99,6 @@
   (or path->req
       (fn [path _]
         {:uri (abs-path->uri path dir ext)})))
-
-(defn- watch-handler [f config]
-  (with-meta
-    (fn [{:keys [action file]}]
-      (when (= :modify action)
-        (when-let [req (create-request
-                         (request-creator config)
-                         (.getCanonicalPath file)
-                         config)]
-          (f req))))
-    {:handler f
-     :config config}))
-
-(defn- watch-route [handler route]
-  (when-let [config (bread/watch-config route)]
-    (let [;; We need to get the absolute path of dir to correctly handle
-          ;; absolute Markdown/content file paths later on.
-          dir (io/file (:dir config))
-          config (assoc config :dir (.getCanonicalPath dir))]
-      (watch/watch-dir (watch-handler handler config) dir))))
-
-(defn watch-routes [handler router]
-  (let [watchers (doall
-                   (filter some? (map (fn [route]
-                                        (watch-route handler route))
-                                      (bread/routes router))))]
-    (fn []
-      (doall (for [watcher watchers]
-               (watch/close-watcher watcher))))))
 
 (defn plugin
   ([]

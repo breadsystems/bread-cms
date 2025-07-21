@@ -29,10 +29,6 @@
   (route-dispatcher [this req])
   (routes [this]))
 
-(defprotocol WatchableRoute
-  :extend-via-metadata true
-  (watch-config [this]))
-
 (extend-protocol Router
   clojure.lang.Var
   (path [v route-name params] (path (deref v) route-name params))

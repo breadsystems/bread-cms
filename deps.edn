@@ -51,7 +51,6 @@
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
                 juji/editscript             {:mvn/version "0.6.3"}
-                juxt/dirwatch               {:mvn/version "0.2.5"}
                 markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
                 one-time/one-time           {:mvn/version "0.8.0"}
                 org.babashka/sci            {:mvn/version "0.8.40"}
@@ -89,8 +88,7 @@
 
   :markdown
   {:extra-paths ["plugins/markdown"]
-   :extra-deps {juxt/dirwatch             {:mvn/version "0.2.5"}
-                markdown-clj/markdown-clj {:mvn/version "1.10.5"}}}
+   :extra-deps {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}}
 
   :reitit
   {:extra-paths ["plugins/reitit"]
