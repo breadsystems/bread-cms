@@ -25,14 +25,14 @@
          :or {post-type :page
               post-status :post.status/published}} dispatcher
         pull-spec (vec (dispatcher/pull-spec dispatcher))
+        ;; NOTE: because of how pull works, we can't specify the pull spec of the posts within
+        ;; the requested taxon ~while also filtering those posts~ in the same query.
+        ;; Instead, we query for all the posts and then filter them in memory.
         query {:find [(list 'pull '?e pull-spec) '.]
                :in '[$ ?taxonomy ?slug]
                :where '[[?e :taxon/taxonomy ?taxonomy]
                         [?e :thing/slug ?slug]]}
-        {:keys [bindings]} (qi/infer-query-bindings
-                             :post/_taxons
-                             vector?
-                             query)]
+        {:keys [bindings]} (qi/infer-query-bindings :post/_taxons vector? query)]
     {:expansions (if (seq bindings)
                    (vec (mapcat
                           (fn [query]
