@@ -111,25 +111,30 @@
 (defonce system (atom nil))
 
 (defn- prompt-cli-user [message & {:keys [password?] :or {password? false}}]
+  (print message)
+  (flush)
   (if password?
-    (if-let [console (System/console)]
-      (do (print message)
-          (flush)
-          (String. (.readPassword console)))
-      (do
-        ;; TODO i18n
-        (log/warn "No system console available. Password will be visible as it is typed.")
-        (flush)
-        (read-line)))
-    (do (print message)
-        (flush)
-        (read-line))))
+    ;; Prompt securely if possible
+    (if-let [console (System/console)] (String. (.readPassword console)) (read-line))
+    (read-line)))
 
-(defn run-install [{:keys [options]}]
+(defn- prompt-cli-user-for-password [i18n]
+  (when-not (System/console)
+    (log/warn (:no-system-console-available i18n)))
+  (loop [confirmed-password nil]
+    (if-not confirmed-password
+      (let [password (prompt-cli-user (:enter-admin-password i18n) :password? true)
+            confirmation (prompt-cli-user (:confirm-admin-password i18n) :password? true)
+            confirmed (when (= password confirmation) password)]
+        (when-not confirmed
+          (println (:passwords-must-match i18n)))
+        (recur confirmed))
+      confirmed-password)))
+
+(defn run-install [{:keys [options i18n]}]
   (let [config (select-keys (get-config options) [:bread/db :bread/app])
-        admin-username (prompt-cli-user "Enter admin username: ")
-        admin-password (prompt-cli-user "Enter admin password: " :password? true)
-        admin-password-confirmation (prompt-cli-user "Confirm admin password: " :password? true)
+        admin-username (prompt-cli-user (:enter-admin-username i18n))
+        admin-password (prompt-cli-user-for-password i18n)
         ;; TODO confirm
         admin-txs [{:user/username admin-username
                     :user/password admin-password
@@ -672,7 +677,16 @@
 (defn -main [& args]
   (let [{:keys [options errors] :as cli-env} (cli/parse-opts args cli-options)
         {:keys [help port cgi install config file]} options
-        cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))]
+        cgi (or cgi (System/getenv "GATEWAY_INTERFACE"))
+        i18n {;; TODO
+              :en {:enter-admin-username "Enter admin username: "
+                   :enter-admin-password "Enter admin password: "
+                   :confirm-admin-password "Confirm admin password: "
+                   :passwords-must-match "Passwords must match!"
+                   :no-system-console-available (str "No system console available."
+                                                     " Password will be visible as it is typed.")}}
+        lang :en
+        cli-env (assoc cli-env :i18n (get i18n lang))]
     (cond
       errors (show-errors cli-env)
       help (show-help cli-env)
