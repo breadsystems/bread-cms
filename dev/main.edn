@@ -36,6 +36,9 @@
           :user "bread"
           :password "bread"
           :dbname "bread"}
+  #_#_
+  :store {:backend :mem
+          :id "bread-db"}
   :recreate? true
   :force? true
   :db/migrations #deref #var systems.bread.alpha.schema/initial
