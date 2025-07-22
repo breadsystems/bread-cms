@@ -48,7 +48,7 @@
                 metosin/reitit              {:mvn/version "0.9.1"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
-                io.replikativ/datahike      {:mvn/version "0.6.1531"}
+                io.replikativ/datahike      {:mvn/version "0.6.1535"}
                 io.replikativ/datahike-jdbc {:mvn/version "0.3.50"}
                 juji/editscript             {:mvn/version "0.6.3"}
                 markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
