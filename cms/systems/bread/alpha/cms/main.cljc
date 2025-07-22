@@ -12,7 +12,6 @@
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
     [taoensso.timbre :as log]
-    ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme :as theme]
