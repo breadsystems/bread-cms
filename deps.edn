@@ -58,7 +58,9 @@
                 org.xerial/sqlite-jdbc      {:mvn/version "3.41.0.0"}
                 ring/ring                   {:mvn/version "1.9.5"}
                 ring/ring-defaults          {:mvn/version "0.4.0"}
-                rum/rum                     {:mvn/version "0.12.10"}}}
+                rum/rum                     {:mvn/version "0.12.10"}
+                com.taoensso/timbre         {:mvn/version "6.7.1"}
+                ,}}
 
   :marx
   {:extra-paths ["marx" "marx/out"]

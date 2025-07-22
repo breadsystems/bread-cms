@@ -11,6 +11,7 @@
     [reitit.ring]
     [ring.middleware.defaults :as ring]
     [sci.core :as sci]
+    [taoensso.timbre :as log]
     ;; TODO ring middlewares
 
     [systems.bread.alpha.core :as bread]
@@ -33,8 +34,9 @@
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.account :as account])
   (:import
+    [java.io Console]
     [java.time LocalDateTime]
-    [java.util Properties UUID])
+    [java.util Date Properties UUID])
   (:gen-class))
 
 (def status-mappings
@@ -108,8 +110,35 @@
 
 (defonce system (atom nil))
 
+(defn- prompt-cli-user [message & {:keys [password?] :or {password? false}}]
+  (if password?
+    (if-let [console (System/console)]
+      (do (print message)
+          (flush)
+          (String. (.readPassword console)))
+      (do
+        ;; TODO i18n
+        (log/warn "No system console available. Password will be visible as it is typed.")
+        (flush)
+        (read-line)))
+    (do (print message)
+        (flush)
+        (read-line))))
+
 (defn run-install [{:keys [options]}]
-  (println 'install (get-config options)))
+  (let [config (select-keys (get-config options) [:bread/db :bread/app])
+        admin-username (prompt-cli-user "Enter admin username: ")
+        admin-password (prompt-cli-user "Enter admin password: " :password? true)
+        admin-password-confirmation (prompt-cli-user "Confirm admin password: " :password? true)
+        ;; TODO confirm
+        admin-txs [{:user/username admin-username
+                    :user/password admin-password
+                    :thing/created-at (Date.)
+                    :thing/updated-at (Date.)}]
+        config (update-in config [:bread/db :db/initial-txns] concat admin-txs)
+        system (ig/init config)]
+    (println 'install system)
+    ))
 
 (defn start! [config]
   (let [config (assoc config
@@ -206,6 +235,7 @@
 
 (defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
+  (log/info "initializing :bread/db with config:" db-config)
   ;; TODO call datahike API directly
   (db/create! db-config {:force? force?})
   (assoc db-config :db/connection (db/connect db-config)))
@@ -328,7 +358,7 @@
   (set! *print-namespace-maps* false)
 
   (restart! (-> "dev/main.edn" aero/read-config))
-  (deref system)
+  (keys (deref system))
   (:http @system)
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
