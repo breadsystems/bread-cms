@@ -5,6 +5,8 @@
     [clojure.string :as string]
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
+    [datahike.api]
+    [datahike-jdbc.core]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
