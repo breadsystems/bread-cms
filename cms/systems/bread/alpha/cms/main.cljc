@@ -131,19 +131,39 @@
         (recur confirmed))
       confirmed-password)))
 
+(def ANSI
+  {:reset     "\u001b[0m"
+   :bold      "\u001b[1m"})
+
+(defn- bold [& ss]
+  (apply str (concat [(:bold ANSI)] ss [(:reset ANSI)])))
+
 (defn run-install [{:keys [options i18n]}]
-  (let [config (select-keys (get-config options) [:bread/db :bread/app])
-        admin-username (prompt-cli-user (:enter-admin-username i18n))
-        admin-password (prompt-cli-user-for-password i18n)
-        ;; TODO confirm
-        admin-txs [{:user/username admin-username
-                    :user/password admin-password
-                    :thing/created-at (Date.)
-                    :thing/updated-at (Date.)}]
-        config (update-in config [:bread/db :db/initial-txns] concat admin-txs)
-        system (ig/init config)]
-    (println 'install system)
-    ))
+  (let [config (select-keys (get-config options) [:bread/db :bread/app])]
+    (loop [confirmed-details nil]
+      (if-not confirmed-details
+        (let [admin-username (prompt-cli-user (:enter-admin-username i18n))
+              admin-password (prompt-cli-user-for-password i18n)
+              _ (let [detail-lines [[:username admin-username]]]
+                  (println)
+                  (doseq [[k v] [[:username "coby"]]]
+                    ;; TODO how to handle ":" in RTL???
+                    (println (bold (k i18n) ":") v))
+                  (println)
+                  (flush))
+              confirm-details (prompt-cli-user (:confirm-details i18n))
+              confirmed? (or (= "" confirm-details) (= "y" (string/lower-case confirm-details)))]
+          (if confirmed?
+            (let [admin-txs [{:user/username admin-username
+                              :user/password admin-password
+                              :thing/created-at (Date.)
+                              :thing/updated-at (Date.)}]
+                  config (update-in config [:bread/db :db/initial-txns] concat admin-txs)
+                  ;; INSTALL BREAD
+                  system (ig/init config)]
+              ;; TODO warn about :backend :mem
+              (println 'install system))
+            (recur confirmed?)))))))
 
 (defn start! [config]
   (let [config (assoc config
@@ -684,7 +704,9 @@
                    :confirm-admin-password "Confirm admin password: "
                    :passwords-must-match "Passwords must match!"
                    :no-system-console-available (str "No system console available."
-                                                     " Password will be visible as it is typed.")}}
+                                                     " Password will be visible as it is typed.")
+                   :username "Username" ;; TODO get from auth.i18n.edn
+                   :confirm-details "Please confirm the above to finish installing Bread (Y/n): "}}
         lang :en
         cli-env (assoc cli-env :i18n (get i18n lang))]
     (cond
