@@ -36,7 +36,8 @@
   (:import
     [java.io Console]
     [java.time LocalDateTime]
-    [java.util Date Properties UUID])
+    [java.util Date Properties UUID]
+    [org.sqlite JDBC])
   (:gen-class))
 
 (defn not-found [req]

@@ -31,8 +31,11 @@
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
-  :store {:backend :mem
-          :id "bread-db"}
+  :store {:backend :jdbc
+          :dbtype "sqlite"
+          :user "bread"
+          :password "bread"
+          :dbname "bread"}
   :recreate? true
   :force? true
   :db/migrations #deref #var systems.bread.alpha.schema/initial
