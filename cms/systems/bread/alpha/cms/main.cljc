@@ -21,6 +21,7 @@
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
+    [systems.bread.alpha.ring :as bread.ring]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.buddy]
@@ -37,12 +38,6 @@
     [java.time LocalDateTime]
     [java.util Date Properties UUID])
   (:gen-class))
-
-(def status-mappings
-  {200 "OK"
-   400 "Bad Request"
-   404 "Not Found"
-   500 "Internal Server Error"})
 
 (def cli-options
   [["-h" "--help"
@@ -93,7 +88,7 @@
                :content-length (Integer.
                                  (or (System/getenv "CONTENT_LENGTH") "0"))}
           {:keys [status headers body] :as res} (handler req)]
-      (println (str "status: " status " " (status-mappings status)))
+      (println (str "status: " status " " (bread.ring/http-status-codes status)))
       (doseq [[header header-value] headers]
         (println (str header ": " header-value)))
       (println)
