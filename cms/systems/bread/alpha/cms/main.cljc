@@ -40,9 +40,6 @@
     [java.util Date Properties UUID])
   (:gen-class))
 
-(log/merge-config! {:min-level (keyword (or (System/getenv "BREAD_LOG_LEVEL") :info))
-                    :middleware [(log-redactor)]})
-
 (def cli-options
   [["-h" "--help"
     "Show this usage text."]
@@ -191,6 +188,10 @@
 
 (defmethod ig/init-key :started-at [_ _]
   (LocalDateTime/now))
+
+(defmethod ig/init-key :app/log [_ log-config]
+  (log/merge-config! {:min-level (:min-level log-config :info)
+                      :middleware [(log-redactor)]}))
 
 (defn- wrap-clear-flash [f]
   (fn [req]

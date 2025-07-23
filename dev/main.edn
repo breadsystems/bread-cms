@@ -61,7 +61,11 @@
                 :role/abilities
                 #{{:ability/key :publish-posts}
                   {:ability/key :edit-posts}
-                  {:ability/key :delete-posts}}}}}]]}
+                  {:ability/key :delete-posts}}}}}]]
+  ;; db logs can be noisy, so load logging config first
+  :__after #ig/ref :app/log}
+ :app/log
+ {:min-level :info}
  #_#_
  :bread/profilers
  [{:hook #{:systems.bread.alpha.core/request}

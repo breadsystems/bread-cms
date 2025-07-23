@@ -2,6 +2,7 @@
   (:require
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
+    [taoensso.timbre :as log]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
