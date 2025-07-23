@@ -107,7 +107,13 @@
     :default false]
    ["-g" "--cgi"
     "Run Bread as a CGI script"
-    :default false]])
+    :default false]
+   ["-v" "--log-level LEVEL"
+    "Set log verbosity"
+    :parse-fn keyword
+    :default :info
+    :validate [#{:trace :debug :info :warn :error :fatal :report}
+               "Must be one of: trace, debug, info, warn, error, fatal, report"]]])
 
 (defn show-help [{:keys [summary]}]
   (println summary))
@@ -198,7 +204,7 @@
               admin-password (prompt-cli-user-for-password i18n)
               _ (let [detail-lines [[:username admin-username]]]
                   (println)
-                  (doseq [[k v] [[:username "coby"]]]
+                  (doseq [[k v] detail-lines]
                     ;; TODO how to handle ":" in RTL???
                     (println (bold (k i18n) ":") v))
                   (println)
