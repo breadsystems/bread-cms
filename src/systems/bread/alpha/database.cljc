@@ -4,6 +4,7 @@
     [clojure.spec.alpha :as spec]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
     [systems.bread.alpha.internal.datalog :as datalog]))
 
 (defmulti connect :db/type)
@@ -138,6 +139,11 @@
       (and flatten-many? results?) (map first result)
       :else result)))
 
+(defn- mark-sensitive-attrs! [migration]
+  (doseq [{:keys [db/ident attr/sensitive?]} migration]
+    (when (and ident sensitive?)
+      (mark-sensitve-keys! ident))))
+
 (defmethod bread/action ::migrate
   [app {:keys [initial]} _]
   (let [migrations (bread/hook app ::migrations initial)
@@ -151,6 +157,7 @@
         (when (seq unmet-deps)
           (throw (ex-info "Migration has one or more unmet dependencies!"
                           {:unmet-deps (set unmet-deps)})))
+        (mark-sensitive-attrs! migration)
         (when-not (migration-ran? (database app) migration)
           (transact conn migration)))))
   app)
