@@ -315,7 +315,7 @@
 
 (defmethod ig/init-key :bread/db
   [_ {:keys [recreate? force?] :as db-config}]
-  (log/info "initializing :bread/db with config:" db-config)
+  (log/debug "initializing :bread/db with config:" db-config)
   ;; TODO call datahike API directly
   (db/create! db-config {:force? force?})
   (assoc db-config :db/connection (db/connect db-config)))
