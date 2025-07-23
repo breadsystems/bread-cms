@@ -40,6 +40,55 @@
     [java.util Date Properties UUID])
   (:gen-class))
 
+(defn not-found [req]
+  (prn req)
+  {:body "not found"
+   :status 404})
+
+(def router
+  (reitit/router
+    ["/"
+     ["" {:dispatcher/type ::i18n/lang=>}]
+     ["~"
+      ["/login"
+       {:name :login
+        :dispatcher/type ::auth/login=>
+        :dispatcher/component #'auth/LoginPage}]
+      ["/signup"
+       {:name :signup
+        :dispatcher/type ::signup/signup=>
+        :dispatcher/component #'signup/SignupPage}]
+      ["/account"
+       {:name :account
+        :dispatcher/type ::account/account=>
+        :dispatcher/component #'account/AccountPage}]]
+     ["assets/*"
+      (reitit.ring/create-resource-handler
+        {:parameter :filename
+         :not-found-handler #'not-found})]
+     ["{field/lang}"
+      [""
+       {:name :home
+        :dispatcher/type ::post/page=>
+        :dispatcher/component #'theme/HomePage}]
+      ["/i/{db/id}"
+       {:name :id
+        :dispatcher/type ::thing/by-id=>
+        :dispatcher/component #'theme/InteriorPage}]
+      ["/tag/{thing/slug}"
+       {:name :tag
+        :dispatcher/type ::post/tag ;; TODO
+        :dispatcher/component #'theme/Tag}]
+      ["/{thing/slug*}"
+       {:name :page
+        :dispatcher/type ::post/page=>
+        :dispatcher/component #'theme/InteriorPage}]
+      ["/page/{thing/slug*}" ;; TODO
+       {:name :page!
+        :dispatcher/type ::post/page=>
+        :dispatcher/component #'theme/InteriorPage}]]]
+    {:conflicts nil}))
+
 (def cli-options
   [["-h" "--help"
     "Show this usage text."]
@@ -138,7 +187,9 @@
 (def red (partial style :red))
 
 (defn run-install [{:keys [options i18n]}]
-  (let [config (select-keys (get-config options) [:bread/db :bread/app])]
+  (let [config (-> (get-config options)
+                   (select-keys [:bread/db :bread/app :app/log])
+                   (update :bread/router #(or % router)))]
     (when (= :mem (get-in config [:bread/db :store :backend]))
       (println (bold (red (:warning-backend-mem i18n)))))
     (loop [confirmed-details nil]
@@ -273,55 +324,6 @@
   [_ {:keys [recreate?] :as db-config}]
   ;; TODO call datahike API directly
   (when recreate? (db/delete! db-config)))
-
-(defn not-found [req]
-  (prn req)
-  {:body "not found"
-   :status 404})
-
-(def router
-  (reitit/router
-    ["/"
-     ["" {:dispatcher/type ::i18n/lang=>}]
-     ["~"
-      ["/login"
-       {:name :login
-        :dispatcher/type ::auth/login=>
-        :dispatcher/component #'auth/LoginPage}]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'signup/SignupPage}]
-      ["/account"
-       {:name :account
-        :dispatcher/type ::account/account=>
-        :dispatcher/component #'account/AccountPage}]]
-     ["assets/*"
-      (reitit.ring/create-resource-handler
-        {:parameter :filename
-         :not-found-handler #'not-found})]
-     ["{field/lang}"
-      [""
-       {:name :home
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/HomePage}]
-      ["/i/{db/id}"
-       {:name :id
-        :dispatcher/type ::thing/by-id=>
-        :dispatcher/component #'theme/InteriorPage}]
-      ["/tag/{thing/slug}"
-       {:name :tag
-        :dispatcher/type ::post/tag ;; TODO
-        :dispatcher/component #'theme/Tag}]
-      ["/{thing/slug*}"
-       {:name :page
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]
-      ["/page/{thing/slug*}" ;; TODO
-       {:name :page!
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]]]
-    {:conflicts nil}))
 
 (defmethod ig/init-key :bread/router [_ router]
   #'router)
