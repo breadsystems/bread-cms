@@ -193,9 +193,11 @@
 (def red (partial style :red))
 
 (defn run-install [{:keys [options i18n]}]
-  (let [config (-> (get-config options)
+  (let [log-level (:log-level options)
+        config (-> (get-config options)
                    (select-keys [:bread/db :bread/app :app/log])
-                   (update :bread/router #(or % router)))]
+                   (update :bread/router #(or % router)))
+        config (if log-level (assoc-in config [:app/log :min-level] log-level) config)]
     (when (= :mem (get-in config [:bread/db :store :backend]))
       (println (bold (red (:warning-backend-mem i18n)))))
     (loop [confirmed-details nil]
