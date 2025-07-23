@@ -241,7 +241,7 @@
                                :bread.migration/users}}))
 
 (def
-  ^{:doc "Minimal schema for posts, the central concept of Bread CMS."}
+  ^{:doc "Minimal schema for posts, the central content type of Bread CMS."}
   posts
   (with-meta
     [{:db/id "migration.posts"
