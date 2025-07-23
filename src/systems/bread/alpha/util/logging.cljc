@@ -3,7 +3,7 @@
   (:require
     [clojure.walk :as walk]))
 
-(def ^:dynamic ^:private *sensitive-keys* #{})
+(def ^:dynamic ^:private *sensitive-keys* #{:user/password :user/totp-key :session/id})
 
 (defn log-redactor
   ([]
