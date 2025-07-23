@@ -23,6 +23,7 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.ring :as bread.ring]
     [systems.bread.alpha.user :as user]
+    [systems.bread.alpha.util.logging :refer [log-redactor]]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.buddy]
     [systems.bread.alpha.cms.config.reitit]
@@ -38,6 +39,9 @@
     [java.time LocalDateTime]
     [java.util Date Properties UUID])
   (:gen-class))
+
+(log/merge-config! {:min-level (keyword (or (System/getenv "BREAD_LOG_LEVEL") :info))
+                    :middleware [(log-redactor)]})
 
 (def cli-options
   [["-h" "--help"
