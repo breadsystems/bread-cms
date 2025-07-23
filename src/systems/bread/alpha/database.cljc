@@ -160,6 +160,8 @@
                           {:unmet-deps (set unmet-deps)})))
         (mark-sensitive-attrs! migration)
         (when-not (migration-ran? (database app) migration)
+          (log/info "db migration ran" (:migration/key (first (filter :migration/key migration))))
+          (log/debug "migration installed schema" migration)
           (transact conn migration)))))
   app)
 
