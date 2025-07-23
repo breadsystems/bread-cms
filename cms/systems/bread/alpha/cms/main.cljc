@@ -126,14 +126,20 @@
       confirmed-password)))
 
 (def ANSI
-  {:reset     "\u001b[0m"
-   :bold      "\u001b[1m"})
+  {:reset "\u001b[0m"
+   :bold  "\u001b[1m"
+   :red   "\u001b[31m"})
 
-(defn- bold [& ss]
-  (apply str (concat [(:bold ANSI)] ss [(:reset ANSI)])))
+(defn- style [code & ss]
+  (apply str (concat [(code ANSI)] ss [(:reset ANSI)])))
+
+(def bold (partial style :bold))
+(def red (partial style :red))
 
 (defn run-install [{:keys [options i18n]}]
   (let [config (select-keys (get-config options) [:bread/db :bread/app])]
+    (when (= :mem (get-in config [:bread/db :store :backend]))
+      (println (bold (red (:warning-backend-mem i18n)))))
     (loop [confirmed-details nil]
       (if-not confirmed-details
         (let [admin-username (prompt-cli-user (:enter-admin-username i18n))
@@ -155,8 +161,7 @@
                   config (update-in config [:bread/db :db/initial-txns] concat admin-txs)
                   ;; INSTALL BREAD
                   system (ig/init config)]
-              ;; TODO warn about :backend :mem
-              (println 'install system))
+              (println (bold (:bread-installed i18n))))
             (recur confirmed?)))))))
 
 (defn start! [config]
@@ -700,7 +705,10 @@
                    :no-system-console-available (str "No system console available."
                                                      " Password will be visible as it is typed.")
                    :username "Username" ;; TODO get from auth.i18n.edn
-                   :confirm-details "Please confirm the above to finish installing Bread (Y/n): "}}
+                   :confirm-details "Please confirm the above to finish installing Bread (Y/n): "
+                   :warning-backend-mem
+                   "Backend is set to :mem. This installation will have no effect."
+                   :bread-installed "Bread is now installed!"}}
         lang :en
         cli-env (assoc cli-env :i18n (get i18n lang))]
     (cond
