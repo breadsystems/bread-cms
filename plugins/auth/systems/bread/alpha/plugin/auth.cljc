@@ -645,12 +645,14 @@
       :db/doc "User account password hash"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
+      :attr/sensitive? true
       :attr/migration "migration.authentication"}
      {:db/ident :user/totp-key
       :attr/label "TOTP key"
       :db/doc "User's secret key for the Time-based One-Time Password algorithm"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
+      :attr/sensitive? true
       :attr/migration "migration.authentication"}
      {:db/ident :user/locked-at
       :attr/label "Account Locked-at Time"
@@ -678,6 +680,7 @@
       :db/valueType :db.type/string
       :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
+      :attr/sensitive? true
       :attr/migration "migration.authentication"}
      {:db/ident :session/data
       :attr/label "Session Data"

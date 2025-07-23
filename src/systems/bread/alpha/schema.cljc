@@ -22,6 +22,10 @@
       :db/doc "Human-readable label for the database attr itself"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one}
+     {:db/ident :attr/sensitive?
+      :db/doc "Whether values of this attr are considered sensitive (e.g. :user/password)"
+      :db/valueType :db.type/boolean
+      :db/cardinality :db.cardinality/one}
      {:migration/key :bread.migration/migrations
       :migration/description
       "Minimal schema for safely performing future migrations."}]
