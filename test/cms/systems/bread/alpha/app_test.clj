@@ -13,6 +13,12 @@
     [systems.bread.alpha.test-helpers :refer [naive-params use-db]]
     [systems.bread.alpha.defaults :as defaults]))
 
+(defn edn-field [k lang content]
+  {:field/key k
+   :field/lang lang
+   :field/format :edn
+   :field/content (pr-str content)})
+
 (def config {:db/type :datahike
              :store {:backend :mem
                      :id "app-test-db"}
@@ -23,69 +29,30 @@
                :thing/slug ""
                :post/status :post.status/published
                :thing/fields
-               #{{:field/key :title
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content (pr-str "Home Page")}
-                 {:field/key :title
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content (pr-str "Page D'Accueil")}
-                 {:field/key :simple
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content (pr-str {:hello "Hi!"})}
-                 {:field/key :simple
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content (pr-str {:hello "Allo!"})}}}
+               #{(edn-field :title :en "Home Page")
+                 (edn-field :title :fr "Page D'Accueil")
+                 (edn-field :simple :en {:hello "Hi!"})
+                 (edn-field :simple :fr {:hello "Allo!"})}}
               {:db/id "page.parent"
                :post/type :page
                :thing/slug "parent-page"
                :post/status :post.status/published
                :thing/children ["page.child"]
                :thing/fields
-               #{{:field/key :title
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content (pr-str "Parent Page")}
-                 {:field/key :title
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content (pr-str "La Page Parent")}
-                 {:field/key :simple
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content
-                  (pr-str {:hello "Hello from parent"})}
-                 {:field/key :simple
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content
-                  (pr-str {:hello "Bonjour de parent"})}}}
+               #{(edn-field :title :en "Parent Page")
+                 (edn-field :title :fr "La Page Parent")
+                 (edn-field :simple :en {:hello "Hello from parent"})
+                 (edn-field :simple :fr {:hello "Bonjour de parent"})}}
               {:db/id "page.child"
                :post/type :page
                :thing/slug "child-page"
                :post/status :post.status/published
                :thing/fields
-               #{{:field/key :title
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content (pr-str "Child Page")}
-                 {:field/key :title
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content (pr-str "La Page Enfant")}
-                 {:field/key :simple
-                  :field/lang :en
-                  :field/format :edn
-                  :field/content
-                  (pr-str {:hello "Hello from child"})}
-                 {:field/key :simple
-                  :field/lang :fr
-                  :field/format :edn
-                  :field/content
-                  (pr-str {:hello "Bonjour d'enfant"})}}}
+               #{(edn-field :title :en "Child Page")
+                 (edn-field :title :fr "La Page Enfant")
+                 (edn-field :simple :en {:hello "Hello from child"})
+                 (edn-field :simple :fr {:hello "Bonjour d'enfant"})}}
+              ;; TODO deserialize global strings in the same way...
               {:field/lang :en
                :field/key :not-found
                :field/format :edn
