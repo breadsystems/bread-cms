@@ -28,6 +28,34 @@ Hmmm...except...maybe what we actual want to do is provide a single PURE multime
 
 CGI mode is enabled by default when the `GATEWAY_INTERFACE` env var is detected, or if the `--cgi` flag is passed explicitly. Maybe make a `--no-cgi` flag to disable when env var present?
 
+## SCI
+
+```
+(defn- sci-ns [ns-sym]
+  (let [ns* (sci/create-ns ns-sym)
+        publics (ns-publics ns-sym)]
+    (update-vals publics #(sci/copy-var* % ns*))))
+(sci-ns 'systems.bread.alpha.component)
+
+(defn- sci-context [ns-syms]
+  (sci/init {:namespaces (into {} (map (juxt identity sci-ns) ns-syms))}))
+
+(def $theme-ctx
+  (sci-context ['systems.bread.alpha.component]))
+
+(sci/eval-string*
+  $theme-ctx
+  "(ns my-theme (:require [systems.bread.alpha.component :refer [defc]]))
+  (defc my-page [_]
+    {}
+    [:p \"MY PAGE\"])")
+
+(sci/eval-string*
+  $theme-ctx
+  "(ns my-theme)
+  (my-page {})")
+```
+
 ## HTML Cache Logic
 
 For a given set of txs, get the concrete routes that need to be updated on the static frontend.

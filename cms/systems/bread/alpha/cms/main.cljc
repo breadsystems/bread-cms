@@ -10,7 +10,6 @@
     [reitit.core :as reitit]
     [reitit.ring]
     [ring.middleware.defaults :as ring]
-    [sci.core :as sci]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
@@ -575,31 +574,6 @@
 
 
 
-  ;; SCI
-
-  (defn- sci-ns [ns-sym]
-    (let [ns* (sci/create-ns ns-sym)
-          publics (ns-publics ns-sym)]
-      (update-vals publics #(sci/copy-var* % ns*))))
-  (sci-ns 'systems.bread.alpha.component)
-
-  (defn- sci-context [ns-syms]
-    (sci/init {:namespaces (into {} (map (juxt identity sci-ns) ns-syms))}))
-
-  (def $theme-ctx
-    (sci-context ['systems.bread.alpha.component]))
-
-  (sci/eval-string*
-    $theme-ctx
-    "(ns my-theme (:require [systems.bread.alpha.component :refer [defc]]))
-    (defc my-page [_]
-      {}
-      [:p \"MY PAGE\"])")
-
-  (sci/eval-string*
-    $theme-ctx
-    "(ns my-theme)
-    (my-page {})")
 
 
 
