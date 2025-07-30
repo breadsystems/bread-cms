@@ -19,9 +19,10 @@
         packages = with pkgs; [
           nodejs_22
           clojure
-          zulu11
+          zulu17
           babashka
           yarn-berry
+          graalvm-ce
         ];
       };
     };
