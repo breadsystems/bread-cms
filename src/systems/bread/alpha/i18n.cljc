@@ -157,8 +157,7 @@
   (assoc field :field/content (serialize field)))
 
 (defn format-fields
-  "Formats each field's :field/content according to :field/format (by calling
-  deserialize)."
+  "Formats each field's :field/content according to :field/format (by calling deserialize)."
   [context fields]
   (map (fn [field]
          (->> (merge context field) deserialize
