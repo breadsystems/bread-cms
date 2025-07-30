@@ -45,7 +45,7 @@
                  "plugins/rum"]
    :extra-deps {aero/aero                   {:mvn/version "1.1.6"}
                 buddy/buddy-hashers         {:mvn/version "2.0.167"}
-                fi.metosin/reitit           {:mvn/version "0.9.1"}
+                metosin/reitit              {:mvn/version "0.9.1"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
                 io.replikativ/datahike      {:mvn/version "0.6.1531"}
