@@ -44,11 +44,6 @@ BINARY_NAME=${BINARY_NAME:-'bread'}
 
 
 main() {
-  if [[ -z "$GRAALVM_HOME" ]] ; then
-    echo "Please set \$GRAALVM_HOME"
-    exit 1
-  fi
-
   rm -rf classes/*
   rm -rf target/*
 
@@ -60,12 +55,10 @@ main() {
     exit 1
   fi
 
-  "$GRAALVM_HOME/bin/gu" install native-image
-
   echo "compiling native binary \`${BINARY_NAME}\` from ${JAVA_CLASS}"
-  "$GRAALVM_HOME/bin/native-image" \
+  native-image \
     -cp "$(clojure -Spath -M:cms)":classes \
-    -H:Name=$BINARY_NAME \
+    -o bread \
     -H:+ReportExceptionStackTraces \
     -H:+PrintClassInitialization \
     --enable-url-protocols=http,https \
@@ -74,7 +67,7 @@ main() {
     --no-fallback \
     --no-server \
     --static \
-    "-J-Xmx3g" \
+    -J-Xmx3g \
     --trace-object-instantiation=java.lang.Thread \
     $JAVA_CLASS
 }
