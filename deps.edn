@@ -101,6 +101,24 @@
 
   :selmer
   {:extra-paths ["plugins/selmer"]
-   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}}
+   :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}
+
+  :build-cli
+  {:main-opts ["-e" "(set! *warn-on-reflection* true)"
+               "-m" "clj.native-image" "systems.bread.alpha.cms.cli"
+               "-o" "bread"
+               "--initialize-at-build-time"
+               "--no-fallback"
+               "-J-Xmx3g"
+               "--trace-object-instantiation=java.lang.Thread"]
+   :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
+   :extra-deps
+   {clj.native-image/clj.native-image
+    {:git/url "https://github.com/taylorwood/clj.native-image"
+     :sha "4604ae76855e09cdabc0a2ecc5a7de2cc5b775d6"}
+    com.cognitect/transit-clj {:mvn/version "1.0.333"}
+    babashka/pods             {:git/url "https://github.com/babashka/pods"
+                               :git/sha "8b717eb001811bc5da5d15d1163565de00b4ffa4"}}}
+  ,}
 
   :mvn/repos {"jitpack" {:url "https://jitpack.io"}}}
