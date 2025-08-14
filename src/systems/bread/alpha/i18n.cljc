@@ -58,7 +58,8 @@
 (defn lang
   "High-level fn for getting the language for the current request."
   [{:as req :keys [headers]}]
-  (let [params (bread/route-params (route/router req) req)
+  (let [router (route/router req)
+        params (when router (bread/route-params router req))
         lang-param (bread/config req :i18n/lang-param)
         candidates (supported-langs req)
         supported (get candidates (keyword (get params lang-param)))
