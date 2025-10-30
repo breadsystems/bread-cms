@@ -354,3 +354,18 @@
   through the Bread request/response lifecycle."
   [app]
   (partial handle app))
+
+(defn handler*
+  "Returns a handler function that takes a Ring request and threads it
+  through the Bread request/response lifecycle, using the given dispatcher."
+  [app dispatcher]
+  (fn [req]
+    (-> app
+        (merge req)
+        (hook ::request)
+        (hook ::route* dispatcher)
+        (hook ::dispatch)
+        (hook ::expand)
+        (hook ::effects!)
+        (hook ::render)
+        (hook ::response))))

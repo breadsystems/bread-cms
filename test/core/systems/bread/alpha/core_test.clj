@@ -459,10 +459,6 @@
       (is (= [:some :fake :plugins]
              (::bread/plugins app))))))
 
-(defmethod bread/action ::render
-  [_ {:keys [response]} _]
-  response)
-
 (deftest test-load-app
 
   (testing "it returns a function that loads plugins"
@@ -484,6 +480,14 @@
       (is (= :it's-configured!
              (bread/config loaded :my/config))))))
 
+(defmethod bread/action ::render
+  [_ {:keys [response]} _]
+  response)
+
+(defmethod bread/action ::route*
+  [req _ [dispatcher]]
+  (assoc req ::bread/dispatcher dispatcher))
+
 (deftest test-handler
 
   (testing "it supports only defining a render hook"
@@ -497,14 +501,15 @@
 
   ,)
 
-  (testing "it supports only defining a render hook"
-    (let [res {:status 200 :body "lorem ipsum"}
-          renderer-plugin {:hooks
-                           {::bread/render
-                            [{:action/name ::render
-                              :response res}]}}
-          handler (-> {:plugins [renderer-plugin]} bread/app bread/load-app bread/handler)]
-      (is (= res (handler {})))))
+(deftest test-handler*
+
+  (testing "returns a function that routes and dispatches"
+    (let [dispatcher {:dispatcher/type ::my-dispatcher=>}
+          dispatch-plugin {:hooks
+                           {::bread/route* [{:action/name ::route*}]}}
+          loaded (-> {:plugins [dispatch-plugin]} bread/app bread/load-app)
+          handler (bread/handler* loaded dispatcher)]
+      (is (= dispatcher (::bread/dispatcher (handler {}))))))
 
   ,)
 
