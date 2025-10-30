@@ -43,6 +43,14 @@
   {:body "not found"
    :status 404})
 
+;; Need to define this outside the router for now, so that it can use an
+;; explicit :path to match URI => filepath correctly. The long-term fix is:
+;; https://github.com/breadsystems/bread-cms/issues/184
+(def marx-handler
+  (reitit.ring/create-resource-handler
+    {:root "marx"
+     :path "/marx"}))
+
 (def router
   (reitit/router
     ["/"
@@ -62,8 +70,8 @@
         :dispatcher/component #'account/AccountPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
-        {:parameter :filename
-         :not-found-handler #'not-found})]
+        {})]
+     ["marx/*" marx-handler]
      ["{field/lang}"
       [""
        {:name :home
@@ -404,6 +412,20 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
+
+  ;; Playing with resources/files...
+  (io/resource "public/assets/hi.txt")
+  (io/resource "marx/js/marx.js")
+  ($resources {:uri "/marx/js/marx.js" :request-method :get :scheme :http})
+  (def $resource-handler
+    (reitit.ring/create-resource-handler
+      {:root "marx"
+       :path "/marx"}))
+  ($resource-handler {:uri "/marx/js/marx.js" :request-method :get :scheme :http})
+  (def $file-handler (reitit.ring/create-file-handler
+                       {:root "resources/marx"
+                        :path "/marx"}))
+  ($file-handler {:uri "/marx/js/marx.js"})
 
   (alter-var-root #'bread/*profile-hooks* not)
 

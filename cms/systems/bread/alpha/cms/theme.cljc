@@ -33,7 +33,7 @@
     (nav-menu main-nav)
     content
     (marx/render-bar data)
-    [:script {:src "/js/marx.js"}]]])
+    [:script {:src "/marx/js/marx.js"}]]])
 
 (defc NotFoundPage
   [{:keys [lang]}]
