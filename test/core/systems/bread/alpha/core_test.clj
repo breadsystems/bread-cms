@@ -463,27 +463,39 @@
   [_ {:keys [response]} _]
   response)
 
-(deftest test-handler
+(deftest test-load-app
 
   (testing "it returns a function that loads plugins"
     (let [my-plugin {:hooks {:my/hook
                              [{:action/name ::my.action
                                :action/description "Example action"}]}}
           app (bread/app {:plugins [my-plugin]})
-          handler (-> app bread/load-app bread/handler)
-          response (handler {:url "/"})]
+          loaded (bread/load-app app)]
       (is (= [{:action/name ::my.action
                :action/description "Example action"}]
-             (get-in response [::bread/hooks :my/hook])))))
+             (get-in loaded [::bread/hooks :my/hook])))))
 
   (testing "it returns a function that loads config"
     ;; config DSL: (configurator :my/config :it's-configured!)
     (let [configurator-plugin
           {:config
            {:my/config :it's-configured!}}
-          handler (-> {:plugins [configurator-plugin]} bread/app bread/load-app bread/handler)]
+          loaded (-> {:plugins [configurator-plugin]} bread/app bread/load-app)]
       (is (= :it's-configured!
-             (bread/config (handler {:url "/"}) :my/config)))))
+             (bread/config loaded :my/config))))))
+
+(deftest test-handler
+
+  (testing "it supports only defining a render hook"
+    (let [res {:status 200 :body "lorem ipsum"}
+          renderer-plugin {:hooks
+                           {::bread/render
+                            [{:action/name ::render
+                              :response res}]}}
+          handler (-> {:plugins [renderer-plugin]} bread/app bread/load-app bread/handler)]
+      (is (= res (handler {})))))
+
+  ,)
 
   (testing "it supports only defining a render hook"
     (let [res {:status 200 :body "lorem ipsum"}
