@@ -52,7 +52,7 @@
     (are [dispatcher uri] (= dispatcher
                              (-> {:uri uri}
                                  (merge app)
-                                 (bread/hook ::bread/route)
+                                 (bread/hook ::bread/route* (get routes uri))
                                  ::bread/dispatcher))
 
          {:dispatcher/component Page

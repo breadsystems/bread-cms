@@ -224,6 +224,133 @@
 
         ))))
 
+(deftest test-app-lifecycle*
+
+  (testing "it renders a localized Ring response"
+    (let [routes {"/en"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Home
+                   :route/params {:field/lang "en"}}
+                  "/fr"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Home
+                   :route/params {:field/lang "fr"}}
+                  "/en/parent-page"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "en"
+                                  :thing/slug* "parent-page"}}
+                  "/en/parent-page/child-page"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "en"
+                                  :thing/slug* "parent-page/child-page"}}
+                  "/fr/parent-page"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "fr"
+                                  :thing/slug* "parent-page"}}
+                  "/fr/parent-page/child-page"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "fr"
+                                  :thing/slug* "parent-page/child-page"}}
+                  "/en/404"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "en"
+                                  :thing/slug* "404"}}
+                  "/fr/404"
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
+                   :route/params {:field/lang "fr"
+                                  :thing/slug* "404"}}}
+          router (reify bread/Router
+                   (bread/route-params [router req]
+                     (:route/params (get routes (:uri req))))
+                   (bread/route-dispatcher [router req]
+                     (:bread/dispatcher (get routes (:uri req)))))
+          plugins (defaults/plugins
+                    {:db config
+                     :components {:not-found NotFound}
+                     :routes {:router router}
+                     :i18n {:supported-langs #{:en :fr}}
+                     :renderer false})
+          app (-> {:plugins plugins} bread/app bread/load-app)]
+      (are
+        [expected req]
+        (= expected (let [dispatcher (get routes (:uri req))
+                          handler (bread/handler* app dispatcher)]
+                      (-> req handler (select-keys [:body :status]))))
+
+        {:body
+         [:body [:main
+                 [:h1 "Home Page"]
+                 [:p "Hi!"]]]
+         :status 200}
+        {:uri "/en"}
+
+        {:body
+         [:body [:main
+                 [:h1 "Page D'Accueil"]
+                 [:p "Allo!"]]]
+         :status 200}
+        {:uri "/fr"}
+
+        {:body
+         [:body
+          [:main.interior-page
+           [:h1 "Parent Page"]
+           [:p "Hello from parent"]]]
+         :status 200}
+        {:uri "/en/parent-page"}
+
+        {:body
+         [:body
+          [:main.interior-page
+           [:h1 "La Page Parent"]
+           [:p "Bonjour de parent"]]]
+         :status 200}
+        {:uri "/fr/parent-page"}
+
+        {:body
+         [:body
+          [:main.interior-page
+           [:h1 "Child Page"]
+           [:p "Hello from child"]]]
+         :status 200}
+        {:uri "/en/parent-page/child-page"}
+
+        {:body
+         [:body
+          [:main.interior-page
+           [:h1 "La Page Enfant"]
+           [:p "Bonjour d'enfant"]]]
+         :status 200}
+        {:uri "/fr/parent-page/child-page"}
+
+        {:body
+         [:body
+          [:main "404 Not Found"]]
+         :status 404}
+        {:uri "/en/404"}
+
+        {:body
+         [:body
+          [:main "404 Pas Trouvé"]]
+         :status 404}
+        {:uri "/fr/404"}
+
+        ,))))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))

@@ -44,6 +44,22 @@
   [req _ _]
   (assoc req ::bread/dispatcher (dispatcher req)))
 
+(defn load-dispatcher [req dispatcher]
+  (let [dispatcher (bread/hook req ::bread/dispatcher dispatcher)
+        component (bread/hook req ::bread/component (:dispatcher/component dispatcher))
+        dispatcher (if (map? dispatcher)
+                     (assoc dispatcher
+                            :route/params (bread/hook req ::params nil)
+                            :dispatcher/component component
+                            :dispatcher/key (component/query-key component)
+                            :dispatcher/pull (component/query component))
+                     dispatcher)]
+    (bread/hook req ::dispatcher dispatcher)))
+
+(defmethod bread/action ::dispatch*
+  [req _ [dispatcher]]
+  (assoc req ::bread/dispatcher (load-dispatcher req dispatcher)))
+
 (defn path-params [router route-name route-data]
   (let [route-keys (filter keyword? (bread/route-spec router route-name))]
     (zipmap route-keys (map #(bread/infer-param % route-data) route-keys))))
@@ -73,6 +89,8 @@
     [{:action/name ::params :router router}]
     ::bread/route
     [{:action/name ::dispatch :router router}]
+    ::bread/route*
+    [{:action/name ::dispatch* :router router}]
     ::bread/dispatch
     [{:action/name ::uri-helper
       :action/description "Provide a :route/uri helper fn in ::data."}]
