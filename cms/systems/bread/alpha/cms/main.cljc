@@ -40,7 +40,6 @@
   (:gen-class))
 
 (defn not-found [req]
-  (prn req)
   {:body "not found"
    :status 404})
 
