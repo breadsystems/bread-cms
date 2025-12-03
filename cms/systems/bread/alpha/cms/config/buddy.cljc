@@ -4,4 +4,4 @@
     [buddy.hashers :as hashers]))
 
 (defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
-  (hashers/derive pw {:alg algo}))
+  (hashers/derive pw (when algo {:alg algo})))
