@@ -15,6 +15,9 @@
   (:import
     [java.text SimpleDateFormat]))
 
+(defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
+  (or protected? (= (bread/config req :account/account-uri) uri)))
+
 ;; TODO move to generic ui ns
 (defn Option [labels selected-value value]
   [:option {:value value :selected (= selected-value value)}
@@ -217,6 +220,7 @@
                                                         (map (partial hook-preference req))
                                                         (into {})
                                                         pr-str)))]))
+
 (defmethod bread/dispatch ::account=>
   [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
   (if (= :post request-method)
@@ -299,6 +303,9 @@
     [{:action/name ::bread/value
       :action/value account-uri
       :action/description "Redirect to account page after login."}]
+    ::auth/protected-route?
+    [{:action/name ::account-uri?
+      :action/description "Whether request is for a protected account page."}]
     ::i18n/global-strings
     [;; TODO timezone strs...?
      {:action/name ::i18n/merge-global-strings

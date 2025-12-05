@@ -322,7 +322,6 @@
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
-        ;; TODO less stringent default...
         protected? (bread/hook req ::protected-route? (not= login-uri uri))
         anonymous? (empty? (:user session))
         next-param (name (bread/config req :auth/next-param))
