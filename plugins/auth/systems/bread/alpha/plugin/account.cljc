@@ -162,7 +162,7 @@
   [:html {:lang (:field/lang data) :dir dir}
    [:head
     [:meta {:content-type :utf-8}]
-    (hook ::html.account.title [:title (str (:user/username user) " | " (:site/name config))])
+    (hook ::html.account.title [:title (:user/username user) " | " (:site/name config)])
     ;; TODO theme/Style
     (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
     (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
