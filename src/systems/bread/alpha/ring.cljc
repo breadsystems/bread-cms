@@ -106,6 +106,7 @@
         ring-data (select-keys req req-keys)]
     (as-> req $
         (update $ ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
+        ;; TODO :ring/session
         (assoc-in $ [::bread/data :session] (:session req))
         ;; Reset headers - we're working on a response now.
         (assoc $ :headers {}))))
