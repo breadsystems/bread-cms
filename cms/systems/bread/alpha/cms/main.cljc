@@ -65,9 +65,14 @@
         :dispatcher/type ::signup/signup=>
         :dispatcher/component #'signup/SignupPage}]
       ["/account"
-       {:name :account
-        :dispatcher/type ::account/account=>
-        :dispatcher/component #'account/AccountPage}]]
+       [""
+        {:name :account
+         :dispatcher/type ::account/account=>
+         :dispatcher/component #'account/AccountPage}]
+       ["/emails"
+        {:name :account-emails
+         :dispatcher/type ::account/emails=>
+         :dispatcher/component #'account/EmailsPage}]]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]

@@ -16,7 +16,8 @@
     [java.text SimpleDateFormat]))
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
-  (or protected? (= (bread/config req :account/account-uri) uri)))
+  (or protected? (let [account-uri (bread/config req :account/account-uri)]
+                   (string/starts-with? uri account-uri))))
 
 ;; TODO move to generic ui ns
 (defn Option [labels selected-value value]
@@ -148,6 +149,24 @@
                   (:auth/logout i18n)]]]))
            (:user/sessions user))]]))
 
+(defc EmailsPage
+  [{:as data :keys [config hook dir user]}]
+  {:query '[:db/id
+            {:user/email [*]}]}
+  [:html {:lang (:field/lang data) :dir dir}
+   [:head
+    [:meta {:content-type :utf-8}]
+    (hook ::html.account.title [:title (:user/username user) " | " (:site/name config)])
+    ;; TODO theme/Style
+    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
+    (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
+   [:body
+    [:nav.flex.row
+     (map (partial Section data) (:account/html.account.header config))]
+    [:main.flex.col
+     (map (partial Section data) [::email ;; TODO make email fields configurable??
+                                  ])]]])
+
 (defc AccountPage
   [{:as data :keys [config hook dir user]}]
   {:query '[:db/id
@@ -219,6 +238,22 @@
                                                         (map (partial hook-preference req))
                                                         (into {})
                                                         pr-str)))]))
+
+(defmethod bread/dispatch ::emails=>
+  [{:as req :keys [::bread/dispatcher params request-method session]}]
+  (if (= :post request-method)
+    {;; TODO
+     }
+    (let [id (:db/id (:user session))
+          pull (:dispatcher/pull dispatcher)]
+      {:expansions
+       [{:expansion/key :user
+         :expansion/name ::db/query
+         :expansion/description "Query for all user emails"
+         :expansion/db (db/database req)
+         :expansion/args [{:find [(list 'pull '?e pull) '.]
+                           :in '[$ ?e]}
+                          id]}]})))
 
 (defmethod bread/dispatch ::account=>
   [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
