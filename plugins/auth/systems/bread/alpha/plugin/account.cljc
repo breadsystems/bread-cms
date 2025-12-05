@@ -254,11 +254,7 @@
     (let [id (:db/id (:user session))
           pull (:dispatcher/pull dispatcher)]
       {:expansions
-       [{:expansion/key :config
-         :expansion/name ::bread/value
-         :expansion/description "App config"
-         :expansion/value (::bread/config req)}
-        {:expansion/key :user
+       [{:expansion/key :user
          :expansion/name ::db/query
          :expansion/description "Query for all user account data"
          :expansion/db (db/database req)
