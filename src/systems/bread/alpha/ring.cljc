@@ -80,7 +80,6 @@
   "Middleware for clearing (:flash req) after a redirect."
   (fn [req]
     (let [res (f req)]
-      (prn 'wrap-clear-flash (:flash req) '=> (:flash res))
       (cond
         (:clear? (:flash res)) (dissoc res :flash)
         (:flash res) (assoc-in res [:flash :clear?] true)
