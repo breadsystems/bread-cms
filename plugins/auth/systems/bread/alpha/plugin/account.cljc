@@ -153,7 +153,6 @@
   {:query '[:db/id
             :thing/created-at
             :user/username
-            {:user/email [*]}
             :user/name
             :user/lang
             :user/preferences

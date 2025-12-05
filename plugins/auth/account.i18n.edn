@@ -9,6 +9,7 @@
            :date-format-default "EEE, LLL d"
            :leave-passwords-blank "Leave password fields blank to keep your current password."
            :name "Name"
+           :email "Email"
            :preferred-language "Preferred language"
            :pronouns "Pronouns"
            :pronouns-example "they/them/theirs"
