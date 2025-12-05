@@ -76,22 +76,27 @@
    510 "Not Extended"
    511 "Network Authentication Required"})
 
+(defn- rename-keys-with-namespace [n m]
+  (let [renames (into {} (map (juxt identity (comp (partial keyword n) name)) (keys m)))]
+    (clojure.set/rename-keys m renames)))
+
 (defmethod bread/action ::request-data
   [req _ _]
-  (let [req-keys (bread/hook req ::request-keys [:ring/content-length
-                                                 :ring/content-type
-                                                 :ring/flash
-                                                 :ring/headers
-                                                 :ring/params
-                                                 :ring/query-string
-                                                 :ring/remote-addr
-                                                 :ring/request-method
-                                                 :ring/scheme
-                                                 :ring/server-name
-                                                 :ring/server-port
-                                                 :ring/uri])]
+  (let [req-keys (bread/hook req ::request-keys [:content-length
+                                                 :content-type
+                                                 :flash
+                                                 :headers
+                                                 :params
+                                                 :query-string
+                                                 :remote-addr
+                                                 :request-method
+                                                 :scheme
+                                                 :server-name
+                                                 :server-port
+                                                 :uri])
+        ring-data (select-keys req req-keys)]
     (as-> req $
-        (update $ ::bread/data merge (select-keys req req-keys))
+        (update $ ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
         (assoc-in $ [::bread/data :session] (:session req))
         ;; Reset headers - we're working on a response now.
         (assoc $ :headers {}))))

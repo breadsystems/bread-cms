@@ -32,7 +32,7 @@
    {:hooks
     {::bread/expand
      [{:action/name ::ring/request-data
-       :action/description "Include standard request data"}
+       :action/description "Include standard Ring request data"}
       {:action/name ::component/hook-fn
        :action/priority 1000
        :action/description "Include a hook closure fn in ::bread/data"}

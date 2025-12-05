@@ -2,7 +2,80 @@
   (:require
     [clojure.test :refer [deftest are]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.ring :as ring]))
+    [systems.bread.alpha.ring :as ring]
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
+
+(defmethod bread/action ::request-keys+session
+  [_ _ [ks]]
+  (conj ks :session))
+
+(deftest test-request-data-hook
+  (are
+    [expected-data req request-keys]
+    (= expected-data (let [app (plugins->loaded
+                                 [{:hooks
+                                   {::bread/expand
+                                    [{:action/name ::ring/request-data}]
+                                    ::ring/request-keys
+                                    [(when request-keys
+                                       {:action/name ::bread/value
+                                        :action/value request-keys})]}}])]
+                       (-> (merge app req)
+                           (bread/hook ::bread/expand)
+                           ::bread/data)))
+    {:session nil} nil nil
+    {:session nil} {} nil
+
+    {:session {:user {:db/id 123}}}
+    {:session {:user {:db/id 123}}}
+    nil
+
+    {:session nil :ring/uri "/"}
+    {:uri "/"}
+    nil
+
+    {:session nil :ring/flash {:error-key ::OH.NO!}}
+    {:flash {:error-key ::OH.NO!}}
+    nil
+
+    {;; TODO :ring/session ?
+     :session nil
+     :ring/content-length 42
+     :ring/content-type "multipart/form-data"
+     :ring/flash {:error-key ::OH.NO!}
+     :ring/headers {"accept" "*"}
+     :ring/params {:a :b}
+     :ring/query-string "?a=b"
+     :ring/remote-addr "172.0.0.1"
+     :ring/request-method :get
+     :ring/scheme :https
+     :ring/server-name "bread.systems"
+     :ring/server-port 1312
+     :ring/uri "/"}
+    {:content-length 42
+     :content-type "multipart/form-data"
+     :flash {:error-key ::OH.NO!}
+     :headers {"accept" "*"}
+     :params {:a :b}
+     :query-string "?a=b"
+     :remote-addr "172.0.0.1"
+     :request-method :get
+     :scheme :https
+     :server-name "bread.systems"
+     :server-port 1312
+     :uri "/"}
+    nil
+
+    {:session nil
+     :ring/flash {:error-key ::OH.NO!}
+     :ring/headers {"accept" "*"}
+     :ring/uri "/"}
+    {:flash {:error-key ::OH.NO!}
+     :headers {"accept" "*"}
+     :uri "/"}
+    [:flash :headers :uri]
+
+    ,))
 
 (deftest test-redirect-hook
   (are
