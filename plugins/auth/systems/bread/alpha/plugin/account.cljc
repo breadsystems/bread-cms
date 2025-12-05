@@ -113,7 +113,7 @@
    [:button {:type :submit :name :action :value "update"}
     (:account/save i18n)]])
 
-(defmethod Section ::form [{:as data :keys [config]} _]
+(defmethod Section ::account-form [{:as data :keys [config]} _]
   [:form.flex.col {:method :post}
    (map (partial Section data) (:account/html.account.form config))])
 
@@ -290,7 +290,10 @@
                                        ::timezone
                                        ::password
                                        :save]
-                    html-account-sections [::form ::sessions
+                    html-account-sections [::account-form
+                                           #_ ;; TODO
+                                           ::emails-form
+                                           ::sessions
                                            #_ ;; TODO
                                            ::roles]}}]
   {:hooks
