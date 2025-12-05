@@ -3,7 +3,7 @@
  #:signup{
           :all-fields-required "All fields are required."
           :error "Account locked"
-          :invitation-invalid "This invitation is either invalid or has been redeemed."
+          :invitation-invalid "This invitation is invalid or has already been redeemed."
           :please-choose-username-password "Please choose a username and password."
           :signup "Signup"
           :site-invite-only "This site is invite-only."
