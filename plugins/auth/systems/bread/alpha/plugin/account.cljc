@@ -48,7 +48,7 @@
 (defmethod Section ::heading [{:keys [i18n]} _]
   [:h3 (:account/account-details i18n)])
 
-(defmethod Section :flash [{:keys [flash i18n]} _]
+(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
      [:.emphasis [:p (i18n-format i18n success-key)]])
