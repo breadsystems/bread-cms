@@ -258,19 +258,11 @@
   (log/merge-config! {:min-level (:min-level log-config :info)
                       :middleware [(log-redactor)]}))
 
-(defn- wrap-clear-flash [f]
-  (fn [req]
-    (let [res (f req)]
-      (cond
-        (:clear? (:flash res)) (dissoc res :flash)
-        (:flash res) (assoc-in res [:flash :clear?] true)
-        :default res))))
-
 (defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
   (println "Starting HTTP server on port" port)
   (let [handler (if wrap-defaults
                   (-> handler
-                      (wrap-clear-flash)
+                      (bread.ring/wrap-clear-flash)
                       (ring/wrap-defaults wrap-defaults))
                   handler)]
     (http/run-server handler {:port port})))

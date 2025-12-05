@@ -9,6 +9,35 @@
   [_ _ [ks]]
   (conj ks :session))
 
+(deftest test-wrap-clear-flash-middleware
+  (are
+    [expected-flash req res]
+    (= expected-flash (let [handler (constantly res)
+                            wrapped (ring/wrap-clear-flash handler)]
+                        (-> req wrapped :flash)))
+
+    nil {:uri "/"} {}
+    nil {:uri "/" :session {:db/id 123}} {}
+
+    ;; :flash set in response.
+    {:error-key ::OH.NO! :clear? true}
+    {:uri "/"}
+    {:flash {:error-key ::OH.NO!}}
+
+    ;; :clear? set in response explicitly. This isn't normal or required
+    ;; since :clear? will get overwrittedn immediately, but technically supported.
+    {:error-key ::OH.NO! :clear? true}
+    {:uri "/"}
+    {:flash {:error-key ::OH.NO!} :clear? true}
+
+    ;; :flash set prior to redirect. Now we are responding to the post-redirect
+    ;; request, where :clear? is set.
+    nil
+    {:uri "/" :flash {:error-key ::OH.NO! :clear? true}}
+    {}
+
+    ,))
+
 (deftest test-request-data-hook
   (are
     [expected-data req request-keys]
