@@ -427,7 +427,7 @@
                         :path "/marx"}))
   ($file-handler {:uri "/marx/js/marx.js"})
 
-  (alter-var-root #'bread/*profile-hooks* not)
+  (alter-var-root #'bread/*enable-profiling* not)
 
   (def $req {:uri "/en" :request-method :get})
   (def $req {:uri "/en/hello" :request-method :get})

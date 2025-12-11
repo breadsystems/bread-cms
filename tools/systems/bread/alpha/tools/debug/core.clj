@@ -72,8 +72,8 @@
 (defrecord WebsocketDebugger [log config]
   BreadDebugger
   (start [this opts]
-    (when-not (false? (:profile-hooks opts))
-      (alter-var-root #'bread/*profile-hooks* (constantly true)))
+    (when-not (false? (:enable-profiling opts))
+      (alter-var-root #'bread/*enable-profiling* (constantly true)))
     (let [stop-server (srv/start
                         (assoc opts
                                :ws-on-message

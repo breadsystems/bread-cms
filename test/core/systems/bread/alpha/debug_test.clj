@@ -30,7 +30,7 @@
   ;; TODO
   #_
   (testing "with profiling enabled"
-    (binding [bread/*profile-hooks* true]
+    (binding [bread/*enable-profiling* true]
       (bread/hook (load-app) :my/hook 5)
       (is (= #{:my/hook}
              @invocations)))))
