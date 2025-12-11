@@ -43,7 +43,7 @@
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
           sk (if exists? sk (random/base64 512))
-          date-key (if exists? :thing/created-at :thing/updated-at)
+          date-key (if exists? :thing/updated-at :thing/created-at)
           session {:session/id sk
                    :session/data (pr-str data)
                    date-key (Date.)}
