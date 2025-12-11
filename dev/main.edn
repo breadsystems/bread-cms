@@ -28,6 +28,7 @@
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
                         :route/name :page}}}
+  :marx {:site-name "Breadbox"}
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
