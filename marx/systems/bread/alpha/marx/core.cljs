@@ -4,7 +4,7 @@
     [clojure.edn :as edn]))
 
 (defn read-attr [elem attr]
-  (edn/read-string (.getAttribute elem attr)))
+  (when elem (edn/read-string (.getAttribute elem attr))))
 
 (defmulti field-lifecycle (fn [_ed field-config] (:marx/field-type field-config)))
 
