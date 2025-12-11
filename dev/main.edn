@@ -8,10 +8,6 @@
  {:store/type :datalog
   :store/db #ig/ref :bread/db}
  :bread/handler #ig/ref :bread/app
- :websocket
- {:port 13120
-  :wrap-defaults #ig/ref :ring/wrap-defaults
-  :app #ig/ref :bread/app}
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
