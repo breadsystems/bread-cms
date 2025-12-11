@@ -1,15 +1,19 @@
 (ns systems.bread.alpha.plugin.marx
   (:require
     [clojure.edn :as edn]
+    [cognitect.transit :as transit]
     [com.rpl.specter :as s]
     [editscript.core :as edit]
     [hickory.core :as hickory]
+    [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.route :as route]))
+    [systems.bread.alpha.route :as route])
+  (:import
+    [java.io ByteArrayInputStream]))
 
 (defn on-websocket-message [app message]
   (let [message (bread/hook app ::websocket-message (edn/read-string message))]
@@ -112,24 +116,31 @@
   ;;
   )
 
-(defmethod bread/dispatch ::edit!
-  [{:marx/keys [edit] :as app}]
-  (let [txs (edit->transactions edit)
-        txs (if (:revision? edit)
-              [(transactions->revision app txs)]
-              txs)]
-    {:effects
-     [{:effect/name ::db/transact
-       :effect/description "Persist edits."
-       :effect/key (:edit/key edit)
-       :conn (db/connection app)
-       :txs (bread/hook app ::transactions txs edit)}]}))
+(defn- transit-decode [s]
+  (let [in (ByteArrayInputStream. (.getBytes s))
+        reader (transit/reader in :json)]
+    (transit/read reader)))
+
+(defmethod bread/dispatch ::edit=>
+  [{:keys [marx/edit body session] :as req}]
+  (let [edit (if edit edit (transit-decode (slurp body)))]
+    (when (bread/hook req ::allow-edit? (boolean (:user session)) edit)
+      (let [txs (edit->transactions edit)
+            txs (if (:revision? edit)
+                  [(transactions->revision req txs)]
+                  txs)]
+        (log/debug edit)
+        {:effects
+         [{:effect/name ::db/transact
+           :effect/description "Persist edits."
+           :effect/key (:edit/key edit)
+           :conn (db/connection req)
+           :txs (bread/hook req ::transactions txs edit)}]}))))
 
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]
-  ;; TODO support CGI, API route
   (if (bread/config app :marx/websocket?)
-    {:dispatcher/type ::edit!
+    {:dispatcher/type ::edit=>
      :dispatcher/description
      "Special dispatcher for saving edits made in the Marx editor."}
     dispatcher))

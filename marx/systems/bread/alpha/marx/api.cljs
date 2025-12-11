@@ -3,7 +3,7 @@
     ["react" :as react]
     [clojure.math :refer [pow]]
 
-    [systems.bread.alpha.marx.websocket]
+    [systems.bread.alpha.marx.http]
     [systems.bread.alpha.marx.field.bar :as bar]
     [systems.bread.alpha.marx.field.rich-text]
     [systems.bread.alpha.marx.core :as core]))
@@ -38,6 +38,8 @@
                  (core/fields-from-dom config))
         ed-state @ed]
     (when (nil? (:marx/backend ed-state))
+      ;; TODO logging
+      (println "attaching backend" (backend (:backend ed-state)))
       (core/attach-backend! ed (backend (:backend ed-state))))
     (doseq [field fields]
       (core/init-field ed field))))

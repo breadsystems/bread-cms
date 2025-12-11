@@ -70,8 +70,7 @@
         :dispatcher/component #'account/AccountPage}]
       ["/edit"
        {:name :edit
-        ;; TODO dispatcher style: edit=>
-        :dispatcher/type ::marx/edit!}]]
+        :dispatcher/type ::marx/edit=>}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
