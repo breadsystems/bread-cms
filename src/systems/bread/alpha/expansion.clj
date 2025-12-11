@@ -68,7 +68,11 @@
   )
 
 (defn- expand [data expansion]
-  (populate-in data (:expansion/key expansion) (bread/expand expansion data)))
+  (let [result (bread/expand expansion data)]
+    (when bread/*enable-profiling*
+      (bread/profile> :profile.type/expansion {:expansion expansion
+                                               :result result}))
+    (populate-in data (:expansion/key expansion) result)))
 
 (defmethod bread/action ::expand
   [{::bread/keys [expansions data] :as req} _ _]

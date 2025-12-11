@@ -70,7 +70,9 @@
  :bread/profilers
  [{:hook #{:systems.bread.alpha.core/request}
    ;:action/name #{:systems.bread.alpha.cms.defaults/response}
-   :f #var systems.bread.alpha.cms.main/log-hook!}]
+   :f #var systems.bread.alpha.cms.main/log-hook}
+  {:expansion #{:systems.bread.alpha.database/query}
+   :f #var systems.bread.alpha.cms.main/log-expansion}]
  #_#_
  :bread/debugger
  {:http

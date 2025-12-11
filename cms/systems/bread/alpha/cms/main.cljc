@@ -362,24 +362,32 @@
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/handler app))
 
-(defn log-hook! [invocation]
-  (let [{:keys [hook action result]} invocation]
-    (prn (:action/name action) (select-keys result
-                                            [:params
-                                             :headers
-                                             :status
-                                             :session]))))
+(defn log-hook [{:keys [hook action result]}]
+  (prn (:action/name action) (select-keys result
+                                          [:params
+                                           :headers
+                                           :status
+                                           :session])))
+
+(defn log-query [{:keys [expansion result] :as profile}]
+  (prn ::db/query (:expansion/key expansion) result))
 
 (defmethod ig/init-key :bread/profilers [_ profilers]
   ;; Enable hook profiling.
-  (alter-var-root #'bread/*profile-hooks* (constantly true))
+  (alter-var-root #'bread/*enable-profiling* (constantly true))
   (map
-    (fn [{h :hook act :action/name f :f :as profiler}]
-      (let [tap (bread/add-profiler
-                  (fn [{{:keys [action hook] :as invocation} ::bread/profile}]
-                    (if (and (or (nil? (seq h)) ((set h) hook))
-                             (or (nil? (seq act)) ((set act) (:action/name action))))
-                      (f invocation))))]
+    (fn [{h :hook act :action/name expansions :expansion f :f :as profiler}]
+      (let [f (if (symbol? f) (resolve f) f)
+            tap (bread/add-profiler
+                  (fn [{t ::bread/profile.type profile ::bread/profile}]
+                    (if (seq expansions)
+                      (let [{:keys [expansion]} profile]
+                        (when (contains? expansions (:expansion/name expansion))
+                          (f profile)))
+                      (let [{:keys [action hook]} profile]
+                        (if (and (or (nil? (seq h)) ((set h) hook))
+                                 (or (nil? (seq act)) ((set act) (:action/name action))))
+                          (f profile))))))]
         (assoc profiler :tap tap)))
     profilers))
 
