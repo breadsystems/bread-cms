@@ -95,31 +95,31 @@
       :db/doc "Unique-per-entity keyword for this field"
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
+      :attr/migration "migration.fields"}
      {:db/ident :field/content
       :attr/label "Field Content"
       :db/doc "Field content as an EDN string"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
+      :attr/migration "migration.fields"}
      {:db/ident :field/format
       :attr/label "Field Format"
       :db/doc "A keyword representing the format in which this field's content is stored."
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
+      :attr/migration "migration.fields"}
      {:db/ident :field/type
       :attr/label "Field Type"
       :db/doc "The user experience provided for this field in the Marx editor"
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.i18n"}
+      :attr/migration "migration.fields"}
      {:db/ident :thing/fields
       :attr/label "Translatable Fields"
       :db/doc "The set of all translatable fields for a given entity (post, taxon, etc.)."
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.i18n"}]
+      :attr/migration "migration.fields"}]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
