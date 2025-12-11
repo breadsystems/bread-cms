@@ -149,13 +149,33 @@
     [{:db/id  "migration.users"
       :migration/key :bread.migration/users
       :migration/description  "Migration for users schema"}
+     {:db/ident :user/name
+      :attr/label "Full Name"
+      :db/doc "User's name"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/lang
+      :attr/label "User's language"
+      :db/doc "Users's preferred language"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
+     {:db/ident :user/preferences
+      :attr/label "User Preferences"
+      :db/doc "The user's preferences, as an EDN-encoded string"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.users"}
      {:db/ident :user/email
       :attr/label "Email"
-      :db/doc "User account email"
+      :db/doc "User account email(s)"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
       :db/unique :db.unique/value
       :attr/migration "migration.users"}
+
+     ;; Emails
      {:db/ident :email/address
       :attr/label "Email address"
       :db/doc "The actual email address, as a string"
@@ -180,24 +200,7 @@
       :db/valueType :db.type/boolean
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
-     {:db/ident :user/name
-      :attr/label "Full Name"
-      :db/doc "User's name"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/lang
-      :attr/label "User's language"
-      :db/doc "Users's preferred language"
-      :db/valueType :db.type/keyword
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}
-     {:db/ident :user/preferences
-      :attr/label "User Preferences"
-      :db/doc "The user's preferences, as an EDN-encoded string"
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.users"}]
+     ,]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
