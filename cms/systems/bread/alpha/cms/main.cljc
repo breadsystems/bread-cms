@@ -437,6 +437,8 @@
 
     (defn db []
       (db/database (->app $req)))
+    (deref (db/connect (:bread/db @system)))
+    (db/database (:bread/app @system))
 
     (defn q [& args]
       (apply
