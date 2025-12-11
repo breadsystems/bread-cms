@@ -137,6 +137,18 @@
            :conn (db/connection req)
            :txs (bread/hook req ::transactions txs edit)}]}))))
 
+(defn EditorMeta [{{:marx/keys [site-name editor-name bar-settings backend]}
+                   :config
+                   {preferences :user/preferences} :user}]
+  (let [user-bar-settings (select-keys preferences [:bar/position])
+        bar-settings (merge-with #(or %1 %2) user-bar-settings bar-settings)
+        marx-config {:name editor-name
+                     :site/name site-name
+                     :site/settings bar-settings
+                     :backend backend}]
+    [:meta {:content (pr-str marx-config)
+            :name editor-name}]))
+
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]
   (if (bread/config app :marx/websocket?)
@@ -145,8 +157,31 @@
      "Special dispatcher for saving edits made in the Marx editor."}
     dispatcher))
 
-(defn plugin [{:as config}]
+(defn plugin [{:as config :keys [backend bar-position editor-name site-name
+                                 default-theme]
+               :or {site-name "My Bread Site"
+                    editor-name "marx-editor"
+                    backend {:type :bread/http
+                             :endpoint "/~/edit"}
+                    #_ {:type :bread/websocket
+                        :uri "ws://localhost:13120/_bread"}
+                    bar-position :bottom
+                    default-theme :dark}}]
   {:plugin/id ::marx
+   :config {;; TODO support secure websockets
+            :marx/websocket? false
+            :marx/site-name site-name
+            :marx/editor-name editor-name
+            :marx/bar-settings {:bar/position bar-position
+                                :theme/variant default-theme}
+            :marx/backend backend
+            #_#_
+            :marx/collaboration {:strategy :webrtc
+                                 ;; TODO from session...
+                                 :user {:name "cobby"
+                                        ;; TODO coordinating colors will be fun :D
+                                        :color "red"
+                                        :data-avatar "/cat.jpg"}}}
    :hooks
    {::route/dispatcher
     [{:action/name ::dispatcher
