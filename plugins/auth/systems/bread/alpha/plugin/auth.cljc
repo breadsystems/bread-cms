@@ -8,7 +8,7 @@
     [one-time.core :as ot]
     [one-time.uri :as oturi]
     [one-time.qrgen :as qr]
-    [ring.middleware.session.store :as ss :refer [SessionStore]]
+    [ring.middleware.session.store :as ss]
 
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.dispatcher :as dispatcher]
@@ -22,8 +22,11 @@
     [java.net URLEncoder]
     [java.util Base64 Date]))
 
+(defn database [req]
+  (db/db (db/connection req)))
+
 (deftype DatalogSessionStore [conn]
-  SessionStore
+  ss/SessionStore
   (ss/delete-session [_ sk]
     (db/transact conn [[:db/retract [:session/id sk] :session/id]
                        [:db/retract [:session/id sk] :session/data]])
@@ -508,7 +511,7 @@
         {:expansion/name ::db/query
          :expansion/key :auth/result
          :expansion/description "Find a user with the given username"
-         :expansion/db (db/database req)
+         :expansion/db (database req)
          :expansion/args
          [{:find [(list 'pull '?e user-keys) '.]
            :in '[$ ?username]
@@ -632,6 +635,7 @@
     [{:db/id "migration.authentication"
       :migration/key :bread.migration/authentication
       :migration/description "User credentials and security mechanisms"}
+
      {:db/ident :user/username
       :attr/label "Username"
       :db/doc "Username they use to login"
@@ -675,7 +679,7 @@
       :attr/migration "migration.authentication"}
      {:db/ident :session/id
       :attr/label "Session ID"
-      :db/doc "Session identifier."
+      :db/doc "Secure session identifier."
       :db/valueType :db.type/string
       :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
