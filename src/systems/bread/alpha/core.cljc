@@ -49,11 +49,17 @@
 ;; Tooling for profiling hooks.
 ;;
 
-(defonce ^{:dynamic true
-           :doc
-           "Boolean used at compile time to determine whether to tap> each
-           hook invocation. For debugging purposes only; not recommended
-           in production. Default false."}
+(defonce
+  ^{:dynamic true
+    :doc
+    "Whether to tap> hook invocations, requests, etc. for debugging purposes.
+    Default false."}
+  *enable-profiling* false)
+
+(defonce
+  ^{:dynamic true
+    :doc
+    "DEPRECATED. Use *enable-profiling* instead."}
   *profile-hooks* false)
 
 (defn add-profiler
@@ -67,8 +73,14 @@
     (add-tap wrapper)
     wrapper))
 
-(defn profile> [t e]
+(defn profile* [t e]
   (tap> {::profile.type t ::profile e}))
+
+(defmacro profile> [t e]
+  `(when *enable-profiling* (profile* ~t ~e)))
+
+(comment
+  (macroexpand-1 '(profile> :hi :there)))
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                            ;;
@@ -220,7 +232,7 @@
 (defmacro ^:private try-action [hook app current-action args]
   `(try
      (let [result# (action ~app ~current-action ~args)]
-       (when *profile-hooks*
+       (when (or *enable-profiling* *profile-hooks*)
          (profile> :profile.type/hook {:hook ~hook
                                        :app ~app
                                        :action ~current-action
