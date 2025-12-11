@@ -25,8 +25,7 @@
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
-    [:meta {:name "marx-editor"
-            :content (pr-str {:post/id 123})}]
+    (when user (marx/EditorMeta data))
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
