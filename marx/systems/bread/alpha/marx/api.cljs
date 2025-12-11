@@ -3,6 +3,7 @@
     ["react" :as react]
     [clojure.math :refer [pow]]
 
+    ;; TODO support (authenticated) websocket
     [systems.bread.alpha.marx.http]
     [systems.bread.alpha.marx.field.bar :as bar]
     [systems.bread.alpha.marx.field.rich-text]
