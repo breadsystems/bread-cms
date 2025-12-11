@@ -13,6 +13,9 @@
                         :theme/variants #js {:dark darkTheme
                                              :light lightTheme}
                         :backend
+                        {:type :bread/http
+                         :endpoint "/~/edit"}
+                        #_
                         {:type :bread/websocket
                          :uri "ws://localhost:13120/_bread"}
                         #_#_
