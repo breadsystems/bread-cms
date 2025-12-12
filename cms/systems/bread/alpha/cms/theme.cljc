@@ -13,7 +13,7 @@
     [:a {:href uri} title]]
    (map nav-menu-item children)])
 
-(defn- nav-menu [{items :menu/items}]
+(defn- Nav [{items :menu/items}]
   [:nav
    [:ul
     (map nav-menu-item items)]])
@@ -29,9 +29,9 @@
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
-    (nav-menu main-nav)
+    (Nav main-nav)
     content
-    (marx/render-bar data)
+    (marx/BarData data)
     [:script {:src "/marx/js/marx.js"}]]])
 
 (defc NotFoundPage
@@ -81,7 +81,7 @@
     [:h2 (:db/id post)]
     [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
-    (marx/render-field (:rte (meta fields)) :rich-text)
+    (marx/Editable (:rte (meta fields)) :rich-text)
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :thing/fields}]

@@ -27,7 +27,7 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defn render-field [field field-type & {:as extra}]
+(defn Editable [field field-type & {:as extra}]
   (let [tag (:tag extra :div)
         data-attr (-> field
                       (dissoc :field/content)
@@ -36,7 +36,8 @@
     [tag {:data-marx data-attr}
      (:field/content field)]))
 
-(defn render-bar [{{:user/keys [preferences]} :user :as data}]
+;; TODO DELETE
+(defn BarData [{{:user/keys [preferences]} :user :as data}]
   (let [doc {:query/pull (:query/pull data)
              :db/id (:db/id (get data (:query/key data)))}]
     [:div {:data-marx (pr-str {:field/key :bar
@@ -137,7 +138,9 @@
            :conn (db/connection req)
            :txs (bread/hook req ::transactions txs edit)}]}))))
 
-(defn EditorMeta [{{:marx/keys [site-name editor-name bar-settings backend]}
+(defn EditorMeta [{{:marx/keys [site-name editor-name bar-settings backend
+                                include-datastar-script?]
+                    :or {include-datastar-script? true}}
                    :config
                    {preferences :user/preferences} :user}]
   (let [user-bar-settings (select-keys preferences [:bar/position])
@@ -161,8 +164,7 @@
                                  default-theme]
                :or {site-name "My Bread Site"
                     editor-name "marx-editor"
-                    backend {:type :bread/http
-                             :endpoint "/~/edit"}
+                    backend {:type :bread/http :endpoint "/~/edit"}
                     #_ {:type :bread/websocket
                         :uri "ws://localhost:13120/_bread"}
                     bar-position :bottom

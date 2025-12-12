@@ -7,7 +7,7 @@
         :proxy-url "http://localhost:1312"}}
 
  :builds
- {;; npx shadow-cljs -A:dev:tools:editor watch editor
+ {;; npx shadow-cljs -A:tools:editor watch editor
   :editor
   {:target :browser
    :output-dir "resources/editor/js"
@@ -17,17 +17,17 @@
              {:init-fn systems.bread.alpha.editor.app/init}}}
 
   ;; npx babel marx/js --out-dir marx/out --watch
-  ;; npx shadow-cljs -A:dev:tools:marx watch marx
+  ;; npx shadow-cljs -A:tools:marx watch marx
   :marx
   {:target :browser
    :output-dir "resources/marx/js"
    :asset-path "/js"
-   :modules {:marx ; becomes resources/editor/js/marx.js
+   :modules {:marx ; becomes resources/marx/js/marx.js
              {:init-fn systems.bread.alpha.marx.app/init}}}
 
   ;; TODO separate build for UI testing...?
 
-  ;; npx shadow-cljs -A:dev:tools watch debug
+  ;; npx shadow-cljs -A:tools watch debug
   :debug
   {:target :browser
    :output-dir "resources/debug/js"
