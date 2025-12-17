@@ -84,27 +84,14 @@
      :fields field-data
      :marx/document document}))
 
-(defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state
-                        :keys [document]}]
-  (let [message (assoc (edit e ed) :marx/document document
-                       #_#_
-                       :revision? true ;; TODO config
-                       #_#_
-                       :revision/note "Hello"
-                       )]
-    #_
-    (persist! backend message)))
-
 (defn save! [e {:keys [marx/backends] :as ed-state}]
   (let [data (edit e ed-state)]
     (doseq [be backends]
       (prn 'persist be data)
       (persist! be data))))
 
-;; TODO support multiple backends...
 (defn attach-backend! [ed backend-inst]
-  (swap! ed update :marx/backends conj backend-inst)
-  (swap! ed assoc :marx/backend backend-inst))
+  (swap! ed update :marx/backends conj backend-inst))
 
 (defn init-field [ed field]
   (let [{:keys [init-state

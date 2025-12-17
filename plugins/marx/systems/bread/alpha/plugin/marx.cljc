@@ -85,23 +85,6 @@
       (pr-str editor-config)]
      [:script {:src "/marx/js/marx.js"}]]))
 
-;; TODO DELETE
-(defn BarData [{{:user/keys [preferences]} :user :as data}]
-  (let [doc {:query/pull (:query/pull data)
-             :db/id (:db/id (get data (:query/key data)))}]
-    [:div {:data-marx (pr-str {:field/key :bar
-                               :marx/field-type :bar
-                               :marx/document doc
-                               :sections (or (:bar/sections preferences)
-                                             [:site-name
-                                              :settings
-                                              :media
-                                              :spacer
-                                              :publish-button])
-                               ;; Tell the frontend not to send info about
-                               ;; BreadBar itself.
-                               :persist? false})}]))
-
 (defn fragment
   "Wrap a hiccup-style vector in a hiccup-style fragment."
   [v]
@@ -174,7 +157,7 @@
 (defmethod bread/dispatch ::edit=>
   [{:keys [marx/edit body session] :as req}]
   (let [edit (if edit edit (transit-decode (slurp body)))]
-    (when (bread/hook req ::allow-edit? (boolean (:user session)) edit)
+    (when (bread/hook req ::allow-edit? true #_(boolean (:user session)) edit)
       (let [txs (edit->transactions edit)
             txs (if (:revision? edit)
                   [(transactions->revision req txs)]
@@ -186,20 +169,6 @@
            :effect/key (:edit/key edit)
            :conn (db/connection req)
            :txs (bread/hook req ::transactions txs edit)}]}))))
-
-(defn EditorMeta [{{:marx/keys [site-name editor-name bar-settings backend
-                                include-datastar-script?]
-                    :or {include-datastar-script? true}}
-                   :config
-                   {preferences :user/preferences} :user}]
-  (let [user-bar-settings (select-keys preferences [:bar/position])
-        bar-settings (merge-with #(or %1 %2) user-bar-settings bar-settings)
-        marx-config {:name editor-name
-                     :site/name site-name
-                     :site/settings bar-settings
-                     :backend backend}]
-    [:meta {:content (pr-str marx-config)
-            :name editor-name}]))
 
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]

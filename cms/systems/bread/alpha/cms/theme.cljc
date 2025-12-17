@@ -25,17 +25,12 @@
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
-    #_(when user (marx/EditorMeta data))
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
     (Nav main-nav)
     content
-    (marx/Embed data)
-    #_
-    (marx/BarData data)
-    #_
-    [:script {:src "/marx/js/marx.js"}]]])
+    (marx/Embed data)]])
 
 (defc NotFoundPage
   [{:keys [lang]}]
