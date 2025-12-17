@@ -68,46 +68,33 @@
        :field/content "Bonjour!"}
       {:field/key :rte
        :field/lang :en
-       :field/format :edn
+       :field/format :html
        :field/content
-       (pr-str [:<>
-                [:h1 "This will be demoted to a <p> by default"]
-                ;; TODO headings...?
-                [:h2 "This is a heading"]
-                [:p "This is some paragraph text. <>;&"]
-                #_ ;; TODO parse imgs
-                [:img {:src "/assets/cat.jpeg" :alt "It's a kitty!"}]
-                [:ul
-                 [:li "some"]
-                 [:li "list"]
-                 [:li "items"]]
-                [:hr]
-                [:ol
-                 [:li "some"]
-                 [:li "numbered"]
-                 [:li "list"]
-                 [:li "items"]]
-                [:p
-                 "This isn't code but "
-                 [:code "this is some inline code."]]
-                [:p "And here's a code block:"]
-                [:pre [:code "(println \"Hello, World!\")"]]
-                [:p
-                 "Here is some prose with "
-                 [:sup "superscript"]
-                 " and some with "
-                 [:sub "subscript"]
-                 ". Now, here is some "
-                 [:del "struck text"]
-                 " and some "
-                 [:mark "highlighted text"]
-                 "."]
-                [:p
-                 "Here is a paragraph"
-                 [:br]
-                 "with some line breaks"
-                 [:br]
-                 "in the middle of it."]])}}}
+       "<h1>This will be demoted to a &lt;p&gt; by default</h1>
+       <h2>Level 2 heading</h2>
+       <h3>Level 3 sub-heading</h3>
+       <h4>Level 4 sub-heading</h4>
+       <h5>Level 5 sub-heading</h5>
+       <h6>Level 6 sub-heading</h6>
+       <p>This is some paragraph text with some special characters. <>'\"&-</p>
+       <ul>
+        <li>some</li>
+        <li>list</li>
+        <li>list</li>
+       </ul>
+       <hr>
+       <ol>
+        <li>some</li>
+        <li>ordered</li>
+        <li>list</li>
+        <li>items</li>
+       </ol>
+       <p>This isn't code but <code>this is some inline code.</code>
+       <pre><code> (println \"Hello, World!\")</code></pre>
+       <p>Here is some prose with <sup>superscript</sup> and some with <sub>subscript</sub>
+          Now, here is some <del>struck text</del> and some <mark>highlighted text</mark>.
+       <p>Here is a paragraph<br>with some line breaks</br>in the middle of it.
+       "}}}
    {:db/id "page.grandchild"
     :post/type :page
     :thing/slug "grandchild-page"
