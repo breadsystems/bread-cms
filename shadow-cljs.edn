@@ -23,7 +23,8 @@
    :output-dir "resources/marx/js"
    :asset-path "/js"
    :modules {:marx ; becomes resources/marx/js/marx.js
-             {:init-fn systems.bread.alpha.marx.app/init}}}
+             {:init-fn #_systems.bread.alpha.marx.app/init
+              systems.bread.alpha.marx.main/init}}}
 
   ;; TODO separate build for UI testing...?
 

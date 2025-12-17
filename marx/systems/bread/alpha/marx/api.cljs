@@ -1,7 +1,9 @@
 (ns systems.bread.alpha.marx.api
   (:require
     ["react" :as react]
+    [clojure.edn :as edn]
     [clojure.math :refer [pow]]
+    [clojure.string :as string]
 
     ;; TODO support (authenticated) websocket
     [systems.bread.alpha.marx.http]
@@ -15,6 +17,28 @@
      (core/read-attr (js/document.querySelector selector) "content")))
   ([]
    (from-meta-element "marx-editor")))
+
+(defn- unescape [s]
+  (let [html-entities {"&amp;" "&"
+                       "&lt;" "<"
+                       "&gt;" ">"
+                       "&quot;" "\""
+                       "&#039;" "'"
+                       "&ndash;" "-"}]
+    (string/replace s #"&[\w#]+;" #(html-entities % %))))
+
+(comment
+  (unescape "&quot;hello&quot;?" ))
+
+(defn read-editor-config
+  ([editor-name]
+   (some-> (str "script[data-marx-editor=\"" editor-name "\"]")
+           (js/document.querySelector)
+           (.-innerText)
+           (unescape)
+           (edn/read-string)))
+  ([]
+   (read-editor-config "marx-editor")))
 
 (defn editor [config]
   (assoc config :marx/fields {}))
@@ -39,8 +63,11 @@
                  (core/fields-from-dom config))
         ed-state @ed]
     (when (nil? (:marx/backend ed-state))
-      ;; TODO logging
-      (println "attaching backend" (backend (:backend ed-state)))
-      (core/attach-backend! ed (backend (:backend ed-state))))
+      (let [backend (core/backend {:type :bread/http
+                                   :endpoint "/~/edit"})]
+        ;; TODO logging
+        (println "attaching backend" backend)
+        (core/attach-backend! ed backend)))
     (doseq [field fields]
+      (when (:marx/document field) (prn 'doc (:field/key field) (:marx/document field)))
       (core/init-field ed field))))

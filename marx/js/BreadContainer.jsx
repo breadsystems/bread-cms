@@ -11,7 +11,7 @@ function BreadContainer({
   children,
 }) {
   const {theme: {variant} = {variant: 'light'}} = settings;
-  const theme = themeVariants[variant] || lightTheme;
+  const theme = darkTheme;
 
   return <ThemeProvider theme={theme}>
     <BreadStyle />

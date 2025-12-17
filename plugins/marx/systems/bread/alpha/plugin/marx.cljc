@@ -8,6 +8,7 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :refer [Section]]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
@@ -35,6 +36,54 @@
                       pr-str)]
     [tag {:data-marx data-attr}
      (:field/content field)]))
+
+(defmethod Section ::site-name [{{:marx/keys [site-name]} :config} _]
+  [:div site-name])
+
+(defmethod Section ::settings [{:keys [i18n]} _]
+  [:div
+   [:div {"data-show" "$showSettings"
+          :style {:display :none}}
+    "SETTINGS"]
+   [:button {"data-on:click" "$showSettings = !$showSettings"}
+    ;; TODO i18n
+    (:marx/settings i18n "Settings")]])
+
+(defmethod Section ::media [{:keys [i18n]} _]
+  [:div
+   [:div {"data-show" "$showMedia"
+          :style {:display :none}}
+    "MEDIA LIBRARY"]
+   [:button {"data-on:click" "$showMedia = !$showMedia"}
+    ;; TODO i18n
+    (:marx/settings i18n "Media")]])
+
+(defmethod Section ::publish [{:keys [i18n]} _]
+  [:div
+   [:button {"data-on:click" "marxPublish()"}
+    (:publish i18n "Publish")]])
+
+(defn BreadBar [{{:marx/keys [bar-sections bar-position]} :config
+                 :as data}]
+  (let [style {:position :fixed :left 0 bar-position 0}]
+    [:div {:style {:position :fixed bar-position 0 :left 0 #_#_:width "100%"}}
+     (doall (map (partial Section data) bar-sections))]))
+
+(defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-js-uri site-name]}
+              :config :as data}]
+  (let [doc {:query/pull (:query/pull data)
+             :db/id (:db/id (get data (:query/key data)))}
+        editor-config {:name editor-name
+                       :site/name site-name
+                       :site/settings bar-settings
+                       :backend backend
+                       :marx/document doc}]
+    [:<>
+     (BreadBar data)
+     [:script {:type :module :src datastar-uri}]
+     [:script {:type "application/edn" :data-marx-editor editor-name}
+      (pr-str editor-config)]
+     [:script {:src "/marx/js/marx.js"}]]))
 
 ;; TODO DELETE
 (defn BarData [{{:user/keys [preferences]} :user :as data}]
@@ -160,23 +209,41 @@
      "Special dispatcher for saving edits made in the Marx editor."}
     dispatcher))
 
-(defn plugin [{:as config :keys [backend bar-position editor-name site-name
-                                 default-theme]
+(defn plugin [{:as config :keys [backend
+                                 bar-position
+                                 bar-sections
+                                 datastar-uri
+                                 default-theme
+                                 editor-name
+                                 marx-js-uri
+                                 site-name]
                :or {site-name "My Bread Site"
-                    editor-name "marx-editor"
                     backend {:type :bread/http :endpoint "/~/edit"}
                     #_ {:type :bread/websocket
                         :uri "ws://localhost:13120/_bread"}
                     bar-position :bottom
-                    default-theme :dark}}]
+                    bar-sections [::site-name
+                                  ::settings
+                                  ::media
+                                  :spacer
+                                  ::publish]
+                    datastar-uri "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"
+                    default-theme :dark
+                    editor-name "marx-editor"
+                    marx-js-uri "/marx/js/marx.js"}}]
   {:plugin/id ::marx
    :config {;; TODO support secure websockets
-            :marx/websocket? false
-            :marx/site-name site-name
+            :marx/backend backend
+            :marx/bar-position bar-position
+            :marx/bar-sections bar-sections
+            :marx/datastar-uri datastar-uri
             :marx/editor-name editor-name
+            :marx/marx-js-uri marx-js-uri
+            :marx/site-name site-name
+            ;; TODO #_#_
             :marx/bar-settings {:bar/position bar-position
                                 :theme/variant default-theme}
-            :marx/backend backend
+            :marx/websocket? false
             #_#_
             :marx/collaboration {:strategy :webrtc
                                  ;; TODO from session...

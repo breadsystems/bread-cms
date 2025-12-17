@@ -68,7 +68,7 @@
 (defmulti edit (fn [e _ed]
                   (:edit/action e)))
 
-(defmethod edit :publish-fields [_ {:marx/keys [fields]}]
+(defmethod edit :publish-fields [_ {:marx/keys [document fields]}]
   (let [field-data (->> fields
                         vals
                         (filter (complement (comp false? :persist?)))
@@ -81,7 +81,8 @@
                                                  :field/content])))))]
     {:edit/action :publish-fields
      :edit/key :edit/instant
-     :fields field-data}))
+     :fields field-data
+     :marx/document document}))
 
 (defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state
                         :keys [document]}]
@@ -91,17 +92,25 @@
                        #_#_
                        :revision/note "Hello"
                        )]
+    #_
     (persist! backend message)))
 
+(defn save! [e {:keys [marx/backends] :as ed-state}]
+  (let [data (edit e ed-state)]
+    (doseq [be backends]
+      (prn 'persist be data)
+      (persist! be data))))
+
+;; TODO support multiple backends...
 (defn attach-backend! [ed backend-inst]
+  (swap! ed update :marx/backends conj backend-inst)
   (swap! ed assoc :marx/backend backend-inst))
 
 (defn init-field [ed field]
   (let [{:keys [init-state
                 did-mount
                 render]
-         :or {state {}
-              init-state (constantly {})}}
+         :or {init-state (constantly {})}}
         (field-lifecycle ed field)]
     (assert (fn? render)
             (str "field-lifecycle method for " (:marx/field-type field)
