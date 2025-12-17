@@ -74,7 +74,7 @@
                 [:h1 "This will be demoted to a <p> by default"]
                 ;; TODO headings...?
                 [:h2 "This is a heading"]
-                [:p "This is some paragraph text."]
+                [:p "This is some paragraph text. <>;&"]
                 #_ ;; TODO parse imgs
                 [:img {:src "/assets/cat.jpeg" :alt "It's a kitty!"}]
                 [:ul
