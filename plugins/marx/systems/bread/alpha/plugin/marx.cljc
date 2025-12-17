@@ -161,11 +161,12 @@
   [{:keys [marx/edit body session] :as req}]
   (let [edit (if edit edit (transit-decode (slurp body)))]
     (when (bread/hook req ::allow-edit? (boolean (:user session)) edit)
+      (log/debug edit)
       (let [txs (edit->transactions edit)
             txs (if (:revision? edit)
                   [(transactions->revision req txs)]
                   txs)]
-        (log/debug edit)
+        (log/debug txs)
         {:effects
          [{:effect/name ::db/transact
            :effect/description "Persist edits."
