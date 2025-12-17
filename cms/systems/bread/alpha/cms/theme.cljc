@@ -79,7 +79,7 @@
     [:h2 (:db/id post)]
     [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
-    (marx/Editable (:rte (meta fields)) :rich-text)
+    (marx/Editable (:rte (meta fields)) :rich-text :escape? false)
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :thing/fields}]
