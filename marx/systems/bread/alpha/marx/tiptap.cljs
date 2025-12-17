@@ -74,7 +74,7 @@
 
 ;; DEPRECATED. Decalre tooltip etc. on tool-specific multimethod instead.
 (def default-rich-text-tools
-  [#_{:type :heading :levels [2 3 4 5 6]}
+  [{:type :heading :levels [2 3 4 5 6]}
    :bold
    :italic
    {:type :ul     :tooltip "Numbered list"}
