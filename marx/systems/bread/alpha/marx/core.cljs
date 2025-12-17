@@ -8,7 +8,9 @@
                        "&lt;" "<"
                        "&gt;" ">"
                        "&quot;" "\""
+                       "&#x27;" "'"
                        "&#039;" "'"
+                       "&#39;" "'"
                        "&ndash;" "-"}]
     (clojure.string/replace s #"&[\w#]+;" #(html-entities % %))))
 
