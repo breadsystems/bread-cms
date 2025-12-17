@@ -3,6 +3,15 @@
     ["react-dom/client" :as rdom]
     [clojure.edn :as edn]))
 
+(defn unescape [s]
+  (let [html-entities {"&amp;" "&"
+                       "&lt;" "<"
+                       "&gt;" ">"
+                       "&quot;" "\""
+                       "&#039;" "'"
+                       "&ndash;" "-"}]
+    (clojure.string/replace s #"&[\w#]+;" #(html-entities % %))))
+
 (defn read-attr [elem attr]
   (when elem (edn/read-string (.getAttribute elem attr))))
 

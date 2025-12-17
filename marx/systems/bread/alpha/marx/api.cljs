@@ -3,31 +3,21 @@
     ["react" :as react]
     [clojure.edn :as edn]
     [clojure.math :refer [pow]]
-    [clojure.string :as string]
 
     ;; TODO support (authenticated) websocket
     [systems.bread.alpha.marx.http]
     [systems.bread.alpha.marx.field.rich-text]
     [systems.bread.alpha.marx.core :as core]))
 
-(defn- unescape [s]
-  (let [html-entities {"&amp;" "&"
-                       "&lt;" "<"
-                       "&gt;" ">"
-                       "&quot;" "\""
-                       "&#039;" "'"
-                       "&ndash;" "-"}]
-    (string/replace s #"&[\w#]+;" #(html-entities % %))))
-
 (comment
-  (unescape "&quot;hello&quot;?" ))
+  (core/unescape "&quot;hello&quot;?" ))
 
 (defn read-editor-config
   ([editor-name]
    (some-> (str "script[data-marx-editor=\"" editor-name "\"]")
            (js/document.querySelector)
            (.-innerText)
-           (unescape)
+           (core/unescape)
            (edn/read-string)))
   ([]
    (read-editor-config "marx-editor")))
