@@ -80,7 +80,7 @@
        <ul>
         <li>some</li>
         <li>list</li>
-        <li>list</li>
+        <li>items</li>
        </ul>
        <hr>
        <ol>

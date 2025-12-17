@@ -9,15 +9,26 @@
     [systems.bread.alpha.marx.field.rich-text]
     [systems.bread.alpha.marx.core :as core]))
 
+(defn- unescape [s]
+  (let [html-entities {"&amp;" "&"
+                       "&lt;" "<"
+                       "&gt;" ">"
+                       "&quot;" "\""
+                       "&#x27;" "'"
+                       "&#039;" "'"
+                       "&#39;" "'"
+                       "&ndash;" "-"}]
+    (clojure.string/replace s #"&[\w#]+;" #(html-entities % %))))
+
 (comment
-  (core/unescape "&quot;hello&quot;?" ))
+  (unescape "&quot;hello&quot;?" ))
 
 (defn read-editor-config
   ([editor-name]
    (some-> (str "script[data-marx-editor=\"" editor-name "\"]")
            (js/document.querySelector)
            (.-innerText)
-           (core/unescape)
+           (unescape)
            (edn/read-string)))
   ([]
    (read-editor-config "marx-editor")))
