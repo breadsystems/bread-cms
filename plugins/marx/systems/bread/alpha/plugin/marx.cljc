@@ -4,7 +4,6 @@
     [cognitect.transit :as transit]
     [com.rpl.specter :as s]
     [editscript.core :as edit]
-    [hickory.core :as hickory]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
@@ -103,11 +102,6 @@
 (defmethod edit->transactions :publish-fields [{:keys [fields]}]
   (map (fn [field]
          (-> field
-             (update :field/content
-                     #(->> %
-                           hickory/parse-fragment
-                           (mapv hickory/as-hiccup)
-                           fragment))
              i18n/with-serialized
              (select-keys [:db/id :field/content])))
        fields))
