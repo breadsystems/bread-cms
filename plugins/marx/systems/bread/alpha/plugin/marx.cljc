@@ -13,7 +13,8 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route])
   (:import
-    [java.io ByteArrayInputStream]))
+    [java.io ByteArrayInputStream]
+    [org.owasp.html HtmlPolicyBuilder]))
 
 (defn on-websocket-message [app message]
   (let [message (bread/hook app ::websocket-message (edn/read-string message))]
@@ -156,22 +157,66 @@
         reader (transit/reader in :json)]
     (transit/read reader)))
 
+(defn- sanitize-fields [policy e]
+  (update e :fields (fn [fields]
+                      (map (fn [field]
+                             (update field :field/content #(.sanitize policy %)))
+                           fields))))
+
+(defn- sanitizer-policy [{:keys [allow-elements images links]}]
+  (let [str-array (fn [v] (into-array String v))]
+    (cond-> (HtmlPolicyBuilder.)
+      (seq allow-elements) (.allowElements (str-array (map name allow-elements)))
+
+      links
+      (.allowElements (str-array ["a"]))
+      (seq (:allow-attrs links))
+      (.allowAttributes (str-array (map name (:allow-attrs links))))
+      (seq (:allow-attrs links))
+      (.onElements (str-array ["a"]))
+      (seq (:allow-url-protocols links))
+      (.allowUrlProtocols (str-array (map name (:allow-url-protocols links))))
+      (:require-rel-nofollow? links)
+      (.requireRelNofollowOnLinks)
+
+      images
+      (.allowElements (str-array ["img"]))
+      (seq (:allow-attrs images))
+      (.allowAttributes (str-array (map name (:allow-attrs images))))
+      (seq (:allow-attrs links))
+      (.onElements (str-array ["img"]))
+      (seq (:allow-url-protocols images))
+      (.allowUrlProtocols (str-array (map name (:allow-url-protocols images))))
+
+      true (.toFactory))))
+
+(comment
+  (sanitize-html (sanitizer-policy {:allow-elements [:p]
+                                    :links {:allow-attrs [:href :title]}})
+                 (str "<a id='mylink' href='/mylink'>CLICK HERE</a>"
+                      "<p>paragraph</p>"
+                      "<script>alert(1);<script>")))
+
 (defmethod bread/dispatch ::edit=>
   [{:keys [marx/edit body session] :as req}]
-  (let [edit (if edit edit (transit-decode (slurp body)))]
-    (when (bread/hook req ::allow-edit? (boolean (:user session)) edit)
-      (log/debug edit)
-      (let [txs (edit->transactions edit)
-            txs (if (:revision? edit)
+  (let [policy-config (bread/hook req ::sanitizer-policy
+                                  (bread/config req :marx/sanitizer-policy))
+        policy (sanitizer-policy policy-config)
+        e (->> (if edit edit (transit-decode (slurp body)))
+               (sanitize-fields policy))]
+    (when (bread/hook req ::allow-edit? (boolean (:user session)) e)
+      (log/info "edit" e)
+      (let [txs (edit->transactions e)
+            txs (if (:revision? e)
                   [(transactions->revision req txs)]
                   txs)]
-        (log/debug txs)
+        (log/debug "editor txs" txs)
         {:effects
          [{:effect/name ::db/transact
            :effect/description "Persist edits."
-           :effect/key (:edit/key edit)
+           :effect/key (:edit/key e)
            :conn (db/connection req)
-           :txs (bread/hook req ::transactions txs edit)}]}))))
+           :txs (bread/hook req ::transactions txs e)}]}))))
 
 (defmethod bread/action ::dispatcher
   [app _ [dispatcher]]
@@ -188,6 +233,7 @@
                                  default-theme
                                  editor-name
                                  marx-js-uri
+                                 sanitizer-policy
                                  site-name]
                :or {site-name "My Bread Site"
                     backend {:type :bread/http :endpoint "/~/edit"}
@@ -202,7 +248,19 @@
                     datastar-uri "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"
                     default-theme :dark
                     editor-name "marx-editor"
-                    marx-js-uri "/marx/js/marx.js"}}]
+                    marx-js-uri "/marx/js/marx.js"
+                    sanitizer-policy
+                    {:allow-elements [:h1 :h2 :h3 :h4 :h5 :h6
+                                      :p :br :hr :pre :code
+                                      :div :blockquote
+                                      :ul :ol :li :dl :dt :dd
+                                      :strong :em :b :i :u :s :mark
+                                      :sub :sup :abbr :cite :q]
+                     :links {:allow-attrs [:href :title :class :id]
+                             :allow-url-protocols [:http :https :mailto]
+                             :require-rel-nofollow? true}
+                     :images {:allow-attrs [:src :alt :title :width :height]
+                              :allow-url-protocols [:http]}}}}]
   {:plugin/id ::marx
    :config {;; TODO support secure websockets
             :marx/backend backend
@@ -215,6 +273,7 @@
             ;; TODO #_#_
             :marx/bar-settings {:bar/position bar-position
                                 :theme/variant default-theme}
+            :marx/sanitizer-policy sanitizer-policy
             :marx/websocket? false
             #_#_
             :marx/collaboration {:strategy :webrtc
