@@ -70,20 +70,23 @@
      (doall (map (partial Section data) bar-sections))]))
 
 (defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-js-uri site-name]}
-              :config :as data}]
-  (let [doc {:query/pull (:query/pull data)
-             :db/id (:db/id (get data (:query/key data)))}
-        editor-config {:name editor-name
-                       :site/name site-name
-                       :site/settings bar-settings
-                       :backend backend
-                       :marx/document doc}]
-    [:<>
-     (BreadBar data)
-     [:script {:type :module :src datastar-uri}]
-     [:script {:type "application/edn" :data-marx-editor editor-name}
-      (pr-str editor-config)]
-     [:script {:src "/marx/js/marx.js"}]]))
+              :config
+              :keys [hook user]
+              :as data}]
+  (when (hook ::show-editor? (boolean user))
+    (let [doc {:query/pull (:query/pull data)
+               :db/id (:db/id (get data (:query/key data)))}
+          editor-config {:name editor-name
+                         :site/name site-name
+                         :site/settings bar-settings
+                         :backend backend
+                         :marx/document doc}]
+      [:<>
+       (BreadBar data)
+       [:script {:type :module :src datastar-uri}]
+       [:script {:type "application/edn" :data-marx-editor editor-name}
+        (pr-str editor-config)]
+       [:script {:src "/marx/js/marx.js"}]])))
 
 (defn fragment
   "Wrap a hiccup-style vector in a hiccup-style fragment."
@@ -157,7 +160,7 @@
 (defmethod bread/dispatch ::edit=>
   [{:keys [marx/edit body session] :as req}]
   (let [edit (if edit edit (transit-decode (slurp body)))]
-    (when (bread/hook req ::allow-edit? true #_(boolean (:user session)) edit)
+    (when (bread/hook req ::allow-edit? (boolean (:user session)) edit)
       (let [txs (edit->transactions edit)
             txs (if (:revision? edit)
                   [(transactions->revision req txs)]
