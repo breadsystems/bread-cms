@@ -3,7 +3,11 @@
     [clojure.pprint :refer [pprint]]
     [clojure.string :as string]
     #?(:cljs ["date-fns" :refer [formatISO9075]])
+    [integrant.core :as ig]
     [flow-storm.api :as flow]
+    [taoensso.timbre :as log]
+
+    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]))
 
 #?(:cljs
@@ -76,6 +80,43 @@
        (update ::bread/expansions subvec start end)
        (bread/hook ::bread/expand)
        ::bread/data)))
+
+(defn- expansion-profile-match? [{expansions :expansion} {:keys [expansion]}]
+  (contains? (set expansions) (:expansion/name expansion)))
+
+(defn- hook-profile-match? [{h :hook act :action/name} {:keys [action hook]}]
+  (and (or (nil? (seq h)) ((set h) hook))
+       (or (nil? (seq act)) ((set act) (:action/name action)))))
+
+(defmethod ig/init-key :bread/profilers [_ profilers]
+  ;; Enable hook profiling.
+  (alter-var-root #'bread/*enable-profiling* (constantly true))
+  (map
+    (fn [{h :hook act :action/name expansions :expansion f :f :as profiler}]
+      (let [f (if (symbol? f) (resolve f) f)
+            tap (bread/add-profiler
+                  (fn [{t ::bread/profile.type profile ::bread/profile}]
+                    (if (seq expansions)
+                      (when (expansion-profile-match? profile)
+                        (f profile))
+                      (when (hook-profile-match? profiler profile)
+                        (f profile)))))]
+        (assoc profiler :tap tap)))
+    profilers))
+
+(defmethod ig/halt-key! :bread/profilers [_ profilers]
+  (doseq [{:keys [tap]} profilers]
+    (remove-tap tap)))
+
+(defn log-lifecycle-hook [{:keys [hook action app result]}]
+  (let [app-data-keys (-> app ::bread/data keys set)
+        res-data-keys (-> result ::bread/data keys set)
+        new-keys (clojure.set/difference res-data-keys app-data-keys)
+        data (select-keys (::bread/data result) new-keys)]
+    (log/info hook action data)))
+
+(defn log-query [{:keys [expansion result] :as profile}]
+  (log/info ::db/query (:expansion/key expansion) result))
 
 (comment
   (flow/local-connect)
