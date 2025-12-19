@@ -486,6 +486,14 @@
 
 
 
+  ;; MEDIA
+  (q '{:find [(pull ?e [:db/id :thing/slug {:thing/fields [*]}])]
+       :in [$]
+       :where [[?e :post/type :media]
+               [?e :post/type :media]
+               [?e :post/status :post.status/published]
+               [?e :post/status :post.status/published]]})
+
   ;; AUTH
 
   (->> (q '{:find [(pull ?e [:db/id

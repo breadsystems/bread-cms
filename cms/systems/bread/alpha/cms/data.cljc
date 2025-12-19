@@ -172,6 +172,34 @@
     :menu/locations [:primary]
     :menu/items ["menu-item.zero" "menu-item.one" "menu-item.two"]}
 
+   ;; Media
+   {:post/type :media
+    :thing/slug "cat.jpeg"
+    :post/taxons ["tag.one" "tag.two"]
+    :post/status :post.status/published
+    :thing/fields
+    #{{:field/key :uri
+       :field/content "/assets/cat.jpeg"}
+      {:field/key :alt-text
+       :field/lang :en
+       :field/content "Kitty"}
+      {:field/key :alt-text
+       :field/lang :fr
+       :field/content "un chat"}}}
+   {:post/type :media
+    :thing/slug "dog.jpg"
+    :post/taxons ["tag.one"]
+    :post/status :post.status/published
+    :thing/fields
+    #{{:field/key :uri
+       :field/content "/assets/dog.png"}
+      {:field/key :alt-text
+       :field/lang :en
+       :field/content "Doggo"}
+      {:field/key :alt-text
+       :field/lang :fr
+       :field/content "un chat"}}}
+
    ;; Site-wide translations
    {:field/lang :en
     :field/key :not-found
