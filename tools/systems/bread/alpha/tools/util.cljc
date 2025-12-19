@@ -81,12 +81,20 @@
        (bread/hook ::bread/expand)
        ::bread/data)))
 
-(defn- expansion-profile-match? [{expansions :expansion} {:keys [expansion]}]
+(defmulti profile-match? (fn [profiler _] (:profiler/type profiler)))
+
+(defmethod profile-match? :expansion [{expansions :expansion} {:keys [expansion]}]
   (contains? (set expansions) (:expansion/name expansion)))
 
-(defn- hook-profile-match? [{h :hook act :action/name} {:keys [action hook]}]
+(defmethod profile-match? :hook [{h :hook act :action/name} {:keys [action hook]}]
   (and (or (nil? (seq h)) ((set h) hook))
        (or (nil? (seq act)) ((set act) (:action/name action)))))
+
+(defn- safe-match? [profiler profile]
+  (try
+    (profile-match? profiler profile)
+    (catch Throwable e
+      (log/error e))))
 
 (defmethod ig/init-key :bread/profilers [_ profilers]
   ;; Enable hook profiling.
@@ -95,12 +103,9 @@
     (fn [{h :hook act :action/name expansions :expansion f :f :as profiler}]
       (let [f (if (symbol? f) (resolve f) f)
             tap (bread/add-profiler
-                  (fn [{t ::bread/profile.type profile ::bread/profile}]
-                    (if (seq expansions)
-                      (when (expansion-profile-match? profile)
-                        (f profile))
-                      (when (hook-profile-match? profiler profile)
-                        (f profile)))))]
+                  (fn [{::bread/keys [profile]}]
+                    (when (safe-match? profiler profile)
+                      (f profile))))]
         (assoc profiler :tap tap)))
     profilers))
 
