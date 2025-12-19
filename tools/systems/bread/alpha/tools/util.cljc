@@ -86,9 +86,11 @@
 (defmethod profile-match? :expansion [{expansions :expansion} {:keys [expansion]}]
   (contains? (set expansions) (:expansion/name expansion)))
 
-(defmethod profile-match? :hook [{h :hook act :action/name} {:keys [action hook]}]
-  (and (or (nil? (seq h)) ((set h) hook))
-       (or (nil? (seq act)) ((set act) (:action/name action)))))
+(defmethod profile-match? :hook
+  [{h :hook act :action/name !act :!action/name} {:keys [action hook]}]
+  (and (or (nil? (seq h)) (contains? (set h) hook))
+       (or (nil? (seq act)) (contains? (set act) (:action/name action)))
+       (or (nil? (seq !act)) (not (contains? (set !act) (:action/name action))))))
 
 (defn- safe-match? [profiler profile]
   (try
@@ -100,12 +102,13 @@
   ;; Enable hook profiling.
   (alter-var-root #'bread/*enable-profiling* (constantly true))
   (map
-    (fn [{h :hook act :action/name expansions :expansion f :f :as profiler}]
+    (fn [{:keys [f] :as profiler}]
       (let [f (if (symbol? f) (resolve f) f)
             tap (bread/add-profiler
                   (fn [{::bread/keys [profile]}]
                     (when (safe-match? profiler profile)
                       (f profile))))]
+        ;; hold onto tap so we can remove it later.
         (assoc profiler :tap tap)))
     profilers))
 
