@@ -70,10 +70,21 @@
         :dispatcher/component #'account/AccountPage}]
       ["/edit"
        {:name :edit
-        :dispatcher/type ::marx/edit=>}]]
+        :dispatcher/type ::marx/edit=>}]
+      ["/marx"
+       [""
+        (fn [_]
+          {:body "Hello, Marx!"
+           :status 200
+           :headers {"content-type" "text/plain"}})]
+       ["/media"
+        {:name :media
+         :dispatcher/type ::marx/media.library=>
+         :dispatcher/component #'marx/MediaLibrary}]]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
+     ;; TODO publish to assets?
      ["marx/*" marx-handler]
      ["{field/lang}"
       [""

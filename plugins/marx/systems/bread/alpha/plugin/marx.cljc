@@ -7,11 +7,12 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [Section]]
+    [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.route :as route])
+    [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.util.datalog :as datalog])
   (:import
     [java.io ByteArrayInputStream]
     [org.owasp.html HtmlPolicyBuilder]))
@@ -45,21 +46,62 @@
 (defmethod Section ::site-name [{{:marx/keys [site-name]} :config} _]
   [:div site-name])
 
-(defmethod Section ::settings [{:keys [i18n]} _]
+;; TODO move to UI ns
+(defmethod Section :loading-spinner [_ _]
+  [:span {:style {:cursor :wait}} "loading..."])
+
+;; TODO move to settings plugin ns
+(defmethod Section ::settings [{:as data :keys [i18n]} _]
   [:div
-   [:div {"data-show" "$showSettings"
+   [:div {:id :settings
+          "data-show" "$showSettings"
           :style {:display :none}}
-    "SETTINGS"]
+    (Section data :loading-spinner)]
    [:button {"data-on:click" "$showSettings = !$showSettings"}
     ;; TODO i18n
     (:marx/settings i18n "Settings")]])
 
-(defmethod Section ::media [{:keys [i18n]} _]
+(defc MediaLibrary [{:keys [media config]}]
+  {:key :media
+   :query '[:thing/slug {:thing/fields [*]}]}
+  (let [id (:media/media-library-html-id config :media-library)]
+    [:aside {:id id
+             :data-show "$showMedia"}
+     [:h2 "Media: " (count media) " posts"]
+     (doall (map (fn [{{:keys [alt-text uri]} :thing/fields}]
+                   [:img {:alt alt-text :src uri :width 150}])
+                 media))]))
+
+(defmethod bread/dispatch ::media.library=>
+  [{{post-type :post/type
+     post-status :post/status
+     :or {post-type :media
+          post-status :post.status/published}
+     :as dispatcher} ::bread/dispatcher
+    {:keys [user]} :session
+    :as req}]
+  (when (bread/hook req ::allow-list-media? true #_user)
+    (let [;; TODO params for filtering, pagination, etc.
+          pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
+          args [{:find [(list 'pull '?e pull)]
+                 :in '[$]
+                 :where [['?e :post/type post-type]
+                         ['?e :post/status post-status]]}]
+          expansion {:expansion/name ::db/query
+                     :expansion/key (:dispatcher/key dispatcher :media)
+                     :expansion/db (db/database req)
+                     :expansion/args args
+                     :expansion/description "Query for items in the media library."}]
+      {:expansions (bread/hook req ::i18n/expansions expansion)})))
+
+;; TODO move to media plugin ns
+(defmethod Section ::media [{:as data :keys [i18n]} _]
   [:div
-   [:div {"data-show" "$showMedia"
+   [:div {:id :media-library
+          :data-show "$showMedia"
           :style {:display :none}}
-    "MEDIA LIBRARY"]
-   [:button {"data-on:click" "$showMedia = !$showMedia"}
+    (Section data :loading-spinner)]
+   [:button {"data-on:click" "$showMedia = !$showMedia; $showMedia && @get('/~/marx/media')"}
     ;; TODO i18n
     (:marx/settings i18n "Media")]])
 
