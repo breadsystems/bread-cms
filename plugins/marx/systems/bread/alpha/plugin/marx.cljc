@@ -12,6 +12,7 @@
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.util.datalog :as datalog])
   (:import
     [java.io ByteArrayInputStream]
@@ -79,29 +80,50 @@
           post-status :post.status/published}
      :as dispatcher} ::bread/dispatcher
     {:keys [user]} :session
+    :keys [params]
     :as req}]
-  (when (bread/hook req ::allow-list-media? true #_user)
+  (when (bread/hook req ::allow-list-media? user)
     (let [;; TODO params for filtering, pagination, etc.
           pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
           args [{:find [(list 'pull '?e pull)]
                  :in '[$]
                  :where [['?e :post/type post-type]
                          ['?e :post/status post-status]]}]
-          expansion {:expansion/name ::db/query
-                     :expansion/key (:dispatcher/key dispatcher :media)
-                     :expansion/db (db/database req)
-                     :expansion/args args
-                     :expansion/description "Query for items in the media library."}]
-      {:expansions (bread/hook req ::i18n/expansions expansion)})))
+          k (:dispatcher/key dispatcher :media)
+          query {:expansion/name ::db/query
+                 :expansion/key k
+                 :expansion/db (db/database req)
+                 :expansion/args args
+                 :expansion/description "Query for items in the media library."}
+          paginate {:expansion/name ::thing/paginate
+                    :expansion/key k
+                    :expansion/description "Paginate media items."
+                    :page (Integer. (:page params 1))
+                    :per-page (:per-page dispatcher 25)}]
+      {:expansions (conj (bread/hook req ::i18n/expansions query) paginate)})))
+
+(defn ->sig [x]
+  (if (map? x)
+    (str "{"
+         (clojure.string/join
+           ", "
+           (reduce (fn [signals [k v]]
+                     (prn k '=> v)
+                     (conj signals (str (name k) ": " (->sig v)))) [] x))
+         "}")
+    (str x)))
+
+(comment
+  (->sig {:foo {:bar 123}}))
 
 ;; TODO move to media plugin ns
 (defmethod Section ::media [{:as data :keys [i18n]} _]
-  [:div
+  [:div {:data-signals (->sig {:mediaPage 1})}
    [:div {:id :media-library
           :data-show "$showMedia"
           :style {:display :none}}
     (Section data :loading-spinner)]
-   [:button {"data-on:click" "$showMedia = !$showMedia; $showMedia && @get('/~/marx/media')"}
+   [:button {"data-on:click" "$showMedia = !$showMedia; $showMedia && @get(`/~/marx/media?page=${$mediaPage}`)"}
     ;; TODO i18n
     (:marx/settings i18n "Media")]])
 
