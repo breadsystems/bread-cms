@@ -32,6 +32,7 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
+    [systems.bread.alpha.tools.util]
     [systems.bread.alpha.plugin.account :as account])
   (:import
     [java.io Console]
