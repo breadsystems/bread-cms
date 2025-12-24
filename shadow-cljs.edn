@@ -7,16 +7,7 @@
         :proxy-url "http://localhost:1312"}}
 
  :builds
- {;; npx shadow-cljs -A:tools:editor watch editor
-  :editor
-  {:target :browser
-   :output-dir "resources/editor/js"
-   :asset-path "/js"
-   :devtools {:watch-dir "resources/editor"}
-   :modules {:ui ; becomes resources/editor/js/ui.js
-             {:init-fn systems.bread.alpha.editor.app/init}}}
-
-  ;; npx babel marx/js --out-dir marx/out --watch
+ {;; npx babel marx/js --out-dir marx/out --watch
   ;; npx shadow-cljs -A:tools:marx watch marx
   :marx
   {:target :browser
