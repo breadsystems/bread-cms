@@ -248,7 +248,7 @@
      [:head
       [:meta {:content-type :utf-8}]
       (hook ::html.title [:title (str (:auth/login i18n) " | " (:site/name config))])
-      (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
+      (->> (LoginStyle data) (hook ::html.stylesheet) (hook ::html.login.stylesheet))
       (->> [:<>] (hook ::html.head) (hook ::html.login.head))]
      [:body
       (cond
