@@ -73,11 +73,6 @@
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
       ["/marx"
-       [""
-        (fn [_]
-          {:body "Hello, Marx!"
-           :status 200
-           :headers {"content-type" "text/plain"}})]
        ["/media"
         {:name :media
          :dispatcher/type ::marx/media.library=>
