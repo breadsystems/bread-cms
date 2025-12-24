@@ -4,6 +4,11 @@
   }
 
   --border-width: 2px;
+  --gap-tiny: 0.25em;
+  --gap-small: 0.5em;
+  --gap-standard: 1em;
+  --gap-large: 2em;
+  --gap-spacious: 4em;
 
   /* DARK THEME */
   --color-text-body: hsl(300, 80%, 95%);
@@ -34,8 +39,8 @@
   justify-content: space-between;
   align-items: center;
   margin: 0;
-  padding: 1em;
-  gap: 2em;
+  padding: var(--gap-standard);
+  gap: var(--gap-standard);
   &[data-bar-position=bottom] {
     width: 100%;
     bottom: 0;
@@ -63,14 +68,14 @@
   }
   .flex {
     display: flex;
-    gap: 1.5em;
+    gap: var(--gap-standard);
   }
   .col {
     flex-flow: column nowrap;
   }
   .row {
     flex-flow: row nowrap;
-    gap: 1em;
+    gap: var(--gap-small);
     justify-content: space-between;
   }
   .spacer {
