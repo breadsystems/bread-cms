@@ -135,10 +135,11 @@
 (defn BreadBar [{{:marx/keys [bar-sections bar-position]} :config
                  :as data}]
   (let [style {:position :fixed :left 0 bar-position 0}]
-    [:div {:style {:position :fixed bar-position 0 :left 0 #_#_:width "100%"}}
+    [:aside.breadbar {:style {:position :fixed bar-position 0 :left 0 #_#_:width "100%"}}
      (doall (map (partial Section data) bar-sections))]))
 
-(defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-js-uri site-name]}
+(defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-css-uri
+                           marx-js-uri site-name]}
               :config
               :keys [hook user]
               :as data}]
@@ -151,6 +152,7 @@
                          :backend backend
                          :marx/document doc}]
       [:<>
+       [:link {:rel :stylesheet :href marx-css-uri}]
        (BreadBar data)
        [:script {:type :module :src datastar-uri}]
        [:script {:type "application/edn" :data-marx-editor editor-name}
@@ -297,6 +299,7 @@
                                  default-theme
                                  editor-name
                                  marx-js-uri
+                                 marx-css-uri
                                  sanitizer-policy
                                  site-name]
                :or {site-name "My Bread Site"
@@ -313,6 +316,7 @@
                     default-theme :dark
                     editor-name "marx-editor"
                     marx-js-uri "/marx/js/marx.js"
+                    marx-css-uri "/marx/css/marx.css"
                     sanitizer-policy
                     {:allow-elements [:h1 :h2 :h3 :h4 :h5 :h6
                                       :p :br :hr :pre :code
@@ -333,6 +337,7 @@
             :marx/datastar-uri datastar-uri
             :marx/editor-name editor-name
             :marx/marx-js-uri marx-js-uri
+            :marx/marx-css-uri marx-css-uri
             :marx/site-name site-name
             ;; TODO #_#_
             :marx/bar-settings {:bar/position bar-position
