@@ -134,9 +134,8 @@
 
 (defn BreadBar [{{:marx/keys [bar-sections bar-position]} :config
                  :as data}]
-  (let [style {:position :fixed :left 0 bar-position 0}]
-    [:aside.breadbar {:style {:position :fixed bar-position 0 :left 0 #_#_:width "100%"}}
-     (doall (map (partial Section data) bar-sections))]))
+  [:aside {:data-bread true :data-bar-position bar-position}
+   (doall (map (partial Section data) bar-sections))])
 
 (defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-css-uri
                            marx-js-uri site-name]}

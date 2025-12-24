@@ -1,0 +1,146 @@
+[data-bread] {
+  * {
+    box-sizing: border-box;
+  }
+
+  --border-width: 2px;
+
+  /* DARK THEME */
+  --color-text-body: hsl(300, 80%, 95%);
+  --color-text-emphasis: hsl(300.7, 95.3%, 83.1%);
+  --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
+  --color-stroke-secondary: hsl(300, 75%, 12.5%);
+  --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
+  --color-text-error: hsl(326, 68.3%, 62.9%);
+  --color-stroke-error: hsl(314.9, 52.7%, 46.5%);
+  --color-text-secondary: hsl(300, 21.9%, 70.4%);
+  --color-bg: hsl(264, 41.7%, 4.7%);
+
+  /* LIGHT THEME */
+  @media (prefers-color-scheme: light) {
+    --color-text-body: hsl(263.9, 79%, 24.3%);
+    --color-text-emphasis: hsl(280.9, 52.6%, 42.2%);
+    --color-stroke-emphasis: hsl(290, 33.3%, 49.4%);
+    --color-stroke-secondary: hsl(300, 75%, 12.5%);
+    --color-text-error: hsl(309.4, 73.8%, 37.5%);
+    --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
+    --color-text-secondary: hsl(280.3, 42.7%, 36.3%);
+    --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
+    --color-bg: hsl(300, 12.8%, 92.4%);
+  }
+
+  position: fixed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 1em;
+  gap: 2em;
+  &[data-bar-position=bottom] {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 0 var(--border-width);
+  }
+  &[data-bar-position=top] {
+    width: 100%;
+    top: 0;
+    left: 0;
+    border-width: var(--border-width) 0 0 0;
+  }
+
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+  line-height: 1.5;
+
+  color: var(--color-text-body);
+  background: var(--color-bg);
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-emphasis);
+  }
+  h1, h2, p {
+    margin: 0;
+  }
+  .flex {
+    display: flex;
+    gap: 1.5em;
+  }
+  .col {
+    flex-flow: column nowrap;
+  }
+  .row {
+    flex-flow: row nowrap;
+    gap: 1em;
+    justify-content: space-between;
+  }
+  .spacer {
+    flex: 1;
+  }
+  .field {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 3ch;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .field label {
+    flex: 1;
+  }
+  .field :is(input, select) {
+    flex: 2;
+  }
+  .instruct {
+    color: var(--color-text-secondary);
+  }
+  .emphasis {
+    font-weight: 700;
+    color: var(--color-text-emphasis);
+    border: var(--border-width) dashed var(--color-stroke-emphasis);
+    padding: 12px;
+  }
+  .error {
+    font-weight: 700;
+    color: var(--color-text-error);
+    border: var(--border-width) dashed var(--color-stroke-error);
+    padding: 12px;
+  }
+  label {
+    font-weight: 700;
+  }
+  select {
+    cursor: pointer;
+  }
+  input, select {
+    padding: 12px;
+    border: var(--border-width) solid var(--color-text-body);
+  }
+  button, input, select {
+    color: var(--color-text-body);
+    background: var(--color-bg);
+    border: var(--border-width) solid var(--color-text-body);
+    border-radius: 0;
+  }
+  button {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  :is(button, input, select):focus {
+    outline: var(--border-width) solid var(--color-stroke-emphasis);
+    border-color: transparent;
+  }
+  button:hover {
+    border-color: transparent;
+    outline: var(--border-width) dashed var(--color-stroke-emphasis);
+    color: var(--color-text-emphasis);
+  }
+  .center {
+    display: flex;
+    justify-content: center;
+  }
+  hr {
+    width: 100%;
+    border: 2px solid var(--color-stroke-secondary);
+  }
+}
