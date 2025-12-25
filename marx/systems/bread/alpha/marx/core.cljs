@@ -4,7 +4,7 @@
     [clojure.edn :as edn]))
 
 (defn read-attr [elem attr]
-  (edn/read-string (.getAttribute elem attr)))
+  (when elem (edn/read-string (.getAttribute elem attr))))
 
 (defmulti field-lifecycle (fn [_ed field-config] (:marx/field-type field-config)))
 
@@ -68,7 +68,7 @@
 (defmulti edit (fn [e _ed]
                   (:edit/action e)))
 
-(defmethod edit :publish-fields [_ {:marx/keys [fields]}]
+(defmethod edit :publish-fields [_ {:marx/keys [document fields]}]
   (let [field-data (->> fields
                         vals
                         (filter (complement (comp false? :persist?)))
@@ -81,27 +81,23 @@
                                                  :field/content])))))]
     {:edit/action :publish-fields
      :edit/key :edit/instant
-     :fields field-data}))
+     :fields field-data
+     :marx/document document}))
 
-(defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state
-                        :keys [document]}]
-  (let [message (assoc (edit e ed) :marx/document document
-                       #_#_
-                       :revision? true ;; TODO config
-                       #_#_
-                       :revision/note "Hello"
-                       )]
-    (persist! backend message)))
+(defn save! [e {:keys [marx/backends] :as ed-state}]
+  (let [data (edit e ed-state)]
+    (doseq [be backends]
+      (prn 'persist be data)
+      (persist! be data))))
 
 (defn attach-backend! [ed backend-inst]
-  (swap! ed assoc :marx/backend backend-inst))
+  (swap! ed update :marx/backends conj backend-inst))
 
 (defn init-field [ed field]
   (let [{:keys [init-state
                 did-mount
                 render]
-         :or {state {}
-              init-state (constantly {})}}
+         :or {init-state (constantly {})}}
         (field-lifecycle ed field)]
     (assert (fn? render)
             (str "field-lifecycle method for " (:marx/field-type field)

@@ -73,7 +73,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -119,7 +119,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -169,7 +169,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :basic-nav :menu/items]
       :expansion/description "Process post menu item data."
@@ -220,8 +220,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
-               [s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :menu.item/entity :thing/fields]
+               [s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:my/menus :global-nav :menu/items]
       :field/key nil
@@ -270,8 +270,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
-               [s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :menu.item/entity :thing/fields]
+               [s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:my/menus :location-nav :menu/items]
       :field/key nil
@@ -320,8 +320,8 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :menu.item/entity :thing/fields]
-               [s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :menu.item/entity :thing/fields]
+               [s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :location-nav :menu/items]
       :field/key #{:a}
@@ -368,7 +368,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key nil
@@ -412,7 +412,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}
@@ -460,7 +460,7 @@
       :compact? true
       :format? true
       :recur-attrs #{:thing/children}
-      :spaths [[s/ALL s/ALL :thing/fields]]}
+      :spaths [[s/ALL :thing/fields]]}
      {:expansion/name ::navigation/items
       :expansion/key [:menus :taxon-nav :menu/items]
       :field/key #{:x :y :z}

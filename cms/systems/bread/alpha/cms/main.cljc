@@ -32,6 +32,7 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
+    [systems.bread.alpha.tools.util]
     [systems.bread.alpha.plugin.account :as account])
   (:import
     [java.io Console]
@@ -70,10 +71,16 @@
         :dispatcher/component #'account/AccountPage}]
       ["/edit"
        {:name :edit
-        :dispatcher/type ::marx/edit=>}]]
+        :dispatcher/type ::marx/edit=>}]
+      ["/marx"
+       ["/media"
+        {:name :media
+         :dispatcher/type ::marx/media.library=>
+         :dispatcher/component #'marx/MediaLibrary}]]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
+     ;; TODO publish to assets?
      ["marx/*" marx-handler]
      ["{field/lang}"
       [""
@@ -274,35 +281,6 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defn- ws-handler [on-message-received app]
-  (fn main-ws-handler [req]
-    (http/with-channel req ws-chan
-      (let [client-id (str (UUID/randomUUID))
-            app (-> req
-                    (merge app)
-                    (bread/set-config :marx/websocket? true
-                                      :marx/client-id client-id)
-                    (bread/hook ::bread/request))]
-        ;; TODO logging
-        (println "WebSocket connection created with client-id" client-id)
-        (http/on-close ws-chan (fn [status]
-                                 (println "channel closed:" status)))
-        (http/on-receive ws-chan
-                         (fn main-on-message-recieved [message]
-                           (on-message-received app message)))
-        ))))
-
-(defmethod ig/init-key :websocket [_ {:keys [port wrap-defaults app]}]
-  (let [handler (ws-handler #'marx/on-websocket-message app)
-        handler (if wrap-defaults
-                  (ring/wrap-defaults handler wrap-defaults)
-                  handler)]
-    (http/run-server handler {:port port})))
-
-(defmethod ig/halt-key! :websocket [_ stop-server]
-  (when-let [prom (stop-server :timeout 100)]
-    @prom))
-
 (defmethod ig/init-key :ring/wrap-defaults [_ value]
   (let [default-configs {:api-defaults ring/api-defaults
                          :site-defaults ring/site-defaults
@@ -364,39 +342,6 @@
 
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/handler app))
-
-(defn log-hook [{:keys [hook action result]}]
-  (prn (:action/name action) (select-keys result
-                                          [:params
-                                           :headers
-                                           :status
-                                           :session])))
-
-(defn log-query [{:keys [expansion result] :as profile}]
-  (prn ::db/query (:expansion/key expansion) result))
-
-(defmethod ig/init-key :bread/profilers [_ profilers]
-  ;; Enable hook profiling.
-  (alter-var-root #'bread/*enable-profiling* (constantly true))
-  (map
-    (fn [{h :hook act :action/name expansions :expansion f :f :as profiler}]
-      (let [f (if (symbol? f) (resolve f) f)
-            tap (bread/add-profiler
-                  (fn [{t ::bread/profile.type profile ::bread/profile}]
-                    (if (seq expansions)
-                      (let [{:keys [expansion]} profile]
-                        (when (contains? expansions (:expansion/name expansion))
-                          (f profile)))
-                      (let [{:keys [action hook]} profile]
-                        (if (and (or (nil? (seq h)) ((set h) hook))
-                                 (or (nil? (seq act)) ((set act) (:action/name action))))
-                          (f profile))))))]
-        (assoc profiler :tap tap)))
-    profilers))
-
-(defmethod ig/halt-key! :bread/profilers [_ profilers]
-  (doseq [{:keys [tap]} profilers]
-    (remove-tap tap)))
 
 (defn restart! [config]
   (stop!)
@@ -547,6 +492,14 @@
                                                 :password "hello"}}))
 
 
+
+  ;; MEDIA
+  (q '{:find [(pull ?e [:db/id :thing/slug {:thing/fields [*]}])]
+       :in [$]
+       :where [[?e :post/type :media]
+               [?e :post/type :media]
+               [?e :post/status :post.status/published]
+               [?e :post/status :post.status/published]]})
 
   ;; AUTH
 

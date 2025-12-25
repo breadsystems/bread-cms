@@ -244,7 +244,7 @@
           :format? (bread/config req :i18n/format-fields?)
           :recur-attrs recur-attrs
           :spaths
-          (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
+          (map (comp #(if querying-many? (concat [s/ALL] %) %)
                      (partial qi/relation->spath
                               (bread/hook req ::bread/attrs-map nil))
                      :relation)

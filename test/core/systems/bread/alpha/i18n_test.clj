@@ -465,8 +465,8 @@
         :format? false
         :compact? false
         :recur-attrs #{}
-        :spaths [[s/ALL s/ALL :thing/fields]
-                 [s/ALL s/ALL :post/_taxons s/ALL :thing/fields]]}]
+        :spaths [[s/ALL :thing/fields]
+                 [s/ALL :post/_taxons s/ALL :thing/fields]]}]
       {:expansion/name ::db/query
        :expansion/key :post-with-taxons-and-field-content
        :expansion/db ::FAKEDB
@@ -571,7 +571,7 @@
       false
       false
 
-      ;; With :field/content; no formatting; with compaction.
+      ;; With :field/content; no formatting; with compaction; querying single.
       [{:expansion/name ::db/query
         :expansion/key :post-with-content
         :expansion/db ::FAKEDB
@@ -607,7 +607,7 @@
       true
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
-      ;; with formatting; two entities to compact.
+      ;; with formatting; querying single; two entities to compact.
       [{:expansion/name ::db/query
         :expansion/key :post-with-taxons-and-field-content
         :expansion/db ::FAKEDB
@@ -705,7 +705,7 @@
       true
       true
 
-      ;; All the things, plus a recursive spec.
+      ;; All the things, plus a recursive spec; querying single.
       [{:expansion/name ::db/query
         :expansion/key :post-with-taxons-and-field-content
         :expansion/db ::FAKEDB
@@ -747,6 +747,49 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
+        :page]}
+      :en
+      true
+      true
+
+      ;; All the things, plus a recursive spec; querying many.
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
+        ['{:find [(pull ?e [:db/id
+                            :thing/slug
+                            {:thing/children ...}
+                            {:thing/fields
+                             [:db/id :field/lang :field/key :field/content]}
+                            {:post/taxons [:thing/slug
+                                           :taxon/taxonomy
+                                           {:thing/fields [*]}]}])]
+           :in [$ ?type]
+           :where [[?e :post/type ?type]]}
+         :page]}
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{:thing/children}
+        :spaths [[s/ALL :thing/fields]
+                 [s/ALL :post/taxons s/ALL :thing/fields]]}]
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/children ...}
+                           {:thing/fields [:field/key :field/content]}
+                           {:post/taxons [:thing/slug
+                                          :taxon/taxonomy
+                                          {:thing/fields [*]}]}])]
+          :in [$ ?type]
+          :where [[?e :post/type ?type]]}
         :page]}
       :en
       true
