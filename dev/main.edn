@@ -31,16 +31,13 @@
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
-  :store {:backend :jdbc
-          :dbtype "sqlite"
-          :user "bread"
-          :password "bread"
-          :dbname "bread"}
-  #_#_
-  :store {:backend :mem
-          :id "bread-db"}
-  :recreate? true
-  :force? true
+  :db/recreate? true
+  :db/force? true
+  :config {:store {:backend :jdbc
+                   :dbtype "sqlite"
+                   :user "bread"
+                   :password "bread"
+                   :dbname "bread.db"}}
   :db/migrations #deref #var systems.bread.alpha.schema/initial
   :db/initial-txns
   #concat [#deref #var systems.bread.alpha.cms.data/initial
