@@ -200,7 +200,7 @@
 ;; Methods for managing database connection and state.
 ;;
 
-(defmethod db/connect :datahike [{:keys [config]}]
+(defmethod db/connect :datahike [{:keys [db/config]}]
   (try
     (d/connect config)
     (catch IllegalArgumentException e
