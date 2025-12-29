@@ -167,7 +167,7 @@
 
 
 (extend-protocol db/TransactionalDatabaseConnection
-  clojure.lang.Atom
+  datahike.connector.Connection
   (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
@@ -200,7 +200,7 @@
 ;; Methods for managing database connection and state.
 ;;
 
-(defmethod db/connect :datahike [config]
+(defmethod db/connect :datahike [{:keys [config]}]
   (try
     (d/connect config)
     (catch IllegalArgumentException e

@@ -5,7 +5,7 @@
     [clojure.string :as string]
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
-    [datahike.api]
+    [datahike.api :as d]
     [datahike-jdbc.core]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
@@ -291,26 +291,32 @@
     defaults))
 
 (defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :db/connection} :store/db}]
+  [_ {store-type :store/type db-config :store/db}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
-    (auth/session-store conn)))
-
-(defmethod ig/resolve-key :bread/db [_ db-config]
-  ;; This key is just to ensure that the timbre log gets loaded first. Don't
-  ;; load it as part of the actual Datahike config, as this can cause problems
-  ;; e.g. with serlialization.
-  (dissoc db-config :__after))
+    (auth/session-store (db/connect db-config))))
 
 (defmethod ig/init-key :bread/db
-  [_ {:keys [force?] :as db-config}]
-  (log/info "initializing :bread/db with config:" db-config)
-  (db/create! db-config {:force? force?})
-  (assoc db-config :db/connection (db/connect db-config)))
+  [_ {datahike-config :config :keys [db/force? db/recreate?] :as db-config}]
+  (log/info "initializing :bread/db with config:" datahike-config)
+  (when (and (d/database-exists? datahike-config) recreate?)
+    (log/info "deleting existing database before recreating")
+    (d/delete-database datahike-config))
+  (try
+    (log/info "creating database")
+    (d/create-database datahike-config)
+    (catch clojure.lang.ExceptionInfo e
+      (log/info "database exists")
+      (let [exists? (= :db-already-exists (:type (ex-data e)))]
+        (when (and force? exists?)
+          (log/info "forcing db creation")
+          (d/delete-database datahike-config)
+          (d/create-database datahike-config)))))
+  db-config)
 
-(defmethod ig/halt-key! :bread/db
-  [_ {:keys [recreate?] :as db-config}]
-  (when recreate? (db/delete! db-config)))
+(defmethod ig/halt-key! :bread/db [_ db-config]
+  (when (:db/recreate? db-config)
+    (d/delete-database db-config)))
 
 (defmethod ig/init-key :bread/router [_ router]
   #'router)
