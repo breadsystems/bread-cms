@@ -149,6 +149,7 @@
   [app {:keys [initial]} _]
   (let [migrations (bread/hook app ::migrations initial)
         conn (connection app)]
+    (log/info (str "checking " (count migrations) " migrations"))
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
@@ -215,6 +216,7 @@
                 (try
                   (connect config)
                   (catch clojure.lang.ExceptionInfo e
+                    (log/info "error initializing database connection")
                     (when-not (= :db-does-not-exist (:type (ex-data e)))
                       (throw e))))}} config]
       {:config

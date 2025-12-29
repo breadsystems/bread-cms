@@ -204,13 +204,13 @@
   (try
     (d/connect config)
     (catch IllegalArgumentException e
-      (throw (ex-info (str "Error connecting to datahike")
+      (throw (ex-info (str "Error connecting to datahike db: " (get-in config [:store :dbname] "(unknown)"))
                       {:type      :connection-error
                        :message   (.getMessage e)
                        :config    config}
                       e)))))
 
-(defmethod db/create! :datahike [config & [{:keys [force?]}]]
+(defmethod db/create! :datahike db-create-datahike [config & {:keys [force?]}]
   (try
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
