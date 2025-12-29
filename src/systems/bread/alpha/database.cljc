@@ -3,15 +3,16 @@
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [taoensso.timbre :as log]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
     [systems.bread.alpha.internal.datalog :as datalog]))
 
 (defmulti connect :db/type)
-(defmulti create! (fn [config & _]
-                             (:db/type config)))
-(defmulti delete! :db/type)
+(defmulti -exists? :db/type)
+(defmulti -create :db/type)
+(defmulti -delete :db/type)
 (defmulti max-tx (fn [app]
                    (:db/type (bread/config app :db/config))))
 
@@ -47,6 +48,24 @@
                    " Did you forget to load a plugin?"))]
     (throw (ex-info msg {:config config
                          :bread.context :db/connect}))))
+
+(defn create! [{:as db-spec :db/keys [force? recreate?]}]
+  (when (and (-exists? db-spec) recreate?)
+    (log/info "deleting existing database before recreating")
+    (-delete db-spec))
+  (try
+    (log/info "creating database")
+    (-create db-spec)
+    (catch clojure.lang.ExceptionInfo e
+      (when-let [db-exists? (= :db-already-exists (:type (ex-data e)))]
+        (log/info "database exists")
+        (when force?
+          (-delete db-spec)
+          (-create db-spec))))))
+
+(defn delete! [config]
+  (log/info "deleting database")
+  (-delete config))
 
 (defprotocol TransactionalDatabaseConnection
   (db [conn])
