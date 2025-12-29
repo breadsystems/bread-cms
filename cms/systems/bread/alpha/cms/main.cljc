@@ -377,6 +377,9 @@
 (comment
   (set! *print-namespace-maps* false)
 
+  (require '[flow-storm.api :as flow])
+  (flow/local-connect)
+
   (restart! (-> "dev/main.edn" aero/read-config))
   (keys (deref system))
   (:http @system)
@@ -413,8 +416,7 @@
 
   (do
     (def $req {:uri "/~/signup" :request-method :get})
-    (require '[flow-storm.api :as flow]
-             '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
+    (require '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
     (def ->app (partial util/->app (:bread/app @system)))
     (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @system)))
 
@@ -428,8 +430,6 @@
         db/q
         (db/database (->app $req))
         args)))
-
-  (flow/local-connect)
 
   (diagnose-expansions (->app $req))
   (do-expansions (->app $req) 1)
