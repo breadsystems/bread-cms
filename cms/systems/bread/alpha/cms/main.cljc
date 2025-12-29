@@ -299,19 +299,7 @@
 (defmethod ig/init-key :bread/db
   [_ {:keys [db/config db/force? db/recreate?] :as db-spec}]
   (log/info "initializing :bread/db with config:" config)
-  (when (and (d/database-exists? config) recreate?)
-    (log/info "deleting existing database before recreating")
-    (d/delete-database config))
-  (try
-    (log/info "creating database")
-    (d/create-database config)
-    (catch clojure.lang.ExceptionInfo e
-      (log/info "database exists")
-      (let [exists? (= :db-already-exists (:type (ex-data e)))]
-        (when (and force? exists?)
-          (log/info "forcing db creation")
-          (d/delete-database config)
-          (d/create-database config)))))
+  (db/create! db-spec)
   db-spec)
 
 (defmethod ig/halt-key! :bread/db [_ db-config]
