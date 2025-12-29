@@ -7,9 +7,10 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.datahike :as plugin]
     [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.test-helpers :as h :refer [db-config->loaded
-                                                    db-config->handler
-                                                    plugins->loaded]])
+    [systems.bread.alpha.test-helpers :refer [db-config->loaded
+                                              db-config->handler
+                                              plugins->loaded
+                                              use-db]])
   (:import
     [java.lang IllegalArgumentException]
     [clojure.lang ExceptionInfo]))
@@ -19,7 +20,7 @@
    :db/migrations schema/initial
    :db/config {:store {:backend :mem :id "plugin-db" :dbname "plugins"}}})
 
-(h/use-db :each config)
+(use-db :each config)
 
 (deftest test-datahike-plugin
 

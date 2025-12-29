@@ -4,6 +4,8 @@
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
     [datahike.db :as dhdb]
+    [taoensso.timbre :as log]
+
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
@@ -210,12 +212,17 @@
                        :config    config}
                       e)))))
 
-(defmethod db/create! :datahike db-create-datahike [{:db/keys [config force?]}]
+(defmethod db/create! :datahike db-create-datahike [{:db/keys [config force? recreate?]}]
+  (when (and (d/database-exists? config) recreate?)
+    (log/info "deleting existing database before recreating")
+    (d/delete-database config))
   (try
+    (log/info "creating database")
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
-      (let [exists? (= :db-already-exists (:type (ex-data e)))]
-        (when (and force? exists?)
+      (when-let [exists? (= :db-already-exists (:type (ex-data e)))]
+        (log/info "database exists")
+        (when force?
           (d/delete-database config)
           (d/create-database config))))))
 
