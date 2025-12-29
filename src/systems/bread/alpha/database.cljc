@@ -200,7 +200,6 @@
   application code; recommended for use from plugins only. Use db/plugin
   instead."
   [config]
-  ;; TODO make these simple keys
   (when config
     (let [{:db/keys [connection
                      as-of-format
@@ -211,7 +210,7 @@
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
-                migrations schema/initial
+                migrations []
                 connection
                 (try
                   (connect config)
