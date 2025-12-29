@@ -6,6 +6,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.plugin.datahike :as plugin]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :as h :refer [db-config->loaded
                                                     db-config->handler
                                                     plugins->loaded]])
@@ -15,8 +16,8 @@
 
 (def config
   {:db/type :datahike
-   :store {:backend :mem
-           :id "plugin-db"}})
+   :db/migrations schema/initial
+   :db/config {:store {:backend :mem :id "plugin-db" :dbname "plugins"}}})
 
 (h/use-db :each config)
 
@@ -28,7 +29,7 @@
       (try
         (db/connect config)
         (catch ExceptionInfo e
-          (is (= "Error connecting to datahike" (ex-message e)))
+          (is (= "Error connecting to datahike db: plugins" (ex-message e)))
           (is (= "nah" (-> e ex-cause ex-message)))))))
 
   (testing "it configures a default as-of-param"
@@ -37,21 +38,21 @@
 
   (testing "it configures db connection"
     (let [app (db-config->loaded config)]
-      (is (instance? clojure.lang.Atom
+      (is (instance? datahike.connector.Connection
                      (bread/config app :db/connection)))))
 
   (testing "database returns the present snapshot by default"
     (let [app (db-config->loaded config)]
       (is (instance? datahike.db.DB (db/database app)))))
 
-  (testing "database honors as-of-tx? config"
+  (testing "database honors :as-of-tx?"
     (let [app (db-config->loaded (assoc config :db/as-of-tx? true))
           handler (bread/handler app)
           max-tx (:max-tx (db/database app))
           res (handler {:uri "/" :params {:as-of (dec max-tx)}})]
       (is (instance? datahike.db.AsOfDB (db/database res)))))
 
-  (testing "database honors as-of-param"
+  (testing "database honors :as-of-param"
     (let [app (db-config->loaded config)
           handler (bread/handler app)
           res (handler {:uri "/" :params {:as-of
@@ -79,7 +80,7 @@
           res (handler {:uri "/"})]
       (is (instance? datahike.db.AsOfDB (db/database res)))))
 
-  (testing "database honors as-of-format config"
+  (testing "database honors :as-of-format"
     (let [handler (db-config->handler
                     (assoc config :db/as-of-format "yyyy-MM-dd"))
           res (handler {:uri "/" :params {:as-of "2020-01-01"}})]
@@ -87,4 +88,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run *ns*))
+  (k/run {:color? false}))

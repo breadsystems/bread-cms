@@ -8,7 +8,7 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded use-db]]))
 
 (def config {:db/type :datahike
-             :store {:backend :mem :id "expand-db"}
+             :db/config {:store {:backend :mem :id "expand-db"}}
              :db/initial-txns
              [;; init simplified schema
               {:db/ident :thing/slug
@@ -185,4 +185,5 @@
           :en]}])))
 
 (comment
-  (k/run))
+  (require '[kaocha.repl :as k])
+  (k/run {:color? false}))
