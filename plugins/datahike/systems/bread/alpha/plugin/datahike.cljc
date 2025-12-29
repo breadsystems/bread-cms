@@ -206,27 +206,17 @@
   (try
     (d/connect config)
     (catch IllegalArgumentException e
-      (throw (ex-info (str "Error connecting to datahike db: " (get-in config [:store :dbname] "(unknown)"))
-                      {:type      :connection-error
-                       :message   (.getMessage e)
-                       :config    config}
-                      e)))))
+      (let [dbname (get-in config [:store :dbname] "(unknown)")]
+        (throw (ex-info (str "Error connecting to datahike db: " dbname)
+                        {:type :connection-error :config config} e))))))
 
-(defmethod db/create! :datahike db-create-datahike [{:db/keys [config force? recreate?]}]
-  (when (and (d/database-exists? config) recreate?)
-    (log/info "deleting existing database before recreating")
-    (d/delete-database config))
-  (try
-    (log/info "creating database")
-    (d/create-database config)
-    (catch clojure.lang.ExceptionInfo e
-      (when-let [exists? (= :db-already-exists (:type (ex-data e)))]
-        (log/info "database exists")
-        (when force?
-          (d/delete-database config)
-          (d/create-database config))))))
+(defmethod db/-exists? :datahike datahike-db-exists? [{:db/keys [config]}]
+  (d/database-exists? config))
 
-(defmethod db/delete! :datahike [{:db/keys [config]}]
+(defmethod db/-create :datahike create-datahike-db [{:db/keys [config]}]
+  (d/create-database config))
+
+(defmethod db/-delete :datahike [{:db/keys [config]}]
   (d/delete-database config))
 
 (defmethod db/max-tx :datahike [req]
