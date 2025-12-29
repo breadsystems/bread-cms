@@ -7,7 +7,7 @@
    [systems.bread.alpha.test-helpers :refer [db-config->loaded]]))
 
 (defonce config {:db/type :datahike
-                 :store {:backend :mem :id "install-db"}})
+                 :db/config {:store {:backend :mem :id "install-db"}}})
 
 (defn- wrap-db-installation [run]
   ;; Clean up after any bad test runs

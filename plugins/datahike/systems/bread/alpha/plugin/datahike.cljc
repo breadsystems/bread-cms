@@ -210,7 +210,7 @@
                        :config    config}
                       e)))))
 
-(defmethod db/create! :datahike db-create-datahike [config & {:keys [force?]}]
+(defmethod db/create! :datahike db-create-datahike [{:db/keys [config force?]}]
   (try
     (d/create-database config)
     (catch clojure.lang.ExceptionInfo e
@@ -219,7 +219,7 @@
           (d/delete-database config)
           (d/create-database config))))))
 
-(defmethod db/delete! :datahike [config]
+(defmethod db/delete! :datahike [{:db/keys [config]}]
   (d/delete-database config))
 
 (defmethod db/max-tx :datahike [req]

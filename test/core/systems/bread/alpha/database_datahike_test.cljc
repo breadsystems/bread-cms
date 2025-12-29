@@ -7,15 +7,15 @@
 
 ;; Set up a bunch of boilerplate to share between tests.
 (let [config {:db/type :datahike
-              :store {:backend :mem :id "testdb"}
-              :initial-tx [{:db/ident :name
-                            :db/valueType :db.type/string
-                            :db/unique :db.unique/identity
-                            :db/index true
-                            :db/cardinality :db.cardinality/one}
-                           {:db/ident :age
-                            :db/valueType :db.type/number
-                            :db/cardinality :db.cardinality/one}]}
+              :db/config {:store {:backend :mem :id "testdb"}
+                          :initial-tx [{:db/ident :name
+                                        :db/valueType :db.type/string
+                                        :db/unique :db.unique/identity
+                                        :db/index true
+                                        :db/cardinality :db.cardinality/one}
+                                       {:db/ident :age
+                                        :db/valueType :db.type/number
+                                        :db/cardinality :db.cardinality/one}]}}
 
       datahike-fixture (fn [f]
                          ;; Clean up after any prior failures, just in case.

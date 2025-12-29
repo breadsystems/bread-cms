@@ -9,14 +9,15 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
                                               naive-plugin
                                               naive-router
                                               use-db]]))
 
 (def config {:db/type :datahike
-             :store {:backend :mem
-                     :id "test-i18n-db"}
+             :db/config {:store {:backend :mem :id "test-i18n-db"}}
+             :db/migrations schema/initial
              :db/initial-txns
              ;; TODO test locales e.g. en-gb
              [{:thing/fields #{{:field/key :one
