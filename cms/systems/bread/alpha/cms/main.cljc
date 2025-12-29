@@ -296,6 +296,12 @@
   (when (= :datalog store-type)
     (auth/session-store conn)))
 
+(defmethod ig/resolve-key :bread/db [_ db-config]
+  ;; This key is just to ensure that the timbre log gets loaded first. Don't
+  ;; load it as part of the actual Datahike config, as this can cause problems
+  ;; e.g. with serlialization.
+  (dissoc db-config :__after))
+
 (defmethod ig/init-key :bread/db
   [_ {:keys [force?] :as db-config}]
   (log/info "initializing :bread/db with config:" db-config)
