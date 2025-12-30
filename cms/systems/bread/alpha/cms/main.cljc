@@ -290,7 +290,9 @@
                    (do
                      (log/info "setting ring-defaults session store:" session-store)
                      (assoc-in defaults [:session :store] session-store))
-                   defaults)]
+                   (do
+                     (log/info "using default session store")
+                     defaults))]
     (reduce #(assoc-in %1 (key %2) (val %2)) defaults overrides)))
 
 (defmethod ig/init-key :ring/session-store
