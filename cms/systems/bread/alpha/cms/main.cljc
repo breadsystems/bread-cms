@@ -31,6 +31,7 @@
     [systems.bread.alpha.cms.config.buddy]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
+    [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
@@ -339,6 +340,7 @@
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))
+                   (email/plugin (:email app-config))
                    {:hooks
                     {::bread/route
                      [{:action/name ::enrich-session
@@ -418,6 +420,10 @@
   (db/connection (:bread/app @system))
 
   ;; EMAIL
+  (:email (:bread/app (:initial-config @system)))
+  (email/config->postal (::bread/config (:bread/app @system)))
+  (:email/smtp-from-email (::bread/config (:bread/app @system)))
+
   (require '[postal.core :as postal])
   (def $postal-config {:host (System/getenv "SMTP_HOST")
                        :port (Integer. (System/getenv "SMTP_PORT"))

@@ -28,6 +28,13 @@
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
                         :route/name :page}}}
+  :email {:dry-run? true
+          :smtp-from-email #env SMTP_FROM_EMAIL
+          :smtp-host #env SMTP_HOST
+          :smtp-port #env SMTP_PORT
+          :smtp-username #env SMTP_USERNAME
+          :smtp-password #env SMTP_PASSWORD
+          :smtp-tls? #env SMTP_USE_TLS}
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
