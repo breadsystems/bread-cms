@@ -38,7 +38,6 @@
               ;; STORE_BACKEND=jdbc
               ;; STORE_BACKEND=mem
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
-  :db/migrations #deref #var systems.bread.alpha.schema/initial
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
  :app/log
