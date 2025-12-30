@@ -11,7 +11,6 @@
              ;; Printing the whole schema slows down results on error/failure,
              ;; so just use the mininum viable post schema for what we need
              ;; to run this test.
-             ;; TODO get Kaocha not to print debug logs?
              :db/initial-txns
              [{:db/ident :thing/slug
                :db/valueType :db.type/string
