@@ -1,9 +1,9 @@
 {:http {:port 1312
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
- :ring/wrap-defaults {:ring-defaults :site-defaults
-                      [:session :store] #ig/ref :ring/session-store
-                      [:security :anti-forgery] false}
+ :ring/wrap-defaults {:kind :site-defaults
+                      :session-store #ig/ref :ring/session-store
+                      :overrides {[:security :anti-forgery] false}}
  :ring/session-store
  {:store/type :datalog
   :store/db #ig/ref :bread/db}

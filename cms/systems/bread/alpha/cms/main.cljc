@@ -278,18 +278,20 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defmethod ig/init-key :ring/wrap-defaults [_ value]
-  (let [default-configs {:api-defaults ring/api-defaults
-                         :site-defaults ring/site-defaults
-                         :secure-api-defaults ring/secure-api-defaults
-                         :secure-site-defaults ring/secure-api-defaults}
-        k (if (keyword? value) value (get value :ring-defaults))
-        defaults (get default-configs k)
-        defaults (if (map? value)
-                   (reduce #(assoc-in %1 (key %2) (val %2))
-                           defaults (dissoc value :ring-defaults))
+(defmethod ig/init-key :ring/wrap-defaults
+  [_ {:keys [kind overrides session-store]
+      :or {overrides {}}}]
+  (let [configs {:api-defaults ring/api-defaults
+                 :site-defaults ring/site-defaults
+                 :secure-api-defaults ring/secure-api-defaults
+                 :secure-site-defaults ring/secure-site-defaults}
+        defaults (get configs kind ring/secure-site-defaults)
+        defaults (if session-store
+                   (do
+                     (log/info "setting ring-defaults session store:" session-store)
+                     (assoc-in defaults [:session :store] session-store))
                    defaults)]
-    defaults))
+    (reduce #(assoc-in %1 (key %2) (val %2)) defaults overrides)))
 
 (defmethod ig/init-key :ring/session-store
   [_ {store-type :store/type db-config :store/db}]
