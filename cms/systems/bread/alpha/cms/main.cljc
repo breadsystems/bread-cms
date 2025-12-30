@@ -318,22 +318,23 @@
   [_ db-spec]
   (log/info "initializing :bread/db with config:" (:db/config db-spec))
   (db/create! db-spec)
-  (let [initial (when (:db/recreate? db-spec)
+  (let [;; TODO
+        initial (when (:db/recreate? db-spec)
                   (concat
                     data/initial
                     [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
-                      :invitation/invited-by "user.coby"}
-                     {:db/id "user.coby"
-                      :user/username "coby"
-                      :user/name "Coby Tamayo"
-                      :user/email [{:email/address "coby@bread.systems"
+                      :invitation/invited-by "user.admin"}
+                     {:db/id "user.admin"
+                      :user/username "bread"
+                      :user/name "Bread User"
+                      :user/email [{:email/address "admin@bread.systems"
                                     :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
                                     :email/primary? true}]
                       :user/password (hashers/derive "hello")
                       #_#_ ;; Uncomment to enable MFA
                       :user/totp-key "B67CWTTTP7UQ5KWT"
                       :user/failed-login-count 0
-                      :user/preferences "{}"
+                      :user/preferences (pr-str {})
                       :user/lang :en
                       :user/roles
                       #{{:role/key :author
