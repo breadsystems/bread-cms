@@ -31,7 +31,6 @@
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
-  #_#_
   :db/recreate? true
   :db/config {:schema-flexibility :write
               :keep-history? true
