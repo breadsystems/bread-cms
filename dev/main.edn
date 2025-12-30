@@ -33,7 +33,6 @@
  {:db/type :datahike
   #_#_
   :db/recreate? true
-  :db/force? true
   :db/config {:schema-flexibility :write
               :keep-history? true
               :store {:backend :jdbc

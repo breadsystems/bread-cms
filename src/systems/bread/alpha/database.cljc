@@ -49,19 +49,21 @@
     (throw (ex-info msg {:config config
                          :bread.context :db/connect}))))
 
-(defn create! [{:as db-spec :db/keys [force? recreate?]}]
-  (when (and (-exists? db-spec) recreate?)
-    (log/info "deleting existing database before recreating")
-    (-delete db-spec))
-  (try
-    (log/info "creating database")
-    (-create db-spec)
-    (catch clojure.lang.ExceptionInfo e
-      (when-let [db-exists? (= :db-already-exists (:type (ex-data e)))]
-        (log/info "database exists")
-        (when force?
-          (-delete db-spec)
-          (-create db-spec))))))
+(defn exists? [db-spec]
+  (-exists? db-spec))
+
+(defn create! [{:as db-spec :db/keys [recreate?]}]
+  (log/info "create!")
+  (if (-exists? db-spec)
+    (if recreate?
+      (do
+        (log/info "deleting existing database before recreating")
+        (-delete db-spec)
+        (-create db-spec))
+      (log/info "database already exists"))
+    (do
+      (log/info "creating database")
+      (-create db-spec))))
 
 (defn delete! [config]
   (log/info "deleting database")
