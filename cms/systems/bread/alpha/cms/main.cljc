@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.cms.main
   (:require
+    [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
@@ -16,7 +17,7 @@
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.cms.data]
+    [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.thing :as thing]
@@ -309,6 +310,35 @@
 (defmethod ig/init-key :bread/router [_ router]
   #'router)
 
+(defmethod ig/init-key :bread/db
+  [_ db-spec]
+  (log/info "initializing :bread/db with config:" (:db/config db-spec))
+  (db/create! db-spec)
+  (let [initial (when (:db/recreate? db-spec)
+                  (concat
+                    data/initial
+                    [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
+                      :invitation/invited-by "user.coby"}
+                     {:db/id "user.coby"
+                      :user/username "coby"
+                      :user/name "Coby Tamayo"
+                      :user/email [{:email/address "coby@bread.systems"
+                                    :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
+                                    :email/primary? true}]
+                      :user/password (hashers/derive "hello")
+                      #_#_ ;; Uncomment to enable MFA
+                      :user/totp-key "B67CWTTTP7UQ5KWT"
+                      :user/failed-login-count 0
+                      :user/preferences "{}"
+                      :user/lang :en
+                      :user/roles
+                      #{{:role/key :author
+                         :role/abilities
+                         #{{:ability/key :publish-posts}
+                           {:ability/key :edit-posts}
+                           {:ability/key :delete-posts}}}}}]))]
+    (assoc db-spec :db/initial-txns initial)))
+
 (defmethod bread/action ::enrich-session
   [{:as req :keys [headers remote-addr session]} _ _]
   (if session
@@ -380,7 +410,8 @@
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
 
-  (restart! (-> "dev/main.edn" aero/read-config))
+  (keys (restart! (-> "dev/main.edn" aero/read-config)))
+  (stop!)
   (keys (deref system))
   (:http @system)
   (:ring/wrap-defaults @system)
@@ -390,6 +421,16 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
+
+  (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
+  (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
+
+  (= (db/connection (:bread/app @system))
+     (db/connect (:bread/db @system)))
+  ;; => true
+
+  ;; Connection pool...
+  (db/connection (:bread/app @system))
 
   ;; Playing with resources/files...
   (io/resource "public/assets/hi.txt")
