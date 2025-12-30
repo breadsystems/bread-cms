@@ -8,11 +8,11 @@
 (defn log-redactor
   ([]
    (log-redactor {}))
-  ([{:keys [redacted] :or {redacted "[REDACTED]"}}]
+  ([{:keys [redaction-text] :or {redaction-text "[REDACTED]"}}]
    (fn [data]
      (walk/postwalk (fn [node]
                       (if-let [ks (and (map? node) (seq (keys (select-keys node *sensitive-keys*))))]
-                        (into node (zipmap ks (repeat redacted)))
+                        (into node (zipmap ks (repeat redaction-text)))
                         node))
                     data))))
 
