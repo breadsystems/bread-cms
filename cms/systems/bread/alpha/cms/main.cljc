@@ -295,17 +295,15 @@
   [_ {store-type :store/type db-config :store/db}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
-    (auth/session-store (db/connect db-config))))
+    (let [conn (db/connect db-config)]
+      {:session-store (auth/session-store conn)
+       :connection conn})))
 
-(defmethod ig/init-key :bread/db
-  [_ {:keys [db/config db/force? db/recreate?] :as db-spec}]
-  (log/info "initializing :bread/db with config:" config)
-  (db/create! db-spec)
-  db-spec)
+(defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
+  session-store)
 
-(defmethod ig/halt-key! :bread/db [_ db-config]
-  (when (:db/recreate? db-config)
-    (d/delete-database db-config)))
+(defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]
+  (d/release connection))
 
 (defmethod ig/init-key :bread/router [_ router]
   #'router)

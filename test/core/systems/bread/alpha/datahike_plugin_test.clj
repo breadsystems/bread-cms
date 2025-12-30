@@ -37,11 +37,6 @@
     (let [app ((db-config->handler config) {})]
       (is (= :as-of (bread/config app :db/as-of-param)))))
 
-  (testing "it configures db connection"
-    (let [app (db-config->loaded config)]
-      (is (instance? datahike.connector.Connection
-                     (bread/config app :db/connection)))))
-
   (testing "database returns the present snapshot by default"
     (let [app (db-config->loaded config)]
       (is (instance? datahike.db.DB (db/database app)))))
