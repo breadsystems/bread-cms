@@ -315,33 +315,10 @@
   #'router)
 
 (defmethod ig/init-key :bread/db
-  [_ db-spec]
-  (log/info "initializing :bread/db with config:" (:db/config db-spec))
+  [_ {:as db-spec :db/keys [recreate? config initial-txns]}]
+  (log/info "initializing :bread/db with config:" config)
   (db/create! db-spec)
-  (let [;; TODO
-        initial (when (:db/recreate? db-spec)
-                  (concat
-                    data/initial
-                    [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
-                      :invitation/invited-by "user.admin"}
-                     {:db/id "user.admin"
-                      :user/username "bread"
-                      :user/name "Bread User"
-                      :user/email [{:email/address "admin@bread.systems"
-                                    :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
-                                    :email/primary? true}]
-                      :user/password (hashers/derive "hello")
-                      #_#_ ;; Uncomment to enable MFA
-                      :user/totp-key "B67CWTTTP7UQ5KWT"
-                      :user/failed-login-count 0
-                      :user/preferences (pr-str {})
-                      :user/lang :en
-                      :user/roles
-                      #{{:role/key :author
-                         :role/abilities
-                         #{{:ability/key :publish-posts}
-                           {:ability/key :edit-posts}
-                           {:ability/key :delete-posts}}}}}]))]
+  (let [initial (when recreate? (concat data/initial initial-txns))]
     (assoc db-spec
            :db/initial-txns initial
            :db/migrations schema/initial)))
