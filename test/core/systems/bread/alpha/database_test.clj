@@ -14,7 +14,7 @@
   (testing "it gives a friendly error message if you forget :db/type"
     (is (thrown-with-msg?
           ExceptionInfo
-          #"No :db/type specified in database config!"
+          #"No :db/type specified in database spec"
           (db/connect {:db/typo :datahike}))))
 
   (testing "it gives a friendly error message if you pass a bad :db/type"

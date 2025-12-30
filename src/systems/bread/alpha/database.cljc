@@ -41,12 +41,12 @@
      [db query a b c d e f g h i j k l m n o p q r])
   (db-with [db txs]))
 
-(defmethod connect :default [{:db/keys [type] :as config}]
+(defmethod connect :default [{:db/keys [type] :as db-spec}]
   (let [msg (if (nil? type)
-              "No :db/type specified in database config!"
+              "No :db/type specified in database spec"
               (str "Unknown :db/type `" type "`!"
                    " Did you forget to load a plugin?"))]
-    (throw (ex-info msg {:config config
+    (throw (ex-info msg {:config db-spec
                          :bread.context :db/connect}))))
 
 (defn exists? [db-spec]
@@ -74,9 +74,9 @@
   (transact [conn txs]))
 
 (defn connection [app]
-  (-> app
-      (bread/config :db/connection)
-      (bread/hook ::connection)))
+  (let [conn (or (bread/config app :db/connection)
+                 (connect (bread/config app :db/config)))]
+    (bread/hook app ::connection conn)))
 
 (defn database [app]
   (let [timepoint (bread/hook app ::timepoint nil)
@@ -231,14 +231,7 @@
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
-                migrations []
-                connection
-                (try
-                  (connect config)
-                  (catch clojure.lang.ExceptionInfo e
-                    (log/info "error initializing database connection")
-                    (when-not (= :db-does-not-exist (:type (ex-data e)))
-                      (throw e))))}} config]
+                migrations []}} config]
       {:config
        {:db/config config
         :db/connection connection
