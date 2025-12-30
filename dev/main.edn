@@ -44,7 +44,9 @@
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
  :app/log
- {:min-level :info}
+ {:min-level [[#{"systems.bread.*"} :debug]
+              [#{"datahike.*"} :info]
+              [#{"*"} :warn]]}
  #_#_
  :bread/profilers
  [{:hook #{:systems.bread.alpha.core/request}
