@@ -3,6 +3,7 @@
            }
  :en
  #:account{
+           :account "Account"
            :account-details "Account details"
            :account-updated "Account details have been updated."
            :datetime-format-default "EEE, LLL d 'at' h:mm a"
