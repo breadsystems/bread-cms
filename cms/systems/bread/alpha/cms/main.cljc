@@ -24,6 +24,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.ring :as bread.ring]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.util.logging :refer [log-redactor]]
     [systems.bread.alpha.cms.config.bread]
@@ -342,7 +343,9 @@
                          #{{:ability/key :publish-posts}
                            {:ability/key :edit-posts}
                            {:ability/key :delete-posts}}}}}]))]
-    (assoc db-spec :db/initial-txns initial)))
+    (assoc db-spec
+           :db/initial-txns initial
+           :db/migrations schema/initial)))
 
 (defmethod bread/action ::enrich-session
   [{:as req :keys [headers remote-addr session]} _ _]
