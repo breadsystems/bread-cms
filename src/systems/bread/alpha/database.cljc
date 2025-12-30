@@ -53,7 +53,6 @@
   (-exists? db-spec))
 
 (defn create! [{:as db-spec :db/keys [recreate?]}]
-  (log/info "create!")
   (if (-exists? db-spec)
     (if recreate?
       (do
