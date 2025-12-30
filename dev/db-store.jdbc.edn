@@ -1,0 +1,5 @@
+{:backend :jdbc
+ :dbtype "sqlite"
+ :user "bread"
+ :password "bread"
+ :dbname "bread.db"}
