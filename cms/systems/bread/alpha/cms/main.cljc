@@ -298,6 +298,7 @@
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
     (let [conn (db/connect db-config)]
+      (log/info "connecting auth session-store:" (str conn))
       {:session-store (auth/session-store conn)
        :connection conn})))
 
@@ -305,6 +306,7 @@
   session-store)
 
 (defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]
+  (log/info "releasing auth session-store connection")
   (d/release connection))
 
 (defmethod ig/init-key :bread/router [_ router]
@@ -402,7 +404,8 @@
 
 (defn restart! [config]
   (stop!)
-  (start! config))
+  (start! config)
+  true)
 
 (comment
   (set! *print-namespace-maps* false)
@@ -410,9 +413,9 @@
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
 
-  (keys (restart! (-> "dev/main.edn" aero/read-config)))
+  (restart! (-> "dev/main.edn" aero/read-config))
   (stop!)
-  (keys (deref system))
+  (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
