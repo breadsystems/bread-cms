@@ -222,6 +222,7 @@
          [{:effect/name ::send-confirmation!
            :effect/key :add
            :effect/description "Prepare confirmation email"
+           ;; TODO :send-effect-key to override ::send!
            :from (:email/smtp-from-email config)
            :to (:email params)
            :code code}]}
