@@ -51,7 +51,7 @@
 (defmethod Section ::emails [{:keys [config i18n user]} _]
   (let [{:email/keys [allow-delete-primary?]} config
         ;; TODO sort
-        emails (:user/email user)]
+        emails (:user/emails user)]
     [:<>
      (if (seq emails)
        [:.flex.col
@@ -96,7 +96,7 @@
        [:h4 (:email/no-emails i18n)])]))
 
 (defmethod Section ::add-email [{:keys [config i18n user]} _]
-  (let [emails (:user/email user)
+  (let [emails (:user/emails user)
         any-pending? (seq (filter (complement :email/confirmed-at) emails))
         allow-multiple-pending? (:email/allow-multiple-pending? config)]
     (if (or (not any-pending?) allow-multiple-pending?)
@@ -113,7 +113,7 @@
 
 (defc EmailPage
   [{:as data :keys [config dir hook i18n user]}]
-  {:query '[:db/id :user/username {:user/email [* :thing/created-at]}]}
+  {:query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
   ;; TODO UI lib
   [:html {:lang {:field/lang data} :dir dir}
    [:head
@@ -129,7 +129,7 @@
 (defmethod bread/effect [::update :make-primary]
   [{:keys [conn params]} {:keys [user]}]
   (let [action (:action params)
-        emails (:user/email user)
+        emails (:user/emails user)
         current-id (->> emails (filter :email/primary?) first :db/id)
         new-id (->> emails (filter #(= (:email params) (:email/address %)))
                     first :db/id)]

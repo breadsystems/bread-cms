@@ -167,7 +167,7 @@
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
-     {:db/ident :user/email
+     {:db/ident :user/emails
       :attr/label "Email"
       :db/doc "User account email(s)"
       :db/valueType :db.type/ref
