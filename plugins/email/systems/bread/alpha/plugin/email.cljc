@@ -71,42 +71,49 @@
         emails (:user/emails user)]
     [:<>
      (if (seq emails)
-       [:.flex.col
+       [:.flex.col {:role :list}
         (map (fn [{:keys [email/address
                           email/confirmed-at
                           email/primary?
                           thing/created-at
                           db/id]}]
-               [:form.flex.col.tight {:method :post}
+               [:form.flex.row {:method :post :role :listitem}
                 [:input {:type :hidden :name :email :value address}]
                 [:input {:type :hidden :name :id :value id}]
-                [:.field.flex.row
-                 [:label address]]
                 (cond
                   primary?
-                  [:.flex.row
-                   [:span
-                    (:email/confirmed i18n)
-                    ;; TODO date locale/formatting
-                    " " confirmed-at]
-                   [:span (:email/primary i18n)]
+                  [:<>
+                   [:.flex.col.tight
+                    [:label address]
+                    [:small
+                     (:email/confirmed i18n)
+                     ;; TODO date locale/formatting
+                     " " confirmed-at]]
+                   [:span.spacer]
+                   [:small (:email/primary i18n)]
                    (when allow-delete-primary?
                      [:button {:type :submit :name :action :value :delete}
                       (:email/delete i18n)])]
 
                   confirmed-at
-                  [:.flex.row
-                   [:span (:email/confirmed i18n)
-                    ;; TODO date locale/formatting
-                    " " confirmed-at]
+                  [:<>
+                   [:.flex.col.tight
+                    [:label address]
+                    [:small (:email/confirmed i18n)
+                     ;; TODO date locale/formatting
+                     " " confirmed-at]]
+                   [:span.spacer]
                    [:button {:type :submit :name :action :value :make-primary}
                     (:email/make-primary i18n)]
                    [:button {:type :submit :name :action :value :delete}
                     (:email/delete i18n)]]
 
                   :pending
-                  [:.flex.row
-                   [:span (:email/confirmation-pending i18n)]
+                  [:<>
+                   [:.flex.col.tight
+                    [:label address]
+                    [:small (:email/confirmation-pending i18n)]]
+                   [:span.spacer]
                    [:button {:type :submit :name :action :value :resend-confirmation}
                     (:email/resend-confirmation i18n)]
                    [:button {:type :submit :name :action :value :delete}
