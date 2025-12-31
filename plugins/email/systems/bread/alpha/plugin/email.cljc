@@ -302,7 +302,8 @@
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
   (let [min-updated (minutes-ago (t/now) max-pending-minutes)
-        valid? (.after (:thing/updated-at pending-email) min-updated)]
+        valid? (when pending-email
+                 (.after (:thing/updated-at pending-email) min-updated))]
     (when valid? pending-email)))
 
 (defmethod bread/dispatch ::confirm=>
