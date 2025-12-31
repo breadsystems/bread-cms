@@ -71,7 +71,15 @@
        :role/abilities
        #{{:ability/key :publish-posts}
          {:ability/key :edit-posts}
-         {:ability/key :delete-posts}}}}}]
+         {:ability/key :delete-posts}}}}}
+   {:user/username "reader"
+    :user/name "Reader User"
+    ;; No emails yet!
+    :user/password #buddy/derive ["hello"]
+    :user/failed-login-count 0
+    :user/preferences "{}"
+    :user/lang :en}
+   ,]
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
  :app/log
