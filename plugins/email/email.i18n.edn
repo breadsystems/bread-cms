@@ -3,15 +3,17 @@
            }
  :en
  #:email{
-         :add-email "Add email"
+         :confirmation-pending "Confirmation pending"
+         :confirmed "Confirmed"
+         :delete "Delete"
          :email "Email"
          :email-settings "Email settings"
-         :confirmed "Confirmed"
-         :confirmation-pending "Confirmation pending"
-         :resend-confirmation "Resend confirmation"
+         :make-primary "Make primary"
          :primary "Primary"
-         :to-add-email-confirm-pending
-         "To add another email, first confirm your pending email"
+         :resend-confirmation "Resend confirmation"
+         :to-add-email-confirm-pending "To add another email, first confirm any pending email addresses."
+         :unexpected-error "Unexpected error. Please try again later."
+         :updated-primary "Updated primary email"
          }
  :es
  #:account{
