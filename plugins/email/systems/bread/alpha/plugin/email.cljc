@@ -7,10 +7,11 @@
 
     [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.plugin.auth :as auth]))
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.ring :as ring]
+    [systems.bread.alpha.thing :as thing]))
 
 (defn- summarize [email]
   (update email :body #(str "[" (-> % .getBytes count) " bytes]")))
@@ -49,62 +50,65 @@
 
 (defmethod Section ::emails [{:keys [config i18n user]} _]
   (let [{:email/keys [allow-delete-primary?]} config
-        emails (conj (:user/email user) {:email/address "unconfirmed@example.com"})]
+        ;; TODO sort
+        emails (:user/email user)]
     [:<>
      (if (seq emails)
-       [:form.flex.col {:method :post}
+       [:.flex.col
         (map (fn [{:keys [email/address
                           email/confirmed-at
                           email/primary?
                           thing/created-at
                           db/id]}]
-               [:.flex.col.tight {:style {:gap "0.5em"}} ;; TODO
+               [:form.flex.col.tight {:method :post}
+                [:input {:type :hidden :name :email :value address}]
                 [:.field.flex.row
                  [:label address]]
                 (cond
-                  ;; TODO support deleting primary?
                   primary?
                   [:.flex.row
                    [:span
-                    (:email/confirmed i18n "TODO Confirmed")
+                    (:email/confirmed i18n)
                     ;; TODO date locale/formatting
                     " " confirmed-at]
-                   [:span (:email/primary i18n "TODO Primary")]
+                   [:span (:email/primary i18n)]
                    (when allow-delete-primary?
-                     [:button {:type :submit :name :delete :value id}
-                      (:email/delete i18n "TODO Delete")])]
+                     [:button {:type :submit :name :action :value :delete}
+                      (:email/delete i18n)])]
 
                   confirmed-at
                   [:.flex.row
-                   [:span (:email/confirmed i18n "TODO Confirmed") confirmed-at]
-                   [:button {:type :submit :name :make-primary :value id}
-                    (:email/make-primary i18n "TODO Make primary")]
-                   [:button {:type :submit :name :delete :value id}
-                    (:email/delete i18n "TODO Delete")]]
+                   [:span (:email/confirmed i18n)
+                    ;; TODO date locale/formatting
+                    " " confirmed-at]
+                   [:button {:type :submit :name :action :value :make-primary}
+                    (:email/make-primary i18n)]
+                   [:button {:type :submit :name :action :value :delete}
+                    (:email/delete i18n)]]
 
                   :pending
                   [:.flex.row
-                   [:span (:email/confirmation-pending i18n "TODO pending")]
-                   [:button {:type :submit :name :resend-confirmation :value id}
-                    (:email/resend-confirmation i18n "TODO Resend...")]]
+                   [:span (:email/confirmation-pending i18n)]
+                   [:button {:type :submit :name :action :value :resend-confirmation}
+                    (:email/resend-confirmation i18n)]]
                   )])
              emails)]
-       [:h4 (:email/no-emails i18n "TODO No emails set up yet!")])]))
+       [:h4 (:email/no-emails i18n)])]))
 
 (defmethod Section ::add-email [{:keys [config i18n user]} _]
-  (let [emails (conj (:user/email user) {:email/address "unconfirmed@foo"})
+  (let [emails (:user/email user)
         any-pending? (seq (filter (complement :email/confirmed-at) emails))
         allow-multiple-pending? (:email/allow-multiple-pending? config)]
     (if (or (not any-pending?) allow-multiple-pending?)
       [:<>
        [:h3 {:for :add-email}
-        (:email/add-email i18n "TODO add...")]
+        (:email/add-email i18n)]
        [:form.flex.row {:method :post}
         [:input {:type :hidden :name :action :value :add-email}]
         [:input {:id :add-email :type :email :name :email}]
         [:span.spacer]
         [:button {:type :submit}
-         (:email/add i18n "TODO add...")]]]
+         (:email/add i18n)]]]
       [:p.instruct (:email/to-add-email-confirm-pending i18n "To add another...")])))
 
 (defc EmailPage
@@ -122,24 +126,54 @@
     [:main.flex.col
      (map (partial Section data) (:email/html.email.sections config))]]])
 
+(defmethod bread/effect [::update :make-primary]
+  [{:keys [conn params]} {:keys [user]}]
+  (let [action (:action params)
+        emails (:user/email user)
+        current-id (->> emails (filter :email/primary?) first :db/id)
+        new-id (->> emails (filter #(= (:email params) (:email/address %)))
+                    first :db/id)]
+    (try
+      (db/transact conn [{:db/id current-id :email/primary? false}
+                         {:db/id new-id :email/primary? true}])
+      {:flash {:success-key :email/updated-primary}}
+      (catch clojure.lang.ExceptionInfo e
+        (log/error e)
+        {:flash {:error-key :email/unexpected-error}}))))
+
 (defmethod bread/dispatch ::settings=>
   [{:as req
     :keys [::bread/dispatcher params request-method]
     {:keys [user]} :session}]
-  (if (= :post request-method)
-    (let []
-      (prn 'UPDATE params)
-      ;; TODO
-      )
-    (let [pull (:dispatcher/pull dispatcher)]
-      {:expansions
-       [{:expansion/key :user
-         :expansion/name ::db/query
-         :expansion/description "Query for user emails."
-         :expansion/db (db/database req)
-         :expansion/args [{:find [(list 'pull '?e pull) '.]
-                           :in '[$ ?e]}
-                          (:db/id user)]}]})))
+  (let [post? (= :post request-method)
+        action (when (seq (:action params)) (keyword (:action params)))
+        pull (:dispatcher/pull dispatcher)
+        query {:find [(list 'pull '?e pull) '.]
+               :in '[$ ?e]}
+        expansion {:expansion/key :user
+                   :expansion/name ::db/query
+                   :expansion/description "Query for user emails."
+                   :expansion/db (db/database req)
+                   :expansion/args [query (:db/id user)]}]
+    (if post?
+      {:expansions [expansion]
+       :hooks
+       {::bread/render
+        [{:action/name ::ring/effect-redirect
+          :effect/key action
+          :to (bread/config req :email/settings-uri)
+          :action/description
+          "Redirect to email settings page after an update action."}]}
+       :effects
+       [(when action
+          {:effect/name [::update action]
+           :effect/key action
+           :effect/description "Process email update action."
+           :conn (db/connection req)
+           :params params})]}
+
+      ;; Show settings page.
+      {:expansions [expansion]})))
 
 #_
 (defmethod bread/dispatch ::confirm=>
