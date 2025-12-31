@@ -80,6 +80,11 @@
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]]
+     ["_"
+      ["/confirm-email"
+       {:name :confirm-email
+         :dispatcher/type ::email/confirm=>
+         :dispatcher/component #'email/ConfirmPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
