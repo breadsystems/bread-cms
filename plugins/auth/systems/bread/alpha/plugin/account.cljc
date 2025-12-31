@@ -57,6 +57,7 @@
 (defmethod Section ::heading [{:keys [i18n]} _]
   [:h3 (:account/account i18n)])
 
+;; TODO move to generic UI ns...
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
