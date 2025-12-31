@@ -186,7 +186,7 @@
       :attr/sensitive? true
       :attr/label "Confirmation code"
       :db/doc "Secure confirmation code for this email"
-      :db/valueType :db.type/uuid
+      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.users"}
      {:db/ident :email/confirmed-at
