@@ -15,7 +15,8 @@
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.thing :as thing])
   (:import
-    [java.util Calendar]))
+    [java.util Calendar]
+    [java.net URLEncoder]))
 
 (comment
   (doto (Calendar/getInstance)
@@ -187,7 +188,7 @@
   (let [from (or from (:email/smtp-from-email config))
         link-uri (format "%s://%s%s%s?code=%s&email=%s"
                          (name scheme) server-name (when server-port (str ":" server-port))
-                         "/_/confirm-email" code to)
+                         "/_/confirm-email" (URLEncoder/encode code) (URLEncoder/encode to))
         subject (format (:email/confirmation-email-subject i18n) server-name)
         body (format (:email/confirmation-email-body i18n) link-uri)]
     (log/info "sending confirmation email" link-uri)
