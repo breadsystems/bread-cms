@@ -11,7 +11,7 @@
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:protected-prefixes ["_____"]
+  :auth {:protected-prefixes ["/~/"]
          :login-uri "/~/login"
          ;:require-mfa? true
          :min-password-length 4}
