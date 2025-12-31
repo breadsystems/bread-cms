@@ -77,7 +77,7 @@
         --body-max-width: 70ch;
         --border-width: 2px;
         --color-text-body: hsl(300, 80%, 95%);
-        --color-text-emphasis: hsl(300.7, 95.3%, 83.1%);
+        --color-text-emphasis: hsl(300.7, 66%, 65.3%);
         --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
         --color-stroke-secondary: hsl(300, 75%, 12.5%);
         --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
@@ -126,6 +126,12 @@
       }
       form {
         margin: 0;
+      }
+      a {
+        color: var(--color-text-emphasis);
+      }
+      a:visited {
+        color: var(--color-text-secondary);
       }
       .flex {
         display: flex;
