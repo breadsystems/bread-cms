@@ -340,7 +340,8 @@
           :effect/description "Redirect after confirming"
           :to (bread/config req :email/settings-uri)})]}}))
 
-(defn plugin [{:keys [smtp-from-email
+(defn plugin [{:keys [dry-run?
+                      smtp-from-email
                       smtp-host
                       smtp-port
                       smtp-username
@@ -366,7 +367,8 @@
       :action/description "Merge strings for email page into global i18n strings."
       :strings (edn/read-string (slurp (io/resource "email.i18n.edn")))}]}
    :config
-   {:email/allow-delete-primary? allow-delete-primary?
+   {:email/dry-run? dry-run?
+    :email/allow-delete-primary? allow-delete-primary?
     :email/allow-multiple-pending? allow-multiple-pending?
     :email/smtp-from-email smtp-from-email
     :email/smtp-host smtp-host
