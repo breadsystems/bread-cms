@@ -91,8 +91,9 @@
                   [:.flex.row
                    [:span (:email/confirmation-pending i18n)]
                    [:button {:type :submit :name :action :value :resend-confirmation}
-                    (:email/resend-confirmation i18n)]]
-                  )])
+                    (:email/resend-confirmation i18n)]
+                   [:button {:type :submit :name :action :value :delete}
+                    (:email/delete i18n)]])])
              emails)]
        [:h4 (:email/no-emails i18n)])]))
 
