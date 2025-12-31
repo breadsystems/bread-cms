@@ -3,11 +3,18 @@
            }
  :en
  #:email{
+         :add "Add"
+         :add-email "Add an email"
+         :confirm-email "Confirm email"
+         :confirmation-email-body "Please confirm your email:\n\n%s"
+         :confirmation-email-subject "Email confirmation for %s"
          :confirmation-pending "Confirmation pending"
          :confirmed "Confirmed"
          :delete "Delete"
          :deleted "Deleted email"
          :email "Email"
+         :email-confirmed "Email confirmed"
+         :email-in-use "That email is already in use."
          :email-settings "Email settings"
          :make-primary "Make primary"
          :primary "Primary"

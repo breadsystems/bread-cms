@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [crypto.random :as random]
     [postal.core :as postal]
     [taoensso.timbre :as log]
 
@@ -11,7 +12,9 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring]
-    [systems.bread.alpha.thing :as thing]))
+    [systems.bread.alpha.thing :as thing])
+  (:import
+    [java.util Date]))
 
 (defn- summarize [email]
   (update email :body #(str "[" (-> % .getBytes count) " bytes]")))
@@ -27,7 +30,7 @@
    :pass smtp-password
    :tls smtp-tls?})
 
-(defmethod bread/effect ::bread/email! send-email!
+(defmethod bread/effect ::send! send!
   [effect {{:as config :email/keys [dry-run? smtp-from-email]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
         postal-config (config->postal config)
@@ -35,9 +38,11 @@
                :to (:to effect)
                :subject (:subject effect)
                :body (:body effect)}]
-    (log/info (if send? "sending email" "simlulating email") (summarize email))
-    (when send?
-      (postal/send-message postal-config email))))
+    (if send?
+      (do
+        (log/info "sending email" (summarize email))
+        (postal/send-message postal-config email))
+      (log/info "simulating email" (summarize email)))))
 
 (defmethod Section ::settings-link
   [{:keys [i18n] {:email/keys [settings-uri]} :config} _]
@@ -106,12 +111,10 @@
        [:h3 {:for :add-email}
         (:email/add-email i18n)]
        [:form.flex.row {:method :post}
-        [:input {:type :hidden :name :action :value :add-email}]
-        [:input {:id :add-email :type :email :name :email}]
-        [:span.spacer]
-        [:button {:type :submit}
+        [:input {:id :add-email :type :email :name :email :placeholder "me@example.email"}]
+        [:button {:type :submit :name :action :value :add}
          (:email/add i18n)]]]
-      [:p.instruct (:email/to-add-email-confirm-pending i18n "To add another...")])))
+      [:p.instruct (:email/to-add-email-confirm-pending i18n)])))
 
 (defc EmailPage
   [{:as data :keys [config dir hook i18n user]}]
@@ -127,6 +130,18 @@
      (map (partial Section data) (:account/html.account.header config))]
     [:main.flex.col
      (map (partial Section data) (:email/html.email.sections config))]]])
+
+(defc ConfirmPage
+  [{:keys [pending-email i18n ring/params ring/uri]}]
+  {:query '[:db/id :email/address]
+   :key :pending-email}
+  (let [{:email/keys [address code]} pending-email]
+    ;; TODO styles
+    [:form {:method :post :action uri}
+     [:input {:type :hidden :name :email :value address}]
+     [:input {:type :hidden :name :code :value code}]
+     [:button {:type :submit}
+      (:email/confirm-email i18n)]]))
 
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
@@ -147,6 +162,23 @@
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
 
+(defmethod bread/effect ::send-confirmation! send-confirmation!
+  [{:as effect :keys [from to code]}
+   {:as data :keys [config i18n ring/scheme ring/server-name ring/server-port]}]
+  (let [from (or from (:email/smtp-from-email config))
+        link-uri (format "%s://%s%s%s?code=%s&email=%s"
+                         (name scheme) server-name (when server-port (str ":" server-port))
+                         "/_/confirm-email" code to)
+        subject (format (:email/confirmation-email-subject i18n) server-name)
+        body (format (:email/confirmation-email-body i18n) link-uri)]
+    (log/info "sending confirmation email" link-uri)
+    {:effects
+     [{:effect/name ::send!
+       :from from
+       :to to
+       :subject subject
+       :body body}]}))
+
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
   (let [emails (:user/emails user)
@@ -158,6 +190,29 @@
       (catch clojure.lang.ExceptionInfo e
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
+
+(defmethod bread/effect [::update :add] add-email
+  [{:keys [conn params]} {:keys [config existing-email user]}]
+  (if (seq existing-email)
+    {:flash {:error-key :email/email-in-use}}
+    (let [email (:email params)
+          user-id (:db/id user)
+          code (random/url-part 32)]
+      (try
+        (log/info "adding email" {:email email :user-id user-id})
+        (db/transact conn [{:db/id (:db/id user)
+                            :user/emails [{:email/address email
+                                           :email/code code}]}])
+        {:effects
+         [{:effect/name ::send-confirmation!
+           :effect/key :add
+           :effect/description "Prepare confirmation email"
+           :from (:email/smtp-from-email config)
+           :to (:email params)
+           :code code}]}
+        (catch clojure.lang.ExceptionInfo e
+          (log/error e)
+          {:flash {:error-key :email/unexpected-error}})))))
 
 (defmethod bread/dispatch ::settings=>
   [{:as req
@@ -174,7 +229,18 @@
                    :expansion/db (db/database req)
                    :expansion/args [query (:db/id user)]}]
     (if post?
-      {:expansions [expansion]
+      {:expansions
+       [expansion
+        (when (= :add action)
+          {:expansion/key :existing-email
+           :expansion/name ::db/query
+           :expansion/description "Query for conflicting emails."
+           :expansion/db (db/database req)
+           :expansion/args
+           ['{:find [?e]
+              :in [$ ?email]
+              :where [[?e :email/address ?email]]}
+            (:email params)]})]
        :hooks
        {::bread/render
         [{:action/name ::ring/effect-redirect
@@ -193,11 +259,50 @@
       ;; Show settings page.
       {:expansions [expansion]})))
 
-#_
+(defmethod bread/effect ::confirm! confirm!
+  [{:keys [conn]} {:keys [pending-email user]}]
+  (when pending-email
+    (log/info "confirming email" {:email (:email/address pending-email)
+                                  :user-id (:db/id user)})
+    (let [now (Date.)
+          txs [{:db/id (:db/id pending-email)
+                :email/confirmed-at now
+                :thing/updated-at now}]]
+      (try
+        (db/transact conn txs)
+        {:flash {:success-key :email/email-confirmed}}
+        (catch Throwable e
+          (log/error e)
+          {:flash {:error-key :email/unexpected-error}})))))
+
 (defmethod bread/dispatch ::confirm=>
-  [{:as req {:keys [code email]} :params}]
-  (let [code (thing/->uuid code)
-        txs [{:email/code code}]] (db/txs->effect req txs)))
+  [{:as req :keys [request-method] {:keys [code email]} :params}]
+  (let [post? (= :post request-method)
+        expansion {:expansion/name ::db/query
+                   :expansion/key :pending-email
+                   :expansion/description "Query for matching email and code."
+                   :expansion/db (db/database req)
+                   :expansion/args ['{:find [(pull ?e [:db/id :email/code :email/address]) .]
+                                      :in [$ ?code ?email]
+                                      :where [[?e :email/code ?code]
+                                              [?e :email/address ?email]
+                                              ;; Only query for unconfirmed emails.
+                                              (not-join [?e] [?e :email/confirmed-at])]}
+                                    code email]}]
+    {:expansions [expansion]
+     :effects
+     [(when post?
+        {:effect/name ::confirm!
+         :effect/key :confirm
+         :effect/description "Confirm account email."
+         :conn (db/connection req)})]
+     :hooks
+     {::bread/render
+      [(when post?
+         {:action/name ::ring/effect-redirect
+          :effect/key :confirm
+          :effect/description "Redirect after confirming"
+          :to (bread/config req :email/settings-uri)})]}}))
 
 (defn plugin [{:keys [smtp-from-email
                       smtp-host
@@ -206,11 +311,13 @@
                       smtp-password
                       smtp-tls?
                       settings-uri
+                      confirm-uri
                       allow-delete-primary?
                       allow-multiple-pending?
                       html-email-sections]
                :or {smtp-port 587
                     settings-uri "/~/email"
+                    confirm-uri "/_/confirm-email"
                     html-email-sections [::heading
                                          :flash
                                          ::emails
@@ -230,4 +337,5 @@
     :email/smtp-password smtp-password
     :email/smtp-tls? (boolean smtp-tls?)
     :email/settings-uri settings-uri
+    :email/confirm-uri confirm-uri
     :email/html.email.sections html-email-sections}})
