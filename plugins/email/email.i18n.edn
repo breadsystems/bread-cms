@@ -1,0 +1,19 @@
+{:ar
+ #:account{
+           }
+ :en
+ #:email{
+         :add-email "Add email"
+         :email "Email"
+         :email-settings "Email settings"
+         :confirmed "Confirmed"
+         :confirmation-pending "Confirmation pending"
+         :resend-confirmation "Resend confirmation"
+         :primary "Primary"
+         :to-add-email-confirm-pending
+         "To add another email, first confirm your pending email"
+         }
+ :es
+ #:account{
+           }
+ }
