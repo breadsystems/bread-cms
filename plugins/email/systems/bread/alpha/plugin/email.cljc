@@ -199,6 +199,26 @@
        :subject subject
        :body body}]}))
 
+(defmethod bread/effect [::update :resend-confirmation] resend-confirmation
+  [{:keys [conn params]} {:keys [config user]}]
+  (let [emails (:user/emails user)
+        ;; Check that the email belongs to the user and that it's still
+        ;; actually pending confirmation.
+        email (->> emails
+                   (filter (fn [{:email/keys [address confirmed-at]}]
+                             (and (= (:email params) address)
+                                  (not confirmed-at))))
+                   first)]
+    (when email
+      {:effects
+       [{:effect/name ::send-confirmation!
+         :effect/key :add
+         :effect/description "Prepare to resend confirmation email."
+         ;; TODO :send-effect-key to override ::send!
+         :from (:email/smtp-from-email config)
+         :to (:email/address email)
+         :code (:email/code email)}]})))
+
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
   (let [emails (:user/emails user)
