@@ -131,6 +131,9 @@
         display: flex;
         gap: 1.5em;
       }
+      .tight {
+        gap: 0.5em;
+      }
       .col {
         flex-flow: column nowrap;
       }
