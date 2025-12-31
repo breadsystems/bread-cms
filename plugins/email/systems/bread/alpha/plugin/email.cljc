@@ -129,8 +129,7 @@
 
 (defmethod bread/effect [::update :make-primary]
   [{:keys [conn params]} {:keys [user]}]
-  (let [action (:action params)
-        emails (:user/emails user)
+  (let [emails (:user/emails user)
         ids (set (map :db/id emails))
         id (Integer. (:id params))
         _ (when-not (contains? ids id)
