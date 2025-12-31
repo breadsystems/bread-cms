@@ -127,13 +127,16 @@
     [:main.flex.col
      (map (partial Section data) (:email/html.email.sections config))]]])
 
+(defn- ensure-own-email-id [user id]
+  (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
+    (when-not own-id?
+      (doto (ex-info "Prohibited :db/id" {:params id}) (log/error) (throw)))))
+
 (defmethod bread/effect [::update :make-primary]
   [{:keys [conn params]} {:keys [user]}]
   (let [emails (:user/emails user)
-        ids (set (map :db/id emails))
         id (Integer. (:id params))
-        _ (when-not (contains? ids id)
-            (throw (ex-info "Invalid :db/id" {:params params})))
+        _ (ensure-own-email-id user id)
         current-id (->> emails (filter :email/primary?) first :db/id)]
     (try
       (db/transact conn [{:db/id current-id :email/primary? false}
