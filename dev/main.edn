@@ -37,6 +37,7 @@
           :smtp-tls? #env SMTP_USE_TLS}
   :plugins []} ;; define additional plugins here
  :bread/db
+ :app/log
  {:db/type :datahike
   :db/recreate? true
   :db/config {:schema-flexibility :write
@@ -68,7 +69,6 @@
          {:ability/key :delete-posts}}}}}]
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
- :app/log
  {:min-level [[#{"systems.bread.*"} :debug]
               [#{"datahike.*"} :info]
               [#{"*"} :warn]]}
