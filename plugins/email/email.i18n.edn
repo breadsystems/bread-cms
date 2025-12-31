@@ -6,6 +6,7 @@
          :confirmation-pending "Confirmation pending"
          :confirmed "Confirmed"
          :delete "Delete"
+         :deleted "Deleted email"
          :email "Email"
          :email-settings "Email settings"
          :make-primary "Make primary"
