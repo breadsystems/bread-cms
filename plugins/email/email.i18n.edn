@@ -1,6 +1,6 @@
 {:ar
- #:account{
-           }
+ #:email{
+         }
  :en
  #:email{
          :add "Add"
@@ -24,6 +24,6 @@
          :updated-primary "Updated primary email"
          }
  :es
- #:account{
-           }
+ #:email{
+         }
  }
