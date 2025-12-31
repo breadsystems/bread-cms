@@ -62,6 +62,7 @@
                           db/id]}]
                [:form.flex.col.tight {:method :post}
                 [:input {:type :hidden :name :email :value address}]
+                [:input {:type :hidden :name :id :value id}]
                 [:.field.flex.row
                  [:label address]]
                 (cond
@@ -130,12 +131,14 @@
   [{:keys [conn params]} {:keys [user]}]
   (let [action (:action params)
         emails (:user/emails user)
-        current-id (->> emails (filter :email/primary?) first :db/id)
-        new-id (->> emails (filter #(= (:email params) (:email/address %)))
-                    first :db/id)]
+        ids (set (map :db/id emails))
+        id (Integer. (:id params))
+        _ (when-not (contains? ids id)
+            (throw (ex-info "Invalid :db/id" {:params params})))
+        current-id (->> emails (filter :email/primary?) first :db/id)]
     (try
       (db/transact conn [{:db/id current-id :email/primary? false}
-                         {:db/id new-id :email/primary? true}])
+                         {:db/id id :email/primary? true}])
       {:flash {:success-key :email/updated-primary}}
       (catch clojure.lang.ExceptionInfo e
         (log/error e)
