@@ -14,7 +14,18 @@
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.thing :as thing])
   (:import
-    [java.util Date]))
+    [java.util Calendar Date]))
+
+(comment
+  (doto (Calendar/getInstance)
+    (.setTime (Date.))
+    (.add Calendar/MINUTE -60))
+  (minutes-ago (Date.) 120))
+
+(defn- minutes-ago [now minutes]
+  (.getTime (doto (Calendar/getInstance)
+              (.setTime now)
+              (.add Calendar/MINUTE (- minutes)))))
 
 (defn- summarize [email]
   (update email :body #(str "[" (-> % .getBytes count) " bytes]")))
@@ -197,12 +208,15 @@
     {:flash {:error-key :email/email-in-use}}
     (let [email (:email params)
           user-id (:db/id user)
-          code (random/url-part 32)]
+          code (random/url-part 32)
+          now (Date.)]
       (try
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
                             :user/emails [{:email/address email
-                                           :email/code code}]}])
+                                           :email/code code
+                                           :thing/updated-at now
+                                           :thing/created-at now}]}])
         {:effects
          [{:effect/name ::send-confirmation!
            :effect/key :add
@@ -275,21 +289,34 @@
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
 
+(defmethod bread/expand ::validate-recency
+  [{:keys [max-pending-minutes]} {:keys [pending-email]}]
+  (let [min-updated (minutes-ago (Date.) max-pending-minutes)
+        valid? (.after (:thing/updated-at pending-email) min-updated)]
+    (when valid? pending-email)))
+
 (defmethod bread/dispatch ::confirm=>
   [{:as req :keys [request-method] {:keys [code email]} :params}]
   (let [post? (= :post request-method)
-        expansion {:expansion/name ::db/query
-                   :expansion/key :pending-email
-                   :expansion/description "Query for matching email and code."
-                   :expansion/db (db/database req)
-                   :expansion/args ['{:find [(pull ?e [:db/id :email/code :email/address]) .]
-                                      :in [$ ?code ?email]
-                                      :where [[?e :email/code ?code]
-                                              [?e :email/address ?email]
-                                              ;; Only query for unconfirmed emails.
-                                              (not-join [?e] [?e :email/confirmed-at])]}
-                                    code email]}]
-    {:expansions [expansion]
+        expansions
+        [{:expansion/name ::db/query
+          :expansion/key :pending-email
+          :expansion/description "Query for matching email and code."
+          :expansion/db (db/database req)
+          :expansion/args ['{:find [(pull ?e [:db/id
+                                              :email/code
+                                              :email/address
+                                              :thing/updated-at]) .]
+                             :in [$ ?code ?email]
+                             :where [[?e :email/code ?code]
+                                     [?e :email/address ?email]
+                                     ;; Only query for unconfirmed emails.
+                                     (not-join [?e] [?e :email/confirmed-at])]}
+                           code email]}
+         {:expansion/name ::validate-recency
+          :expansion/key :pending-email
+          :max-pending-minutes (bread/config req :email/max-pending-minutes)}]]
+    {:expansions expansions
      :effects
      [(when post?
         {:effect/name ::confirm!
@@ -312,12 +339,14 @@
                       smtp-tls?
                       settings-uri
                       confirm-uri
+                      max-pending-minutes
                       allow-delete-primary?
                       allow-multiple-pending?
                       html-email-sections]
                :or {smtp-port 587
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
+                    max-pending-minutes (* 72 60)
                     html-email-sections [::heading
                                          :flash
                                          ::emails
@@ -338,4 +367,5 @@
     :email/smtp-tls? (boolean smtp-tls?)
     :email/settings-uri settings-uri
     :email/confirm-uri confirm-uri
+    :email/max-pending-minutes max-pending-minutes
     :email/html.email.sections html-email-sections}})
