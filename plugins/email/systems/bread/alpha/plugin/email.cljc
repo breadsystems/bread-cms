@@ -10,17 +10,18 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.thing :as thing])
   (:import
-    [java.util Calendar Date]))
+    [java.util Calendar]))
 
 (comment
   (doto (Calendar/getInstance)
-    (.setTime (Date.))
+    (.setTime (t/now))
     (.add Calendar/MINUTE -60))
-  (minutes-ago (Date.) 120))
+  (minutes-ago (t/now) 120))
 
 (defn- minutes-ago [now minutes]
   (.getTime (doto (Calendar/getInstance)
@@ -209,7 +210,7 @@
     (let [email (:email params)
           user-id (:db/id user)
           code (random/url-part 32)
-          now (Date.)]
+          now (t/now)]
       (try
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
@@ -278,7 +279,7 @@
   (when pending-email
     (log/info "confirming email" {:email (:email/address pending-email)
                                   :user-id (:db/id user)})
-    (let [now (Date.)
+    (let [now (t/now)
           txs [{:db/id (:db/id pending-email)
                 :email/confirmed-at now
                 :thing/updated-at now}]]
@@ -291,7 +292,7 @@
 
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
-  (let [min-updated (minutes-ago (Date.) max-pending-minutes)
+  (let [min-updated (minutes-ago (t/now) max-pending-minutes)
         valid? (.after (:thing/updated-at pending-email) min-updated)]
     (when valid? pending-email)))
 

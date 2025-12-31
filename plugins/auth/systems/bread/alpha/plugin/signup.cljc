@@ -11,7 +11,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
-    [java.util Date UUID]))
+    [java.util UUID]))
 
 (defn- ->uuid [x]
   (if (string? x)
@@ -152,7 +152,7 @@
             password-hash (hashers/derive (:password params) {:alg hash-algo})
             user {:user/username (:username params)
                   :user/password password-hash
-                  :thing/created-at (Date.)}]
+                  :thing/created-at (t/now)}]
         {:expansions (concat expansions
                              [invitation-query
                               {:expansion/key :existing-username
