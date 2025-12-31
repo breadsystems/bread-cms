@@ -146,6 +146,18 @@
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
 
+(defmethod bread/effect [::update :delete]
+  [{:keys [conn params]} {:keys [user]}]
+  (let [emails (:user/emails user)
+        id (Integer. (:id params))]
+    (ensure-own-email-id user id)
+    (try
+      (db/transact conn [[:db/retractEntity id]])
+      {:flash {:success-key :email/deleted}}
+      (catch clojure.lang.ExceptionInfo e
+        (log/error e)
+        {:flash {:error-key :email/unexpected-error}}))))
+
 (defmethod bread/dispatch ::settings=>
   [{:as req
     :keys [::bread/dispatcher params request-method]
