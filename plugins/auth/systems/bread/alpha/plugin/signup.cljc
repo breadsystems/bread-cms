@@ -202,7 +202,7 @@
      {:db/ident :invitation/code
       :attr/label "Invitation code"
       :db/doc "Secure UUID for this invitation"
-      ;:attr/sensitive? true
+      :attr/sensitive? true
       :db/unique :db.unique/identity
       :db/valueType :db.type/uuid
       :db/cardinality :db.cardinality/one
