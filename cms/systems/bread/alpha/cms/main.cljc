@@ -590,7 +590,7 @@
                               :user/username
                               :user/totp-key
                               :user/name
-                              {:user/email [*]}
+                              {:user/emails [*]}
                               :user/preferences
                               :user/failed-login-count
                               {:user/roles
