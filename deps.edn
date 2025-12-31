@@ -39,6 +39,7 @@
                  "resources"
                  "plugins/auth"
                  "plugins/datahike"
+                 "plugins/email"
                  "plugins/markdown"
                  "plugins/marx"
                  "plugins/reitit"

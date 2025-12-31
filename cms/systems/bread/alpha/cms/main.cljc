@@ -73,6 +73,10 @@
        {:name :account
         :dispatcher/type ::account/account=>
         :dispatcher/component #'account/AccountPage}]
+      ["/email"
+       {:name :email
+        :dispatcher/type ::email/settings=>
+        :dispatcher/component #'email/EmailPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]]
