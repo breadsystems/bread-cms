@@ -309,7 +309,9 @@
     (log/info "confirming email" {:email (:email/address pending-email)
                                   :user-id (:db/id user)})
     (let [now (t/now)
+          first? (= 1 (count (:user/emails user)))
           txs [{:db/id (:db/id pending-email)
+                :email/primary? first?
                 :email/confirmed-at now
                 :thing/updated-at now}]]
       (try
