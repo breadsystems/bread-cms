@@ -4,7 +4,6 @@
     [clojure.string :as string]
     #?(:cljs ["date-fns" :refer [formatISO9075]])
     [integrant.core :as ig]
-    [flow-storm.api :as flow]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.database :as db]
@@ -125,9 +124,3 @@
 
 (defn log-query [{:keys [expansion result] :as profile}]
   (log/info ::db/query (:expansion/key expansion) result))
-
-(comment
-  (flow/local-connect)
-
-  ;;
-  )
