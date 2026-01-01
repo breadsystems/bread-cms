@@ -113,7 +113,6 @@
          (clojure.string/join
            ", "
            (reduce (fn [signals [k v]]
-                     (prn k '=> v)
                      (conj signals (str (name k) ": " (->sig v)))) [] x))
          "}")
     (str x)))
