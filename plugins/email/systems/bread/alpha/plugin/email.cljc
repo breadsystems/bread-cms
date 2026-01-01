@@ -54,10 +54,10 @@
     (postal/send-message postal-config message)))
 
 (defmethod bread/effect ::send! send-smtp!
-  [{:as effect :keys [message]} {{:as config :email/keys [dry-run? mailer]} :config}]
+  [{:as effect :keys [message]}
+   {:keys [hook] {:as config :email/keys [dry-run? mailer]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
-        ;; TODO hook for email
-        ]
+        message (hook ::message message)]
     (if send?
       (try
         (log/info "sending email" (summarize message))
