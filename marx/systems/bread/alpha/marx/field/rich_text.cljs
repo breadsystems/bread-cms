@@ -34,8 +34,9 @@
      (fn [{:keys [menu-root tiptap]}]
        (let [menu-tool (fn [tool]
                          (let [tk (if (map? tool) (:type tool) tool)
+                               label (:label tool (name tk))
                                props {:type tk
-                                      :content (name tk)
+                                      :content label
                                       :effect #(tiptap/command tiptap tool)}]
                            (merge props (core/tool-props @ed props))))
              menu-props {:tools (map menu-tool tools)}]

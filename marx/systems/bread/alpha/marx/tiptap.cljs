@@ -58,6 +58,7 @@
 
 (defmulti command (fn [_tiptap tool] (if (map? tool) (:type tool) tool)))
 
+(defmethod command :heading    [tiptap {:keys [level]}] (-> tiptap .chain .focus (.toggleHeading #js {:level level}) .run))
 (defmethod command :bold       [tiptap _] (-> tiptap .chain .focus .toggleBold .run))
 (defmethod command :italic     [tiptap _] (-> tiptap .chain .focus .toggleItalic .run))
 (defmethod command :blockquote [tiptap _] (-> tiptap .chain .focus .toggleBlockquote .run))
@@ -74,7 +75,11 @@
 
 ;; DEPRECATED. Decalre tooltip etc. on tool-specific multimethod instead.
 (def default-rich-text-tools
-  [{:type :heading :levels [2 3 4 5 6]}
+  [{:type :heading :label :h2 :level 2}
+   {:type :heading :label :h3 :level 3}
+   {:type :heading :label :h4 :level 4}
+   {:type :heading :label :h5 :level 5}
+   {:type :heading :label :h6 :level 6}
    :bold
    :italic
    {:type :ul     :tooltip "Numbered list"}
