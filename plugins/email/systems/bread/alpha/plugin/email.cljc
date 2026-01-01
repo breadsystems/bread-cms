@@ -277,7 +277,7 @@
 (defn validate-action [action {params :params {:keys [user]} :session}]
   (case action
     :add
-    (when-not (includes? (:email params) "@")
+    (when-not (string/includes? (:email params) "@")
       :email/invalid-email)
     ;; NOTE: we can't validate email ownership yet because session data
     ;; does not contain user's emails.
