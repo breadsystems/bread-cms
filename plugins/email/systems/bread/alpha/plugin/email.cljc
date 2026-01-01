@@ -203,7 +203,7 @@
 
 (defn- confirmation-effect
   [{:as effect :keys [from to code]}
-   {:as data :keys [config i18n ring/scheme ring/server-name ring/server-port]}]
+   {:as data :keys [config hook i18n ring/scheme ring/server-name ring/server-port]}]
   (let [from (or from (:email/smtp-from-email config))
         link-uri (format "%s://%s%s%s?code=%s&email=%s"
                          (name scheme) server-name (when server-port (str ":" server-port))
@@ -213,10 +213,10 @@
     (log/info "generated email confirmation link" link-uri)
     {:effect/name ::send!
      :effect/description "Send a confirmation email."
-     :message {:from from
-               :to to
-               :subject subject
-               :body body}}))
+     :message (hook ::confirmation-message {:from from
+                                            :to to
+                                            :subject subject
+                                            :body body})}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
   [{:keys [conn params]} {:as data :keys [config user]}]
