@@ -203,7 +203,7 @@
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
 
-(defmethod bread/effect ::send-confirmation! send-confirmation!
+(defn- confirmation-effect
   [{:as effect :keys [from to code]}
    {:as data :keys [config i18n ring/scheme ring/server-name ring/server-port]}]
   (let [from (or from (:email/smtp-from-email config))
@@ -213,15 +213,15 @@
         subject (format (:email/confirmation-email-subject i18n) server-name)
         body (format (:email/confirmation-email-body i18n) link-uri)]
     (log/info "generated email confirmation link" link-uri)
-    {:effects
-     [{:effect/name ::send!
-       :from from
-       :to to
-       :subject subject
-       :body body}]}))
+    {:effect/name ::send!
+     :effect/description "Send a confirmation email."
+     :from from
+     :to to
+     :subject subject
+     :body body}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
-  [{:keys [conn params]} {:keys [config user]}]
+  [{:keys [conn params]} {:as data :keys [config user]}]
   (let [emails (:user/emails user)
         ;; Check that the email belongs to the user and that it's still
         ;; actually pending confirmation.
@@ -229,15 +229,13 @@
                    (filter (fn [{:email/keys [address confirmed-at]}]
                              (and (= (:email params) address)
                                   (not confirmed-at))))
-                   first)]
+                   first)
+        effect (confirmation-effect {:from (:email/smtp-from-email config)
+                                     :to (:email/address email)
+                                     :code (:email/code email)}
+                                    data)]
     (when email
-      {:effects
-       [{:effect/name ::send-confirmation!
-         :effect/description "Prepare to resend confirmation email."
-         ;; TODO :send-effect-key to override ::send!
-         :from (:email/smtp-from-email config)
-         :to (:email/address email)
-         :code (:email/code email)}]
+      {:effects [effect]
        :flash {:success-key :email/confirmation-resent}})))
 
 (defmethod bread/effect [::update :delete]
@@ -253,13 +251,17 @@
         {:flash {:error-key :email/unexpected-error}}))))
 
 (defmethod bread/effect [::update :add] add-email
-  [{:keys [conn params]} {:keys [config existing-email user]}]
+  [{:keys [conn params]} {:as data :keys [config existing-email user]}]
   (if (seq existing-email)
     {:flash {:error-key :email/email-in-use}}
     (let [email (:email params)
           user-id (:db/id user)
           code (random/url-part 32)
-          now (t/now)]
+          now (t/now)
+          effect (confirmation-effect {:from (:email/smtp-from-email config)
+                                       :to email
+                                       :code code}
+                                      data)]
       (try
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
@@ -267,13 +269,7 @@
                                            :email/code code
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
-        {:effects
-         [{:effect/name ::send-confirmation!
-           :effect/description "Prepare confirmation email."
-           ;; TODO :send-effect-key to override ::send!
-           :from (:email/smtp-from-email config)
-           :to (:email params)
-           :code code}]
+        {:effects [effect]
          :flash {:success-key :email/email-added-please-confirm}}
         (catch clojure.lang.ExceptionInfo e
           (log/error e)
