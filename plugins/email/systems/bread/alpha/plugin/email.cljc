@@ -44,7 +44,7 @@
    :pass smtp-password
    :tls smtp-tls?})
 
-(defmethod bread/effect ::send! send!
+(defmethod bread/effect ::send! send-smtp!
   [effect {{:as config :email/keys [dry-run? smtp-from-email]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
         postal-config (config->postal config)
