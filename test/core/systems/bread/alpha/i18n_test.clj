@@ -926,7 +926,10 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; with compaction.
-    {:thing/fields {:uri "/es/the-slug"}}
+    {:thing/fields {:uri "/es/the-slug"
+                    :bread/fields {:uri {:field/key :uri
+                                         :field/format ::i18n/uri
+                                         :field/content "/es/the-slug"}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :es
@@ -941,7 +944,17 @@
 
     ;; With direct fields; no formatting; compactions.
     {:thing/fields {:from-the-river (pr-str "מהנהר")
-                    :to-the-sea (pr-str "לים")}}
+                    :to-the-sea (pr-str "לים")
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content (pr-str "מהנהר")
+                                    :field/lang :he}
+                                   :to-the-sea
+                                   {:field/key :to-the-sea
+                                    :field/format :edn
+                                    :field/content (pr-str "לים")
+                                    :field/lang :he}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -968,7 +981,18 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; compactions.
-    {:thing/fields {:from-the-river "מהנהר" :to-the-sea "לים"}}
+    {:thing/fields {:from-the-river "מהנהר"
+                    :to-the-sea "לים"
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content "מהנהר"
+                                    :field/lang :he}
+                                   :to-the-sea
+                                   {:field/key :to-the-sea
+                                    :field/format :edn
+                                    :field/content "לים"
+                                    :field/lang :he}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -995,8 +1019,19 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; compactions; recursive data.
-    {:thing/fields {:from-the-river "מהנהר"}
-     :thing/children [{:thing/fields {:to-the-sea "לים"}}]}
+    {:thing/fields {:from-the-river "מהנהר"
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content "מהנהר"
+                                    :field/lang :he}}}
+     :thing/children [{:thing/fields {:to-the-sea "לים"
+                                      :bread/fields
+                                      {:to-the-sea
+                                       {:field/key :to-the-sea
+                                        :field/format :edn
+                                        :field/content "לים"
+                                        :field/lang :he}}}}]}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -1024,9 +1059,16 @@
                    :field/content (pr-str "to the sea")
                    :field/lang :en}]}]}}
 
-    ;; With direct fields; raw formatting; compactions; universal fields.
-    {:thing/fields {:uri "/abc"}
-     :thing/children [{:thing/fields {:uri "/def"}}]}
+    ;; With direct fields; raw formatting; compactions; recursive data; universal fields.
+    {:thing/fields {:uri "/abc"
+                    :bread/fields {:uri
+                                   {:field/key :uri
+                                    :field/content "/abc"}}}
+     :thing/children [{:thing/fields {:uri "/def"
+                                      :bread/fields
+                                      {:uri
+                                       {:field/key :uri
+                                        :field/content "/def"}}}}]}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
