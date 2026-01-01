@@ -22,6 +22,7 @@
   (doto (Calendar/getInstance)
     (.setTime (t/now))
     (.add Calendar/MINUTE -60))
+  (compare (minutes-ago (t/now) 120) (minutes-ago (t/now) 1))
   (minutes-ago (t/now) 120))
 
 (defn- minutes-ago [now minutes]
@@ -66,10 +67,15 @@
 (defmethod Section ::heading [{:keys [i18n]} _]
   [:h3 (:email/email i18n "Email")])
 
+(defn- compare-emails [a b]
+  (cond
+    (:email/primary? a) -1
+    (:email/primary? b) 1
+    :else (compare (:email/confirmed-at a) (:email/confirmed-at b))))
+
 (defmethod Section ::emails [{:keys [config i18n user]} _]
   (let [{:email/keys [allow-delete-primary?]} config
-        ;; TODO sort
-        emails (:user/emails user)]
+        emails (sort compare-emails (:user/emails user))]
     [:<>
      (if (seq emails)
        [:.flex.col {:role :list}
