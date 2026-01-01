@@ -36,8 +36,8 @@
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
-    [systems.bread.alpha.tools.util]
-    [systems.bread.alpha.plugin.account :as account])
+    [systems.bread.alpha.plugin.account :as account]
+    [systems.bread.alpha.tools.util])
   (:import
     [java.io Console]
     [java.time LocalDateTime]
