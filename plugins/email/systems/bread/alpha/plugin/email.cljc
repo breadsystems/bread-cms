@@ -348,6 +348,7 @@
                            code email]}
          {:expansion/name ::validate-recency
           :expansion/key :pending-email
+          :expansion/description "Validate the confirmation link's age."
           :max-pending-minutes (bread/config req :email/max-pending-minutes)}]]
     {:expansions expansions
      :effects
