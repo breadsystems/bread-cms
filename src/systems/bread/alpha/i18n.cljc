@@ -127,9 +127,9 @@
   "Takes a sequence of translatable fields and compacts it down to a single map,
   using :field/key and :field/content as the map keys and values, respectively."
   [fields]
-  (with-meta
-    (into {} (map (juxt :field/key :field/content)) fields)
-    (into {} (map (juxt :field/key identity)) fields)))
+  (let [content-by-key (into {} (map (juxt :field/key :field/content)) fields)
+        data-by-key (into {} (map (juxt :field/key identity)) fields)]
+    (assoc content-by-key :bread/fields data-by-key)))
 
 (defmulti deserialize :field/format)
 (defmulti serialize :field/format)

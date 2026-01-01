@@ -66,7 +66,7 @@
    [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
-  [{{fields :thing/fields tags :post/taxons :as post} :post
+  [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus
     :keys [hook]}]
   {:extends MainLayout
@@ -79,7 +79,7 @@
     [:h2 (:db/id post)]
     [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
-    (marx/Editable (:rte (meta fields)) :rich-text :escape? false)
+    (marx/Editable (:rte field-defs) :rich-text :escape? false)
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :thing/fields}]
