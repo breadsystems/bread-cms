@@ -44,18 +44,26 @@
    :pass smtp-password
    :tls smtp-tls?})
 
+(defprotocol Mailer
+  :extend-via-metadata true
+  (send! [this email]))
+
+(deftype PostalMailer [postal-config]
+  Mailer
+  (send! [this email]
+    (postal/send-message postal-config email)))
+
 (defmethod bread/effect ::send! send-smtp!
   [effect {{:as config :email/keys [dry-run? smtp-from-email]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
-        postal-config (config->postal config)
         email {:from (or (:from effect) smtp-from-email)
                :to (:to effect)
                :subject (:subject effect)
                :body (:body effect)}]
     (if send?
-      (do
+      (let [mailer (PostalMailer. (config->postal config))]
         (log/info "sending email" (summarize email))
-        (postal/send-message postal-config email))
+        (send! mailer email))
       (log/info "simulating email" (summarize email)))))
 
 (defmethod Section ::settings-link
