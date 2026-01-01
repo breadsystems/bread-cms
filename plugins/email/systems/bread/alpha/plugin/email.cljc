@@ -279,12 +279,20 @@
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
 
+(defn validate-action [action {params :params {:keys [user]} :session}]
+  (case action
+    :add
+    (when-not (.contains (:email params) "@")
+      :email/invalid-email)
+    nil))
+
 (defmethod bread/dispatch ::settings=>
   [{:as req
     :keys [::bread/dispatcher params request-method]
     {:keys [user]} :session}]
   (let [post? (= :post request-method)
         action (when (seq (:action params)) (keyword (:action params)))
+        error-key (when post? (validate-action action req))
         pull (:dispatcher/pull dispatcher)
         query {:find [(list 'pull '?e pull) '.]
                :in '[$ ?e]}
@@ -293,7 +301,14 @@
                    :expansion/description "Query for user emails."
                    :expansion/db (db/database req)
                    :expansion/args [query (:db/id user)]}]
-    (if post?
+    (cond
+      (and post? error-key)
+      {:expansions
+       [{:expansion/name ::bread/value
+         :expansion/key :error-key
+         :expansion/value error-key}]}
+
+      post?
       {:expansions
        [expansion
         (when (= :add action)
@@ -322,6 +337,7 @@
            :params params})]}
 
       ;; Show settings page.
+      :default
       {:expansions [expansion]})))
 
 (defmethod bread/effect ::confirm! confirm!
