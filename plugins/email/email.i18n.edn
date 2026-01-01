@@ -18,6 +18,7 @@
          :email-confirmed "Email confirmed."
          :email-in-use "That email is already in use."
          :email-settings "Email settings"
+         :invalid-email "Invalid email"
          :no-emails "No emails yet."
          :make-primary "Make primary"
          :primary "Primary email"
