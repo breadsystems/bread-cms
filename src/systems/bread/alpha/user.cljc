@@ -38,7 +38,7 @@
   (let [user-pull (bread/hook req ::pull '[:db/id
                                            :thing/uuid
                                            :thing/slug
-                                           {:user/email [*]}
+                                           {:user/emails [*]}
                                            :user/name
                                            :user/lang
                                            :user/preferences

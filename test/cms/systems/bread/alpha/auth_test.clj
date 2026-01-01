@@ -44,9 +44,10 @@
 
 (def config
   {:db/type :datahike
-   :store {:id "authdb" :backend :mem}
-   :recreate? true
-   :force? true
+   :db/config {:store {:id "authdb" :backend :mem}}
+   :db/recreate? true
+   :db/force? true
+   :db/migrations schema/initial
    :db/initial-txns
    [(assoc angela :user/password (hashers/derive "abolition4lyfe"))
     (assoc bobby :user/password (hashers/derive "pantherz"))

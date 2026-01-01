@@ -20,7 +20,7 @@
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
-    [java.util Base64 Date]))
+    [java.util Base64]))
 
 (defn database [req]
   (db/db (db/connection req)))
@@ -46,7 +46,7 @@
           date-key (if exists? :thing/updated-at :thing/created-at)
           session {:session/id sk
                    :session/data (pr-str data)
-                   date-key (Date.)}
+                   date-key (t/now)}
           tx {:db/id (:db/id user)
               :user/sessions [session]}]
       (db/transact conn [tx])
@@ -77,7 +77,7 @@
         --body-max-width: 70ch;
         --border-width: 2px;
         --color-text-body: hsl(300, 80%, 95%);
-        --color-text-emphasis: hsl(300.7, 95.3%, 83.1%);
+        --color-text-emphasis: hsl(300.7, 66%, 65.3%);
         --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
         --color-stroke-secondary: hsl(300, 75%, 12.5%);
         --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
@@ -127,9 +127,18 @@
       form {
         margin: 0;
       }
+      a {
+        color: var(--color-text-emphasis);
+      }
+      a:visited {
+        color: var(--color-text-secondary);
+      }
       .flex {
         display: flex;
         gap: 1.5em;
+      }
+      .tight {
+        gap: 0.5em;
       }
       .col {
         flex-flow: column nowrap;
@@ -568,7 +577,7 @@
                    valid? (assoc :user/totp-key totp-key))
             tx {:user/username (:user/username user)
                 :user/totp-key totp-key
-                :thing/updated-at (Date.)}
+                :thing/updated-at (t/now)}
             session (if valid? session {:auth/user user :auth/step :two-factor})
             totp-expansion
             (when-not valid?

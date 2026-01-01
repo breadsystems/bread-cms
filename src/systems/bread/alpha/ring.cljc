@@ -118,17 +118,24 @@
       ;; TODO content negotiation
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
-(defmethod bread/action ::redirect
-  [{:as res :keys [headers]} {:as action :keys [flash permanent? to]} _]
-  (if-let [allowed-to? (bread/hook res ::allow-redirect?
-                                   (clojure.string/starts-with? to "/")
-                                   action)]
-    (let [headers (assoc headers "Location" to)]
-      (assoc res
-             :flash (or flash (:flash res))
-             :status (if permanent? 301 302)
-             :headers headers))
-    res))
+(defn redirect [{:as res :keys [headers]} & {:as action :keys [flash permanent? to]}]
+  (let [internal? (clojure.string/starts-with? to "/")
+        allowed? (bread/hook res ::allow-redirect? internal? action)]
+    (if allowed?
+      (let [headers (assoc headers "Location" to)]
+        (assoc res
+               :flash (or flash (:flash res))
+               :status (if permanent? 301 302)
+               :headers headers))
+      res)))
+
+(defmethod bread/action ::effect-redirect effect->redirect
+  [{:as res :keys [::bread/data]} {k :effect/key :keys [to permanent?]} _]
+  (let [{:keys [flash]} (some-> data (get k) deref)]
+    (redirect res :flash flash :to to :permanent? permanent?)))
+
+(defmethod bread/action ::redirect redirect- [res action _]
+  (redirect res action))
 
 (defn redirect=> [redir]
   {:hooks

@@ -8,6 +8,7 @@
 .clj-kondo
 *.jar
 *.iml
+*.db
 pom.properties
 inputFiles.lst
 /target

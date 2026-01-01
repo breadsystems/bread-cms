@@ -1,10 +1,13 @@
 (ns systems.bread.alpha.cms.main
   (:require
+    [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.string :as string]
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
+    [datahike.api :as d]
+    [datahike-jdbc.core]
     [integrant.core :as ig]
     [org.httpkit.server :as http]
     [reitit.core :as reitit]
@@ -14,20 +17,21 @@
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.cms.data]
+    [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.ring :as bread.ring]
+    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.util.logging :refer [log-redactor]]
     [systems.bread.alpha.cms.config.bread]
     [systems.bread.alpha.cms.config.buddy]
-    [systems.bread.alpha.cms.config.reitit]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.datahike]
+    [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
@@ -37,7 +41,8 @@
   (:import
     [java.io Console]
     [java.time LocalDateTime]
-    [java.util Date Properties UUID])
+    [java.util Date Properties UUID]
+    [org.sqlite JDBC])
   (:gen-class))
 
 (defn not-found [req]
@@ -69,6 +74,10 @@
        {:name :account
         :dispatcher/type ::account/account=>
         :dispatcher/component #'account/AccountPage}]
+      ["/email"
+       {:name :email
+        :dispatcher/type ::email/settings=>
+        :dispatcher/component #'email/EmailPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
@@ -77,6 +86,11 @@
         {:name :media
          :dispatcher/type ::marx/media.library=>
          :dispatcher/component #'marx/MediaLibrary}]]]
+     ["_"
+      ["/confirm-email"
+       {:name :confirm-email
+         :dispatcher/type ::email/confirm=>
+         :dispatcher/component #'email/ConfirmPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
@@ -281,39 +295,50 @@
   (when-let [prom (stop-server :timeout 100)]
     @prom))
 
-(defmethod ig/init-key :ring/wrap-defaults [_ value]
-  (let [default-configs {:api-defaults ring/api-defaults
-                         :site-defaults ring/site-defaults
-                         :secure-api-defaults ring/secure-api-defaults
-                         :secure-site-defaults ring/secure-api-defaults}
-        k (if (keyword? value) value (get value :ring-defaults))
-        defaults (get default-configs k)
-        defaults (if (map? value)
-                   (reduce #(assoc-in %1 (key %2) (val %2))
-                           defaults (dissoc value :ring-defaults))
-                   defaults)]
-    defaults))
+(defmethod ig/init-key :ring/wrap-defaults
+  [_ {:keys [kind overrides session-store]
+      :or {overrides {}}}]
+  (let [configs {:api-defaults ring/api-defaults
+                 :site-defaults ring/site-defaults
+                 :secure-api-defaults ring/secure-api-defaults
+                 :secure-site-defaults ring/secure-site-defaults}
+        defaults (get configs kind ring/secure-site-defaults)
+        defaults (if session-store
+                   (do
+                     (log/info "setting ring-defaults session store:" session-store)
+                     (assoc-in defaults [:session :store] session-store))
+                   (do
+                     (log/info "using default session store")
+                     defaults))]
+    (reduce #(assoc-in %1 (key %2) (val %2)) defaults overrides)))
 
 (defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type {conn :db/connection} :store/db}]
+  [_ {store-type :store/type db-config :store/db}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
-    (auth/session-store conn)))
+    (let [conn (db/connect db-config)]
+      (log/info "connecting auth session-store:" (str conn))
+      {:session-store (auth/session-store conn)
+       :connection conn})))
 
-(defmethod ig/init-key :bread/db
-  [_ {:keys [recreate? force?] :as db-config}]
-  (log/debug "initializing :bread/db with config:" db-config)
-  ;; TODO call datahike API directly
-  (db/create! db-config {:force? force?})
-  (assoc db-config :db/connection (db/connect db-config)))
+(defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
+  session-store)
 
-(defmethod ig/halt-key! :bread/db
-  [_ {:keys [recreate?] :as db-config}]
-  ;; TODO call datahike API directly
-  (when recreate? (db/delete! db-config)))
+(defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]
+  (log/info "releasing auth session-store connection")
+  (d/release connection))
 
 (defmethod ig/init-key :bread/router [_ router]
   #'router)
+
+(defmethod ig/init-key :bread/db
+  [_ {:as db-spec :db/keys [recreate? config initial-txns]}]
+  (log/info "initializing :bread/db with config:" config)
+  (db/create! db-spec)
+  (let [initial (when recreate? (concat data/initial initial-txns))]
+    (assoc db-spec
+           :db/initial-txns initial
+           :db/migrations schema/initial)))
 
 (defmethod bread/action ::enrich-session
   [{:as req :keys [headers remote-addr session]} _ _]
@@ -331,6 +356,7 @@
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))
+                   (email/plugin (:email app-config))
                    {:hooks
                     {::bread/route
                      [{:action/name ::enrich-session
@@ -345,13 +371,18 @@
 
 (defn restart! [config]
   (stop!)
-  (start! config))
+  (start! config)
+  true)
 
 (comment
   (set! *print-namespace-maps* false)
 
+  (require '[flow-storm.api :as flow])
+  (flow/local-connect)
+
   (restart! (-> "dev/main.edn" aero/read-config))
-  (keys (deref system))
+  (stop!)
+  (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
@@ -360,6 +391,35 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
+
+  (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
+  (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
+
+  (= (db/connection (:bread/app @system))
+     (db/connect (:bread/db @system)))
+  ;; => true
+
+  ;; Connection pool...
+  (db/connection (:bread/app @system))
+
+  ;; EMAIL
+  (:email (:bread/app (:initial-config @system)))
+  (email/config->postal (::bread/config (:bread/app @system)))
+  (:email/smtp-from-email (::bread/config (:bread/app @system)))
+
+  (require '[postal.core :as postal])
+  (def $postal-config {:host (System/getenv "SMTP_HOST")
+                       :port (Integer. (System/getenv "SMTP_PORT"))
+                       :user (System/getenv "SMTP_USERNAME")
+                       :pass (System/getenv "SMTP_PASSWORD")
+                       :tls true})
+  (def fut (future
+             (postal/send-message $postal-config
+                                  {:from (System/getenv "SMTP_FROM_EMAIL")
+                                   :to ["coby@tamayo.email" (System/getenv "SMTP_LIST_EMAIL")]
+                                   :subject "Postal test"
+                                   :body "Testing from Clojure Postal"})))
+  (deref fut 60000 :timeout)
 
   ;; Playing with resources/files...
   (io/resource "public/assets/hi.txt")
@@ -386,8 +446,7 @@
 
   (do
     (def $req {:uri "/~/signup" :request-method :get})
-    (require '[flow-storm.api :as flow]
-             '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
+    (require '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
     (def ->app (partial util/->app (:bread/app @system)))
     (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @system)))
 
@@ -401,8 +460,6 @@
         db/q
         (db/database (->app $req))
         args)))
-
-  (flow/local-connect)
 
   (diagnose-expansions (->app $req))
   (do-expansions (->app $req) 1)
@@ -520,7 +577,7 @@
                               :user/username
                               :user/totp-key
                               :user/name
-                              {:user/email [*]}
+                              {:user/emails [*]}
                               :user/preferences
                               :user/failed-login-count
                               {:user/roles

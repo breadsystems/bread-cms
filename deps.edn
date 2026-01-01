@@ -39,6 +39,7 @@
                  "resources"
                  "plugins/auth"
                  "plugins/datahike"
+                 "plugins/email"
                  "plugins/markdown"
                  "plugins/marx"
                  "plugins/reitit"
@@ -48,8 +49,9 @@
                 metosin/reitit              {:mvn/version "0.9.1"}
                 http-kit/http-kit           {:mvn/version "2.6.0"}
                 integrant/integrant         {:mvn/version "0.8.0"}
-                io.replikativ/datahike      {:mvn/version "0.6.1531"}
-                io.replikativ/datahike-jdbc {:mvn/version "0.1.2"}
+                io.replikativ/datahike      {:mvn/version "0.6.1612"}
+                io.replikativ/datahike-jdbc {:mvn/version "0.3.50"}
+                juji/editscript             {:mvn/version "0.6.3"}
                 markdown-clj/markdown-clj   {:mvn/version "1.10.5"}
                 one-time/one-time           {:mvn/version "0.8.0"}
                 ;; TODO ?
@@ -60,6 +62,7 @@
                 rum/rum                     {:mvn/version "0.12.10"}
                 com.taoensso/timbre         {:mvn/version "6.7.1"}
                 com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer {:mvn/version "20240325.1"}
+                com.draines/postal          {:mvn/version "2.0.5"}
                 ,}}
 
   :marx
@@ -88,6 +91,10 @@
   :datahike
   {:extra-paths  ["plugins/datahike"]
    :extra-deps {io.replikativ/datahike {:mvn/version "0.6.1531"}}}
+
+  :email
+  {:extra-paths ["plugins/email"]
+   :extra-deps {com.draines/postal {:mvn/version "2.0.5"}}}
 
   :garden
   {:extra-paths ["plugins/garden"]

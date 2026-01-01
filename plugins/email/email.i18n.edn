@@ -1,0 +1,33 @@
+{:ar
+ #:email{
+         }
+ :en
+ #:email{
+         :add "Add"
+         :add-email "Add an email"
+         :confirm-email "Confirm email"
+         :confirmation-email-body "Please confirm your email:\n\n%s"
+         :confirmation-email-subject "Confirm your email for %s"
+         :confirmation-pending "Confirmation pending"
+         :confirmation-resent "Confirmation email sent."
+         :confirmed "Confirmed"
+         :delete "Delete"
+         :email "Email"
+         :email-added-please-confirm "Email added. We sent a confirmation link to your new email. Please follow the link to confirm."
+         :email-confirmed "Email confirmed."
+         :email-deleted "Email deleted."
+         :email-in-use "That email is already in use."
+         :email-settings "Email settings"
+         :invalid-email "Invalid email"
+         :no-emails "No emails yet."
+         :make-primary "Make primary"
+         :primary "Primary email"
+         :resend-confirmation "Resend confirmation"
+         :to-add-email-confirm-pending "To add another email, first confirm any pending email addresses."
+         :unexpected-error "Unexpected error. Please try again later."
+         :updated-primary "Updated primary email"
+         }
+ :es
+ #:email{
+         }
+ }

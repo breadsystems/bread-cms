@@ -11,7 +11,8 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.ring :as ring]
-    [systems.bread.alpha.plugin.auth :as auth])
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.email :as email])
   (:import
     [java.text SimpleDateFormat]))
 
@@ -48,9 +49,15 @@
 (defmethod Section ::username [{:keys [user]} _]
   [:span.username (:user/username user)])
 
-(defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:account/account-details i18n)])
+(defmethod Section ::account-link
+  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
+  [:a {:href account-uri :title (:account/account-details i18n)}
+   (:user/username user)])
 
+(defmethod Section ::heading [{:keys [i18n]} _]
+  [:h3 (:account/account i18n)])
+
+;; TODO move to generic UI ns...
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
@@ -281,7 +288,10 @@
                                       "America/Denver"
                                       "America/Chicago"
                                       "America/New_York"]
-                    html-account-header [::username :spacer auth/LogoutForm]
+                    html-account-header [::account-link
+                                         ::email/settings-link
+                                         :spacer
+                                         auth/LogoutForm]
                     html-account-form [::heading
                                        :flash
                                        ::name
@@ -291,8 +301,6 @@
                                        ::password
                                        :save]
                     html-account-sections [::account-form
-                                           #_ ;; TODO
-                                           ::emails-form
                                            ::sessions
                                            #_ ;; TODO
                                            ::roles]}}]

@@ -1,9 +1,9 @@
 {:http {:port 1312
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
- :ring/wrap-defaults {:ring-defaults :site-defaults
-                      [:session :store] #ig/ref :ring/session-store
-                      [:security :anti-forgery] false}
+ :ring/wrap-defaults {:kind :site-defaults
+                      :session-store #ig/ref :ring/session-store
+                      :overrides {[:security :anti-forgery] false}}
  :ring/session-store
  {:store/type :datalog
   :store/db #ig/ref :bread/db}
@@ -11,7 +11,7 @@
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:protected-prefixes ["_____"]
+  :auth {:protected-prefixes ["/~/"]
          :login-uri "/~/login"
          ;:require-mfa? true
          :min-password-length 4}
@@ -29,40 +29,64 @@
                         :menu/location :primary
                         :route/name :page}}}
   :marx {:site-name "Breadbox"}
+  :email {:dry-run? true
+          :smtp-from-email #env SMTP_FROM_EMAIL
+          :smtp-host #env SMTP_HOST
+          :smtp-port #env SMTP_PORT
+          :smtp-username #env SMTP_USERNAME
+          :smtp-password #env SMTP_PASSWORD
+          :smtp-tls? #env SMTP_USE_TLS}
   :plugins []} ;; define additional plugins here
  :bread/db
  {:db/type :datahike
-  :store {:backend :mem
-          :id "bread-db"}
-  :recreate? true
-  :force? true
-  :db/migrations #deref #var systems.bread.alpha.schema/initial
+  :db/recreate? true
+  :db/config {:schema-flexibility :write
+              :keep-history? true
+              ;; Set one of the following:
+              ;; STORE_BACKEND=jdbc
+              ;; STORE_BACKEND=mem
+              :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
   :db/initial-txns
-  #concat [#deref #var systems.bread.alpha.cms.data/initial
-           [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
-             :invitation/invited-by "user.coby"}
-            {:db/id "user.coby"
-             :user/username "coby"
-             :user/name "Coby Tamayo"
-             :user/email [{:email/address "coby@bread.systems"
-                           :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
-                           :email/primary? true}]
-             :user/password #buddy/derive ["hello" :bcrypt+blake2b-512]
-             #_#_ ;; Uncomment to enable MFA
-             :user/totp-key "B67CWTTTP7UQ5KWT"
-             :user/failed-login-count 0
-             :user/preferences "{}"
-             :user/lang :en
-             :user/roles
-             #{{:role/key :author
-                :role/abilities
-                #{{:ability/key :publish-posts}
-                  {:ability/key :edit-posts}
-                  {:ability/key :delete-posts}}}}}]]
+  [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
+    :invitation/invited-by "user.admin"}
+   {:db/id "user.admin"
+    :user/username "bread"
+    :user/name "Bread User"
+    :user/emails [{:email/address "admin@bread.systems"
+                   :email/code "already_confirmed"
+                   :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
+                   :email/primary? true}
+                  {:email/address "admin2@bread.systems"
+                   :email/confirmed-at #inst "2025-12-30T12:00:00-08:00"
+                   :email/code "qwerty"}
+                  {:email/address "admin3@bread.systems"
+                   :email/code "asdf"}]
+    :user/password #buddy/derive ["hello"]
+    #_#_ ;; Uncomment to enable MFA
+    :user/totp-key "B67CWTTTP7UQ5KWT"
+    :user/failed-login-count 0
+    :user/preferences "{}"
+    :user/lang :en
+    :user/roles
+    #{{:role/key :author
+       :role/abilities
+       #{{:ability/key :publish-posts}
+         {:ability/key :edit-posts}
+         {:ability/key :delete-posts}}}}}
+   {:user/username "reader"
+    :user/name "Reader User"
+    ;; No emails yet!
+    :user/password #buddy/derive ["hello"]
+    :user/failed-login-count 0
+    :user/preferences "{}"
+    :user/lang :en}
+   ,]
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
  :app/log
- {:min-level :info}
+ {:min-level [[#{"systems.bread.*"} :debug]
+              [#{"datahike.*"} :info]
+              [#{"*"} :warn]]}
  :bread/profilers
  [{:profiler/type :hook
    :hook #{:systems.bread.alpha.core/dispatch

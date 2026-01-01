@@ -9,9 +9,10 @@
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
-    [java.util Date UUID]))
+    [java.util UUID]))
 
 (defn- ->uuid [x]
   (if (string? x)
@@ -152,7 +153,7 @@
             password-hash (hashers/derive (:password params) {:alg hash-algo})
             user {:user/username (:username params)
                   :user/password password-hash
-                  :thing/created-at (Date.)}]
+                  :thing/created-at (t/now)}]
         {:expansions (concat expansions
                              [invitation-query
                               {:expansion/key :existing-username
@@ -202,7 +203,7 @@
      {:db/ident :invitation/code
       :attr/label "Invitation code"
       :db/doc "Secure UUID for this invitation"
-      ;:attr/sensitive? true
+      :attr/sensitive? true
       :db/unique :db.unique/identity
       :db/valueType :db.type/uuid
       :db/cardinality :db.cardinality/one

@@ -20,8 +20,7 @@
    :field/content (pr-str content)})
 
 (def config {:db/type :datahike
-             :store {:backend :mem
-                     :id "app-test-db"}
+             :db/config {:store {:backend :mem :id "app-test-db"}}
              :db/initial-txns
              [;; init post content
               {:db/id "page.home"

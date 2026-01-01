@@ -3,15 +3,16 @@
     [clojure.core.protocols :refer [datafy]]
     [clojure.spec.alpha :as spec]
     [taoensso.timbre :as log]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
     [systems.bread.alpha.internal.datalog :as datalog]))
 
 (defmulti connect :db/type)
-(defmulti create! (fn [config & _]
-                             (:db/type config)))
-(defmulti delete! :db/type)
+(defmulti -exists? :db/type)
+(defmulti -create :db/type)
+(defmulti -delete :db/type)
 (defmulti max-tx (fn [app]
                    (:db/type (bread/config app :db/config))))
 
@@ -40,22 +41,41 @@
      [db query a b c d e f g h i j k l m n o p q r])
   (db-with [db txs]))
 
-(defmethod connect :default [{:db/keys [type] :as config}]
+(defmethod connect :default [{:db/keys [type] :as db-spec}]
   (let [msg (if (nil? type)
-              "No :db/type specified in database config!"
+              "No :db/type specified in database spec"
               (str "Unknown :db/type `" type "`!"
                    " Did you forget to load a plugin?"))]
-    (throw (ex-info msg {:config config
+    (throw (ex-info msg {:config db-spec
                          :bread.context :db/connect}))))
+
+(defn exists? [db-spec]
+  (-exists? db-spec))
+
+(defn create! [{:as db-spec :db/keys [recreate?]}]
+  (if (-exists? db-spec)
+    (if recreate?
+      (do
+        (log/info "deleting existing database before recreating")
+        (-delete db-spec)
+        (-create db-spec))
+      (log/info "database already exists"))
+    (do
+      (log/info "creating database")
+      (-create db-spec))))
+
+(defn delete! [config]
+  (log/info "deleting database")
+  (-delete config))
 
 (defprotocol TransactionalDatabaseConnection
   (db [conn])
   (transact [conn txs]))
 
 (defn connection [app]
-  (-> app
-      (bread/config :db/connection)
-      (bread/hook ::connection)))
+  (let [conn (or (bread/config app :db/connection)
+                 (connect (bread/config app :db/config)))]
+    (bread/hook app ::connection conn)))
 
 (defn database [app]
   (let [timepoint (bread/hook app ::timepoint nil)
@@ -149,6 +169,7 @@
   [app {:keys [initial]} _]
   (let [migrations (bread/hook app ::migrations initial)
         conn (connection app)]
+    (log/info (str "checking " (count migrations) " migrations"))
     (doseq [migration migrations]
       ;; Get a new db instance each time, to see the latest migrations
       (let [db (database app)
@@ -199,7 +220,6 @@
   application code; recommended for use from plugins only. Use db/plugin
   instead."
   [config]
-  ;; TODO make these simple keys
   (when config
     (let [{:db/keys [connection
                      as-of-format
@@ -210,13 +230,7 @@
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
-                migrations schema/initial
-                connection
-                (try
-                  (connect config)
-                  (catch clojure.lang.ExceptionInfo e
-                    (when-not (= :db-does-not-exist (:type (ex-data e)))
-                      (throw e))))}} config]
+                migrations []}} config]
       {:config
        {:db/config config
         :db/connection connection

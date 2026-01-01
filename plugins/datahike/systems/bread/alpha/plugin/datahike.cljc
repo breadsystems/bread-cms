@@ -4,6 +4,8 @@
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
     [datahike.db :as dhdb]
+    [taoensso.timbre :as log]
+
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
@@ -167,7 +169,7 @@
 
 
 (extend-protocol db/TransactionalDatabaseConnection
-  clojure.lang.Atom
+  datahike.connector.Connection
   (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
@@ -200,26 +202,21 @@
 ;; Methods for managing database connection and state.
 ;;
 
-(defmethod db/connect :datahike [config]
+(defmethod db/connect :datahike [{:keys [db/config]}]
   (try
     (d/connect config)
     (catch IllegalArgumentException e
-      (throw (ex-info (str "Error connecting to datahike")
-                      {:type      :connection-error
-                       :message   (.getMessage e)
-                       :config    config}
-                      e)))))
+      (let [dbname (get-in config [:store :dbname] "(unknown)")]
+        (throw (ex-info (str "Error connecting to datahike db: " dbname)
+                        {:type :connection-error :config config} e))))))
 
-(defmethod db/create! :datahike [config & [{:keys [force?]}]]
-  (try
-    (d/create-database config)
-    (catch clojure.lang.ExceptionInfo e
-      (let [exists? (= :db-already-exists (:type (ex-data e)))]
-        (when (and force? exists?)
-          (d/delete-database config)
-          (d/create-database config))))))
+(defmethod db/-exists? :datahike datahike-db-exists? [{:db/keys [config]}]
+  (d/database-exists? config))
 
-(defmethod db/delete! :datahike [config]
+(defmethod db/-create :datahike create-datahike-db [{:db/keys [config]}]
+  (d/create-database config))
+
+(defmethod db/-delete :datahike [{:db/keys [config]}]
   (d/delete-database config))
 
 (defmethod db/max-tx :datahike [req]
