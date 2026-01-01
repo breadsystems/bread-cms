@@ -14,7 +14,7 @@
          :delete "Delete"
          :deleted "Deleted email."
          :email "Email"
-         :email-added-please-confirm "Email added. We sent a confirmation link to your new email. Please confirm by clicking the link."
+         :email-added-please-confirm "Email added. We sent a confirmation link to your new email. Please follow the link to confirm."
          :email-confirmed "Email confirmed."
          :email-in-use "That email is already in use."
          :email-settings "Email settings"
