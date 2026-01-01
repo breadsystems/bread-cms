@@ -191,7 +191,7 @@
                          "/_/confirm-email" (URLEncoder/encode code) (URLEncoder/encode to))
         subject (format (:email/confirmation-email-subject i18n) server-name)
         body (format (:email/confirmation-email-body i18n) link-uri)]
-    (log/info "sending confirmation email" link-uri)
+    (log/info "generated email confirmation link" link-uri)
     {:effects
      [{:effect/name ::send!
        :from from
@@ -212,12 +212,12 @@
     (when email
       {:effects
        [{:effect/name ::send-confirmation!
-         :effect/key :add
          :effect/description "Prepare to resend confirmation email."
          ;; TODO :send-effect-key to override ::send!
          :from (:email/smtp-from-email config)
          :to (:email/address email)
-         :code (:email/code email)}]})))
+         :code (:email/code email)}]
+       :flash {:success-key :email/confirmation-resent}})))
 
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
@@ -248,12 +248,12 @@
                                            :thing/created-at now}]}])
         {:effects
          [{:effect/name ::send-confirmation!
-           :effect/key :add
            :effect/description "Prepare confirmation email."
            ;; TODO :send-effect-key to override ::send!
            :from (:email/smtp-from-email config)
            :to (:email params)
-           :code code}]}
+           :code code}]
+         :flash {:success-key :email/email-added-please-confirm}}
         (catch clojure.lang.ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
