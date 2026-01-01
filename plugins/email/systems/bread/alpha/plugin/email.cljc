@@ -86,12 +86,12 @@
                   [:<>
                    [:.flex.col.tight
                     [:label address]
+                    [:small (:email/primary i18n)]
                     [:small
                      (:email/confirmed i18n)
                      ;; TODO date locale/formatting
                      " " confirmed-at]]
                    [:span.spacer]
-                   [:small (:email/primary i18n)]
                    (when allow-delete-primary?
                      [:button {:type :submit :name :action :value :delete}
                       (:email/delete i18n)])]
@@ -120,7 +120,7 @@
                    [:button {:type :submit :name :action :value :delete}
                     (:email/delete i18n)]])])
              emails)]
-       [:h4 (:email/no-emails i18n)])]))
+       [:p.instruct (:email/no-emails i18n)])]))
 
 (defmethod Section ::add-email [{:keys [config i18n user]} _]
   (let [emails (:user/emails user)
