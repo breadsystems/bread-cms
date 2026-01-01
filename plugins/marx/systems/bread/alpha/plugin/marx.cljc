@@ -30,19 +30,24 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defn Editable [field field-type & {:keys [escape?]
-                                    :or {escape? true}
-                                    :as extra}]
-  (let [tag (:tag extra :div)
-        data-attr (-> field
+(defn Editable [{:as field :field/keys [content]}
+                field-type
+                & {:keys [escape? tag wrapper]
+                   :or {escape? true
+                        tag :div
+                        wrapper [:div]}
+                   :as extra}]
+  (let [data-attr (-> field
                       (dissoc :field/content)
                       (assoc :marx/field-type field-type)
                       pr-str)
         attrs {:data-marx data-attr}
-        content (:field/content field)]
-    (if escape?
-      [tag attrs content]
-      [tag (merge attrs {:dangerouslySetInnerHTML {:__html content}})])))
+        html (if escape?
+               [tag attrs content]
+               [tag (merge attrs {:dangerouslySetInnerHTML {:__html content}})])]
+    (if wrapper
+                (vec (conj wrapper html))
+                html)))
 
 (defmethod Section ::site-name [{{:marx/keys [site-name]} :config} _]
   [:div site-name])
