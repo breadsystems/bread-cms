@@ -7,7 +7,7 @@
          :add-email "Add an email"
          :confirm-email "Confirm email"
          :confirmation-email-body "Please confirm your email:\n\n%s"
-         :confirmation-email-subject "Email confirmation for %s"
+         :confirmation-email-subject "Confirm your email for %s"
          :confirmation-pending "Confirmation pending"
          :confirmation-resent "Confirmation email sent."
          :confirmed "Confirmed"
