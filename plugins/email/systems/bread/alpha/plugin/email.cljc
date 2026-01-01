@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [clojure.string :as string]
     [crypto.random :as random]
     [postal.core :as postal]
     [taoensso.timbre :as log]
@@ -244,7 +245,7 @@
     (ensure-own-email-id user id)
     (try
       (db/transact conn [[:db/retractEntity id]])
-      {:flash {:success-key :email/deleted}}
+      {:flash {:success-key :email/email-deleted}}
       (catch clojure.lang.ExceptionInfo e
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
