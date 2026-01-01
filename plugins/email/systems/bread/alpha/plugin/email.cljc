@@ -69,9 +69,14 @@
 
 (defn- compare-emails [a b]
   (cond
+    ;; Always list primary first...
     (:email/primary? a) -1
     (:email/primary? b) 1
-    :else (compare (:email/confirmed-at a) (:email/confirmed-at b))))
+    ;; ...then confirmed...
+    (and (:email/confirmed-at a) (:email/confirmed-at b))
+    (compare (:email/confirmed-at a) (:email/confirmed-at b))
+    ;; ...and finally unconfirmed.
+    :else (compare (:email/created-at a) (:email/created-at b))))
 
 (defmethod Section ::emails [{:keys [config i18n user]} _]
   (let [{:email/keys [allow-delete-primary?]} config
