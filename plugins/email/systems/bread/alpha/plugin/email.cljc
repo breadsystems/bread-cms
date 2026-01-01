@@ -46,27 +46,25 @@
 
 (defprotocol Mailer
   :extend-via-metadata true
-  (send! [this email]))
+  (send! [this message]))
 
 (deftype PostalMailer [postal-config]
   Mailer
-  (send! [this email]
-    (postal/send-message postal-config email)))
+  (send! [this message]
+    (postal/send-message postal-config message)))
 
 (defmethod bread/effect ::send! send-smtp!
-  [effect {{:as config :email/keys [dry-run? mailer smtp-from-email]} :config}]
+  [{:as effect :keys [message]} {{:as config :email/keys [dry-run? mailer]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
-        email {:from (or (:from effect) smtp-from-email)
-               :to (:to effect)
-               :subject (:subject effect)
-               :body (:body effect)}]
+        ;; TODO hook for email
+        ]
     (if send?
       (try
-        (log/info "sending email" (summarize email))
-        (send! mailer email)
+        (log/info "sending email" (summarize message))
+        (send! mailer message)
         (catch Throwable e
-          (log/error (ex-info "Error sending email" {:mailer mailer :email email} e))))
-      (log/info "simulating email" (summarize email)))))
+          (log/error (ex-info "Error sending email" {:mailer mailer :message message} e))))
+      (log/info "simulating email" (summarize message)))))
 
 (defmethod Section ::settings-link
   [{:keys [i18n] {:email/keys [settings-uri]} :config} _]
@@ -215,10 +213,10 @@
     (log/info "generated email confirmation link" link-uri)
     {:effect/name ::send!
      :effect/description "Send a confirmation email."
-     :from from
-     :to to
-     :subject subject
-     :body body}))
+     :message {:from from
+               :to to
+               :subject subject
+               :body body}}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
   [{:keys [conn params]} {:as data :keys [config user]}]
