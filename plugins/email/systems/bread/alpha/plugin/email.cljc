@@ -54,16 +54,18 @@
     (postal/send-message postal-config email)))
 
 (defmethod bread/effect ::send! send-smtp!
-  [effect {{:as config :email/keys [dry-run? smtp-from-email]} :config}]
+  [effect {{:as config :email/keys [dry-run? mailer smtp-from-email]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
         email {:from (or (:from effect) smtp-from-email)
                :to (:to effect)
                :subject (:subject effect)
                :body (:body effect)}]
     (if send?
-      (let [mailer (PostalMailer. (config->postal config))]
+      (try
         (log/info "sending email" (summarize email))
-        (send! mailer email))
+        (send! mailer email)
+        (catch Throwable e
+          (log/error (ex-info "Error sending email" {:mailer mailer :email email} e))))
       (log/info "simulating email" (summarize email)))))
 
 (defmethod Section ::settings-link
@@ -396,7 +398,8 @@
                       max-pending-minutes
                       allow-delete-primary?
                       allow-multiple-pending?
-                      html-email-sections]
+                      html-email-sections
+                      mailer]
                :or {smtp-port 587
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
@@ -405,22 +408,23 @@
                                          :flash
                                          ::emails
                                          ::add-email]}}]
-  {:hooks
-   {::i18n/global-strings
-    [{:action/name ::i18n/merge-global-strings
-      :action/description "Merge strings for email page into global i18n strings."
-      :strings (edn/read-string (slurp (io/resource "email.i18n.edn")))}]}
-   :config
-   {:email/dry-run? dry-run?
-    :email/allow-delete-primary? allow-delete-primary?
-    :email/allow-multiple-pending? allow-multiple-pending?
-    :email/smtp-from-email smtp-from-email
-    :email/smtp-host smtp-host
-    :email/smtp-port (Integer. smtp-port)
-    :email/smtp-username smtp-username
-    :email/smtp-password smtp-password
-    :email/smtp-tls? (boolean smtp-tls?)
-    :email/settings-uri settings-uri
-    :email/confirm-uri confirm-uri
-    :email/max-pending-minutes max-pending-minutes
-    :email/html.email.sections html-email-sections}})
+  (let [config {:email/dry-run? dry-run?
+                :email/allow-delete-primary? allow-delete-primary?
+                :email/allow-multiple-pending? allow-multiple-pending?
+                :email/smtp-from-email smtp-from-email
+                :email/smtp-host smtp-host
+                :email/smtp-port (Integer. smtp-port)
+                :email/smtp-username smtp-username
+                :email/smtp-password smtp-password
+                :email/smtp-tls? (boolean smtp-tls?)
+                :email/settings-uri settings-uri
+                :email/confirm-uri confirm-uri
+                :email/max-pending-minutes max-pending-minutes
+                :email/html.email.sections html-email-sections}
+        mailer (or mailer (PostalMailer. (config->postal config)))]
+    {:hooks
+     {::i18n/global-strings
+      [{:action/name ::i18n/merge-global-strings
+        :action/description "Merge strings for email page into global i18n strings."
+        :strings (edn/read-string (slurp (io/resource "email.i18n.edn")))}]}
+     :config (assoc config :email/mailer mailer)}))
