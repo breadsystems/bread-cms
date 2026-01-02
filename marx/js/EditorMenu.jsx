@@ -10,10 +10,10 @@ const EditorMenu = ({ tools }) => {
         content,
         tooltip,
         effect,
-      }) => {
+      }, idx) => {
         return (
           <button
-            key={type}
+            key={idk}
             onClick={effect}
             title={tooltip}
             data-icon={icon || "empty"}

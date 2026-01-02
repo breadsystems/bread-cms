@@ -10,8 +10,7 @@
 
 (defmulti tool-props (fn [_ed tool] (:marx/field-type tool)))
 
-(defmethod tool-props :default [_ed tool]
-  {})
+(defmethod tool-props :default [_ _] {})
 
 (defn- persist-field-state! [ed field state]
   (swap! ed assoc-in [:marx/fields (:field/key field)]
@@ -87,7 +86,6 @@
 (defn save! [e {:keys [marx/backends] :as ed-state}]
   (let [data (edit e ed-state)]
     (doseq [be backends]
-      (prn 'persist be data)
       (persist! be data))))
 
 (defn attach-backend! [ed backend-inst]
