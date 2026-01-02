@@ -1,7 +1,6 @@
 import React from 'react';
 
 const EditorMenu = ({ tools }) => {
-  console.log(tools);
   return (
     <div>
       {tools.map(({

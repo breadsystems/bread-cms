@@ -60,5 +60,4 @@
         (println "attaching backend" backend)
         (core/attach-backend! ed backend)))
     (doseq [field fields]
-      (when (:marx/document field) (prn 'doc (:field/key field) (:marx/document field)))
       (core/init-field ed field))))

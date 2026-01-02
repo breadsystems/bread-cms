@@ -9,7 +9,6 @@
   (marx/init! ed {}))
 
 (defn- publish! []
-  (prn 'SAVE (:marx/document @ed))
   (core/save! {:edit/action :publish-fields} @ed))
 
 (defn init
