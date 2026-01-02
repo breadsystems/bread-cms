@@ -13,7 +13,7 @@ const EditorMenu = ({ tools }) => {
       }, idx) => {
         return (
           <button
-            key={idk}
+            key={idx}
             onClick={effect}
             title={tooltip}
             data-icon={icon || "empty"}
