@@ -91,25 +91,24 @@
 (defn attach-backend! [ed backend-inst]
   (swap! ed update :marx/backends conj backend-inst))
 
+(defn- assert-valid-lifecycle-method [t f mn]
+  (assert (fn? f) (str "field-lifecycle method for " t
+                       " returned a `" (name mn)
+                       "` value of a type other than function!")))
+
 (defn init-field [ed field]
   (let [{:keys [init-state
                 did-mount
                 render]
          :or {init-state (constantly {})}}
         (field-lifecycle ed field)]
-    (assert (fn? render)
-            (str "field-lifecycle method for " (:marx/field-type field)
-                 " returned something other than a function!"))
+    (assert-valid-lifecycle-method (:marx/field-type field) render :render)
     (if (:initialized? field)
-      (let [{{root :marx/react-root :as state} :state} field
-            react-element (render state)]
-        (.render root react-element))
+      (render (:state field))
       (do
-        (assert (fn? init-state))
-        (let [root (rdom/createRoot (:elem field))
-              initial (assoc (init-state)
-                             :marx/react-root root)]
+        (assert-valid-lifecycle-method (:marx/field-type field) init-state :init-state)
+        (let [initial (init-state)]
+          (render initial)
           (persist-field-state! ed field initial)
-          (.render root (render initial))
           (when (fn? did-mount)
             (did-mount initial)))))))

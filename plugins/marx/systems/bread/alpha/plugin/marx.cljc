@@ -30,6 +30,15 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
+(defn Text [tag {:as field :field/keys [content]}]
+  [tag {:data-marx (-> field
+                       (dissoc :field/content)
+                       (assoc :marx/field-type :text
+                              :create-react-root? false)
+                       pr-str)
+        :tabindex 0}
+   content])
+
 (defn Editable [{:as field :field/keys [content]}
                 field-type
                 & {:keys [escape? tag wrapper]
@@ -41,7 +50,8 @@
                       (dissoc :field/content)
                       (assoc :marx/field-type field-type)
                       pr-str)
-        attrs {:data-marx data-attr}
+        attrs {:data-marx data-attr
+               :tabindex 0}
         html (if escape?
                [tag attrs content]
                [tag (merge attrs {:dangerouslySetInnerHTML {:__html content}})])]

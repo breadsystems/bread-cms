@@ -7,6 +7,7 @@
     ;; TODO support (authenticated) websocket
     [systems.bread.alpha.marx.http]
     [systems.bread.alpha.marx.field.rich-text]
+    [systems.bread.alpha.marx.field.text]
     [systems.bread.alpha.marx.core :as core]))
 
 (defn- unescape [s]

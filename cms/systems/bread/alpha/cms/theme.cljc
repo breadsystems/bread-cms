@@ -75,7 +75,7 @@
             {:post/taxons [{:thing/fields [*]}]}]}
   [:<>
    [:main
-    [:h1 (:title fields)]
+    (marx/Text :h1 (:title field-defs))
     [:h2 (:db/id post)]
     [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
