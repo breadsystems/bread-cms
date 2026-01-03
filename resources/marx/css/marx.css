@@ -54,6 +54,7 @@
     border-width: var(--border-width) 0 0 0;
   }
 
+  font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
   line-height: 1.5;
 
@@ -129,7 +130,6 @@
     padding: 10px 12px;
     cursor: pointer;
     font-weight: 700;
-    font-size: 1rem;
   }
   :is(button, input, select):focus {
     outline: var(--border-width) solid var(--color-stroke-emphasis);
@@ -147,5 +147,19 @@
   hr {
     width: 100%;
     border: 2px solid var(--color-stroke-secondary);
+  }
+
+  &[data-marx-menu] {
+    --border-width: 1px;
+    --gap-standard: 0.2rem;
+
+    display: flex;
+    gap: 0.2rem;
+    padding: var(--gap-standard);
+
+    button {
+      padding: 0.5em;
+      font-size: 0.5rem;
+    }
   }
 }

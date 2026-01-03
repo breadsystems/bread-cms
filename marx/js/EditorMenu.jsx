@@ -2,7 +2,7 @@ import React from 'react';
 
 const EditorMenu = ({ tools }) => {
   return (
-    <div>
+    <div data-marx-menu data-bread>
       {tools.map(({
         type,
         icon,
@@ -15,6 +15,7 @@ const EditorMenu = ({ tools }) => {
             key={idx}
             onClick={effect}
             title={tooltip}
+            data-marx-button={true}
             data-icon={icon || "empty"}
           >
             {content}
