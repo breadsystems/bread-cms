@@ -466,8 +466,8 @@
         :format? false
         :compact? false
         :recur-attrs #{}
-        :spaths [[s/ALL s/ALL :thing/fields]
-                 [s/ALL s/ALL :post/_taxons s/ALL :thing/fields]]}]
+        :spaths [[s/ALL :thing/fields]
+                 [s/ALL :post/_taxons s/ALL :thing/fields]]}]
       {:expansion/name ::db/query
        :expansion/key :post-with-taxons-and-field-content
        :expansion/db ::FAKEDB
@@ -572,7 +572,7 @@
       false
       false
 
-      ;; With :field/content; no formatting; with compaction.
+      ;; With :field/content; no formatting; with compaction; querying single.
       [{:expansion/name ::db/query
         :expansion/key :post-with-content
         :expansion/db ::FAKEDB
@@ -608,7 +608,7 @@
       true
 
       ;; With deeply nested, mixed implicit & explicit :field/content;
-      ;; with formatting; two entities to compact.
+      ;; with formatting; querying single; two entities to compact.
       [{:expansion/name ::db/query
         :expansion/key :post-with-taxons-and-field-content
         :expansion/db ::FAKEDB
@@ -706,7 +706,7 @@
       true
       true
 
-      ;; All the things, plus a recursive spec.
+      ;; All the things, plus a recursive spec; querying single.
       [{:expansion/name ::db/query
         :expansion/key :post-with-taxons-and-field-content
         :expansion/db ::FAKEDB
@@ -748,6 +748,49 @@
           :where [[?e :thing/slug ?slug]
                   [?e :post/type ?type]]}
         "my-post"
+        :page]}
+      :en
+      true
+      true
+
+      ;; All the things, plus a recursive spec; querying many.
+      [{:expansion/name ::db/query
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/db ::FAKEDB
+        :expansion/args
+        ['{:find [(pull ?e [:db/id
+                            :thing/slug
+                            {:thing/children ...}
+                            {:thing/fields
+                             [:db/id :field/lang :field/key :field/content]}
+                            {:post/taxons [:thing/slug
+                                           :taxon/taxonomy
+                                           {:thing/fields [*]}]}])]
+           :in [$ ?type]
+           :where [[?e :post/type ?type]]}
+         :page]}
+       {:expansion/name ::i18n/fields
+        :expansion/key :post-with-taxons-and-field-content
+        :expansion/description  "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{:thing/children}
+        :spaths [[s/ALL :thing/fields]
+                 [s/ALL :post/taxons s/ALL :thing/fields]]}]
+      {:expansion/name ::db/query
+       :expansion/key :post-with-taxons-and-field-content
+       :expansion/db ::FAKEDB
+       :expansion/args
+       ['{:find [(pull ?e [:db/id
+                           :thing/slug
+                           {:thing/children ...}
+                           {:thing/fields [:field/key :field/content]}
+                           {:post/taxons [:thing/slug
+                                          :taxon/taxonomy
+                                          {:thing/fields [*]}]}])]
+          :in [$ ?type]
+          :where [[?e :post/type ?type]]}
         :page]}
       :en
       true
@@ -883,7 +926,10 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; with compaction.
-    {:thing/fields {:uri "/es/the-slug"}}
+    {:thing/fields {:uri "/es/the-slug"
+                    :bread/fields {:uri {:field/key :uri
+                                         :field/format ::i18n/uri
+                                         :field/content "/es/the-slug"}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :es
@@ -898,7 +944,17 @@
 
     ;; With direct fields; no formatting; compactions.
     {:thing/fields {:from-the-river (pr-str "מהנהר")
-                    :to-the-sea (pr-str "לים")}}
+                    :to-the-sea (pr-str "לים")
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content (pr-str "מהנהר")
+                                    :field/lang :he}
+                                   :to-the-sea
+                                   {:field/key :to-the-sea
+                                    :field/format :edn
+                                    :field/content (pr-str "לים")
+                                    :field/lang :he}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -925,7 +981,18 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; compactions.
-    {:thing/fields {:from-the-river "מהנהר" :to-the-sea "לים"}}
+    {:thing/fields {:from-the-river "מהנהר"
+                    :to-the-sea "לים"
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content "מהנהר"
+                                    :field/lang :he}
+                                   :to-the-sea
+                                   {:field/key :to-the-sea
+                                    :field/format :edn
+                                    :field/content "לים"
+                                    :field/lang :he}}}}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -952,8 +1019,19 @@
                  :field/lang :en}]}}
 
     ;; With direct fields; EDN formatting; compactions; recursive data.
-    {:thing/fields {:from-the-river "מהנהר"}
-     :thing/children [{:thing/fields {:to-the-sea "לים"}}]}
+    {:thing/fields {:from-the-river "מהנהר"
+                    :bread/fields {:from-the-river
+                                   {:field/key :from-the-river
+                                    :field/format :edn
+                                    :field/content "מהנהר"
+                                    :field/lang :he}}}
+     :thing/children [{:thing/fields {:to-the-sea "לים"
+                                      :bread/fields
+                                      {:to-the-sea
+                                       {:field/key :to-the-sea
+                                        :field/format :edn
+                                        :field/content "לים"
+                                        :field/lang :he}}}}]}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he
@@ -981,9 +1059,16 @@
                    :field/content (pr-str "to the sea")
                    :field/lang :en}]}]}}
 
-    ;; With direct fields; raw formatting; compactions; universal fields.
-    {:thing/fields {:uri "/abc"}
-     :thing/children [{:thing/fields {:uri "/def"}}]}
+    ;; With direct fields; raw formatting; compactions; recursive data; universal fields.
+    {:thing/fields {:uri "/abc"
+                    :bread/fields {:uri
+                                   {:field/key :uri
+                                    :field/content "/abc"}}}
+     :thing/children [{:thing/fields {:uri "/def"
+                                      :bread/fields
+                                      {:uri
+                                       {:field/key :uri
+                                        :field/content "/def"}}}}]}
     {:expansion/name ::i18n/fields
      :expansion/key :the-key
      :field/lang :he

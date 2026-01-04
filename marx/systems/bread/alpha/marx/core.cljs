@@ -4,14 +4,13 @@
     [clojure.edn :as edn]))
 
 (defn read-attr [elem attr]
-  (edn/read-string (.getAttribute elem attr)))
+  (when elem (edn/read-string (.getAttribute elem attr))))
 
 (defmulti field-lifecycle (fn [_ed field-config] (:marx/field-type field-config)))
 
 (defmulti tool-props (fn [_ed tool] (:marx/field-type tool)))
 
-(defmethod tool-props :default [_ed tool]
-  {})
+(defmethod tool-props :default [_ _] {})
 
 (defn- persist-field-state! [ed field state]
   (swap! ed assoc-in [:marx/fields (:field/key field)]
@@ -68,7 +67,7 @@
 (defmulti edit (fn [e _ed]
                   (:edit/action e)))
 
-(defmethod edit :publish-fields [_ {:marx/keys [fields]}]
+(defmethod edit :publish-fields [_ {:marx/keys [document fields]}]
   (let [field-data (->> fields
                         vals
                         (filter (complement (comp false? :persist?)))
@@ -81,41 +80,35 @@
                                                  :field/content])))))]
     {:edit/action :publish-fields
      :edit/key :edit/instant
-     :fields field-data}))
+     :fields field-data
+     :marx/document document}))
 
-(defn persist-edit! [e {{:marx/keys [backend] :as ed} :editor-state
-                        :keys [document]}]
-  (let [message (assoc (edit e ed) :marx/document document
-                       #_#_
-                       :revision? true ;; TODO config
-                       #_#_
-                       :revision/note "Hello"
-                       )]
-    (persist! backend message)))
+(defn save! [e {:keys [marx/backends] :as ed-state}]
+  (let [data (edit e ed-state)]
+    (doseq [be backends]
+      (persist! be data))))
 
 (defn attach-backend! [ed backend-inst]
-  (swap! ed assoc :marx/backend backend-inst))
+  (swap! ed update :marx/backends conj backend-inst))
+
+(defn- assert-valid-lifecycle-method [t f mn]
+  (assert (fn? f) (str "field-lifecycle method for " t
+                       " returned a `" (name mn)
+                       "` value of a type other than function!")))
 
 (defn init-field [ed field]
   (let [{:keys [init-state
                 did-mount
                 render]
-         :or {state {}
-              init-state (constantly {})}}
+         :or {init-state (constantly {})}}
         (field-lifecycle ed field)]
-    (assert (fn? render)
-            (str "field-lifecycle method for " (:marx/field-type field)
-                 " returned something other than a function!"))
+    (assert-valid-lifecycle-method (:marx/field-type field) render :render)
     (if (:initialized? field)
-      (let [{{root :marx/react-root :as state} :state} field
-            react-element (render state)]
-        (.render root react-element))
+      (render (:state field))
       (do
-        (assert (fn? init-state))
-        (let [root (rdom/createRoot (:elem field))
-              initial (assoc (init-state)
-                             :marx/react-root root)]
+        (assert-valid-lifecycle-method (:marx/field-type field) init-state :init-state)
+        (let [initial (init-state)]
+          (render initial)
           (persist-field-state! ed field initial)
-          (.render root (render initial))
           (when (fn? did-mount)
             (did-mount initial)))))))

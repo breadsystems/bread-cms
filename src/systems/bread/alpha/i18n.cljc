@@ -127,9 +127,9 @@
   "Takes a sequence of translatable fields and compacts it down to a single map,
   using :field/key and :field/content as the map keys and values, respectively."
   [fields]
-  (with-meta
-    (into {} (map (juxt :field/key :field/content)) fields)
-    (into {} (map (juxt :field/key identity)) fields)))
+  (let [content-by-key (into {} (map (juxt :field/key :field/content)) fields)
+        data-by-key (into {} (map (juxt :field/key identity)) fields)]
+    (assoc content-by-key :bread/fields data-by-key)))
 
 (defmulti deserialize :field/format)
 (defmulti serialize :field/format)
@@ -244,7 +244,7 @@
           :format? (bread/config req :i18n/format-fields?)
           :recur-attrs recur-attrs
           :spaths
-          (map (comp #(if querying-many? (concat [s/ALL s/ALL] %) %)
+          (map (comp #(if querying-many? (concat [s/ALL] %) %)
                      (partial qi/relation->spath
                               (bread/hook req ::bread/attrs-map nil))
                      :relation)

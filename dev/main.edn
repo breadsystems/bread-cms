@@ -28,6 +28,7 @@
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
                         :route/name :page}}}
+  :marx {:site-name "Breadbox"}
   :email {:dry-run? true
           :smtp-from-email #env SMTP_FROM_EMAIL
           :smtp-host #env SMTP_HOST
@@ -86,13 +87,18 @@
  {:min-level [[#{"systems.bread.*"} :debug]
               [#{"datahike.*"} :info]
               [#{"*"} :warn]]}
- #_#_
  :bread/profilers
- [{:hook #{:systems.bread.alpha.core/request}
-   ;:action/name #{:systems.bread.alpha.cms.defaults/response}
-   :f #var systems.bread.alpha.cms.main/log-hook}
-  {:expansion #{:systems.bread.alpha.database/query}
-   :f #var systems.bread.alpha.cms.main/log-expansion}]
+ [{:profiler/type :hook
+   :hook #{:systems.bread.alpha.core/dispatch
+           :systems.bread.alpha.core/expand
+           :systems.bread.alpha.core/effects!}
+   :!action/name #{:systems.bread.alpha.defaults/config
+                   :systems.bread.alpha.expansion/expand
+                   :systems.bread.alpha.component/hook-fn}
+   :f #var systems.bread.alpha.tools.util/log-lifecycle-hook}
+  {:profiler/type :expansion
+   :expansion #{:systems.bread.alpha.database/query}
+   :f #var systems.bread.alpha.tools.util/log-query}]
  #_#_
  :bread/debugger
  {:http

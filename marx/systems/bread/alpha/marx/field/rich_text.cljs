@@ -28,14 +28,19 @@
                                            :extensions extensions
                                            :content (.-outerHTML elem)}))}))
      :did-mount
-     (fn [state]
+     (fn [{:keys [menu-elem]}]
+       ;; Append the menu element directly after the rich-text field in the DOM.
+       ;; This is necessary for keyboard accessibility. Otherwise, the field
+       ;; element goes out of focus and the menu disappears.
+       (.append (.-parentNode elem) menu-elem)
        (.removeChild (.-parentNode elem) elem))
      :render
      (fn [{:keys [menu-root tiptap]}]
        (let [menu-tool (fn [tool]
                          (let [tk (if (map? tool) (:type tool) tool)
+                               label (:label tool (name tk))
                                props {:type tk
-                                      :content (name tk)
+                                      :content label
                                       :effect #(tiptap/command tiptap tool)}]
                            (merge props (core/tool-props @ed props))))
              menu-props {:tools (map menu-tool tools)}]

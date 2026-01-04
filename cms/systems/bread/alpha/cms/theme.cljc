@@ -13,7 +13,7 @@
     [:a {:href uri} title]]
    (map nav-menu-item children)])
 
-(defn- nav-menu [{items :menu/items}]
+(defn- Nav [{items :menu/items}]
   [:nav
    [:ul
     (map nav-menu-item items)]])
@@ -25,15 +25,12 @@
   [:html {:lang lang}
    [:head
     [:meta {:content-type "utf-8"}]
-    [:meta {:name "marx-editor"
-            :content (pr-str {:post/id 123})}]
     [:title "hey"]
     [:link {:rel :stylesheet :href "/assets/site.css"}]]
    [:body
-    (nav-menu main-nav)
+    (Nav main-nav)
     content
-    (marx/render-bar data)
-    [:script {:src "/marx/js/marx.js"}]]])
+    (marx/Embed data)]])
 
 (defc NotFoundPage
   [{:keys [lang]}]
@@ -69,7 +66,7 @@
    [:h2 [:code (:thing/slug tag)]]])
 
 (defc InteriorPage
-  [{{fields :thing/fields tags :post/taxons :as post} :post
+  [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus
     :keys [hook]}]
   {:extends MainLayout
@@ -78,11 +75,11 @@
             {:post/taxons [{:thing/fields [*]}]}]}
   [:<>
    [:main
-    [:h1 (:title fields)]
+    (marx/Text :h1 (:title field-defs))
     [:h2 (:db/id post)]
     [:p (hook ::stuff "stuff")]
     ;; TODO don't compact?
-    (marx/render-field (:rte (meta fields)) :rich-text)
+    (marx/Editable (:rte field-defs) :rich-text :escape? false)
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :thing/fields}]

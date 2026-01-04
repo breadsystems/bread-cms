@@ -140,3 +140,14 @@
   {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})
 
 (derive ::thing=> ::by-slug*=>)
+
+(defmethod bread/expand ::paginate
+  paginate
+  [{:keys [page per-page] k :expansion/key} data]
+  (prn 'k k (vec (get data k)))
+  (let [things (vec (get data k))
+        len (count things)
+        start (* (dec page) per-page)
+        end (+ start per-page)]
+  (prn start '- end)
+    (subvec things (min len start) (min len end))))
