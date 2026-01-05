@@ -75,10 +75,8 @@
             {:post/taxons [{:thing/fields [*]}]}]}
   [:<>
    [:main
-    (marx/Text :h1 (:title field-defs))
+    (marx/Text (:title field-defs) :tag :h1)
     [:h2 (:db/id post)]
-    [:p (hook ::stuff "stuff")]
-    ;; TODO don't compact?
     (marx/Editable (:rte field-defs) :rich-text :escape? false)
     [:div.tags-list
      [:p "TAGS"]
