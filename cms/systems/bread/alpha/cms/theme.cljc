@@ -5,18 +5,18 @@
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.component :refer [defc]]))
 
-(defn- nav-menu-item [{:keys [children uri]
+(defn- NavItem [{:keys [children uri]
                        {:keys [title] :as fields} :thing/fields
                        :as item}]
   [:li
    [:div
     [:a {:href uri} title]]
-   (map nav-menu-item children)])
+   (map NavItem children)])
 
 (defn- Nav [{items :menu/items}]
   [:nav
    [:ul
-    (map nav-menu-item items)]])
+    (map NavItem items)]])
 
 (defc MainLayout [{:keys [lang content user]
                    {:keys [main-nav]} :menus
