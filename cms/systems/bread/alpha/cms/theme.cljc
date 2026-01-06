@@ -75,8 +75,7 @@
    :key :post
    :query '[{:thing/fields [*]}
             {:post/taxons [{:thing/fields [*]}]}]}
-  (let [can-edit? (boolean user)
-        Field (partial marx/Field can-edit? post)]
+  (let [Field (partial marx/Field post)]
     [:<>
      [:main
       (Field :text :title :tag :h1)

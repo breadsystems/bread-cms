@@ -30,21 +30,18 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defn Field [can-edit? thing field-type k & opts]
-  (let [{:keys [tag wrapper attrs]
-         :or {tag :div
-              wrapper [:div]
-              attrs {}}} opts
-        {{:as fields field-defs :bread/fields} :thing/fields} thing
+(defn Field [thing field-type k & {:keys [tag wrapper attrs]
+                                   :or {tag :div
+                                        wrapper [:div]
+                                        attrs {}}}]
+  (let [{{:as fields field-defs :bread/fields} :thing/fields} thing
         content (get fields k)
         field (get field-defs k)
-        attrs (if can-edit?
-                (merge attrs {:data-marx (-> field
-                                             (dissoc :field/content)
-                                             (assoc :marx/field-type field-type)
-                                             pr-str)
-                              :tabindex 0})
-                attrs)
+        config (-> field
+                   (dissoc :field/content)
+                   (assoc :marx/field-type field-type)
+                   pr-str)
+        attrs (merge attrs {:data-marx config :tabindex 0})
         html (if wrapper
                (vec (conj wrapper [tag attrs content]))
                [tag attrs content])]
