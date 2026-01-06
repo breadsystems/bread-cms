@@ -45,9 +45,7 @@
         attrs (merge {:data-marx data-attr
                       :tabindex 0}
                      attrs)
-        html (if escape?
-               [tag attrs content]
-               [tag (merge attrs {:dangerouslySetInnerHTML {:__html content}})])]
+        html [tag attrs content]]
     (if wrapper
       (vec (conj wrapper html))
       html)))
