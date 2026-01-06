@@ -453,6 +453,16 @@
                               (reduced true)))
                           false protected-prefixes)))
 
+(defmethod bread/action ::session
+  [{:as req :keys [headers remote-addr session]} _ _]
+  (if session
+    (cond-> req
+      (bread/config req :auth/store-session-ip?)
+      (update :session assoc :remote-addr remote-addr)
+      (bread/config req :auth/store-session-user-agent?)
+      (update :session assoc :user-agent (get headers "user-agent")))
+    req))
+
 (defmethod bread/effect ::log-attempt
   [{:keys [conn max-failed-login-count lock-seconds]}
    {{:keys [user valid] :as result} :auth/result}]
@@ -710,7 +720,8 @@
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
             login-uri protected-prefixes require-mfa? mfa-issuer
-            min-password-length max-password-length generous-totp-window?]
+            min-password-length max-password-length generous-totp-window?
+            store-session-ip? store-session-user-agent?]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -718,13 +729,20 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
-          generous-totp-window? true}}]
+          generous-totp-window? true
+          ;; Don't track Personally Identfiable Information (PII) by default.
+          store-session-ip? false
+          store-session-user-agent? false}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
        :action/description
        "Add schema for authentication to the sequence of migrations to be run."
        :schema-txs schema}]
+     ::bread/route
+     [(when (or store-session-ip? store-session-user-agent?)
+        {:action/name ::session
+         :action/description "Add session metadata"})]
      ;; NOTE: we hook into ::bread/expand to require auth because
      ;; if we do it before that, the :headers may get wiped out.
      ::bread/expand
@@ -751,4 +769,6 @@
      :auth/max-password-length max-password-length
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
-     :auth/login-uri login-uri}}))
+     :auth/login-uri login-uri
+     :auth/store-session-ip? store-session-ip?
+     :auth/store-session-user-agent? store-session-user-agent?}}))

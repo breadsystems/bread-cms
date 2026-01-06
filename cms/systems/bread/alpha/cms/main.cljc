@@ -340,14 +340,6 @@
            :db/initial-txns initial
            :db/migrations schema/initial)))
 
-(defmethod bread/action ::enrich-session
-  [{:as req :keys [headers remote-addr session]} _ _]
-  (if session
-    (update req :session assoc
-            :user-agent (get headers "user-agent")
-            :remote-addr remote-addr)
-    req))
-
 (defmethod ig/init-key :bread/app [_ app-config]
   (let [plugins (concat
                   (defaults/plugins app-config)
@@ -356,11 +348,7 @@
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))
-                   (email/plugin (:email app-config))
-                   {:hooks
-                    {::bread/route
-                     [{:action/name ::enrich-session
-                       :action/description "Add session metadata"}]}}])]
+                   (email/plugin (:email app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]

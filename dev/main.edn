@@ -14,7 +14,9 @@
   :auth {:protected-prefixes ["/~/"]
          :login-uri "/~/login"
          ;:require-mfa? true
-         :min-password-length 4}
+         :min-password-length 4
+         :store-session-ip? true
+         :store-session-user-agent? true}
   :signup {:signup-uri "/~/signup"
            :invite-only? true}
   :account {:account-uri "/~/account"}
