@@ -25,20 +25,22 @@
    (get labels value)])
 
 (defn- ua->browser [ua]
-  (let [normalized (string/lower-case ua)]
+  (when ua
+    (let [normalized (string/lower-case ua)]
     (cond
       (re-find #"firefox" normalized) "Firefox"
       (re-find #"chrome" normalized) "Google Chrome"
       (re-find #"safari" normalized) "Safari"
-      :default "Unknown browser")))
+      :default "Unknown browser"))))
 
 (defn- ua->os [ua]
-  (let [normalized (string/lower-case ua)]
-    (cond
-      (re-find #"linux" normalized) "Linux"
-      (re-find #"macintosh" normalized) "Mac"
-      (re-find #"windows" normalized) "Windows"
-      :default "Unknown OS")))
+  (when ua
+    (let [normalized (string/lower-case ua)]
+      (cond
+        (re-find #"linux" normalized) "Linux"
+        (re-find #"macintosh" normalized) "Mac"
+        (re-find #"windows" normalized) "Windows"
+        :default "Unknown OS"))))
 
 (defn- i18n-format [i18n k]
   (if (sequential? k) ;; TODO tongue
@@ -135,8 +137,10 @@
              (if (= (:db/id session) (:db/id user-session))
                [:div.user-session.current
                 [:div
-                 [:div (ua->browser user-agent)]
-                 [:div (ua->os user-agent)]
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
                  [:div (.format date-fmt created-at)]
                  (when updated-at
                    ;; TODO i18n
@@ -145,8 +149,10 @@
                [:form.user-session {:method :post}
                 [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
                 [:div
-                 [:div (ua->browser user-agent)]
-                 [:div (ua->os user-agent)]
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
                  [:div (.format date-fmt created-at)]
                  (when updated-at
                    [:div "Last active at " (.format date-fmt updated-at)])]
