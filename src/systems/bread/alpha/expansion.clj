@@ -20,6 +20,8 @@
 (defn- entity? [x]
   (and (map? x) ((set (keys x)) :db/id)))
 
+;; TODO mv to bread.internal
+;; TODO redefine with Specter
 (defn populate-in [m k v]
   (cond
     (not (sequential? k)) (assoc m k v)
@@ -51,6 +53,7 @@
   (butlast [:x])
   (populate-in {} [:x] :y)
   (populate-in {:a :A} [:x] :y)
+  (populate-in {:a :A} [:x :y] :z)
 
   (defn- do-effect* [data {k :effect/key :as effect}]
     (let [result (bread/effect effect data)]
