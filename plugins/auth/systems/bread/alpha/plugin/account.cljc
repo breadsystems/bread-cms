@@ -141,7 +141,7 @@
                    [:div (ua->browser user-agent) " | " (ua->os user-agent)])
                  (when remote-addr
                    [:div remote-addr])
-                 [:div (.format date-fmt created-at)]
+                 [:div "Logged in at " (.format date-fmt created-at)]
                  (when updated-at
                    ;; TODO i18n
                    [:div "Last active at " (.format date-fmt updated-at)])]
@@ -153,7 +153,7 @@
                    [:div (ua->browser user-agent) " | " (ua->os user-agent)])
                  (when remote-addr
                    [:div remote-addr])
-                 [:div (.format date-fmt created-at)]
+                 [:div "Logged in at " (.format date-fmt created-at)]
                  (when updated-at
                    [:div "Last active at " (.format date-fmt updated-at)])]
                 [:div
