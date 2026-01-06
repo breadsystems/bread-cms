@@ -79,9 +79,9 @@
         Field (partial marx/Field can-edit? post)]
     [:<>
      [:main
-      (Field :title :text :tag :h1)
+      (Field :text :title :tag :h1)
       [:h2 (:db/id post)]
-      (Field :rte :rich-text)
+      (Field :rich-text :rte)
       [:div.tags-list
        [:p "TAGS"]
        (map (fn [{tag :thing/fields}]

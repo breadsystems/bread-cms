@@ -30,7 +30,7 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defn Field [can-edit? thing k field-type & opts]
+(defn Field [can-edit? thing field-type k & opts]
   (let [{:keys [tag wrapper attrs]
          :or {tag :div
               wrapper [:div]
