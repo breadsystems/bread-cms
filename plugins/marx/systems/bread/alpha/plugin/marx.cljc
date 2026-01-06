@@ -30,26 +30,6 @@
         (bread/hook ::bread/expand)
         (bread/hook ::bread/effects!))))
 
-(defn Editable [{:as field :field/keys [content]}
-                field-type
-                & {:keys [escape? tag wrapper attrs]
-                   :or {escape? true
-                        tag :div
-                        wrapper [:div]
-                        attrs {}}
-                   :as extra}]
-  (let [data-attr (-> field
-                      (dissoc :field/content)
-                      (assoc :marx/field-type field-type)
-                      pr-str)
-        attrs (merge {:data-marx data-attr
-                      :tabindex 0}
-                     attrs)
-        html [tag attrs content]]
-    (if wrapper
-      (vec (conj wrapper html))
-      html)))
-
 (defn Field [can-edit? thing k field-type & opts]
   (let [{:keys [tag wrapper attrs]
          :or {tag :div
@@ -57,11 +37,18 @@
               attrs {}}} opts
         {{:as fields field-defs :bread/fields} :thing/fields} thing
         content (get fields k)
-        field-def (get field-defs k)]
-    (cond
-      can-edit? (apply Editable field-def field-type opts)
-      wrapper (vec (conj wrapper [tag attrs content]))
-      :default [tag attrs content])))
+        field (get field-defs k)
+        attrs (if can-edit?
+                (merge attrs {:data-marx (-> field
+                                             (dissoc :field/content)
+                                             (assoc :marx/field-type field-type)
+                                             pr-str)
+                              :tabindex 0})
+                attrs)
+        html (if wrapper
+               (vec (conj wrapper [tag attrs content]))
+               [tag attrs content])]
+    html))
 
 (defmethod Section ::site-name [{{:marx/keys [site-name]} :config} _]
   [:div site-name])
