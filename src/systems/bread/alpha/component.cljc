@@ -13,10 +13,13 @@
     tree))
 
 (defmacro defc [sym arglist metadata & exprs]
-  (let [vmeta (assoc metadata :name (name sym))
+  (let [[metadata exprs] (if (map? metadata)
+                           [metadata exprs]
+                           [{} [metadata]])
         expr (cons 'list (list
                            (macro-symbolize arglist)
-                           (macro-symbolize (last exprs))))]
+                           (macro-symbolize (last exprs))))
+        vmeta (assoc metadata :name (name sym))]
     `(def
        ~(with-meta sym vmeta)
        (with-meta (fn ~sym ~arglist ~@exprs)
@@ -30,14 +33,15 @@
     (.write w (str (:ns m) ".component$" (:name m)))))
 
 (comment
-  (macroexpand '(defc hello []
+  (macroexpand '(defc Hello []
                   {:extends greeting}
                   [:<>]))
-  (macroexpand '(defc hello [x]
+  (macroexpand '(defc Hello [x]
                   {}
                   (if x [:div x] [:div "no x"])))
-  (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
-  (macroexpand '(defc not-found [] {} [:<>]))
+  (macroexpand '(defc Person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
+  (macroexpand '(defc Person [{:person/keys [a b]}] [:div]))
+  (macroexpand '(defc NotFound [] {} [:<>]))
 
   (do
     (defc hello [x]
