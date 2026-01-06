@@ -75,17 +75,15 @@
    :key :post
    :query '[{:thing/fields [*]}
             {:post/taxons [{:thing/fields [*]}]}]}
-  [:<>
-   [:main
-    (if user
-      (marx/Text (:title field-defs) :tag :h1)
-      [:h1 (:title fields)])
-    [:h2 (:db/id post)]
-    (if user
-      (marx/Editable (:rte field-defs) :rich-text)
-      [:div (:rte fields)])
-    [:div.tags-list
-     [:p "TAGS"]
-     (map (fn [{tag :thing/fields}]
-            [:span.tag (:name tag)])
-          tags)]]])
+  (let [can-edit? (boolean user)
+        Field (partial marx/Field can-edit? post)]
+    [:<>
+     [:main
+      (Field :title :text :tag :h1)
+      [:h2 (:db/id post)]
+      (Field :rte :rich-text)
+      [:div.tags-list
+       [:p "TAGS"]
+       (map (fn [{tag :thing/fields}]
+              [:span.tag (:name tag)])
+            tags)]]]))

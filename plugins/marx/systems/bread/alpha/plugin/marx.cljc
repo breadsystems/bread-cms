@@ -50,8 +50,18 @@
       (vec (conj wrapper html))
       html)))
 
-(defn Text [field & opts]
-  (apply Editable field :text opts))
+(defn Field [can-edit? thing k field-type & opts]
+  (let [{:keys [tag wrapper attrs]
+         :or {tag :div
+              wrapper [:div]
+              attrs {}}} opts
+        {{:as fields field-defs :bread/fields} :thing/fields} thing
+        content (get fields k)
+        field-def (get field-defs k)]
+    (cond
+      can-edit? (apply Editable field-def field-type opts)
+      wrapper (vec (conj wrapper [tag attrs content]))
+      :default [tag attrs content])))
 
 (defmethod Section ::site-name [{{:marx/keys [site-name]} :config} _]
   [:div site-name])
