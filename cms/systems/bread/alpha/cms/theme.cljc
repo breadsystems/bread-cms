@@ -66,15 +66,6 @@
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
-(defmethod bread/action ::html [res _ [[tag attrs & content]]]
-  (cond
-    (vector? attrs)
-    [tag (bread/hook res ::html attrs)]
-    (map? attrs)
-    [tag (merge attrs {:dangerouslySetInnerHTML {:__html (apply str content)}})]
-    (string? attrs)
-    [tag {:dangerouslySetInnerHTML {:__html (apply str attrs content)}}]))
-
 (defc InteriorPage
   [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus
@@ -86,13 +77,13 @@
             {:post/taxons [{:thing/fields [*]}]}]}
   [:<>
    [:main
-    (hook ::html (if user
-                   (marx/Text (:title field-defs) :tag :h1)
-                   [:h1 (:title fields)]))
+    (if user
+      (marx/Text (:title field-defs) :tag :h1)
+      [:h1 (:title fields)])
     [:h2 (:db/id post)]
-    (hook ::html (if user
-                   (marx/Editable (:rte field-defs) :rich-text)
-                   [:div (:rte fields)]))
+    (if user
+      (marx/Editable (:rte field-defs) :rich-text)
+      [:div (:rte fields)])
     [:div.tags-list
      [:p "TAGS"]
      (map (fn [{tag :thing/fields}]

@@ -358,9 +358,7 @@
                    (rum/plugin (:renderer app-config))
                    (email/plugin (:email app-config))
                    {:hooks
-                    {::theme/html
-                     [{:action/name ::theme/html}]
-                     ::bread/route
+                    {::bread/route
                      [{:action/name ::enrich-session
                        :action/description "Add session metadata"}]}}])]
     (bread/load-app (bread/app {:plugins plugins}))))
