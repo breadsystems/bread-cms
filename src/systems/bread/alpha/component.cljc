@@ -12,14 +12,6 @@
         :else node))
     tree))
 
-(defmulti Section (fn [_data section-type] section-type))
-
-(defmethod Section :default [data section]
-  (if (fn? section) (section data) section))
-
-(defmethod Section :spacer [_ _]
-  [:.spacer])
-
 (defmacro defc [sym arglist metadata & exprs]
   (let [vmeta (assoc metadata :name (name sym))
         expr (cons 'list (list
@@ -138,6 +130,14 @@
   [req _ _]
   (assoc-in req [::bread/data :hook] (fn [h & args]
                                        (apply bread/hook req h args))))
+
+(defmulti Section (fn [_data section-type] section-type))
+
+(defmethod Section :default [data section]
+  (if (fn? section) (section data) section))
+
+(defmethod Section :spacer [_ _]
+  [:.spacer])
 
 ;; Support implicit dispatchers in routes that only define a :dispatcher/component.
 (defmethod bread/dispatch nil [_])
