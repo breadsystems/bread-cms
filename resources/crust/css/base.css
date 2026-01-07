@@ -1,7 +1,21 @@
 :root {
-  --body-max-width: 70ch;
-  --border-width: 2px;
+  --content-width: 85ch;
+  --content-max-width: calc(100% - 4ch);
 
+  --gap-multiplier: 2;
+  --gap-standard: 1em;
+  --gap-tiny:     calc(var(--gap-standard) * pow(var(--gap-multiplier), -2));
+  --gap-small:    calc(var(--gap-standard) * pow(var(--gap-multiplier), -1));
+  --gap-large:    calc(var(--gap-standard) * pow(var(--gap-multiplier), 1));
+  --gap-spacious: calc(var(--gap-standard) * pow(var(--gap-multiplier), 2));
+  --line-height: 1.5;
+
+  --stroke-width: 2px;
+  --stroke-style: solid;
+  --stroke-style-hover: dashed;
+  --weight-heavy: 700;
+
+  /* Dark theme */
   --color-theme-dark-text-body:         hsl(300, 80%, 95%);
   --color-theme-dark-text-emphasis:     hsl(300.7, 66%, 65.3%);
   --color-theme-dark-stroke-emphasis:   hsl(258.6, 100%, 74.7%);
@@ -14,6 +28,7 @@
   --color-theme-dark-text-secondary:    hsl(256, 44%, 73.5%);
   --color-theme-dark-bg:                hsl(264, 41.7%, 4.7%);
 
+  /* Light theme */
   --color-theme-light-text-body:        hsl(263.9, 79%, 24.3%);
   --color-theme-light-text-emphasis:    hsl(280.9, 52.6%, 42.2%);
   --color-theme-light-stroke-emphasis:  hsl(290, 33.3%, 49.4%);
@@ -25,6 +40,8 @@
   --color-theme-light-text-secondary:   hsl(280.3, 42.7%, 36.3%);
   --color-theme-light-stroke-tertiary:  hsl(300, 17.8%, 17.6%);
   --color-theme-light-bg:               hsl(300, 12.8%, 92.4%);
+
+  --font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -83,53 +100,107 @@ html[data-theme=light] {
   --color-bg:               var(--color-theme-light-bg);
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
-  line-height: 1.5;
+  font-family: var(--font-family);
+  line-height: var(--line-height);
 
   color: var(--color-text-body);
   background: var(--color-bg);
 }
+nav, header, main, article, section, footer, aside {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: var(--gap-standard);
+}
+article > section {
+  gap: var(--gap-small);
+}
 nav {
   align-items: center;
-
-  padding: 1em;
-  border-bottom: 2px dashed var(--color-stroke-emphasis);
+  padding: var(--gap-standard);
+  border-bottom: var(--stroke-width) dashed var(--color-stroke-emphasis);
 }
 main {
-  width: var(--body-max-width);
-  max-width: 96%;
-  margin: 5em auto;
+  width: var(--content-width);
+  max-width: var(--content-max-width);
+  margin: var(--gap-spacious) auto;
+}
+h1, h2, h3, h4, h5, h6, p, ol, ul, form, div,
+nav, header, article, section, footer, aside, p, pre {
+  margin: 0;
+}
+h5, h6 {
+  font-size: 1rem;
 }
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-emphasis);
 }
-h1, h2, p {
-  margin: 0;
+ol, ul {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: var(--gap-small);
 }
-form {
-  margin: 0;
-}
+
 a {
   color: var(--color-text-emphasis);
+  text-decoration: underline var(--stroke-width);
 }
-a:visited {
+a:visited, [data-visited] {
   color: var(--color-text-secondary);
 }
+a:hover, a[data-hover] {
+  text-decoration-style: dashed;
+}
+summary {
+  cursor: pointer;
+}
+
+label {
+  font-weight: var(--weight-heavy);
+}
+select {
+  cursor: pointer;
+}
+input, select {
+  padding: 12px;
+  border: var(--stroke-width) var(--stroke-style) var(--color-text-body);
+}
+button, input, select {
+  color: var(--color-text-body);
+  background: var(--color-bg);
+  border: var(--stroke-width) var(--stroke-style) var(--color-text-body);
+  border-radius: 0;
+}
+button {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: var(--weight-heavy);
+  font-size: 1rem;
+}
+:is(button, input, select):focus {
+  outline: var(--stroke-width) var(--stroke-style) var(--color-stroke-emphasis);
+  border-color: transparent;
+}
+button:hover {
+  border-color: transparent;
+  outline: var(--stroke-width) dashed var(--color-stroke-emphasis);
+  color: var(--color-text-emphasis);
+}
+
 .flex {
   display: flex;
-  gap: 1.5em;
-}
-.tight {
-  gap: 0.5em;
+  gap: var(--gap-standard);
 }
 .col {
   flex-flow: column nowrap;
 }
 .row {
   flex-flow: row nowrap;
-  gap: 1em;
   justify-content: space-between;
 }
 .spacer {
@@ -139,6 +210,22 @@ a:visited {
   display: flex;
   justify-content: center;
 }
+.gap-tiny {
+  gap: var(--gap-tiny);
+}
+.gap-small {
+  gap: var(--gap-small);
+}
+.gap-standard {
+  gap: var(--gap-standard);
+}
+.gap-large {
+  gap: var(--gap-large);
+}
+.gap-spacious {
+  gap: var(--gap-spacious);
+}
+
 .field {
   display: flex;
   flex-flow: row nowrap;
@@ -156,49 +243,20 @@ a:visited {
   color: var(--color-text-secondary);
 }
 .emphasis {
-  font-weight: 700;
+  font-weight: var(--weight-heavy);
   color: var(--color-text-emphasis);
-  border: var(--border-width) dashed var(--color-stroke-emphasis);
-  padding: 12px;
+  border: var(--stroke-width) dashed var(--color-stroke-emphasis);
+  padding: var(--gap-standard);
+}
+.success {
+  font-weight: var(--weight-heavy);
+  color: var(--color-text-success);
+  border: var(--border-width) dashed var(--color-stroke-success);
+  padding: var(--gap-standard);
 }
 .error {
-  font-weight: 700;
+  font-weight: var(--weight-heavy);
   color: var(--color-text-error);
-  border: var(--border-width) dashed var(--color-stroke-error);
-  padding: 12px;
-}
-label {
-  font-weight: 700;
-}
-select {
-  cursor: pointer;
-}
-input, select {
-  padding: 12px;
-  border: var(--border-width) solid var(--color-text-body);
-}
-button, input, select {
-  color: var(--color-text-body);
-  background: var(--color-bg);
-  border: var(--border-width) solid var(--color-text-body);
-  border-radius: 0;
-}
-button {
-  padding: 10px 12px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 1rem;
-}
-:is(button, input, select):focus {
-  outline: var(--border-width) solid var(--color-stroke-emphasis);
-  border-color: transparent;
-}
-button:hover {
-  border-color: transparent;
-  outline: var(--border-width) dashed var(--color-stroke-emphasis);
-  color: var(--color-text-emphasis);
-}
-hr {
-  width: 100%;
-  border: 2px solid var(--color-stroke-secondary);
+  border: var(--stroke-width) dashed var(--color-stroke-error);
+  padding: var(--gap-standard);
 }
