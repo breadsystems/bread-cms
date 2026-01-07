@@ -16,7 +16,9 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
+    [systems.bread.alpha.cms.theme.crust :as crust]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -90,7 +92,11 @@
       ["/confirm-email"
        {:name :confirm-email
          :dispatcher/type ::email/confirm=>
-         :dispatcher/component #'email/ConfirmPage}]]
+         :dispatcher/component #'email/ConfirmPage}]
+      ["/patterns"
+       {:name :patterns
+        :dispatcher/type ::component/standalone=>
+        :dispatcher/component #'crust/PatternLibrary}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
