@@ -1,11 +1,12 @@
 ;; TODO figure out how themes work :P
 (ns systems.bread.alpha.cms.theme
   (:require
+    [clojure.walk :as walk]
     [rum.core :as rum]
 
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.component :refer [defc] :as component]
     [systems.bread.alpha.plugin.marx :as marx]))
 
 (defn title [& strs]
@@ -30,24 +31,65 @@
                          [:li [:a {:href (str "#" (name id))} title]]))
                      sections))]]])
 
+(defn- remove-noop-elements [html]
+  (walk/postwalk (fn [x]
+                   (if (and (vector? x) (not (map-entry? x)))
+                     (filterv (complement (partial contains? #{nil [:<>]})) x)
+                     x)) html))
+
+(defc DocSection [{:keys [content id title]}]
+  [:section {:id id}
+   [:h1 title]
+   content
+   [:a {:href "#contents"} "Back to top"]])
+
 (defc ComponentSection [{:keys [component]}]
-  (let [{:as cmeta cname :name :keys [doc expr examples]} (meta component)]
-    [:article {:id (:name cmeta) :data-component cname}
+  (let [{:as cmeta cname :name
+         :keys [doc doc/show-html? doc/default-data expr examples]
+         :or {show-html? true}}
+        (meta component)]
+    (when (= "Page" cname)
+      (def component component)
+      (comment
+        (meta component)
+        (merge (:doc/default-data (meta component)))
+        (remove-noop-elements (apply list (symbol (:name (meta component))) args))
+        ))
+    [:article {:id cname :data-component cname}
      [:h1 cname]
      [:p doc]
-     (map (fn [{:keys [doc args]}]
-            [:section.example
-             [:h2 doc]
-             [:pre (pp (apply list (symbol cname) args))]
-             ;; TODO toggle these
-             [:pre (pp (apply component args))]
-             [:pre (rum/render-static-markup (apply component args))]])
+     (map (fn [{:keys [doc description args]}]
+            (let [args' (cons (merge default-data (first args)) (rest args))]
+              [:section.example
+               [:h2 doc]
+               [:p description]
+               [:pre (pp (apply list (symbol cname) args))]
+               ;; TODO toggle these
+               [:pre (pp (remove-noop-elements (apply component args')))]
+               (when show-html?
+                 [:pre (rum/render-static-markup (apply component args'))])]))
           examples)
      [:details
       [:summary "Show source"]
-      [:pre (pp (apply list 'defc (symbol cname) expr))]]]))
+      [:pre (pp (apply list 'defc (symbol cname) expr))]]
+     [:a {:href "#contents"} "Back to top"]]))
+
+(defn pattern->section [pattern]
+  (if (= ::component/component (:type (meta pattern)))
+    {:component pattern}
+    pattern))
+
+(defn ns->patterns [ns*]
+  (let [pattern? #(:doc/pattern (meta %) true)
+        xform (comp (map (comp deref val))
+                    (filter pattern?))]
+    (into [] xform (ns-publics ns*))))
 
 (comment
+  (map
+    pattern->section
+    (ns->patterns 'systems.bread.alpha.cms.theme.crust))
+
   (macroexpand
     '(defc P [{:keys [text] :or {text "Default text."}}]
        {:doc "Example description"
