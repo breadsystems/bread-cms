@@ -15,21 +15,27 @@
 (defn- pp [x]
   (with-out-str (clojure.pprint/pprint x)))
 
-(defn name->id [cname]
-  (str "theme-cpt-" (name cname)))
+(defn pattern-type [pattern]
+  (or (:type pattern)
+      (:type (meta pattern))))
 
-(defc TableOfContents [{:as data :keys [sections]}]
+(defmulti ContentsItem pattern-type)
+(defmulti Pattern pattern-type)
+
+(defmethod ContentsItem :default [pattern] pattern)
+
+(defmethod ContentsItem ::component/component [component]
+  (let [cpt-name (:name (meta component))]
+    {:id cpt-name :title cpt-name}))
+
+(defc TableOfContents [{:as data :keys [patterns]}]
   [:nav
    [:h1#contents "Table of contents"]
    [:ul
-    [:<> (doall (map (fn [{:keys [component id title]}]
-                       (let [{:keys [id title]}
-                             (if-let [cmeta (meta component)]
-                               {:id (:name cmeta)
-                                :title (:name cmeta)}
-                               {:id id :title title})]
+    [:<> (doall (map (fn [pattern]
+                       (let [{:keys [id title]} (ContentsItem pattern)]
                          [:li [:a {:href (str "#" (name id))} title]]))
-                     sections))]]])
+                     patterns))]]])
 
 (defn- remove-noop-elements [html]
   (walk/postwalk (fn [x]
@@ -37,24 +43,17 @@
                      (filterv (complement (partial contains? #{nil [:<>]})) x)
                      x)) html))
 
-(defc DocSection [{:keys [content id title]}]
+(defmethod Pattern :default DocSection [{:keys [content id title]}]
   [:section {:id id}
    [:h1 title]
    content
    [:a {:href "#contents"} "Back to top"]])
 
-(defc ComponentSection [{:keys [component]}]
+(defmethod Pattern ::component/component ComponentSection [component]
   (let [{:as cmeta cname :name
          :keys [doc doc/show-html? doc/default-data expr examples]
          :or {show-html? true}}
         (meta component)]
-    (when (= "Page" cname)
-      (def component component)
-      (comment
-        (meta component)
-        (merge (:doc/default-data (meta component)))
-        (remove-noop-elements (apply list (symbol (:name (meta component))) args))
-        ))
     [:article {:id cname :data-component cname}
      [:h1 cname]
      [:p doc]
@@ -64,10 +63,8 @@
                [:h2 doc]
                [:p description]
                [:pre (pp (apply list (symbol cname) args))]
-               ;; TODO toggle these
                [:pre (pp (remove-noop-elements (apply component args')))]
-               (when show-html?
-                 [:pre (rum/render-static-markup (apply component args'))])]))
+               [:pre (rum/render-static-markup (apply component args'))]]))
           examples)
      [:details
       [:summary "Show source"]

@@ -53,7 +53,6 @@
   {:doc "The Page is the foundation of the CRUST theme. This is the component
         you should use to serve most user-facing web pages in your application.
         "
-   :doc/show-html? false
    :doc/default-data
    '{:content [:p "Page content"]
      :hook identity}
@@ -102,3 +101,23 @@
     [:p
      "This technique is powerful, but if your needs are more complex, look into
      creating your own custom theme with its own pattern library."]]})
+
+(defc PatternLibrary [_]
+  {:extends Page
+   :doc/pattern false}
+  (let [patterns [IntroSection
+                  HowToSection
+                  TypographySection
+                  Page
+                  CustomizingSection]]
+    {:title "CRUST"
+     :head [:<>
+            [:script {:src "/crust/js/patterns.js"}]
+            [:link {:rel :stylesheet :href "/crust/css/patterns.css"}]]
+     :content
+     [:<>
+      [:div#theme-toggle-container
+       [:button#toggle-theme {:style {:position :relative}} "light/dark"]]
+      [:main.gap-spacious
+       (theme/TableOfContents {:patterns patterns})
+       (map theme/Pattern patterns)]]}))
