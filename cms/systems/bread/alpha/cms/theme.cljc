@@ -7,7 +7,7 @@
     [systems.bread.alpha.plugin.marx :as marx]))
 
 (defn title [& strs]
-  (apply clojure.string/join " | " (filter seq strs)))
+  (clojure.string/join " | " (filter seq strs)))
 
 (defn- NavItem [{:keys [children uri]
                        {:keys [title] :as fields} :thing/fields
