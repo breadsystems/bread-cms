@@ -1,6 +1,8 @@
 ;; TODO figure out how themes work :P
 (ns systems.bread.alpha.cms.theme
   (:require
+    [rum.core :as rum]
+
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
@@ -8,6 +10,56 @@
 
 (defn title [& strs]
   (clojure.string/join " | " (filter seq strs)))
+
+(defn- pp [x]
+  (with-out-str (clojure.pprint/pprint x)))
+
+(defn name->id [cname]
+  (str "theme-cpt-" (name cname)))
+
+(defc TableOfContents [{:as data :keys [sections]}]
+  [:nav
+   [:h1#contents "Table of contents"]
+   [:ul
+    [:<> (doall (map (fn [{:keys [component id title]}]
+                       (let [{:keys [id title]}
+                             (if-let [cmeta (meta component)]
+                               {:id (:name cmeta)
+                                :title (:name cmeta)}
+                               {:id id :title title})]
+                         [:li [:a {:href (str "#" (name id))} title]]))
+                     sections))]]])
+
+(defc ComponentSection [{:keys [component]}]
+  (let [{:as cmeta cname :name :keys [doc expr examples]} (meta component)]
+    [:article {:id (:name cmeta) :data-component cname}
+     [:h1 cname]
+     [:p doc]
+     (map (fn [{:keys [doc args]}]
+            [:section.example
+             [:h2 doc]
+             [:pre (pp (apply list (symbol cname) args))]
+             ;; TODO toggle these
+             [:pre (pp (apply component args))]
+             [:pre (rum/render-static-markup (apply component args))]])
+          examples)
+     [:details
+      [:summary "Show source"]
+      [:pre (pp (apply list 'defc (symbol cname) expr))]]]))
+
+(comment
+  (macroexpand
+    '(defc P [{:keys [text] :or {text "Default text."}}]
+       {:doc "Example description"
+        :examples
+        '[{:doc "With text"
+           :args ({:text "Sample text."})}
+          {:doc "With default text"
+           :args ({})}]}
+       [:p text]))
+  (ComponentSection {:component P}))
+
+;; TODO vvvvv DELETE vvvvv
 
 (defn- NavItem [{:keys [children uri]
                        {:keys [title] :as fields} :thing/fields

@@ -18,7 +18,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.cms.theme.crust :as crust]
+    [systems.bread.alpha.cms.theme.crust.pattern-library :as crust.lib]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -101,7 +101,7 @@
       ["/patterns"
        {:name :patterns
         :dispatcher/type ::component/standalone=>
-        :dispatcher/component #'crust/PatternLibrary}]]
+        :dispatcher/component #'crust.lib/PatternLibrary}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
