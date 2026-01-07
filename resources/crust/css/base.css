@@ -1,0 +1,204 @@
+:root {
+  --body-max-width: 70ch;
+  --border-width: 2px;
+
+  --color-theme-dark-text-body:         hsl(300, 80%, 95%);
+  --color-theme-dark-text-emphasis:     hsl(300.7, 66%, 65.3%);
+  --color-theme-dark-stroke-emphasis:   hsl(258.6, 100%, 74.7%);
+  --color-theme-dark-stroke-secondary:  hsl(300, 75%, 12.5%);
+  --color-theme-dark-stroke-tertiary:   hsl(300, 17.8%, 17.6%);
+  --color-theme-dark-text-success:      hsl(326, 68.3%, 62.9%);
+  --color-theme-dark-stroke-success:    hsl(314.9, 52.7%, 46.5%);
+  --color-theme-dark-text-error:        hsl(326, 68.3%, 62.9%);
+  --color-theme-dark-stroke-error:      hsl(315, 32.8%, 23.9%);
+  --color-theme-dark-text-secondary:    hsl(256, 44%, 73.5%);
+  --color-theme-dark-bg:                hsl(264, 41.7%, 4.7%);
+
+  --color-theme-light-text-body:        hsl(263.9, 79%, 24.3%);
+  --color-theme-light-text-emphasis:    hsl(280.9, 52.6%, 42.2%);
+  --color-theme-light-stroke-emphasis:  hsl(290, 33.3%, 49.4%);
+  --color-theme-light-stroke-secondary: hsl(300, 75%, 12.5%);
+  --color-theme-light-text-success:     hsl(253.4, 84.7%, 61.6%);
+  --color-theme-light-stroke-success:   hsl(258.7, 52.7%, 46.5%);
+  --color-theme-light-text-error:       hsl(309, 80.9%, 45.1%);
+  --color-theme-light-stroke-error:     hsl(309.3, 100%, 75.9%);
+  --color-theme-light-text-secondary:   hsl(280.3, 42.7%, 36.3%);
+  --color-theme-light-stroke-tertiary:  hsl(300, 17.8%, 17.6%);
+  --color-theme-light-bg:               hsl(300, 12.8%, 92.4%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-body:        var(--color-theme-dark-text-body);
+    --color-text-emphasis:    var(--color-theme-dark-text-emphasis);
+    --color-text-secondary:   var(--color-theme-dark-text-secondary);
+    --color-text-success:     var(--color-theme-dark-text-success);
+    --color-text-error:       var(--color-theme-dark-text-error);
+    --color-stroke-emphasis:  var(--color-theme-dark-stroke-emphasis);
+    --color-stroke-secondary: var(--color-theme-dark-stroke-secondary);
+    --color-stroke-tertiary:  var(--color-theme-dark-stroke-tertiary);
+    --color-stroke-success:   var(--color-theme-dark-stroke-success);
+    --color-stroke-error:     var(--color-theme-dark-stroke-error);
+    --color-bg:               var(--color-theme-dark-bg);
+  }
+}
+html[data-theme=dark] {
+  --color-text-body:        var(--color-theme-dark-text-body);
+  --color-text-emphasis:    var(--color-theme-dark-text-emphasis);
+  --color-text-secondary:   var(--color-theme-dark-text-secondary);
+  --color-text-success:     var(--color-theme-dark-text-success);
+  --color-text-error:       var(--color-theme-dark-text-error);
+  --color-stroke-emphasis:  var(--color-theme-dark-stroke-emphasis);
+  --color-stroke-secondary: var(--color-theme-dark-stroke-secondary);
+  --color-stroke-tertiary:  var(--color-theme-dark-stroke-tertiary);
+  --color-stroke-success:   var(--color-theme-dark-stroke-success);
+  --color-stroke-error:     var(--color-theme-dark-stroke-error);
+  --color-bg:               var(--color-theme-dark-bg);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-text-body:        var(--color-theme-light-text-body);
+    --color-text-emphasis:    var(--color-theme-light-text-emphasis);
+    --color-text-secondary:   var(--color-theme-light-text-secondary);
+    --color-text-success:     var(--color-theme-light-text-success);
+    --color-text-error:       var(--color-theme-light-text-error);
+    --color-stroke-emphasis:  var(--color-theme-light-stroke-emphasis);
+    --color-stroke-secondary: var(--color-theme-light-stroke-secondary);
+    --color-stroke-tertiary:  var(--color-theme-light-stroke-tertiary);
+    --color-stroke-success:   var(--color-theme-light-stroke-success);
+    --color-stroke-error:     var(--color-theme-light-stroke-error);
+    --color-bg:               var(--color-theme-light-bg);
+  }
+}
+html[data-theme=light] {
+  --color-text-body:        var(--color-theme-light-text-body);
+  --color-text-emphasis:    var(--color-theme-light-text-emphasis);
+  --color-text-secondary:   var(--color-theme-light-text-secondary);
+  --color-text-success:     var(--color-theme-light-text-success);
+  --color-text-error:       var(--color-theme-light-text-error);
+  --color-stroke-emphasis:  var(--color-theme-light-stroke-emphasis);
+  --color-stroke-secondary: var(--color-theme-light-stroke-secondary);
+  --color-stroke-tertiary:  var(--color-theme-light-stroke-tertiary);
+  --color-stroke-success:   var(--color-theme-light-stroke-success);
+  --color-stroke-error:     var(--color-theme-light-stroke-error);
+  --color-bg:               var(--color-theme-light-bg);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+  line-height: 1.5;
+
+  color: var(--color-text-body);
+  background: var(--color-bg);
+}
+nav {
+  align-items: center;
+
+  padding: 1em;
+  border-bottom: 2px dashed var(--color-stroke-emphasis);
+}
+main {
+  width: var(--body-max-width);
+  max-width: 96%;
+  margin: 5em auto;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-emphasis);
+}
+h1, h2, p {
+  margin: 0;
+}
+form {
+  margin: 0;
+}
+a {
+  color: var(--color-text-emphasis);
+}
+a:visited {
+  color: var(--color-text-secondary);
+}
+.flex {
+  display: flex;
+  gap: 1.5em;
+}
+.tight {
+  gap: 0.5em;
+}
+.col {
+  flex-flow: column nowrap;
+}
+.row {
+  flex-flow: row nowrap;
+  gap: 1em;
+  justify-content: space-between;
+}
+.spacer {
+  flex: 1;
+}
+.center {
+  display: flex;
+  justify-content: center;
+}
+.field {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 3ch;
+  justify-content: space-between;
+  align-items: center;
+}
+.field label {
+  flex: 1;
+}
+.field :is(input, select) {
+  flex: 2;
+}
+.instruct {
+  color: var(--color-text-secondary);
+}
+.emphasis {
+  font-weight: 700;
+  color: var(--color-text-emphasis);
+  border: var(--border-width) dashed var(--color-stroke-emphasis);
+  padding: 12px;
+}
+.error {
+  font-weight: 700;
+  color: var(--color-text-error);
+  border: var(--border-width) dashed var(--color-stroke-error);
+  padding: 12px;
+}
+label {
+  font-weight: 700;
+}
+select {
+  cursor: pointer;
+}
+input, select {
+  padding: 12px;
+  border: var(--border-width) solid var(--color-text-body);
+}
+button, input, select {
+  color: var(--color-text-body);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-text-body);
+  border-radius: 0;
+}
+button {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+}
+:is(button, input, select):focus {
+  outline: var(--border-width) solid var(--color-stroke-emphasis);
+  border-color: transparent;
+}
+button:hover {
+  border-color: transparent;
+  outline: var(--border-width) dashed var(--color-stroke-emphasis);
+  color: var(--color-text-emphasis);
+}
+hr {
+  width: 100%;
+  border: 2px solid var(--color-stroke-secondary);
+}

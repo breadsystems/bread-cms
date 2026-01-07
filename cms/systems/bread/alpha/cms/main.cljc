@@ -59,6 +59,11 @@
     {:root "marx"
      :path "/marx"}))
 
+(def crust-handler
+  (reitit.ring/create-resource-handler
+    {:root "crust"
+     :path "/crust"}))
+
 (def router
   (reitit/router
     ["/"
@@ -102,6 +107,7 @@
         {})]
      ;; TODO publish to assets?
      ["marx/*" marx-handler]
+     ["crust/*" crust-handler]
      ["{field/lang}"
       [""
        {:name :home

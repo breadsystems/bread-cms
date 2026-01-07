@@ -9,8 +9,8 @@
     [:meta {:content-type :utf-8}]
     ;; TODO ::ui.title ?
     (hook ::html.title [:title title " | " (:site/name config)])
-    [:link {:rel :stylesheet :href "/assets/crust/css/base.css"}]
-    [:script {:src "/assets/crust/js/patterns.js"}]
+    [:link {:rel :stylesheet :href "/crust/css/base.css"}]
+    [:script {:src "/crust/js/patterns.js"}]
     ;; Support arbitrary markup in <head>
     (->> [:<>] (hook ::html.head))]
    [:body
