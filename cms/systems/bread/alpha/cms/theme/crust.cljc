@@ -26,6 +26,7 @@
    :content
    [:<>
     [:div {:style {:position :sticky
+                   :top 0
                    :width "calc(100% - 2 * var(--gap-standard, 1em))"
                    :padding "1em"
                    :display :flex
