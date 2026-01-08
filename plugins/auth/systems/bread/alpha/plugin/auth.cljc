@@ -25,7 +25,7 @@
 (defn database [req]
   (db/db (db/connection req)))
 
-(deftype DatalogSessionStore [conn]
+(deftype DatalogSessionStore [config conn]
   ss/SessionStore
   (ss/delete-session [_ sk]
     (db/transact conn [[:db/retract [:session/id sk] :session/id]
@@ -33,27 +33,35 @@
     sk)
   (ss/read-session [_ sk]
     (when sk
-      (let [{id :db/id data :session/data}
+      (let [{:as session :keys [db/id session/data thing/updated-at]}
             (db/q @conn
-                  '{:find [(pull ?e [:db/id :session/data]) .]
+                  '{:find [(pull ?e [:db/id :thing/updated-at :session/data]) .]
                     :in [$ ?sk]
                     :where [[?e :session/id ?sk]]}
-                  sk)]
-        (when id (-> data edn/read-string (assoc :db/id id))))))
+                  sk)
+            earliest-valid (t/seconds-ago (:max-age config))
+            valid? (when session (.after updated-at earliest-valid))]
+        (when (and valid? id)
+          (-> data edn/read-string (assoc :db/id id))))))
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
           sk (if exists? sk (random/base64 512))
-          date-key (if exists? :thing/updated-at :thing/created-at)
-          session {:session/id sk
-                   :session/data (pr-str data)
-                   date-key (t/now)}
+          now (t/now)
+          session (merge {:session/id sk
+                          :session/data (pr-str data)
+                          :thing/updated-at now}
+                         (when-not exists? {:thing/created-at now}))
           tx {:db/id (:db/id user)
               :user/sessions [session]}]
       (db/transact conn [tx])
       sk)))
 
-(defn session-store [conn]
-  (DatalogSessionStore. conn))
+(defn session-store
+  ([{:keys [max-age]} conn]
+   (let [config {:max-age (or max-age (* 72 60 60))}]
+     (DatalogSessionStore. config conn)))
+  ([conn]
+   (session-store {} conn)))
 
 (comment
   (random/base64 512)

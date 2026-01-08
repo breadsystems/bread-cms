@@ -310,15 +310,16 @@
                    (do
                      (log/info "using default session store")
                      defaults))]
+    ;; TODO observe session-store max-age automatically...
     (reduce #(assoc-in %1 (key %2) (val %2)) defaults overrides)))
 
 (defmethod ig/init-key :ring/session-store
-  [_ {store-type :store/type db-config :store/db}]
+  [_ {:as config store-type :store/type db-config :store/db}]
   ;; TODO extend with a multimethod??
   (when (= :datalog store-type)
     (let [conn (db/connect db-config)]
       (log/info "connecting auth session-store:" (str conn))
-      {:session-store (auth/session-store conn)
+      {:session-store (auth/session-store config conn)
        :connection conn})))
 
 (defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
