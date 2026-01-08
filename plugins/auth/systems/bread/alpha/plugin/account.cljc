@@ -161,30 +161,6 @@
                   (:auth/logout i18n)]]]))
            (:user/sessions user))]]))
 
-(defc AccountPage
-  [{:as data :keys [config hook dir user]}]
-  {:query '[:db/id
-            :thing/created-at
-            :user/username
-            :user/name
-            :user/lang
-            :user/preferences
-            {:user/roles [:role/key {:role/abilities [:ability/key]}]}
-            {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
-            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (hook ::html.account.title [:title (:user/username user) " | " (:site/name config)])
-    ;; TODO theme/Style
-    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
-    (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:account/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:account/html.account.sections config))]]])
-
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
   (when user

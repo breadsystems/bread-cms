@@ -80,7 +80,7 @@
       ["/account"
        {:name :account
         :dispatcher/type ::account/account=>
-        :dispatcher/component #'account/AccountPage}]
+        :dispatcher/component #'crust/AccountPage}]
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>

@@ -188,6 +188,38 @@
           [:span.spacer]
           [:button {:type :submit} (:auth/login i18n)]]]])}))
 
+(defc AccountPage
+  [{:as data :keys [config hook dir user]}]
+  {:extends Page
+   :query '[:db/id
+            :thing/created-at
+            :user/username
+            :user/name
+            :user/lang
+            :user/preferences
+            {:user/roles [:role/key {:role/abilities [:ability/key]}]}
+            {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
+            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
+  {:title (:user/username user)
+   :head [:<> [:style
+               "
+              .user-session {
+                display: flex;
+                flex-flow: row wrap;
+                justify-content: space-between;
+                align-items: start;
+
+                padding: 1em;
+                border: 2px dashed var(--color-stroke-tertiary);
+              }
+               "]]
+   :content
+   [:<>
+    [:nav.row
+     (map (partial Section data) (:account/html.account.header config))]
+    [:main
+     (map (partial Section data) (:account/html.account.sections config))]]})
+
 (defc LogoutForm [{:keys [config i18n]}]
   {:doc "Standard logout form for the account page."}
   [:form.logout-form {:method :post :action (:auth/login-uri config)}
