@@ -100,7 +100,7 @@ html[data-theme=light] {
   --color-bg:               var(--color-theme-light-bg);
 }
 
-* {
+*, :*, *::before, *::after {
   box-sizing: border-box;
 }
 
