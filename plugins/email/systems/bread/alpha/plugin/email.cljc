@@ -16,20 +16,7 @@
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.thing :as thing])
   (:import
-    [java.util Calendar]
     [java.net URLEncoder]))
-
-(comment
-  (doto (Calendar/getInstance)
-    (.setTime (t/now))
-    (.add Calendar/MINUTE -60))
-  (compare (minutes-ago (t/now) 120) (minutes-ago (t/now) 1))
-  (minutes-ago (t/now) 120))
-
-(defn- minutes-ago [now minutes]
-  (.getTime (doto (Calendar/getInstance)
-              (.setTime now)
-              (.add Calendar/MINUTE (- minutes)))))
 
 (defn- summarize [email]
   (update email :body #(str "[" (-> % .getBytes count) " bytes]")))
@@ -358,7 +345,7 @@
 
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
-  (let [min-updated (minutes-ago (t/now) max-pending-minutes)
+  (let [min-updated (t/minutes-ago (t/now) max-pending-minutes)
         valid? (when pending-email
                  (.after (:thing/updated-at pending-email) min-updated))]
     (when valid? pending-email)))
