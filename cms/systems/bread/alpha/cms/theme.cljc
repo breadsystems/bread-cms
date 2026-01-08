@@ -2,6 +2,7 @@
 (ns systems.bread.alpha.cms.theme
   (:require
     [clojure.walk :as walk]
+    [markdown-to-hiccup.core :as md2h]
     [rum.core :as rum]
 
     [systems.bread.alpha.user :as user]
@@ -46,7 +47,9 @@
 (defmethod Pattern :default DocSection [{:keys [content id title]}]
   [:section {:id id}
    [:h1 title]
-   content
+   (if (string? content)
+     (-> content md2h/md->hiccup md2h/component)
+     content)
    [:a {:href "#contents"} "Back to top"]])
 
 (defmethod Pattern ::component/component ComponentSection [component]
@@ -61,6 +64,7 @@
             (let [args' (cons (merge default-data (first args)) (rest args))]
               [:section.example
                [:h2 doc]
+               ;; TODO support markdown...
                [:p description]
                ;; TODO syntax highlighting
                [:pre (pp (apply list (symbol cname) args))]

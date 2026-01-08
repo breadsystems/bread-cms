@@ -113,9 +113,11 @@ body {
   background: var(--color-bg);
 }
 nav, header, main, article, section, footer, aside {
-  display: flex;
-  flex-flow: column nowrap;
-  gap: var(--gap-standard);
+  &, & > div {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: var(--gap-standard);
+  }
 }
 article > section {
   gap: var(--gap-small);
