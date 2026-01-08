@@ -8,6 +8,14 @@
 (defn now []
   (or *now* (Date.)))
 
+(defn seconds-ago
+  ([seconds]
+   (seconds-ago (now) seconds))
+  ([now seconds]
+   (.getTime (doto (Calendar/getInstance)
+               (.setTime now)
+               (.add Calendar/SECOND (- seconds))))))
+
 (defn minutes-ago
   ([minutes]
    (minutes-ago (now) minutes))
@@ -21,7 +29,9 @@
   (doto (Calendar/getInstance)
     (.setTime (now))
     (.add Calendar/MINUTE -60))
-  (compare (minutes-ago (now) 120) (minutes-ago (now) 1))
+  (= -1 (compare (minutes-ago (now) 1)
+                 (seconds-ago (now) 59)))
+  (seconds-ago (now) 120)
   (minutes-ago (now) 120)
 
   [(binding [*now* :NOW] (now)) (now)])
