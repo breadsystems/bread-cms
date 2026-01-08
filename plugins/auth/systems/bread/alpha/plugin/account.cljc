@@ -297,7 +297,7 @@
                     html-account-header [::account-link
                                          ::email/settings-link
                                          :spacer
-                                         auth/LogoutForm]
+                                         ::logout-form]
                     html-account-form [::heading
                                        :flash
                                        ::name

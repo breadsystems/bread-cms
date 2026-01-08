@@ -1,8 +1,9 @@
 (ns systems.bread.alpha.cms.theme.crust
   (:require
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.component :refer [defc]]))
+    [systems.bread.alpha.component :refer [defc Section]]
+    [systems.bread.alpha.plugin.account :as account]
+    [systems.bread.alpha.plugin.auth :as auth]))
 
 (def IntroSection
   {:id :intro
@@ -103,7 +104,11 @@
   [{:as data
     :keys [config hook i18n session dir totp]
     :auth/keys [result]}]
-  {:extends Page}
+  {:extends Page
+   :doc
+   "The standard Bread login page, designed to work with the `::auth/login=>`
+   dispatcher. You typically won't need to call this component from within
+   other components."}
   (let [{:keys [totp-key issuer]} totp
         user (or (:user session) (:auth/user session))
         step (:auth/step session)
@@ -183,6 +188,15 @@
           [:span.spacer]
           [:button {:type :submit} (:auth/login i18n)]]]])}))
 
+(defc LogoutForm [{:keys [config i18n]}]
+  {:doc "Standard logout form for the account page."}
+  [:form.logout-form {:method :post :action (:auth/login-uri config)}
+   [:button {:type :submit :name :submit :value "logout"}
+    (:auth/logout i18n)]])
+
+(defmethod Section ::account/logout-form [data _]
+  (LogoutForm data))
+
 (def CustomizingSection
   {:id :customizing
    :title "Customizing CRUST"
@@ -197,8 +211,7 @@
      creating your own custom theme with its own pattern library."]]})
 
 (defc PatternLibrary [_]
-  {:extends Page
-   :doc/pattern false}
+  {:extends Page}
   (let [patterns [IntroSection
                   HowToSection
                   TypographySection

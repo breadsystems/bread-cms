@@ -252,11 +252,6 @@
          (.encodeToString (Base64/getEncoder))
          (str "data:image/png;base64,"))))
 
-(defn LogoutForm [{:keys [config i18n]}]
-  [:form.logout-form {:method :post :action (:auth/login-uri config)}
-   [:button {:type :submit :name :submit :value "logout"}
-    (:auth/logout i18n)]])
-
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
