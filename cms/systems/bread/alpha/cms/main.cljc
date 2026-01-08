@@ -72,7 +72,7 @@
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
-        :dispatcher/component #'auth/LoginPage}]
+        :dispatcher/component #'crust/LoginPage}]
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
