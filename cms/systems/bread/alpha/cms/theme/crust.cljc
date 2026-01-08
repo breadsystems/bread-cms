@@ -5,7 +5,7 @@
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.auth :as auth]))
 
-(def IntroSection
+(defn- IntroSection [_]
   {:id :intro
    :title "Introduction"
    :content
@@ -16,26 +16,29 @@
     [:ol
      [:li "to illustrate the look and feel of the CRUST theme"]
      [:li "to illustrate usage of the CRUST components"]]
-    [:p "CRUST is designed to be used for functional UIs in web apps, as opposed
-        to long-form or image-heavy content. The font-family is
-        therefore a uniform sans-serif across the board, to maximize scannability.
-        CRUST uses a system font cascade:"]
-    [:pre
-     "--font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
-     "]]})
+    ,]})
 
-(def HowToSection
+(defn- HowToSection  [_]
   {:id :how-to
    :title "How to use this document"
    :content
    [:<>
     [:p "Don't."]]})
 
-(def TypographySection
+(defn- TypographySection  [_]
   {:id :typography
    :title "Typography"
    :content
    [:<>
+    [:p "CRUST is designed to be used for functional UIs in web apps, as opposed
+        to long-form or image-heavy content. The font-family is
+        therefore a uniform sans-serif across the board, to maximize scannability.
+        CRUST uses a system font cascade:"]
+    [:pre
+     "--font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+     "]
+    [:p "This ensures that fonts load instantly, and helps keep things simple."]
+    [:h1 "Heading one"]
     [:h2 "Heading two"]
     [:h3 "Heading three"]
     [:h4 "Heading four"]
@@ -248,7 +251,7 @@
    [:button {:type :submit :name :action :value "update"}
     (:account/save i18n)]])
 
-(def CustomizingSection
+(defn- CustomizingSection [_]
   {:id :customizing
    :title "Customizing CRUST"
    :content
@@ -261,14 +264,14 @@
      "This technique is powerful, but if your needs are more complex, look into
      creating your own custom theme with its own pattern library."]]})
 
-(defc PatternLibrary [_]
+(defc PatternLibrary [{:as data :keys [hook]}]
   {:extends Page}
-  (let [patterns [IntroSection
-                  HowToSection
-                  TypographySection
+  (let [patterns [(IntroSection data)
+                  (HowToSection data)
+                  (TypographySection data)
                   Page
                   LoginPage
-                  CustomizingSection]]
+                  (CustomizingSection data)]]
     {:title "CRUST"
      :head [:<>
             [:script {:src "/crust/js/patterns.js"}]
