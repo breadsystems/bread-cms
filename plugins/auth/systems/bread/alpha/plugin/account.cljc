@@ -108,14 +108,15 @@
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
   (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
-    [:section.flex.col
+    [:section
      [:h3 (:account/your-sessions i18n)]
      [:.flex.col
       (map (fn [{:as user-session
                  {:keys [user-agent remote-addr]} :session/data
                  :thing/keys [created-at updated-at]}]
              (if (= (:db/id session) (:db/id user-session))
-               [:div.user-session.current
+               ;; Current session.
+               [:div.user-session
                 [:div
                  (when user-agent
                    [:div (ua->browser user-agent) " | " (ua->os user-agent)])
@@ -126,6 +127,7 @@
                    ;; TODO i18n
                    [:div "Last active at " (.format date-fmt updated-at)])]
                 [:div [:span.instruct "This session"]]]
+               ;; Sessions on other devices.
                [:form.user-session {:method :post}
                 [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
                 [:div
