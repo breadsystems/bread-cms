@@ -203,15 +203,15 @@
   {:title (:user/username user)
    :head [:<> [:style
                "
-              .user-session {
-                display: flex;
-                flex-flow: row wrap;
-                justify-content: space-between;
-                align-items: start;
+               .user-session {
+                 display: flex;
+                 flex-flow: row wrap;
+                 justify-content: space-between;
+                 align-items: start;
 
-                padding: 1em;
-                border: 2px dashed var(--color-stroke-tertiary);
-              }
+                 padding: 1em;
+                 border: 2px dashed var(--color-stroke-tertiary);
+               }
                "]]
    :content
    [:<>
