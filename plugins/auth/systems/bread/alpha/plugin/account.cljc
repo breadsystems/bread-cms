@@ -42,12 +42,6 @@
         (re-find #"windows" normalized) "Windows"
         :default "Unknown OS"))))
 
-(defn- i18n-format [i18n k]
-  (if (sequential? k) ;; TODO tongue
-    (let [[k & args] k]
-      (apply format (get i18n k) args))
-    (get i18n k)))
-
 (defmethod Section ::username [{:keys [user]} _]
   [:span.username (:user/username user)])
 
@@ -58,14 +52,6 @@
 
 (defmethod Section ::heading [{:keys [i18n]} _]
   [:h3 (:account/account i18n)])
-
-;; TODO move to generic UI ns...
-(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
-  [:<>
-   (when-let [success-key (:success-key flash)]
-     [:.success [:p (i18n-format i18n success-key)]])
-   (when-let [error-key (:error-key flash)]
-     [:.error [:p (i18n-format i18n error-key)]])])
 
 (defmethod Section ::name [{:keys [user i18n]} _]
   [:.field
@@ -115,12 +101,6 @@
              :type :password
              :name :password-confirmation
              :maxlength (:auth/max-password-length config)}]]])
-
-(defmethod Section :save [{:keys [i18n]} _]
-  [:.field
-   [:span.spacer]
-   [:button {:type :submit :name :action :value "update"}
-    (:account/save i18n)]])
 
 (defmethod Section ::account-form [{:as data :keys [config]} _]
   [:form.flex.col {:method :post}

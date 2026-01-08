@@ -229,6 +229,25 @@
 (defmethod Section ::account/logout-form [data _]
   (LogoutForm data))
 
+(defn- i18n-format [i18n k]
+  (if (sequential? k) ;; TODO tongue
+    (let [[k & args] k]
+      (apply format (get i18n k) args))
+    (get i18n k)))
+
+(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
+  [:<>
+   (when-let [success-key (:success-key flash)]
+     [:.success [:p (i18n-format i18n success-key)]])
+   (when-let [error-key (:error-key flash)]
+     [:.error [:p (i18n-format i18n error-key)]])])
+
+(defmethod Section :save [{:keys [i18n]} _]
+  [:.field
+   [:span.spacer]
+   [:button {:type :submit :name :action :value "update"}
+    (:account/save i18n)]])
+
 (def CustomizingSection
   {:id :customizing
    :title "Customizing CRUST"
