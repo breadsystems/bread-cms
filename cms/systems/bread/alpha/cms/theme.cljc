@@ -62,6 +62,7 @@
               [:section.example
                [:h2 doc]
                [:p description]
+               ;; TODO syntax highlighting
                [:pre (pp (apply list (symbol cname) args))]
                [:pre (pp (remove-noop-elements (apply component args')))]
                [:pre (rum/render-static-markup (apply component args'))]]))
