@@ -77,17 +77,7 @@
     {:component pattern}
     pattern))
 
-(defn ns->patterns [ns*]
-  (let [pattern? #(:doc/pattern (meta %) true)
-        xform (comp (map (comp deref val))
-                    (filter pattern?))]
-    (into [] xform (ns-publics ns*))))
-
 (comment
-  (map
-    pattern->section
-    (ns->patterns 'systems.bread.alpha.cms.theme.crust))
-
   (macroexpand
     '(defc P [{:keys [text] :or {text "Default text."}}]
        {:doc "Example description"
