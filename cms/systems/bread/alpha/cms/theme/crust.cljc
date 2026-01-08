@@ -49,30 +49,48 @@
      [:strong "bold text"] " and some " [:i "italicized text."]]
     ,]})
 
-(defc Page [{:keys [dir config content hook i18n field/lang title]}]
-  {:doc "The Page is the foundation of the CRUST theme. This is the component
+(defc Page [{:keys [dir config content hook field/lang]}]
+  {:doc "`Page` is the foundation of the CRUST theme. This is the component
         you should use to serve most user-facing web pages in your application.
         "
    :doc/default-data
-   '{:content [:p "Page content"]
-     :hook identity}
+   {:content [:div "Page content"]
+    :config {:site/name "Site name"}
+    :hook (fn hook [_ x & _] x)}
    :examples
    '[{:doc "Language and text direction"
       ;; TODO support markdown in docs
       :description
-      "Specify document language and text direction with :field/lang and :dir,
-      resp. Typically the i18n core plugin takes care of this for you, including
+      "Specify document language and text direction with `:field/lang` and `:dir`,
+      resp. Typically the `i18n` core plugin takes care of this for you, including
       detecting text direction based on language."
       :args ({:dir :rtl
               :field/lang :ar
-              :content [:p "محتوى الصفحة"]})}]}
-  (let [{:keys [content head] page-title :title}
+              :content [:p "محتوى الصفحة"]})}
+     {:doc "Document title"
+      :description
+      "By default, `(:site/name config)` is used for the document title. This
+      is set up automatically if you pass `{:site {:name your-site-name}}` to
+      the `defaults` plugin.
+      "
+      :args ({:config {:site/name "Title in config"}})}
+     {:doc "Overriding document title"
+      :description
+      "Set `(:title content)` to have it prepended to the globally configured
+      site name, separated with `\" | \"`. If you need further customization,
+      use the `::theme/html.title` hook.
+      "
+      :args ({:config {:site/name "Title in config"}
+              :content {:title "Title override!" :content [:div "Page content"]}})}
+     ,]}
+  (let [{:keys [content head title]}
         (if (vector? content) {:content content} content)]
     [:html {:lang lang :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
       (hook ::theme/html.title
-            [:title (theme/title (or page-title title) (:site/name config))])
+            [:title (theme/title title (:site/name config))]
+            title)
       [:link {:rel :stylesheet :href "/crust/css/base.css"}]
       head
       ;; Support arbitrary markup in <head>
