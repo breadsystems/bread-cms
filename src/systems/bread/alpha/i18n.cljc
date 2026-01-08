@@ -44,6 +44,13 @@
          (reverse)
          (map :lang))))
 
+(defn- range-prefix [lang-range]
+  (keyword (first (string/split (name lang-range) #"-"))))
+
+(defn- accepted-range? [candidates lang-range]
+  (let [prefix (range-prefix lang-range)]
+    (contains? candidates range-lang)))
+
 (defn- accept-first [candidates lang-ranges]
   (when (seq lang-ranges)
     (reduce (fn
@@ -51,8 +58,8 @@
               ([_ lang-range]
                (cond
                  (contains? candidates lang-range) (reduced lang-range)
-                 (re-find #"-" (name lang-range))
-                 (reduced (keyword (first (string/split (name lang-range) #"-")))))))
+                 (accepted-range? candidates lang-range)
+                 (reduced (range-prefix lang-range)))))
             [] lang-ranges)))
 
 (defn lang
