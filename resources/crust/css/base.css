@@ -152,6 +152,10 @@ pre {
   background: #2b182b;
   overflow-x: scroll;
 }
+hr {
+  width: 100%;
+  border: var(--stroke-width) solid var(--color-stroke-secondary);
+}
 
 a {
   color: var(--color-text-emphasis);
