@@ -44,11 +44,14 @@
                      (filterv (complement (partial contains? #{nil [:<>]})) x)
                      x)) html))
 
+(defn- md->hiccup [s]
+  (-> s md2h/md->hiccup md2h/component))
+
 (defmethod Pattern :default DocSection [{:keys [content id title]}]
   [:section {:id id}
    [:h1 title]
    (if (string? content)
-     (-> content md2h/md->hiccup md2h/component)
+     (md->hiccup content)
      content)
    [:a {:href "#contents"} "Back to top"]])
 
@@ -59,14 +62,12 @@
         (meta component)]
     [:article {:id cname :data-component cname}
      [:h1 cname]
-     [:p doc]
+     (md->hiccup doc)
      (map (fn [{:keys [doc description args]}]
             (let [args' (cons (merge default-data (first args)) (rest args))]
               [:section.example
                [:h2 doc]
-               ;; TODO support markdown...
-               [:p description]
-               ;; TODO syntax highlighting
+               (md->hiccup description)
                [:pre [:code.clj (pp (apply list (symbol cname) args))]]
                [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
                [:pre [:code.xml (rum/render-static-markup (apply component args'))]]]))

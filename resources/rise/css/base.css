@@ -119,9 +119,6 @@ nav, header, main, article, section, footer, aside {
     gap: var(--gap-standard);
   }
 }
-article > section {
-  gap: var(--gap-small);
-}
 nav {
   align-items: center;
   padding: var(--gap-standard);
