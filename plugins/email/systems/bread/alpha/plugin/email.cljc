@@ -346,8 +346,10 @@
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
   (let [min-updated (t/minutes-ago (t/now) max-pending-minutes)
-        valid? (when pending-email
-                 (.after (:thing/updated-at pending-email) min-updated))]
+        updated-at (or (:thing/updated-at pending-email)
+                       (:thing/created-at pending-email))
+        valid? (when updated-at
+                 (.after updated-at min-updated))]
     (when valid? pending-email)))
 
 (defmethod bread/dispatch ::confirm=>
@@ -361,6 +363,7 @@
           :expansion/args ['{:find [(pull ?e [:db/id
                                               :email/code
                                               :email/address
+                                              :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
                              :where [[?e :email/code ?code]
