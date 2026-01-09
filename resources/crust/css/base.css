@@ -147,9 +147,10 @@ ol, ul {
   flex-flow: column nowrap;
   gap: var(--gap-small);
 }
-pre {
+pre:not(:has(.clj,.xml)) {
   padding: var(--gap-standard);
   max-width: calc(100% - 2 * var(--gap-standard));
+  /* TODO */
   color: hsl(329.8, 100%, 76.3%);
   background: #2b182b;
   overflow-x: scroll;
