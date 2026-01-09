@@ -12,7 +12,7 @@
 
   --stroke-width: 2px;
   --stroke-style: solid;
-  --stroke-style-hover: dashed;
+  --stroke-style-emphasis: dashed;
   --weight-heavy: 700;
 
   /* Dark theme */
@@ -122,7 +122,7 @@ nav, header, main, article, section, footer, aside {
 nav {
   align-items: center;
   padding: var(--gap-standard);
-  border-bottom: var(--stroke-width) var(--stroke-style-hover) var(--color-stroke-emphasis);
+  border-bottom: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-emphasis);
 }
 main {
   width: var(--content-width);
@@ -165,7 +165,7 @@ a:visited, [data-visited] {
   color: var(--color-text-secondary);
 }
 a:hover, a[data-hover] {
-  text-decoration-style: var(--stroke-style-hover);
+  text-decoration-style: var(--stroke-style-emphasis);
 }
 summary {
   cursor: pointer;
@@ -199,7 +199,7 @@ button {
 }
 button:hover {
   border-color: transparent;
-  outline: var(--stroke-width) var(--stroke-style-hover) var(--color-stroke-emphasis);
+  outline: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-emphasis);
   color: var(--color-text-emphasis);
 }
 
@@ -256,18 +256,18 @@ button:hover {
 .emphasis {
   font-weight: var(--weight-heavy);
   color: var(--color-text-emphasis);
-  border: var(--stroke-width) var(--stroke-style-hover) var(--color-stroke-emphasis);
+  border: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-emphasis);
   padding: var(--gap-standard);
 }
 .success {
   font-weight: var(--weight-heavy);
   color: var(--color-text-success);
-  border: var(--border-width) var(--stroke-style-hover) var(--color-stroke-success);
+  border: var(--border-width) var(--stroke-style-emphasis) var(--color-stroke-success);
   padding: var(--gap-standard);
 }
 .error {
   font-weight: var(--weight-heavy);
   color: var(--color-text-error);
-  border: var(--stroke-width) var(--stroke-style-hover) var(--color-stroke-error);
+  border: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-error);
   padding: var(--gap-standard);
 }
