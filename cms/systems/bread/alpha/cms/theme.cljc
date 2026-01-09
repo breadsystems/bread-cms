@@ -67,9 +67,9 @@
                ;; TODO support markdown...
                [:p description]
                ;; TODO syntax highlighting
-               [:pre (pp (apply list (symbol cname) args))]
-               [:pre (pp (remove-noop-elements (apply component args')))]
-               [:pre (rum/render-static-markup (apply component args'))]]))
+               [:pre [:code.clj (pp (apply list (symbol cname) args))]]
+               [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
+               [:pre [:code.xml (rum/render-static-markup (apply component args'))]]]))
           examples)
      [:details
       [:summary "Show source"]
@@ -175,3 +175,20 @@
        (map (fn [{tag :thing/fields}]
               [:span.tag (:name tag)])
             tags)]]]))
+
+(defmethod bread/action ::html.head.pattern-library [req _ [head]]
+  (let [head (or head [:<>])]
+    (conj head
+          [:link {:rel :stylesheet :href "/assets/highlight/styles/atom-one-dark.min.css"}]
+          [:script {:src "/assets/highlight/highlight.min.js"}]
+          [:script "hljs.highlightAll()"])))
+
+(defn plugin
+  ([] (plugin {}))
+  ([_]
+   {:hooks
+    {::html.head.pattern-library
+     [{:action/name ::html.head.pattern-library
+       :action/description
+       "Call this hook inside the <head> of your theme's PatternLibrary component
+       to automatically include standard assets, e.g. for syntax highlighting."}]}}))

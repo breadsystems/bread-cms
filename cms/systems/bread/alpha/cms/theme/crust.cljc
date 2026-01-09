@@ -273,9 +273,10 @@
                   LoginPage
                   (CustomizingSection data)]]
     {:title "CRUST"
-     :head [:<>
-            [:script {:src "/crust/js/patterns.js"}]
-            [:link {:rel :stylesheet :href "/crust/css/patterns.css"}]]
+     :head (hook ::theme/html.head.pattern-library
+                 [:<>
+                  [:script {:src "/crust/js/patterns.js"}]
+                  [:link {:rel :stylesheet :href "/crust/css/patterns.css"}]])
      :content
      [:<>
       [:div#theme-toggle-container
