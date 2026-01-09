@@ -56,6 +56,12 @@
      content)
    [:a {:href "#contents"} "Back to top"]])
 
+(defn- ->id [s]
+  (apply str (map (fn [c] (if (Character/isWhitespace c) \_ c)) s)))
+
+(comment
+  (->id "How to do stuff"))
+
 (defmethod Pattern ::component/component ComponentSection [component]
   (let [{component-name :name
          :keys [doc doc/show-html? doc/default-data expr examples]
@@ -69,10 +75,11 @@
         "#"]
        (md->hiccup doc)
        (map (fn [{:keys [doc description args]}]
-              (let [args' (cons (merge default-data (first args)) (rest args))]
-                [:section.example
+              (let [args' (cons (merge default-data (first args)) (rest args))
+                    id (->id doc)]
+                [:section.example {:id id}
                  [:h2 doc]
-                 [:a.section-link {:href (str "#")}]
+                 [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]
                  (md->hiccup description)
                  [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
                  [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
