@@ -144,13 +144,18 @@ ol, ul {
   flex-flow: column nowrap;
   gap: var(--gap-small);
 }
-pre:not(:has(.clj,.xml)) {
+pre:not(:has(.hljs)) {
   padding: var(--gap-standard);
   max-width: calc(100% - 2 * var(--gap-standard));
   /* TODO */
   color: hsl(329.8, 100%, 76.3%);
   background: #2b182b;
   overflow-x: scroll;
+}
+code:not(.hljs) {
+  padding: 0.25em;
+  color: hsl(329.8, 100%, 76.3%);
+  background: #2b182b;
 }
 hr {
   width: 100%;
