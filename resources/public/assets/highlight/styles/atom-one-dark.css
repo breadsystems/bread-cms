@@ -28,7 +28,7 @@ hue-6-2: #e6c07b
 .hljs {
   color: #abb2bf;
   /* NOTE: modified for contrast */
-  background: #282c34
+  background: #1a0b31
 }
 .hljs-comment,
 .hljs-quote {
@@ -45,7 +45,8 @@ hue-6-2: #e6c07b
 .hljs-selector-tag,
 .hljs-deletion,
 .hljs-subst {
-  color: #e06c75
+  /* NOTE: modified for cohesion */
+  color: #dc6ce0
 }
 .hljs-literal {
   color: #56b6c2
