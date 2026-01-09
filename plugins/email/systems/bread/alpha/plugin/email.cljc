@@ -143,21 +143,6 @@
          (:email/add i18n)]]]
       [:p.instruct (:email/to-add-email-confirm-pending i18n)])))
 
-(defc EmailPage
-  [{:as data :keys [config dir hook i18n user]}]
-  {:query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
-  ;; TODO UI lib
-  [:html {:lang {:field/lang data} :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.email.stylesheet))
-    (hook ::html.email.title [:title (:email/email i18n "Email")])]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:account/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:email/html.email.sections config))]]])
-
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
     (when-not own-id?

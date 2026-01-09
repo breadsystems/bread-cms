@@ -223,6 +223,16 @@
     [:main
      (map (partial Section data) (:account/html.account.sections config))]]})
 
+(defc EmailPage
+  [{:as data :keys [config]}]
+  {:extends Page
+   :query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
+  [:<>
+   [:nav.row
+    (map (partial Section data) (:account/html.account.header config))]
+   [:main
+    (map (partial Section data) (:email/html.email.sections config))]])
+
 (defc LogoutForm [{:keys [config i18n]}]
   {:doc "Standard logout form for the account page."}
   [:form.logout-form {:method :post :action (:auth/login-uri config)}

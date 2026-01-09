@@ -81,7 +81,7 @@
        {:name :email
         :dispatcher/type ::email/settings=>
          ;; TODO
-        :dispatcher/component #'email/EmailPage}]
+        :dispatcher/component #'rise/EmailPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
