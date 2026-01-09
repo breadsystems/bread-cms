@@ -18,7 +18,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.cms.theme.crust :as crust]
+    [systems.bread.alpha.cms.theme.rise :as rise]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -59,10 +59,10 @@
     {:root "marx"
      :path "/marx"}))
 
-(def crust-handler
+(def rise-handler
   (reitit.ring/create-resource-handler
-    {:root "crust"
-     :path "/crust"}))
+    {:root "rise"
+     :path "/rise"}))
 
 (def router
   (reitit/router
@@ -72,7 +72,7 @@
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
-        :dispatcher/component #'crust/LoginPage}]
+        :dispatcher/component #'rise/LoginPage}]
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
@@ -80,7 +80,7 @@
       ["/account"
        {:name :account
         :dispatcher/type ::account/account=>
-        :dispatcher/component #'crust/AccountPage}]
+        :dispatcher/component #'rise/AccountPage}]
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>
@@ -99,15 +99,16 @@
          :dispatcher/type ::email/confirm=>
          :dispatcher/component #'email/ConfirmPage}]
       ["/patterns"
-       {:name :patterns
-        :dispatcher/type ::component/standalone=>
-        :dispatcher/component #'crust/PatternLibrary}]]
+       ["/rise"
+        {:name :patterns.rise
+         :dispatcher/type ::component/standalone=>
+         :dispatcher/component #'rise/PatternLibrary}]]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
      ;; TODO publish to assets?
      ["marx/*" marx-handler]
-     ["crust/*" crust-handler]
+     ["rise/*" rise-handler]
      ["{field/lang}"
       [""
        {:name :home

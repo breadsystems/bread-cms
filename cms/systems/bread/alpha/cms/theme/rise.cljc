@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.cms.theme.crust
+(ns systems.bread.alpha.cms.theme.rise
   (:require
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.component :refer [defc Section]]
@@ -11,11 +11,11 @@
    :content
    [:<>
     [:p
-     "This is the pattern library for the CRUST Bread theme."
+     "This is the pattern library for the RISE Bread theme."
      " This document serves two purposes:"]
     [:ol
-     [:li "to illustrate the look and feel of the CRUST theme"]
-     [:li "to illustrate usage of the CRUST components"]]
+     [:li "to illustrate the look and feel of the RISE theme"]
+     [:li "to illustrate usage of the RISE components"]]
     ,]})
 
 (defn- HowToSection  [_]
@@ -30,10 +30,10 @@
    :title "Typography"
    :content
    [:<>
-    [:p "CRUST is designed to be used for functional UIs in web apps, as opposed
+    [:p "RISE is designed to be used for functional UIs in web apps, as opposed
         to long-form or image-heavy content. The font-family is
         therefore a uniform sans-serif across the board, to maximize scannability.
-        CRUST uses a system font cascade:"]
+        RISE uses a system font cascade:"]
     [:pre
      "--font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
      "]
@@ -55,7 +55,7 @@
     ,]})
 
 (defc Page [{:keys [dir config content hook field/lang]}]
-  {:doc "`Page` is the foundation of the CRUST theme. This is the component
+  {:doc "`Page` is the foundation of the RISE theme. This is the component
         you should use to serve most user-facing web pages in your application.
         "
    :doc/default-data
@@ -96,7 +96,7 @@
       (hook ::theme/html.title
             [:title (theme/title title (:site/name config))]
             title)
-      [:link {:rel :stylesheet :href "/crust/css/base.css"}]
+      [:link {:rel :stylesheet :href "/rise/css/base.css"}]
       head
       ;; Support arbitrary markup in <head>
       (->> [:<>] (hook ::theme/html.head))]
@@ -253,11 +253,11 @@
 
 (defn- CustomizingSection [_]
   {:id :customizing
-   :title "Customizing CRUST"
+   :title "Customizing RISE"
    :content
    [:<>
     [:p
-     "CRUST is designed to be extensible via CSS variables, AKA custom properties.
+     "RISE is designed to be extensible via CSS variables, AKA custom properties.
      By overriding these, you can get a lot of variation from the core theme.
      Of course, you can extend it further by serving your own custom CSS."]
     [:p
@@ -272,11 +272,11 @@
                   Page
                   LoginPage
                   (CustomizingSection data)]]
-    {:title "CRUST"
+    {:title "RISE"
      :head (hook ::theme/html.head.pattern-library
                  [:<>
-                  [:script {:src "/crust/js/patterns.js"}]
-                  [:link {:rel :stylesheet :href "/crust/css/patterns.css"}]])
+                  [:script {:src "/rise/js/patterns.js"}]
+                  [:link {:rel :stylesheet :href "/rise/css/patterns.css"}]])
      :content
      [:<>
       [:div#theme-toggle-container
