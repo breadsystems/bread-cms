@@ -158,18 +158,6 @@
     [:main.flex.col
      (map (partial Section data) (:email/html.email.sections config))]]])
 
-(defc ConfirmPage
-  [{:keys [pending-email i18n ring/params ring/uri]}]
-  {:query '[:db/id :email/address]
-   :key :pending-email}
-  (let [{:email/keys [address code]} pending-email]
-    ;; TODO styles
-    [:form {:method :post :action uri}
-     [:input {:type :hidden :name :email :value address}]
-     [:input {:type :hidden :name :code :value code}]
-     [:button {:type :submit}
-      (:email/confirm-email i18n)]]))
-
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
     (when-not own-id?

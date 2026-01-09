@@ -232,6 +232,23 @@
 (defmethod Section ::account/logout-form [data _]
   (LogoutForm data))
 
+(defc ConfirmPage
+  [{:keys [pending-email i18n ring/uri]}]
+  {:extends Page
+   :query '[:db/id :email/address]
+   :key :pending-email}
+  (let [{:email/keys [address code]} pending-email]
+    {:title (:email/confirm-email i18n)
+     :content
+     [:main.gap-large
+      [:h2 (:email/please-confirm i18n)]
+      [:p address]
+      [:form {:method :post :action uri}
+       [:input {:type :hidden :name :email :value address}]
+       [:input {:type :hidden :name :code :value code}]
+       [:button {:type :submit}
+        (:email/confirm-email i18n)]]]}))
+
 (defn- i18n-format [i18n k]
   (if (sequential? k) ;; TODO tongue
     (let [[k & args] k]

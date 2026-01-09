@@ -76,6 +76,7 @@
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
+        ;; TODO
         :dispatcher/component #'signup/SignupPage}]
       ["/account"
        {:name :account
@@ -84,6 +85,7 @@
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>
+         ;; TODO
         :dispatcher/component #'email/EmailPage}]
       ["/edit"
        {:name :edit
@@ -97,7 +99,7 @@
       ["/confirm-email"
        {:name :confirm-email
          :dispatcher/type ::email/confirm=>
-         :dispatcher/component #'email/ConfirmPage}]
+         :dispatcher/component #'rise/ConfirmPage}]
       ["/patterns"
        ["/rise"
         {:name :patterns.rise

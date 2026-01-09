@@ -21,6 +21,7 @@
          :invalid-email "Invalid email"
          :no-emails "No emails yet."
          :make-primary "Make primary"
+         :please-confirm "Please confirm your email:"
          :primary "Primary email"
          :resend-confirmation "Resend confirmation"
          :to-add-email-confirm-pending "To add another email, first confirm any pending email addresses."
