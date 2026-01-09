@@ -195,9 +195,18 @@
   [:nav.row
    (map (partial Section data) (:account/html.account.header config))])
 
+(defc SettingsPage [{:as data :keys [content]}]
+  {:extends Page}
+  (let [{:as content settings-content :content}
+        (if (vector? content) {:content content} content)]
+    (assoc content :content
+           [:<>
+            (AccountNav data)
+            settings-content])))
+
 (defc AccountPage
   [{:as data :keys [config user]}]
-  {:extends Page
+  {:extends SettingsPage
    :query '[:db/id
             :thing/created-at
             :user/username
@@ -221,19 +230,17 @@
                }
                "]]
    :content
-   [:<>
-    (AccountNav data)
-    [:main
-     (map (partial Section data) (:account/html.account.sections config))]]})
+   [:main
+    (map (partial Section data) (:account/html.account.sections config))]})
 
 (defc EmailPage
-  [{:as data :keys [config]}]
-  {:extends Page
+  [{:as data :keys [config i18n]}]
+  {:extends SettingsPage
    :query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
-  [:<>
-   (AccountNav data)
+  {:title (:email/email i18n)
+   :content
    [:main
-    (map (partial Section data) (:email/html.email.sections config))]])
+    (map (partial Section data) (:email/html.email.sections config))]})
 
 (defc LogoutForm [{:keys [config i18n]}]
   {:doc "Standard logout form for the account page."}
