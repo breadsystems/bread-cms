@@ -281,6 +281,6 @@
      [:<>
       [:div#theme-toggle-container
        [:button#toggle-theme {:style {:position :relative}} "light/dark"]]
+      (theme/TableOfContents {:patterns patterns})
       [:main.gap-spacious
-       (theme/TableOfContents {:patterns patterns})
        (map theme/Pattern patterns)]]}))
