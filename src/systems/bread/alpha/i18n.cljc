@@ -49,7 +49,7 @@
 
 (defn- accepted-range? [candidates lang-range]
   (let [prefix (range-prefix lang-range)]
-    (contains? candidates range-lang)))
+    (contains? candidates prefix)))
 
 (defn- accept-first [candidates lang-ranges]
   (when (seq lang-ranges)
