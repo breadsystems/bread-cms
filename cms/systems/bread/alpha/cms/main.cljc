@@ -73,11 +73,6 @@
        {:name :login
         :dispatcher/type ::auth/login=>
         :dispatcher/component #'rise/LoginPage}]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        ;; TODO
-        :dispatcher/component #'signup/SignupPage}]
       ["/account"
        {:name :account
         :dispatcher/type ::account/account=>
@@ -98,13 +93,18 @@
      ["_"
       ["/confirm-email"
        {:name :confirm-email
-         :dispatcher/type ::email/confirm=>
-         :dispatcher/component #'rise/ConfirmPage}]
+        :dispatcher/type ::email/confirm=>
+        :dispatcher/component #'rise/ConfirmPage}]
       ["/patterns"
        ["/rise"
         {:name :patterns.rise
          :dispatcher/type ::component/standalone=>
-         :dispatcher/component #'rise/PatternLibrary}]]]
+         :dispatcher/component #'rise/PatternLibrary}]]
+      ["/signup"
+       {:name :signup
+        :dispatcher/type ::signup/signup=>
+        ;; TODO
+        :dispatcher/component #'signup/SignupPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]

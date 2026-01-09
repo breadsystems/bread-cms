@@ -3,6 +3,7 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [crypto.random :as random]
     [one-time.core :as ot]
 
     [systems.bread.alpha.core :as bread]
@@ -10,14 +11,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.plugin.auth :as auth])
-  (:import
-    [java.util UUID]))
-
-(defn- ->uuid [x]
-  (if (string? x)
-    (try (UUID/fromString x) (catch IllegalArgumentException _ nil))
-    x))
+    [systems.bread.alpha.plugin.auth :as auth]))
 
 (defc SignupPage
   [{:as data
@@ -137,7 +131,7 @@
                                :in [$ ?code]
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
-                             (->uuid (:code params))]})
+                             (:code params)]})
         expansions [{:expansion/key :config
                      :expansion/name ::bread/value
                      :expansion/description "Signup config"
@@ -202,10 +196,10 @@
       :attr/migration "migration.invitation"}
      {:db/ident :invitation/code
       :attr/label "Invitation code"
-      :db/doc "Secure UUID for this invitation"
+      :db/doc "Secure ID for this invitation"
       :attr/sensitive? true
       :db/unique :db.unique/identity
-      :db/valueType :db.type/uuid
+      :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.invitation"}
      {:db/ident :invitation/invited-by
@@ -232,7 +226,7 @@
             invite-only? invitation-expiration-seconds signup-uri]
      :or {invite-only? false
           invitation-expiration-seconds (* 72 60 60)
-          signup-uri "/signup"}}]
+          signup-uri "/_/signup"}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
