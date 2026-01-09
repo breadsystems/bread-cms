@@ -110,8 +110,8 @@
   {:extends Page
    :doc
    "The standard Bread login page, designed to work with the `::auth/login=>`
-   dispatcher. You typically won't need to call this component from within
-   other components."}
+   dispatcher. You typically won't need to call this component from your code,
+   except to reference it from your route if implementing custom routing."}
   (let [{:keys [totp-key issuer]} totp
         user (or (:user session) (:auth/user session))
         step (:auth/step session)
@@ -192,6 +192,22 @@
           [:button {:type :submit} (:auth/login i18n)]]]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
+  {:doc
+   "Top-level navigation for all user account pages. Calls `component/Section`
+   on each member of `(:account/html.account.header config)`. See also:
+   `SettingsPage`.
+   using the `account` plugin and extend the `component/Section` method
+   to customize."
+   :examples
+   '[{:doc "Customizing the account nav"
+      :description
+      "You typically won't need to to call this component directly from your theme
+      code. To customize the account nav, configure the `:html-account-header`
+      option to the `account` plugin and implement the `component/Section` method
+      for each custom value."
+      :args [{:config {:account/html.account.header [[:span "First section"]
+                                                     [:span "Second section"]
+                                                     "..."]}}]}]}
   [:nav.row
    (map (partial Section data) (:account/html.account.header config))])
 
@@ -363,6 +379,7 @@
                   (TypographySection data)
                   Page
                   LoginPage
+                  AccountNav
                   (CustomizingSection data)]]
     {:title "RISE"
      :head (hook ::theme/html.head.pattern-library
