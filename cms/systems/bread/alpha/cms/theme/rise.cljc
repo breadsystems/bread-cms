@@ -148,7 +148,7 @@
            [:input {:type :hidden :name :totp-key :value totp-key}]
            [:hr]
            [:p.instruct (:auth/enter-totp-next i18n)]
-           [:div.field
+           [:.field
             [:input {:id :two-factor-code :type :number :name :two-factor-code}]
             [:button {:type :submit :name :submit :value "verify"}
              (:auth/verify i18n)]]
@@ -163,7 +163,7 @@
          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
          (hook ::html.enter-2fa-code
                [:p.instruct (:auth/enter-totp i18n)])
-         [:div.field.two-factor
+         [:.field.two-factor
           [:input {:id :two-factor-code :type :number :name :two-factor-code}]
           [:button {:type :submit :name :submit :value "verify"}
            (:auth/verify i18n)]]
@@ -178,16 +178,16 @@
          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
          (hook ::html.enter-username
                [:p.instruct (:auth/enter-username-password i18n)])
-         [:div.field
+         [:.field
           [:label {:for :user} (:auth/username i18n)]
           [:input {:id :user :type :text :name :username}]]
-         [:div.field
+         [:.field
           [:label {:for :password} (:auth/password i18n)]
           [:input {:id :password :type :password :name :password}]]
          (when error?
            (hook ::html.invalid-login
                  [:div.error [:p (:auth/invalid-username-password i18n)]]))
-         [:div.field
+         [:.field
           [:span.spacer]
           [:button {:type :submit} (:auth/login i18n)]]]])}))
 
@@ -248,6 +248,62 @@
        [:input {:type :hidden :name :code :value code}]
        [:button {:type :submit}
         (:email/confirm-email i18n)]]]}))
+
+(defc SignupPage
+  [{:as data
+    :keys [config error hook i18n invitation rtl? dir ring/params]
+    [valid? error-key] :validation}]
+  {}
+  [:html {:lang (:field/lang data) :dir dir}
+   [:head
+    [:meta {:content-type "utf-8"}]
+    (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
+    (->> (auth/LoginStyle data) (hook ::auth/html.stylesheet) (hook ::html.signup.stylesheet))
+    (->> [:<>] (hook ::auth/html.head) (hook ::html.signup.head))]
+   [:body
+    (cond
+      (and (:signup/invite-only? config) (not (:code params)))
+      [:main
+       [:form.flex.col
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        [:p (:signup/site-invite-only i18n)]]]
+
+      (and (:signup/invite-only? config) (not invitation))
+      [:main
+       [:form.flex.col
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        [:p (:signup/invitation-invalid i18n)]]]
+
+      :default
+      [:main
+       [:form.flex.col {:name :bread-signup :method :post}
+        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+        (hook ::html.enter-username
+              [:p.instruct (:signup/please-choose-username-password i18n)])
+        [:.field
+         [:label {:for :user} (:auth/username i18n)]
+         [:input {:id :user :type :text :name :username :value (:username params)}]]
+        [:.field
+         [:label {:for :password} (:auth/password i18n)]
+         [:input {:id :password
+                  :type :password
+                  :name :password
+                  :maxlength (:auth/max-password-length config)}]]
+        [:.field
+         [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+         [:input {:id :password-confirmation
+                  :type :password
+                  :name :password-confirmation
+                  :maxlength (:auth/max-password-length config)}]]
+        (when error-key
+          (hook ::html.invalid-signup
+                [:div.error [:p (if (sequential? error-key) ;; TODO tongue?
+                                  (let [[k & args] error-key]
+                                    (apply format (get i18n k) args))
+                                  (get i18n error-key))]]))
+        [:.field
+         [:span.spacer]
+         [:button {:type :submit} (:signup/create-account i18n)]]]])]])
 
 (defn- i18n-format [i18n k]
   (if (sequential? k) ;; TODO tongue
