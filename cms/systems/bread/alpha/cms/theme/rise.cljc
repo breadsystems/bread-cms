@@ -191,8 +191,12 @@
           [:span.spacer]
           [:button {:type :submit} (:auth/login i18n)]]]])}))
 
+(defc AccountNav [{:as data :keys [config]}]
+  [:nav.row
+   (map (partial Section data) (:account/html.account.header config))])
+
 (defc AccountPage
-  [{:as data :keys [config hook dir user]}]
+  [{:as data :keys [config user]}]
   {:extends Page
    :query '[:db/id
             :thing/created-at
@@ -218,8 +222,7 @@
                "]]
    :content
    [:<>
-    [:nav.row
-     (map (partial Section data) (:account/html.account.header config))]
+    (AccountNav data)
     [:main
      (map (partial Section data) (:account/html.account.sections config))]]})
 
@@ -228,8 +231,7 @@
   {:extends Page
    :query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
   [:<>
-   [:nav.row
-    (map (partial Section data) (:account/html.account.header config))]
+   (AccountNav data)
    [:main
     (map (partial Section data) (:email/html.email.sections config))]])
 
