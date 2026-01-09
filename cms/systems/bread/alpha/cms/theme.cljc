@@ -48,8 +48,9 @@
   (-> s md2h/md->hiccup md2h/component))
 
 (defmethod Pattern :default DocSection [{:keys [content id title]}]
-  [:section {:id id}
+  [:section.pattern {:id id}
    [:h1 title]
+   [:a.section-link {:href (str "#" (name id)) :title title} "#"]
    (if (string? content)
      (md->hiccup content)
      content)
@@ -60,8 +61,11 @@
          :keys [doc doc/show-html? doc/default-data expr examples]
          :or {show-html? true}}
         (meta component)]
-    [:article {:id cname :data-component cname}
+    [:article.pattern {:id cname :data-component cname}
      [:h1 cname]
+     [:a.section-link {:href (str "#" (name cname))
+                       :title (str "Link to " (name cname))}
+      "#"]
      (md->hiccup doc)
      (map (fn [{:keys [doc description args]}]
             (let [args' (cons (merge default-data (first args)) (rest args))]

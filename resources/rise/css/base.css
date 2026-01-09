@@ -1,6 +1,6 @@
 :root {
   --content-width: 85ch;
-  --content-max-width: calc(100% - 4ch);
+  --content-max-width: calc(100% - 8ch);
 
   --gap-multiplier: 2;
   --gap-standard: 1em;
