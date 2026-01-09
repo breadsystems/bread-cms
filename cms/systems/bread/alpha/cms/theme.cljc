@@ -57,29 +57,31 @@
    [:a {:href "#contents"} "Back to top"]])
 
 (defmethod Pattern ::component/component ComponentSection [component]
-  (let [{:as cmeta cname :name
+  (let [{component-name :name
          :keys [doc doc/show-html? doc/default-data expr examples]
          :or {show-html? true}}
         (meta component)]
-    [:article.pattern {:id cname :data-component cname}
-     [:h1 cname]
-     [:a.section-link {:href (str "#" (name cname))
-                       :title (str "Link to " (name cname))}
-      "#"]
-     (md->hiccup doc)
-     (map (fn [{:keys [doc description args]}]
-            (let [args' (cons (merge default-data (first args)) (rest args))]
-              [:section.example
-               [:h2 doc]
-               (md->hiccup description)
-               [:pre [:code.clj (pp (apply list (symbol cname) args))]]
-               [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
-               [:pre [:code.xml (rum/render-static-markup (apply component args'))]]]))
-          examples)
-     [:details
-      [:summary "Show source"]
-      [:pre (pp (apply list 'defc (symbol cname) expr))]]
-     [:a {:href "#contents"} "Back to top"]]))
+    (let [component-name (name component-name)]
+      [:article.pattern {:id component-name :data-component component-name}
+       [:h1 component-name]
+       [:a.section-link {:href (str "#" component-name)
+                         :title (str "Link to " component-name)}
+        "#"]
+       (md->hiccup doc)
+       (map (fn [{:keys [doc description args]}]
+              (let [args' (cons (merge default-data (first args)) (rest args))]
+                [:section.example
+                 [:h2 doc]
+                 [:a.section-link {:href (str "#")}]
+                 (md->hiccup description)
+                 [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
+                 [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
+                 [:pre [:code.xml (rum/render-static-markup (apply component args'))]]]))
+            examples)
+       [:details
+        [:summary "Show source"]
+        [:pre (pp (apply list 'defc (symbol component-name) expr))]]
+       [:a {:href "#contents"} "Back to top"]])))
 
 (defn pattern->section [pattern]
   (if (= ::component/component (:type (meta pattern)))
