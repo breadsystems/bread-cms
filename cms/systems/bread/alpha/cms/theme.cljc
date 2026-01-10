@@ -47,6 +47,19 @@
 (defn- md->hiccup [s]
   (-> s md2h/md->hiccup md2h/component))
 
+(defn- html-comment [s]
+  (str "<!-- " s " -->\n"))
+
+(defn- render-html [content]
+  (if (map? content)
+    (mapcat (juxt (comp html-comment name key)
+                           (comp #(str % "\n")
+                                 rum/render-static-markup
+                                 remove-noop-elements
+                                 val))
+                     content)
+    (rum/render-static-markup content)))
+
 (defmethod Pattern :default DocSection [{:keys [content id title]}]
   [:section.pattern {:id id}
    [:h1 title]
@@ -83,11 +96,11 @@
                  (md->hiccup description)
                  [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
                  [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
-                 [:pre [:code.xml (rum/render-static-markup (apply component args'))]]]))
+                 [:pre [:code.xml (render-html (apply component args'))]]]))
             examples)
        [:details
         [:summary "Show source"]
-        [:pre (pp (apply list 'defc (symbol component-name) expr))]]
+        [:pre [:code.clj (pp (apply list 'defc (symbol component-name) expr))]]]
        [:a {:href "#contents"} "Back to top"]])))
 
 (defn pattern->section [pattern]
