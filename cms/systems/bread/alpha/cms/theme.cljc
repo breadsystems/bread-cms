@@ -90,7 +90,7 @@
        (md->hiccup doc)
        (map (fn [{:as example :keys [doc description args]}]
               (let [post-render (or (:doc/post-render example) post-render)
-                    args' (cons (merge default-data (first args)) (rest args))
+                    args' (cons (merge-with merge default-data (first args)) (rest args))
                     id (->id doc)
                     content (apply component args')
                     formatted-content (-> content remove-noop-elements post-render pp)
