@@ -238,6 +238,11 @@
 (defc AccountPage
   [{:as data :keys [config user]}]
   {:extends SettingsPage
+   :doc
+   "The main account settings page, the default redirect target after logging in.
+   Contains settings for name, pronouns, timezone, etc. You typically won't have
+   to call this component except to reference it from your route if implementing
+   custom routing."
    :query '[:db/id
             :thing/created-at
             :user/username
@@ -246,7 +251,32 @@
             :user/preferences
             {:user/roles [:role/key {:role/abilities [:ability/key]}]}
             {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
-            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
+            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]
+   :doc/default-data {:user {:user/username "username"}
+                      :config {:account/html.account.sections
+                               [::account/account-form
+                                [:section "Login sessions section..."]]}}
+   :examples
+   '[#_{:doc "Customizing account page sections"}
+     {:doc "Customizing the account settings form"
+      :description
+      "To customize the fields that appear in the main settings form, override
+      the `:html-account-form` option to the `account` plugin and implement the
+      `component/Section` method for each custom value. In this example, we
+      include only the default `::account/name` and `::account/pronouns` options
+      and a custom option called `:my-custom-field`. NOTE: The `::account/account=>`
+      dispatcher treats any keys that are not part of Bread's default user
+      schema as user preferences, automatically handling serialization and
+      deserialization."
+      :args ({:config {:account/html.account.form
+                       [::account/name
+                        ::account/pronouns
+                        [:field
+                         [:label "My custom field"]
+                         [:input {:name :my-custom-field
+                                  :value "value in user preferences"}]]]}})}]
+   :doc/post-render (fn [content]
+                      (assoc content :head [:style "...page-specific styles..."]))}
   {:title (:user/username user)
    :head [:<> [:style
                "
@@ -261,8 +291,8 @@
                }
                "]]
    :content
-   [:main
-    (map (partial Section data) (:account/html.account.sections config))]})
+   (apply conj [:main]
+          (map (partial Section data) (:account/html.account.sections config)))})
 
 (defc EmailPage
   [{:as data :keys [config i18n]}]
@@ -396,6 +426,7 @@
                   LoginPage
                   AccountNav
                   SettingsPage
+                  AccountPage
                   (CustomizingSection data)]]
     {:title "RISE"
      :head (hook ::theme/html.head.pattern-library
