@@ -45,7 +45,7 @@
                      x)) html))
 
 (defn- md->hiccup [s]
-  (-> s md2h/md->hiccup md2h/component))
+  (when s (-> s md2h/md->hiccup md2h/component)))
 
 (defn- html-comment [s]
   (str "<!-- " s " -->\n"))
