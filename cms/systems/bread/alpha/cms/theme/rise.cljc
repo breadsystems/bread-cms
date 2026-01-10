@@ -257,7 +257,15 @@
                                [::account/account-form
                                 [:section "Login sessions section..."]]}}
    :examples
-   '[#_{:doc "Customizing account page sections"}
+   '[{:doc "Customizing account page sections"
+      :description
+      "`AccountPage` renders each item in `(:account/html.account.sections config)`
+      as a section on this page. To customize this, pass `:html-account-section`
+      to the `account` plugin and implement the `component/Section` method for
+      each custom value."
+      :args ({:config {:account/html.account.sections
+                       [[:section "First section"]
+                        [:section "Second section"]]}})}
      {:doc "Customizing the account settings form"
       :description
       "To customize the fields that appear in the main settings form, override
