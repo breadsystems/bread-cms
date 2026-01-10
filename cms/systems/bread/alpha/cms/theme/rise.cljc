@@ -193,7 +193,7 @@
 
 (defc AccountNav [{:as data :keys [config]}]
   {:doc
-   "Top-level navigation for all user account pages. Calls `component/Section`
+   "Top-level navigation for all user settings pages. Calls `component/Section`
    on each member of `(:account/html.account.header config)`. See also:
    `SettingsPage`.
    using the `account` plugin and extend the `component/Section` method
@@ -204,15 +204,30 @@
       "You typically won't need to to call this component directly from your theme
       code. To customize the account nav, configure the `:html-account-header`
       option to the `account` plugin and implement the `component/Section` method
-      for each custom value."
+      for each custom value. See also:
+      [Adding a custom user settings page](#Adding_a_custom_user_settings_page)."
       :args [{:config {:account/html.account.header [[:span "First section"]
                                                      [:span "Second section"]
                                                      "..."]}}]}]}
-  [:nav.row
-   (map (partial Section data) (:account/html.account.header config))])
+  (apply conj [:nav.row]
+         (map (partial Section data) (:account/html.account.header config))))
 
 (defc SettingsPage [{:as data :keys [content]}]
-  {:extends Page}
+  {:extends Page
+   :doc
+   "Reusable account settings page that includes `AccountNav` automatically.
+   To add custom user settings pages, extend this component. For adding links
+   to any custom pages within the account nav itself, see
+   [Customizing the account nav](#Customizing_the_account_nav)."
+   :examples
+   '[{:doc "Adding a custom user settings page"
+      :description
+      "`SettingsPage` extends `Page`, so all the same options for `content`,
+      `title`, etc. apply."
+      :args ({:content [:div "My custom settings page content"]
+              :config {:account/html.account.header
+                       [[:a {:href "/my-custom-route"}]]}})}
+     ,]}
   (let [{:as content settings-content :content}
         (if (vector? content) {:content content} content)]
     (assoc content :content
@@ -380,6 +395,7 @@
                   Page
                   LoginPage
                   AccountNav
+                  SettingsPage
                   (CustomizingSection data)]]
     {:title "RISE"
      :head (hook ::theme/html.head.pattern-library
