@@ -117,12 +117,12 @@
   [_ {:keys [component]} _]
   component)
 
-(defn render [component data]
+(defn render [component {:as data
+                         :keys [component/extend?]
+                         :or {extend? true}}]
   (let [parent (component-parent component)]
     (cond
-      (and component
-           (false? (:component/extend? data)))
-      (component data)
+      (and component (not extend?)) (component data)
       parent (render-parent parent data (component data))
       component (component data)
       :else nil)))
