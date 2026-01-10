@@ -77,8 +77,9 @@
 
 (defmethod Pattern ::component/component ComponentSection [component]
   (let [{component-name :name
-         :keys [doc doc/show-html? doc/default-data expr examples]
-         :or {show-html? true}}
+         :keys [doc doc/show-html? doc/default-data expr examples doc/post-render]
+         :or {show-html? true
+              post-render identity}}
         (meta component)]
     (let [component-name (name component-name)]
       [:article.pattern {:id component-name :data-component component-name}
@@ -87,16 +88,20 @@
                          :title (str "Link to " component-name)}
         "#"]
        (md->hiccup doc)
-       (map (fn [{:keys [doc description args]}]
-              (let [args' (cons (merge default-data (first args)) (rest args))
-                    id (->id doc)]
+       (map (fn [{:as example :keys [doc description args]}]
+              (let [post-render (or (:doc/post-render example) post-render)
+                    args' (cons (merge default-data (first args)) (rest args))
+                    id (->id doc)
+                    content (apply component args')
+                    formatted-content (-> content remove-noop-elements post-render pp)
+                    formatted-html (-> content post-render render-html)]
                 [:section.example {:id id}
                  [:h2 doc]
                  [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]
                  (md->hiccup description)
                  [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
-                 [:pre [:code.clj (pp (remove-noop-elements (apply component args')))]]
-                 [:pre [:code.xml (render-html (apply component args'))]]]))
+                 [:pre [:code.clj formatted-content]]
+                 [:pre [:code.xml formatted-html]]]))
             examples)
        [:details
         [:summary "Show source"]
