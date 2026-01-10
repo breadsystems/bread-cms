@@ -117,17 +117,20 @@
   [_ {:keys [component]} _]
   component)
 
+(defn render [component data]
+  (let [parent (component-parent component)]
+    (cond
+      (and component
+           (false? (:component/extend? data)))
+      (component data)
+      parent (render-parent parent data (component data))
+      component (component data)
+      :else nil)))
+
 (defmethod bread/action ::render
   [{::bread/keys [data] :as res} _ _]
   (let [component (match res)
-        parent (component-parent component)
-        body (cond
-               (and component
-                    (false? (:component/extend? data)))
-               (component data)
-               parent (render-parent parent data (component data))
-               component (component data)
-               :else nil)]
+        body (render component data)]
     (assoc res :body body)))
 
 (defmethod bread/action ::hook-fn
