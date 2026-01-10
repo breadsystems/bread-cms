@@ -16,7 +16,9 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
+    [systems.bread.alpha.cms.theme.rise :as rise]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -57,6 +59,11 @@
     {:root "marx"
      :path "/marx"}))
 
+(def rise-handler
+  (reitit.ring/create-resource-handler
+    {:root "rise"
+     :path "/rise"}))
+
 (def router
   (reitit/router
     ["/"
@@ -65,19 +72,16 @@
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
-        :dispatcher/component #'auth/LoginPage}]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'signup/SignupPage}]
+        :dispatcher/component #'rise/LoginPage}]
       ["/account"
        {:name :account
         :dispatcher/type ::account/account=>
-        :dispatcher/component #'account/AccountPage}]
+        :dispatcher/component #'rise/AccountPage}]
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>
-        :dispatcher/component #'email/EmailPage}]
+         ;; TODO
+        :dispatcher/component #'rise/EmailPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
@@ -89,13 +93,23 @@
      ["_"
       ["/confirm-email"
        {:name :confirm-email
-         :dispatcher/type ::email/confirm=>
-         :dispatcher/component #'email/ConfirmPage}]]
+        :dispatcher/type ::email/confirm=>
+        :dispatcher/component #'rise/ConfirmPage}]
+      ["/patterns"
+       ["/rise"
+        {:name :patterns.rise
+         :dispatcher/type ::component/standalone=>
+         :dispatcher/component #'rise/PatternLibrary}]]
+      ["/signup"
+       {:name :signup
+        :dispatcher/type ::signup/signup=>
+        :dispatcher/component #'rise/SignupPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
      ;; TODO publish to assets?
      ["marx/*" marx-handler]
+     ["rise/*" rise-handler]
      ["{field/lang}"
       [""
        {:name :home
@@ -349,7 +363,8 @@
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
                    (rum/plugin (:renderer app-config))
-                   (email/plugin (:email app-config))])]
+                   (email/plugin (:email app-config))
+                   (theme/plugin (:theme app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]

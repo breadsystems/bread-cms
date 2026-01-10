@@ -143,33 +143,6 @@
          (:email/add i18n)]]]
       [:p.instruct (:email/to-add-email-confirm-pending i18n)])))
 
-(defc EmailPage
-  [{:as data :keys [config dir hook i18n user]}]
-  {:query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
-  ;; TODO UI lib
-  [:html {:lang {:field/lang data} :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.email.stylesheet))
-    (hook ::html.email.title [:title (:email/email i18n "Email")])]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:account/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:email/html.email.sections config))]]])
-
-(defc ConfirmPage
-  [{:keys [pending-email i18n ring/params ring/uri]}]
-  {:query '[:db/id :email/address]
-   :key :pending-email}
-  (let [{:email/keys [address code]} pending-email]
-    ;; TODO styles
-    [:form {:method :post :action uri}
-     [:input {:type :hidden :name :email :value address}]
-     [:input {:type :hidden :name :code :value code}]
-     [:button {:type :submit}
-      (:email/confirm-email i18n)]]))
-
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
     (when-not own-id?
@@ -346,8 +319,10 @@
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
   (let [min-updated (t/minutes-ago (t/now) max-pending-minutes)
-        valid? (when pending-email
-                 (.after (:thing/updated-at pending-email) min-updated))]
+        updated-at (or (:thing/updated-at pending-email)
+                       (:thing/created-at pending-email))
+        valid? (when updated-at
+                 (.after updated-at min-updated))]
     (when valid? pending-email)))
 
 (defmethod bread/dispatch ::confirm=>
@@ -361,6 +336,7 @@
           :expansion/args ['{:find [(pull ?e [:db/id
                                               :email/code
                                               :email/address
+                                              :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
                              :where [[?e :email/code ?code]

@@ -42,12 +42,6 @@
         (re-find #"windows" normalized) "Windows"
         :default "Unknown OS"))))
 
-(defn- i18n-format [i18n k]
-  (if (sequential? k) ;; TODO tongue
-    (let [[k & args] k]
-      (apply format (get i18n k) args))
-    (get i18n k)))
-
 (defmethod Section ::username [{:keys [user]} _]
   [:span.username (:user/username user)])
 
@@ -58,14 +52,6 @@
 
 (defmethod Section ::heading [{:keys [i18n]} _]
   [:h3 (:account/account i18n)])
-
-;; TODO move to generic UI ns...
-(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
-  [:<>
-   (when-let [success-key (:success-key flash)]
-     [:.emphasis [:p (i18n-format i18n success-key)]])
-   (when-let [error-key (:error-key flash)]
-     [:.error [:p (i18n-format i18n error-key)]])])
 
 (defmethod Section ::name [{:keys [user i18n]} _]
   [:.field
@@ -116,26 +102,21 @@
              :name :password-confirmation
              :maxlength (:auth/max-password-length config)}]]])
 
-(defmethod Section :save [{:keys [i18n]} _]
-  [:.field
-   [:span.spacer]
-   [:button {:type :submit :name :action :value "update"}
-    (:account/save i18n)]])
-
 (defmethod Section ::account-form [{:as data :keys [config]} _]
-  [:form.flex.col {:method :post}
-   (map (partial Section data) (:account/html.account.form config))])
+  (apply conj [:form.flex.col {:method :post}]
+         (map (partial Section data) (:account/html.account.form config))))
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
   (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
-    [:section.flex.col
+    [:section
      [:h3 (:account/your-sessions i18n)]
      [:.flex.col
       (map (fn [{:as user-session
                  {:keys [user-agent remote-addr]} :session/data
                  :thing/keys [created-at updated-at]}]
              (if (= (:db/id session) (:db/id user-session))
-               [:div.user-session.current
+               ;; Current session.
+               [:div.user-session
                 [:div
                  (when user-agent
                    [:div (ua->browser user-agent) " | " (ua->os user-agent)])
@@ -146,6 +127,7 @@
                    ;; TODO i18n
                    [:div "Last active at " (.format date-fmt updated-at)])]
                 [:div [:span.instruct "This session"]]]
+               ;; Sessions on other devices.
                [:form.user-session {:method :post}
                 [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
                 [:div
@@ -160,30 +142,6 @@
                  [:button {:type :submit :name :action :value "delete-session"}
                   (:auth/logout i18n)]]]))
            (:user/sessions user))]]))
-
-(defc AccountPage
-  [{:as data :keys [config hook dir user]}]
-  {:query '[:db/id
-            :thing/created-at
-            :user/username
-            :user/name
-            :user/lang
-            :user/preferences
-            {:user/roles [:role/key {:role/abilities [:ability/key]}]}
-            {:invitation/_redeemer [{:invitation/invited-by [:db/id :user/username]}]}
-            {:user/sessions [:db/id :session/data :thing/created-at :thing/updated-at]}]}
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (hook ::html.account.title [:title (:user/username user) " | " (:site/name config)])
-    ;; TODO theme/Style
-    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.account.stylesheet))
-    (->> [:<>] (hook ::html.head) (hook ::html.account.head))]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:account/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:account/html.account.sections config))]]])
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
@@ -297,7 +255,7 @@
                     html-account-header [::account-link
                                          ::email/settings-link
                                          :spacer
-                                         auth/LogoutForm]
+                                         ::logout-form]
                     html-account-form [::heading
                                        :flash
                                        ::name

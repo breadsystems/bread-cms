@@ -198,7 +198,7 @@
        :field/content "Doggo"}
       {:field/key :alt-text
        :field/lang :fr
-       :field/content "un chat"}}}
+       :field/content "un chien"}}}
 
    ;; Site-wide translations
    {:field/lang :en
