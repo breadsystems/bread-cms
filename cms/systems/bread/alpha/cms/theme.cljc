@@ -26,16 +26,31 @@
 (defmethod ContentsItem :default [pattern] pattern)
 
 (defmethod ContentsItem ::component/component [component]
-  (let [cpt-name (:name (meta component))]
-    {:id cpt-name :title cpt-name}))
+  (let [component-meta (meta component)]
+    {:id (:name component-meta)
+     :title (:name component-meta)
+     :children (map (fn [example]
+                      (assoc example :type :example))
+                    (:examples component-meta))}))
+
+(defn- ->id [s]
+  (apply str (map (fn [c] (if (Character/isWhitespace c) \_ c)) s)))
+
+(comment
+  (->id "How to do stuff"))
 
 (defc TableOfContents [{:as data :keys [patterns]}]
   [:nav
    [:h1#contents "Table of contents"]
    [:ul
     [:<> (doall (map (fn [pattern]
-                       (let [{:keys [id title]} (ContentsItem pattern)]
-                         [:li [:a {:href (str "#" (name id))} title]]))
+                       (let [{:keys [id title children]} (ContentsItem pattern)]
+                         [:li
+                          [:a {:href (str "#" (name id))} title]
+                          [:ul
+                           (map (fn [{:as child :keys [doc]}]
+                                  [:li [:a {:href (str "#" (->id doc))} doc]])
+                                children)]]))
                      patterns))]]])
 
 (defn- remove-noop-elements [html]
@@ -68,12 +83,6 @@
      (md->hiccup content)
      content)
    [:a {:href "#contents"} "Back to top"]])
-
-(defn- ->id [s]
-  (apply str (map (fn [c] (if (Character/isWhitespace c) \_ c)) s)))
-
-(comment
-  (->id "How to do stuff"))
 
 (defmethod Pattern ::component/component ComponentSection [component]
   (let [{component-name :name
