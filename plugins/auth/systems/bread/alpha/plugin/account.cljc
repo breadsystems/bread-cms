@@ -103,8 +103,8 @@
              :maxlength (:auth/max-password-length config)}]]])
 
 (defmethod Section ::account-form [{:as data :keys [config]} _]
-  [:form.flex.col {:method :post}
-   (map (partial Section data) (:account/html.account.form config))])
+  (apply conj [:form.flex.col {:method :post}]
+         (map (partial Section data) (:account/html.account.form config))))
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
   (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
