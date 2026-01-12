@@ -62,6 +62,14 @@
                  (reduced (range-prefix lang-range)))))
             [] lang-ranges)))
 
+(defn t [k i18n]
+  "Translates k into its value in the given i18n map. If k is sequential,
+  treats (first k) as i18n key and (rest k) as args to format."
+  (if (sequential? k)
+    (let [[k & args] k]
+      (apply format (get i18n k) args))
+    (get i18n k)))
+
 (defn lang
   "High-level fn for getting the language for the current request."
   [{:as req :keys [headers]}]
