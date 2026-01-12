@@ -117,6 +117,11 @@
                                  :type (or field-type :text)
                                  :value value})]]))
 
+(defc Submit [label]
+  [:.field
+   [:span.spacer]
+   [:button {:type :submit} label]])
+
 (defc LoginPage
   [{:as data
     :keys [config hook i18n session dir totp]
@@ -388,10 +393,8 @@
                :label (:auth/password-confirmation i18n)
                :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
-          (hook ::html.invalid-signup (Error (i18n/t error-key i18n))))
-        [:.field
-         [:span.spacer]
-         [:button {:type :submit} (:signup/create-account i18n)]]]])]])
+          (hook ::html.invalid-signup (ErrorMessage (i18n/t error-key i18n))))
+        (Submit (:signup/create-account i18n))]])]])
 
 (defn- i18n-format [i18n k]
   (if (sequential? k) ;; TODO tongue
