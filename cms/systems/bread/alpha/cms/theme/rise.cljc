@@ -386,21 +386,15 @@
                :label (:auth/password-confirmation i18n)
                :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
-          (hook ::html.invalid-signup (ErrorMessage (i18n/t error-key i18n))))
+          (hook ::html.invalid-signup (ErrorMessage (i18n/t i18n error-key))))
         (Submit (:signup/create-account i18n))]])]])
-
-(defn- i18n-format [i18n k]
-  (if (sequential? k) ;; TODO tongue
-    (let [[k & args] k]
-      (apply format (get i18n k) args))
-    (get i18n k)))
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
-     [:.success [:p (i18n-format i18n success-key)]])
+     [:.success [:p (i18n/t i18n success-key)]])
    (when-let [error-key (:error-key flash)]
-     [:.error [:p (i18n-format i18n error-key)]])])
+     [:.error [:p (i18n/t i18n error-key)]])])
 
 (defmethod Section :save [{:keys [i18n]} _]
   (Submit (:account/save i18n) :name :action :value "update"))
