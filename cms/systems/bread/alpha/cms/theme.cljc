@@ -105,8 +105,10 @@
                     formatted-content (-> content remove-noop-elements post-render pp)
                     formatted-html (-> content post-render render-html)]
                 [:section.example {:id id}
-                 [:h2 doc]
-                 [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]
+                 (when doc
+                   [:<>
+                    [:h2 doc]
+                    [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]])
                  (md->hiccup description)
                  [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
                  [:pre [:code.clj formatted-content]]
