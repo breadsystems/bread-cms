@@ -103,11 +103,15 @@
      [:body
       content]]))
 
-(defc Field [field-name & {field-type :type :keys [id label]}]
+(defc Field [field-name & {field-type :type
+                           :keys [id label value input-attrs label-attrs]}]
   (let [id (or id field-name)]
     [:.field
-     [:label {:for id} label]
-     [:input {:name field-name :id id :type (or field-type :text)}]]))
+     [:label (merge label-attrs {:for id}) label]
+     [:input (merge input-attrs {:name field-name
+                                 :id id
+                                 :type (or field-type :text)
+                                 :value value})]]))
 
 (defc LoginPage
   [{:as data
@@ -370,21 +374,15 @@
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         (hook ::html.enter-username
               [:p.instruct (:signup/please-choose-username-password i18n)])
-        [:.field
-         [:label {:for :user} (:auth/username i18n)]
-         [:input {:id :user :type :text :name :username :value (:username params)}]]
-        [:.field
-         [:label {:for :password} (:auth/password i18n)]
-         [:input {:id :password
-                  :type :password
-                  :name :password
-                  :maxlength (:auth/max-password-length config)}]]
-        [:.field
-         [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
-         [:input {:id :password-confirmation
-                  :type :password
-                  :name :password-confirmation
-                  :maxlength (:auth/max-password-length config)}]]
+        (Field :username :label (:auth/username i18n) :value (:username params))
+        (Field :password
+               :type :password
+               :label (:auth/password i18n)
+               :input-attrs {:maxlength (:auth/max-password-length config)})
+        (Field :password-confirmation
+               :type :password
+               :label (:auth/password-confirmation i18n)
+               :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
           (hook ::html.invalid-signup
                 [:div.error [:p (if (sequential? error-key) ;; TODO tongue?
