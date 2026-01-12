@@ -49,7 +49,8 @@
                           [:a {:href (str "#" (name id))} title]
                           [:ul
                            (map (fn [{:as child :keys [doc]}]
-                                  [:li [:a {:href (str "#" (->id doc))} doc]])
+                                  (when doc
+                                    [:li [:a {:href (str "#" (->id doc))} doc]]))
                                 children)]]))
                      patterns))]]])
 
