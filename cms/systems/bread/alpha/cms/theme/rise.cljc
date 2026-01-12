@@ -103,6 +103,12 @@
      [:body
       content]]))
 
+(defc Field [field-name & {field-type :type :keys [id label]}]
+  (let [id (or id field-name)]
+    [:.field
+     [:label {:for id} label]
+     [:input {:name field-name :id id :type (or field-type :text)}]]))
+
 (defc LoginPage
   [{:as data
     :keys [config hook i18n session dir totp]
@@ -178,12 +184,8 @@
          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
          (hook ::html.enter-username
                [:p.instruct (:auth/enter-username-password i18n)])
-         [:.field
-          [:label {:for :user} (:auth/username i18n)]
-          [:input {:id :user :type :text :name :username}]]
-         [:.field
-          [:label {:for :password} (:auth/password i18n)]
-          [:input {:id :password :type :password :name :password}]]
+         (Field :username :label (:auth/username i18n))
+         (Field :password :type :password :label (:auth/password i18n))
          (when error?
            (hook ::html.invalid-login
                  [:div.error [:p (:auth/invalid-username-password i18n)]]))
