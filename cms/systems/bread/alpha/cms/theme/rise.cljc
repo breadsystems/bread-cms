@@ -172,9 +172,7 @@
             [:button {:type :submit :name :submit :value "verify"}
              (:auth/verify i18n)]]
            (when error?
-             (hook ::html.invalid-code
-                   [:div.error
-                    [:p (:auth/invalid-totp i18n)]]))]])
+             (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]])
 
        (= :two-factor step)
        [:main
@@ -187,9 +185,7 @@
           [:button {:type :submit :name :submit :value "verify"}
            (:auth/verify i18n)]]
          (when error?
-           (hook ::html.invalid-code
-                 [:div.error
-                  [:p (:auth/invalid-totp i18n)]]))]]
+           (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]]
 
        :default
        [:main
@@ -201,7 +197,7 @@
          (Field :password :type :password :label (:auth/password i18n))
          (when error?
            (hook ::html.invalid-login
-                 [:div.error [:p (:auth/invalid-username-password i18n)]]))
+                 (ErrorMessage (:auth/invalid-username-password i18n))))
          (Submit (:auth/login i18n))]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
