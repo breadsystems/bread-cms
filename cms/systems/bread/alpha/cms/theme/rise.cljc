@@ -104,7 +104,22 @@
      [:body
       content]]))
 
+(defc SuccessMessage [message]
+  {:doc "A success message"
+   :description
+   "Used to indicate success of some action, typically a side-effect, such
+   as an account update."
+   :examples
+   '[{:args ({:message "Update successful!"})}]}
+  [:.success [:p message]])
+
 (defc ErrorMessage [message]
+  {:doc "An error message"
+   :description
+   "Used to indicate an error completing some action, typically a side-effect, such
+   as an account update."
+   :examples
+   '[{:args ({:message "Something bad happened!"})}]}
   [:.error [:p message]])
 
 (defc Field [field-name & {field-type :type
@@ -392,9 +407,9 @@
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
-     [:.success [:p (i18n/t i18n success-key)]])
+     (SuccessMessage (i18n/t i18n success-key)))
    (when-let [error-key (:error-key flash)]
-     [:.error [:p (i18n/t i18n error-key)]])])
+     (ErrorMessage (i18n/t i18n error-key)))])
 
 (defmethod Section :save [{:keys [i18n]} _]
   (Submit (:account/save i18n) :name :action :value "update"))
@@ -417,6 +432,8 @@
   (let [patterns [(IntroSection data)
                   (HowToSection data)
                   (TypographySection data)
+                  SuccessMessage
+                  ErrorMessage
                   Page
                   LoginPage
                   AccountNav
