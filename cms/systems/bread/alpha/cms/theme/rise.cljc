@@ -350,7 +350,6 @@
   [{:as data
     :keys [config error hook i18n invitation rtl? dir ring/params]
     [valid? error-key] :validation}]
-  {}
   [:html {:lang (:field/lang data) :dir dir}
    [:head
     [:meta {:content-type "utf-8"}]
