@@ -2,6 +2,7 @@
   (:require
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.component :refer [defc Section]]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.auth :as auth]))
 
@@ -102,6 +103,9 @@
       (->> [:<>] (hook ::theme/html.head))]
      [:body
       content]]))
+
+(defc ErrorMessage [message]
+  [:.error [:p message]])
 
 (defc Field [field-name & {field-type :type
                            :keys [id label value input-attrs label-attrs]}]
@@ -384,11 +388,7 @@
                :label (:auth/password-confirmation i18n)
                :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
-          (hook ::html.invalid-signup
-                [:div.error [:p (if (sequential? error-key) ;; TODO tongue?
-                                  (let [[k & args] error-key]
-                                    (apply format (get i18n k) args))
-                                  (get i18n error-key))]]))
+          (hook ::html.invalid-signup (Error (i18n/t error-key i18n))))
         [:.field
          [:span.spacer]
          [:button {:type :submit} (:signup/create-account i18n)]]]])]])
