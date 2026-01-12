@@ -117,10 +117,10 @@
                                  :type (or field-type :text)
                                  :value value})]]))
 
-(defc Submit [label]
+(defc Submit [label & {field-name :name :keys [value]}]
   [:.field
    [:span.spacer]
-   [:button {:type :submit} label]])
+   [:button {:type :submit :name field-name :value value} label]])
 
 (defc LoginPage
   [{:as data
@@ -202,9 +202,7 @@
          (when error?
            (hook ::html.invalid-login
                  [:div.error [:p (:auth/invalid-username-password i18n)]]))
-         [:.field
-          [:span.spacer]
-          [:button {:type :submit} (:auth/login i18n)]]]])}))
+         (Submit (:auth/login i18n))]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
   {:doc
@@ -410,10 +408,7 @@
      [:.error [:p (i18n-format i18n error-key)]])])
 
 (defmethod Section :save [{:keys [i18n]} _]
-  [:.field
-   [:span.spacer]
-   [:button {:type :submit :name :action :value "update"}
-    (:account/save i18n)]])
+  (Submit (:account/save i18n) :name :action :value "update"))
 
 (defn- CustomizingSection [_]
   {:id :customizing
