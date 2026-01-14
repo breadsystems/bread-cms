@@ -30,7 +30,7 @@
      [:head
       [:meta {:content-type "utf-8"}]
       [:title (theme/title title (:site/name config))]
-      [:link {:rel :stylesheet :href "/assets/site.css"}]]
+      [:link {:rel :stylesheet :href "/crust/css/base.css"}]]
      [:body
       (Nav main-nav)
       content
