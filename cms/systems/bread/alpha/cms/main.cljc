@@ -18,6 +18,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
+    [systems.bread.alpha.cms.theme.crust :as crust]
     [systems.bread.alpha.cms.theme.rise :as rise]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
@@ -114,23 +115,23 @@
       [""
        {:name :home
         :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/HomePage}]
+        :dispatcher/component #'crust/HomePage}]
       ["/i/{db/id}"
        {:name :id
         :dispatcher/type ::thing/by-id=>
-        :dispatcher/component #'theme/InteriorPage}]
+        :dispatcher/component #'crust/InteriorPage}]
       ["/tag/{thing/slug}"
        {:name :tag
         :dispatcher/type ::post/tag ;; TODO
-        :dispatcher/component #'theme/Tag}]
+        :dispatcher/component #'crust/Tag}]
       ["/{thing/slug*}"
        {:name :page
         :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]
+        :dispatcher/component #'crust/InteriorPage}]
       ["/page/{thing/slug*}" ;; TODO
        {:name :page!
         :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]]]
+        :dispatcher/component #'crust/InteriorPage}]]]
     {:conflicts nil}))
 
 (def cli-options

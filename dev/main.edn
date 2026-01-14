@@ -32,7 +32,7 @@
          :supported-langs #{:en :fr :es :ar}
          :fallback-lang :ar}
   :routes {:router #ig/ref :bread/router}
-  :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
+  :components {:not-found #var systems.bread.alpha.cms.theme.crust/NotFoundPage}
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
