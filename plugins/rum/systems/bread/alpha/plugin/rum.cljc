@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.plugin.rum
   (:require
+    [clojure.edn :as edn]
     [clojure.walk :as walk]
     [rum.core :as rum :exclude [cljsjs/react cljsjs/react-dom]]
 
@@ -18,6 +19,10 @@
 
 (defmethod i18n/deserialize :html [field]
   (HtmlString. (:field/content field)))
+
+(defmethod i18n/deserialize :edn+html [{:field/keys [content]}]
+  (let [content (edn/read-string content)]
+    (walk/postwalk #(if (string? %) (HtmlString. %) %) content)))
 
 (defn html-string? [x]
   (instance? HtmlString x))

@@ -43,7 +43,9 @@
    "404"])
 
 (defc HomePage
-  [{:keys [lang user post]}]
+  [{:keys [lang user]
+    {{:as fields} :thing/fields
+     :as post} :post}]
   {:extends MainLayout
    :key :post
    :query '[:thing/children
@@ -52,9 +54,14 @@
             {:thing/fields [*]}]}
   {:content
    [:main {:role :main}
-    [:h1 (:title (:thing/fields post))]
-    [:pre (with-out-str (clojure.pprint/pprint post))]
-    [:pre (pr-str (user/can? user :edit-posts))]]})
+    [:h1 (:title fields)]
+    [:article
+     (map (fn [{:section/keys [title content]}]
+            [:<>
+             [:h2 title]
+             [:p content]])
+          (:content fields))]
+    [:pre (with-out-str (clojure.pprint/pprint post))]]})
 
 (defc Tag
   [{{fields :thing/fields :as tag} :tag}]

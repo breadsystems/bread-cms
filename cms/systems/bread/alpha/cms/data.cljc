@@ -16,12 +16,24 @@
        :field/content "Le Titre"}
       {:field/key :content
        :field/lang :en
-       :field/format :edn
-       :field/content (pr-str [{:a "some content" :b "more content"}])}
+       :field/format :edn+html
+       :field/content (pr-str [{:section/title "Some content"
+                                :section/content "Lorem ipsum dolor sit amet."}
+                               {:section/title "More content"
+                                :section/content "
+                                <p>Sed luctus placerat leo sit amet pulvinar. Fusce convallis odio quis arcu sodales, id pretium purus ultrices.
+                                <p>Ut ac odio eget elit scelerisque condimentum nec vitae nibh. Ut ultrices felis eget justo malesuada fringilla. Morbi elit neque, feugiat id vehicula lacinia, vestibulum vitae magna.
+                                                 "}])}
       {:field/key :content
        :field/lang :fr
-       :field/format :edn
-       :field/content (pr-str [{:a "le content" :b "et plus"}])}}}
+       :field/format :edn+html
+       :field/content (pr-str [{:section/title "Le content"
+                                :section/content "Lorem ipsum dolor sit amet."}
+                               {:section/title "Et plus"
+                                :section/content "
+                                <p>Sed luctus placerat leo sit amet pulvinar. Fusce convallis odio quis arcu sodales, id pretium purus ultrices.
+                                <p>Ut ac odio eget elit scelerisque condimentum nec vitae nibh. Ut ultrices felis eget justo malesuada fringilla. Morbi elit neque, feugiat id vehicula lacinia, vestibulum vitae magna.
+                                                 "}])}}}
    {:db/id "page.child"
     :post/type :page
     :thing/slug "child-page"
