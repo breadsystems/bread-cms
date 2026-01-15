@@ -36,6 +36,9 @@
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.marx :as marx]
+    [systems.bread.alpha.navigation :as navigation]
+    #_ ;; TODO
+    [systems.bread.alpha.plugin.navigation :as navigation]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
@@ -369,6 +372,7 @@
                    (signup/plugin (:signup app-config))
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
+                   (navigation/plugin (:navigation app-config))
                    (rum/plugin (:renderer app-config))
                    (email/plugin (:email app-config))
                    (theme/plugin (:theme app-config))])]
