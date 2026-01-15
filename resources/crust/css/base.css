@@ -34,3 +34,22 @@ body {
     "Courier New",
     monospace;
 }
+
+/* SIDEBAR LAYOUT */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.container > nav {
+  flex-basis: 25ch;
+  flex-grow: 1;
+  min-inline-size: 30%;
+}
+main {
+  flex-basis: 0;
+  flex-grow: 999;
+  min-height: 80vh;
+}
+.container > footer {
+  min-height: 20vh;
+}

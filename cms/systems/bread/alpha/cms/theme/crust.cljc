@@ -16,8 +16,8 @@
     [:a {:href uri} title]]
    (map NavItem children)])
 
-(defc Nav [{items :menu/items}]
-  [:nav
+(defc MainNav [{items :menu/items}]
+  [:nav.main-nav
    [:ul
     (map NavItem items)]])
 
@@ -30,11 +30,16 @@
      [:head
       [:meta {:content-type "utf-8"}]
       [:title (theme/title title (:site/name config))]
-      [:link {:rel :stylesheet :href "/crust/css/base.css"}]]
+      [:link {:rel :stylesheet :href "/crust/css/base.css"}]
+      head]
      [:body
-      (Nav main-nav)
-      content
-      (marx/Embed data)]]))
+      [:.container
+       (MainNav main-nav)
+       [:main {:role :main}
+        content
+        (marx/Embed data)]]
+      [:footer.main-footer
+       (:site/name config)]]]))
 
 (defc NotFoundPage
   [{:keys [lang]}]
@@ -53,15 +58,13 @@
             :post/authors
             {:thing/fields [*]}]}
   {:content
-   [:main {:role :main}
+   [:article
     [:h1 (:title fields)]
-    [:article
-     (map (fn [{:section/keys [title content]}]
-            [:<>
-             [:h2 title]
-             [:p content]])
-          (:content fields))]
-    [:pre (with-out-str (clojure.pprint/pprint post))]]})
+    (map (fn [{:section/keys [title content]}]
+           [:<>
+            [:h2 title]
+            [:p content]])
+         (:content fields))]})
 
 (defc Tag
   [{{fields :thing/fields :as tag} :tag}]
@@ -72,7 +75,7 @@
             {:post/_taxons
              [{:post/authors [*]}
               {:thing/fields [*]}]}]}
-  [:main
+  [:article
    [:h1 (:name fields)]
    [:h2 [:code (:thing/slug tag)]]])
 
@@ -87,12 +90,11 @@
             {:post/taxons [{:thing/fields [*]}]}]}
   (let [Field (partial marx/Field post)]
     [:<>
-     [:main
-      (Field :text :title :tag :h1)
-      [:h2 (:db/id post)]
-      (Field :rich-text :rte)
-      [:div.tags-list
-       [:p "TAGS"]
-       (map (fn [{tag :thing/fields}]
-              [:span.tag (:name tag)])
-            tags)]]]))
+     (Field :text :title :tag :h1)
+     [:h2 (:db/id post)]
+     (Field :rich-text :rte)
+     [:div.tags-list
+      [:p "TAGS"]
+      (map (fn [{tag :thing/fields}]
+             [:span.tag (:name tag)])
+           tags)]]))
