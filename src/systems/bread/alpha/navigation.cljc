@@ -40,8 +40,7 @@
 (defmethod bread/expand ::items
   [opts data]
   (when-let [items (expansion/get-at data (:expansion/key opts))]
-    ;; First layer will be a vector of vectors
-    (->items opts (map first items))))
+    (->items opts items)))
 
 (defn- field-keys [ks]
   (cond
