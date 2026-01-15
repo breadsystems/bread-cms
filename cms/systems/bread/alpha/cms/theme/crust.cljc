@@ -8,15 +8,15 @@
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.marx :as marx]))
 
-(defn- NavItem [{:keys [children uri]
-                       {:keys [title] :as fields} :thing/fields
-                       :as item}]
+(defc NavItem [{:keys [children uri]
+                {:keys [title] :as fields} :thing/fields
+                :as item}]
   [:li
    [:div
     [:a {:href uri} title]]
    (map NavItem children)])
 
-(defn- Nav [{items :menu/items}]
+(defc Nav [{items :menu/items}]
   [:nav
    [:ul
     (map NavItem items)]])
