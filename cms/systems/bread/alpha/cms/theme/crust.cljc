@@ -60,11 +60,7 @@
   {:content
    [:article
     [:h1 (:title fields)]
-    (map (fn [{:section/keys [title content]}]
-           [:<>
-            [:h2 title]
-            [:p content]])
-         (:content fields))]})
+    (:content fields)]})
 
 (defc Tag
   [{{fields :thing/fields :as tag} :tag}]

@@ -16,24 +16,36 @@
        :field/content "Le Titre"}
       {:field/key :content
        :field/lang :en
-       :field/format :edn+html
-       :field/content (pr-str [{:section/title "Some content"
-                                :section/content "Lorem ipsum dolor sit amet."}
-                               {:section/title "More content"
-                                :section/content "
-                                <p>Sed luctus placerat leo sit amet pulvinar. Fusce convallis odio quis arcu sodales, id pretium purus ultrices.
-                                <p>Ut ac odio eget elit scelerisque condimentum nec vitae nibh. Ut ultrices felis eget justo malesuada fringilla. Morbi elit neque, feugiat id vehicula lacinia, vestibulum vitae magna.
-                                                 "}])}
+       :field/format :html
+       :field/content
+       "<h2>Some content</h2>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vel egestas sapien, vel gravida lacus. Morbi placerat lorem justo, luctus pretium sem mattis ac. Maecenas convallis lorem a enim iaculis luctus. Pellentesque malesuada elit et sodales efficitur. Integer quis blandit felis. Aenean fringilla magna quis lacinia egestas. Praesent neque mauris, aliquam quis elementum quis, sagittis sit amet diam. Nulla eu scelerisque tortor, nec condimentum erat.</p>
+<h2>More content</h2>
+<p>Cras tellus purus, ultricies nec augue ut, lacinia dignissim leo. Quisque eros erat, semper ut ornare et, mattis at ipsum. Pellentesque odio dui, hendrerit sollicitudin ultricies fringilla, feugiat at turpis. Curabitur quam felis, dapibus mollis tellus a, accumsan euismod mauris. Suspendisse dictum commodo arcu, eget pharetra nibh aliquet ut. Duis accumsan nec leo a dignissim. Nam nunc massa, vulputate non neque vel, convallis congue nisi. Maecenas ut cursus orci.</p>
+<p>Duis ipsum nunc, gravida ut est sit amet, facilisis luctus enim. Maecenas eget sapien aliquam odio luctus eleifend sed sit amet metus. Nulla malesuada efficitur odio. Aenean ligula ipsum, faucibus maximus consectetur eget, condimentum placerat nibh. Nunc laoreet luctus velit vel dignissim. Pellentesque hendrerit purus et leo tincidunt, egestas finibus turpis tempor. Curabitur ut ligula sit amet justo vulputate condimentum. Phasellus aliquet magna et est convallis blandit. Nullam eros magna, ornare at tempus et, pellentesque non justo.</p>
+<p>Integer faucibus mauris quis lobortis consequat. Sed ac congue arcu. Nunc convallis, massa non imperdiet consequat, mi nibh iaculis elit, mollis dignissim ipsum quam vitae felis. Aliquam laoreet tellus odio, nec molestie erat pretium sed. Quisque lacus tortor, hendrerit ut nulla at, rhoncus malesuada velit. Nunc rhoncus interdum mi, nec dictum nisi ullamcorper vel. Fusce sed porta felis. Suspendisse sagittis ornare nulla. Suspendisse potenti. Sed sed ligula malesuada, pulvinar mauris sed, vehicula sapien. Vestibulum nec ipsum quis orci condimentum volutpat. Quisque sollicitudin mi in enim mollis, ac pretium enim interdum.</p>
+<p>Aenean nunc nulla, finibus sed tortor eget, lobortis viverra tortor. In in orci maximus, mollis nulla finibus, blandit nunc. Nulla facilisi. Morbi quis nisi a massa consequat porta nec ut turpis. Proin varius porttitor euismod. Vivamus elit felis, suscipit vel ullamcorper luctus, eleifend vel lacus. Vivamus vestibulum elit quis volutpat commodo. Curabitur dapibus porttitor ultrices. Etiam facilisis lorem vitae diam pulvinar, at ullamcorper augue rutrum.</p>
+<h2>And some more...</h2>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus</p>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.</p>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>"
+       ,}
       {:field/key :content
        :field/lang :fr
-       :field/format :edn+html
-       :field/content (pr-str [{:section/title "Le content"
-                                :section/content "Lorem ipsum dolor sit amet."}
-                               {:section/title "Et plus"
-                                :section/content "
-                                <p>Sed luctus placerat leo sit amet pulvinar. Fusce convallis odio quis arcu sodales, id pretium purus ultrices.
-                                <p>Ut ac odio eget elit scelerisque condimentum nec vitae nibh. Ut ultrices felis eget justo malesuada fringilla. Morbi elit neque, feugiat id vehicula lacinia, vestibulum vitae magna.
-                                                 "}])}}}
+       :field/format :html
+       :field/content
+       "<h2>Le content</h2>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vel egestas sapien, vel gravida lacus. Morbi placerat lorem justo, luctus pretium sem mattis ac. Maecenas convallis lorem a enim iaculis luctus. Pellentesque malesuada elit et sodales efficitur. Integer quis blandit felis. Aenean fringilla magna quis lacinia egestas. Praesent neque mauris, aliquam quis elementum quis, sagittis sit amet diam. Nulla eu scelerisque tortor, nec condimentum erat.</p>
+<h2>Et plus</h2>
+<p>Cras tellus purus, ultricies nec augue ut, lacinia dignissim leo. Quisque eros erat, semper ut ornare et, mattis at ipsum. Pellentesque odio dui, hendrerit sollicitudin ultricies fringilla, feugiat at turpis. Curabitur quam felis, dapibus mollis tellus a, accumsan euismod mauris. Suspendisse dictum commodo arcu, eget pharetra nibh aliquet ut. Duis accumsan nec leo a dignissim. Nam nunc massa, vulputate non neque vel, convallis congue nisi. Maecenas ut cursus orci.</p>
+<p>Duis ipsum nunc, gravida ut est sit amet, facilisis luctus enim. Maecenas eget sapien aliquam odio luctus eleifend sed sit amet metus. Nulla malesuada efficitur odio. Aenean ligula ipsum, faucibus maximus consectetur eget, condimentum placerat nibh. Nunc laoreet luctus velit vel dignissim. Pellentesque hendrerit purus et leo tincidunt, egestas finibus turpis tempor. Curabitur ut ligula sit amet justo vulputate condimentum. Phasellus aliquet magna et est convallis blandit. Nullam eros magna, ornare at tempus et, pellentesque non justo.</p>
+<p>Integer faucibus mauris quis lobortis consequat. Sed ac congue arcu. Nunc convallis, massa non imperdiet consequat, mi nibh iaculis elit, mollis dignissim ipsum quam vitae felis. Aliquam laoreet tellus odio, nec molestie erat pretium sed. Quisque lacus tortor, hendrerit ut nulla at, rhoncus malesuada velit. Nunc rhoncus interdum mi, nec dictum nisi ullamcorper vel. Fusce sed porta felis. Suspendisse sagittis ornare nulla. Suspendisse potenti. Sed sed ligula malesuada, pulvinar mauris sed, vehicula sapien. Vestibulum nec ipsum quis orci condimentum volutpat. Quisque sollicitudin mi in enim mollis, ac pretium enim interdum.</p>
+<p>Aenean nunc nulla, finibus sed tortor eget, lobortis viverra tortor. In in orci maximus, mollis nulla finibus, blandit nunc. Nulla facilisi. Morbi quis nisi a massa consequat porta nec ut turpis. Proin varius porttitor euismod. Vivamus elit felis, suscipit vel ullamcorper luctus, eleifend vel lacus. Vivamus vestibulum elit quis volutpat commodo. Curabitur dapibus porttitor ultrices. Etiam facilisis lorem vitae diam pulvinar, at ullamcorper augue rutrum.</p>
+<h2>Et maintenant, plus...</h2>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus</p>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.</p>
+<p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>"
+       ,}}}
    {:db/id "page.child"
     :post/type :page
     :thing/slug "child-page"
