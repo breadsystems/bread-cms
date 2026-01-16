@@ -105,15 +105,15 @@ h1, h2, h3, h4, h5, h6, nav, footer {
     monospace;
 }
 body, main, article, section {
-  font-family: Apple Garamond,
-    Times New Roman,
-    Droid Serif,
-    Times,
-    Source Serif Pro,
+  font-family: "Apple Garamond",
+    "Times New Roman",
+    "Droid Serif",
+    "Times",
+    "Source Serif Pro",
     serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol;
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol";
 }
 
 a {
