@@ -52,9 +52,9 @@
                       :expansion/db (db/database req)
                       :expansion/args [query taxonomy (:slug params)]}))}))
 
-(defmethod bread/dispatch ::tag
+(defmethod bread/dispatch ::tag=>
   [{::bread/keys [dispatcher] :as req}]
   (let [dispatcher (assoc dispatcher
                           :dispatcher/type ::taxon
-                          :taxon/taxonomy :taxon.taxonomy/tag)]
+                          :taxon/taxonomy :tag)]
     (bread/dispatch (assoc req ::bread/dispatcher dispatcher))))

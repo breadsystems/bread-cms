@@ -53,7 +53,6 @@
        :route/params {:lang "en" :slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
-      ;; ::taxon/tag
       [{:expansion/name ::db/query
         :expansion/key :tag
         :expansion/db ::FAKEDB
@@ -62,9 +61,9 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
        :route/params {:lang "en" :slug "some-tag"}}
@@ -79,9 +78,9 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
        :post/status :post.status/draft
@@ -134,7 +133,7 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}
        {:expansion/name ::i18n/fields
         :expansion/key :tag-with-posts
@@ -149,7 +148,7 @@
         :expansion/key :tag-with-posts
         :post/type :page
         :post/status :post.status/published}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
@@ -172,7 +171,7 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}
        {:expansion/name ::i18n/fields
         :expansion/key :tag-with-posts
@@ -187,7 +186,7 @@
         :expansion/key :tag-with-posts
         :post/type :post.type/article
         :post/status :post.status/draft}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
