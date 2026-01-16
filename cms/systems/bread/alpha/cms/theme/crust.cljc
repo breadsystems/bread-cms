@@ -79,18 +79,18 @@
   [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
     {:keys [main-nav]} :menus
     {:keys [user]} :session
-    :keys [hook]}]
+    :keys [hook route/uri]}]
   {:extends MainLayout
    :key :post
    :query '[{:thing/fields [*]}
-            {:post/taxons [{:thing/fields [*]}]}]}
+            {:post/taxons [:thing/slug {:thing/fields [*]}]}]}
   (let [Field (partial marx/Field post)]
-    [:<>
+    [:article
      (Field :text :title :tag :h1)
-     [:h2 (:db/id post)]
      (Field :rich-text :rte)
-     [:div.tags-list
-      [:p "TAGS"]
-      (map (fn [{tag :thing/fields}]
-             [:span.tag (:name tag)])
-           tags)]]))
+     [:footer
+      [:h3 "Tags"]
+      [:div.tag-list {:role :list}
+       (map (fn [{:as tag {tag-name :name} :thing/fields}]
+              [:a.tag-link {:href (uri :tag tag)} tag-name])
+            tags)]]]))

@@ -122,3 +122,9 @@ a {
 a:visited {
   color: #550e47;
 }
+
+.tag-list {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 1ch;
+}
