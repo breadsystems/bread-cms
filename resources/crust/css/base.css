@@ -1,3 +1,7 @@
+:root {
+  --color-offwhite: #fbfaf5;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -11,14 +15,81 @@ html {
 
 /* Remove default margin in favour of better control in authored CSS */
 body, h1, h2, h3, h4, p,
-figure, blockquote, dl, dd {
+figure, blockquote, dl, dd, ol, ul {
   margin: 0;
 }
 
+/* SIDEBAR LAYOUT */
 body {
-  width: 70ch;
+  width: 100%;
+
+  background: #f0ead6;
+}
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 95ch;
   max-width: 100%;
   margin: auto;
+  gap: 1rem;
+}
+.main-nav {
+  flex-basis: 20ch;
+  flex-grow: 1;
+  min-inline-size: 30%;
+
+  background: lightgrey;
+  background: #cec9b9;
+  padding-inline: 1em;
+}
+main {
+  flex-basis: 30ch;
+  flex-grow: 999;
+  min-height: 80vh;
+}
+.main-footer {
+  display: flex;
+  width: 100%;
+  min-height: 20vh;
+
+  background: #393636;
+  color: white;
+}
+.footer-content {
+  max-width: 100%;
+  margin: 2em auto;
+  flex-basis: 79ch;
+
+  color: #f0ead6;
+}
+
+nav, article {
+  padding: 3em 0;
+}
+h1 {
+  margin-bottom: 2em;
+}
+h2 {
+  margin-top: 1.5em;
+  margin-bottom: 1.2em;
+}
+h3 {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+p {
+  margin: 1em auto;
+}
+
+nav ul {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: 0.5em;
+  padding: 0;
+  list-style: none;
+}
+
+h1, h2, h3, h4, h5, h6, nav, footer {
   font-family: ui-monospace,
     Menlo,
     Monaco,
@@ -34,22 +105,21 @@ body {
     "Courier New",
     monospace;
 }
+body, main, article, section {
+  font-family: Apple Garamond,
+    Times New Roman,
+    Droid Serif,
+    Times,
+    Source Serif Pro,
+    serif,
+    Apple Color Emoji,
+    Segoe UI Emoji,
+    Segoe UI Symbol;
+}
 
-/* SIDEBAR LAYOUT */
-.container {
-  display: flex;
-  flex-wrap: wrap;
+a {
+  color: #621c1c;
 }
-.container > nav {
-  flex-basis: 25ch;
-  flex-grow: 1;
-  min-inline-size: 30%;
-}
-main {
-  flex-basis: 0;
-  flex-grow: 999;
-  min-height: 80vh;
-}
-.container > footer {
-  min-height: 20vh;
+a:visited {
+  color: #550e47;
 }

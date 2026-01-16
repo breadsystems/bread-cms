@@ -39,7 +39,7 @@
         content
         (marx/Embed data)]]
       [:footer.main-footer
-       (:site/name config)]]]))
+       [:.footer-content (:site/name config)]]]]))
 
 (defc NotFoundPage
   [{:keys [lang]}]
