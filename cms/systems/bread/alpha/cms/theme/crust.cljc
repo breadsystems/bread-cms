@@ -44,8 +44,10 @@
 (defc NotFoundPage
   [{:keys [lang]}]
   {:extends MainLayout}
-  [:main
-   "404"])
+  [:article
+   ;; TODO i18n
+   [:h1 "404"]
+   [:p "The page you are looking for was not found."]])
 
 (defc HomePage
   [{:keys [lang user]
