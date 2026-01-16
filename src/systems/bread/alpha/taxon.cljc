@@ -22,8 +22,10 @@
          taxonomy :taxon/taxonomy
          post-type :post/type
          post-status :post/status
+         slug-param :route/slug-param
          :or {post-type :page
-              post-status :post.status/published}} dispatcher
+              post-status :post.status/published
+              slug-param :thing/slug}} dispatcher
         pull-spec (vec (dispatcher/pull-spec dispatcher))
         ;; NOTE: because of how pull works, we can't specify the pull spec of the posts within
         ;; the requested taxon ~while also filtering those posts~ in the same query.
@@ -40,7 +42,7 @@
                           [{:expansion/name ::db/query
                             :expansion/key k
                             :expansion/db (db/database req)
-                            :expansion/args [query taxonomy (:slug params)]}
+                            :expansion/args [query taxonomy (slug-param params)]}
                            {:expansion/name ::filter-posts
                             :expansion/key :tag-with-posts
                             :post/type post-type
@@ -50,7 +52,7 @@
                      {:expansion/name ::db/query
                       :expansion/key k
                       :expansion/db (db/database req)
-                      :expansion/args [query taxonomy (:slug params)]}))}))
+                      :expansion/args [query taxonomy (slug-param params)]}))}))
 
 (defmethod bread/dispatch ::tag=>
   [{::bread/keys [dispatcher] :as req}]
