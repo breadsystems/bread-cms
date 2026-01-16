@@ -27,15 +27,19 @@
 (defn html-string? [x]
   (instance? HtmlString x))
 
+(defn- ->html [& xs]
+  (let [xs (map (fn [x] (if (vector? x) (rum/render-static-markup x) x)) xs)]
+    (apply str xs)))
+
 (defn unescape [html]
   (walk/postwalk (fn [x]
                    (if (and (vector? x) (seq (filter html-string? x)))
                      (let [[tag attrs & content] x
                            attrs (if (map? attrs)
                                    (merge attrs {:dangerouslySetInnerHTML
-                                                 {:__html (apply str content)}})
+                                                 {:__html (apply ->html content)}})
                                    {:dangerouslySetInnerHTML
-                                    {:__html (apply str attrs content)}})]
+                                    {:__html (apply ->html attrs content)}})]
                        [tag attrs])
                      x))
                  html))
