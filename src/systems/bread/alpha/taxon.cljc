@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.taxon
   (:require
     [clojure.set :refer [rename-keys]]
+    [com.rpl.specter :as s]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -10,10 +12,13 @@
 
 (defmethod bread/expand ::filter-posts
   [{k :expansion/key post-type :post/type post-status :post/status} data]
-  (filter (fn [post]
-            (and (or (nil? post-type)   (= post-type   (:post/type post)))
-                 (or (nil? post-status) (= post-status (:post/status post)))))
-          (get-in data [k :post/_taxons])))
+  (update (get data k)
+          :post/_taxons
+          (fn [posts]
+            (filter (fn [post]
+                      (and (or (nil? post-type)   (= post-type   (:post/type post)))
+                           (or (nil? post-status) (= post-status (:post/status post)))))
+                    posts))))
 
 (defmethod bread/dispatch ::taxon
   [{::bread/keys [dispatcher] :as req}]
@@ -36,23 +41,28 @@
                         [?e :thing/slug ?slug]]}
         {:keys [bindings]} (qi/infer-query-bindings :post/_taxons vector? query)]
     {:expansions (if (seq bindings)
-                   (vec (mapcat
-                          (fn [query]
-                            (bread/hook req ::i18n/expansions query))
-                          [{:expansion/name ::db/query
-                            :expansion/key k
-                            :expansion/db (db/database req)
-                            :expansion/args [query taxonomy (slug-param params)]}
-                           {:expansion/name ::filter-posts
-                            :expansion/key :tag-with-posts
-                            :post/type post-type
-                            :post/status post-status}]))
-                   (bread/hook
+                   (let [{:keys [binding-path entity-index]} (first bindings)
+                         path (concat [:find         ;; find clause
+                                       entity-index  ;; find position
+                                       s/LAST]       ;; pull-expr
+                                      binding-path) ;; within pull-expr
+                         query (s/transform path #(conj % :post/type :post/status) query)
+                         expansion {:expansion/name ::db/query
+                                    :expansion/key k
+                                    :expansion/db (db/database req)
+                                    :expansion/args [query taxonomy (slug-param params)]}]
+                     (concat (bread/hook req ::i18n/expansions expansion)
+                             [{:expansion/name ::filter-posts
+                               :expansion/key k
+                               :post/type post-type
+                               :post/status post-status}]))
+                   (do
+                     (bread/hook
                      req ::i18n/expansions
                      {:expansion/name ::db/query
                       :expansion/key k
                       :expansion/db (db/database req)
-                      :expansion/args [query taxonomy (slug-param params)]}))}))
+                      :expansion/args [query taxonomy (slug-param params)]})))}))
 
 (defmethod bread/dispatch ::tag=>
   [{::bread/keys [dispatcher] :as req}]

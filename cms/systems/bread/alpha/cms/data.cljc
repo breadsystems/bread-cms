@@ -135,7 +135,7 @@
        :field/content "Petit Enfant Page"}}}
    {:db/id "tag.one"
     :thing/slug "one"
-    :taxon/taxonomy :taxon.taxonomy/tag
+    :taxon/taxonomy :tag
     :thing/fields
     [{:field/key :name
       :field/content "One"
@@ -145,7 +145,7 @@
       :field/lang :fr}]}
    {:db/id "tag.two"
     :thing/slug "two"
-    :taxon/taxonomy :taxon.taxonomy/tag
+    :taxon/taxonomy :tag
     :thing/fields
     [{:field/key :name
       :field/content "Two"

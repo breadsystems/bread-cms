@@ -28,6 +28,7 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.ring :as bread.ring]
     [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.util.logging :refer [log-redactor]]
     [systems.bread.alpha.cms.config.bread]
@@ -133,14 +134,11 @@
         :dispatcher/component #'crust/InteriorPage}]
       ["/tag/{thing/slug}"
        {:name :tag
-        :dispatcher/type ::post/tag ;; TODO
-        :dispatcher/component #'crust/Tag}]
-      ["/{thing/slug*}"
+        :dispatcher/type ::taxon/tag=>
+        :dispatcher/component #'crust/Tag
+        :post/type :page}]
+      ["/*slugs"
        {:name :page
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'crust/InteriorPage}]
-      ["/page/{thing/slug*}" ;; TODO
-       {:name :page!
         :dispatcher/type ::post/page=>
         :dispatcher/component #'crust/InteriorPage}]]]
     {:conflicts nil}))
