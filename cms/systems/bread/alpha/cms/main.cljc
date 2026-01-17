@@ -637,24 +637,27 @@
      :thing/_children [{:thing/slug "b"
                         :thing/_children [{:thing/slug "a"}]}]})
 
-  (def $router (route/router (->app $req)))
-
+  (reitit/match-by-path router "/en/a")
+  (reitit/match-by-path router "/en/a/b/c")
+  (-> router
+      (reitit/match-by-path "/en/tag/two")
+      :data :name)
   (reitit/match->path
-    (reitit/match-by-path $router "/en/a/b/c")
-    {:field/lang :en :thing/slug* "a/b/c"})
+    (reitit/match-by-path router "/en/a/b/c")
+    {:field/lang :en :slugs "a/b/c"})
   (reitit/match->path
-    (reitit/match-by-name $router :page {:field/lang :en :thing/slug* "x"}))
+    (reitit/match-by-name router :page {:field/lang :en :slugs "x"}))
 
   (bread/routes $router)
   (bread/route-params $router $req)
 
   ;; route/uri infers params and then just calls bread/path under the hood...
-  (bread/path $router :page {:field/lang :en :thing/slug* "a/b/c"})
+  (bread/path $router :page {:field/lang :en :slugs "a/b/c"})
   (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
   (route/uri (->app $req) :page! (merge {:field/lang :en} grandchild))
 
   (route/ancestry grandchild)
-  (bread/infer-param :thing/slug* grandchild)
+  (bread/infer-param :slugs grandchild)
   (bread/routes (route/router (->app $req)))
 
   (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))

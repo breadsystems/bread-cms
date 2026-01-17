@@ -51,16 +51,16 @@
     ["/{thing/slug}" {:name :page}]
     "/abc"
 
-    [:thing/slug*]
-    ["/{thing/slug*}" {:name :page}]
+    [:slugs]
+    ["/{slugs}" {:name :page}]
     "/abc"
 
-    [:field/lang :thing/slug*]
-    ["/{field/lang}/{thing/slug*}" {:name :page}]
+    [:field/lang :slugs]
+    ["/{field/lang}/{slugs}" {:name :page}]
     "/en/abc"
 
-    [:field/lang "page" :thing/slug*]
-    ["/{field/lang}/page/{thing/slug*}" {:name :page}]
+    [:field/lang "page" :slugs]
+    ["/{field/lang}/page/{slugs}" {:name :page}]
     "/en/page/abc"
 
     ;;

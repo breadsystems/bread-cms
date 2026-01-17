@@ -10,7 +10,7 @@
     (let [slugs (cons slug slugs)]
       (if (nil? parent) slugs (recur slugs parent)))))
 
-(defmethod bread/infer-param :thing/slug* [_ thing]
+(defmethod bread/infer-param :slugs [_ thing]
   (string/join "/" (ancestry thing)))
 
 (defn router [app]

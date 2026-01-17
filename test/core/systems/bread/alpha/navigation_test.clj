@@ -16,9 +16,9 @@
   bread/Router
   (bread/route-params [this _] params)
   (bread/route-spec [this _]
-    [:field/lang :thing/slug*])
+    [:field/lang :slugs])
   (bread/path [this route-name params]
-    (let [route (get {::page [:field/lang :thing/slug*]} route-name)]
+    (let [route (get {::page [:field/lang :slugs]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
   (bread/routes [this] []))
 
