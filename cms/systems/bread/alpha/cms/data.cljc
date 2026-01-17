@@ -50,6 +50,7 @@
     :post/type :page
     :thing/slug "child-page"
     :post/status :post.status/published
+    :post/taxons ["tag.two"]
     :thing/children ["page.grandchild"]
     :thing/fields
     #{{:field/key :title
@@ -70,6 +71,7 @@
     :post/type :page
     :thing/slug "daughter-page"
     :post/status :post.status/draft
+    :post/taxons ["tag.one"]
     :thing/fields
     #{{:field/key :title
        :field/lang :en
@@ -123,6 +125,7 @@
     :post/type :page
     :thing/slug "grandchild-page"
     :post/status :post.status/published
+    :post/taxons ["tag.one" "tag.two"]
     :thing/fields
     #{{:field/key :title
        :field/lang :en
