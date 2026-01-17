@@ -89,6 +89,9 @@ h3 {
 p {
   margin: 1em auto;
 }
+mark {
+  background-color: #fbe10d;
+}
 
 .post-content::after {
   display: block;
