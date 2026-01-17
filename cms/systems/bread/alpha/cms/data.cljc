@@ -49,6 +49,7 @@
    {:db/id "page.child"
     :post/type :page
     :thing/slug "child-page"
+    :thing/created-at #inst "2026-01-01T04:20:00-08:00"
     :post/status :post.status/published
     :post/taxons ["tag.two"]
     :thing/children ["page.grandchild"]
@@ -70,6 +71,7 @@
    {:db/id "page.daughter"
     :post/type :page
     :thing/slug "daughter-page"
+    :thing/created-at #inst "2025-10-10T05:53:00-08:00"
     :post/status :post.status/draft
     :post/taxons ["tag.one"]
     :thing/fields
@@ -82,6 +84,7 @@
    {:db/id "page.parent"
     :post/type :page
     :thing/slug "hello"
+    :thing/created-at #inst "2025-03-16T14:21:22-08:00"
     :thing/children ["page.child" "page.daughter"]
     :post/taxons ["tag.one" "tag.two"]
     :post/status :post.status/published
@@ -124,6 +127,7 @@
    {:db/id "page.grandchild"
     :post/type :page
     :thing/slug "grandchild-page"
+    :thing/created-at #inst "2024-01-15T13:12:42-08:00"
     :post/status :post.status/published
     :post/taxons ["tag.one" "tag.two"]
     :thing/fields

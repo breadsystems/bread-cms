@@ -6,7 +6,11 @@
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.marx :as marx]))
+    [systems.bread.alpha.plugin.marx :as marx])
+  (:import
+    [java.text SimpleDateFormat]))
+
+(def date-fmt-published-at (SimpleDateFormat. "d LLL YYY"))
 
 (defc NavItem [{:keys [children uri]
                 {:keys [title] :as fields} :thing/fields
@@ -65,17 +69,32 @@
     (:content fields)]})
 
 (defc Tag
-  [{{fields :thing/fields :as tag} :tag}]
+  [{{fields :thing/fields :as tag pages :post/_taxons} :tag
+    :keys [route/uri]}]
   {:extends MainLayout
    :key :tag
    :query '[:thing/slug
             {:thing/fields [*]}
             {:post/_taxons
-             [{:post/authors [*]}
-              {:thing/fields [*]}]}]}
+             [:thing/slug
+              :thing/created-at
+              {:post/authors [*]}
+              {:thing/fields [*]}
+              {:thing/_children
+               [:thing/slug
+                {:thing/_children ...}]}
+              {:thing/children ...}]}]}
   [:article
    [:h1 (:name fields)]
-   [:h2 [:code (:thing/slug tag)]]])
+   [:.posts-list {:role :list}
+    (map (fn [{:as page
+               :keys [thing/created-at]
+               {:keys [title]} :thing/fields}]
+           [:div
+            [:h2
+             [:a {:href (uri :page page)} title]]
+            [:h3 (.format date-fmt-published-at created-at)]])
+         pages)]])
 
 (defc InteriorPage
   [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
@@ -89,10 +108,9 @@
   (let [Field (partial marx/Field post)]
     [:article
      (Field :text :title :tag :h1)
-     (Field :rich-text :rte)
+     [:.post-content (Field :rich-text :rte)]
      [:footer
-      [:h3 "Tags"]
-      [:div.tag-list {:role :list}
+      [:.tags-list {:role :list}
        (map (fn [{:as tag {tag-name :name} :thing/fields}]
-              [:a.tag-link {:href (uri :tag tag)} tag-name])
+              [:a.tag-link {:href (uri :tag tag)} (str "#" tag-name)])
             tags)]]]))
