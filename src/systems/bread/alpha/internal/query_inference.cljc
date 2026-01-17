@@ -43,6 +43,9 @@
   (spec-paths keyword? nil [1 {:k [:a {:k :v} :c]} {:k :v}])
   )
 
+(defn- pull-expr? [expr]
+  (and (sequential? expr) (= 'pull (first expr))))
+
 (defn binding-clauses
   "Takes a query, a key predicate, and a value predicate. Returns a list of
   matching patterns, describing the path and identity of each value found."
@@ -50,7 +53,7 @@
   (->> query d/normalize-query :find
        (map-indexed
          (fn [idx clause]
-           (when (and (list? clause) (= 'pull (first clause)))
+           (when (pull-expr? clause)
              (when-let [paths (seq (spec-paths kpred vpred (last clause)))]
                {:index idx
                 :sym (second clause)
@@ -106,6 +109,30 @@
                         [:field/key :field/content]}])]}
     :thing/fields
     #(some #{'* :field/content} %))
+
+  (require '[systems.bread.alpha.i18n :as i18n])
+  (def query
+    '{:find
+      [(pull
+         ?e
+         [:db/id
+          :thing/slug
+          {:thing/fields [*]}
+          {:post/_taxons
+           [:thing/slug
+            {:post/authors [*]}
+            {:thing/fields [*]}
+            {:thing/_children [:thing/slug {:thing/_children ...}]}
+            {:thing/children ...}
+            :post/type
+            :post/status]}])
+       .],
+      :in [$ ?taxonomy ?slug],
+      :where [[?e :taxon/taxonomy ?taxonomy]
+              [?e :thing/slug ?slug]]})
+  (binding-clauses
+    (s/transform [:find s/FIRST] #(lazy-seq %) query)
+    :thing/fields i18n/translatable-binding?)
 
   (relation->spath {:x {:db/cardinality :db.cardinality/many}} [:x :y])
 
