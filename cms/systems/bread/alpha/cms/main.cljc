@@ -51,6 +51,8 @@
     [org.sqlite JDBC])
   (:gen-class))
 
+(set! *print-namespace-maps* false)
+
 (defn not-found [req]
   {:body "not found"
    :status 404})
@@ -390,8 +392,6 @@
   true)
 
 (comment
-  (set! *print-namespace-maps* false)
-
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
 
