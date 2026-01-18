@@ -44,7 +44,7 @@
   )
 
 (defn- pull-expr? [expr]
-  (and (sequential? expr) (= 'pull (first expr))))
+  (and (seq? expr) (= 'pull (first expr))))
 
 (defn binding-clauses
   "Takes a query, a key predicate, and a value predicate. Returns a list of
