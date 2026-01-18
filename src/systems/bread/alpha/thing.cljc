@@ -25,9 +25,10 @@
              (fn [[ancestor-sym descendant-sym slug-sym]]
                [[ancestor-sym :thing/children descendant-sym]
                 [ancestor-sym :thing/slug slug-sym]])
-             (partition 3 (interleave (rest descendant-syms)
-                                      (butlast descendant-syms)
-                                      (rest slug-syms))))
+             (map vector
+                  (rest descendant-syms)
+                  (butlast descendant-syms)
+                  (rest slug-syms)))
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
