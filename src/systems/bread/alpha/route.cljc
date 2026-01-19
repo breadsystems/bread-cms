@@ -10,7 +10,7 @@
     (let [slugs (cons slug slugs)]
       (if (nil? parent) slugs (recur slugs parent)))))
 
-(defmethod bread/infer-param :thing/slug* [_ thing]
+(defmethod bread/infer-param :slugs [_ thing]
   (string/join "/" (ancestry thing)))
 
 (defn router [app]
@@ -57,7 +57,7 @@
 (defn uri [app route-name thing]
   (bread/hook app ::uri nil route-name thing))
 
-(defmethod bread/action ::uri-helper [req _ _]
+(defmethod bread/action ::uri-fn [req _ _]
   (let [uri-helper (fn
                      ([route-name] (uri req route-name {}))
                      ([route-name params] (uri req route-name params)))]
@@ -74,7 +74,7 @@
     ::bread/route
     [{:action/name ::dispatch :router router}]
     ::bread/dispatch
-    [{:action/name ::uri-helper
+    [{:action/name ::uri-fn
       :action/description "Provide a :route/uri helper fn in ::data."}]
     ::uri
     [{:action/name ::uri :router router}]}})

@@ -16,9 +16,9 @@
   bread/Router
   (bread/route-params [this _] params)
   (bread/route-spec [this _]
-    [:field/lang :thing/slug*])
+    [:field/lang :slugs])
   (bread/path [this route-name params]
-    (let [route (get {::page [:field/lang :thing/slug*]} route-name)]
+    (let [route (get {::page [:field/lang :slugs]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
   (bread/routes [this] []))
 
@@ -519,12 +519,12 @@
      :router (MockRouter. {})
      :field/key nil
      :sort-by [:thing/order]}
-    {:menus {:#nofilter {:menu/items [[{:thing/fields
-                                        {:uri "/abc"
-                                         :my/field "My Field"}}]
-                                      [{:thing/fields
-                                        {:uri "/xyz"
-                                         :other/field "Other"}}]]}}}
+    {:menus {:#nofilter {:menu/items [{:thing/fields
+                                       {:uri "/abc"
+                                        :my/field "My Field"}}
+                                      {:thing/fields
+                                       {:uri "/xyz"
+                                        :other/field "Other"}}]}}}
 
     ;; Basic menu items with related entities.
     [{:uri "/en/xyz"
@@ -548,28 +548,28 @@
      :route/params {:field/lang :en}}
     {:menus {:my-nav
              {:menu/items
-              [[{:thing/order 2
-                 :menu.item/entity
-                 {:thing/slug "abc"
-                  :thing/fields {:extra "This gets filtered out..."
-                                 :my/field "My Field"
-                                 :other/field "Other"}}
-                 :thing/fields {:more "...and so does this"
-                                :my/field "Override"
-                                :other/field "Another override"}}]
-               [{:thing/order 3
-                 :menu.item/entity
-                 {:thing/slug "child"
-                  :thing/fields {:extra "This gets filtered out..."
-                                 :my/field "Post field"
-                                 :other/field "Another post field"}
-                  ;; Post ancestry.
-                  :thing/_children
-                  [{:thing/slug "parent"}]}
-                 :thing/fields {:more "...and so does this"}}]
-               [{:thing/order 1
-                 ;; no post
-                 :thing/fields {:uri "/en/xyz"}}]]}}}
+              [{:thing/order 2
+                :menu.item/entity
+                {:thing/slug "abc"
+                 :thing/fields {:extra "This gets filtered out..."
+                                :my/field "My Field"
+                                :other/field "Other"}}
+                :thing/fields {:more "...and so does this"
+                               :my/field "Override"
+                               :other/field "Another override"}}
+               {:thing/order 3
+                :menu.item/entity
+                {:thing/slug "child"
+                 :thing/fields {:extra "This gets filtered out..."
+                                :my/field "Post field"
+                                :other/field "Another post field"}
+                 ;; Post ancestry.
+                 :thing/_children
+                 [{:thing/slug "parent"}]}
+                :thing/fields {:more "...and so does this"}}
+               {:thing/order 1
+                ;; no post
+                :thing/fields {:uri "/en/xyz"}}]}}}
 
     ;; :merge-entities? false; recursive.
     [{:uri "/en/xyz"
@@ -590,51 +590,49 @@
      {:uri "/en/parent/child"
       :thing/fields {}
       :thing/children []}]
-    {:expansion/name ::navigation/items
-     :expansion/key [:menus :my-nav :menu/items]
-     :merge-entities? false
-     :field/key #{:my/field :other/field}
-     :sort-by [:thing/order]
-     :router (MockRouter. {})
-     :route/name ::page
-     :route/params {:field/lang :en}}
-    {:menus {:my-nav
-             {:menu/items
-              [[{:thing/order 2
-                 :menu.item/entity {:thing/slug "abc"
-                                    :thing/fields
-                                    {:extra "This gets filtered out..."
-                                     :my/field "My Field"
-                                     :other/field "Other"}}
-                 :thing/fields {:more "...and so does this"
-                                :my/field "Override"
-                                :other/field "Another override"}}]
-               [{:thing/order 3
-                 :menu.item/entity {:thing/slug "child"
-                                    :thing/fields
-                                    {:extra "This gets filtered out..."
-                                     :my/field "Post field"
-                                     :other/field "Another post field"}
-                                    ;; Post ancestry.
-                                    :thing/_children [{:thing/slug "parent"}]}
-                 :thing/fields {:more "...and so does this"}}]
-               [{:thing/order 1
-                 ;; No entity.
-                 :thing/fields {:uri "/en/xyz"}
-                 :thing/children
-                 [{:thing/order 1
-                   :thing/fields {:uri "/en/xyz/456"
-                                  :my/field "Child"}
-                   :thing/children
-                   [{:thing/order 0
-                     :thing/fields {:uri "/en/xyz/456/789"
-                                    :my/field "Grandchild"}}]}
-                  {:thing/order 0
-                   :thing/fields {:uri "/en/xyz/123"
-                                  :my/field "Daughter"}}]}]]}}}
-
-    ;;
-    ))
+{:expansion/name ::navigation/items
+ :expansion/key [:menus :my-nav :menu/items]
+ :merge-entities? false
+ :field/key #{:my/field :other/field}
+ :sort-by [:thing/order]
+ :router (MockRouter. {})
+ :route/name ::page
+ :route/params {:field/lang :en}}
+{:menus {:my-nav
+         {:menu/items
+          [{:thing/order 2
+            :menu.item/entity {:thing/slug "abc"
+                               :thing/fields
+                               {:extra "This gets filtered out..."
+                                :my/field "My Field"
+                                :other/field "Other"}}
+            :thing/fields {:more "...and so does this"
+                           :my/field "Override"
+                           :other/field "Another override"}}
+           {:thing/order 3
+            :menu.item/entity {:thing/slug "child"
+                               :thing/fields
+                               {:extra "This gets filtered out..."
+                                :my/field "Post field"
+                                :other/field "Another post field"}
+                               ;; Post ancestry.
+                               :thing/_children [{:thing/slug "parent"}]}
+            :thing/fields {:more "...and so does this"}}
+           {:thing/order 1
+            ;; No entity.
+            :thing/fields {:uri "/en/xyz"}
+            :thing/children
+            [{:thing/order 1
+              :thing/fields {:uri "/en/xyz/456"
+                             :my/field "Child"}
+              :thing/children
+              [{:thing/order 0
+                :thing/fields {:uri "/en/xyz/456/789"
+                               :my/field "Grandchild"}}]}
+             {:thing/order 0
+              :thing/fields {:uri "/en/xyz/123"
+                             :my/field "Daughter"}}]}]}}}
+    ,))
 
 (comment
   (require '[kaocha.repl :as k])

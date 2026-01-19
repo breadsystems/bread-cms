@@ -24,7 +24,7 @@
      :or {post-status :post.status/published}
      :as dispatcher} ::bread/dispatcher
     :as req}]
-  "Returns an expansion for querying a single post by :thing/slug*. Observes
+  "Returns an expansion for querying a single post by :slugs. Observes
   the options in ::bread/dispatcher, which may specify:
   - :post/type (default nil, meaning all types)
   - :post/status (default :post.status/published)"

@@ -91,6 +91,7 @@
 
     ;; We don't support their preferred langs :'(
     :en {:uri "/qwerty" :headers {"accept-language" "de, fr;q=0.5"}}
+    :en {:uri "/qwerty" :headers {"accept-language" "de, fr-FR;q=0.5"}}
 
     ))
 

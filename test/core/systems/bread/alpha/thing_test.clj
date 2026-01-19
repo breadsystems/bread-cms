@@ -218,7 +218,7 @@
       {:dispatcher/type ::thing/thing=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :thing
-       :route/params {:lang "en" :thing/slug* "hello"}}
+       :route/params {:lang "en" :slugs "hello"}}
 
       )))
 
@@ -249,7 +249,7 @@
     {:dispatcher/type ::thing/thing=>
      :dispatcher/pull '[:thing/slug *]
      :dispatcher/key :thing
-     :route/params {:lang "en" :thing/slug* "hello"}}
+     :route/params {:lang "en" :slugs "hello"}}
 
     {:expansions
      [{:expansion/name ::db/query
@@ -280,7 +280,7 @@
     {:dispatcher/type ::thing/by-slug*=>
      :dispatcher/pull '[:thing/slug {:thing/fields [:field/content]}]
      :dispatcher/key :thing
-     :route/params {:lang "en" :thing/slug* "hello"}}
+     :route/params {:lang "en" :slugs "hello"}}
 
     ;; ::thing/thing=> is an alias of ::thing/by-slug*=>
     {:expansions
@@ -312,7 +312,7 @@
     {:dispatcher/type ::thing/thing=>
      :dispatcher/pull '[:thing/slug {:thing/fields [:field/content]}]
      :dispatcher/key :thing
-     :route/params {:lang "en" :thing/slug* "hello"}}
+     :route/params {:lang "en" :slugs "hello"}}
 
     ;;
     ))

@@ -44,6 +44,13 @@
          (reverse)
          (map :lang))))
 
+(defn- range-prefix [lang-range]
+  (keyword (first (string/split (name lang-range) #"-"))))
+
+(defn- accepted-range? [candidates lang-range]
+  (let [prefix (range-prefix lang-range)]
+    (contains? candidates prefix)))
+
 (defn- accept-first [candidates lang-ranges]
   (when (seq lang-ranges)
     (reduce (fn
@@ -51,9 +58,17 @@
               ([_ lang-range]
                (cond
                  (contains? candidates lang-range) (reduced lang-range)
-                 (re-find #"-" (name lang-range))
-                 (reduced (keyword (first (string/split (name lang-range) #"-")))))))
+                 (accepted-range? candidates lang-range)
+                 (reduced (range-prefix lang-range)))))
             [] lang-ranges)))
+
+(defn t [i18n k]
+  "Translates k into its value in the given i18n map. If k is sequential,
+  treats (first k) as i18n key and (rest k) as args to format."
+  (if (sequential? k)
+    (let [[k & args] k]
+      (apply format (get i18n k) args))
+    (get i18n k)))
 
 (defn lang
   "High-level fn for getting the language for the current request."

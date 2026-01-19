@@ -33,9 +33,12 @@
          params []
          ctx {:keyword? false}]
     (case c
-      nil params
+      nil (if (:keyword? ctx)
+            (conj params (keyword param))
+            params)
       ;; TODO support keyword-style :route/:params syntax
       \{ (recur cs "" params {:keyword? true})
+      \* (recur cs "" params {:keyword? true})
       \} (recur cs "" (conj params (keyword param)) {:keyword? false})
       \/ (let [param? (seq param)
                parsing-keyword? (:keyword? ctx)]
@@ -44,6 +47,10 @@
              (seq param) (recur cs param (conj params param) ctx)
              :else (recur cs param params ctx)))
       (recur cs (str param c) params ctx))))
+
+(comment
+  (template->spec "/{field/lang}/*slugs")
+  )
 
 (defn- route-name [compiled-route]
   (or (:name compiled-route) (keyword (first compiled-route))))

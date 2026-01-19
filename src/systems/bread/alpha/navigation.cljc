@@ -1,3 +1,4 @@
+;; TODO move to plugins/navigation
 (ns systems.bread.alpha.navigation
   (:require
     [clojure.string :as string]
@@ -39,8 +40,7 @@
 (defmethod bread/expand ::items
   [opts data]
   (when-let [items (expansion/get-at data (:expansion/key opts))]
-    ;; First layer will be a vector of vectors
-    (->items opts (map first items))))
+    (->items opts items)))
 
 (defn- field-keys [ks]
   (cond
@@ -249,7 +249,13 @@
 (defmethod bread/action ::add-menu-expansions
   add-menu-expansions-action
   [req {:keys [opts]} _]
-  (apply expansion/add req (menu-expansions req opts)))
+  ;; We already have a response, which means this could be a static file or
+  ;; something like that. Don't mess with the response data.
+  ;; NOTE: the long-term solution for this is:
+  ;; https://github.com/breadsystems/bread-cms/issues/184
+  (if (not (:status req))
+    (apply expansion/add req (menu-expansions req opts))
+    req))
 
 (defn plugin
   ([]

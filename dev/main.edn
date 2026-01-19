@@ -25,15 +25,14 @@
          :min-password-length 4
          :store-session-ip? true
          :store-session-user-agent? true}
-  :signup {:signup-uri "/~/signup"
-           :invite-only? true}
+  :signup {:invite-only? true}
   :account {:account-uri "/~/account"}
   :i18n {:home-route :home
          :query-global-strings? false
          :supported-langs #{:en :fr :es :ar}
          :fallback-lang :ar}
   :routes {:router #ig/ref :bread/router}
-  :components {:not-found #var systems.bread.alpha.cms.theme/NotFoundPage}
+  :components {:not-found #var systems.bread.alpha.cms.theme.crust/NotFoundPage}
   :navigation {:menus {:main-nav
                        {:menu/type :systems.bread.alpha.navigation/location
                         :menu/location :primary
@@ -57,7 +56,7 @@
               ;; STORE_BACKEND=mem
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
   :db/initial-txns
-  [{:invitation/code #uuid "a7d190e5-d7f4-4b92-a751-3c36add92610"
+  [{:invitation/code "a7d190e5-d7f4-4b92-a751-3c36add92610"
     :invitation/invited-by "user.admin"}
    {:db/id "user.admin"
     :user/username "bread"
@@ -69,7 +68,8 @@
                   {:email/address "admin2@bread.systems"
                    :email/confirmed-at #inst "2025-12-30T12:00:00-08:00"
                    :email/code "qwerty"}
-                  {:email/address "admin3@bread.systems"
+                  {:thing/created-at #seconds-ago 0
+                   :email/address "admin3@bread.systems"
                    :email/code "asdf"}]
     :user/password #buddy/derive ["hello"]
     #_#_ ;; Uncomment to enable MFA

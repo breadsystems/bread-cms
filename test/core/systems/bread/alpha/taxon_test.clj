@@ -50,10 +50,9 @@
        :dispatcher/pull [:thing/slug]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
-       :route/params {:lang "en" :slug "some-tag"}}
+       :route/params {:lang "en" :thing/slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
-      ;; ::taxon/tag
       [{:expansion/name ::db/query
         :expansion/key :tag
         :expansion/db ::FAKEDB
@@ -62,12 +61,12 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
-       :route/params {:lang "en" :slug "some-tag"}}
+       :route/params {:lang "en" :thing/slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post/type and :post/status have no effect without :post/_taxons
@@ -79,14 +78,14 @@
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [:taxon/whatever]
        :dispatcher/key :tag
        :post/status :post.status/draft
        :post/type :post.type/article
-       :route/params {:lang "en" :slug "some-tag"}}
+       :route/params {:lang "en" :thing/slug "some-tag"}}
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Query includes :thing/field as a map.
@@ -117,27 +116,29 @@
                                          :field/content]}]
        :dispatcher/key :taxon
        :taxon/taxonomy :taxon.taxonomy/category
-       :route/params {:lang "en" :slug "some-tag"}}
+       :route/params {:lang "en" :thing/slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
       ;; Default :post/type and :post/status with :post/_taxons
       [{:expansion/name ::db/query
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :expansion/db ::FAKEDB
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:thing/fields
-                               [:db/id :field/lang :field/key :field/content]}]}
+                               [:db/id :field/lang :field/key :field/content]}
+                              :post/type
+                              :post/status]}
                             {:thing/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}
        {:expansion/name ::i18n/fields
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :expansion/description "Process translatable fields."
         :field/lang :en
         :format? true
@@ -146,36 +147,38 @@
         :spaths [[:post/_taxons s/ALL :thing/fields]
                  [:thing/fields]]}
        {:expansion/name ::taxon/filter-posts
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :post/type :page
         :post/status :post.status/published}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
-       :dispatcher/key :tag-with-posts
-       :route/params {:lang "en" :slug "some-tag"}}
+       :dispatcher/key :tag
+       :route/params {:lang "en" :thing/slug "some-tag"}}
 
       ;; {:uri "/en/tag/some-tag"}
       ;; :post.type/article and :post.status/draft with :post/_taxons
       [;; Query for the taxon and its relation.
        {:expansion/name ::db/query
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :expansion/db ::FAKEDB
         :expansion/args
         ['{:find [(pull ?e [:db/id
                             {:post/_taxons
                              [{:thing/fields
-                               [:db/id :field/lang :field/key :field/content]}]}
+                               [:db/id :field/lang :field/key :field/content]}
+                              :post/type
+                              :post/status]}
                             {:thing/fields
                              [:db/id :field/lang :field/key :field/content]}]) .]
            :in [$ ?taxonomy ?slug]
            :where [[?e :taxon/taxonomy ?taxonomy]
                    [?e :thing/slug ?slug]]}
-         :taxon.taxonomy/tag
+         :tag
          "some-tag"]}
        {:expansion/name ::i18n/fields
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :expansion/description "Process translatable fields."
         :field/lang :en
         :format? true
@@ -184,17 +187,61 @@
         :spaths [[:post/_taxons s/ALL :thing/fields]
                  [:thing/fields]]}
        {:expansion/name ::taxon/filter-posts
-        :expansion/key :tag-with-posts
+        :expansion/key :tag
         :post/type :post.type/article
         :post/status :post.status/draft}]
-      {:dispatcher/type ::taxon/tag
+      {:dispatcher/type ::taxon/tag=>
        :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
                                                          :field/content]}]}
                          {:thing/fields [:field/key :field/content]}]
-       :dispatcher/key :tag-with-posts
-       :route/params {:lang "en" :slug "some-tag"}
+       :dispatcher/key :tag
+       :route/params {:lang "en" :thing/slug "some-tag"}
        :post/type :post.type/article
        :post/status :post.status/draft}
+
+      ;; {:uri "/en/tag/some-tag"}
+      ;; :post.type/article and :post.status/draft with :post/_taxons,
+      ;; custom :slug-param.
+      [;; Query for the taxon and its relation.
+       {:expansion/name ::db/query
+        :expansion/key :tag
+        :expansion/db ::FAKEDB
+        :expansion/args
+        ['{:find [(pull ?e [:db/id
+                            {:post/_taxons
+                             [{:thing/fields
+                               [:db/id :field/lang :field/key :field/content]}
+                              :post/type
+                              :post/status]}
+                            {:thing/fields
+                             [:db/id :field/lang :field/key :field/content]}]) .]
+           :in [$ ?taxonomy ?slug]
+           :where [[?e :taxon/taxonomy ?taxonomy]
+                   [?e :thing/slug ?slug]]}
+         :tag
+         "some-tag"]}
+       {:expansion/name ::i18n/fields
+        :expansion/key :tag
+        :expansion/description "Process translatable fields."
+        :field/lang :en
+        :format? true
+        :compact? true
+        :recur-attrs #{}
+        :spaths [[:post/_taxons s/ALL :thing/fields]
+                 [:thing/fields]]}
+       {:expansion/name ::taxon/filter-posts
+        :expansion/key :tag
+        :post/type :post.type/article
+        :post/status :post.status/draft}]
+      {:dispatcher/type ::taxon/tag=>
+       :dispatcher/pull [{:post/_taxons [{:thing/fields [:field/key
+                                                         :field/content]}]}
+                         {:thing/fields [:field/key :field/content]}]
+       :dispatcher/key :tag
+       :route/params {:lang "en" :slug-custom "some-tag"}
+       :post/type :post.type/article
+       :post/status :post.status/draft
+       :route/slug-param :slug-custom}
 
       ;;
       )))
@@ -213,6 +260,7 @@
                                             :expansion/key :the-query-key
                                             :post/type post-type
                                             :post/status post-status})
+                             :post/_taxons
                              (map :thing/slug)))
 
       ;; Filter by post type only.

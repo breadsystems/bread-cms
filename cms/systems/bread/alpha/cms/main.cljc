@@ -16,7 +16,10 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.cms.theme :as theme]
+    [systems.bread.alpha.cms.theme.crust :as crust]
+    [systems.bread.alpha.cms.theme.rise :as rise]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.post :as post]
@@ -25,6 +28,7 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.ring :as bread.ring]
     [systems.bread.alpha.schema :as schema]
+    [systems.bread.alpha.taxon :as taxon]
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.util.logging :refer [log-redactor]]
     [systems.bread.alpha.cms.config.bread]
@@ -33,6 +37,9 @@
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.marx :as marx]
+    [systems.bread.alpha.navigation :as navigation]
+    #_ ;; TODO
+    [systems.bread.alpha.plugin.navigation :as navigation]
     [systems.bread.alpha.plugin.reitit]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
@@ -44,6 +51,8 @@
     [java.util Date Properties UUID]
     [org.sqlite JDBC])
   (:gen-class))
+
+(set! *print-namespace-maps* false)
 
 (defn not-found [req]
   {:body "not found"
@@ -57,6 +66,16 @@
     {:root "marx"
      :path "/marx"}))
 
+(def crust-handler
+  (reitit.ring/create-resource-handler
+    {:root "crust"
+     :path "/crust"}))
+
+(def rise-handler
+  (reitit.ring/create-resource-handler
+    {:root "rise"
+     :path "/rise"}))
+
 (def router
   (reitit/router
     ["/"
@@ -65,19 +84,16 @@
       ["/login"
        {:name :login
         :dispatcher/type ::auth/login=>
-        :dispatcher/component #'auth/LoginPage}]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'signup/SignupPage}]
+        :dispatcher/component #'rise/LoginPage}]
       ["/account"
        {:name :account
         :dispatcher/type ::account/account=>
-        :dispatcher/component #'account/AccountPage}]
+        :dispatcher/component #'rise/AccountPage}]
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>
-        :dispatcher/component #'email/EmailPage}]
+         ;; TODO
+        :dispatcher/component #'rise/EmailPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
@@ -89,34 +105,42 @@
      ["_"
       ["/confirm-email"
        {:name :confirm-email
-         :dispatcher/type ::email/confirm=>
-         :dispatcher/component #'email/ConfirmPage}]]
+        :dispatcher/type ::email/confirm=>
+        :dispatcher/component #'rise/ConfirmPage}]
+      ["/patterns"
+       ["/rise"
+        {:name :patterns.rise
+         :dispatcher/type ::component/standalone=>
+         :dispatcher/component #'rise/PatternLibrary}]]
+      ["/signup"
+       {:name :signup
+        :dispatcher/type ::signup/signup=>
+        :dispatcher/component #'rise/SignupPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
      ;; TODO publish to assets?
      ["marx/*" marx-handler]
+     ["crust/*" crust-handler]
+     ["rise/*" rise-handler]
      ["{field/lang}"
       [""
        {:name :home
         :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/HomePage}]
+        :dispatcher/component #'crust/HomePage}]
       ["/i/{db/id}"
        {:name :id
         :dispatcher/type ::thing/by-id=>
-        :dispatcher/component #'theme/InteriorPage}]
+        :dispatcher/component #'crust/InteriorPage}]
       ["/tag/{thing/slug}"
        {:name :tag
-        :dispatcher/type ::post/tag ;; TODO
-        :dispatcher/component #'theme/Tag}]
-      ["/{thing/slug*}"
+        :dispatcher/type ::taxon/tag=>
+        :dispatcher/component #'crust/Tag
+        :post/type :page}]
+      ["/*slugs"
        {:name :page
         :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]
-      ["/page/{thing/slug*}" ;; TODO
-       {:name :page!
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'theme/InteriorPage}]]]
+        :dispatcher/component #'crust/InteriorPage}]]]
     {:conflicts nil}))
 
 (def cli-options
@@ -348,8 +372,10 @@
                    (signup/plugin (:signup app-config))
                    (account/plugin (:account app-config))
                    (marx/plugin (:marx app-config))
+                   (navigation/plugin (:navigation app-config))
                    (rum/plugin (:renderer app-config))
-                   (email/plugin (:email app-config))])]
+                   (email/plugin (:email app-config))
+                   (theme/plugin (:theme app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
@@ -364,8 +390,6 @@
   true)
 
 (comment
-  (set! *print-namespace-maps* false)
-
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
 
@@ -613,24 +637,27 @@
      :thing/_children [{:thing/slug "b"
                         :thing/_children [{:thing/slug "a"}]}]})
 
-  (def $router (route/router (->app $req)))
-
+  (reitit/match-by-path router "/en/a")
+  (reitit/match-by-path router "/en/a/b/c")
+  (-> router
+      (reitit/match-by-path "/en/tag/two")
+      :data :name)
   (reitit/match->path
-    (reitit/match-by-path $router "/en/a/b/c")
-    {:field/lang :en :thing/slug* "a/b/c"})
+    (reitit/match-by-path router "/en/a/b/c")
+    {:field/lang :en :slugs "a/b/c"})
   (reitit/match->path
-    (reitit/match-by-name $router :page {:field/lang :en :thing/slug* "x"}))
+    (reitit/match-by-name router :page {:field/lang :en :slugs "x"}))
 
-  (bread/routes $router)
-  (bread/route-params $router $req)
+  (bread/routes router)
+  (bread/route-params router $req)
 
   ;; route/uri infers params and then just calls bread/path under the hood...
-  (bread/path $router :page {:field/lang :en :thing/slug* "a/b/c"})
+  (bread/path router :page {:field/lang :en :slugs "a/b/c"})
   (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
   (route/uri (->app $req) :page! (merge {:field/lang :en} grandchild))
 
   (route/ancestry grandchild)
-  (bread/infer-param :thing/slug* grandchild)
+  (bread/infer-param :slugs grandchild)
   (bread/routes (route/router (->app $req)))
 
   (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
@@ -693,12 +720,42 @@
     (find-path adjacents seen :thing/slug))
   (def full-path
     (vec (concat [:field/lang] path)))
+  ;; -> [:field/lang :thing/fields :thing/slug]
 
   ;; We've now found the path between :field/lang and :thing/slug, the only two
   ;; attrs in our route definition. So, we can stop looking in this case. But,
   ;; if there were more attrs in the route or if we hadn't found it, we could
   ;; simply add the adjacent attrs we just found to seen, and explore each of
   ;; those (via references) recursively...
+
+  [:field/lang :thing/fields :thing/slug]
+
+  (defn- ->sym [k] (symbol (str "?" (name k))))
+  (map vector (butlast full-path) (rest full-path))
+
+  ;; Now that we have the path, we can construct a query from it:
+  ;; TODO
+  (def query
+    '{:find [(pull ?e [{:thing/fields [:field/lang]}
+                       :thing/slug
+                       {:thing/_children ...}])]
+      :in [$]
+      :where [[?field :field/lang ?lang]
+              [?e :thing/fields ?field]
+              [?e :thing/slug ?slug]]})
+
+  ;; TODO how do we go from :slugs => :thing/slug + {:thing/children ...} ?
+
+  ;; Now we infer values from route-spec, and we have out list of uris...
+  ;; TODO how do we get to lang?
+  (bread/infer-param :field/lang [{:thing/slug "two",
+                                   :thing/fields
+                                   [{:field/lang :en}
+                                    {:field/lang :fr}]}])
+  (map (fn [[thing]]
+         (map #(bread/infer-param % thing) route-spec)
+         )
+       (q query))
 
   ;; /experiment
 

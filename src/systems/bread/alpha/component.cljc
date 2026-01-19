@@ -12,19 +12,14 @@
         :else node))
     tree))
 
-(defmulti Section (fn [_data section-type] section-type))
-
-(defmethod Section :default [data section]
-  (if (fn? section) (section data) section))
-
-(defmethod Section :spacer [_ _]
-  [:.spacer])
-
 (defmacro defc [sym arglist metadata & exprs]
-  (let [vmeta (assoc metadata :name (name sym))
+  (let [[metadata exprs] (if (map? metadata)
+                           [metadata exprs]
+                           [{} [metadata]])
         expr (cons 'list (list
                            (macro-symbolize arglist)
-                           (macro-symbolize (last exprs))))]
+                           (macro-symbolize (last exprs))))
+        vmeta (assoc metadata :name (name sym))]
     `(def
        ~(with-meta sym vmeta)
        (with-meta (fn ~sym ~arglist ~@exprs)
@@ -38,14 +33,15 @@
     (.write w (str (:ns m) ".component$" (:name m)))))
 
 (comment
-  (macroexpand '(defc hello []
+  (macroexpand '(defc Hello []
                   {:extends greeting}
                   [:<>]))
-  (macroexpand '(defc hello [x]
+  (macroexpand '(defc Hello [x]
                   {}
                   (if x [:div x] [:div "no x"])))
-  (macroexpand '(defc person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
-  (macroexpand '(defc not-found [] {} [:<>]))
+  (macroexpand '(defc Person [{:person/keys [a b]}] {:x :y :z :Z} [:div]))
+  (macroexpand '(defc Person [{:person/keys [a b]}] [:div]))
+  (macroexpand '(defc NotFound [] {} [:<>]))
 
   (do
     (defc hello [x]
@@ -121,23 +117,34 @@
   [_ {:keys [component]} _]
   component)
 
+(defn render [component {:as data
+                         :keys [component/extend?]
+                         :or {extend? true}}]
+  (let [parent (component-parent component)]
+    (cond
+      (and component (not extend?)) (component data)
+      parent (render-parent parent data (component data))
+      component (component data)
+      :else nil)))
+
 (defmethod bread/action ::render
   [{::bread/keys [data] :as res} _ _]
   (let [component (match res)
-        parent (component-parent component)
-        body (cond
-               (and component
-                    (false? (:component/extend? data)))
-               (component data)
-               parent (render-parent parent data (component data))
-               component (component data)
-               :else nil)]
+        body (render component data)]
     (assoc res :body body)))
 
 (defmethod bread/action ::hook-fn
   [req _ _]
   (assoc-in req [::bread/data :hook] (fn [h & args]
                                        (apply bread/hook req h args))))
+
+(defmulti Section (fn [_data section-type] section-type))
+
+(defmethod Section :default [data section]
+  (if (fn? section) (section data) section))
+
+(defmethod Section :spacer [_ _]
+  [:.spacer])
 
 ;; Support implicit dispatchers in routes that only define a :dispatcher/component.
 (defmethod bread/dispatch nil [_])
@@ -151,6 +158,10 @@
     {::bread/render
      [{:action/name ::render
        :action/description "Render the selected component"}]
+     ::bread/expand
+     [{:action/name ::hook-fn
+       :action/priority 1000
+       :action/description "Include a hook closure fn in ::bread/data"}]
      ::not-found
      [{:action/name ::not-found
        :action/description
