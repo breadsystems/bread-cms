@@ -648,11 +648,11 @@
   (reitit/match->path
     (reitit/match-by-name router :page {:field/lang :en :slugs "x"}))
 
-  (bread/routes $router)
-  (bread/route-params $router $req)
+  (bread/routes router)
+  (bread/route-params router $req)
 
   ;; route/uri infers params and then just calls bread/path under the hood...
-  (bread/path $router :page {:field/lang :en :slugs "a/b/c"})
+  (bread/path router :page {:field/lang :en :slugs "a/b/c"})
   (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
   (route/uri (->app $req) :page! (merge {:field/lang :en} grandchild))
 
@@ -720,12 +720,42 @@
     (find-path adjacents seen :thing/slug))
   (def full-path
     (vec (concat [:field/lang] path)))
+  ;; -> [:field/lang :thing/fields :thing/slug]
 
   ;; We've now found the path between :field/lang and :thing/slug, the only two
   ;; attrs in our route definition. So, we can stop looking in this case. But,
   ;; if there were more attrs in the route or if we hadn't found it, we could
   ;; simply add the adjacent attrs we just found to seen, and explore each of
   ;; those (via references) recursively...
+
+  [:field/lang :thing/fields :thing/slug]
+
+  (defn- ->sym [k] (symbol (str "?" (name k))))
+  (map vector (butlast full-path) (rest full-path))
+
+  ;; Now that we have the path, we can construct a query from it:
+  ;; TODO
+  (def query
+    '{:find [(pull ?e [{:thing/fields [:field/lang]}
+                       :thing/slug
+                       {:thing/_children ...}])]
+      :in [$]
+      :where [[?field :field/lang ?lang]
+              [?e :thing/fields ?field]
+              [?e :thing/slug ?slug]]})
+
+  ;; TODO how do we go from :slugs => :thing/slug + {:thing/children ...} ?
+
+  ;; Now we infer values from route-spec, and we have out list of uris...
+  ;; TODO how do we get to lang?
+  (bread/infer-param :field/lang [{:thing/slug "two",
+                                   :thing/fields
+                                   [{:field/lang :en}
+                                    {:field/lang :fr}]}])
+  (map (fn [[thing]]
+         (map #(bread/infer-param % thing) route-spec)
+         )
+       (q query))
 
   ;; /experiment
 
