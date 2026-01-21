@@ -18,7 +18,7 @@
     "react-refresh": "^0.14.2",
     "shadow-cljs": "^2.19.1",
     "storybook": "^8.1.6",
-    "vite": "^5.2.12"
+    "vite": "^5.2.14"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.0.7",
