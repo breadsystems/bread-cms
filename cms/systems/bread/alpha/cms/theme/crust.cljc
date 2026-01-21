@@ -61,7 +61,7 @@
    :key :post
    :query '[:thing/children
             :thing/slug
-            :post/authors
+            :thing/authors
             {:thing/fields [*]}]}
   {:content
    [:article
@@ -78,7 +78,7 @@
             {:post/_taxons
              [:thing/slug
               :thing/created-at
-              {:post/authors [*]}
+              {:thing/authors [*]}
               {:thing/fields [*]}
               {:thing/_children
                [:thing/slug

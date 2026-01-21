@@ -120,7 +120,7 @@
           {:thing/fields [*]}
           {:post/_taxons
            [:thing/slug
-            {:post/authors [*]}
+            {:thing/authors [*]}
             {:thing/fields [*]}
             {:thing/_children [:thing/slug {:thing/_children ...}]}
             {:thing/children ...}
