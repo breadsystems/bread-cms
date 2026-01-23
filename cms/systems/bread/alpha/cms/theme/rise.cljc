@@ -139,7 +139,7 @@
 
 (defc LoginPage
   [{:as data
-    :keys [config hook i18n session dir totp]
+    :keys [config hook i18n session dir totp ring/anti-forgery-token-field]
     :auth/keys [result]}]
   {:extends Page
    :doc
@@ -163,6 +163,7 @@
        (:user/locked-at user)
        [:main
         [:form.flex.col
+         (anti-forgery-token-field)
          (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
          (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
@@ -173,6 +174,7 @@
                                         :image-type :PNG})]
          [:main
           [:form.flex.col {:name :setup-mfa :method :post}
+           (anti-forgery-token-field)
            (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
            (hook ::html.scan-qr-instructions
                  [:p.instruct (:auth/please-scan-qr-code i18n)])
@@ -192,6 +194,7 @@
        (= :two-factor step)
        [:main
         [:form.flex.col {:name :bread-login :method :post}
+         (anti-forgery-token-field)
          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
          (hook ::html.enter-2fa-code
                [:p.instruct (:auth/enter-totp i18n)])
@@ -205,6 +208,7 @@
        :default
        [:main
         [:form.flex.col {:name :bread-login :method :post}
+         (anti-forgery-token-field)
          (hook ::html.login-heading [:h1 (:auth/login-to-bread i18n)])
          (hook ::html.enter-username
                [:p.instruct (:auth/enter-username-password i18n)])
@@ -335,9 +339,10 @@
    [:main
     (map (partial Section data) (:email/html.email.sections config))]})
 
-(defc LogoutForm [{:keys [config i18n]}]
+(defc LogoutForm [{:keys [config i18n ring/anti-forgery-token-field]}]
   {:doc "Standard logout form for the account page."}
   [:form.logout-form {:method :post :action (:auth/login-uri config)}
+   (anti-forgery-token-field)
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
 
@@ -363,7 +368,7 @@
 
 (defc SignupPage
   [{:as data
-    :keys [config error hook i18n invitation rtl? dir ring/params]
+    :keys [config error hook i18n invitation rtl? dir ring/params ring/anti-forgery-token-field]
     [valid? error-key] :validation}]
   [:html {:lang (:field/lang data) :dir dir}
    [:head
@@ -376,18 +381,21 @@
       (and (:signup/invite-only? config) (not (:code params)))
       [:main
        [:form.flex.col
+        (anti-forgery-token-field)
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p (:signup/site-invite-only i18n)]]]
 
       (and (:signup/invite-only? config) (not invitation))
       [:main
        [:form.flex.col
+        (anti-forgery-token-field)
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         [:p (:signup/invitation-invalid i18n)]]]
 
       :default
       [:main
        [:form.flex.col {:name :bread-signup :method :post}
+        (anti-forgery-token-field)
         (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
         (hook ::html.enter-username
               [:p.instruct (:signup/please-choose-username-password i18n)])
