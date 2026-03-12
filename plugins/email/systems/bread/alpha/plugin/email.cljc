@@ -7,7 +7,6 @@
     [postal.core :as postal]
     [taoensso.timbre :as log]
 
-    [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
@@ -53,98 +52,6 @@
         (catch Throwable e
           (log/error (ex-info "Error sending email" {:mailer mailer :message message} e))))
       (log/info "simulating email" (summarize message)))))
-
-(defmethod Section ::settings-link
-  [{:keys [i18n] {:email/keys [settings-uri]} :config} _]
-  [:a {:href settings-uri :title (:email/email-settings i18n)}
-   ;; TODO i18n
-   (:email i18n "Email")])
-
-(defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:email/email i18n "Email")])
-
-(defn- compare-emails [a b]
-  (cond
-    ;; Always list primary first...
-    (:email/primary? a) -1
-    (:email/primary? b) 1
-    ;; ...then confirmed...
-    (and (:email/confirmed-at a) (:email/confirmed-at b))
-    (compare (:email/confirmed-at a) (:email/confirmed-at b))
-    ;; ...and finally unconfirmed.
-    :else (compare (:email/created-at a) (:email/created-at b))))
-
-(defmethod Section ::emails [{:keys [config i18n user ring/anti-forgery-token-field]} _]
-  (let [{:email/keys [allow-delete-primary?]} config
-        emails (sort compare-emails (:user/emails user))]
-    [:<>
-     (if (seq emails)
-       [:.flex.col {:role :list}
-        (map (fn [{:keys [email/address
-                          email/confirmed-at
-                          email/primary?
-                          thing/created-at
-                          db/id]}]
-               [:form.flex.row {:method :post :role :listitem}
-                (anti-forgery-token-field)
-                [:input {:type :hidden :name :email :value address}]
-                [:input {:type :hidden :name :id :value id}]
-                (cond
-                  primary?
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/primary i18n)]
-                    [:small
-                     (:email/confirmed i18n)
-                     ;; TODO date locale/formatting
-                     " " confirmed-at]]
-                   [:span.spacer]
-                   (when allow-delete-primary?
-                     [:button {:type :submit :name :action :value :delete}
-                      (:email/delete i18n)])]
-
-                  confirmed-at
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/confirmed i18n)
-                     ;; TODO date locale/formatting
-                     " " confirmed-at]]
-                   [:span.spacer]
-                   [:button {:type :submit :name :action :value :make-primary}
-                    (:email/make-primary i18n)]
-                   [:button {:type :submit :name :action :value :delete}
-                    (:email/delete i18n)]]
-
-                  :pending
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/confirmation-pending i18n)]]
-                   [:span.spacer]
-                   [:button {:type :submit :name :action :value :resend-confirmation}
-                    (:email/resend-confirmation i18n)]
-                   [:button {:type :submit :name :action :value :delete}
-                    (:email/delete i18n)]])])
-             emails)]
-       [:p.instruct (:email/no-emails i18n)])]))
-
-(defmethod Section ::add-email
-  [{:keys [config i18n user ring/anti-forgery-token-field]} _]
-  (let [emails (:user/emails user)
-        any-pending? (seq (filter (complement :email/confirmed-at) emails))
-        allow-multiple-pending? (:email/allow-multiple-pending? config)]
-    (if (or (not any-pending?) allow-multiple-pending?)
-      [:<>
-       [:h3 {:for :add-email}
-        (:email/add-email i18n)]
-       [:form.flex.row {:method :post}
-        (anti-forgery-token-field)
-        [:input {:id :add-email :type :email :name :email :placeholder "me@example.email"}]
-        [:button {:type :submit :name :action :value :add}
-         (:email/add i18n)]]]
-      [:p.instruct (:email/to-add-email-confirm-pending i18n)])))
 
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]

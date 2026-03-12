@@ -92,7 +92,6 @@
       ["/email"
        {:name :email
         :dispatcher/type ::email/settings=>
-         ;; TODO
         :dispatcher/component #'rise/EmailPage}]
       ["/edit"
        {:name :edit
