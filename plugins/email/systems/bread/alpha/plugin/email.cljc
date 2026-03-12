@@ -74,7 +74,7 @@
     ;; ...and finally unconfirmed.
     :else (compare (:email/created-at a) (:email/created-at b))))
 
-(defmethod Section ::emails [{:keys [config i18n user]} _]
+(defmethod Section ::emails [{:keys [config i18n user ring/anti-forgery-token-field]} _]
   (let [{:email/keys [allow-delete-primary?]} config
         emails (sort compare-emails (:user/emails user))]
     [:<>
@@ -86,6 +86,7 @@
                           thing/created-at
                           db/id]}]
                [:form.flex.row {:method :post :role :listitem}
+                (anti-forgery-token-field)
                 [:input {:type :hidden :name :email :value address}]
                 [:input {:type :hidden :name :id :value id}]
                 (cond
@@ -129,7 +130,8 @@
              emails)]
        [:p.instruct (:email/no-emails i18n)])]))
 
-(defmethod Section ::add-email [{:keys [config i18n user]} _]
+(defmethod Section ::add-email
+  [{:keys [config i18n user ring/anti-forgery-token-field]} _]
   (let [emails (:user/emails user)
         any-pending? (seq (filter (complement :email/confirmed-at) emails))
         allow-multiple-pending? (:email/allow-multiple-pending? config)]
@@ -138,6 +140,7 @@
        [:h3 {:for :add-email}
         (:email/add-email i18n)]
        [:form.flex.row {:method :post}
+        (anti-forgery-token-field)
         [:input {:id :add-email :type :email :name :email :placeholder "me@example.email"}]
         [:button {:type :submit :name :action :value :add}
          (:email/add i18n)]]]

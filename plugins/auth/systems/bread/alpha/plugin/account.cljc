@@ -102,8 +102,11 @@
              :name :password-confirmation
              :maxlength (:auth/max-password-length config)}]]])
 
-(defmethod Section ::account-form [{:as data :keys [config]} _]
+(defmethod Section ::account-form
+  [{:as data :keys [config ring/anti-forgery-token-field]} _]
   (apply conj [:form.flex.col {:method :post}]
+         (when anti-forgery-token-field
+           (anti-forgery-token-field))
          (map (partial Section data) (:account/html.account.form config))))
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
