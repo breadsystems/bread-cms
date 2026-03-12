@@ -7,7 +7,6 @@
     [postal.core :as postal]
     [taoensso.timbre :as log]
 
-    [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
@@ -53,122 +52,6 @@
         (catch Throwable e
           (log/error (ex-info "Error sending email" {:mailer mailer :message message} e))))
       (log/info "simulating email" (summarize message)))))
-
-(defmethod Section ::settings-link
-  [{:keys [i18n] {:email/keys [settings-uri]} :config} _]
-  [:a {:href settings-uri :title (:email/email-settings i18n)}
-   ;; TODO i18n
-   (:email i18n "Email")])
-
-(defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:email/email i18n "Email")])
-
-(defn- compare-emails [a b]
-  (cond
-    ;; Always list primary first...
-    (:email/primary? a) -1
-    (:email/primary? b) 1
-    ;; ...then confirmed...
-    (and (:email/confirmed-at a) (:email/confirmed-at b))
-    (compare (:email/confirmed-at a) (:email/confirmed-at b))
-    ;; ...and finally unconfirmed.
-    :else (compare (:email/created-at a) (:email/created-at b))))
-
-(defmethod Section ::emails [{:keys [config i18n user]} _]
-  (let [{:email/keys [allow-delete-primary?]} config
-        emails (sort compare-emails (:user/emails user))]
-    [:<>
-     (if (seq emails)
-       [:.flex.col {:role :list}
-        (map (fn [{:keys [email/address
-                          email/confirmed-at
-                          email/primary?
-                          thing/created-at
-                          db/id]}]
-               [:form.flex.row {:method :post :role :listitem}
-                [:input {:type :hidden :name :email :value address}]
-                [:input {:type :hidden :name :id :value id}]
-                (cond
-                  primary?
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/primary i18n)]
-                    [:small
-                     (:email/confirmed i18n)
-                     ;; TODO date locale/formatting
-                     " " confirmed-at]]
-                   [:span.spacer]
-                   (when allow-delete-primary?
-                     [:button {:type :submit :name :action :value :delete}
-                      (:email/delete i18n)])]
-
-                  confirmed-at
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/confirmed i18n)
-                     ;; TODO date locale/formatting
-                     " " confirmed-at]]
-                   [:span.spacer]
-                   [:button {:type :submit :name :action :value :make-primary}
-                    (:email/make-primary i18n)]
-                   [:button {:type :submit :name :action :value :delete}
-                    (:email/delete i18n)]]
-
-                  :pending
-                  [:<>
-                   [:.flex.col.tight
-                    [:label address]
-                    [:small (:email/confirmation-pending i18n)]]
-                   [:span.spacer]
-                   [:button {:type :submit :name :action :value :resend-confirmation}
-                    (:email/resend-confirmation i18n)]
-                   [:button {:type :submit :name :action :value :delete}
-                    (:email/delete i18n)]])])
-             emails)]
-       [:p.instruct (:email/no-emails i18n)])]))
-
-(defmethod Section ::add-email [{:keys [config i18n user]} _]
-  (let [emails (:user/emails user)
-        any-pending? (seq (filter (complement :email/confirmed-at) emails))
-        allow-multiple-pending? (:email/allow-multiple-pending? config)]
-    (if (or (not any-pending?) allow-multiple-pending?)
-      [:<>
-       [:h3 {:for :add-email}
-        (:email/add-email i18n)]
-       [:form.flex.row {:method :post}
-        [:input {:id :add-email :type :email :name :email :placeholder "me@example.email"}]
-        [:button {:type :submit :name :action :value :add}
-         (:email/add i18n)]]]
-      [:p.instruct (:email/to-add-email-confirm-pending i18n)])))
-
-(defc EmailPage
-  [{:as data :keys [config dir hook i18n user]}]
-  {:query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
-  ;; TODO UI lib
-  [:html {:lang {:field/lang data} :dir dir}
-   [:head
-    [:meta {:content-type :utf-8}]
-    (->> (auth/LoginStyle data) (hook ::html.stylesheet) (hook ::html.email.stylesheet))
-    (hook ::html.email.title [:title (:email/email i18n "Email")])]
-   [:body
-    [:nav.flex.row
-     (map (partial Section data) (:account/html.account.header config))]
-    [:main.flex.col
-     (map (partial Section data) (:email/html.email.sections config))]]])
-
-(defc ConfirmPage
-  [{:keys [pending-email i18n ring/params ring/uri]}]
-  {:query '[:db/id :email/address]
-   :key :pending-email}
-  (let [{:email/keys [address code]} pending-email]
-    ;; TODO styles
-    [:form {:method :post :action uri}
-     [:input {:type :hidden :name :email :value address}]
-     [:input {:type :hidden :name :code :value code}]
-     [:button {:type :submit}
-      (:email/confirm-email i18n)]]))
 
 (defn- ensure-own-email-id [user id]
   (let [own-id? (contains? (set (map :db/id (:user/emails user))) id)]
@@ -346,8 +229,10 @@
 (defmethod bread/expand ::validate-recency
   [{:keys [max-pending-minutes]} {:keys [pending-email]}]
   (let [min-updated (t/minutes-ago (t/now) max-pending-minutes)
-        valid? (when pending-email
-                 (.after (:thing/updated-at pending-email) min-updated))]
+        updated-at (or (:thing/updated-at pending-email)
+                       (:thing/created-at pending-email))
+        valid? (when updated-at
+                 (.after updated-at min-updated))]
     (when valid? pending-email)))
 
 (defmethod bread/dispatch ::confirm=>
@@ -361,6 +246,7 @@
           :expansion/args ['{:find [(pull ?e [:db/id
                                               :email/code
                                               :email/address
+                                              :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
                              :where [[?e :email/code ?code]

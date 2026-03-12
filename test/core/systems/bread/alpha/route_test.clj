@@ -130,10 +130,10 @@
                  :route/spec [:field/lang "article" :thing/slug]}
                 "/en/a/b/c"
                 {:name :wildcard
-                 :route/spec [:field/lang :thing/slug*]}
+                 :route/spec [:field/lang :slugs]}
                 "/en/page/a/b/c"
                 {:name :wildcard-nested
-                 :route/spec [:field/lang "page" :thing/slug*]}}
+                 :route/spec [:field/lang "page" :slugs]}}
         app (plugins->loaded [(map->route-plugin routes)])]
     (are
       [expected route-name thing+params]

@@ -1,0 +1,155 @@
+:root {
+  --color-offwhite: #fbfaf5;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Prevent font size inflation */
+html {
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Remove default margin in favour of better control in authored CSS */
+body, h1, h2, h3, h4, p,
+figure, blockquote, dl, dd, ol, ul {
+  margin: 0;
+}
+
+/* SIDEBAR LAYOUT */
+body {
+  width: 100%;
+
+  background: #f0ead6;
+}
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 95ch;
+  max-width: 100%;
+  margin: auto;
+  gap: 1rem;
+}
+.main-nav {
+  flex-basis: 20ch;
+  flex-grow: 1;
+  min-inline-size: 30%;
+
+  background: lightgrey;
+  background: #cec9b9;
+  padding-inline: 1em;
+}
+main {
+  flex-basis: 30ch;
+  flex-grow: 999;
+  min-height: 80vh;
+}
+.main-footer {
+  display: flex;
+  width: 100%;
+  min-height: 20vh;
+
+  background: #393636;
+  color: white;
+}
+.footer-content {
+  max-width: 100%;
+  margin: 2em auto;
+  flex-basis: 79ch;
+
+  color: #f0ead6;
+}
+
+nav ul {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: 0.5em;
+  padding: 0;
+
+  list-style: none;
+}
+
+nav, article {
+  padding: 3em 0;
+}
+h1 {
+  margin-block-end: 2em;
+}
+h2 {
+  margin-block-start: 1.5em;
+  margin-block-end: 1.2em;
+}
+h3 {
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+}
+p {
+  margin: 1em auto;
+}
+mark {
+  background-color: #fbe10d;
+}
+
+.post-content::after {
+  display: block;
+  content: " ";
+  width: 0.5em;
+  height: 0.5em;
+  background: #aea895;
+}
+article footer {
+  margin-block-start: 3em;
+}
+
+h1, h2, h3, h4, h5, h6, nav, footer {
+  font-family: ui-monospace,
+    Menlo,
+    Monaco,
+    "Cascadia Mono",
+    "Segoe UI Mono",
+    "Roboto Mono",
+    "Oxygen Mono",
+    "Ubuntu Mono",
+    "Source Code Pro",
+    "Fira Mono",
+    "Droid Sans Mono",
+    "Consolas",
+    monospace;
+}
+body, main, article, section {
+  font-family: "Apple Garamond",
+    "Times New Roman",
+    "Droid Serif",
+    "Times",
+    "Source Serif Pro",
+    serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol";
+}
+
+a {
+  color: #621c1c;
+}
+a:visited {
+  color: #550e47;
+}
+
+.posts-list {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: 1em;
+
+  h2, h3, h4 {
+    margin-block: 0.5em;
+  }
+}
+
+.tags-list {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 1ch;
+}

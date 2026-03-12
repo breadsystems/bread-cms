@@ -38,7 +38,7 @@
       {:dispatcher/type ::post/post=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
-       :route/params {:lang "en" :thing/slug* "hello"}}
+       :route/params {:lang "en" :slugs "hello"}}
 
       )))
 
@@ -90,7 +90,7 @@
       {:dispatcher/type ::post/by-slug*=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
-       :route/params {:lang "en" :thing/slug* "hello"}}
+       :route/params {:lang "en" :slugs "hello"}}
 
       [{:expansion/name ::db/query
         :expansion/description "Query for a single post matching the current request URI"
@@ -119,7 +119,7 @@
       {:dispatcher/type ::post/post=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
-       :route/params {:lang "en" :thing/slug* "hello"}}
+       :route/params {:lang "en" :slugs "hello"}}
 
       [{:expansion/name ::db/query
         :expansion/description "Query for a single page matching the current request URI"
@@ -150,7 +150,7 @@
       {:dispatcher/type ::post/page=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
-       :route/params {:lang "en" :thing/slug* "hello"}}
+       :route/params {:lang "en" :slugs "hello"}}
 
       ;; Post type, status are dynamic.
       [{:expansion/name ::db/query
@@ -182,7 +182,7 @@
       {:dispatcher/type ::post/post=>
        :dispatcher/pull '[:thing/slug {:thing/fields [*]}]
        :dispatcher/key :post
-       :route/params {:lang "en" :thing/slug* "hello"}
+       :route/params {:lang "en" :slugs "hello"}
        :post/status :post.status/draft
        :post/type :post.type/article}
 

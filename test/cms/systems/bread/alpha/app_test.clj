@@ -111,42 +111,42 @@
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "en"
-                                  :thing/slug* "parent-page"}}
+                                  :slugs "parent-page"}}
                   "/en/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page=>
                                       :dispatcher/key :post
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "en"
-                                  :thing/slug* "parent-page/child-page"}}
+                                  :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page=>
                                       :dispatcher/key :post
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "fr"
-                                  :thing/slug* "parent-page"}}
+                                  :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
                   {:bread/dispatcher {:dispatcher/type ::post/page=>
                                       :dispatcher/key :post
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "fr"
-                                  :thing/slug* "parent-page/child-page"}}
+                                  :slugs "parent-page/child-page"}}
                   "/en/404"
                   {:bread/dispatcher {:dispatcher/type ::post/page=>
                                       :dispatcher/key :post
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "en"
-                                  :thing/slug* "not-found"}}
+                                  :slugs "not-found"}}
                   "/fr/404"
                   {:bread/dispatcher {:dispatcher/type ::post/page=>
                                       :dispatcher/key :post
                                       :dispatcher/component Page}
                    :bread/component Page
                    :route/params {:field/lang "fr"
-                                  :thing/slug* "not-found"}}}
+                                  :slugs "not-found"}}}
           router (reify bread/Router
                    (bread/route-params [router req]
                      (:route/params (get routes (:uri req))))

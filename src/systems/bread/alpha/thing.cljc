@@ -25,9 +25,10 @@
              (fn [[ancestor-sym descendant-sym slug-sym]]
                [[ancestor-sym :thing/children descendant-sym]
                 [ancestor-sym :thing/slug slug-sym]])
-             (partition 3 (interleave (rest descendant-syms)
-                                      (butlast descendant-syms)
-                                      (rest slug-syms))))
+             (map vector
+                  (rest descendant-syms)
+                  (butlast descendant-syms)
+                  (rest slug-syms)))
            [(list 'not-join [earliest-ancestor-sym]
                   ['?_ :thing/children earliest-ancestor-sym])]))))
 
@@ -72,14 +73,14 @@
      :as dispatcher} ::bread/dispatcher
     :as req}]
   "Returns an expansion for querying a single thing matching the ancestry
-  (according to :thing/children) given by the :thing/slug* from the route."
+  (according to :thing/children) given by the :slugs from the route."
   (let [params (:route/params dispatcher)
         ;; Ensure we always have :db/id
         pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
         args (-> [{:find [(list 'pull '?e pull) '.]
                    :in '[$]
                    :where []}]
-                 (ancestralize (string/split (:thing/slug* params "") #"/")))
+                 (ancestralize (string/split (:slugs params "") #"/")))
         query-key (or (:dispatcher/key dispatcher) :thing)]
     {:expansion/name ::db/query
      :expansion/key query-key
@@ -136,7 +137,7 @@
 (defmethod bread/dispatch ::by-slug*=>
   by-slug*=>
   [req]
-  "Dispatch req by the :thing/slug* in the URI."
+  "Dispatch req by the :slugs in the URI."
   {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})
 
 (derive ::thing=> ::by-slug*=>)
@@ -144,10 +145,8 @@
 (defmethod bread/expand ::paginate
   paginate
   [{:keys [page per-page] k :expansion/key} data]
-  (prn 'k k (vec (get data k)))
   (let [things (vec (get data k))
         len (count things)
         start (* (dec page) per-page)
         end (+ start per-page)]
-  (prn start '- end)
     (subvec things (min len start) (min len end))))

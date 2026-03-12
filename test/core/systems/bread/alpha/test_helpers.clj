@@ -62,7 +62,7 @@
 (defn naive-params [uri]
   (let [[lang & slugs] (filter (complement empty?)
                                (string/split (or uri "") #"/"))]
-    {:field/lang lang :thing/slugs* slugs}))
+    {:field/lang lang :slugs slugs}))
 
 (defmethod bread/action ::naive-params
   [{:keys [uri]} _ _]

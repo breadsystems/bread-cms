@@ -1,88 +1,155 @@
 ;; TODO figure out how themes work :P
 (ns systems.bread.alpha.cms.theme
   (:require
+    [clojure.walk :as walk]
+    [markdown-to-hiccup.core :as md2h]
+    [rum.core :as rum]
+
     [systems.bread.alpha.user :as user]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.component :refer [defc] :as component]
     [systems.bread.alpha.plugin.marx :as marx]))
 
-(defn- NavItem [{:keys [children uri]
-                       {:keys [title] :as fields} :thing/fields
-                       :as item}]
-  [:li
-   [:div
-    [:a {:href uri} title]]
-   (map NavItem children)])
+(defn title [& strs]
+  (clojure.string/join " | " (filter seq strs)))
 
-(defn- Nav [{items :menu/items}]
+(defn- pp [x]
+  (with-out-str (clojure.pprint/pprint x)))
+
+(defn pattern-type [pattern]
+  (or (:type pattern)
+      (:type (meta pattern))))
+
+(defmulti ContentsItem pattern-type)
+(defmulti Pattern pattern-type)
+
+(defmethod ContentsItem :default [pattern] pattern)
+
+(defmethod ContentsItem ::component/component [component]
+  (let [component-meta (meta component)]
+    {:id (:name component-meta)
+     :title (:name component-meta)
+     :children (map (fn [example]
+                      (assoc example :type :example))
+                    (:examples component-meta))}))
+
+(defn- ->id [s]
+  (apply str (map (fn [c] (if (Character/isWhitespace c) \_ c)) s)))
+
+(comment
+  (->id "How to do stuff"))
+
+(defc TableOfContents [{:as data :keys [patterns]}]
   [:nav
+   [:h1#contents "Table of contents"]
    [:ul
-    (map NavItem items)]])
+    [:<> (doall (map (fn [pattern]
+                       (let [{:keys [id title children]} (ContentsItem pattern)]
+                         [:li
+                          [:a {:href (str "#" (name id))} title]
+                          [:ul
+                           (map (fn [{:as child :keys [doc]}]
+                                  (when doc
+                                    [:li [:a {:href (str "#" (->id doc))} doc]]))
+                                children)]]))
+                     patterns))]]])
 
-(defc MainLayout [{:keys [lang content user]
-                   {:keys [main-nav]} :menus
-                   :as data}]
-  {}
-  [:html {:lang lang}
-   [:head
-    [:meta {:content-type "utf-8"}]
-    [:title "hey"]
-    [:link {:rel :stylesheet :href "/assets/site.css"}]]
-   [:body
-    (Nav main-nav)
-    content
-    (marx/Embed data)]])
+(defn- remove-noop-elements [html]
+  (walk/postwalk (fn [x]
+                   (if (and (vector? x) (not (map-entry? x)))
+                     (filterv (complement (partial contains? #{nil [:<>]})) x)
+                     x)) html))
 
-(defc NotFoundPage
-  [{:keys [lang]}]
-  {:extends MainLayout}
-  [:main
-   "404"])
+(defn- md->hiccup [s]
+  (when s (-> s md2h/md->hiccup md2h/component)))
 
-(defc HomePage
-  [{:keys [lang user post]}]
-  {:extends MainLayout
-   :key :post
-   :query '[:thing/children
-            :thing/slug
-            :post/authors
-            {:thing/fields [*]}]}
-  {:content
-   [:main {:role :main}
-    [:h1 (:title (:thing/fields post))]
-    [:pre (pr-str post)]
-    [:pre (pr-str (user/can? user :edit-posts))]]})
+(defn- html-comment [s]
+  (str "<!-- " s " -->\n"))
 
-(defc Tag
-  [{{fields :thing/fields :as tag} :tag}]
-  {:extends MainLayout
-   :key :tag
-   :query '[:thing/slug
-            {:thing/fields [*]}
-            {:post/_taxons
-             [{:post/authors [*]}
-              {:thing/fields [*]}]}]}
-  [:main
-   [:h1 (:name fields)]
-   [:h2 [:code (:thing/slug tag)]]])
+(defn- render-html [content]
+  (if (map? content)
+    (mapcat (juxt (comp html-comment name key)
+                           (comp #(str % "\n")
+                                 rum/render-static-markup
+                                 remove-noop-elements
+                                 val))
+                     content)
+    (rum/render-static-markup content)))
 
-(defc InteriorPage
-  [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
-    {:keys [main-nav]} :menus
-    {:keys [user]} :session
-    :keys [hook]}]
-  {:extends MainLayout
-   :key :post
-   :query '[{:thing/fields [*]}
-            {:post/taxons [{:thing/fields [*]}]}]}
-  (let [Field (partial marx/Field post)]
-    [:<>
-     [:main
-      (Field :text :title :tag :h1)
-      [:h2 (:db/id post)]
-      (Field :rich-text :rte)
-      [:div.tags-list
-       [:p "TAGS"]
-       (map (fn [{tag :thing/fields}]
-              [:span.tag (:name tag)])
-            tags)]]]))
+(defmethod Pattern :default DocSection [{:keys [content id title]}]
+  [:section.pattern {:id id}
+   [:h1 title]
+   [:a.section-link {:href (str "#" (name id)) :title title} "#"]
+   (if (string? content)
+     (md->hiccup content)
+     content)
+   [:a {:href "#contents"} "Back to top"]])
+
+(defmethod Pattern ::component/component ComponentSection [component]
+  (let [{component-name :name
+         :keys [doc doc/show-html? doc/default-data expr examples doc/post-render]
+         :or {show-html? true
+              post-render identity}}
+        (meta component)]
+    (let [component-name (name component-name)]
+      [:article.pattern {:id component-name :data-component component-name}
+       [:h1 component-name]
+       [:a.section-link {:href (str "#" component-name)
+                         :title (str "Link to " component-name)}
+        "#"]
+       (md->hiccup doc)
+       (map (fn [{:as example :keys [doc description args]}]
+              (let [post-render (or (:doc/post-render example) post-render)
+                    args' (cons (merge-with merge default-data (first args)) (rest args))
+                    id (->id doc)
+                    content (apply component args')
+                    formatted-content (-> content remove-noop-elements post-render pp)
+                    formatted-html (-> content post-render render-html)]
+                [:section.example {:id id}
+                 (when doc
+                   [:<>
+                    [:h2 doc]
+                    [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]])
+                 (md->hiccup description)
+                 [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
+                 [:pre [:code.clj formatted-content]]
+                 [:pre [:code.xml formatted-html]]]))
+            examples)
+       [:details
+        [:summary "Show source"]
+        [:pre [:code.clj (pp (apply list 'defc (symbol component-name) expr))]]]
+       [:a {:href "#contents"} "Back to top"]])))
+
+(defn pattern->section [pattern]
+  (if (= ::component/component (:type (meta pattern)))
+    {:component pattern}
+    pattern))
+
+(comment
+  (macroexpand
+    '(defc P [{:keys [text] :or {text "Default text."}}]
+       {:doc "Example description"
+        :examples
+        '[{:doc "With text"
+           :args ({:text "Sample text."})}
+          {:doc "With default text"
+           :args ({})}]}
+       [:p text]))
+  (ComponentSection {:component P}))
+
+(defmethod bread/action ::html.head.pattern-library [req _ [head]]
+  (let [head (or head [:<>])]
+    (conj head
+          [:link {:rel :stylesheet :href "/assets/highlight/styles/atom-one-dark.min.css"}]
+          [:script {:src "/assets/highlight/highlight.min.js"}]
+          [:script "hljs.highlightAll()"])))
+
+(defn plugin
+  ([] (plugin {}))
+  ([_]
+   {:hooks
+    {::html.head.pattern-library
+     [{:action/name ::html.head.pattern-library
+       :action/description
+       "Call this hook inside the <head> of your theme's PatternLibrary component
+       to automatically include standard assets, e.g. for syntax highlighting."}]}}))

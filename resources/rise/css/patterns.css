@@ -1,0 +1,21 @@
+#theme-toggle-container {
+  position: sticky;
+  top: 0;
+  width: calc(100% - 2em));
+  padding: 1em;
+  display: flex;
+  flex-direction: row-reverse;
+}
+.pattern, .example {
+  position: relative;
+}
+.pattern .section-link {
+  position: absolute;
+  font-size: 2rem;
+  top: 0;
+  left: -1.5ch;
+
+  h2 + & {
+    font-size: 1.5rem;
+  }
+}

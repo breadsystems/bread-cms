@@ -35,7 +35,7 @@
 
 (def
   ^{:doc "Schema for generic db entities AKA \"Things\" that can have children,
-         slugs, sort order, and a UUID."}
+         slugs, sort order, authorship, and a UUID."}
   things
   (with-meta
     [{:db/id "migration.things"
@@ -78,7 +78,13 @@
       :db/doc "Entity IDs of child things, if any"
       :db/valueType :db.type/ref
       :db/cardinality :db.cardinality/many
-      :attr/migration "migration.things"}]
+      :attr/migration "migration.things"}
+     {:db/ident :thing/authors
+      :attr/label "Authors"
+      :db/doc "Zero or more entity IDs of a thing's author(s)."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.posts"}]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations}}))
@@ -264,19 +270,11 @@
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.posts"}
-     {:db/ident :post/publish-date
+     {:db/ident :post/published-at
       :attr/label "Post Publish Date"
-      :db/doc "Date/time this post was/is scheduled to go live"
+      :db/doc "Date/time this post was/is scheduled to go live."
       :db/valueType :db.type/instant
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.posts"}
-
-     ;; Authorship of posts
-     {:db/ident :post/authors
-      :attr/label "Post Authors"
-      :db/doc "Zero or more entity IDs of a Post's author(s)"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/many
       :attr/migration "migration.posts"}]
 
     {:type :bread/migration

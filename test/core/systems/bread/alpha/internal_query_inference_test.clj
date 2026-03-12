@@ -71,6 +71,16 @@
     :ATTR
     #(some #{:y} %)
 
+    ;; a pull-expr can be a LazySeq, which is not a list!
+    [{:index 0
+      :sym '?e
+      :ops [[[0] {:ATTR [:x :y]}]]
+      :clause '(pull ?e [{:ATTR [:x :y]}])}]
+    (update-in '{:find [(pull ?e [{:ATTR [:x :y]}])]}
+               [:find 0] #(lazy-seq %))
+    :ATTR
+    #(some #{:y} %)
+
     ;; single match at non-zero position
     [{:index 0
       :sym '?e
