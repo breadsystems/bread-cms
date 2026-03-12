@@ -41,12 +41,12 @@
      [db query a b c d e f g h i j k l m n o p q r])
   (db-with [db txs]))
 
-(defmethod connect :default [db-spec]
-  (let [msg (if (nil? (:db/type db-spec))
+(defmethod connect :default [{db-type :db/type :as spec}]
+  (let [msg (if (nil? db-type)
               "No :db/type specified in database spec"
-              (str "Unknown :db/type `" type "`!"
+              (str "Unknown :db/type `" db-type "`!"
                    " Did you forget to load a plugin?"))]
-    (throw (ex-info msg {:config db-spec :bread.context :db/connect}))))
+    (throw (ex-info msg {:config spec :bread.context :db/connect}))))
 
 (defn exists? [db-spec]
   (-exists? db-spec))
