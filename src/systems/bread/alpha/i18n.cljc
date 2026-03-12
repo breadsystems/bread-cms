@@ -63,9 +63,9 @@
             [] lang-ranges)))
 
 (defn t [i18n k]
-  "Translates k into its value in the given i18n map. If k is sequential,
+  "Translates k into its value in the given i18n map. If k is a sequence,
   treats (first k) as i18n key and (rest k) as args to format."
-  (if (sequential? k)
+  (if (seq? k)
     (let [[k & args] k]
       (apply format (get i18n k) args))
     (get i18n k)))
