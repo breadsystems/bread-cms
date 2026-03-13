@@ -10,7 +10,7 @@
    "plugins/reitit"
    "plugins/rum"])
 
-(def minor-version "0.9")
+(def minor-version "0.10")
 
 (def core-lib 'systems.bread/bread-core)
 (def patch-version (format "%s.%s" minor-version (b/git-count-revs nil)))
