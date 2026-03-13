@@ -38,6 +38,11 @@
     :aliases [:datahike]
     :src-dirs ["plugins/datahike"]}
 
+   :email
+   {:lib 'systems.bread/bread-plugin-email
+    :aliases [:email]
+    :src-dirs ["plugins/email"]}
+
    :garden
    {:lib 'systems.bread/bread-plugin-garden
     :aliases [:garden]}
