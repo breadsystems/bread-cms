@@ -65,6 +65,7 @@
 (defn- html-comment [s]
   (str "<!-- " s " -->\n"))
 
+;; TODO de-couple from rendering layer...
 (defn- render-html [content]
   (if (map? content)
     (mapcat (juxt (comp html-comment name key)
