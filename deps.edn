@@ -36,6 +36,7 @@
   ;; you also do so below in that dep's standalone alias.
   :cms
   {:extra-paths ["cms"
+                 "cms/themes/rise"
                  "resources/crust"
                  "resources/marx"
                  "resources/public"
@@ -46,6 +47,7 @@
                  "plugins/markdown"
                  "plugins/marx"
                  "plugins/reitit"
+                 "plugins/theme"
                  "plugins/rum"]
    :extra-deps {aero/aero                             {:mvn/version "1.1.6"}
                 buddy/buddy-hashers                   {:mvn/version "2.0.167"}
