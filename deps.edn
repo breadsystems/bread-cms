@@ -124,7 +124,7 @@
 
   :theme-rise
   {:extra-paths ["cms/themes/rise"]
-   :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2383"}}}
+   :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
 
   ;; TODO CRUST
 
