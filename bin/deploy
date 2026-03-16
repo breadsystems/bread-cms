@@ -8,6 +8,8 @@ clojure -T:build jar :lib :datahike
 clojure -T:build jar :lib :email
 clojure -T:build jar :lib :reitit
 clojure -T:build jar :lib :rum
+# TODO theme API
+clojure -T:build jar :lib :theme-rise
 
 clojure -T:build deploy :lib :auth
 clojure -T:build deploy :lib :core
@@ -15,3 +17,5 @@ clojure -T:build deploy :lib :datahike
 clojure -T:build deploy :lib :email
 clojure -T:build deploy :lib :reitit
 clojure -T:build deploy :lib :rum
+# TODO theme API
+clojure -T:build deploy :lib :theme-rise

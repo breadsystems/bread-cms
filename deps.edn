@@ -117,6 +117,14 @@
   {:extra-paths ["plugins/selmer"]
    :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}
 
+  :theme
+  {:extra-paths ["plugins/theme"]}
+
+  :theme-rise
+  {:extra-paths ["cms/themes/rise"]}
+
+  ;; TODO CRUST
+
   :build-cli
   {:main-opts ["-e" "(set! *warn-on-reflection* true)"
                "-m" "clj.native-image" "systems.bread.alpha.cms.cli"

@@ -67,6 +67,20 @@
     :aliases [:selmer]
     :src-dirs ["plugins/selmer"]}
 
+   ;; Base theme API.
+   :theme
+   {:lib 'systems.bread/bread-plugin-theme
+    :alias [:theme]
+    :src-dirs ["plugins/theme"]}
+
+   ;; RISE theme.
+   :theme-rise
+   {:lib 'systems.bread/bread-theme-rise
+    :aliases [:theme-rise]
+    :src-dirs ["cms/themes/rise"]}
+
+   ;; TODO CRUST
+
    ;;
    })
 
