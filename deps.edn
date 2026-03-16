@@ -91,7 +91,7 @@
 
   :datahike
   {:extra-paths  ["plugins/datahike"]
-   :extra-deps {io.replikativ/datahike {:mvn/version "0.6.1531"}}}
+   :extra-deps {io.replikativ/datahike {:mvn/version "0.6.1612"}}}
 
   :email
   {:extra-paths ["plugins/email"]
