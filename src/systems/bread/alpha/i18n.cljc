@@ -120,12 +120,6 @@
         (into {})
         (bread/hook req ::strings))))
 
-(defn t
-  "Query the database for the translatable string represented by keyword k."
-  [app k]
-  {:pre [(keyword? k)]}
-  (k (strings app)))
-
 (defn translatable-binding?
   "Takes a query binding vector and returns the binding itself if it is
   translatable, otherwise nil."
