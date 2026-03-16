@@ -118,7 +118,9 @@
    :extra-deps {selmer/selmer {:mvn/version "1.12.55"}}}
 
   :theme
-  {:extra-paths ["plugins/theme"]}
+  {:extra-paths ["plugins/theme"]
+   :extra-deps {markdown-to-hiccup/markdown-to-hiccup {:mvn/version "0.6.2"}
+                rum/rum {:mvn/version "0.12.10"}}}
 
   :theme-rise
   {:extra-paths ["cms/themes/rise"]}
