@@ -36,7 +36,10 @@
   ;; you also do so below in that dep's standalone alias.
   :cms
   {:extra-paths ["cms"
-                 "resources"
+                 "resources/crust"
+                 "resources/marx"
+                 "resources/public"
+                 "resources/rise"
                  "plugins/auth"
                  "plugins/datahike"
                  "plugins/email"
@@ -123,7 +126,7 @@
                 rum/rum {:mvn/version "0.12.10"}}}
 
   :theme-rise
-  {:extra-paths ["cms/themes/rise"]
+  {:extra-paths ["cms/themes/rise" "resources/rise"]
    :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
 
   ;; TODO CRUST
