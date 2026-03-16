@@ -77,7 +77,7 @@
    :theme-rise
    {:lib 'systems.bread/bread-theme-rise
     :aliases [:theme-rise]
-    :src-dirs ["cms/themes/rise"]}
+    :src-dirs ["cms/themes/rise" "resources/rise"]}
 
    ;; TODO CRUST
 
