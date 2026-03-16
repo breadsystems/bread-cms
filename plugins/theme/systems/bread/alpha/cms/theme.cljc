@@ -4,10 +4,8 @@
     [markdown-to-hiccup.core :as md2h]
     [rum.core :as rum]
 
-    [systems.bread.alpha.user :as user]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc] :as component]
-    [systems.bread.alpha.plugin.marx :as marx]))
+    [systems.bread.alpha.component :refer [defc] :as component]))
 
 (defn title [& strs]
   (clojure.string/join " | " (filter seq strs)))
