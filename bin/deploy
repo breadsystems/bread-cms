@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo "usage: $(basename $0) [-h|--help] [--jar] [--deploy] [--core] [--themes]"
+  echo "usage: $(basename $0) [-h|--help] [--core] [--themes]"
   echo
   echo '  OPTIONS:'
   echo
@@ -18,14 +18,6 @@ case $key in
     # show usage and bail
     usage
     exit
-    ;;
-    --jar)
-    SKIP_DEPLOY=1
-    shift # past argument
-    ;;
-    --deploy)
-    SKIP_JARS=1
-    shift # past argument
     ;;
     --core)
     SKIP_THEMES=1
@@ -52,26 +44,10 @@ main() {
     echo packaging core libs...
 
     # Build core jars
-    if [[ -z $SKIP_CORE ]] ; then
-      clojure -T:build jar :lib :auth
-      clojure -T:build jar :lib :core
-      clojure -T:build jar :lib :datahike
-      clojure -T:build jar :lib :email
-      clojure -T:build jar :lib :reitit
-      clojure -T:build jar :lib :rum
-      clojure -T:build jar :lib :theme
-    fi
-
-    # Deploy core jars
-    if [[ -z $SKIP_DEPLOY ]] ; then
-      clojure -T:build deploy :lib :auth
-      clojure -T:build deploy :lib :core
-      clojure -T:build deploy :lib :datahike
-      clojure -T:build deploy :lib :email
-      clojure -T:build deploy :lib :reitit
-      clojure -T:build deploy :lib :rum
-      clojure -T:build deploy :lib :theme
-    fi
+    for lib in :auth :core :datahike :email :reitit :rum :theme ; do
+      clojure -T:build jar :lib $lib
+      clojure -T:build deploy :lib $lib
+    done
   fi
 
   if [[ $SKIP_THEMES ]] ; then
