@@ -1,4 +1,3 @@
-;; TODO figure out how themes work :P
 (ns systems.bread.alpha.cms.theme
   (:require
     [clojure.walk :as walk]
