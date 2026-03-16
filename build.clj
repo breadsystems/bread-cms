@@ -70,7 +70,7 @@
    ;; Base theme API.
    :theme
    {:lib 'systems.bread/bread-plugin-theme
-    :alias [:theme]
+    :aliases [:theme]
     :src-dirs ["plugins/theme"]}
 
    ;; RISE theme.
