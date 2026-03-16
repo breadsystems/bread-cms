@@ -202,7 +202,7 @@
 ;; Methods for managing database connection and state.
 ;;
 
-(defmethod db/connect :datahike [{:keys [db/config]}]
+(defmethod db/connect :datahike db-connect-datahike [{:keys [db/config]}]
   (try
     (d/connect config)
     (catch IllegalArgumentException e
@@ -216,7 +216,7 @@
 (defmethod db/-create :datahike create-datahike-db [{:db/keys [config]}]
   (d/create-database config))
 
-(defmethod db/-delete :datahike [{:db/keys [config]}]
+(defmethod db/-delete :datahike delete-datahike-db [{:db/keys [config]}]
   (d/delete-database config))
 
 (defmethod db/max-tx :datahike [req]
