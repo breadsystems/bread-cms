@@ -123,7 +123,8 @@
                 rum/rum {:mvn/version "0.12.10"}}}
 
   :theme-rise
-  {:extra-paths ["cms/themes/rise"]}
+  {:extra-paths ["cms/themes/rise"]
+   :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2380"}}}
 
   ;; TODO CRUST
 
