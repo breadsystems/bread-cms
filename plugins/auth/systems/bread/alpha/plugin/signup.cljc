@@ -43,11 +43,16 @@
   [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
   (when valid?
     (if invitation
-      {:effects [{:effect/name ::db/transact
-                  :conn conn
-                  :effect/description "Redeem invitation and create user."
-                  :txs [{:invitation/code (:invitation/code invitation)
-                         :invitation/redeemer user}]}]}
+      (let [email (when-let [email (:invitation/email invitation)]
+                    (assoc email :email/confirmed-at (t/now)))
+            user (if email
+                   (assoc user :user/emails [email])
+                   user)]
+        {:effects [{:effect/name ::db/transact
+                    :conn conn
+                    :effect/description "Redeem invitation and create user."
+                    :txs [{:invitation/code (:invitation/code invitation)
+                           :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
                   :effect/description "Create user"
@@ -71,7 +76,8 @@
                             :expansion/key :invitation
                             :expansion/db (db/database req)
                             :expansion/args
-                            ['{:find [(pull ?e [:invitation/code]) .]
+                            ['{:find [(pull ?e [:invitation/code
+                                                {:invitation/email [*]}]) .]
                                :in [$ ?code]
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
