@@ -164,7 +164,7 @@
         pull (:dispatcher/pull dispatcher)
         query {:find [(list 'pull '?e pull) '.]
                :in '[$ ?e]}
-        expansion {:expansion/key :user
+        expansion {:expansion/key (:dispatcher/key dispatcher :user)
                    :expansion/name ::db/query
                    :expansion/description "Query for user emails."
                    :expansion/db (db/database req)
