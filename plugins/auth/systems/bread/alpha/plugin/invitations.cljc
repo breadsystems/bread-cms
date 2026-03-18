@@ -29,6 +29,10 @@
   (let [action (keyword action)
         total-reached? (when max-total
                          (>= (count invitations) max-total))
+        window-cutoff (t/minutes-ago max-window-minutes)
+        recent-count (count (filter (fn [{:keys [thing/updated-at]}]
+                                      (.after updated-at window-cutoff))
+                                    invitations))
         new-invite? (= :send action)
         resending? (= :resend action)
         revoking? (= :revoke action)
@@ -44,10 +48,13 @@
         pending? (contains? pending-ids id)
         invitation-invalid? (and (or resending? revoking?)
                                  (or (not id) (not pending?)))
+        rate-limited? (and (or new-invite? resending?)
+                           (>= recent-count max-window-count))
         error-key (cond
                     (and new-invite? existing-email) :signup/email-exists
                     (and new-invite? (not valid-email?)) :email/invalid-email
                     (and new-invite? total-reached?) :total-reached
+                    rate-limited? :invitations/sending-too-many
                     invitation-invalid? :invitations/invitation-invalid)
         valid? (not error-key)]
     [valid? error-key]))

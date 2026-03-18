@@ -14,6 +14,7 @@
                :no-invitations-body "You haven't sent any invitations yet."
                :resend "Resend"
                :revoke "Revoke"
+               :sending-too-many "You are sending too many invitations. Please wait."
                :sent-at "Sent %s"
                :signup "Signup"
                :total-left "You have %s invitation(s) left."
