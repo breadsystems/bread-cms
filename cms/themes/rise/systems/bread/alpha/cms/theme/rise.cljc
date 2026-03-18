@@ -448,8 +448,8 @@
    [:h3 (:invitations/invite i18n)]
    [:.field
     [:label {:for :email} (:email/email i18n)]
-    [:input {:id :email :name :email :type :email :value (:email params)}]]
-   (Submit (:invitations/invite i18n "Invite") :name :action :value "send")])
+    [:input {:id :email :name :email :type :email :value (:email params)}]
+    (Submit (:invitations/invite i18n "Invite") :name :action :value "send")]])
 
 (defn- compare-invitations [a b]
   (let [redeemer-a (:invitation/redeemer a)
