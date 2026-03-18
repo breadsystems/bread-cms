@@ -12,6 +12,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.email :as email])
   (:import
     [java.text SimpleDateFormat]))
@@ -257,6 +258,7 @@
                                       "America/New_York"]
                     html-account-header [::account-link
                                          ::email/settings-link
+                                         ::signup/invitations-link
                                          :spacer
                                          ::logout-form]
                     html-account-form [::heading
