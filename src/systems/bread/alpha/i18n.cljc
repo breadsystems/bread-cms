@@ -67,7 +67,7 @@
   treats (first k) as i18n key and (rest k) as args to format."
   (if (sequential? k)
     (let [[k & args] k]
-      (apply format (get i18n k) args))
+      (when-let [s (get i18n k)] (apply format s args)))
     (get i18n k)))
 
 (defn lang
