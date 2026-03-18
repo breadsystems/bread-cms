@@ -44,6 +44,7 @@
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.account :as account]
+    [systems.bread.alpha.plugin.invitations :as invitations]
     [systems.bread.alpha.tools.util])
   (:import
     [java.io Console]
@@ -95,7 +96,7 @@
         :dispatcher/component #'rise/EmailPage}]
       ["/invitations"
        {:name :invitations
-        :dispatcher/type ::signup/invitations=>
+        :dispatcher/type ::invitations/invitations=>
         :dispatcher/component #'rise/InvitationsPage}]
       ["/edit"
        {:name :edit
@@ -374,6 +375,7 @@
                   [(auth/plugin (:auth app-config))
                    (signup/plugin (:signup app-config))
                    (account/plugin (:account app-config))
+                   (invitations/plugin (:invitation app-config))
                    (marx/plugin (:marx app-config))
                    (navigation/plugin (:navigation app-config))
                    (rum/plugin (:renderer app-config))

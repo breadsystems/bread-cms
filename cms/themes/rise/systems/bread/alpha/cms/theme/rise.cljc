@@ -6,7 +6,7 @@
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.signup :as signup]))
+    [systems.bread.alpha.plugin.invitations :as invitations]))
 
 (defn- IntroSection [_]
   {:id :intro
@@ -433,26 +433,25 @@
    [:main
     (map (partial Section data) (:email/html.email.sections config))]})
 
-(defmethod Section ::signup/invitations-link
-  [{:keys [i18n] {:signup/keys [invitations-uri]} :config} _]
-  [:a {:href invitations-uri :title (:email/email-settings i18n)}
-   (:signup/invitations i18n "Invitations")])
+(defmethod Section ::invitations/invitations-link
+  [{:keys [config i18n]} _]
+  [:a {:href (:invitations/invitations-uri config)}
+   (:invitations/invitations i18n "Invitations")])
 
-(defmethod Section ::signup/invitations-heading [{:keys [i18n]} _]
-  [:h2 (:signup/invitations i18n "Invitations")])
+(defmethod Section ::invitations/invitations-heading [{:keys [i18n]} _]
+  [:h2 (:invitations/invitations i18n "Invitations")])
 
-(defmethod Section ::signup/invite-form
+(defmethod Section ::invitations/invite-form
   [{:keys [config i18n ring/params ring/anti-forgery-token-field]} _]
-  [:form.flex.col {:method :post :action (:signup/invitations-uri config)}
+  [:form.flex.col {:method :post :action (:invitations/invitations-uri config)}
    (anti-forgery-token-field)
-   [:h3 (:signup/invite i18n)]
+   [:h3 (:invitations/invite i18n)]
    [:.field
     [:label {:for :email} (:email/email i18n)]
     [:input {:id :email :name :email :type :email :value (:email params)}]]
-   (Submit (:signup/invite i18n "Invite") :name :action :value "send")])
+   (Submit (:invitations/invite i18n "Invite") :name :action :value "send")])
 
 (defn- compare-invitations [a b]
-  (prn 'redeemer (:invitation/redeemer a) '<> (:invitation/redeemer b))
   (let [redeemer-a (:invitation/redeemer a)
         redeemer-b (:invitation/redeemer b)]
     (cond
@@ -464,11 +463,11 @@
       ;; ...and then redeemed.
       :else (compare (:email/created-at a) (:email/created-at b)))))
 
-(defmethod Section ::signup/invitations-list
+(defmethod Section ::invitations/invitations-list
   [{:keys [config i18n user ring/anti-forgery-token-field]} _]
   (let [invitations (sort compare-invitations (:invitation/_invited-by user))]
     [:.flex.col
-     [:h3 (:signup/your-invitations i18n)]
+     [:h3 (:invitations/your-invitations i18n)]
      (if (seq invitations)
        (map (fn SentInvitation [{{:email/keys [address]} :invitation/email
                                  :keys [db/id
@@ -478,21 +477,21 @@
               (if redeemer
                 [:.flex.row
                  [:label address]
-                 [:small (i18n/t i18n [:signup/accepted-at updated-at])]]
-                [:form {:method :post :action (:signup/invitations-uri config)}
+                 [:small (i18n/t i18n [:invitations/accepted-at updated-at])]]
+                [:form {:method :post :action (:invitations/invitations-uri config)}
                  (anti-forgery-token-field)
                  [:.field.flex.row {:data-code code}
                   [:input {:type :hidden :name :id :value id}]
                   [:.flex.col.tight
                    [:label address]
-                   [:small (i18n/t i18n [:signup/sent-at updated-at])]]
+                   [:small (i18n/t i18n [:invitations/sent-at updated-at])]]
                   [:span.spacer]
                   [:button {:type :submit :name :action :value :resend}
-                   (:signup/resend i18n)]
+                   (:invitations/resend i18n)]
                   [:button {:type :submit :name :action :value :revoke}
-                   (:signup/revoke i18n)]]]))
+                   (:invitations/revoke i18n)]]]))
             invitations)
-       [:p.instruct (:signup/no-invitations-body i18n)])]))
+       [:p.instruct (:invitations/no-invitations-body i18n)])]))
 
 (defc InvitationsPage
   [{:as data :keys [i18n ring/anti-forgery-token-field]}]
@@ -502,14 +501,14 @@
             :user/username
             {:invitation/_invited-by [* :thing/created-at
                                       {:invitation/email [*]}]}]}
-  {:title (:signup/invitations i18n)
+  {:title (:invitations/invitations i18n)
    :content
    [:main.flex.col
     ;; TODO
-    (map (partial Section data) [::signup/invitations-heading
+    (map (partial Section data) [::invitations/invitations-heading
                                  :flash
-                                 ::signup/invite-form
-                                 ::signup/invitations-list])]})
+                                 ::invitations/invite-form
+                                 ::invitations/invitations-list])]})
 
 (defc LogoutForm [{:keys [config i18n ring/anti-forgery-token-field]}]
   {:doc "Standard logout form for the account page."}
