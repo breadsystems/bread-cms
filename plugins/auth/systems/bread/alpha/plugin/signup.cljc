@@ -195,8 +195,29 @@
    {:as data
     :keys [config i18n user]
     [valid? error-key] :validation}]
-  ;; TODO
-  )
+  (if valid?
+    (let [id (->int (:id params))
+          code (random/url-part 32)
+          now (t/now)
+          invitation-tx {:db/id id
+                         :invitation/code code
+                         :thing/updated-at now}
+          invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
+          to (:email/address (:invitation/email invitation))
+          email-effect {:effect/name ::invitation-email
+                        :effect/description "Resend invitation with a new code."
+                        :code code
+                        :to to}]
+      (try
+        (log/info "resending invitation email" {:email to
+                                                :invitation/invited-by (:db/id user)})
+        (db/transact conn [invitation-tx])
+        {:effects [email-effect]
+         :flash {:success-key :signup/invitation-sent}}
+        (catch clojure.lang.ExceptionInfo e
+          (log/error e)
+          {:flash {:error-key :email/unexpected-error}})))
+    {:flash {:error-key error-key}}))
 
 (defmethod bread/effect [::invite :revoke] resend-invitation
   [{:keys [conn params]}
