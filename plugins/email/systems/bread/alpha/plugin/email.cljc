@@ -78,7 +78,8 @@
   (let [from (or from (:email/smtp-from-email config))
         link-uri (format "%s://%s%s%s?code=%s&email=%s"
                          (name scheme) server-name (when server-port (str ":" server-port))
-                         "/_/confirm-email" (URLEncoder/encode code) (URLEncoder/encode to))
+                         (:email/confirm-uri config)
+                         (URLEncoder/encode code) (URLEncoder/encode to))
         site-name (or (:site/name config) server-name)
         subject (format (:email/confirmation-email-subject i18n) site-name)
         body (format (:email/confirmation-email-body i18n) link-uri)]
