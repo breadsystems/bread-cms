@@ -3,15 +3,21 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [clojure.string :as string]
     [crypto.random :as random]
     [one-time.core :as ot]
+    [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.component :refer [defc] :as component]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.plugin.auth :as auth]))
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.email :as email])
+  (:import
+    [java.net URLEncoder]))
 
 (defmethod bread/expand ::validate
   [{{:auth/keys [min-password-length max-password-length]
@@ -59,12 +65,201 @@
                   :txs [user]}]})))
 
 (defmethod bread/action ::redirect
-  [{:as res {[valid? _] :validation} ::bread/data} _ _]
+  [{:as res {[valid? _] :validation} ::bread/data} {:keys [to]} _]
   (if valid?
-    (-> res
-        (assoc :status 302)
-        (assoc-in [:headers "Location"] (bread/config res :auth/login-uri)))
+    (let [to (or to (bread/config res :auth/login-uri))]
+      (-> res
+          (assoc :status 302)
+          (assoc-in [:headers "Location"] to)))
     res))
+
+(defn- ->int [x]
+  (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
+
+(defmethod bread/expand ::validate-invitation
+  [{{:auth/keys [max-invitations-count
+                 max-invitations-window-minutes
+                 max-total-invitations]} :config
+    {:keys [id action email]} :params}
+   {:as data
+    :keys [existing-email user]
+    {invitations :invitation/_invited-by} :user}]
+  (let [action (keyword action)
+        new-invite? (= :send action)
+        resending? (= :resend action)
+        revoking? (= :revoke action)
+        valid-email? (when new-invite? (string/includes? email "@"))
+        pending-ids (->> invitations
+                         (filter (complement :invitation/redeemer))
+                         (map :db/id)
+                         set)
+        id (->int id)
+        pending? (contains? pending-ids id)
+        invitation-invalid? (and (or resending? revoking?)
+                                 (or (not id) (not pending?)))
+        error-key (cond
+                    (and new-invite? existing-email) :signup/email-exists
+                    (and new-invite? (not valid-email?)) :email/invalid-email
+                    invitation-invalid? :signup/invitation-invalid)
+        valid? (not error-key)]
+    [valid? error-key]))
+
+(comment
+  (def $effect
+    {:effect/name :systems.bread.alpha.plugin.signup/invitation-email,
+     :effect/description "Send an invitation email.",
+     :code "asdfqwerty",
+     :params
+     {:email "test@tamayo.email",
+      :action "send"}})
+
+  (:code $effect)
+  (:signup/signup-uri (:config $data))
+  (:user $data)
+  (:ring/scheme $data)
+  (:ring/server-name $data)
+  (:ring/server-port $data)
+  (invitation-email-subject $data)
+  (invitation-email-body
+    (assoc $data
+           :link
+           (invitation-link (assoc $data :invitation/code (:code $effect)))))
+  ,)
+
+(defn invitation-link [{:keys [config
+                               invitation/code
+                               ring/scheme
+                               ring/server-name
+                               ring/server-port]}]
+  (format "%s://%s%s%s?code=%s"
+          (name scheme) server-name (when server-port (str ":" server-port))
+          (:signup/signup-uri config) (URLEncoder/encode code)))
+
+(defn invitation-email-subject [{:keys [config i18n ring/server-name]}]
+  (let [site-name (:site/name config server-name)]
+    (i18n/t i18n [:signup/invitation-email-subject site-name])))
+
+(defn invitation-email-body [{:keys [config i18n link ring/server-name user]}]
+  (let [from-name (or (:user/name user) (:user/username user))
+        site-name (:site/name config server-name)]
+    (i18n/t i18n [:signup/invitation-email-body from-name site-name link])))
+
+(defmethod bread/effect ::invitation-email
+  [{:as effect :keys [code from to]}
+   {:as data :keys [config hook]}]
+  (prn 'EMAIL)
+  (let [from (or from (:email/smtp-from-email config))
+        link (invitation-link (assoc data :invitation/code code))
+        message (hook ::invitation-message
+                      {:from from
+                       :to to
+                       :subject (invitation-email-subject data)
+                       :body (invitation-email-body (assoc data :link link))})]
+    {:effects
+     [{:effect/name ::email/send!
+       :effect/description "Send invitation email."
+       :message message}]}))
+
+(defmethod bread/effect [::invite :send] send-invitation
+  [{:keys [conn params]}
+   {:as data
+    :keys [config i18n existing-email user]
+    [valid? error-key] :validation}]
+  (if valid?
+    (let [email (:email params)
+          code (random/url-part 32)
+          now (t/now)
+          invitation-tx {:invitation/code code
+                         :invitation/invited-by (:db/id user)
+                         :invitation/email {:email/address email
+                                            :thing/created-at now}
+                         :thing/created-at now}
+          email-effect (when valid?
+                         {:effect/name ::invitation-email
+                          :effect/description "Send an invitation email."
+                          :code code
+                          :to email})]
+      (try
+        (log/info "sending invitation email" {:email email
+                                              :invitation/invited-by (:db/id user)})
+        (db/transact conn [invitation-tx])
+        {:effects [email-effect]
+         :flash {:success-key :signup/invitation-sent}}
+        (catch clojure.lang.ExceptionInfo e
+          (log/error e)
+          {:flash {:error-key :email/unexpected-error}})))
+    {:flash {:error-key error-key}}))
+
+(defmethod bread/effect [::invite :resend] resend-invitation
+  [{:keys [conn params]}
+   {:as data
+    :keys [config i18n user]
+    [valid? error-key] :validation}]
+  ;; TODO
+  )
+
+(defmethod bread/effect [::invite :revoke] resend-invitation
+  [{:keys [conn params]}
+   {:as data
+    :keys [config i18n user]
+    [valid? error-key] :validation}]
+  ;; TODO
+  )
+
+(defmethod bread/dispatch ::invitations=>
+  [{:keys [::bread/dispatcher params request-method server-name]
+    {:keys [user]} :session
+    :as req}]
+  "Invitations page in the account section"
+  (let [post? (= :post request-method)
+        action (when (seq (:action params)) (keyword (:action params)))
+        pull (conj (:dispatcher/pull dispatcher) :user/name)
+        query {:find [(list 'pull '?e pull) '.]
+               :in '[$ ?e]}
+        user-expansion {:expansion/key (:dispatcher/key dispatcher :user)
+                        :expansion/name ::db/query
+                        :expansion/description "Query for user emails."
+                        :expansion/db (db/database req)
+                        :expansion/args [query (:db/id user)]}
+        email-expansion #_(if (= :send action))
+        {:expansion/key :existing-email
+         :expansion/name ::db/query
+         :expansion/description "Query for conflicting emails."
+         :expansion/db (db/database req)
+         :expansion/args ['{:find [?e .]
+                            :in [$ ?email]
+                            :where [[?e :email/address ?email]]}
+                          (:email params)]}
+        #_
+        {:expansion/key :pending-invitation
+         :expansion/name ::db/query
+         :expanction/description "Query for a pending invitation."
+         :expansion/db (db/database req)
+         :expansion/args
+         ['{:find [(pull ?e [:db/id :invitation/email]) .]
+            :in [$ ?from ?e]
+            :where [[?e :invitation/invited-by ?from]
+                    (not [?e :invitation/redeemer])]}
+          (Integer. (:id params))]}
+        validation {:expansion/key :validation
+                    :expansion/name ::validate-invitation
+                    :params params
+                    :config (::bread/config req)}]
+    (if post?
+      {:expansions [user-expansion email-expansion validation]
+       :effects
+       [{:effect/name [::invite action]
+         :effect/description "Email an invitation, pending validation."
+         :effect/key action
+         :params params
+         :conn (db/connection req)}]
+       :hooks
+       {::bread/render
+        [{:action/name ::ring/effect-redirect
+          :action/description "Redirect to invitations page."
+          :effect/key action
+          :to (bread/config req :signup/invitations-uri)}]}}
+      {:expansions [user-expansion]})))
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
@@ -173,9 +368,13 @@
   ([]
    (plugin {}))
   ([{:keys [;; TODO email as a normal hook
-            invite-only? invitation-expiration-seconds signup-uri]
+            invite-only?
+            invitation-expiration-seconds
+            invitations-uri
+            signup-uri]
      :or {invite-only? false
           invitation-expiration-seconds (* 72 60 60)
+          invitations-uri "/~/invitations"
           signup-uri "/_/signup"}}]
    {:hooks
     {::db/migrations
@@ -193,4 +392,5 @@
     :config
     {:signup/invite-only? invite-only?
      :signup/invitation-expiration-seconds invitation-expiration-seconds
-     :signup/signup-uri signup-uri}}))
+     :signup/signup-uri signup-uri
+     :signup/invitations-uri invitations-uri}}))

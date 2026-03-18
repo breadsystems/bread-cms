@@ -93,6 +93,10 @@
        {:name :email
         :dispatcher/type ::email/settings=>
         :dispatcher/component #'rise/EmailPage}]
+      ["/invitations"
+       {:name :invitations
+        :dispatcher/type ::signup/invitations=>
+        :dispatcher/component #'rise/InvitationsPage}]
       ["/edit"
        {:name :edit
         :dispatcher/type ::marx/edit=>}]
