@@ -337,7 +337,7 @@
    (:email/email i18n)])
 
 (defmethod Section ::email/heading [{:keys [i18n]} _]
-  [:h3 (:email/email-heading i18n)])
+  [:h2 (:email/email-heading i18n)])
 
 (defn- compare-emails [a b]
   (cond
