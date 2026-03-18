@@ -19,14 +19,16 @@
   (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
 
 (defmethod bread/expand ::validate-invitation
-  [{{:auth/keys [max-invitations-count
-                 max-invitations-window-minutes
-                 max-total-invitations]} :config
+  [{{:invitations/keys [max-window-count
+                        max-window-minutes
+                        max-total]} :config
     {:keys [id action email]} :params}
    {:as data
     :keys [existing-email user]
     {invitations :invitation/_invited-by} :user}]
   (let [action (keyword action)
+        total-reached? (when max-total
+                         (>= (count invitations) max-total))
         new-invite? (= :send action)
         resending? (= :resend action)
         revoking? (= :revoke action)
@@ -45,6 +47,7 @@
         error-key (cond
                     (and new-invite? existing-email) :signup/email-exists
                     (and new-invite? (not valid-email?)) :email/invalid-email
+                    (and new-invite? total-reached?) :total-reached
                     invitation-invalid? :invitations/invitation-invalid)
         valid? (not error-key)]
     [valid? error-key]))
@@ -267,8 +270,13 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [invitations-uri]
-     :or {invitations-uri "/~/invitations"}}]
+  ([{:keys [invitations-uri
+            max-window-count
+            max-window-minutes
+            max-total]
+     :or {invitations-uri "/~/invitations"
+          max-window-count 10
+          max-window-minutes 5}}]
    {:hooks
     {::db/migrations
      [{:action/name ::db/add-schema-migration
@@ -280,4 +288,7 @@
        :action/description "Merge strings for signup into global strings."
        :strings (edn/read-string (slurp (io/resource "invitations.i18n.edn")))}]}
     :config
-    {:invitations/invitations-uri invitations-uri}}))
+    #:invitations{:invitations-uri invitations-uri
+                  :max-window-count max-window-count
+                  :max-window-minutes max-window-minutes
+                  :max-total max-total}}))

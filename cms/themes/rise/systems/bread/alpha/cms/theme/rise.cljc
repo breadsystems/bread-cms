@@ -442,14 +442,24 @@
   [:h2 (:invitations/invitations i18n "Invitations")])
 
 (defmethod Section ::invitations/invite-form
-  [{:keys [config i18n ring/params ring/anti-forgery-token-field]} _]
+  [{:keys [config i18n ring/params ring/anti-forgery-token-field user]} _]
   [:form.flex.col {:method :post :action (:invitations/invitations-uri config)}
    (anti-forgery-token-field)
-   [:h3 (:invitations/invite i18n)]
-   [:.field
-    [:label {:for :email} (:email/email i18n)]
-    [:input {:id :email :name :email :type :email :value (:email params)}]
-    (Submit (:invitations/invite i18n "Invite") :name :action :value "send")]])
+   (let [max-total (:invitations/max-total config)
+         left (when max-total (- max-total (count (:invitation/_invited-by user))))
+         any-left? (or (not max-total) (not (zero? left)))]
+     [:<>
+      (when any-left?
+        [:h3 (:invitations/invite i18n)])
+      (when max-total
+        [:.instruct (if any-left?
+                      (i18n/t i18n [:invitations/total-left left])
+                      (:invitations/total-reached i18n))])
+      (when (or (not max-total) (not (zero? left)))
+        [:.field
+         [:label {:for :email} (:email/email i18n)]
+         [:input {:id :email :name :email :type :email :value (:email params)}]
+         (Submit (:invitations/invite i18n "Invite") :name :action :value "send")])])])
 
 (defn- compare-invitations [a b]
   (let [redeemer-a (:invitation/redeemer a)

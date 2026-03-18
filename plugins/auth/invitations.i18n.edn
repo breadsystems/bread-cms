@@ -16,6 +16,8 @@
                :revoke "Revoke"
                :sent-at "Sent %s"
                :signup "Signup"
+               :total-left "You have %s invitation(s) left."
+               :total-reached "You have no invitations left."
                :your-invitations "Your invitations"
                }
  }
