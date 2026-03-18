@@ -242,26 +242,14 @@
                         :expansion/description "Query for user emails."
                         :expansion/db (db/database req)
                         :expansion/args [query (:db/id user)]}
-        email-expansion #_(if (= :send action))
-        {:expansion/key :existing-email
-         :expansion/name ::db/query
-         :expansion/description "Query for conflicting emails."
-         :expansion/db (db/database req)
-         :expansion/args ['{:find [?e .]
-                            :in [$ ?email]
-                            :where [[?e :email/address ?email]]}
-                          (:email params)]}
-        #_
-        {:expansion/key :pending-invitation
-         :expansion/name ::db/query
-         :expanction/description "Query for a pending invitation."
-         :expansion/db (db/database req)
-         :expansion/args
-         ['{:find [(pull ?e [:db/id :invitation/email]) .]
-            :in [$ ?from ?e]
-            :where [[?e :invitation/invited-by ?from]
-                    (not [?e :invitation/redeemer])]}
-          (Integer. (:id params))]}
+        email-expansion {:expansion/key :existing-email
+                         :expansion/name ::db/query
+                         :expansion/description "Query for conflicting emails."
+                         :expansion/db (db/database req)
+                         :expansion/args ['{:find [?e .]
+                                            :in [$ ?email]
+                                            :where [[?e :email/address ?email]]}
+                                          (:email params)]}
         validation {:expansion/key :validation
                     :expansion/name ::validate-invitation
                     :params params
