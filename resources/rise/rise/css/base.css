@@ -19,12 +19,12 @@
   --color-theme-dark-text-body:         hsl(300, 80%, 95%);
   --color-theme-dark-text-emphasis:     hsl(300.7, 66%, 65.3%);
   --color-theme-dark-stroke-emphasis:   hsl(258.6, 100%, 74.7%);
-  --color-theme-dark-stroke-secondary:  hsl(300, 75%, 12.5%);
+  --color-theme-dark-stroke-secondary:  hsl(267.1, 36%, 33.7%);
   --color-theme-dark-stroke-tertiary:   hsl(300, 17.8%, 17.6%);
-  --color-theme-dark-text-success:      hsl(326, 68.3%, 62.9%);
-  --color-theme-dark-stroke-success:    hsl(314.9, 52.7%, 46.5%);
+  --color-theme-dark-text-success:      hsl(244.8, 100%, 75.3%);
+  --color-theme-dark-stroke-success:    hsl(255.7, 72%, 40.6%);
   --color-theme-dark-text-error:        hsl(326, 68.3%, 62.9%);
-  --color-theme-dark-stroke-error:      hsl(315, 32.8%, 23.9%);
+  --color-theme-dark-stroke-error:      hsl(315.2, 49.7%, 31.2%);
   --color-theme-dark-text-secondary:    hsl(256, 44%, 73.5%);
   --color-theme-dark-bg:                hsl(264, 41.7%, 4.7%);
 
@@ -122,7 +122,7 @@ nav, header, main, article, section, footer, aside {
 nav {
   align-items: center;
   padding: var(--gap-standard);
-  border-bottom: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-emphasis);
+  border-bottom: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-secondary);
 }
 main {
   width: var(--content-width);
