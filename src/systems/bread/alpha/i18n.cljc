@@ -65,9 +65,9 @@
 (defn t [i18n k]
   "Translates k into its value in the given i18n map. If k is a sequence,
   treats (first k) as i18n key and (rest k) as args to format."
-  (if (seq? k)
+  (if (sequential? k)
     (let [[k & args] k]
-      (apply format (get i18n k) args))
+      (when-let [s (get i18n k)] (apply format s args)))
     (get i18n k)))
 
 (defn lang
@@ -119,12 +119,6 @@
               lang)
         (into {})
         (bread/hook req ::strings))))
-
-(defn t
-  "Query the database for the translatable string represented by keyword k."
-  [app k]
-  {:pre [(keyword? k)]}
-  (k (strings app)))
 
 (defn translatable-binding?
   "Takes a query binding vector and returns the binding itself if it is

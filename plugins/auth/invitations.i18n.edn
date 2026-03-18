@@ -1,0 +1,24 @@
+{
+ :en
+ #:invitations{
+               :accepted-at "Accepted %s"
+               :invitation-email-body "%s invited you to %s! Go here to accept:\n\n%s"
+               :invitation-email-subject "You've been invited to %s"
+               :invitation-invalid "This invitation is invalid or has already been redeemed."
+               :invitation-pending "Invitation pending"
+               :invitation-resent "Invitation resent."
+               :invitation-revoked "Invitation revoked."
+               :invitation-sent "Invitation sent."
+               :invitations "Invitations"
+               :invite "Invite"
+               :no-invitations-body "You haven't sent any invitations yet."
+               :resend "Resend"
+               :revoke "Revoke"
+               :sending-too-many "You are sending too many invitations. Please wait."
+               :sent-at "Sent %s"
+               :signup "Signup"
+               :total-left "You have %s invitation(s) left."
+               :total-reached "You have no invitations left."
+               :your-invitations "Your invitations"
+               }
+ }

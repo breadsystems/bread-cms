@@ -5,7 +5,8 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.email :as email]
-    [systems.bread.alpha.plugin.auth :as auth]))
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.invitations :as invitations]))
 
 (defn- IntroSection [_]
   {:id :intro
@@ -337,7 +338,7 @@
    (:email/email i18n)])
 
 (defmethod Section ::email/heading [{:keys [i18n]} _]
-  [:h3 (:email/email-heading i18n)])
+  [:h2 (:email/email-heading i18n)])
 
 (defn- compare-emails [a b]
   (cond
@@ -431,6 +432,93 @@
    :content
    [:main
     (map (partial Section data) (:email/html.email.sections config))]})
+
+(defmethod Section ::invitations/invitations-link
+  [{:keys [config i18n]} _]
+  [:a {:href (:invitations/invitations-uri config)}
+   (:invitations/invitations i18n "Invitations")])
+
+(defmethod Section ::invitations/invitations-heading [{:keys [i18n]} _]
+  [:h2 (:invitations/invitations i18n "Invitations")])
+
+(defmethod Section ::invitations/invite-form
+  [{:keys [config i18n ring/params ring/anti-forgery-token-field user]} _]
+  [:form.flex.col {:method :post :action (:invitations/invitations-uri config)}
+   (anti-forgery-token-field)
+   (let [max-total (:invitations/max-total config)
+         left (when max-total (- max-total (count (:invitation/_invited-by user))))
+         any-left? (or (not max-total) (not (zero? left)))]
+     [:<>
+      (when any-left?
+        [:h3 (:invitations/invite i18n)])
+      (when max-total
+        [:.instruct (if any-left?
+                      (i18n/t i18n [:invitations/total-left left])
+                      (:invitations/total-reached i18n))])
+      (when (or (not max-total) (not (zero? left)))
+        [:.field
+         [:label {:for :email} (:email/email i18n)]
+         [:input {:id :email :name :email :type :email :value (:email params)}]
+         (Submit (:invitations/invite i18n "Invite") :name :action :value "send")])])])
+
+(defn- compare-invitations [a b]
+  (let [redeemer-a (:invitation/redeemer a)
+        redeemer-b (:invitation/redeemer b)]
+    (cond
+      ;; Always list pending first (reverse chronological)...
+      (and redeemer-a (not redeemer-b)) 1
+      (and redeemer-b (not redeemer-a)) -1
+      (and (not redeemer-a) (not redeemer-b))
+      (compare (:thing/updated-at b) (:thing/updated-at a))
+      ;; ...and then redeemed.
+      :else (compare (:email/created-at a) (:email/created-at b)))))
+
+(defmethod Section ::invitations/invitations-list
+  [{:keys [config i18n user ring/anti-forgery-token-field]} _]
+  (let [invitations (sort compare-invitations (:invitation/_invited-by user))]
+    [:.flex.col
+     [:h3 (:invitations/your-invitations i18n)]
+     (if (seq invitations)
+       (map (fn SentInvitation [{{:email/keys [address]} :invitation/email
+                                 :keys [db/id
+                                        invitation/code
+                                        invitation/redeemer
+                                        thing/updated-at]}]
+              (if redeemer
+                [:.flex.row
+                 [:label address]
+                 [:small (i18n/t i18n [:invitations/accepted-at updated-at])]]
+                [:form {:method :post :action (:invitations/invitations-uri config)}
+                 (anti-forgery-token-field)
+                 [:.field.flex.row {:data-code code}
+                  [:input {:type :hidden :name :id :value id}]
+                  [:.flex.col.tight
+                   [:label address]
+                   [:small (i18n/t i18n [:invitations/sent-at updated-at])]]
+                  [:span.spacer]
+                  [:button {:type :submit :name :action :value :resend}
+                   (:invitations/resend i18n)]
+                  [:button {:type :submit :name :action :value :revoke}
+                   (:invitations/revoke i18n)]]]))
+            invitations)
+       [:p.instruct (:invitations/no-invitations-body i18n)])]))
+
+(defc InvitationsPage
+  [{:as data :keys [i18n ring/anti-forgery-token-field]}]
+  {:extends SettingsPage
+   :key :user
+   :query '[:db/id
+            :user/username
+            {:invitation/_invited-by [* :thing/created-at
+                                      {:invitation/email [*]}]}]}
+  {:title (:invitations/invitations i18n)
+   :content
+   [:main.flex.col
+    ;; TODO
+    (map (partial Section data) [::invitations/invitations-heading
+                                 :flash
+                                 ::invitations/invite-form
+                                 ::invitations/invitations-list])]})
 
 (defc LogoutForm [{:keys [config i18n ring/anti-forgery-token-field]}]
   {:doc "Standard logout form for the account page."}

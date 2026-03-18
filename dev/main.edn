@@ -57,7 +57,10 @@
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
   :db/initial-txns
   [{:invitation/code "a7d190e5-d7f4-4b92-a751-3c36add92610"
-    :invitation/invited-by "user.admin"}
+    :invitation/invited-by "user.admin"
+    :invitation/email {:email/address "test@localhost"}
+    :thing/created-at #seconds-ago 3600
+    :thing/updated-at #seconds-ago 0}
    {:db/id "user.admin"
     :user/username "bread"
     :user/name "Bread User"

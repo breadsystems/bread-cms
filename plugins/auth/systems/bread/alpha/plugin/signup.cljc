@@ -3,15 +3,21 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [clojure.string :as string]
     [crypto.random :as random]
     [one-time.core :as ot]
+    [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc]]
+    [systems.bread.alpha.component :refer [defc] :as component]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.plugin.auth :as auth]))
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.email :as email])
+  (:import
+    [java.net URLEncoder]))
 
 (defmethod bread/expand ::validate
   [{{:auth/keys [min-password-length max-password-length]
@@ -43,22 +49,28 @@
   [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
   (when valid?
     (if invitation
-      {:effects [{:effect/name ::db/transact
-                  :conn conn
-                  :effect/description "Redeem invitation and create user."
-                  :txs [{:invitation/code (:invitation/code invitation)
-                         :invitation/redeemer user}]}]}
+      (let [email (when-let [email (:invitation/email invitation)]
+                    (assoc email :email/confirmed-at (t/now)))
+            user (if email
+                   (assoc user :user/emails [email])
+                   user)]
+        {:effects [{:effect/name ::db/transact
+                    :conn conn
+                    :effect/description "Redeem invitation and create user."
+                    :txs [{:invitation/code (:invitation/code invitation)
+                           :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
                   :effect/description "Create user"
                   :txs [user]}]})))
 
 (defmethod bread/action ::redirect
-  [{:as res {[valid? _] :validation} ::bread/data} _ _]
+  [{:as res {[valid? _] :validation} ::bread/data} {:keys [to]} _]
   (if valid?
-    (-> res
-        (assoc :status 302)
-        (assoc-in [:headers "Location"] (bread/config res :auth/login-uri)))
+    (let [to (or to (bread/config res :auth/login-uri))]
+      (-> res
+          (assoc :status 302)
+          (assoc-in [:headers "Location"] to)))
     res))
 
 (defmethod bread/dispatch ::signup=>
@@ -71,7 +83,8 @@
                             :expansion/key :invitation
                             :expansion/db (db/database req)
                             :expansion/args
-                            ['{:find [(pull ?e [:invitation/code]) .]
+                            ['{:find [(pull ?e [:invitation/code
+                                                {:invitation/email [*]}]) .]
                                :in [$ ?code]
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
@@ -119,46 +132,6 @@
           [{:action/name ::redirect
             :action/description "Redirect to login"}]}}))))
 
-(def
-  ^{:doc "Schema for invitations"}
-  schema
-  (with-meta
-    [{:db/id "migration.invitations"
-      :migration/key :bread.migration/invitations
-      :migration/description "Migration for invitations to sign up"}
-     {:db/ident :invitation/email
-      :attr/label "Invitation email"
-      :db/doc "Email this invitation was sent to, if any"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.invitation"}
-     {:db/ident :invitation/redeemer
-      :attr/label "Redeeming user"
-      :db/doc "User who redeemed this invitation, if any"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.invitation"}
-     {:db/ident :invitation/code
-      :attr/label "Invitation code"
-      :db/doc "Secure ID for this invitation"
-      :attr/sensitive? true
-      :db/unique :db.unique/identity
-      :db/valueType :db.type/string
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.invitation"}
-     {:db/ident :invitation/invited-by
-      :attr/label "Invited by"
-      :db/doc "User who created this invitation"
-      :db/valueType :db.type/ref
-      :db/cardinality :db.cardinality/one
-      :attr/migration "migration.invitation"}]
-
-    {:type :bread/migration
-     :migration/dependencies #{:bread.migration/migrations
-                               :bread.migration/things
-                               :bread.migration/users
-                               :bread.migration/authentication}}))
-
 (defmethod bread/action ::protected-route?
   [{:as req :keys [uri]} _ [protected?]]
   (and protected? (not= (bread/config req :signup/signup-uri) uri)))
@@ -166,18 +139,16 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [;; TODO email as a normal hook
-            invite-only? invitation-expiration-seconds signup-uri]
+  ([{:keys [invite-only?
+            invitation-expiration-seconds
+            invitations-uri
+            signup-uri]
      :or {invite-only? false
           invitation-expiration-seconds (* 72 60 60)
+          invitations-uri "/~/invitations"
           signup-uri "/_/signup"}}]
    {:hooks
-    {::db/migrations
-     [{:action/name ::db/add-schema-migration
-       :action/description
-       "Add schema for invitations to the sequence of migrations to be run."
-       :schema-txs schema}]
-     ::auth/protected-route?
+    {::auth/protected-route?
      [{:action/name ::protected-route?
        :action/description "Exclude signup-uri from protected routes"}]
      ::i18n/global-strings
