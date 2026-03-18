@@ -267,7 +267,7 @@ button:hover {
 .success {
   font-weight: var(--weight-heavy);
   color: var(--color-text-success);
-  border: var(--border-width) var(--stroke-style-emphasis) var(--color-stroke-success);
+  border: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-success);
   padding: var(--gap-standard);
 }
 .error {
