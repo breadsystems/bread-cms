@@ -43,7 +43,7 @@
         invitation-invalid? (and (or resending? revoking?)
                                  (or (not id) (not pending?)))
         error-key (cond
-                    (and new-invite? existing-email) :invitations/email-exists
+                    (and new-invite? existing-email) :signup/email-exists
                     (and new-invite? (not valid-email?)) :email/invalid-email
                     invitation-invalid? :invitations/invitation-invalid)
         valid? (not error-key)]
@@ -167,12 +167,14 @@
 
 (defmethod bread/effect [::invite :revoke] resend-invitation
   [{:keys [conn params]}
-   {:as data
-    [valid? error-key] :validation}]
+   {:as data :keys [user] [valid? error-key] :validation}]
   (if valid?
-    (let [id (->int (:id params))]
+    (let [id (->int (:id params))
+          invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
+          email-id (:db/id (:invitation/email invitation))]
       (try
-        (db/transact conn [[:db/retractEntity id]])
+        (db/transact conn [[:db/retractEntity id]
+                           [:db/retractEntity email-id]])
         {:flash {:success-key :invitations/invitation-revoked}}
         (catch clojure.lang.ExceptionInfo e
           (log/error e)
