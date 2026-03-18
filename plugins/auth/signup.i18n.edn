@@ -2,6 +2,7 @@
  :en
  #:signup{
           :all-fields-required "All fields are required."
+          :accepted-at "Accepted %s"
           :create-account "Create account"
           :email-exists "Email already exists."
           :error "Account locked"
@@ -9,13 +10,18 @@
           :invitation-email-subject "You've been invited to %s"
           :invitation-invalid "This invitation is invalid or has already been redeemed."
           :invitation-pending "Invitation pending"
+          :invitation-resent "Invitation resent."
+          :invitation-revoked "Invitation revoked."
           :invitation-sent "Invitation sent."
           :invitations "Invitations"
           :invite "Invite"
+          :no-invitations-body "You haven't sent any invitations yet."
           :please-choose-username-password "Please choose a username and password."
           :resend "Resend"
           :revoke "Revoke"
+          :sent-at "Sent %s"
           :signup "Signup"
           :site-invite-only "This site is invite-only."
+          :your-invitations "Your invitations"
           }
  }

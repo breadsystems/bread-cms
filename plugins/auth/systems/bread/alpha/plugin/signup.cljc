@@ -94,6 +94,9 @@
                          (map :db/id)
                          set)
         id (->int id)
+        ;; To avoid an extra query, we just loop through the user's pending
+        ;; invitations to check whether the given id is one the user is
+        ;; authorized to revoke.
         pending? (contains? pending-ids id)
         invitation-invalid? (and (or resending? revoking?)
                                  (or (not id) (not pending?)))
@@ -147,7 +150,6 @@
 (defmethod bread/effect ::invitation-email
   [{:as effect :keys [code from to]}
    {:as data :keys [config hook]}]
-  (prn 'EMAIL)
   (let [from (or from (:email/smtp-from-email config))
         link (invitation-link (assoc data :invitation/code code))
         message (hook ::invitation-message
@@ -172,8 +174,10 @@
           invitation-tx {:invitation/code code
                          :invitation/invited-by (:db/id user)
                          :invitation/email {:email/address email
-                                            :thing/created-at now}
-                         :thing/created-at now}
+                                            :thing/created-at now
+                                            :thing/updated-at now}
+                         :thing/created-at now
+                         :thing/updated-at now}
           email-effect (when valid?
                          {:effect/name ::invitation-email
                           :effect/description "Send an invitation email."
@@ -213,7 +217,7 @@
                                                 :invitation/invited-by (:db/id user)})
         (db/transact conn [invitation-tx])
         {:effects [email-effect]
-         :flash {:success-key :signup/invitation-sent}}
+         :flash {:success-key :signup/invitation-resent}}
         (catch clojure.lang.ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))
@@ -222,10 +226,16 @@
 (defmethod bread/effect [::invite :revoke] resend-invitation
   [{:keys [conn params]}
    {:as data
-    :keys [config i18n user]
     [valid? error-key] :validation}]
-  ;; TODO
-  )
+  (if valid?
+    (let [id (->int (:id params))]
+      (try
+        (db/transact conn [[:db/retractEntity id]])
+        {:flash {:success-key :signup/invitation-revoked}}
+        (catch clojure.lang.ExceptionInfo e
+          (log/error e)
+          {:flash {:error-key :email/unexpected-error}})))
+    {:flash {:error-key error-key}}))
 
 (defmethod bread/dispatch ::invitations=>
   [{:keys [::bread/dispatcher params request-method server-name]

@@ -451,24 +451,48 @@
     [:input {:id :email :name :email :type :email :value (:email params)}]]
    (Submit (:signup/invite i18n "Invite") :name :action :value "send")])
 
+(defn- compare-invitations [a b]
+  (prn 'redeemer (:invitation/redeemer a) '<> (:invitation/redeemer b))
+  (let [redeemer-a (:invitation/redeemer a)
+        redeemer-b (:invitation/redeemer b)]
+    (cond
+      ;; Always list pending first (reverse chronological)...
+      (and redeemer-a (not redeemer-b)) 1
+      (and redeemer-b (not redeemer-a)) -1
+      (and (not redeemer-a) (not redeemer-b))
+      (compare (:thing/updated-at b) (:thing/updated-at a))
+      ;; ...and then redeemed.
+      :else (compare (:email/created-at a) (:email/created-at b)))))
+
 (defmethod Section ::signup/invitations-list
   [{:keys [config i18n user ring/anti-forgery-token-field]} _]
-  [:.flex.col
-   (map (fn SentInvitation [{{:email/keys [address]} :invitation/email
-                             :keys [db/id invitation/code]}]
-          [:form {:method :post :action (:signup/invitations-uri config)}
-           (anti-forgery-token-field)
-           [:.field.flex.row
-            [:input {:type :hidden :name :id :value id}]
-            [:.flex.col.tight
-             [:label address]
-             [:small (:signup/invitation-pending i18n)]]
-            [:span.spacer]
-            [:button {:type :submit :name :action :value :resend}
-             (:signup/resend i18n)]
-            [:button {:type :submit :name :action :value :revoke}
-             (:signup/revoke i18n)]]])
-        (:invitation/_invited-by user))])
+  (let [invitations (sort compare-invitations (:invitation/_invited-by user))]
+    [:.flex.col
+     [:h3 (:signup/your-invitations i18n)]
+     (if (seq invitations)
+       (map (fn SentInvitation [{{:email/keys [address]} :invitation/email
+                                 :keys [db/id
+                                        invitation/code
+                                        invitation/redeemer
+                                        thing/updated-at]}]
+              (if redeemer
+                [:.flex.row
+                 [:label address]
+                 [:small (i18n/t i18n [:signup/accepted-at updated-at])]]
+                [:form {:method :post :action (:signup/invitations-uri config)}
+                 (anti-forgery-token-field)
+                 [:.field.flex.row {:data-code code}
+                  [:input {:type :hidden :name :id :value id}]
+                  [:.flex.col.tight
+                   [:label address]
+                   [:small (i18n/t i18n [:signup/sent-at updated-at])]]
+                  [:span.spacer]
+                  [:button {:type :submit :name :action :value :resend}
+                   (:signup/resend i18n)]
+                  [:button {:type :submit :name :action :value :revoke}
+                   (:signup/revoke i18n)]]]))
+            invitations)
+       [:p.instruct (:signup/no-invitations-body i18n)])]))
 
 (defc InvitationsPage
   [{:as data :keys [i18n ring/anti-forgery-token-field]}]
@@ -484,8 +508,8 @@
     ;; TODO
     (map (partial Section data) [::signup/invitations-heading
                                  :flash
-                                 ::signup/invitations-list
-                                 ::signup/invite-form])]})
+                                 ::signup/invite-form
+                                 ::signup/invitations-list])]})
 
 (defc LogoutForm [{:keys [config i18n ring/anti-forgery-token-field]}]
   {:doc "Standard logout form for the account page."}
