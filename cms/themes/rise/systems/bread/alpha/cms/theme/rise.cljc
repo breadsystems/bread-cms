@@ -266,7 +266,7 @@
             settings-content])))
 
 (defc AccountPage
-  [{:as data :keys [config user]}]
+  [{:as data :keys [config hook user]}]
   {:extends SettingsPage
    :doc
    "The main account settings page, the default redirect target after logging in.
@@ -316,18 +316,19 @@
    :doc/post-render (fn [content]
                       (assoc content :head [:style "...page-specific styles..."]))}
   {:title (:user/username user)
-   :head [:<> [:style
-               "
-               .user-session {
-                 display: flex;
-                 flex-flow: row wrap;
-                 justify-content: space-between;
-                 align-items: start;
+   :head (->> [:<> [:style
+                    "
+                    .user-session {
+                    display: flex;
+                    flex-flow: row wrap;
+                    justify-content: space-between;
+                    align-items: start;
 
-                 padding: 1em;
-                 border: 2px dashed var(--color-stroke-tertiary);
-               }
-               "]]
+                    padding: 1em;
+                    border: 2px dashed var(--color-stroke-tertiary);
+                    }
+                    "]]
+              (hook ::account/html.head))
    :content
    (apply conj [:main]
           (map (partial Section data) (:account/html.account.sections config)))})
