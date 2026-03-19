@@ -29,7 +29,7 @@
   (let [action (keyword action)
         total-reached? (when max-total
                          (>= (count invitations) max-total))
-        window-cutoff (when window-cutoff (t/minutes-ago max-window-minutes))
+        window-cutoff (when max-window-minutes (t/minutes-ago max-window-minutes))
         recent-count (count (filter (fn [{:keys [thing/updated-at]}]
                                       (when updated-at
                                         (.after updated-at window-cutoff)))
