@@ -376,7 +376,9 @@
 
 (defmethod bread/action ::session
   [{:as req :keys [headers remote-addr session]} _ _]
-  (if session
+  ;; Only store session metadata for authenticated users to avoid writing
+  ;; sessions to the database on every anonymous request.
+  (if (:user session)
     (cond-> req
       (bread/config req :auth/store-session-ip?)
       (update :session assoc :remote-addr remote-addr)

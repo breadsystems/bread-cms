@@ -106,10 +106,11 @@
         ring-data (select-keys req req-keys)]
     (as-> req $
         (update $ ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
-        ;; TODO :ring/session
         (assoc-in $ [::bread/data :session] (:session req))
         ;; Reset headers - we're working on a response now.
-        (assoc $ :headers {}))))
+        (assoc $ :headers {})
+        ;; Avoid writing sessions data for anonymous requests.
+        (update $ :session #(when (seq %) %)))))
 
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
