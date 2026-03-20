@@ -3,7 +3,7 @@
         :wrap-defaults #ig/ref :ring/wrap-defaults}
  :ring/wrap-defaults {:kind :site-defaults
                       :session-store #ig/ref :ring/session-store
-                      :overrides {[:security :anti-forgery] true
+                      :overrides {[:security :anti-forgery] false
                                   [:session :cookie-name] "bread-session"
                                   ;; https://github.com/ring-clojure/ring/blob/fd08dd8d905bc8062866cfec938c8cbf65afc7b0/ring-core/src/ring/middleware/cookies.clj#L101
                                   [:session :cookie-attrs] {:http-only true
