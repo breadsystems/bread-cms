@@ -35,7 +35,8 @@
   ;; NOTE: if you upgrade any of the dependencies here, make sure
   ;; you also do so below in that dep's standalone alias.
   :cms
-  {:extra-paths ["cms"
+  {:extra-paths ["cms/core/src"
+                 "cms/core/resources"
                  "cms/themes/rise"
                  "resources/crust"
                  "resources/marx"
