@@ -96,7 +96,7 @@
   "Returns a response with the current app (req) merged into raw map,
   preserving any hooks/config added to req."
   [req raw]
-  (merge raw (select-keys req [::config ::hooks ::plugins])))
+  (merge raw (select-keys req [::plugins ::config ::hooks ::expansions ::data])))
 
 (defn config
   "Returns app's config value for k. Returns the (optionally) provided default

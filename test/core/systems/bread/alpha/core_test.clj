@@ -12,9 +12,9 @@
   (testing "it persists plugins, hooks, and config"
     (let [raw {:status 200 :headers {} :body [:main]}]
       (is (= #{:status :headers :body
-               ::bread/plugins ::bread/hooks ::bread/config}
+               ::bread/plugins ::bread/hooks ::bread/config ::bread/expansions ::bread/data}
              (set (keys (bread/response (bread/app {:url "/"}) raw)))))
-      (is (= #{:body ::bread/plugins ::bread/hooks ::bread/config}
+      (is (= #{:body ::bread/plugins ::bread/hooks ::bread/config ::bread/expansions ::bread/data}
              (set (keys (bread/response (bread/app {:url "/"}) {:body "hello"}))))))))
 
 (deftest test-config
