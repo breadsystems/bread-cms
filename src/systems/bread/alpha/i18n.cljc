@@ -273,6 +273,34 @@
                         :expansion/name ::bread/value
                         :expansion/value strings})))
 
+(comment
+  (def ^:dynamic *read-eagerly* false)
+  (alter-var-root #'*read-eagerly* not)
+  (require '[clojure.java.io :as io]
+           '[clojure.edn :as edn])
+
+  (defn refreshing-resource [path]
+    (reify clojure.lang.ILookup
+      (valAt [this k]
+        (-> path io/resource slurp edn/read-string (get k)))
+      (valAt [this k not-found]
+        (-> path io/resource slurp edn/read-string (get k not-found)))))
+
+  (get (refreshing-resource "auth.i18n.edn") :ar)
+  (get (refreshing-resource "auth.i18n.edn") :en)
+
+  (defn read-strings [path]
+    (if *read-eagerly*
+      (-> path io/resource slurp edn/read-string)
+      (refreshing-resource path)))
+
+  (map (comp :auth/reset-password :en)
+       [(read-strings "auth.i18n.edn")
+        (binding [*read-eagerly* true]
+          (read-strings "auth.i18n.edn"))])
+
+  ,)
+
 (defmethod bread/action ::merge-global-strings
   [req {:keys [strings]} [req-strings]]
   (merge req-strings (get strings (lang req))))
