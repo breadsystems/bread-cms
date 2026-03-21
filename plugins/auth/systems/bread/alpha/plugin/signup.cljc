@@ -154,7 +154,7 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for signup into global strings."
-       :strings (edn/read-string (slurp (io/resource "signup.i18n.edn")))}]}
+       :strings (i18n/read-strings "signup.i18n.edn")}]}
     :config
     {:signup/invite-only? invite-only?
      :signup/invitation-expiration-seconds invitation-expiration-seconds

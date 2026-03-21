@@ -684,7 +684,7 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for auth into global i18n strings."
-       :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
+       :strings (i18n/read-strings "auth.i18n.edn")}]}
     :config
     #:auth{:require-mfa? require-mfa?
            :mfa-issuer mfa-issuer

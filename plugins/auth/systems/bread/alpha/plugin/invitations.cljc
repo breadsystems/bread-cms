@@ -295,7 +295,7 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for signup into global strings."
-       :strings (edn/read-string (slurp (io/resource "invitations.i18n.edn")))}]}
+       :strings (i18n/read-strings "invitations.i18n.edn")}]}
     :config
     #:invitations{:invitations-uri invitations-uri
                   :max-window-count max-window-count

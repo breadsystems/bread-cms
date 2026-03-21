@@ -314,5 +314,5 @@
      {::i18n/global-strings
       [{:action/name ::i18n/merge-global-strings
         :action/description "Merge strings for email page into global i18n strings."
-        :strings (edn/read-string (slurp (io/resource "email.i18n.edn")))}]}
+        :strings (i18n/read-strings "email.i18n.edn")}]}
      :config (assoc config :email/mailer mailer)}))
