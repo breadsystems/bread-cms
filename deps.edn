@@ -37,11 +37,14 @@
   :cms
   {:extra-paths ["cms/core/src"
                  "cms/core/resources"
-                 "cms/themes/rise"
-                 "resources/crust"
+                 "cms/themes/rise/src"
+                 "cms/themes/rise/resources"
+                 "cms/themes/crust/src"
+                 "cms/themes/crust/resources"
+
                  "resources/marx"
                  "resources/public"
-                 "resources/rise"
+
                  "plugins/auth"
                  "plugins/datahike"
                  "plugins/email"
@@ -129,7 +132,7 @@
                 rum/rum {:mvn/version "0.12.10"}}}
 
   :theme-rise
-  {:extra-paths ["cms/themes/rise" "resources/rise"]
+  {:extra-paths ["cms/themes/rise/src" "cms/themes/rise/resources"]
    :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
 
   ;; TODO CRUST
