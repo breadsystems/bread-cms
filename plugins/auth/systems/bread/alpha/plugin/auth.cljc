@@ -255,7 +255,9 @@
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
-        protected? (bread/hook req ::protected-route? (not= login-uri uri))
+        reset-uri (bread/config req :auth/reset-password-uri)
+        exempt? (contains? #{login-uri reset-uri} uri)
+        protected? (bread/hook req ::protected-route? (not exempt?))
         anonymous? (empty? (:user session))
         next-param (name (bread/config req :auth/next-param))
         next-uri (URLEncoder/encode (if (seq query-string)
@@ -642,7 +644,7 @@
   ([]
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
-            login-uri protected-prefixes require-mfa? mfa-issuer
+            login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
             store-session-ip? store-session-user-agent?]
      :or {min-password-length 12
@@ -652,6 +654,7 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
+          reset-password-uri "/reset"
           generous-totp-window? true
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
@@ -693,5 +696,6 @@
      :auth/lock-seconds lock-seconds
      :auth/next-param next-param
      :auth/login-uri login-uri
+     :auth/reset-password-uri reset-password-uri
      :auth/store-session-ip? store-session-ip?
      :auth/store-session-user-agent? store-session-user-agent?}}))

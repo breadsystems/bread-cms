@@ -119,7 +119,7 @@
     {:request-method :get
      :uri "/not-matching"}
 
-    ;; Requesting login page anonymously with a custom login page and
+    ;; Requesting home page anonymously with a custom login page and
     ;; protected route prefixes configured. Non-protected URI is ignored.
     {:status 200
      :headers {"content-type" "text/html"}
@@ -141,6 +141,28 @@
      :login-uri "/custom"}
     {:request-method :get
      :uri "/protected"}
+
+    ;; Custom login URI under the /protected route tree gets exempted
+    ;; (otherwise no one could ever login).
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}}
+    {:protected-prefixes #{"/protected"}
+     :login-uri "/protected/login"}
+    {:request-method :get
+     :uri "/protected/login"}
+
+    ;; Custom reset URI under the /protected route tree gets exempted
+    ;; (otherwise no one could ever reset their password).
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}}
+    {:protected-prefixes #{"/protected"}
+     :reset-password-uri "/protected/reset"}
+    {:request-method :get
+     :uri "/protected/reset"}
 
     ;; Requesting anonymously with protected route prefixes AND a custom
     ;; next-params configured. Protected URIs should get redirected with the
