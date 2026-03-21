@@ -676,7 +676,7 @@
      "This technique is powerful, but if your needs are more complex, look into
      creating your own custom theme with its own pattern library."]]})
 
-(defc PatternLibrary [{:as data :keys [hook]}]
+(defc PatternLibrary [{:as data :keys [hook i18n]}]
   {:extends Page}
   (let [patterns [(IntroSection data)
                   (HowToSection data)
@@ -703,4 +703,4 @@
        [:button#toggle-theme {:style {:position :relative}} "light/dark"]]
       (theme/TableOfContents {:patterns patterns})
       [:main.gap-spacious
-       (map theme/Pattern patterns)]]}))
+       (map (partial theme/Pattern {:i18n i18n}) patterns)]]}))

@@ -13,16 +13,16 @@
 (defn- pp [x]
   (with-out-str (clojure.pprint/pprint x)))
 
-(defn pattern-type [pattern]
+(defn pattern-type [_data pattern]
   (or (:type pattern)
       (:type (meta pattern))))
 
 (defmulti ContentsItem pattern-type)
 (defmulti Pattern pattern-type)
 
-(defmethod ContentsItem :default [pattern] pattern)
+(defmethod ContentsItem :default [_ pattern] pattern)
 
-(defmethod ContentsItem ::component/component [component]
+(defmethod ContentsItem ::component/component [_ component]
   (let [component-meta (meta component)]
     {:id (:name component-meta)
      :title (:name component-meta)
@@ -41,7 +41,7 @@
    [:h1#contents "Table of contents"]
    [:ul
     [:<> (doall (map (fn [pattern]
-                       (let [{:keys [id title children]} (ContentsItem pattern)]
+                       (let [{:keys [id title children]} (ContentsItem nil pattern)]
                          [:li
                           [:a {:href (str "#" (name id))} title]
                           [:ul
@@ -74,7 +74,7 @@
                      content)
     (rum/render-static-markup content)))
 
-(defmethod Pattern :default DocSection [{:keys [content id title]}]
+(defmethod Pattern :default DocSection [_ {:keys [content id title]}]
   [:section.pattern {:id id}
    [:h1 title]
    [:a.section-link {:href (str "#" (name id)) :title title} "#"]
@@ -83,9 +83,14 @@
      content)
    [:a {:href "#contents"} "Back to top"]])
 
-(defmethod Pattern ::component/component ComponentSection [component]
+(defn- component-content [html]
+  (letfn [(head? [x] (and (vector? x) (= :head (first x))))]
+    (walk/postwalk #(when-not (head? %) %) html)))
+
+(defmethod Pattern ::component/component ComponentSection [data component]
   (let [{component-name :name
-         :keys [doc doc/show-html? doc/default-data expr examples doc/post-render]
+         :keys [doc doc/show-html? doc/default-data expr examples doc/preview?
+                doc/post-render]
          :or {show-html? true
               post-render identity}}
         (meta component)]
@@ -97,9 +102,14 @@
         "#"]
        (md->hiccup doc)
        (map (fn [{:as example :keys [doc description args]}]
-              (let [post-render (or (:doc/post-render example) post-render)
+              (let [preview? (or (:doc/preview? example) preview?)
+                    post-render (or (:doc/post-render example) post-render)
                     args' (cons (merge-with merge default-data (first args)) (rest args))
                     id (->id doc)
+                    rendered-content (when preview?
+                                       (let [data (merge data (first args'))]
+                                         (component-content
+                                           (component/render component data))))
                     content (apply component args')
                     formatted-content (-> content remove-noop-elements post-render pp)
                     formatted-html (-> content post-render render-html)]
@@ -109,7 +119,10 @@
                     [:h2 doc]
                     [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]])
                  (md->hiccup description)
+                 ;; TODO why the abbrevz?
                  [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
+                 (when preview?
+                   [:.pattern-preview rendered-content])
                  [:pre [:code.clj formatted-content]]
                  [:pre [:code.xml formatted-html]]]))
             examples)
