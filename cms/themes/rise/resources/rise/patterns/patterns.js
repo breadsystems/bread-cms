@@ -19,5 +19,10 @@ window.addEventListener('load', () => {
       setTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
+  document.querySelectorAll('.pattern-preview form')
+    .forEach(form => {
+      form.addEventListener('submit', (e) => e.preventDefault());
+    });
+
   window.hljs.highlightAll();
 });

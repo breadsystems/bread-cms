@@ -108,20 +108,22 @@
      [:body
       content]]))
 
-(defc SuccessMessage [message]
+(defc SuccessMessage [{:keys [message]}]
   {:doc "A success message"
    :description
    "Used to indicate success of some action, typically a side-effect, such
    as an account update."
+   :doc/preview? true
    :examples
    '[{:args ({:message "Update successful!"})}]}
   [:.success [:p message]])
 
-(defc ErrorMessage [message]
+(defc ErrorMessage [{:keys [message]}]
   {:doc "An error message"
    :description
    "Used to indicate an error completing some action, typically a side-effect, such
    as an account update."
+   :doc/preview? true
    :examples
    '[{:args ({:message "Something bad happened!"})}]}
   [:.error [:p message]])
@@ -193,7 +195,8 @@
             [:button {:type :submit :name :submit :value "verify"}
              (:auth/verify i18n)]]
            (when error?
-             (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]])
+             (hook ::html.invalid-code
+                   (ErrorMessage {:message (:auth/invalid-totp i18n)})))]])
 
        (= :two-factor step)
        [:main
@@ -207,7 +210,8 @@
           [:button {:type :submit :name :submit :value "verify"}
            (:auth/verify i18n)]]
          (when error?
-           (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]]
+           (hook ::html.invalid-code
+                 (ErrorMessage {:message (:auth/invalid-totp i18n)})))]]
 
        :default
        [:main
@@ -220,7 +224,7 @@
          (Field :password :type :password :label (:auth/password i18n))
          (when error?
            (hook ::html.invalid-login
-                 (ErrorMessage (:auth/invalid-username-password i18n))))
+                 (ErrorMessage {:message (:auth/invalid-username-password i18n)})))
          (Submit (:auth/login i18n))]])}))
 
 (defc ResetPasswordPage
@@ -268,7 +272,7 @@
                [:p.instruct (:auth/enter-confirm-new-password i18n)])
          (when error?
            (hook ::html.invalid-password
-                 (ErrorMessage (:auth/invalid-password i18n))))
+                 (ErrorMessage {:message (:auth/invalid-password i18n)})))
          (Field :password
                 :type :password
                 :label (:auth/password i18n)
@@ -650,15 +654,16 @@
                :label (:auth/password-confirmation i18n)
                :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
-          (hook ::html.invalid-signup (ErrorMessage (i18n/t i18n error-key))))
+          (hook ::html.invalid-signup
+                (ErrorMessage {:message (i18n/t i18n error-key)})))
         (Submit (:signup/create-account i18n))]])]])
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
-     (SuccessMessage (i18n/t i18n success-key)))
+     (SuccessMessage {:message (i18n/t i18n success-key)}))
    (when-let [error-key (:error-key flash)]
-     (ErrorMessage (i18n/t i18n error-key)))])
+     (ErrorMessage {:message (i18n/t i18n error-key)}))])
 
 (defmethod Section :save [{:keys [i18n]} _]
   (Submit (:account/save i18n) :name :action :value "update"))
