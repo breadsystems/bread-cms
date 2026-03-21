@@ -1,8 +1,10 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.edn :as edn]
+    [clojure.java.io :as io]
     [clojure.string :as string]
     [com.rpl.specter :as s]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.ring :as ring]
@@ -10,6 +12,30 @@
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.util.datalog :as d]))
+
+(comment
+  (alter-var-root #'*read-eagerly* not)
+
+  (map (comp :auth/reset-password :en)
+       [(read-strings "auth.i18n.edn")
+        (binding [*read-eagerly* true]
+          (read-strings "auth.i18n.edn"))])
+
+  ,)
+
+(def ^:dynamic *read-eagerly* true)
+
+(defn read-strings [path]
+  "Read strings from the filesystem. If *read-eagerly* is true (the default),
+  returns a plain i18n map, keyed by lang/locale; if false, returns an ILookup
+  instance that dynamically reads from the filesystem on each call to (get)."
+  (if *read-eagerly*
+    (-> path io/resource slurp edn/read-string)
+    (reify clojure.lang.ILookup
+      (valAt [this k]
+        (-> path io/resource slurp edn/read-string (get k)))
+      (valAt [this k not-found]
+        (-> path io/resource slurp edn/read-string (get k not-found))))))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
@@ -272,34 +298,6 @@
     (expansion/add req {:expansion/key :i18n
                         :expansion/name ::bread/value
                         :expansion/value strings})))
-
-(comment
-  (def ^:dynamic *read-eagerly* false)
-  (alter-var-root #'*read-eagerly* not)
-  (require '[clojure.java.io :as io]
-           '[clojure.edn :as edn])
-
-  (defn refreshing-resource [path]
-    (reify clojure.lang.ILookup
-      (valAt [this k]
-        (-> path io/resource slurp edn/read-string (get k)))
-      (valAt [this k not-found]
-        (-> path io/resource slurp edn/read-string (get k not-found)))))
-
-  (get (refreshing-resource "auth.i18n.edn") :ar)
-  (get (refreshing-resource "auth.i18n.edn") :en)
-
-  (defn read-strings [path]
-    (if *read-eagerly*
-      (-> path io/resource slurp edn/read-string)
-      (refreshing-resource path)))
-
-  (map (comp :auth/reset-password :en)
-       [(read-strings "auth.i18n.edn")
-        (binding [*read-eagerly* true]
-          (read-strings "auth.i18n.edn"))])
-
-  ,)
 
 (defmethod bread/action ::merge-global-strings
   [req {:keys [strings]} [req-strings]]

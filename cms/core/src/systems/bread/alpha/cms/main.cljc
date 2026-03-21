@@ -306,6 +306,11 @@
 (defmethod ig/init-key :started-at [_ _]
   (LocalDateTime/now))
 
+(defmethod ig/init-key :app/env [_ env]
+  (when (= :development env)
+    (alter-var-root #'i18n/*read-eagerly* (constantly false)))
+  env)
+
 (defmethod ig/init-key :app/log [_ log-config]
   (log/merge-config! {:min-level (:min-level log-config :info)
                       :middleware [(log-redactor)]}))
