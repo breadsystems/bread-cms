@@ -131,7 +131,10 @@
   {:extra-paths ["cms/themes/rise/src" "cms/themes/rise/resources"]
    :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
 
-  ;; TODO CRUST
+  :theme-crust
+  {:extra-paths ["cms/themes/crust/src" "cms/themes/crust/resources"]
+   :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
+
 
   :build-cli
   {:main-opts ["-e" "(set! *warn-on-reflection* true)"
