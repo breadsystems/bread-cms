@@ -686,16 +686,16 @@
        :action/description "Merge strings for auth into global i18n strings."
        :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
     :config
-    {:auth/require-mfa? require-mfa?
-     :auth/mfa-issuer mfa-issuer
-     :auth/generous-totp-window? generous-totp-window?
-     :auth/hash-algorithm hash-algorithm
-     :auth/max-failed-login-count max-failed-login-count
-     :auth/min-password-length min-password-length
-     :auth/max-password-length max-password-length
-     :auth/lock-seconds lock-seconds
-     :auth/next-param next-param
-     :auth/login-uri login-uri
-     :auth/reset-password-uri reset-password-uri
-     :auth/store-session-ip? store-session-ip?
-     :auth/store-session-user-agent? store-session-user-agent?}}))
+    #:auth{:require-mfa? require-mfa?
+           :mfa-issuer mfa-issuer
+           :generous-totp-window? generous-totp-window?
+           :hash-algorithm hash-algorithm
+           :max-failed-login-count max-failed-login-count
+           :min-password-length min-password-length
+           :max-password-length max-password-length
+           :lock-seconds lock-seconds
+           :next-param next-param
+           :login-uri login-uri
+           :reset-password-uri reset-password-uri
+           :store-session-ip? store-session-ip?
+           :store-session-user-agent? store-session-user-agent?}}))
