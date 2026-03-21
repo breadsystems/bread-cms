@@ -18,4 +18,6 @@ window.addEventListener('load', () => {
       const currentTheme = document.querySelector('html').getAttribute('data-theme');
       setTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
+
+  window.hljs.highlightAll();
 });

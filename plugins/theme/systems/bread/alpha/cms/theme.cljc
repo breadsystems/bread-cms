@@ -134,20 +134,3 @@
            :args ({})}]}
        [:p text]))
   (ComponentSection {:component P}))
-
-(defmethod bread/action ::html.head.pattern-library [req _ [head]]
-  (let [head (or head [:<>])]
-    (conj head
-          [:link {:rel :stylesheet :href "/assets/highlight/styles/atom-one-dark.min.css"}]
-          [:script {:src "/assets/highlight/highlight.min.js"}]
-          [:script "hljs.highlightAll()"])))
-
-(defn plugin
-  ([] (plugin {}))
-  ([_]
-   {:hooks
-    {::html.head.pattern-library
-     [{:action/name ::html.head.pattern-library
-       :action/description
-       "Call this hook inside the <head> of your theme's PatternLibrary component
-       to automatically include standard assets, e.g. for syntax highlighting."}]}}))

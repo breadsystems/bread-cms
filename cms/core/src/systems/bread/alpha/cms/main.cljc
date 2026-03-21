@@ -379,8 +379,7 @@
                    (marx/plugin (:marx app-config))
                    (navigation/plugin (:navigation app-config))
                    (rum/plugin (:renderer app-config))
-                   (email/plugin (:email app-config))
-                   (theme/plugin (:theme app-config))])]
+                   (email/plugin (:email app-config))])]
     (bread/load-app (bread/app {:plugins plugins}))))
 
 (defmethod ig/halt-key! :bread/app [_ app]
