@@ -24,6 +24,7 @@
   :auth {:secret-key #env AUTH_SECRET_KEY
          :protected-prefixes ["/~/"]
          :login-uri "/~/login"
+         :reset-password-uri "/~/reset"
          ;:require-mfa? true
          :min-password-length 4
          :store-session-ip? true

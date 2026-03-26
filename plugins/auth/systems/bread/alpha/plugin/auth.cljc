@@ -406,6 +406,55 @@
         [{:action/name ::=>logged-in
           :action/description "Redirect after login"}]}})))
 
+;; TODO ::forgot-password=>
+
+(defmethod bread/dispatch ::reset-password=>
+  [{:keys [params request-method session] :as req}]
+  (let [{:auth/keys [step]} session
+        ;; NOTE: we reuse failed-login-count for pw resets.
+        max-failed-reset-count (bread/config req :auth/max-failed-login-count)
+        lock-seconds (bread/config req :auth/lock-seconds)
+        get? (= :get request-method)
+        post? (= :post request-method)
+        redirect-to (bread/config req :auth/login-uri)
+        user-keys (cond-> [:db/id
+                           :user/username
+                           :user/totp-key
+                           :user/locked-at
+                           :user/failed-login-count])
+        hashed-code (sha-512 (:code params ""))
+        user-expansion
+        {:expansion/name ::db/query
+         :expansion/key :reset/result
+         :expansion/description "Find the user matching the reset code."
+         :expansion/db (database req)
+         :expansion/args
+         [{:find [(list 'pull '?e user-keys) '.]
+           :in '[$ ?code]
+           :where '[[?code :reset/code ?e]]}
+          hashed-code]}]
+    (cond
+      (empty? (:code params))
+      [:div "NO CODE"]
+
+      ;; Reset
+      post?
+      {:expansions
+       [user-expansion
+        {:expansion/name ::authenticate-reset
+         :expansion/key :auth/result
+         :lock-seconds lock-seconds
+         :plaintext-password (:password params)}]
+       :effects
+       [{:effect/name ::log-attempt
+         :effect/description
+         "Record this reset attempt, locking account after too many."
+         :max-failed-login-count max-failed-reset-count
+         :lock-seconds lock-seconds
+         :conn (db/connection req)}]}
+
+      )))
+
 (def
   ^{:doc "Schema for authentication."}
   schema
