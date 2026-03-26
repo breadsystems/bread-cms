@@ -5,6 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
@@ -48,7 +49,7 @@
         {:effects [{:effect/name ::db/transact
                     :conn conn
                     :effect/description "Redeem invitation and create user."
-                    :txs [{:invitation/code (:invitation/code invitation)
+                    :txs [{:invitation/code (sha-512 (:invitation/code invitation))
                            :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
@@ -78,7 +79,7 @@
                                :in [$ ?code]
                                :where [[?e :invitation/code ?code]
                                        (not [?e :invitation/redeemer])]}
-                             (:code params)]})
+                             (sha-512 (:code params))]})
         expansions [{:expansion/key :config
                      :expansion/name ::bread/value
                      :expansion/description "Signup config"
