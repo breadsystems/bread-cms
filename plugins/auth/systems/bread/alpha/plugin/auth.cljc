@@ -2,21 +2,18 @@
   (:require
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
     [one-time.core :as ot]
-    [one-time.uri :as oturi]
     [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss]
 
     [systems.bread.alpha.component :as component :refer [defc]]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.ring :as ring])
+    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.time :as t])
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
@@ -246,7 +243,6 @@
 (defn qr-datauri [data]
   (when-let [stream (try (qr/totp-stream data)
                          (catch Throwable _ nil))]
-    (def $stream stream)
     (->> stream
          (.toByteArray)
          (.encodeToString (Base64/getEncoder))

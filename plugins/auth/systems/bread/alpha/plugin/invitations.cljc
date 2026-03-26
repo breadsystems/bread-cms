@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.plugin.invitations
   (:require
-    [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
     [taoensso.timbre :as log]
@@ -23,8 +21,7 @@
                         max-window-minutes
                         max-total]} :config
     {:keys [id action email]} :params}
-   {:as data
-    :keys [existing-email user]
+   {:keys [existing-email]
     {invitations :invitation/_invited-by} :user}]
   (let [action (keyword action)
         total-reached? (when max-total
