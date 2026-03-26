@@ -1,21 +1,12 @@
 (ns systems.bread.alpha.plugin.signup
   (:require
     [buddy.hashers :as hashers]
-    [clojure.edn :as edn]
-    [clojure.java.io :as io]
-    [clojure.string :as string]
-    [crypto.random :as random]
-    [one-time.core :as ot]
-    [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :refer [defc] :as component]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.email :as email])
+    [systems.bread.alpha.plugin.auth :as auth])
   (:import
     [java.net URLEncoder]))
 
@@ -23,7 +14,7 @@
   [{{:auth/keys [min-password-length max-password-length]
      :signup/keys [invite-only?]} :config
     {:keys [username password password-confirmation]} :params}
-   {:as data :keys [existing-username invitation]}]
+   {:keys [existing-username invitation]}]
   (let [username? (seq username)
         password? (seq password)
         password-fields-match? (= password password-confirmation)
@@ -75,8 +66,7 @@
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
-  (let [require-mfa? (bread/config req :auth/require-mfa?)
-        invitation-query (when (:code params)
+  (let [invitation-query (when (:code params)
                            {:expansion/name ::db/query
                             :expansion/description
                             "Check for valid invite code."
@@ -141,11 +131,9 @@
    (plugin {}))
   ([{:keys [invite-only?
             invitation-expiration-seconds
-            invitations-uri
             signup-uri]
      :or {invite-only? false
           invitation-expiration-seconds (* 72 60 60)
-          invitations-uri "/~/invitations"
           signup-uri "/_/signup"}}]
    {:hooks
     {::auth/protected-route?

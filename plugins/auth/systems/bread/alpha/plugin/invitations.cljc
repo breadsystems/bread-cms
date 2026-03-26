@@ -99,8 +99,7 @@
     (i18n/t i18n [:invitations/invitation-email-body from-name site-name link])))
 
 (defmethod bread/effect ::invitation-email
-  [{:as effect :keys [code from to]}
-   {:as data :keys [config hook]}]
+  [{:keys [code from to]} {:as data :keys [config hook]}]
   (let [from (or from (:email/smtp-from-email config))
         link (invitation-link (assoc data :invitation/code code))
         message (hook ::invitation-message
@@ -114,10 +113,7 @@
        :message message}]}))
 
 (defmethod bread/effect [::invite :send] send-invitation
-  [{:keys [conn params]}
-   {:as data
-    :keys [config i18n existing-email user]
-    [valid? error-key] :validation}]
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [email (:email params)
           code (random/url-part 32)
@@ -146,10 +142,7 @@
     {:flash {:error-key error-key}}))
 
 (defmethod bread/effect [::invite :resend] resend-invitation
-  [{:keys [conn params]}
-   {:as data
-    :keys [config i18n user]
-    [valid? error-key] :validation}]
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [id (->int (:id params))
           code (random/url-part 32)
@@ -174,9 +167,8 @@
           {:flash {:error-key :email/unexpected-error}})))
     {:flash {:error-key error-key}}))
 
-(defmethod bread/effect [::invite :revoke] resend-invitation
-  [{:keys [conn params]}
-   {:as data :keys [user] [valid? error-key] :validation}]
+(defmethod bread/effect [::invite :revoke] revoke-invitation
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [id (->int (:id params))
           invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
