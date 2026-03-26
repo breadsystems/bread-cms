@@ -272,8 +272,8 @@
 
 (defc ResetPasswordPage
   [{:as data
-    :keys [config hook i18n session dir ring/anti-forgery-token-field]
-    :auth/keys [result]}]
+    :keys [auth/result config hook i18n session dir ring/anti-forgery-token-field
+           ring/request-method user validation]}]
   {:extends Page
    :doc
    "The standard Bread password reset page, designed to work with the `::auth/reset=>`
@@ -283,14 +283,21 @@
    {:config {:site/name "Site name"}
     :hook (fn hook [_ x & _] x)
     :ring/anti-forgery-token-field (constantly nil)}
+   :doc/preview? true
    :examples
    '[{:doc "Password reset"
-      :preview? true
       :description
       "A valid code must be present in the query string."
-      :args ({})}]}
-  (let [user (or (:user session) (:auth/user session))
-        error? (false? (:valid result))]
+      :args ({:validation [true nil]})}
+     {:doc "With error"
+      :args ({:ring/request-method :get
+              :validation [false :auth/invalid-reset]})}
+     {:doc "Submitted with error"
+      :args ({:ring/request-method :post
+              :validation [false :auth/passwords-must-match]})}
+     ,]}
+  (let [get? (= :get request-method)
+        [_ error-key] validation]
     {:title (:auth/reset-password i18n)
      :content
      (cond
@@ -301,10 +308,12 @@
          (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
          (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
-       ;; Forgot password
+       (and get? error-key)
+       [:main
+        (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
+        (hook ::html.reset-invalid (ErrorMessage {:message (get i18n error-key)}))]
 
-       ;; MFA
-
+       ;; Happy path for both :post and :get
        :default
        [:main
         [:form.flex.col {:name :bread-login :method :post}
@@ -312,9 +321,9 @@
          (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
          (hook ::html.enter-confirm-new-password
                [:p.instruct (:auth/enter-confirm-new-password i18n)])
-         (when error?
-           (hook ::html.invalid-password
-                 (ErrorMessage {:message (:auth/invalid-password i18n)})))
+         (when error-key
+           (hook ::html.reset-error
+                 (ErrorMessage {:message (get i18n error-key)})))
          (Field :password
                 :type :password
                 :label (:auth/password i18n)
@@ -720,6 +729,7 @@
             {:invitation/_invited-by [* :thing/created-at
                                       {:invitation/email [*]}]}]}
   {:title (:invitations/invitations i18n)
+   :head (hook ::invitations/html.head [:<>])
    :content
    [:main.flex.col
     ;; TODO
@@ -832,7 +842,7 @@
                             (:auth/max-password-length config)])])
        (Submit (:signup/create-account i18n))]])})
 
-(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
+(defmethod Section :flash [{:keys [ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
      (SuccessMessage {:message (i18n/t i18n success-key)}))
