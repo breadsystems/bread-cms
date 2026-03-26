@@ -46,7 +46,7 @@
                           [:ul
                            (map (fn [{:as child :keys [doc]}]
                                   (when doc
-                                    [:li [:a {:href (str "#" (->id doc))} doc]]))
+                                    [:li [:a {:href (str "#" (name id) "_" (->id doc))} doc]]))
                                 children)]]))
                      patterns))]]])
 
@@ -104,7 +104,7 @@
               (let [preview? (or (:doc/preview? example) preview?)
                     post-render (or (:doc/post-render example) post-render)
                     args' (cons (merge-with merge default-data (first args)) (rest args))
-                    id (->id doc)
+                    id (str (->id component-name) "_" (->id doc))
                     rendered-content (when preview?
                                        (let [data (merge data (first args'))]
                                          (component-content
