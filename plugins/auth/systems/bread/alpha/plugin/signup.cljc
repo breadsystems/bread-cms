@@ -49,7 +49,7 @@
         {:effects [{:effect/name ::db/transact
                     :conn conn
                     :effect/description "Redeem invitation and create user."
-                    :txs [{:invitation/code (sha-512 (:invitation/code invitation))
+                    :txs [{:invitation/code (:invitation/code invitation)
                            :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
