@@ -409,42 +409,37 @@
 ;; TODO ::forgot-password=>
 
 (defmethod bread/dispatch ::reset-password=>
-  [{:keys [params request-method session] :as req}]
-  (let [{:auth/keys [step]} session
-        ;; NOTE: we reuse failed-login-count for pw resets.
+  [{:keys [params request-method] :as req}]
+  (let [;; NOTE: we reuse failed-login-count for pw resets.
         max-failed-reset-count (bread/config req :auth/max-failed-login-count)
         lock-seconds (bread/config req :auth/lock-seconds)
         get? (= :get request-method)
         post? (= :post request-method)
         redirect-to (bread/config req :auth/login-uri)
-        user-keys (cond-> [:db/id
-                           :user/username
-                           :user/totp-key
-                           :user/locked-at
-                           :user/failed-login-count])
-        hashed-code (sha-512 (:code params ""))
-        user-expansion
-        {:expansion/name ::db/query
-         :expansion/key :reset/result
-         :expansion/description "Find the user matching the reset code."
-         :expansion/db (database req)
-         :expansion/args
-         [{:find [(list 'pull '?e user-keys) '.]
-           :in '[$ ?code]
-           :where '[[?code :reset/code ?e]]}
-          hashed-code]}]
+        validation-expansion {:expansion/name ::authenticate-reset
+                              :expansion/description "Authentication reset code."
+                              :expansion/key :validation
+                              ;; TODO lock-seconds ?
+                              }
+        user-expansion {:expansion/name ::db/query
+                        :expansion/key :user
+                        :expansion/description "Find the user matching the reset code."
+                        :expansion/db (database req)
+                        :expansion/args
+                        [{:find [(list 'pull '?e [:db/id
+                                                  :user/username
+                                                  :user/totp-key
+                                                  :user/locked-at
+                                                  :user/failed-login-count]) '.]
+                          :in '[$ ?code]
+                          :where '[[?code :reset/code ?e]]}
+                         (sha-512 (:code params ""))]}]
     (cond
-      (empty? (:code params))
-      [:div "NO CODE"]
+      get?
+      {:expansions [user-expansion validation-expansion]}
 
-      ;; Reset
       post?
-      {:expansions
-       [user-expansion
-        {:expansion/name ::authenticate-reset
-         :expansion/key :auth/result
-         :lock-seconds lock-seconds
-         :plaintext-password (:password params)}]
+      {:expansions [user-expansion validation-expansion]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
@@ -502,6 +497,7 @@
       :attr/label "Reset code"
       :db/doc "Short-lived code for password reset"
       :db/valueType :db.type/string
+      :db/unique :db.unique/identity
       :db/cardinality :db.cardinality/one
       :attr/sensitive? true
       :attr/migration "migration.authentication"}
