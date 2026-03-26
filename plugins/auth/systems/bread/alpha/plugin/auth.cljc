@@ -610,6 +610,21 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}
 
+     ;; Password resets
+     {:db/ident :reset/code
+      :attr/label "Reset code"
+      :db/doc "Short-lived code for password reset"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/sensitive? true
+      :attr/migration "migration.authentication"}
+     {:db/ident :reset/user
+      :attr/label "Reset user"
+      :db/doc "The user resetting their password"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+
      ;; Sessions
      {:db/ident :user/sessions
       :attr/label "User sessions"
