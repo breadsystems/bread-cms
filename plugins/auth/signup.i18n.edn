@@ -5,6 +5,7 @@
           :create-account "Create account"
           :email-exists "Email already exists."
           :error "Account locked"
+          :invitation-invalid "This invitation is invalid or has already been redeemed."
           :please-choose-username-password "Please choose a username and password."
           :signup "Signup"
           :site-invite-only "This site is invite-only."

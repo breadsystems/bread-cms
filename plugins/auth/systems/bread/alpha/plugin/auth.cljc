@@ -2,21 +2,18 @@
   (:require
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
     [one-time.core :as ot]
-    [one-time.uri :as oturi]
     [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss]
 
     [systems.bread.alpha.component :as component :refer [defc]]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.ring :as ring])
+    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.time :as t])
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
@@ -246,7 +243,6 @@
 (defn qr-datauri [data]
   (when-let [stream (try (qr/totp-stream data)
                          (catch Throwable _ nil))]
-    (def $stream stream)
     (->> stream
          (.toByteArray)
          (.encodeToString (Base64/getEncoder))
@@ -255,7 +251,9 @@
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
-        protected? (bread/hook req ::protected-route? (not= login-uri uri))
+        reset-uri (bread/config req :auth/reset-password-uri)
+        exempt? (contains? #{login-uri reset-uri} uri)
+        protected? (bread/hook req ::protected-route? (not exempt?))
         anonymous? (empty? (:user session))
         next-param (name (bread/config req :auth/next-param))
         next-uri (URLEncoder/encode (if (seq query-string)
@@ -612,6 +610,21 @@
       :db/cardinality :db.cardinality/one
       :attr/migration "migration.authentication"}
 
+     ;; Password resets
+     {:db/ident :reset/code
+      :attr/label "Reset code"
+      :db/doc "Short-lived code for password reset"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/sensitive? true
+      :attr/migration "migration.authentication"}
+     {:db/ident :reset/user
+      :attr/label "Reset user"
+      :db/doc "The user resetting their password"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+
      ;; Sessions
      {:db/ident :user/sessions
       :attr/label "User sessions"
@@ -642,7 +655,7 @@
   ([]
    (plugin {}))
   ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
-            login-uri protected-prefixes require-mfa? mfa-issuer
+            login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
             store-session-ip? store-session-user-agent?]
      :or {min-password-length 12
@@ -652,6 +665,7 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
+          reset-password-uri "/reset"
           generous-totp-window? true
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
@@ -681,17 +695,18 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for auth into global i18n strings."
-       :strings (edn/read-string (slurp (io/resource "auth.i18n.edn")))}]}
+       :strings (i18n/read-strings "auth.i18n.edn")}]}
     :config
-    {:auth/require-mfa? require-mfa?
-     :auth/mfa-issuer mfa-issuer
-     :auth/generous-totp-window? generous-totp-window?
-     :auth/hash-algorithm hash-algorithm
-     :auth/max-failed-login-count max-failed-login-count
-     :auth/min-password-length min-password-length
-     :auth/max-password-length max-password-length
-     :auth/lock-seconds lock-seconds
-     :auth/next-param next-param
-     :auth/login-uri login-uri
-     :auth/store-session-ip? store-session-ip?
-     :auth/store-session-user-agent? store-session-user-agent?}}))
+    #:auth{:require-mfa? require-mfa?
+           :mfa-issuer mfa-issuer
+           :generous-totp-window? generous-totp-window?
+           :hash-algorithm hash-algorithm
+           :max-failed-login-count max-failed-login-count
+           :min-password-length min-password-length
+           :max-password-length max-password-length
+           :lock-seconds lock-seconds
+           :next-param next-param
+           :login-uri login-uri
+           :reset-password-uri reset-password-uri
+           :store-session-ip? store-session-ip?
+           :store-session-user-agent? store-session-user-agent?}}))

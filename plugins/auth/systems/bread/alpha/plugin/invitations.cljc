@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.plugin.invitations
   (:require
-    [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
     [taoensso.timbre :as log]
@@ -9,6 +7,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
@@ -23,8 +22,7 @@
                         max-window-minutes
                         max-total]} :config
     {:keys [id action email]} :params}
-   {:as data
-    :keys [existing-email user]
+   {:keys [existing-email]
     {invitations :invitation/_invited-by} :user}]
   (let [action (keyword action)
         total-reached? (when max-total
@@ -102,8 +100,7 @@
     (i18n/t i18n [:invitations/invitation-email-body from-name site-name link])))
 
 (defmethod bread/effect ::invitation-email
-  [{:as effect :keys [code from to]}
-   {:as data :keys [config hook]}]
+  [{:keys [code from to]} {:as data :keys [config hook]}]
   (let [from (or from (:email/smtp-from-email config))
         link (invitation-link (assoc data :invitation/code code))
         message (hook ::invitation-message
@@ -117,15 +114,12 @@
        :message message}]}))
 
 (defmethod bread/effect [::invite :send] send-invitation
-  [{:keys [conn params]}
-   {:as data
-    :keys [config i18n existing-email user]
-    [valid? error-key] :validation}]
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [email (:email params)
           code (random/url-part 32)
           now (t/now)
-          invitation-tx {:invitation/code code
+          invitation-tx {:invitation/code (sha-512 code)
                          :invitation/invited-by (:db/id user)
                          :invitation/email {:email/address email
                                             :thing/created-at now
@@ -149,16 +143,13 @@
     {:flash {:error-key error-key}}))
 
 (defmethod bread/effect [::invite :resend] resend-invitation
-  [{:keys [conn params]}
-   {:as data
-    :keys [config i18n user]
-    [valid? error-key] :validation}]
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [id (->int (:id params))
           code (random/url-part 32)
           now (t/now)
           invitation-tx {:db/id id
-                         :invitation/code code
+                         :invitation/code (sha-512 code)
                          :thing/updated-at now}
           invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
           to (:email/address (:invitation/email invitation))
@@ -177,9 +168,8 @@
           {:flash {:error-key :email/unexpected-error}})))
     {:flash {:error-key error-key}}))
 
-(defmethod bread/effect [::invite :revoke] resend-invitation
-  [{:keys [conn params]}
-   {:as data :keys [user] [valid? error-key] :validation}]
+(defmethod bread/effect [::invite :revoke] revoke-invitation
+  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [id (->int (:id params))
           invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
@@ -295,7 +285,7 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for signup into global strings."
-       :strings (edn/read-string (slurp (io/resource "invitations.i18n.edn")))}]}
+       :strings (i18n/read-strings "invitations.i18n.edn")}]}
     :config
     #:invitations{:invitations-uri invitations-uri
                   :max-window-count max-window-count

@@ -19,3 +19,10 @@
     font-size: 1.5rem;
   }
 }
+
+.pattern-preview {
+  border: var(--stroke-width) var(--stroke-style-emphasis) var(--color-stroke-tertiary);
+}
+:is([data-component=SuccessMessage], [data-component=ErrorMessage]) .pattern-preview {
+  border: none;
+}

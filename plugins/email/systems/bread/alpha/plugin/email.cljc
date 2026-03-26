@@ -42,7 +42,7 @@
 
 (defmethod bread/effect ::send! send-smtp!
   [{:as effect :keys [message]}
-   {:keys [hook] {:as config :email/keys [dry-run? mailer]} :config}]
+   {:keys [hook] {:email/keys [dry-run? mailer]} :config}]
   (let [send? (and (not dry-run?) (not (:dry-run? effect)))
         message (hook ::message message)]
     (if send?
@@ -314,5 +314,5 @@
      {::i18n/global-strings
       [{:action/name ::i18n/merge-global-strings
         :action/description "Merge strings for email page into global i18n strings."
-        :strings (edn/read-string (slurp (io/resource "email.i18n.edn")))}]}
+        :strings (i18n/read-strings "email.i18n.edn")}]}
      :config (assoc config :email/mailer mailer)}))

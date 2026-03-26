@@ -1,5 +1,7 @@
 (ns systems.bread.alpha.cms.theme.rise
   (:require
+    [clojure.java.io :as io]
+
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.i18n :as i18n]
@@ -106,20 +108,22 @@
      [:body
       content]]))
 
-(defc SuccessMessage [message]
+(defc SuccessMessage [{:keys [message]}]
   {:doc "A success message"
    :description
    "Used to indicate success of some action, typically a side-effect, such
    as an account update."
+   :doc/preview? true
    :examples
    '[{:args ({:message "Update successful!"})}]}
   [:.success [:p message]])
 
-(defc ErrorMessage [message]
+(defc ErrorMessage [{:keys [message]}]
   {:doc "An error message"
    :description
    "Used to indicate an error completing some action, typically a side-effect, such
    as an account update."
+   :doc/preview? true
    :examples
    '[{:args ({:message "Something bad happened!"})}]}
   [:.error [:p message]])
@@ -152,7 +156,7 @@
         user (or (:user session) (:auth/user session))
         step (:auth/step session)
         error? (false? (:valid result))]
-    {:title "Login"
+    {:title (:auth/login i18n)
      :head [:<> [:style
                  "
                  .totp-key {
@@ -191,7 +195,8 @@
             [:button {:type :submit :name :submit :value "verify"}
              (:auth/verify i18n)]]
            (when error?
-             (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]])
+             (hook ::html.invalid-code
+                   (ErrorMessage {:message (:auth/invalid-totp i18n)})))]])
 
        (= :two-factor step)
        [:main
@@ -205,7 +210,8 @@
           [:button {:type :submit :name :submit :value "verify"}
            (:auth/verify i18n)]]
          (when error?
-           (hook ::html.invalid-code (ErrorMessage (:auth/invalid-totp i18n))))]]
+           (hook ::html.invalid-code
+                 (ErrorMessage {:message (:auth/invalid-totp i18n)})))]]
 
        :default
        [:main
@@ -218,8 +224,64 @@
          (Field :password :type :password :label (:auth/password i18n))
          (when error?
            (hook ::html.invalid-login
-                 (ErrorMessage (:auth/invalid-username-password i18n))))
+                 (ErrorMessage {:message (:auth/invalid-username-password i18n)})))
          (Submit (:auth/login i18n))]])}))
+
+(defc ResetPasswordPage
+  [{:as data
+    :keys [config hook i18n session dir totp ring/anti-forgery-token-field]
+    :auth/keys [result]}]
+  {:extends Page
+   :doc
+   "The standard Bread password reset page, designed to work with the `::auth/reset=>`
+   dispatcher. You typically won't need to call this component from your code,
+   except to reference it from your route if implementing custom routing."
+   :doc/default-data
+   {:config {:site/name "Site name"}
+    :hook (fn hook [_ x & _] x)
+    :ring/anti-forgery-token-field (constantly nil)}
+   :examples
+   '[{:doc "Password reset"
+      :preview? true
+      :description
+      "A valid code must be present in the query string."
+      :args ({})}]}
+  (let [{:keys [totp-key issuer]} totp
+        user (or (:user session) (:auth/user session))
+        error? (false? (:valid result))]
+    {:title (:auth/reset-password i18n)
+     :content
+     (cond
+       (:user/locked-at user)
+       [:main
+        [:form.flex.col
+         (anti-forgery-token-field)
+         (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
+         (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
+
+       ;; Forgot password
+
+       ;; MFA
+
+       :default
+       [:main
+        [:form.flex.col {:name :bread-login :method :post}
+         (anti-forgery-token-field)
+         (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
+         (hook ::html.enter-confirm-new-password
+               [:p.instruct (:auth/enter-confirm-new-password i18n)])
+         (when error?
+           (hook ::html.invalid-password
+                 (ErrorMessage {:message (:auth/invalid-password i18n)})))
+         (Field :password
+                :type :password
+                :label (:auth/password i18n)
+                :input-attrs {:maxlength (:auth/max-password-length config)})
+         (Field :password-confirmation
+                :type :password
+                :label (:auth/password-confirmation i18n)
+                :input-attrs {:maxlength (:auth/max-password-length config)})
+         (Submit (:auth/reset i18n))]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
   {:doc
@@ -285,7 +347,8 @@
    :doc/default-data {:user {:user/username "username"}
                       :config {:account/html.account.sections
                                [::account/account-form
-                                [:section "Login sessions section..."]]}}
+                                [:section "Login sessions section..."]]}
+                      :hook (fn hook [_ x & _] x)}
    :examples
    '[{:doc "Customizing account page sections"
       :description
@@ -591,15 +654,16 @@
                :label (:auth/password-confirmation i18n)
                :input-attrs {:maxlength (:auth/max-password-length config)})
         (when error-key
-          (hook ::html.invalid-signup (ErrorMessage (i18n/t i18n error-key))))
+          (hook ::html.invalid-signup
+                (ErrorMessage {:message (i18n/t i18n error-key)})))
         (Submit (:signup/create-account i18n))]])]])
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
-     (SuccessMessage (i18n/t i18n success-key)))
+     (SuccessMessage {:message (i18n/t i18n success-key)}))
    (when-let [error-key (:error-key flash)]
-     (ErrorMessage (i18n/t i18n error-key)))])
+     (ErrorMessage {:message (i18n/t i18n error-key)}))])
 
 (defmethod Section :save [{:keys [i18n]} _]
   (Submit (:account/save i18n) :name :action :value "update"))
@@ -617,7 +681,7 @@
      "This technique is powerful, but if your needs are more complex, look into
      creating your own custom theme with its own pattern library."]]})
 
-(defc PatternLibrary [{:as data :keys [hook]}]
+(defc PatternLibrary [{:as data :keys [hook i18n]}]
   {:extends Page}
   (let [patterns [(IntroSection data)
                   (HowToSection data)
@@ -626,19 +690,22 @@
                   ErrorMessage
                   Page
                   LoginPage
+                  ResetPasswordPage
                   AccountNav
                   SettingsPage
                   AccountPage
                   (CustomizingSection data)]]
     {:title "RISE"
-     :head (hook ::theme/html.head.pattern-library
+     :head (hook ::theme/html.pattern-library.head
                  [:<>
-                  [:script {:src "/rise/js/patterns.js"}]
-                  [:link {:rel :stylesheet :href "/rise/css/patterns.css"}]])
+                  [:link {:rel :stylesheet :href "/rise/patterns/highlight/styles/atom-one-dark.min.css"}]
+                  [:script {:src "/rise/patterns/highlight/highlight.min.js"}]
+                  [:script {:src "/rise/patterns/patterns.js"}]
+                  [:link {:rel :stylesheet :href "/rise/patterns/patterns.css"}]])
      :content
      [:<>
       [:div#theme-toggle-container
        [:button#toggle-theme {:style {:position :relative}} "light/dark"]]
       (theme/TableOfContents {:patterns patterns})
       [:main.gap-spacious
-       (map theme/Pattern patterns)]]}))
+       (map (partial theme/Pattern {:i18n i18n}) patterns)]]}))

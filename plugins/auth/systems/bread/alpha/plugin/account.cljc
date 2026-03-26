@@ -286,7 +286,7 @@
     [;; TODO timezone strs...?
      {:action/name ::i18n/merge-global-strings
       :action/description "Merge strings for account page into global i18n strings."
-      :strings (edn/read-string (slurp (io/resource "account.i18n.edn")))}]}
+      :strings (i18n/read-strings "account.i18n.edn")}]}
    :config
    {:account/account-uri account-uri
     :account/timezone-options timezone-options
