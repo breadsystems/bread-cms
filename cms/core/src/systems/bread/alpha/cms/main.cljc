@@ -107,6 +107,14 @@
          :dispatcher/type ::marx/media.library=>
          :dispatcher/component #'marx/MediaLibrary}]]]
      ["_"
+      ["/forgot"
+       {:name :forgot-password
+        :dispatcher/type ::auth/forgot-password=>
+        :dispatcher/component #'rise/ForgotPasswordPage}]
+      ["/reset"
+       {:name :reset-password
+        :dispatcher/type ::auth/reset-password=>
+        :dispatcher/component #'rise/ResetPasswordPage}]
       ["/confirm-email"
        {:name :confirm-email
         :dispatcher/type ::email/confirm=>
