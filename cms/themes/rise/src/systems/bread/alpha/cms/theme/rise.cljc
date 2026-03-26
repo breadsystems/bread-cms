@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.cms.theme.rise
   (:require
-    [clojure.java.io :as io]
     [clojure.string :as string]
 
     [systems.bread.alpha.cms.theme :as theme]
@@ -230,6 +229,46 @@
            (hook ::html.invalid-login
                  (ErrorMessage {:message (:auth/invalid-username-password i18n)})))
          (Submit (:auth/login i18n))]])}))
+
+(defc ForgotPasswordPage
+  [{:keys [config hook i18n ring/anti-forgery-token-field ring/request-method]}]
+  {:extends Page
+   :doc
+   "The standard Bread forgot password page, designed to work with the
+   `::auth/forgot-password=>` dispatcher.
+   dispatcher. You typically won't need to call this component from your code,
+   except to reference it from your route if implementing custom routing."
+   :doc/preview? true
+   :doc/default-data
+   {:config {:site/name "Site name"}
+    :hook (fn hook [_ x & _] x)
+    :ring/anti-forgery-token-field (constantly nil)}
+   :examples
+   '[{:doc "Forgot password"
+      :description "Initial form"
+      :args ({:ring/request-method :get})}
+     {:doc "Submitted"
+      :description "Submitted form"
+      :args ({:ring/request-method :post})}
+     ,]}
+  (let [post? (= :post request-method)]
+    {:title (:auth/forgot-password i18n)
+     :content
+     (if post?
+       [:main
+        (hook ::html.forgot-heading [:h1 (:auth/forgot-password i18n)])
+        (hook ::html.forgot-acknowledgement
+              [:p.instruct (:auth/reset-email-sent i18n)])]
+       [:main
+        [:form.flex.col {:name :bread-login :method :post}
+         (anti-forgery-token-field)
+         (hook ::html.forgot-heading [:h1 (:auth/forgot-password i18n)])
+         (hook ::html.enter-confirm-new-password
+               [:p.instruct (:auth/enter-username i18n)])
+         (Field :username
+                :label (:auth/username i18n)
+                :input-attrs {:maxlength (:auth/max-password-length config)})
+         (Submit (:auth/reset-password i18n))]])}))
 
 (defc ResetPasswordPage
   [{:as data
@@ -825,6 +864,7 @@
                   ErrorMessage
                   Page
                   LoginPage
+                  ForgotPasswordPage
                   ResetPasswordPage
                   AccountNav
                   SettingsPage
