@@ -127,7 +127,8 @@
         (assoc res
                :flash (or flash (:flash res))
                :status (if permanent? 301 302)
-               :headers headers))
+               :headers headers
+               :body to))
       res)))
 
 (defmethod bread/action ::effect-redirect effect->redirect

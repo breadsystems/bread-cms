@@ -112,11 +112,16 @@
     (= expected-res (-> res
                         (update ::bread/hooks merge {::bread/render [action]})
                         (bread/hook ::bread/render)
-                        (select-keys [:status :headers :flash :session])))
+                        (select-keys [:status :headers :flash :session :body])))
 
     {:status 302
      :headers {"Location" "/destination"}
-     :flash nil}
+     :flash nil
+     ;; NOTE: security-wise, this bit is load-bearing as it wipes out any body that may
+     ;; have been set with sensitive data. As always, if your domain is vulnerable to
+     ;; timing attacks, you should always validate BEFORE querying any sensitive data.
+     ;; This is, at time of writing, a shortcoming of Bread.
+     :body "/destination"}
     {}
     {:action/name ::ring/redirect
      :to "/destination"}
@@ -126,7 +131,8 @@
      :headers {"X-Marco" :polo
                "Location" "/destination"}
      :session {:user {:db/id 123}}
-     :flash nil}
+     :flash nil
+     :body "/destination"}
     {:session {:user {:db/id 123}}
      :headers {"X-Marco" :polo}}
     {:action/name ::ring/redirect
@@ -136,7 +142,8 @@
      :headers {"Content-Type" "text/html"
                "Location" "/somewhere"}
      :session {:user {:user/username "bob"}}
-     :flash nil}
+     :flash nil
+     :body "/somewhere"}
     {:status 404
      :session {:user {:user/username "bob"}}
      :headers {"Content-Type" "text/html"}}
@@ -162,11 +169,13 @@
     {:action/name ::ring/redirect
      :to "http://evil.com/somewhere"}
 
+    ;; Explicitly allowing with ::ring/allow-redirect?
     {:status 302
      :headers {"Content-Type" "text/html"
                "Location" "http://careful.xxx/sus"}
      :session {:user {:user/username "bob"}}
-     :flash nil}
+     :flash nil
+     :body "http://careful.xxx/sus"}
     {:status 200
      :session {:user {:user/username "bob"}}
      :headers {"Content-Type" "text/html"}
@@ -178,7 +187,8 @@
 
     {:status 301
      :headers {"Location" "/permanent"}
-     :flash nil}
+     :flash nil
+     :body "/permanent"}
     {:status 200}
     {:action/name ::ring/redirect
      :permanent? true
@@ -187,7 +197,8 @@
     ;; Explicit permanent? false case.
     {:status 302
      :headers {"Location" "/temporary"}
-     :flash nil}
+     :flash nil
+     :body "/temporary"}
     {:status 200}
     {:action/name ::ring/redirect
      :permanent? false
@@ -196,7 +207,8 @@
     ;; Support flash.
     {:status 302
      :headers {"Location" "/flash"}
-     :flash {:a :b}}
+     :flash {:a :b}
+     :body "/flash"}
     {:status 200}
     {:action/name ::ring/redirect
      :flash {:a :b}
@@ -205,7 +217,8 @@
     ;; An explicit :flash will overwrite any previous one.
     {:status 302
      :headers {"Location" "/flash"}
-     :flash {:a :b}}
+     :flash {:a :b}
+     :body "/flash"}
     {:status 200
      :flash {:previous :data}}
     {:action/name ::ring/redirect

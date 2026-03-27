@@ -78,6 +78,7 @@
                                                 {:invitation/email [*]}]) .]
                                :in [$ ?code]
                                :where [[?e :invitation/code ?code]
+                                       ;; TODO expire code
                                        (not [?e :invitation/redeemer])]}
                              (sha-512 (:code params))]})
         expansions [{:expansion/key :config
