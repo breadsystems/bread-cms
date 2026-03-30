@@ -89,6 +89,17 @@
   (let [renames (into {} (map (juxt identity (comp (partial keyword n) name)) (keys m)))]
     (clojure.set/rename-keys m renames)))
 
+(defmethod bread/action ::anti-forgery
+  [{:as req :keys [anti-forgery-token]} _ _]
+  (-> req
+      (assoc-in [::bread/data :ring/anti-forgery-token] anti-forgery-token)
+      (assoc-in [::bread/data :ring/anti-forgery-token-field]
+                (fn anti-forgery-token-field []
+                  (when anti-forgery-token
+                    [:input {:type :hidden
+                             :name :__anti-forgery-token
+                             :value anti-forgery-token}])))))
+
 (defmethod bread/action ::request-data
   [req _ _]
   (let [req-keys (bread/hook req ::request-keys [:content-length
@@ -127,7 +138,8 @@
         (assoc res
                :flash (or flash (:flash res))
                :status (if permanent? 301 302)
-               :headers headers))
+               :headers headers
+               :body to))
       res)))
 
 (defmethod bread/action ::effect-redirect effect->redirect

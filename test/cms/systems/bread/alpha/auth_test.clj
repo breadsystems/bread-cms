@@ -21,7 +21,7 @@
   (:import
     [java.util Date]))
 
-(timbre/merge-config! {:min-level :info})
+(timbre/merge-config! {:min-level :warn})
 
 (def SECRET "keep it secret, keep it safe")
 
@@ -63,7 +63,17 @@
   [req _ _]
   (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
 
-(defn- config->plugins [auth-config]
+(defmethod bread/action ::body
+  [res {:keys [body]} _]
+  (if (:body res) res (assoc res :body body)))
+
+(defmethod bread/action ::debug-expand
+  [res _ _]
+  (when (= :special (bread/config res :auth/next-param))
+    (prn 'body 'EXPAND (:body res)))
+  res)
+
+(defn- config->plugins [{:as auth-config :keys [test/body]}]
   (conj
     (defaults/plugins {:db config
                        :routes false})
@@ -71,16 +81,25 @@
     {:hooks
      {::bread/route
       [{:action/name ::route
-        :action/description "Hard-code the dispatcher."}]}}
+        :action/description "Hard-code the dispatcher."}]
+      ::bread/expand
+      [(when body
+         {:action/name ::body
+          :action/description
+          "Write a sensitive :body that should get overwritten by auth redirect."
+          :body body})]}}
     (auth/plugin auth-config)))
 
-(defn- ->auth-data [{::bread/keys [data] :keys [headers status session]}]
+(defn- ->auth-data [{:keys [::bread/data headers status session body]}]
   {::bread/data (select-keys data [:session :auth/result :totp])
    :session session
    :headers headers
-   :status status})
+   :status status
+   :body body})
 
-(deftest test-authentication-flow
+(deftest
+  ^:bread/auth
+  test-authentication-flow
   (are
     [expected auth-config req]
     (= expected (let [handler (-> auth-config config->plugins plugins->loaded bread/handler)
@@ -94,7 +113,8 @@
      :headers {"content-type" "text/html"
                "Location" "/login?next=%2F"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body "/login?next=%2F"}
     nil
     {:request-method :get
      :uri "/"}
@@ -104,8 +124,10 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?next=%2F"}
      :session nil
-     ::bread/data {:session nil}}
-    {:login-uri "/custom"}
+     ::bread/data {:session nil}
+     :body "/custom?next=%2F"}
+    {:login-uri "/custom"
+     :test/body [:p "SENSITIVE"]}
     {:request-method :get
      :uri "/"}
 
@@ -114,8 +136,10 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
-    {:protected-prefixes #{"/protected"}}
+     ::bread/data {:session nil}
+     :body [:p "response body"]}
+    {:protected-prefixes #{"/protected"}
+     :test/body [:p "response body"]}
     {:request-method :get
      :uri "/not-matching"}
 
@@ -124,9 +148,11 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body [:p "response body"]}
     {:protected-prefixes #{"/protected"}
-     :login-uri "/custom"}
+     :login-uri "/custom"
+     :test/body  [:p "response body"]}
     {:request-method :get
      :uri "/"}
 
@@ -136,9 +162,11 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?next=%2Fprotected"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body "/custom?next=%2Fprotected"}
     {:protected-prefixes #{"/protected"}
-     :login-uri "/custom"}
+     :login-uri "/custom"
+     :test/body  [:p "response body"]}
     {:request-method :get
      :uri "/protected"}
 
@@ -147,9 +175,11 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body [:p "login page"]}
     {:protected-prefixes #{"/protected"}
-     :login-uri "/protected/login"}
+     :login-uri "/protected/login"
+     :test/body [:p "login page"]}
     {:request-method :get
      :uri "/protected/login"}
 
@@ -158,9 +188,11 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body [:p "reset page"]}
     {:protected-prefixes #{"/protected"}
-     :reset-password-uri "/protected/reset"}
+     :reset-password-uri "/protected/reset"
+     :test/body [:p "reset page"]}
     {:request-method :get
      :uri "/protected/reset"}
 
@@ -171,10 +203,12 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?special=%2Fprotected"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body "/custom?special=%2Fprotected"}
     {:protected-prefixes #{"/protected"}
      :login-uri "/custom"
-     :next-param :special}
+     :next-param :special
+     :test/body [:p "protected page"]}
     {:request-method :get
      :uri "/protected"}
 
@@ -185,10 +219,12 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?special=%2Fprotected%3Fasdf%3Dqwerty%26a%3D123"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body "/custom?special=%2Fprotected%3Fasdf%3Dqwerty%26a%3D123"}
     {:protected-prefixes #{"/protected"}
      :login-uri "/custom"
-     :next-param :special}
+     :next-param :special
+     :test/body [:p "reset page"]}
     {:request-method :get
      :query-string "asdf=qwerty&a=123"
      :uri "/protected"}
@@ -200,10 +236,13 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?special=%2Fprotected%3Fmatz%3D%E3%81%BE%E3%81%A4%E3%82%82%E3%81%A8%E3%82%86%E3%81%8D%E3%81%B2%E3%82%8D"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     ;; TODO
+     :body "/custom?special=%2Fprotected%3Fmatz%3D%E3%81%BE%E3%81%A4%E3%82%82%E3%81%A8%E3%82%86%E3%81%8D%E3%81%B2%E3%82%8D"}
     {:protected-prefixes #{"/protected"}
      :login-uri "/custom"
-     :next-param :special}
+     :next-param :special
+     :test/body [:p "protected page"]}
     {:request-method :get
      :query-string "matz=まつもとゆきひろ"
      :uri "/protected"}
@@ -214,9 +253,11 @@
      :headers {"content-type" "text/html"
                "Location" "/custom?next=%2Fprotected%2Fsub-route"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body "/custom?next=%2Fprotected%2Fsub-route"}
     {:protected-prefixes #{"/protected"}
-     :login-uri "/custom"}
+     :login-uri "/custom"
+     :test/body [:p "protected page"]}
     {:request-method :get
      :uri "/protected/sub-route"}
 
@@ -224,8 +265,9 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
-    nil
+     ::bread/data {:session nil}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :get
      :uri "/login"}
 
@@ -233,7 +275,8 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
+     ::bread/data {:session nil}
+     :body nil}
     {}
     {:request-method :get
      :uri "/login"}
@@ -244,8 +287,10 @@
     {:status 200
      :headers {"content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
-    {:login-uri "/custom"}
+     ::bread/data {:session nil}
+     :body [:p "login page"]}
+    {:login-uri "/custom"
+     :test/body [:p "login page"]}
     {:request-method :get
      :uri "/custom"}
 
@@ -254,8 +299,9 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:valid false :user nil}}}
-    {}
+                   :auth/result {:valid false :user nil}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :uri "/login"}
 
@@ -264,8 +310,9 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:valid false :user nil}}}
-    {}
+                   :auth/result {:valid false :user nil}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "no one"}
      :uri "/login"}
@@ -275,8 +322,9 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:valid false :user nil}}}
-    {}
+                   :auth/result {:valid false :user nil}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "no one" :password nil}
      :uri "/login"}
@@ -286,8 +334,9 @@
      :headers {"content-type" "text/html"}
      :session nil
      ::bread/data {:session nil
-                   :auth/result {:valid false :user nil}}}
-    {}
+                   :auth/result {:valid false :user nil}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "no one" :password "nothing"}
      :uri "/login"}
@@ -297,8 +346,9 @@
      :headers {"content-type" "text/html"}
      :session {:auth/user angela}
      ::bread/data {:session {:auth/user angela}
-                   :auth/result {:update false :valid false :user angela}}}
-    {}
+                   :auth/result {:update false :valid false :user angela}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "angela" :password "wrongpassword"}
      :uri "/login"}
@@ -311,8 +361,9 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user angela
                              :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user angela}}}
-    {}
+                   :auth/result {:update false :valid true :user angela}}
+     :body "/"}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "angela" :password "abolition4lyfe"}
      :uri "/login"}
@@ -325,8 +376,9 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user bobby
                              :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user bobby}}}
-    {}
+                   :auth/result {:update false :valid true :user bobby}}
+     :body "/"}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "bobby" :password "pantherz"}
      :uri "/login"}
@@ -340,8 +392,9 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user bobby
                              :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user bobby}}}
-    {}
+                   :auth/result {:update false :valid true :user bobby}}
+     :body "/successful-login"}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :params {:username "bobby" :password "pantherz" :next "/successful-login"}
      :uri "/login"}
@@ -355,8 +408,11 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user bobby
                              :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user bobby}}}
-    {:next-param :special}
+                   :auth/result {:update false :valid true :user bobby}}
+     ;; User is authorized; renders the body but still redirects.
+     :body "/successful-login-next"}
+    {:next-param :special
+     :test/body [:p "protected page"]}
     {:request-method :post
      :params {:username "bobby" :password "pantherz" :special "/successful-login-next"}
      :uri "/login"}
@@ -369,8 +425,10 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user crenshaw
                              :auth/step :logged-in}
-                   :auth/result {:update false :valid true :user crenshaw}}}
-    {:auth/hash-algorithm :argon2id}
+                   :auth/result {:update false :valid true :user crenshaw}}
+     :body "/"}
+    {:auth/hash-algorithm :argon2id
+     :test/body [:p "login page"]}
     {:request-method :post
      :params {:username "crenshaw" :password "intersectionz"}
      :uri "/login"}
@@ -380,8 +438,9 @@
      :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user crenshaw}
-     ::bread/data {:session {:user crenshaw}}}
-    {}
+     ::bread/data {:session {:user crenshaw}}
+     :body "/"}
+    {:test/body [:p "login page"]}
     {:request-method :get
      :session {:user crenshaw}
      :uri "/login"}
@@ -391,8 +450,9 @@
      :headers {"Location" "/"
                "content-type" "text/html"}
      :session {:user crenshaw}
-     ::bread/data {:session {:user crenshaw}}}
-    {}
+     ::bread/data {:session {:user crenshaw}}
+     :body "/"}
+    {:test/body [:p "login page"]}
     {:request-method :get
      :session {:user crenshaw}
      :uri "/login"}
@@ -402,8 +462,9 @@
      :headers {"Location" "/login"
                "content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
-    {}
+     ::bread/data {:session nil}
+     :body "/login"}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:user douglass
                :auth/step :logged-in}
@@ -415,8 +476,10 @@
      :headers {"Location" "/custom"
                "content-type" "text/html"}
      :session nil
-     ::bread/data {:session nil}}
-    {:login-uri "/custom"}
+     ::bread/data {:session nil}
+     :body "/custom"}
+    {:login-uri "/custom"
+     :test/body [:p "protected page"]}
     {:request-method :post
      :session {:user douglass
                :auth/step :logged-in}
@@ -432,7 +495,9 @@
   ([^long code ^String secret _]
    (and (= 123456 code) (= SECRET secret))))
 
-(deftest test-authentication-flow-with-mfa
+(deftest
+  ^:bread/auth ^:bread/auth.mfa
+  test-authentication-flow-with-mfa
   (are
     [expected auth-config req]
     (= expected (with-redefs [ot/is-valid-totp-token? valid-code?
@@ -452,8 +517,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:update false :valid true :user douglass}}}
-    {}
+                   :auth/result {:update false :valid true :user douglass}}
+     :body "/login"}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :params {:username "douglass" :password "liber4tion"}
      :uri "/login"}
@@ -467,8 +533,10 @@
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
                    :auth/result {:update false
                                  :valid true
-                                 :user crenshaw}}}
-    {:require-mfa? true}
+                                 :user crenshaw}}
+     :body "/login?next=%2Fsetup-mfa"}
+    {:require-mfa? true
+     :test/body [:p "protected page"]}
     {:request-method :post
      :params {:username "crenshaw" :password "intersectionz" :next "/setup-mfa"}
      :uri "/login"}
@@ -480,8 +548,10 @@
      :session {:auth/user crenshaw
                :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
-                   :totp {:totp-key SECRET :issuer "example.com"}}}
-    {:require-mfa? true}
+                   :totp {:totp-key SECRET :issuer "example.com"}}
+     :body [:p "login page"]}
+    {:require-mfa? true
+     :test/body [:p "login page"]}
     {:request-method :get
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :uri "/login"
@@ -493,8 +563,11 @@
      :session {:auth/user crenshaw
                :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
-                   :totp {:totp-key SECRET :issuer "BREAD"}}}
-    {:require-mfa? true :mfa-issuer "BREAD"}
+                   :totp {:totp-key SECRET :issuer "BREAD"}}
+     :body [:p "TOTP page"]}
+    {:require-mfa? true
+     :mfa-issuer "BREAD"
+     :test/body [:p "TOTP page"]}
     {:request-method :get
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :uri "/login"
@@ -509,8 +582,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:update false :valid true :user douglass}}}
-    {}
+                   :auth/result {:update false :valid true :user douglass}}
+     :body "/login?next=%2Fdest2fa"}
+    {:test/body [:p "2FA page"]}
     {:request-method :post
      :params {:username "douglass" :password "liber4tion" :next "/dest2fa"}
      :uri "/login"}
@@ -524,14 +598,16 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:update false :valid true :user douglass}}}
-    {:next-param :special}
+                   :auth/result {:update false :valid true :user douglass}}
+     :body "/login?special=%2Fdest2fa"}
+    {:next-param :special
+     :test/body [:p "2FA page"]}
     {:request-method :post
      :params {:username "douglass" :password "liber4tion" :special "/dest2fa"}
      :uri "/login"}
 
     ;; Successful username/password login requiring 2FA step, custom next
-    ;; param present. Should not redirect or set session user yet!
+    ;; param present. Should redirect but should not set session user yet!
     {:status 302
      :headers {"Location" "/login?special=%2Fdest2fa%3Fquery%3Dstring%26a%3D1"
                "content-type" "text/html"}
@@ -539,8 +615,10 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:update false :valid true :user douglass}}}
-    {:next-param :special}
+                   :auth/result {:update false :valid true :user douglass}}
+     :body "/login?special=%2Fdest2fa%3Fquery%3Dstring%26a%3D1"}
+    {:next-param :special
+     :test/body [:p "login page"]}
     {:request-method :post
      :params {:username "douglass"
               :password "liber4tion"
@@ -554,8 +632,11 @@
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
                    :auth/result {:valid false :user crenshaw}
-                   :totp {:totp-key SECRET :issuer "example.com"}}}
-    {:require-mfa? true :login-uri "/setup-two-factor"}
+                   :totp {:totp-key SECRET :issuer "example.com"}}
+     :body [:p "TOTP page"]}
+    {:require-mfa? true
+     :login-uri "/setup-two-factor"
+     :test/body [:p "TOTP page"]}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :params {:totp-key SECRET :two-factor-code ""}
@@ -569,8 +650,11 @@
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      ::bread/data {:session {:auth/user crenshaw :auth/step :setup-two-factor}
                    :auth/result {:valid false :user crenshaw}
-                   :totp {:totp-key SECRET :issuer "example.com"}}}
-    {:require-mfa? true :login-uri "/setup-two-factor"}
+                   :totp {:totp-key SECRET :issuer "example.com"}}
+     :body [:p "TOTP page"]}
+    {:require-mfa? true
+     :login-uri "/setup-two-factor"
+     :test/body [:p "TOTP page"]}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :params {:totp-key SECRET :two-factor-code "999999"}
@@ -586,8 +670,10 @@
                  "Location" "/"}
        :session session
        ::bread/data {:session session
-                     :auth/result {:valid true :user user}}})
-    {:require-mfa? true}
+                     :auth/result {:valid true :user user}}
+       :body "/"})
+    {:require-mfa? true
+     :test/body [:p "login page"]}
     {:request-method :post
      :session {:auth/user crenshaw :auth/step :setup-two-factor}
      :params {:totp-key SECRET :two-factor-code "123456"}
@@ -600,8 +686,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "protected page"]}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -615,8 +702,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "protected page"]}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -630,8 +718,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -646,8 +735,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "protected page"]}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -661,8 +751,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "protected page"]}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -677,8 +768,9 @@
                :auth/step :two-factor}
      ::bread/data {:session {:auth/user douglass
                              :auth/step :two-factor}
-                   :auth/result {:valid false :user douglass}}}
-    {}
+                   :auth/result {:valid false :user douglass}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -693,8 +785,9 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user douglass
                              :auth/step :logged-in}
-                   :auth/result {:valid true :user douglass}}}
-    {}
+                   :auth/result {:valid true :user douglass}}
+     :body "/"}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -710,8 +803,9 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user douglass
                              :auth/step :logged-in}
-                   :auth/result {:valid true :user douglass}}}
-    {}
+                   :auth/result {:valid true :user douglass}}
+     :body "/successful-2fa-redirect"}
+    {:test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -727,8 +821,10 @@
                :auth/step :logged-in}
      ::bread/data {:session {:user douglass
                              :auth/step :logged-in}
-                   :auth/result {:valid true :user douglass}}}
-    {:next-param :special}
+                   :auth/result {:valid true :user douglass}}
+     :body "/successful-2fa-custom-next"}
+    {:next-param :special
+     :test/body [:p "protected page"]}
     {:request-method :post
      :session {:auth/user douglass
                :auth/step :two-factor}
@@ -902,6 +998,7 @@
                  :where [[?e :session/data]]})
 
   (require '[kaocha.repl :as k])
+  (k/run #'test-authentication-flow {:color? false})
   (k/run #'test-authentication-flow-with-mfa {:color? false})
   (k/run #'test-authentication-flow #'test-authentication-flow-with-mfa {:color? false})
   (k/run {:color? false}))

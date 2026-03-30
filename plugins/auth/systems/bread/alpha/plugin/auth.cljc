@@ -263,12 +263,12 @@
     (if (and protected? anonymous?)
       (assoc req
              :status 302
+             :body redirect-uri
              :headers (assoc headers "Location" redirect-uri))
       req)))
 
 (defmethod bread/action ::set-session
-  [{::bread/keys [data] :keys [params query-string session] :as res}
-   {:keys [max-failed-login-count require-mfa?]} _]
+  [{::bread/keys [data] :keys [params session] :as res} {:keys [require-mfa?]} _]
   (let [{{:keys [valid user]} :auth/result} data
         current-step (:auth/step session)
         login-step? (nil? current-step)
@@ -307,7 +307,7 @@
     (cond-> (-> res
                 (assoc :session session)
                 (assoc-in [::bread/data :session] session))
-      valid (assoc :status 302)
+      valid (assoc :status 302 :body redirect-to)
       valid (assoc-in [:headers "Location"] redirect-to)
       (not valid) (assoc :status 401))))
 
@@ -360,10 +360,11 @@
         {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
-  (-> res
-      (assoc :session nil :status 302)
-      (assoc-in [::bread/data :session] nil)
-      (assoc-in [:headers "Location"] (bread/config res :auth/login-uri))))
+  (let [login-uri (bread/config res :auth/login-uri)]
+    (-> res
+        (assoc :session nil :status 302 :body login-uri)
+        (assoc-in [::bread/data :session] nil)
+        (assoc-in [:headers "Location"] login-uri))))
 
 (defmethod bread/action ::matches-protected-prefix?
   [{:keys [uri]} {:keys [protected-prefixes]} [protected?]]
@@ -420,10 +421,12 @@
 (defmethod bread/action ::=>logged-in
   [{:as req :keys [session]} {:keys [flash]} _]
   (if (:user session)
-    (assoc req
-           :status 302
-           :headers {"Location" (bread/hook req ::logged-in-uri "/")}
-           :flash flash)
+    (let [redirect-to (bread/hook req ::logged-in-uri "/")]
+      (assoc req
+             :status 302
+             :headers {"Location" redirect-to}
+             :flash flash
+             :body redirect-to))
     req))
 
 (defmethod bread/dispatch ::login=>
@@ -437,7 +440,6 @@
         logout? (= "logout" (:submit params))
         setup-two-factor? (= :setup-two-factor step)
         two-factor? (= :two-factor step)
-        redirect-to (get params (bread/config req :auth/next-param))
         username (if two-factor?
                    (:user/username (:auth/user session))
                    (:username params))
