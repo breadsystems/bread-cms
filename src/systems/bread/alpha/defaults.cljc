@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.defaults
   (:require
-    [ring.util.anti-forgery :refer [anti-forgery-field]]
-
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.database :as db]
@@ -22,16 +20,6 @@
   {:config
    {:site/name site-name}})
 
-(defmethod bread/action ::anti-forgery
-  [{:as req :keys [anti-forgery-token]} _ _]
-  (-> req
-      (assoc-in [::bread/data :ring/anti-forgery-token] anti-forgery-token)
-      (assoc-in [::bread/data :ring/anti-forgery-token-field]
-                (fn anti-forgery-token-field []
-                  [:input {:type :hidden
-                           :name :__anti-forgery-token
-                           :value anti-forgery-token}]))))
-
 (defn plugins [{:keys [components db i18n routes site user]}]
   [(site-plugin site)
    (dispatcher/plugin)
@@ -47,7 +35,7 @@
        :action/description "Include standard Ring request data"}
       {:action/name ::config
        :action/description "Include global config in ::bread/data"}
-      {:action/name ::anti-forgery
+      {:action/name ::ring/anti-forgery
        :action/description "Include Ring anti-forgery utilities."}]
      ::bread/response
      [{:action/name ::ring/response
