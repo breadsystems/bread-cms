@@ -197,7 +197,7 @@
                                                         pr-str)))]))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
+  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
   (if (= :post request-method)
     ;; Account update.
     (let [action (keyword (:action params))
@@ -205,9 +205,7 @@
           [txs error-key] (try
                             [(account-action req) nil]
                             (catch clojure.lang.ExceptionInfo e
-                              [nil (-> e ex-data :error-key)]))
-          success-key (cond
-                        account-update? :account-updated)]
+                              [nil (-> e ex-data :error-key)]))]
       (if txs
         {:effects
          [(db/txs->effect req txs :effect/description "Update account details")]
