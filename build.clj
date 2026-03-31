@@ -91,7 +91,7 @@
   (let [{:keys [aliases lib src-dirs]} (get libs (:lib opts :core))
         jar-file (jar-path lib patch-version)]
     ;; Prevent pollution from previous builds.
-    (b/delete {:path class-dir})
+    (clean nil)
     (b/write-pom {:class-dir class-dir
                   :lib lib
                   :version patch-version
