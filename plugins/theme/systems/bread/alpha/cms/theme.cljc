@@ -4,7 +4,6 @@
     [markdown-to-hiccup.core :as md2h]
     [rum.core :as rum]
 
-    [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc] :as component]))
 
 (defn title [& strs]
