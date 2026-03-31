@@ -425,7 +425,6 @@
         (map (fn [{:keys [email/address
                           email/confirmed-at
                           email/primary?
-                          thing/created-at
                           db/id]}]
                [:form.flex.row {:method :post :role :listitem}
                 (anti-forgery-token-field)
@@ -613,50 +612,46 @@
 
 (defc SignupPage
   [{:as data
-    :keys [config error hook i18n invitation rtl? dir ring/params ring/anti-forgery-token-field]
-    [valid? error-key] :validation}]
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type "utf-8"}]
-    (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
-    (->> (auth/LoginStyle data) (hook ::auth/html.stylesheet) (hook ::html.signup.stylesheet))
-    (->> [:<>] (hook ::auth/html.head) (hook ::html.signup.head))]
-   [:body
-    (cond
-      (and (:signup/invite-only? config) (not (:code params)))
-      [:main
-       [:form.flex.col
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p (:signup/site-invite-only i18n)]]]
+    :keys [config hook i18n invitation ring/params ring/anti-forgery-token-field]
+    [_valid? error-key] :validation}]
+  {:extends Page}
+  {:title (:signup/signup i18n)
+   :content
+   (cond
+     (and (:signup/invite-only? config) (not (:code params)))
+     [:main
+      [:form.flex.col
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       [:p (:signup/site-invite-only i18n)]]]
 
-      (and (:signup/invite-only? config) (not invitation))
-      [:main
-       [:form.flex.col
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p (:signup/invitation-invalid i18n)]]]
+     (and (:signup/invite-only? config) (not invitation))
+     [:main
+      [:form.flex.col
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       [:p (:signup/invitation-invalid i18n)]]]
 
-      :default
-      [:main
-       [:form.flex.col {:name :bread-signup :method :post}
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        (hook ::html.enter-username
-              [:p.instruct (:signup/please-choose-username-password i18n)])
-        (Field :username :label (:auth/username i18n) :value (:username params))
-        (Field :password
-               :type :password
-               :label (:auth/password i18n)
-               :input-attrs {:maxlength (:auth/max-password-length config)})
-        (Field :password-confirmation
-               :type :password
-               :label (:auth/password-confirmation i18n)
-               :input-attrs {:maxlength (:auth/max-password-length config)})
-        (when error-key
-          (hook ::html.invalid-signup
-                (ErrorMessage {:message (i18n/t i18n error-key)})))
-        (Submit (:signup/create-account i18n))]])]])
+     :default
+     [:main
+      [:form.flex.col {:name :bread-signup :method :post}
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       (hook ::html.enter-username
+             [:p.instruct (:signup/please-choose-username-password i18n)])
+       (Field :username :label (:auth/username i18n) :value (:username params))
+       (Field :password
+              :type :password
+              :label (:auth/password i18n)
+              :input-attrs {:maxlength (:auth/max-password-length config)})
+       (Field :password-confirmation
+              :type :password
+              :label (:auth/password-confirmation i18n)
+              :input-attrs {:maxlength (:auth/max-password-length config)})
+       (when error-key
+         (hook ::html.invalid-signup
+               (ErrorMessage {:message (i18n/t i18n error-key)})))
+       (Submit (:signup/create-account i18n))]])})
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>
