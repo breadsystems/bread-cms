@@ -130,10 +130,10 @@
 (defmethod bread/action ::render
   [{:keys [::bread/data body] :as res} _ _]
   (if body
-   res
-   (let [component (match res)
-         body (render component data)]
-     (assoc res :body body))))
+    res
+    (let [component (match res)
+          body (render component data)]
+      (assoc res :body body))))
 
 (defmethod bread/action ::hook-fn
   [req _ _]

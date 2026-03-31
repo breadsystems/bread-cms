@@ -155,14 +155,20 @@
       (update $ :user/preferences edn/read-string)
       (s/transform [:user/sessions s/ALL :session/data] edn/read-string $))))
 
-(defmulti account-action (fn [{:keys [params]}] (keyword (:action params))))
+(defmulti effects (fn [{:keys [params]}] (keyword (:action params))))
 
-(defmethod account-action :delete-session [{:keys [params]}]
-  (when-let [id (try (Integer. (:dbid params)) (catch Throwable _ nil))]
-    [[:db/retract id :session/id]
-     [:db/retract id :session/data]
-     [:db/retract id :thing/created-at]
-     [:db/retract id :thing/updated-at]]))
+(defmethod effects :default [_]
+  ;; TODO standardize generic error-key?
+  (throw (ex-info "Invalid action" {:error-key :account/invalid-action})))
+
+(defmethod effects :delete-session [{:as req :keys [params]}]
+  (when (try (Integer. (:dbid params)) (catch Throwable _ nil))
+    [{:effect/name [::update :delete-session]
+      :effect/description "Update account state"
+      :effect/key :delete-session
+      :success-key :account/session-deleted
+      :params params
+      :conn (db/connection req)}]))
 
 (defn validate-password-fields
   [{:auth/keys [min-password-length max-password-length]}
@@ -170,6 +176,9 @@
   "Returns an error code as a keyword if the :password and/or :password-confirmation
   params are invalid."
   (cond
+    ;; If the user submitted only the password confirmation, assume they intended
+    ;; to update password but forgot to fill out both fields.
+    (and (seq password-confirmation) (empty? password)) :auth/passwords-must-match
     (empty? password) :auth/password-required
     (not= password password-confirmation) :auth/passwords-must-match
     (< (count password) min-password-length)
@@ -180,65 +189,83 @@
 (defn- hook-preference [req [k v]]
   [k (bread/hook req [::preference k] v)])
 
-(defmethod account-action :update [{:as req :keys [params session] ::bread/keys [config]}]
+(defmethod effects :update-details
+  [{:as req :keys [params session] ::bread/keys [config]}]
   (let [{:keys [password password-confirmation]} params
-        update-password? (seq password)
+        update-password? (or (seq password) (seq password-confirmation))
         error-key (when update-password? (validate-password-fields config params))
         hash-algo (when update-password? (:auth/hash-algorithm config))
         preferences (dissoc params :action :name :lang :password :password-confirmation)]
     (when error-key (throw (ex-info "Invalid password" {:error-key error-key})))
-    [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
-       (:lang params) (assoc :user/lang (keyword (:lang params)))
-       update-password? (assoc :user/password
-                               (hashers/derive password {:alg hash-algo}))
-       (seq preferences)  (assoc :user/preferences (->> preferences
-                                                        (map (partial hook-preference req))
-                                                        (into {})
-                                                        pr-str)))]))
+    [{:effect/name ::db/transact
+      :effect/description "Update account details"
+      :effect/key :update-details
+      :success-key :account/account-updated
+      :conn (db/connection req)
+      :txs
+      [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
+         (:lang params) (assoc :user/lang (keyword (:lang params)))
+         update-password? (assoc :user/password
+                                 (hashers/derive password {:alg hash-algo}))
+         (seq preferences)  (assoc :user/preferences (->> preferences
+                                                          (map (partial hook-preference req))
+                                                          (into {})
+                                                          pr-str)))]}]))
+
+(defmethod bread/effect [::update :delete-session]
+  [{k :effect/key :keys [conn params success-key]} {user :user}]
+  (let [session-id (try (Integer. (:dbid params)) (catch Throwable _ nil))
+        valid-ids (set (map :db/id (:user/sessions user)))
+        valid? (contains? valid-ids session-id)]
+    (when valid?
+      {:effects
+       [{:effect/name ::db/transact
+         :effect/description "Delete a user session."
+         :effect/key k
+         :success-key success-key
+         :conn conn
+         :txs [[:db/retractEntity session-id]]}]})))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [config dispatcher]}]
-  (if (= :post request-method)
-    ;; Account update.
-    (let [action (keyword (:action params))
-          account-update? (= :update action)
-          [txs error-key] (try
-                            [(account-action req) nil]
-                            (catch clojure.lang.ExceptionInfo e
-                              [nil (-> e ex-data :error-key)]))
-          success-key (cond
-                        account-update? :account-updated)]
-      (if txs
-        {:effects
-         [(db/txs->effect req txs :effect/description "Update account details")]
-         :hooks
-         {::bread/expand
-          [{:action/name ::ring/redirect
-            :to (bread/config req :account/account-uri)
-            :flash (when account-update? {:success-key :account/account-updated})
-            :action/description
-            "Redirect to account page after taking an account action"}]}}
-        {:hooks
-         {::bread/expand
-          [{:action/name ::ring/redirect
-            :to (bread/config req :account/account-uri)
-            :flash (when account-update? {:error-key error-key})
-            :action/description
-            "Redirect to account page after an error"}]}}))
-    ;; Rendering the account page.
-    (let [id (:db/id (:user session))
-          pull (:dispatcher/pull dispatcher)]
+  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+  (let [id (:db/id (:user session))
+        pull (:dispatcher/pull dispatcher)
+        user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
+        query-user {:expansion/key :user
+                    :expansion/name ::db/query
+                    :expansion/description "Query for all user account data"
+                    :expansion/db (db/database req)
+                    :expansion/args [user-pull id]}
+        expand-user {:expansion/key :user
+                     :expansion/name ::user
+                     :expansion/description "Expand user data"}]
+    (if (= :post request-method)
+      ;; Account update.
+      (let [[effects error-key] (try
+                                  [(effects req) nil]
+                                  (catch clojure.lang.ExceptionInfo e
+                                    [nil (-> e ex-data :error-key)]))]
+        (if error-key
+          {:hooks
+           {::bread/render
+            [{:action/name ::ring/redirect
+              :to (bread/config req :account/account-uri)
+              :flash (when error-key {:error-key error-key})
+              :action/description
+              "Redirect to account page after an error"}]}}
+          {:expansions [query-user expand-user]
+           :effects effects
+           :hooks
+           {::bread/render
+            [{:action/name ::ring/effect-redirect
+              :to (bread/config req :account/account-uri)
+              :effect/key (keyword (:action params))
+              :action/description
+              "Redirect to account page after taking an account action"}]}}))
+      ;; Rendering the account page.
       {:expansions
-       [{:expansion/key :user
-         :expansion/name ::db/query
-         :expansion/description "Query for all user account data"
-         :expansion/db (db/database req)
-         :expansion/args [{:find [(list 'pull '?e pull) '.]
-                           :in '[$ ?e]}
-                          id]}
-        {:expansion/key :user
-         :expansion/name ::user
-         :expansion/description "Expand user data"}
+       [query-user
+        expand-user
         {;; TODO => i18n
          :expansion/key :supported-langs
          :expansion/name ::bread/value
@@ -247,6 +274,7 @@
         {;; TODO => i18n
          :expansion/key :lang-names
          :expansion/name ::bread/value
+         :expansion/description "Language names for display"
          :expansion/value (bread/config req :i18n/lang-names)}]})))
 
 (defn plugin [{:keys [account-uri html-account-header html-account-form

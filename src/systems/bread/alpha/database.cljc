@@ -118,8 +118,13 @@
     (contains? ks (migration-key migration))))
 
 (defmethod bread/effect ::transact
-  [{:keys [conn txs]} _]
-  (transact conn {:tx-data txs}))
+  [{:keys [conn txs success-key error-key]} _]
+  (try
+    {:db (transact conn {:tx-data txs})
+     :flash {:success-key success-key}}
+    (catch Throwable e
+      {:ex e
+       :flash {:error-key error-key}})))
 
 (defn txs->effect [req txs & {desc :effect/description
                               k :effect/key

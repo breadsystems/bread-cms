@@ -8,6 +8,7 @@
            :account-updated "Account details have been updated."
            :datetime-format-default "EEE, LLL d 'at' h:mm a"
            :date-format-default "EEE, LLL d"
+           :invalid-action "Invalid action."
            :leave-passwords-blank "Leave password fields blank to keep your current password."
            :name "Name"
            :email "Email"
@@ -15,6 +16,7 @@
            :pronouns "Pronouns"
            :pronouns-example "they/them/theirs"
            :save "Save"
+           :session-deleted "Session deleted."
            :timezone "Timezone"
            :your-sessions "Your login sessions"
            }
