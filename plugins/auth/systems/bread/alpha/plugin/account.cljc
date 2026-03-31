@@ -213,7 +213,7 @@
                                                           pr-str)))]}]))
 
 (defmethod bread/effect [::update :delete-session]
-  [{:keys [conn params success-key]} {user :user}]
+  [{k :effect/key :keys [conn params success-key]} {user :user}]
   (let [session-id (try (Integer. (:dbid params)) (catch Throwable _ nil))
         valid-ids (set (map :db/id (:user/sessions user)))
         valid? (contains? valid-ids session-id)]
@@ -221,7 +221,7 @@
       {:effects
        [{:effect/name ::db/transact
          :effect/description "Delete a user session."
-         :effect/key :delete-session
+         :effect/key k
          :success-key success-key
          :conn conn
          :txs [[:db/retractEntity session-id]]}]})))
@@ -241,12 +241,7 @@
                      :expansion/description "Expand user data"}]
     (if (= :post request-method)
       ;; Account update.
-      (let [action (keyword (:action params))
-            account-update? (= :update-details action)
-            success-key (if account-update?
-                          :account/account-updated
-                          :account/session-deleted)
-            [effects error-key] (try
+      (let [[effects error-key] (try
                                   [(effects req) nil]
                                   (catch clojure.lang.ExceptionInfo e
                                     [nil (-> e ex-data :error-key)]))]
@@ -264,7 +259,7 @@
            {::bread/render
             [{:action/name ::ring/effect-redirect
               :to (bread/config req :account/account-uri)
-              :effect/key action
+              :effect/key (keyword (:action params))
               :action/description
               "Redirect to account page after taking an account action"}]}}))
       ;; Rendering the account page.

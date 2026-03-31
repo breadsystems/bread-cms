@@ -371,6 +371,105 @@
 
       ,)))
 
+(deftest test-delete-session-effect
+  (are
+    [expected effect data]
+    (= expected (bread/effect effect data))
+
+    ;; Anonymous, no params.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params nil
+     :conn ::FAKEDB}
+    {:user nil}
+
+    ;; Anonymous attempt to delete a session.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid "345"}
+     :conn ::FAKEDB}
+    {:user nil}
+
+    ;; Invalid session id.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid "invalid"}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 234} {:db/id 456} {:db/id 567}]}}
+
+    ;; Invalid session id.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid ""}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 234} {:db/id 456} {:db/id 567}]}}
+
+    ;; Invalid session id.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid nil}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 234} {:db/id 456} {:db/id 567}]}}
+
+    ;; Attempt to delete a different user's session.
+    nil
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid "345"}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 234} {:db/id 456} {:db/id 567}]}}
+
+    ;; Happy path.
+    {:effects
+     [{:effect/name ::db/transact
+       :effect/description "Delete a user session."
+       :effect/key :delete-session
+       :success-key :account/session-deleted
+       :conn ::FAKEDB
+       :txs [[:db/retractEntity 123]]}]}
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid "123"}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 123}]}}
+
+    ;; Happy path; more than one session.
+    {:effects
+     [{:effect/name ::db/transact
+       :effect/description "Delete a user session."
+       :effect/key :delete-session
+       :success-key :account/session-deleted
+       :conn ::FAKEDB
+       :txs [[:db/retractEntity 456]]}]}
+    {:effect/name [::account/update :delete-session]
+     :effect/description "Update account state"
+     :effect/key :delete-session
+     :success-key :account/session-deleted
+     :params {:dbid "456"}
+     :conn ::FAKEDB}
+    {:user {:user/sessions [{:db/id 123} {:db/id 456}]}}
+
+    ,))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
