@@ -46,7 +46,7 @@
           (-> data edn/read-string (assoc :db/id id))))))
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
-          sk (if exists? sk (random/hex 32))
+          sk (if exists? sk (random/hex (:key-length config 32)))
           hashed (hash-session-key config sk)
           now (t/now)
           session (merge {:session/id hashed
