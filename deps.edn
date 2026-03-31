@@ -87,8 +87,9 @@
 
   :auth
   {:extra-paths ["plugins/auth"]
-   :extra-deps {buddy/buddy-hashers {:mvn/version "2.0.167"}
-                one-time/one-time   {:mvn/version "0.8.0"}}}
+   :extra-deps {buddy/buddy-hashers         {:mvn/version "2.0.167"}
+                crypto-random/crypto-random {:mvn/version "1.2.1"}
+                one-time/one-time           {:mvn/version "0.8.0"}}}
 
   :bidi
   {:extra-paths ["plugins/bidi"]
