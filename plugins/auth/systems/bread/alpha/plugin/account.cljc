@@ -226,6 +226,9 @@
       ;; Account update.
       (let [action (keyword (:action params))
             account-update? (= :update action)
+            success-key (if account-update?
+                          :account/account-updated
+                          :account/session-deleted)
             [txs error-key] (try
                               [(account-action req) nil]
                               (catch clojure.lang.ExceptionInfo e
@@ -238,13 +241,12 @@
               {:effect/name [::update action]
                :effect/description "Update account state"
                :params params
-               :conn (db/connection req)
-               :txs txs})]
+               :conn (db/connection req)})]
            :hooks
            {::bread/expand
             [{:action/name ::ring/redirect
               :to (bread/config req :account/account-uri)
-              :flash (when account-update? {:success-key :account/account-updated})
+              :flash {:success-key success-key}
               :action/description
               "Redirect to account page after taking an account action"}]}}
           {:hooks

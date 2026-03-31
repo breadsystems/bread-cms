@@ -15,6 +15,7 @@
            :pronouns "Pronouns"
            :pronouns-example "they/them/theirs"
            :save "Save"
+           :session-deleted "Session deleted."
            :timezone "Timezone"
            :your-sessions "Your login sessions"
            }

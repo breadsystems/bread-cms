@@ -301,6 +301,21 @@
                   :password-confirmation long-password}
          :session {:user {:db/id 123}}})
 
+      ;; Deleting a session.
+      {:expansions [query-user expand-user]
+       :effects [{:effect/name [::account/update :delete-session]
+                  :effect/description "Update account state"
+                  :params {:action "delete-session" :dbid "456"}
+                  :conn db-conn}]
+       :hooks {::bread/expand [(assoc-in success-hook
+                                         [:flash :success-key]
+                                         :account/session-deleted)]}}
+      {}
+      {:request-method :post
+       :params {:action "delete-session"
+                :dbid "456"}
+       :session {:user {:db/id 123}}}
+
       ,)))
 
 (comment
