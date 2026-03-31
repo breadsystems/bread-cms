@@ -38,9 +38,9 @@
          :expansion/key :user
          :expansion/name ::account/user}
         success-hook
-        {:action/name ::ring/redirect
+        {:action/name ::ring/effect-redirect
          :action/description "Redirect to account page after taking an account action"
-         :flash {:success-key :account/account-updated}
+         :effect/key :update-details
          :to "/account"}]
     (are
       [expected config req]
@@ -80,13 +80,13 @@
        [query-user expand-user]
        :effects
        [{:effect/name ::db/transact
-         :effect/key nil
+         :effect/key :update-details
          :effect/description "Update account details"
+         :success-key :account/account-updated
          :txs [{:db/id 123 :user/name "Spongebob Squarepants"}]
          :conn db-conn}]
        :hooks
-       {::bread/expand
-        [success-hook]}}
+       {::bread/render [success-hook]}}
       {}
       {:request-method :post
        :params {:action "update-details"
@@ -96,14 +96,15 @@
       ;; Updating preferences.
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
-                  :effect/key nil
+                  :effect/key :update-details
                   :effect/description "Update account details"
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/preferences (pr-str {:pronouns "he/they"
                                                     :timezone "America/Los_Angeles"})}]
                   :conn db-conn}]
-       :hooks {::bread/expand [success-hook]}}
+       :hooks {::bread/render [success-hook]}}
       {}
       {:request-method :post
        :params {:action "update-details"
@@ -115,14 +116,15 @@
       ;; Updating preferences; custom account-uri.
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
-                  :effect/key nil
+                  :effect/key :update-details
                   :effect/description "Update account details"
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/preferences (pr-str {:pronouns "he/they"
                                                     :timezone "America/Los_Angeles"})}]
                   :conn db-conn}]
-       :hooks {::bread/expand [(assoc success-hook :to "/custom")]}}
+       :hooks {::bread/render [(assoc success-hook :to "/custom")]}}
       {:account-config {:account-uri "/custom"}}
       {:request-method :post
        :params {:action "update-details"
@@ -132,7 +134,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Invalid action.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 :flash {:error-key :account/invalid-action}
@@ -146,7 +148,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Invalid action; custom URI.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 :flash {:error-key :account/invalid-action}
@@ -162,14 +164,15 @@
       ;; Any custom fields on the account form are treated as preferences.
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
-                  :effect/key nil
+                  :effect/key :update-details
                   :effect/description "Update account details"
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/preferences (pr-str {:custom "something"
                                                     :other "something else"})}]
                   :conn db-conn}]
-       :hooks {::bread/expand [success-hook]}}
+       :hooks {::bread/render [success-hook]}}
       {}
       {:request-method :post
        :params {:action "update-details"
@@ -179,7 +182,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - mismatched passwords error.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 :flash {:error-key :auth/passwords-must-match}
@@ -193,7 +196,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - only confirmation submitted.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 :flash {:error-key :auth/passwords-must-match}
@@ -207,7 +210,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - both fields submitted, but still mismatched
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 :flash {:error-key :auth/passwords-must-match}
@@ -221,7 +224,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - too short.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 ;; 12 is the default from auth
@@ -236,7 +239,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - too short with custom auth config.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 ;; 12 is the default from auth
@@ -254,12 +257,13 @@
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
-                  :effect/key nil
+                  :effect/key :update-details
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/password "[:bcrypt+blake2b-512+password]"}]
                   :conn db-conn}]
-       :hooks {::bread/expand [success-hook]}}
+       :hooks {::bread/render [success-hook]}}
       {:auth-config {:min-password-length 8}}
       {:request-method :post
        :params {:action "update-details"
@@ -272,12 +276,13 @@
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
-                  :effect/key nil
+                  :effect/key :update-details
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/password "[:bcrypt+blake2b-512+password1234]"}]
                   :conn db-conn}]
-       :hooks {::bread/expand [success-hook]}}
+       :hooks {::bread/render [success-hook]}}
       {}
       {:request-method :post
        :params {:action "update-details"
@@ -290,7 +295,8 @@
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
-                  :effect/key nil
+                  :effect/key :update-details
+                  :success-key :account/account-updated
                   :txs [{:db/id 123
                          :user/name "Spongebob Squarepants"
                          :user/password (str
@@ -303,7 +309,7 @@
                                           "twelve_chars"
                                           "]")}]
                   :conn db-conn}]
-       :hooks {::bread/expand [success-hook]}}
+       :hooks {::bread/render [success-hook]}}
       {}
       (let [;; 6 * 12 = 72
             long-password (apply str (repeat 6 "twelve_chars"))]
@@ -315,7 +321,7 @@
          :session {:user {:db/id 123}}})
 
       ;; Updating password - too long!
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 ;; 12 is the default from auth
@@ -332,7 +338,7 @@
          :session {:user {:db/id 123}}})
 
       ;; Updating password - too long with custom auth config.
-      {:hooks {::bread/expand [{:action/name ::ring/redirect
+      {:hooks {::bread/render [{:action/name ::ring/redirect
                                 :action/description
                                 "Redirect to account page after an error"
                                 ;; 12 is the default from auth
@@ -352,11 +358,11 @@
       {:expansions [query-user expand-user]
        :effects [{:effect/name [::account/update :delete-session]
                   :effect/description "Update account state"
+                  :effect/key :delete-session
+                  :success-key :account/session-deleted
                   :params {:action "delete-session" :dbid "456"}
                   :conn db-conn}]
-       :hooks {::bread/expand [(assoc-in success-hook
-                                         [:flash :success-key]
-                                         :account/session-deleted)]}}
+       :hooks {::bread/render [(assoc success-hook :effect/key :delete-session)]}}
       {}
       {:request-method :post
        :params {:action "delete-session"

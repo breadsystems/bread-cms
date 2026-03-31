@@ -165,6 +165,8 @@
   (when (try (Integer. (:dbid params)) (catch Throwable _ nil))
     [{:effect/name [::update :delete-session]
       :effect/description "Update account state"
+      :effect/key :delete-session
+      :success-key :account/session-deleted
       :params params
       :conn (db/connection req)}]))
 
@@ -197,7 +199,8 @@
     (when error-key (throw (ex-info "Invalid password" {:error-key error-key})))
     [{:effect/name ::db/transact
       :effect/description "Update account details"
-      :effect/key nil
+      :effect/key :update-details
+      :success-key :account/account-updated
       :conn (db/connection req)
       :txs
       [(cond-> {:db/id (:db/id (:user session)) :user/name (:name params)}
@@ -210,7 +213,7 @@
                                                           pr-str)))]}]))
 
 (defmethod bread/effect [::update :delete-session]
-  [{:keys [conn params]} {user :user}]
+  [{:keys [conn params success-key]} {user :user}]
   (let [session-id (try (Integer. (:dbid params)) (catch Throwable _ nil))
         valid-ids (set (map :db/id (:user/sessions user)))
         valid? (contains? valid-ids session-id)]
@@ -218,7 +221,8 @@
       {:effects
        [{:effect/name ::db/transact
          :effect/description "Delete a user session."
-         :effect/key :session-deleted
+         :effect/key :delete-session
+         :success-key success-key
          :conn conn
          :txs [[:db/retractEntity session-id]]}]})))
 
@@ -248,7 +252,7 @@
                                     [nil (-> e ex-data :error-key)]))]
         (if error-key
           {:hooks
-           {::bread/expand
+           {::bread/render
             [{:action/name ::ring/redirect
               :to (bread/config req :account/account-uri)
               :flash (when error-key {:error-key error-key})
@@ -257,10 +261,10 @@
           {:expansions [query-user expand-user]
            :effects effects
            :hooks
-           {::bread/expand
-            [{:action/name ::ring/redirect
+           {::bread/render
+            [{:action/name ::ring/effect-redirect
               :to (bread/config req :account/account-uri)
-              :flash {:success-key success-key}
+              :effect/key action
               :action/description
               "Redirect to account page after taking an account action"}]}}))
       ;; Rendering the account page.
