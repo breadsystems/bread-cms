@@ -112,6 +112,53 @@
                 :timezone "America/Los_Angeles"}
        :session {:user {:db/id 123}}}
 
+      ;; Updating preferences; custom account-uri.
+      {:expansions [query-user expand-user]
+       :effects [{:effect/name ::db/transact
+                  :effect/key nil
+                  :effect/description "Update account details"
+                  :txs [{:db/id 123
+                         :user/name "Spongebob Squarepants"
+                         :user/preferences (pr-str {:pronouns "he/they"
+                                                    :timezone "America/Los_Angeles"})}]
+                  :conn db-conn}]
+       :hooks {::bread/expand [(assoc success-hook :to "/custom")]}}
+      {:account-config {:account-uri "/custom"}}
+      {:request-method :post
+       :params {:action "update"
+                :name "Spongebob Squarepants"
+                :pronouns "he/they"
+                :timezone "America/Los_Angeles"}
+       :session {:user {:db/id 123}}}
+
+      ;; Invalid action.
+      {:hooks {::bread/expand [{:action/name ::ring/redirect
+                                :action/description
+                                "Redirect to account page after an error"
+                                :flash {:error-key :account/invalid-action}
+                                :to "/account"}]}}
+      {}
+      {:request-method :post
+       :params {:action "booboo"
+                :name "Spongebob Squarepants"
+                :pronouns "he/they"
+                :timezone "America/Los_Angeles"}
+       :session {:user {:db/id 123}}}
+
+      ;; Invalid action; custom URI.
+      {:hooks {::bread/expand [{:action/name ::ring/redirect
+                                :action/description
+                                "Redirect to account page after an error"
+                                :flash {:error-key :account/invalid-action}
+                                :to "/custom"}]}}
+      {:account-config {:account-uri "/custom"}}
+      {:request-method :post
+       :params {:action "booboo"
+                :name "Spongebob Squarepants"
+                :pronouns "he/they"
+                :timezone "America/Los_Angeles"}
+       :session {:user {:db/id 123}}}
+
       ;; Any custom fields on the account form are treated as preferences.
       {:expansions [query-user expand-user]
        :effects [{:effect/name ::db/transact

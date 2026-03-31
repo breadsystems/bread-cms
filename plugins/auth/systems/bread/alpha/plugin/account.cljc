@@ -157,6 +157,10 @@
 
 (defmulti account-action (fn [{:keys [params]}] (keyword (:action params))))
 
+(defmethod account-action :default [_]
+  ;; TODO standardize generic error-key?
+  (throw (ex-info "Invalid action" {:error-key :account/invalid-action})))
+
 (defmethod account-action :delete-session [{:keys [params]}]
   (when-let [id (try (Integer. (:dbid params)) (catch Throwable _ nil))]
     {:db/id id}))
@@ -253,7 +257,7 @@
            {::bread/expand
             [{:action/name ::ring/redirect
               :to (bread/config req :account/account-uri)
-              :flash (when account-update? {:error-key error-key})
+              :flash (when error-key {:error-key error-key})
               :action/description
               "Redirect to account page after an error"}]}}))
       ;; Rendering the account page.
