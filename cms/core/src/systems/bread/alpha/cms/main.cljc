@@ -408,6 +408,7 @@
   (:http @system)
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
+  (-> @system :initial-config :ring/session-store :secret-key)
   (:bread/app @system)
   (:bread/routes @system)
   (:bread/router @system)

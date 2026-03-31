@@ -15,7 +15,8 @@
  :ring/session-store
  {:store/type :datalog
   :store/db #ig/ref :bread/db
-  :max-age 259200}
+  :max-age 259200
+  :secret-key #env AUTH_SECRET_KEY}
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:site {:name "Breadbox"}
