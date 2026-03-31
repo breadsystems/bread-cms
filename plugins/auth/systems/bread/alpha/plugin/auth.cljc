@@ -22,29 +22,34 @@
 (defn database [req]
   (db/db (db/connection req)))
 
+(defn- hash-session-key [config sk]
+  (sha-512 (str (:secret-key config) ":" sk)))
+
 (deftype DatalogSessionStore [config conn]
   ss/SessionStore
   (ss/delete-session [_ sk]
-    (db/transact conn [[:db/retract [:session/id sk] :session/id]
-                       [:db/retract [:session/id sk] :session/data]])
+    (let [hashed (hash-session-key config sk)]
+      (db/transact conn [[:db/retractEntity [:session/id hashed]]]))
     sk)
   (ss/read-session [_ sk]
     (when sk
-      (let [{:as session :keys [db/id session/data thing/updated-at]}
+      (let [hashed (hash-session-key config sk)
+            {:as session :keys [db/id session/data thing/updated-at]}
             (db/q @conn
                   '{:find [(pull ?e [:db/id :thing/updated-at :session/data]) .]
                     :in [$ ?sk]
                     :where [[?e :session/id ?sk]]}
-                  sk)
+                  hashed)
             earliest-valid (t/seconds-ago (:max-age config))
             valid? (when session (.after updated-at earliest-valid))]
         (when (and valid? id)
           (-> data edn/read-string (assoc :db/id id))))))
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
-          sk (if exists? sk (random/base64 512))
+          sk (if exists? sk (random/hex 32))
+          hashed (hash-session-key config sk)
           now (t/now)
-          session (merge {:session/id sk
+          session (merge {:session/id hashed
                           :session/data (pr-str data)
                           :thing/updated-at now}
                          (when-not exists? {:thing/created-at now}))
@@ -54,8 +59,8 @@
       sk)))
 
 (defn session-store
-  ([{:keys [max-age]} conn]
-   (let [config {:max-age (or max-age (* 72 60 60))}]
+  ([config conn]
+   (let [config (merge {:max-age (* 72 60 60)} config)]
      (DatalogSessionStore. config conn)))
   ([conn]
    (session-store {} conn)))
