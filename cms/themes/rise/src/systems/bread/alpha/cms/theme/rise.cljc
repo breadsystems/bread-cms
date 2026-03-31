@@ -666,7 +666,7 @@
      (ErrorMessage {:message (i18n/t i18n error-key)}))])
 
 (defmethod Section :save [{:keys [i18n]} _]
-  (Submit (:account/save i18n) :name :action :value "update"))
+  (Submit (:account/save i18n) :name :action :value "update-details"))
 
 (defn- CustomizingSection [_]
   {:id :customizing

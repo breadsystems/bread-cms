@@ -89,7 +89,7 @@
         [success-hook]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"}
        :session {:user {:db/id 123}}}
 
@@ -106,7 +106,7 @@
        :hooks {::bread/expand [success-hook]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :pronouns "he/they"
                 :timezone "America/Los_Angeles"}
@@ -125,7 +125,7 @@
        :hooks {::bread/expand [(assoc success-hook :to "/custom")]}}
       {:account-config {:account-uri "/custom"}}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :pronouns "he/they"
                 :timezone "America/Los_Angeles"}
@@ -172,7 +172,7 @@
        :hooks {::bread/expand [success-hook]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :custom "something"
                 :other "something else"}
@@ -186,7 +186,7 @@
                                 :to "/account"}]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "xyz"
                 :password-confirmation ""}
@@ -200,7 +200,7 @@
                                 :to "/account"}]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password ""
                 :password-confirmation "xyz"}
@@ -214,7 +214,7 @@
                                 :to "/account"}]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "abc"
                 :password-confirmation "xyz"}
@@ -229,7 +229,7 @@
                                 :to "/account"}]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "tooshort"
                 :password-confirmation "tooshort"}
@@ -244,7 +244,7 @@
                                 :to "/account"}]}}
       {:auth-config {:min-password-length 8}}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "2shrt"
                 :password-confirmation "2shrt"}
@@ -262,7 +262,7 @@
        :hooks {::bread/expand [success-hook]}}
       {:auth-config {:min-password-length 8}}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "password"
                 :password-confirmation "password"}
@@ -280,7 +280,7 @@
        :hooks {::bread/expand [success-hook]}}
       {}
       {:request-method :post
-       :params {:action "update"
+       :params {:action "update-details"
                 :name "Spongebob Squarepants"
                 :password "password1234"
                 :password-confirmation "password1234"}
@@ -308,7 +308,7 @@
       (let [;; 6 * 12 = 72
             long-password (apply str (repeat 6 "twelve_chars"))]
         {:request-method :post
-         :params {:action "update"
+         :params {:action "update-details"
                   :name "Spongebob Squarepants"
                   :password long-password
                   :password-confirmation long-password}
@@ -325,7 +325,7 @@
       (let [;; 1 + 6 * 12 = 73
             long-password (apply str "x" (repeat 6 "twelve_chars"))]
         {:request-method :post
-         :params {:action "update"
+         :params {:action "update-details"
                   :name "Spongebob Squarepants"
                   :password long-password
                   :password-confirmation long-password}
@@ -342,7 +342,7 @@
       (let [;; 6 * 12 = 72
             long-password (apply str (repeat 6 "twelve_chars"))]
         {:request-method :post
-         :params {:action "update"
+         :params {:action "update-details"
                   :name "Spongebob Squarepants"
                   :password long-password
                   :password-confirmation long-password}

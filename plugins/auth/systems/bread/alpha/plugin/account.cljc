@@ -184,7 +184,7 @@
 (defn- hook-preference [req [k v]]
   [k (bread/hook req [::preference k] v)])
 
-(defmethod account-action :update [{:as req :keys [params session] ::bread/keys [config]}]
+(defmethod account-action :update-details [{:as req :keys [params session] ::bread/keys [config]}]
   (let [{:keys [password password-confirmation]} params
         update-password? (or (seq password) (seq password-confirmation))
         error-key (when update-password? (validate-password-fields config params))
@@ -229,7 +229,7 @@
     (if (= :post request-method)
       ;; Account update.
       (let [action (keyword (:action params))
-            account-update? (= :update action)
+            account-update? (= :update-details action)
             success-key (if account-update?
                           :account/account-updated
                           :account/session-deleted)
