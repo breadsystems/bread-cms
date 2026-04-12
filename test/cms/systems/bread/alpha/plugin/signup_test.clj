@@ -12,7 +12,6 @@
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.schema :as schema])
   (:import
     [java.util Date]))
