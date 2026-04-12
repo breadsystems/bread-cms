@@ -189,10 +189,85 @@
 
       ,)))
 
-#_
 (deftest test-validate-expansion
-  ;; TODO
-  )
+  (are
+    [expected expansion data]
+    (= expected (bread/expand (assoc expansion :expansion/name ::signup/validate) data))
+
+    [false :signup/all-fields-required]
+    {:params {}
+     ;; NOTE: doesn't matter what these are for this check
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :signup/all-fields-required]
+    {:params {:username "" :password "" :password-confirmation ""}
+     :min-password-length 1
+     :max-password-length 72}
+    {}
+
+    [false :signup/all-fields-required]
+    {:params {:username "" :password ""}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :signup/all-fields-required]
+    {:params {:password "" :password-confirmation ""}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :signup/all-fields-required]
+    {:params {:username "" :password-confirmation ""}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :auth/passwords-must-match]
+    {:params {:username "a" :password "a" :password-confirmation ""}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :auth/passwords-must-match]
+    {:params {:username "a" :password "a" :password-confirmation "b"}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false :auth/passwords-must-match]
+    {:params {:username "a" :password "abc" :password-confirmation "xyz"}
+     :min-password-length 0
+     :max-password-length 0}
+    {}
+
+    [false [:auth/password-must-be-at-least 4]]
+    {:params {:username "a" :password "abc" :password-confirmation "abc"}
+     :min-password-length 4
+     :max-password-length 0}
+    {}
+
+    [false [:auth/password-must-be-at-least 10]]
+    {:params {:username "a" :password "abc" :password-confirmation "abc"}
+     :min-password-length 10
+     :max-password-length 0}
+    {}
+
+    [false [:auth/password-must-be-at-most 4]]
+    {:params {:username "a" :password "12345" :password-confirmation "12345"}
+     :min-password-length 3
+     :max-password-length 4}
+    {}
+
+    [false [:auth/password-must-be-at-most 10]]
+    {:params {:username "a" :password "12345678901" :password-confirmation "12345678901"}
+     :min-password-length 3
+     :max-password-length 10}
+    {}
+
+    ,))
 
 #_
 (deftest test-check-invitation-age

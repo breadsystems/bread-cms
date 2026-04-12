@@ -13,7 +13,8 @@
 
 (defmethod bread/expand ::validate
   [{:keys [min-password-length max-password-length invite-only?]
-    {:keys [username password password-confirmation]} :params}
+    {:keys [username password password-confirmation]} :params
+    :or {username "" password "" password-confirmation ""}}
    {:keys [existing-username invitation]}]
   (let [username? (seq username)
         password? (seq password)
