@@ -229,7 +229,7 @@
 
 (defc ResetPasswordPage
   [{:as data
-    :keys [config hook i18n session dir totp ring/anti-forgery-token-field]
+    :keys [config hook i18n session dir ring/anti-forgery-token-field]
     :auth/keys [result]}]
   {:extends Page
    :doc
@@ -246,8 +246,7 @@
       :description
       "A valid code must be present in the query string."
       :args ({})}]}
-  (let [{:keys [totp-key issuer]} totp
-        user (or (:user session) (:auth/user session))
+  (let [user (or (:user session) (:auth/user session))
         error? (false? (:valid result))]
     {:title (:auth/reset-password i18n)
      :content
