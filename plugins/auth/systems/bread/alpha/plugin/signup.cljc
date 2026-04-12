@@ -67,20 +67,21 @@
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
-  (let [invitation-query (when (:code params)
-                           {:expansion/name ::db/query
-                            :expansion/description
-                            "Check for valid invite code."
-                            :expansion/key :invitation
-                            :expansion/db (db/database req)
-                            :expansion/args
-                            ['{:find [(pull ?e [:invitation/code
-                                                {:invitation/email [*]}]) .]
-                               :in [$ ?code]
-                               :where [[?e :invitation/code ?code]
-                                       ;; TODO expire code
-                                       (not [?e :invitation/redeemer])]}
-                             (sha-512 (:code params))]})
+  (let [invitation-queries [(when (:code params)
+                               {:expansion/name ::db/query
+                                :expansion/description
+                                "Check for valid invite code."
+                                :expansion/key :invitation
+                                :expansion/db (db/database req)
+                                :expansion/args
+                                ['{:find [(pull ?e [:thing/updated-at
+                                                    :invitation/code
+                                                    {:invitation/email [*]}]) .]
+                                   :in [$ ?code]
+                                   :where [[?e :invitation/code ?code]
+                                           ;; TODO expire code
+                                           (not [?e :invitation/redeemer])]}
+                                 (sha-512 (:code params))]})]
         expansions [{:expansion/key :config
                      :expansion/name ::bread/value
                      :expansion/description "Signup config"
@@ -88,7 +89,7 @@
     (cond
       ;; Viewing signup page
       (= :get request-method)
-      {:expansions (concat expansions [invitation-query])}
+      {:expansions (concat expansions invitation-queries)}
 
       ;; Submitting new username/password
       (= :post request-method)
@@ -98,8 +99,8 @@
                   :user/password password-hash
                   :thing/created-at (t/now)}]
         {:expansions (concat expansions
-                             [invitation-query
-                              {:expansion/key :existing-username
+                             invitation-queries
+                             [{:expansion/key :existing-username
                                :expansion/name ::db/query
                                :expansion/description
                                "Check for existing users by username."
