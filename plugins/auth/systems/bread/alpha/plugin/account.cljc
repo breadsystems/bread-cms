@@ -316,8 +316,8 @@
       :action/description "Merge strings for account page into global i18n strings."
       :strings (i18n/read-strings "account.i18n.edn")}]}
    :config
-   {:account/account-uri account-uri
-    :account/timezone-options timezone-options
-    :account/html.account.header html-account-header
-    :account/html.account.sections html-account-sections
-    :account/html.account.form html-account-form}})
+   #:account{:account-uri account-uri
+             :timezone-options timezone-options
+             :html.account.header html-account-header
+             :html.account.sections html-account-sections
+             :html.account.form html-account-form}})
