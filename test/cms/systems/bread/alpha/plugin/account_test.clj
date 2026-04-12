@@ -8,7 +8,6 @@
                                               use-db]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.auth :as auth]
