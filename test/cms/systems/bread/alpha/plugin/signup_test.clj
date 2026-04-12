@@ -84,7 +84,7 @@
        :uri "/signup"
        :params {:code "qwerty"}}
 
-      ;; Just loading the signup page.
+      ;; Enacting a signup.
       {:expansions [{:expansion/name ::db/query
                      :expansion/description "Query invitation by code."
                      :expansion/key :invitation
@@ -128,6 +128,59 @@
        :hooks {::bread/render [{:action/description "Redirect to login"
                                 :action/name ::signup/redirect}]}}
       {}
+      {:request-method :post
+       :uri "/signup"
+       :params {:code "submitted"
+                :username "coby"
+                :password "password"
+                :password-confirmation "password"}}
+
+      ;; Enacting a signup with custom config.
+      {:expansions [{:expansion/name ::db/query
+                     :expansion/description "Query invitation by code."
+                     :expansion/key :invitation
+                     :expansion/db ::FAKEDB
+                     :expansion/args ['{:find [(pull ?e [:thing/updated-at
+                                                         :invitation/code
+                                                         {:invitation/email [*]}]) .]
+                                        :in [$ ?code]
+                                        :where [[?e :invitation/code ?code]
+                                                (not [?e :invitation/redeemer])]}
+                                      "sha-512[submitted]"]}
+                    {:expansion/name ::signup/check-invitation-age
+                     :expansion/description "Ensure invitation is sufficiently recent."
+                     :expansion/key :invitation
+                     :invitation-expiration-seconds (* 72 60 60)}
+                    {:expansion/name ::db/query
+                     :expansion/key :existing-username
+                     :expansion/description "Check for existing users by username."
+                     :expansion/db ::FAKEDB
+                     :expansion/args ['{:find [?e .]
+                                        :in [$ ?username]
+                                        :where [[?e :user/username ?username]]}
+                                      "coby"]}
+                    {:expansion/name ::signup/validate
+                     :expansion/description "Validate this signup request."
+                     :expansion/key :validation
+                     :params {:code "submitted"
+                              :username "coby"
+                              :password "password"
+                              :password-confirmation "password"}
+                     :min-password-length 4
+                     :max-password-length 42
+                     :invite-only? true}]
+       :effects [{:effect/name ::signup/enact-valid-signup
+                  :effect/description "If the signup is valid, create the account."
+                  :effect/key :new-user
+                  :user {:thing/created-at !now
+                         :user/username "coby"
+                         :user/password "[:bcrypt+blake2b-512+password]"}
+                  :conn db-conn}]
+       :hooks {::bread/render [{:action/description "Redirect to login"
+                                :action/name ::signup/redirect}]}}
+      {:signup-config {:invite-only? true}
+       :auth-config {:min-password-length 4
+                     :max-password-length 42}}
       {:request-method :post
        :uri "/signup"
        :params {:code "submitted"
