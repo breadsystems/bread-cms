@@ -37,6 +37,13 @@
                   [:auth/password-must-be-at-most max-password-length]))]
     [valid? error]))
 
+(defmethod bread/expand ::check-invitation-age
+  [{:keys [invitation-expiration-seconds]} {:keys [invitation]}]
+  (let [invited-at (:thing/updated-at invitation)
+        earliest-valid (t/seconds-ago invitation-expiration-seconds)
+        invitation-valid? (and invited-at (.after invited-at earliest-valid))]
+    (when invitation-valid? invitation)))
+
 (defmethod bread/effect ::enact-valid-signup
   [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
   (when valid?
@@ -70,7 +77,7 @@
   (let [invitation-queries [(when (:code params)
                                {:expansion/name ::db/query
                                 :expansion/description
-                                "Check for valid invite code."
+                                "Query invitation by code."
                                 :expansion/key :invitation
                                 :expansion/db (db/database req)
                                 :expansion/args
@@ -79,9 +86,14 @@
                                                     {:invitation/email [*]}]) .]
                                    :in [$ ?code]
                                    :where [[?e :invitation/code ?code]
-                                           ;; TODO expire code
                                            (not [?e :invitation/redeemer])]}
-                                 (sha-512 (:code params))]})]
+                                 (sha-512 (:code params))]})
+                            {:expansion/name ::check-invitation-age
+                             :expansion/description
+                             "Ensure invitation is sufficiently recent."
+                             :expansion/key :invitation
+                             :invitation-expiration-seconds
+                             (bread/config req :signup/invitation-expiration-seconds)}]
         expansions [{:expansion/key :config
                      :expansion/name ::bread/value
                      :expansion/description "Signup config"
