@@ -30,6 +30,7 @@
         error (when-not valid?
                 (cond
                   (or (not username?) (not password?)) :signup/all-fields-required
+                  (not username-available?) :signup/username-exists
                   (not password-fields-match?) :auth/passwords-must-match
                   (not password-gte-min?)
                   [:auth/password-must-be-at-least min-password-length]

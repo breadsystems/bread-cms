@@ -229,43 +229,55 @@
     {:params {:username "a" :password "a" :password-confirmation ""}
      :min-password-length 0
      :max-password-length 0}
-    {}
+    {:existing-username false}
 
     [false :auth/passwords-must-match]
     {:params {:username "a" :password "a" :password-confirmation "b"}
      :min-password-length 0
      :max-password-length 0}
-    {}
+    {:existing-username false}
 
     [false :auth/passwords-must-match]
     {:params {:username "a" :password "abc" :password-confirmation "xyz"}
      :min-password-length 0
      :max-password-length 0}
-    {}
+    {:existing-username false}
 
     [false [:auth/password-must-be-at-least 4]]
     {:params {:username "a" :password "abc" :password-confirmation "abc"}
      :min-password-length 4
      :max-password-length 0}
-    {}
+    {:existing-username false}
 
     [false [:auth/password-must-be-at-least 10]]
     {:params {:username "a" :password "abc" :password-confirmation "abc"}
      :min-password-length 10
      :max-password-length 0}
-    {}
+    {:existing-username false}
 
     [false [:auth/password-must-be-at-most 4]]
     {:params {:username "a" :password "12345" :password-confirmation "12345"}
      :min-password-length 3
      :max-password-length 4}
-    {}
+    {:existing-username false}
 
     [false [:auth/password-must-be-at-most 10]]
     {:params {:username "a" :password "12345678901" :password-confirmation "12345678901"}
      :min-password-length 3
      :max-password-length 10}
-    {}
+    {:existing-username false}
+
+    [false :signup/username-exists]
+    {:params {:username "a" :password "password" :password-confirmation "password"}
+     :min-password-length 8
+     :max-password-length 10}
+    {:existing-username {}}
+
+    [true nil]
+    {:params {:username "a" :password "password" :password-confirmation "password"}
+     :min-password-length 8
+     :max-password-length 10}
+    {:existing-username false}
 
     ,))
 

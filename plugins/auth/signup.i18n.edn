@@ -9,5 +9,6 @@
           :please-choose-username-password "Please choose a username and password."
           :signup "Signup"
           :site-invite-only "This site is invite-only."
+          :username-exists "Username already exists."
           }
  }
