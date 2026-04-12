@@ -10,7 +10,7 @@
 
 (defn seconds-from-now
   ([seconds]
-   (seconds-ago (now) seconds))
+   (seconds-from-now (now) seconds))
   ([now seconds]
    (.getTime (doto (Calendar/getInstance)
                (.setTime now)
