@@ -12,8 +12,7 @@
     [java.net URLEncoder]))
 
 (defmethod bread/expand ::validate
-  [{{:auth/keys [min-password-length max-password-length]
-     :signup/keys [invite-only?]} :config
+  [{:keys [min-password-length max-password-length invite-only?]
     {:keys [username password password-confirmation]} :params}
    {:keys [existing-username invitation]}]
   (let [username? (seq username)
@@ -93,15 +92,11 @@
                              "Ensure invitation is sufficiently recent."
                              :expansion/key :invitation
                              :invitation-expiration-seconds
-                             (bread/config req :signup/invitation-expiration-seconds)}]
-        expansions [{:expansion/key :config
-                     :expansion/name ::bread/value
-                     :expansion/description "Signup config"
-                     :expansion/value (::bread/config req)}]]
+                             (bread/config req :signup/invitation-expiration-seconds)}]]
     (cond
       ;; Viewing signup page
       (= :get request-method)
-      {:expansions (concat expansions invitation-queries)}
+      {:expansions invitation-queries}
 
       ;; Submitting new username/password
       (= :post request-method)
@@ -110,22 +105,25 @@
             user {:user/username (:username params)
                   :user/password password-hash
                   :thing/created-at (t/now)}]
-        {:expansions (concat expansions
-                             invitation-queries
-                             [{:expansion/key :existing-username
-                               :expansion/name ::db/query
-                               :expansion/description
-                               "Check for existing users by username."
-                               :expansion/db (db/database req)
-                               :expansion/args
-                               ['{:find [?e .]
-                                  :in [$ ?username]
-                                  :where [[?e :user/username ?username]]}
-                                (:username params)]}
-                              {:expansion/key :validation
-                               :expansion/name ::validate
-                               :params params
-                               :config (::bread/config req)}])
+        {:expansions
+         (concat invitation-queries
+                 [{:expansion/key :existing-username
+                   :expansion/name ::db/query
+                   :expansion/description
+                   "Check for existing users by username."
+                   :expansion/db (db/database req)
+                   :expansion/args
+                   ['{:find [?e .]
+                      :in [$ ?username]
+                      :where [[?e :user/username ?username]]}
+                    (:username params)]}
+                  {:expansion/key :validation
+                   :expansion/name ::validate
+                   :expansion/description "Validate this signup request."
+                   :params params
+                   :min-password-length (bread/config req :auth/min-password-length)
+                   :max-password-length (bread/config req :auth/max-password-length)
+                   :invite-only? (bread/config req :signup/invite-only?)}])
          :effects
          [{:effect/name ::enact-valid-signup
            :effect/key :new-user
