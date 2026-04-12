@@ -98,6 +98,7 @@
     [:html {:lang lang :dir dir}
      [:head
       [:meta {:content-type :utf-8}]
+      [:meta {:name :viewport :content "width=device-width, initial-scale=1"}]
       (hook ::theme/html.title
             [:title (theme/title title (:site/name config))]
             title)
