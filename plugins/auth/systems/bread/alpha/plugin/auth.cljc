@@ -162,7 +162,7 @@
 
 (defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
-  (let [encrypted (or (:user/password user) "")
+  (let [hashed (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
     (cond
       (not user) {:valid false :user nil}
@@ -174,7 +174,7 @@
 
       :default
       (let [result (try
-                     (hashers/verify plaintext-password encrypted)
+                     (hashers/verify plaintext-password hashed)
                      (catch clojure.lang.ExceptionInfo e
                        {:valid false}))]
         (assoc result :user user)))))
