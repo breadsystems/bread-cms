@@ -18,7 +18,7 @@
 
 (defn seconds-ago
   ([seconds]
-   (seconds-ago (now) (- seconds)))
+   (seconds-from-now (now) (- seconds)))
   ([now seconds]
    (seconds-from-now now (- seconds))))
 
