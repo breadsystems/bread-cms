@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.cms.theme.rise
   (:require
     [clojure.java.io :as io]
+    [clojure.string :as string]
 
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.component :refer [defc Section]]
@@ -138,6 +139,20 @@
                                  :id id
                                  :type (or field-type :text)
                                  :value value})]]))
+
+(defc Option [labels selected-value value]
+  [:option {:value value :selected (= selected-value value)}
+   (get labels value)])
+
+(defmethod Section ::account/timezone [{:keys [config i18n user]} _]
+  (let [options (:account/timezone-options config)
+        ;; TODO proper localization...
+        labels (map #(string/replace % "_" " ") options)
+        tz (:timezone (:user/preferences user))]
+    [:.field
+     [:label {:for :timezone} (:account/timezone i18n)]
+     [:select {:id :timezone :name :timezone}
+      (map (partial Option (zipmap options labels) tz) options)]]))
 
 (defc Submit [label & {field-name :name :keys [value]}]
   [:.field

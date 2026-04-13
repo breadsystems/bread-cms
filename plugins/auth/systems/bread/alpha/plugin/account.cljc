@@ -21,11 +21,6 @@
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
 
-;; TODO move to generic ui ns
-(defn Option [labels selected-value value]
-  [:option {:value value :selected (= selected-value value)}
-   (get labels value)])
-
 (defn- ua->browser [ua]
   (when ua
     (let [normalized (string/lower-case ua)]
@@ -77,16 +72,6 @@
              [:option {:selected (= k (:user/lang user)) :value k}
               (get lang-names k (name k))])
            (sort-by name (seq supported-langs)))]]))
-
-(defmethod Section ::timezone [{:keys [config i18n user]} _]
-  (let [options (:account/timezone-options config)
-        ;; TODO proper localization...
-        labels (map #(string/replace % "_" " ") options)
-        tz (:timezone (:user/preferences user))]
-    [:.field
-     [:label {:for :timezone} (:account/timezone i18n)]
-     [:select {:id :timezone :name :timezone}
-      (map (partial Option (zipmap options labels) tz) options)]]))
 
 (defmethod Section ::sessions [{:keys [i18n session user]} _]
   (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
