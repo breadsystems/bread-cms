@@ -403,6 +403,40 @@
   [:option {:value value :selected (= selected-value value)}
    (get labels value)])
 
+(defmethod Section ::account/username [{:keys [user]} _]
+  [:span.username (:user/username user)])
+
+(defmethod Section ::account/account-link
+  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
+  [:a {:href account-uri :title (:account/account-details i18n)}
+   (:user/username user)])
+
+(defmethod Section ::account/heading [{:keys [i18n]} _]
+  [:h3 (:account/account i18n)])
+
+(defmethod Section ::account/name [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :name} (:account/name i18n)]
+   [:input {:id :name :name :name :value (:user/name user)}]])
+
+(defmethod Section ::account/pronouns [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :pronouns} (:account/pronouns i18n)]
+   [:input {:id :pronouns
+            :name :pronouns
+            :value (:pronouns (:user/preferences user))
+            :placeholder (:account/pronouns-example i18n)}]])
+
+(defmethod Section ::account/lang [{:keys [i18n lang-names supported-langs user]} _]
+  (when (> (count supported-langs) 1)
+    [:.field
+     [:label {:for :lang} (:account/preferred-language i18n)]
+     [:select {:id :lang :name :lang}
+      (map (fn [k]
+             [:option {:selected (= k (:user/lang user)) :value k}
+              (get lang-names k (name k))])
+           (sort-by name (seq supported-langs)))]]))
+
 (defmethod Section ::account/timezone [{:keys [config i18n user]} _]
   (let [options (:account/timezone-options config)
         ;; TODO proper localization...

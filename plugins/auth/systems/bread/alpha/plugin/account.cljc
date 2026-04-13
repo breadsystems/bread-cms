@@ -3,55 +3,17 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [com.rpl.specter :as s]
-    [clojure.java.io :as io]
-    [clojure.string :as string]
 
-    [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.invitations :as invitations]
     [systems.bread.alpha.plugin.email :as email]))
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
-
-(defmethod Section ::username [{:keys [user]} _]
-  [:span.username (:user/username user)])
-
-(defmethod Section ::account-link
-  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
-  [:a {:href account-uri :title (:account/account-details i18n)}
-   (:user/username user)])
-
-(defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:account/account i18n)])
-
-(defmethod Section ::name [{:keys [user i18n]} _]
-  [:.field
-   [:label {:for :name} (:account/name i18n)]
-   [:input {:id :name :name :name :value (:user/name user)}]])
-
-(defmethod Section ::pronouns [{:keys [user i18n]} _]
-  [:.field
-   [:label {:for :pronouns} (:account/pronouns i18n)]
-   [:input {:id :pronouns
-            :name :pronouns
-            :value (:pronouns (:user/preferences user))
-            :placeholder (:account/pronouns-example i18n)}]])
-
-(defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
-  (when (> (count supported-langs) 1)
-    [:.field
-     [:label {:for :lang} (:account/preferred-language i18n)]
-     [:select {:id :lang :name :lang}
-      (map (fn [k]
-             [:option {:selected (= k (:user/lang user)) :value k}
-              (get lang-names k (name k))])
-           (sort-by name (seq supported-langs)))]]))
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
