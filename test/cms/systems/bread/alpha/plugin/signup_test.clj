@@ -281,10 +281,71 @@
 
     ,))
 
-#_
 (deftest test-check-invitation-age
-  ;; TODO
-  )
+  (are
+    [expected !now expansion data]
+    (= expected (binding [t/*now* !now]
+                  (bread/expand (assoc expansion
+                                       :expansion/name ::signup/check-invitation-age)
+                                data)))
+
+    nil (Date.) {:invitation-expiration-seconds 0} {}
+    nil (Date.) {:invitation-expiration-seconds 3600} {}
+    nil (Date.) {:invitation-expiration-seconds 1} {}
+
+    ;; JUST expired.
+    nil
+    (Date.)
+    {:invitation-expiration-seconds 3600}
+    {:invitation {:thing/updated-at (t/seconds-ago 3600)}}
+
+    ;; JUST expired.
+    nil
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 60}
+    {:invitation {:thing/updated-at #inst "2026-04-11T23:59:00"
+                  :invitation/code "qwerty"}}
+
+    ;; Expired hours ago.
+    nil
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 3600}
+    {:invitation {:thing/updated-at #inst "2026-04-11T20:00:00"
+                  :invitation/code "qwerty"}}
+
+    ;; Invitation is *just* recent enough by one second.
+    {:thing/updated-at #inst "2026-04-11T23:59:01"
+     :invitation/code "qwerty"}
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 60}
+    {:invitation {:thing/updated-at #inst "2026-04-11T23:59:01"
+                  :invitation/code "qwerty"}}
+
+    ;; Invitation expires in the future.
+    {:thing/updated-at #inst "2026-04-12T00:00:00"
+     :invitation/code "qwerty"}
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 3600}
+    {:invitation {:thing/updated-at #inst "2026-04-12T00:00:00"
+                  :invitation/code "qwerty"}}
+
+    ;; Updated just now.
+    {:thing/updated-at #inst "2026-04-12T00:00:00"
+     :invitation/code "qwerty"}
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 3600}
+    {:invitation {:thing/updated-at #inst "2026-04-12T00:00:00"
+                  :invitation/code "qwerty"}}
+
+    ;; Updated just a minute ago.
+    {:thing/updated-at #inst "2026-04-12T00:00:00"
+     :invitation/code "qwerty"}
+    #inst "2026-04-12T00:01:00"
+    {:invitation-expiration-seconds 3600}
+    {:invitation {:thing/updated-at #inst "2026-04-12T00:00:00"
+                  :invitation/code "qwerty"}}
+
+    ,))
 
 (comment
   (require '[kaocha.repl :as k])
