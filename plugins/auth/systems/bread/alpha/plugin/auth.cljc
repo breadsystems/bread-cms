@@ -468,8 +468,7 @@
 
 (defmethod bread/dispatch ::reset-password=>
   [{:keys [params request-method] :as req}]
-  (let [get? (= :get request-method)
-        post? (= :post request-method)
+  (let [post? (= :post request-method)
         authenticate-reset {:expansion/name ::authenticate-reset
                             :expansion/description "Authentication reset code."
                             :expansion/key :validation
