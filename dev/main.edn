@@ -91,6 +91,10 @@
        #{{:ability/key :publish-posts}
          {:ability/key :edit-posts}
          {:ability/key :delete-posts}}}}}
+   {:thing/created-at #seconds-ago 0
+    :thing/updated-at #seconds-ago 0
+    :reset/user "user.admin"
+    :reset/code #sha-512 #join [#env AUTH_SECRET_KEY ":" "RESETCODE"]}
    {:user/username "reader"
     :user/name "Reader User"
     ;; No emails yet!
