@@ -119,7 +119,8 @@
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'rise/SignupPage}]]
+        :dispatcher/component #'rise/SignupPage
+        :dispatcher/not-found-component #'rise/SignupPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
@@ -408,6 +409,7 @@
   (:http @system)
   (:ring/wrap-defaults @system)
   (:ring/session-store @system)
+  (-> @system :initial-config :ring/session-store :secret-key)
   (:bread/app @system)
   (:bread/routes @system)
   (:bread/router @system)

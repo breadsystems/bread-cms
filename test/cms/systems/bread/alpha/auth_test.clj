@@ -11,6 +11,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
+    [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
@@ -936,18 +937,19 @@
 (deftest test-session-store
   (let [app (plugins->loaded [(db/plugin config) (auth/plugin)])
         conn (db/connection app)
-        session-store (auth/session-store conn)
+        secret-key "qwerty"
+        session-store (auth/session-store {:secret-key secret-key} conn)
         get-session-data (fn [sk]
                            (db/q @conn
                                  '{:find [?data .]
-                                   :in [$ ?sk]
-                                   :where [[?e :session/id ?sk]
+                                   :in [$ ?hash]
+                                   :where [[?e :session/id ?hash]
                                            [?e :session/data ?data]]}
-                                 sk))]
+                                 (sha-512 (str secret-key ":" sk))))]
 
     (testing "write-session"
       (testing "passing a random string for session key"
-        (let [sk (ss/write-session session-store (random/base64 512) {:a :b})]
+        (let [sk (ss/write-session session-store (random/hex 32) {:a :b})]
           (is (string? sk))
           (is (= "{:a :b}" (get-session-data sk)))))
 
@@ -961,24 +963,21 @@
         (is (= {:a :b} (dissoc (ss/read-session session-store sk) :db/id)))
         (is (= {:a :b} (dissoc (ss/read-session session-store (str sk)) :db/id))))
 
+      (testing "updating secret-key invalidates all sessions"
+        (let [sk (ss/write-session session-store nil {:a :b})
+              updated-store (auth/session-store {:secret-key "updated"} conn)]
+          (is (nil? (ss/read-session updated-store sk)))))
+
       (testing "passing nil session key"
         (is (nil? (ss/read-session session-store nil)))))
 
     (testing "delete-session"
-      (testing "passing a UUID"
-        (let [sk (ss/write-session session-store nil {:a :b})]
-          (ss/delete-session session-store sk)
-          (is (nil? (get-session-data sk)))
-          (is (nil? (ss/read-session session-store sk)))))
+      (let [sk (ss/write-session session-store nil {:a :b})]
+        (ss/delete-session session-store sk)
+        (is (nil? (get-session-data sk)))
+        (is (nil? (ss/read-session session-store sk)))))
 
-      (testing "passing a UUID-formatted string"
-        (let [sk (ss/write-session session-store nil {:a :b})]
-          (ss/delete-session session-store (str sk))
-          (is (nil? (get-session-data sk)))
-          (is (nil? (ss/read-session session-store sk))))))
-
-    ;;
-    ))
+    ,))
 
 (comment
   (require '[datahike.api :as d])
@@ -1001,4 +1000,5 @@
   (k/run #'test-authentication-flow {:color? false})
   (k/run #'test-authentication-flow-with-mfa {:color? false})
   (k/run #'test-authentication-flow #'test-authentication-flow-with-mfa {:color? false})
+  (k/run #'test-session-store {:color? false})
   (k/run {:color? false}))

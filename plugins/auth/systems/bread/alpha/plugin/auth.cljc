@@ -22,29 +22,34 @@
 (defn database [req]
   (db/db (db/connection req)))
 
+(defn- hash-session-key [config sk]
+  (sha-512 (str (:secret-key config) ":" sk)))
+
 (deftype DatalogSessionStore [config conn]
   ss/SessionStore
   (ss/delete-session [_ sk]
-    (db/transact conn [[:db/retract [:session/id sk] :session/id]
-                       [:db/retract [:session/id sk] :session/data]])
+    (let [hashed (hash-session-key config sk)]
+      (db/transact conn [[:db/retractEntity [:session/id hashed]]]))
     sk)
   (ss/read-session [_ sk]
     (when sk
-      (let [{:as session :keys [db/id session/data thing/updated-at]}
+      (let [hashed (hash-session-key config sk)
+            {:as session :keys [db/id session/data thing/updated-at]}
             (db/q @conn
                   '{:find [(pull ?e [:db/id :thing/updated-at :session/data]) .]
                     :in [$ ?sk]
                     :where [[?e :session/id ?sk]]}
-                  sk)
+                  hashed)
             earliest-valid (t/seconds-ago (:max-age config))
             valid? (when session (.after updated-at earliest-valid))]
         (when (and valid? id)
           (-> data edn/read-string (assoc :db/id id))))))
   (ss/write-session [this sk {:keys [user] :as data}]
     (let [exists? (and sk (ss/read-session this sk))
-          sk (if exists? sk (random/base64 512))
+          sk (if exists? sk (random/hex (:key-length config 32)))
+          hashed (hash-session-key config sk)
           now (t/now)
-          session (merge {:session/id sk
+          session (merge {:session/id hashed
                           :session/data (pr-str data)
                           :thing/updated-at now}
                          (when-not exists? {:thing/created-at now}))
@@ -54,8 +59,8 @@
       sk)))
 
 (defn session-store
-  ([{:keys [max-age]} conn]
-   (let [config {:max-age (or max-age (* 72 60 60))}]
+  ([config conn]
+   (let [config (merge {:max-age (* 72 60 60)} config)]
      (DatalogSessionStore. config conn)))
   ([conn]
    (session-store {} conn)))
@@ -70,175 +75,6 @@
   (map (partial ot/get-totp-token $secret) [{:time-step 30} {:time-step 19} {:time-step 60}])
   (ot/is-valid-totp-token? 812211 $secret)
   (ot/is-valid-totp-token? (ot/get-totp-token $secret) $secret))
-
-(defc LoginStyle [{:keys [hook]}]
-  {}
-  (hook
-    ::html.style
-    [:<>
-     [:style
-      "
-      :root {
-        --body-max-width: 70ch;
-        --border-width: 2px;
-        --color-text-body: hsl(300, 80%, 95%);
-        --color-text-emphasis: hsl(300.7, 66%, 65.3%);
-        --color-stroke-emphasis: hsl(258.6, 100%, 74.7%);
-        --color-stroke-secondary: hsl(300, 75%, 12.5%);
-        --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
-        --color-text-error: hsl(326, 68.3%, 62.9%);
-        --color-stroke-error: hsl(314.9, 52.7%, 46.5%);
-        --color-text-secondary: hsl(300, 21.9%, 70.4%);
-        --color-bg: hsl(264, 41.7%, 4.7%);
-      }
-      @media (prefers-color-scheme: light) {
-        :root {
-          --color-text-body: hsl(263.9, 79%, 24.3%);
-          --color-text-emphasis: hsl(280.9, 52.6%, 42.2%);
-          --color-stroke-emphasis: hsl(290, 33.3%, 49.4%);
-          --color-stroke-secondary: hsl(300, 75%, 12.5%);
-          --color-text-error: hsl(309.4, 73.8%, 37.5%);
-          --color-stroke-error: hsl(300.4, 69.2%, 40.8%);
-          --color-text-secondary: hsl(280.3, 42.7%, 36.3%);
-          --color-stroke-tertiary: hsl(300, 17.8%, 17.6%);
-          --color-bg: hsl(300, 12.8%, 92.4%);
-        }
-      }
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
-        line-height: 1.5;
-
-        color: var(--color-text-body);
-        background: var(--color-bg);
-      }
-      nav {
-        align-items: center;
-
-        padding: 1em;
-        border-bottom: 2px dashed var(--color-stroke-emphasis);
-      }
-      main {
-        width: var(--body-max-width);
-        max-width: 96%;
-        margin: 5em auto;
-      }
-      h1, h2, h3, h4, h5, h6 {
-        color: var(--color-text-emphasis);
-      }
-      h1, h2, p {
-        margin: 0;
-      }
-      form {
-        margin: 0;
-      }
-      a {
-        color: var(--color-text-emphasis);
-      }
-      a:visited {
-        color: var(--color-text-secondary);
-      }
-      .flex {
-        display: flex;
-        gap: 1.5em;
-      }
-      .tight {
-        gap: 0.5em;
-      }
-      .col {
-        flex-flow: column nowrap;
-      }
-      .row {
-        flex-flow: row nowrap;
-        gap: 1em;
-        justify-content: space-between;
-      }
-      .spacer {
-        flex: 1;
-      }
-      .field {
-        display: flex;
-        flex-flow: row nowrap;
-        gap: 3ch;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .field label {
-        flex: 1;
-      }
-      .field :is(input, select) {
-        flex: 2;
-      }
-      .instruct {
-        color: var(--color-text-secondary);
-      }
-      .emphasis {
-        font-weight: 700;
-        color: var(--color-text-emphasis);
-        border: var(--border-width) dashed var(--color-stroke-emphasis);
-        padding: 12px;
-      }
-      .error {
-        font-weight: 700;
-        color: var(--color-text-error);
-        border: var(--border-width) dashed var(--color-stroke-error);
-        padding: 12px;
-      }
-      label {
-        font-weight: 700;
-      }
-      select {
-        cursor: pointer;
-      }
-      input, select {
-        padding: 12px;
-        border: var(--border-width) solid var(--color-text-body);
-      }
-      button, input, select {
-        color: var(--color-text-body);
-        background: var(--color-bg);
-        border: var(--border-width) solid var(--color-text-body);
-        border-radius: 0;
-      }
-      button {
-        padding: 10px 12px;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 1rem;
-      }
-      :is(button, input, select):focus {
-        outline: var(--border-width) solid var(--color-stroke-emphasis);
-        border-color: transparent;
-      }
-      button:hover {
-        border-color: transparent;
-        outline: var(--border-width) dashed var(--color-stroke-emphasis);
-        color: var(--color-text-emphasis);
-      }
-      .center {
-        display: flex;
-        justify-content: center;
-      }
-      hr {
-        width: 100%;
-        border: 2px solid var(--color-stroke-secondary);
-      }
-      .totp-key {
-        font-family: monospace;
-        letter-spacing: 5;
-      }
-
-      .user-session {
-        display: flex;
-        flex-flow: row wrap;
-        justify-content: space-between;
-        align-items: start;
-
-        margin: 0;
-        padding: 1em;
-        border: 2px dashed var(--color-stroke-tertiary);
-      }
-      "]]))
 
 (defn qr-datauri [data]
   (when-let [stream (try (qr/totp-stream data)
@@ -326,7 +162,7 @@
 
 (defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
-  (let [encrypted (or (:user/password user) "")
+  (let [hashed (or (:user/password user) "")
         user (when user (dissoc user :user/password))]
     (cond
       (not user) {:valid false :user nil}
@@ -338,7 +174,7 @@
 
       :default
       (let [result (try
-                     (hashers/verify plaintext-password encrypted)
+                     (hashers/verify plaintext-password hashed)
                      (catch clojure.lang.ExceptionInfo e
                        {:valid false}))]
         (assoc result :user user)))))
@@ -656,7 +492,7 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
+  ([{:keys [secret-key hash-algorithm max-failed-login-count lock-seconds next-param
             login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
             store-session-ip? store-session-user-agent?]
@@ -699,7 +535,8 @@
        :action/description "Merge strings for auth into global i18n strings."
        :strings (i18n/read-strings "auth.i18n.edn")}]}
     :config
-    #:auth{:require-mfa? require-mfa?
+    #:auth{:secret-key secret-key
+           :require-mfa? require-mfa?
            :mfa-issuer mfa-issuer
            :generous-totp-window? generous-totp-window?
            :hash-algorithm hash-algorithm

@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.cms.theme.rise
   (:require
     [clojure.java.io :as io]
+    [clojure.string :as string]
 
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.component :refer [defc Section]]
@@ -8,7 +9,9 @@
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.invitations :as invitations]))
+    [systems.bread.alpha.plugin.invitations :as invitations])
+  (:import
+    [java.text SimpleDateFormat]))
 
 (defn- IntroSection [_]
   {:id :intro
@@ -396,6 +399,108 @@
    (apply conj [:main]
           (map (partial Section data) (:account/html.account.sections config)))})
 
+(defc Option [labels selected-value value]
+  [:option {:value value :selected (= selected-value value)}
+   (get labels value)])
+
+(defmethod Section ::account/username [{:keys [user]} _]
+  [:span.username (:user/username user)])
+
+(defmethod Section ::account/account-link
+  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
+  [:a {:href account-uri :title (:account/account-details i18n)}
+   (:user/username user)])
+
+(defmethod Section ::account/heading [{:keys [i18n]} _]
+  [:h3 (:account/account i18n)])
+
+(defmethod Section ::account/name [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :name} (:account/name i18n)]
+   [:input {:id :name :name :name :value (:user/name user)}]])
+
+(defmethod Section ::account/pronouns [{:keys [user i18n]} _]
+  [:.field
+   [:label {:for :pronouns} (:account/pronouns i18n)]
+   [:input {:id :pronouns
+            :name :pronouns
+            :value (:pronouns (:user/preferences user))
+            :placeholder (:account/pronouns-example i18n)}]])
+
+(defmethod Section ::account/lang [{:keys [i18n lang-names supported-langs user]} _]
+  (when (> (count supported-langs) 1)
+    [:.field
+     [:label {:for :lang} (:account/preferred-language i18n)]
+     [:select {:id :lang :name :lang}
+      (map (fn [k]
+             [:option {:selected (= k (:user/lang user)) :value k}
+              (get lang-names k (name k))])
+           (sort-by name (seq supported-langs)))]]))
+
+(defmethod Section ::account/timezone [{:keys [config i18n user]} _]
+  (let [options (:account/timezone-options config)
+        ;; TODO proper localization...
+        labels (map #(string/replace % "_" " ") options)
+        tz (:timezone (:user/preferences user))]
+    [:.field
+     [:label {:for :timezone} (:account/timezone i18n)]
+     [:select {:id :timezone :name :timezone}
+      (map (partial Option (zipmap options labels) tz) options)]]))
+
+(defn- ua->browser [ua]
+  (when ua
+    (let [normalized (string/lower-case ua)]
+    (cond
+      (re-find #"firefox" normalized) "Firefox"
+      (re-find #"chrome" normalized) "Google Chrome"
+      (re-find #"safari" normalized) "Safari"
+      :default "Unknown browser"))))
+
+(defn- ua->os [ua]
+  (when ua
+    (let [normalized (string/lower-case ua)]
+      (cond
+        (re-find #"linux" normalized) "Linux"
+        (re-find #"macintosh" normalized) "Mac"
+        (re-find #"windows" normalized) "Windows"
+        :default "Unknown OS"))))
+
+(defmethod Section ::account/sessions [{:keys [i18n session user]} _]
+  (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n))]
+    [:section
+     [:h3 (:account/your-sessions i18n)]
+     [:.flex.col
+      (map (fn [{:as user-session
+                 {:keys [user-agent remote-addr]} :session/data
+                 :thing/keys [created-at updated-at]}]
+             (if (= (:db/id session) (:db/id user-session))
+               ;; Current session.
+               [:div.user-session
+                [:div
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
+                 [:div (i18n/t i18n [:account/logged-in-at (.format date-fmt created-at)])]
+                 (when updated-at
+                   [:div (i18n/t i18n [:account/last-active-at (.format date-fmt updated-at)])])]
+                [:div [:span.instruct (:account/this-session i18n)]]]
+               ;; Sessions on other devices.
+               [:form.user-session {:method :post}
+                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
+                [:div
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
+                 [:div "Logged in at " (.format date-fmt created-at)]
+                 (when updated-at
+                   [:div "Last active at " (.format date-fmt updated-at)])]
+                [:div
+                 [:button {:type :submit :name :action :value "delete-session"}
+                  (:auth/logout i18n)]]]))
+           (:user/sessions user))]]))
+
 (defmethod Section ::email/settings-link
   [{:keys [i18n] {:email/keys [settings-uri]} :config} _]
   [:a {:href settings-uri :title (:email/email-settings i18n)}
@@ -425,7 +530,6 @@
         (map (fn [{:keys [email/address
                           email/confirmed-at
                           email/primary?
-                          thing/created-at
                           db/id]}]
                [:form.flex.row {:method :post :role :listitem}
                 (anti-forgery-token-field)
@@ -491,6 +595,7 @@
 (defc EmailPage
   [{:as data :keys [config i18n]}]
   {:extends SettingsPage
+   :key :user
    :query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
   {:title (:email/email i18n)
    :content
@@ -591,6 +696,34 @@
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
 
+(defmethod Section ::account/password [{:keys [i18n hook config]} _]
+  [:<>
+   [:p.instruct (:account/leave-passwords-blank i18n)]
+   [:.field
+    [:label {:for :password} (:auth/password i18n)]
+    [:input {:id :password
+             :type :password
+             :name :password
+             :maxlength (:auth/max-password-length config)}]]
+   [:.field
+    [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+    [:input {:id :password-confirmation
+             :type :password
+             :name :password-confirmation
+             :maxlength (:auth/max-password-length config)}]]
+   (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])])
+
+(defmethod Section ::account/account-form
+  [{:as data :keys [config ring/anti-forgery-token-field]} _]
+  (apply conj [:form.flex.col {:method :post}]
+         (when anti-forgery-token-field
+           (anti-forgery-token-field))
+         (map (partial Section data) (:account/html.account.form config))))
+
 (defmethod Section ::account/logout-form [data _]
   (LogoutForm data))
 
@@ -613,50 +746,52 @@
 
 (defc SignupPage
   [{:as data
-    :keys [config error hook i18n invitation rtl? dir ring/params ring/anti-forgery-token-field]
-    [valid? error-key] :validation}]
-  [:html {:lang (:field/lang data) :dir dir}
-   [:head
-    [:meta {:content-type "utf-8"}]
-    (hook ::html.title [:title (str (:signup/signup i18n) " | Bread")])
-    (->> (auth/LoginStyle data) (hook ::auth/html.stylesheet) (hook ::html.signup.stylesheet))
-    (->> [:<>] (hook ::auth/html.head) (hook ::html.signup.head))]
-   [:body
-    (cond
-      (and (:signup/invite-only? config) (not (:code params)))
-      [:main
-       [:form.flex.col
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p (:signup/site-invite-only i18n)]]]
+    :keys [config hook i18n invitation ring/params ring/anti-forgery-token-field]
+    [_valid? error-key] :validation}]
+  {:extends Page
+   :key :invitation}
+  {:title (:signup/signup i18n)
+   :content
+   (cond
+     (and (:signup/invite-only? config) (not (:code params)))
+     [:main
+      [:form.flex.col
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       [:p (:signup/site-invite-only i18n)]]]
 
-      (and (:signup/invite-only? config) (not invitation))
-      [:main
-       [:form.flex.col
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        [:p (:signup/invitation-invalid i18n)]]]
+     (and (:signup/invite-only? config) (not invitation))
+     [:main
+      [:form.flex.col
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       [:p (:signup/invitation-invalid i18n)]]]
 
-      :default
-      [:main
-       [:form.flex.col {:name :bread-signup :method :post}
-        (anti-forgery-token-field)
-        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
-        (hook ::html.enter-username
-              [:p.instruct (:signup/please-choose-username-password i18n)])
-        (Field :username :label (:auth/username i18n) :value (:username params))
-        (Field :password
-               :type :password
-               :label (:auth/password i18n)
-               :input-attrs {:maxlength (:auth/max-password-length config)})
-        (Field :password-confirmation
-               :type :password
-               :label (:auth/password-confirmation i18n)
-               :input-attrs {:maxlength (:auth/max-password-length config)})
-        (when error-key
-          (hook ::html.invalid-signup
-                (ErrorMessage {:message (i18n/t i18n error-key)})))
-        (Submit (:signup/create-account i18n))]])]])
+     :default
+     [:main
+      [:form.flex.col {:name :bread-signup :method :post}
+       (anti-forgery-token-field)
+       (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
+       (hook ::html.enter-username
+             [:p.instruct (:signup/please-choose-username-password i18n)])
+       (when error-key
+         (hook ::html.invalid-signup
+               (ErrorMessage {:message (i18n/t i18n error-key)})))
+       (Field :username :label (:auth/username i18n) :value (:username params))
+       (Field :password
+              :type :password
+              :label (:auth/password i18n)
+              :input-attrs {:maxlength (:auth/max-password-length config)})
+       (Field :password-confirmation
+              :type :password
+              :label (:auth/password-confirmation i18n)
+              :input-attrs {:maxlength (:auth/max-password-length config)})
+       (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])
+       (Submit (:signup/create-account i18n))]])})
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
   [:<>

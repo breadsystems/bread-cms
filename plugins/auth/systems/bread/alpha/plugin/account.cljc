@@ -3,150 +3,17 @@
     [buddy.hashers :as hashers]
     [clojure.edn :as edn]
     [com.rpl.specter :as s]
-    [clojure.java.io :as io]
-    [clojure.string :as string]
 
-    [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.invitations :as invitations]
-    [systems.bread.alpha.plugin.email :as email])
-  (:import
-    [java.text SimpleDateFormat]))
+    [systems.bread.alpha.plugin.email :as email]))
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
-
-;; TODO move to generic ui ns
-(defn Option [labels selected-value value]
-  [:option {:value value :selected (= selected-value value)}
-   (get labels value)])
-
-(defn- ua->browser [ua]
-  (when ua
-    (let [normalized (string/lower-case ua)]
-    (cond
-      (re-find #"firefox" normalized) "Firefox"
-      (re-find #"chrome" normalized) "Google Chrome"
-      (re-find #"safari" normalized) "Safari"
-      :default "Unknown browser"))))
-
-(defn- ua->os [ua]
-  (when ua
-    (let [normalized (string/lower-case ua)]
-      (cond
-        (re-find #"linux" normalized) "Linux"
-        (re-find #"macintosh" normalized) "Mac"
-        (re-find #"windows" normalized) "Windows"
-        :default "Unknown OS"))))
-
-(defmethod Section ::username [{:keys [user]} _]
-  [:span.username (:user/username user)])
-
-(defmethod Section ::account-link
-  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
-  [:a {:href account-uri :title (:account/account-details i18n)}
-   (:user/username user)])
-
-(defmethod Section ::heading [{:keys [i18n]} _]
-  [:h3 (:account/account i18n)])
-
-(defmethod Section ::name [{:keys [user i18n]} _]
-  [:.field
-   [:label {:for :name} (:account/name i18n)]
-   [:input {:id :name :name :name :value (:user/name user)}]])
-
-(defmethod Section ::pronouns [{:keys [user i18n]} _]
-  [:.field
-   [:label {:for :pronouns} (:account/pronouns i18n)]
-   [:input {:id :pronouns
-            :name :pronouns
-            :value (:pronouns (:user/preferences user))
-            :placeholder (:account/pronouns-example i18n)}]])
-
-(defmethod Section ::lang [{:keys [i18n lang-names supported-langs user]} _]
-  (when (> (count supported-langs) 1)
-    [:.field
-     [:label {:for :lang} (:account/preferred-language i18n)]
-     [:select {:id :lang :name :lang}
-      (map (fn [k]
-             [:option {:selected (= k (:user/lang user)) :value k}
-              (get lang-names k (name k))])
-           (sort-by name (seq supported-langs)))]]))
-
-(defmethod Section ::timezone [{:keys [config i18n user]} _]
-  (let [options (:account/timezone-options config)
-        ;; TODO proper localization...
-        labels (map #(string/replace % "_" " ") options)
-        tz (:timezone (:user/preferences user))]
-    [:.field
-     [:label {:for :timezone} (:account/timezone i18n)]
-     [:select {:id :timezone :name :timezone}
-      (map (partial Option (zipmap options labels) tz) options)]]))
-
-(defmethod Section ::password [{:keys [i18n user config]} _]
-  [:<>
-   [:p.instruct (:account/leave-passwords-blank i18n)]
-   [:.field
-    [:label {:for :password} (:auth/password i18n)]
-    [:input {:id :password
-             :type :password
-             :name :password
-             :maxlength (:auth/max-password-length config)}]]
-   [:.field
-    [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
-    [:input {:id :password-confirmation
-             :type :password
-             :name :password-confirmation
-             :maxlength (:auth/max-password-length config)}]]])
-
-(defmethod Section ::account-form
-  [{:as data :keys [config ring/anti-forgery-token-field]} _]
-  (apply conj [:form.flex.col {:method :post}]
-         (when anti-forgery-token-field
-           (anti-forgery-token-field))
-         (map (partial Section data) (:account/html.account.form config))))
-
-(defmethod Section ::sessions [{:keys [i18n session user]} _]
-  (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
-    [:section
-     [:h3 (:account/your-sessions i18n)]
-     [:.flex.col
-      (map (fn [{:as user-session
-                 {:keys [user-agent remote-addr]} :session/data
-                 :thing/keys [created-at updated-at]}]
-             (if (= (:db/id session) (:db/id user-session))
-               ;; Current session.
-               [:div.user-session
-                [:div
-                 (when user-agent
-                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
-                 (when remote-addr
-                   [:div remote-addr])
-                 [:div "Logged in at " (.format date-fmt created-at)]
-                 (when updated-at
-                   ;; TODO i18n
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div [:span.instruct "This session"]]]
-               ;; Sessions on other devices.
-               [:form.user-session {:method :post}
-                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
-                [:div
-                 (when user-agent
-                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
-                 (when remote-addr
-                   [:div remote-addr])
-                 [:div "Logged in at " (.format date-fmt created-at)]
-                 (when updated-at
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div
-                 [:button {:type :submit :name :action :value "delete-session"}
-                  (:auth/logout i18n)]]]))
-           (:user/sessions user))]]))
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...

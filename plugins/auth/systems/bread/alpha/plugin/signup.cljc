@@ -12,9 +12,9 @@
     [java.net URLEncoder]))
 
 (defmethod bread/expand ::validate
-  [{{:auth/keys [min-password-length max-password-length]
-     :signup/keys [invite-only?]} :config
-    {:keys [username password password-confirmation]} :params}
+  [{:keys [min-password-length max-password-length invite-only?]
+    {:keys [username password password-confirmation]} :params
+    :or {username "" password "" password-confirmation ""}}
    {:keys [existing-username invitation]}]
   (let [username? (seq username)
         password? (seq password)
@@ -30,12 +30,23 @@
         error (when-not valid?
                 (cond
                   (or (not username?) (not password?)) :signup/all-fields-required
+                  (not username-available?) :signup/username-exists
                   (not password-fields-match?) :auth/passwords-must-match
                   (not password-gte-min?)
                   [:auth/password-must-be-at-least min-password-length]
                   (not password-lte-max?)
                   [:auth/password-must-be-at-most max-password-length]))]
+    ;; TODO support custom validations...
     [valid? error]))
+
+(defmethod bread/expand ::check-invitation-age
+  [{:keys [invitation-expiration-seconds]} {:keys [invitation]}]
+  (let [invited-at (:thing/updated-at invitation)
+        invitation-valid?
+        (or (zero? invitation-expiration-seconds)
+            (and invited-at (.after invited-at (t/seconds-ago
+                                                 invitation-expiration-seconds))))]
+    (when invitation-valid? invitation)))
 
 (defmethod bread/effect ::enact-valid-signup
   [{:keys [conn user]} {:keys [invitation] [valid? _] :validation}]
@@ -56,39 +67,49 @@
                   :effect/description "Create user"
                   :txs [user]}]})))
 
-(defmethod bread/action ::redirect
+(defmethod bread/action ::render
   [{:as res {[valid? _] :validation} ::bread/data} {:keys [to]} _]
   (if valid?
     (let [to (or to (bread/config res :auth/login-uri))]
       (-> res
           (assoc :status 302)
           (assoc-in [:headers "Location"] to)))
-    res))
+    (assoc res :status 400)))
+
+(comment
+  (sha-512 "a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-512 ":a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-512 (str (System/getenv "AUTH_SECRET_KEY")
+                ":a7d190e5-d7f4-4b92-a751-3c36add92610"))
+  ,)
 
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
-  (let [invitation-query (when (:code params)
-                           {:expansion/name ::db/query
-                            :expansion/description
-                            "Check for valid invite code."
-                            :expansion/key :invitation
-                            :expansion/db (db/database req)
-                            :expansion/args
-                            ['{:find [(pull ?e [:invitation/code
-                                                {:invitation/email [*]}]) .]
-                               :in [$ ?code]
-                               :where [[?e :invitation/code ?code]
-                                       ;; TODO expire code
-                                       (not [?e :invitation/redeemer])]}
-                             (sha-512 (:code params))]})
-        expansions [{:expansion/key :config
-                     :expansion/name ::bread/value
-                     :expansion/description "Signup config"
-                     :expansion/value (::bread/config req)}]]
+  (let [secret-key (bread/config req :auth/secret-key)
+        invitation-queries [(when (:code params)
+                               {:expansion/name ::db/query
+                                :expansion/description
+                                "Query invitation by code."
+                                :expansion/key :invitation
+                                :expansion/db (auth/database req)
+                                :expansion/args
+                                ['{:find [(pull ?e [:thing/updated-at
+                                                    :invitation/code
+                                                    {:invitation/email [*]}]) .]
+                                   :in [$ ?code]
+                                   :where [[?e :invitation/code ?code]
+                                           (not [?e :invitation/redeemer])]}
+                                 (sha-512 (str secret-key ":" (:code params)))]})
+                            {:expansion/name ::check-invitation-age
+                             :expansion/description
+                             "Ensure invitation is sufficiently recent."
+                             :expansion/key :invitation
+                             :invitation-expiration-seconds
+                             (bread/config req :signup/invitation-expiration-seconds)}]]
     (cond
       ;; Viewing signup page
       (= :get request-method)
-      {:expansions (concat expansions [invitation-query])}
+      {:expansions invitation-queries}
 
       ;; Submitting new username/password
       (= :post request-method)
@@ -97,22 +118,25 @@
             user {:user/username (:username params)
                   :user/password password-hash
                   :thing/created-at (t/now)}]
-        {:expansions (concat expansions
-                             [invitation-query
-                              {:expansion/key :existing-username
-                               :expansion/name ::db/query
-                               :expansion/description
-                               "Check for existing users by username."
-                               :expansion/db (db/database req)
-                               :expansion/args
-                               ['{:find [?e .]
-                                  :in [$ ?username]
-                                  :where [[?e :user/username ?username]]}
-                                (:username params)]}
-                              {:expansion/key :validation
-                               :expansion/name ::validate
-                               :params params
-                               :config (::bread/config req)}])
+        {:expansions
+         (concat invitation-queries
+                 [{:expansion/key :existing-username
+                   :expansion/name ::db/query
+                   :expansion/description
+                   "Check for existing users by username."
+                   :expansion/db (auth/database req)
+                   :expansion/args
+                   ['{:find [?e .]
+                      :in [$ ?username]
+                      :where [[?e :user/username ?username]]}
+                    (:username params)]}
+                  {:expansion/key :validation
+                   :expansion/name ::validate
+                   :expansion/description "Validate this signup request."
+                   :params params
+                   :min-password-length (bread/config req :auth/min-password-length)
+                   :max-password-length (bread/config req :auth/max-password-length)
+                   :invite-only? (bread/config req :signup/invite-only?)}])
          :effects
          [{:effect/name ::enact-valid-signup
            :effect/key :new-user
@@ -121,8 +145,8 @@
            :conn (db/connection req)}]
          :hooks
          {::bread/render
-          [{:action/name ::redirect
-            :action/description "Redirect to login"}]}}))))
+          [{:action/name ::render
+            :action/description "Render signup page or redirect to login"}]}}))))
 
 (defmethod bread/action ::protected-route?
   [{:as req :keys [uri]} _ [protected?]]

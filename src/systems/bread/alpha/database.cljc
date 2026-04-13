@@ -1,11 +1,8 @@
 (ns systems.bread.alpha.database
   (:require
-    [clojure.core.protocols :refer [datafy]]
-    [clojure.spec.alpha :as spec]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
     [systems.bread.alpha.internal.datalog :as datalog]))
 
@@ -199,6 +196,7 @@
 (defmethod bread/action ::transact-initial
   [app {:keys [txs]} _]
   (when (seq txs)
+    (log/info "transacting initial-txns" {:count (count txs)})
     (if-let [conn (connection app)]
       (transact conn txs)
       (throw (ex-info "Failed to connect to database." {:type :no-connection}))))

@@ -114,8 +114,8 @@
        (:routes (meta cpt))))
 
 (defmethod bread/action ::not-found
-  [_ {:keys [component]} _]
-  component)
+  [{dispatcher ::bread/dispatcher} {:keys [component]} _]
+  (or (:dispatcher/not-found-component dispatcher) component))
 
 (defn render [component {:as data
                          :keys [component/extend?]
@@ -128,12 +128,10 @@
       :else nil)))
 
 (defmethod bread/action ::render
-  [{:keys [::bread/data body] :as res} _ _]
-  (if body
-    res
-    (let [component (match res)
-          body (render component data)]
-      (assoc res :body body))))
+  [{:as res ::bread/keys [data]} _ _]
+  (update res :body (fn [body]
+                      (or body (let [component (match res)]
+                                 (render component data))))))
 
 (defmethod bread/action ::hook-fn
   [req _ _]

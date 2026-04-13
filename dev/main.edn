@@ -15,12 +15,14 @@
  :ring/session-store
  {:store/type :datalog
   :store/db #ig/ref :bread/db
-  :max-age 259200}
+  :max-age 259200
+  :secret-key #env AUTH_SECRET_KEY}
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:protected-prefixes ["/~/"]
+  :auth {:secret-key #env AUTH_SECRET_KEY
+         :protected-prefixes ["/~/"]
          :login-uri "/~/login"
          ;:require-mfa? true
          :min-password-length 4
@@ -58,7 +60,7 @@
               ;; STORE_BACKEND=mem
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
   :db/initial-txns
-  [{:invitation/code "a7d190e5-d7f4-4b92-a751-3c36add92610"
+  [{:invitation/code #sha-512 #join [#env AUTH_SECRET_KEY ":" "a7d190e5-d7f4-4b92-a751-3c36add92610"]
     :invitation/invited-by "user.admin"
     :invitation/email {:email/address "test@localhost"}
     :thing/created-at #seconds-ago 3600
