@@ -118,8 +118,9 @@
     (as-> req $
         (update $ ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
         (assoc-in $ [::bread/data :session] (:session req))
-        ;; Reset headers - we're working on a response now.
+        ;; Reset headers and body - we're working on a response now.
         (assoc $ :headers {})
+        (dissoc $ :body)
         ;; Avoid writing sessions data for anonymous requests.
         (update $ :session #(when (seq %) %)))))
 
