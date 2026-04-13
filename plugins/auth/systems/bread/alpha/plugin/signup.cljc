@@ -75,9 +75,17 @@
           (assoc-in [:headers "Location"] to)))
     res))
 
+(comment
+  (sha-512 "a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-512 ":a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-512 (str (System/getenv "AUTH_SECRET_KEY")
+                ":a7d190e5-d7f4-4b92-a751-3c36add92610"))
+  ,)
+
 (defmethod bread/dispatch ::signup=>
   [{:keys [params request-method] :as req}]
-  (let [invitation-queries [(when (:code params)
+  (let [secret-key (bread/config req :auth/secret-key)
+        invitation-queries [(when (:code params)
                                {:expansion/name ::db/query
                                 :expansion/description
                                 "Query invitation by code."
@@ -90,7 +98,7 @@
                                    :in [$ ?code]
                                    :where [[?e :invitation/code ?code]
                                            (not [?e :invitation/redeemer])]}
-                                 (sha-512 (:code params))]})
+                                 (sha-512 (str secret-key ":" (:code params)))]})
                             {:expansion/name ::check-invitation-age
                              :expansion/description
                              "Ensure invitation is sufficiently recent."

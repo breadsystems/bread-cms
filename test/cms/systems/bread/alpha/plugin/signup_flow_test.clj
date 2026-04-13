@@ -26,7 +26,7 @@
    :db/migrations (conj schema/initial auth/schema invitations/schema)
    :db/initial-txns [{:thing/created-at (t/now)
                       :thing/updated-at (t/now)
-                      :invitation/code (sha-512 (str #_AUTH-SECRET-KEY #_":" "qwerty"))}]
+                      :invitation/code (sha-512 (str AUTH-SECRET-KEY ":" "qwerty"))}]
    :db/config {:store {:backend :mem :id "signup-test-db"}}})
 
 (use-db :each db-config)
@@ -72,7 +72,7 @@
      :headers {"content-type" "text/html"}
      :status 200
      ::bread/data {:not-found? false}}
-    {:auth-config {:secret-key "SECRET"}
+    {:auth-config {:secret-key AUTH-SECRET-KEY}
      :test/body [:p "Signup page"]}
     {:request-method :get
      :uri "/_/signup"
@@ -83,22 +83,23 @@
      :headers {"content-type" "text/html"}
      :status 404
      ::bread/data {:not-found? true}}
-    {:test/body [:p "Signup page"]}
-    {:request-method :get
-     :uri "/_/signup"
-     :params {:code "invalid"}}
-
-    ;; Loading the signup page after changing :auth/secret-key.
-    #_#_#_
-    {:body [:p "Signup page"]
-     :headers {"content-type" "text/html"}
-     :status 404
-     ::bread/data {:not-found? true}}
-    {:auth-config {:secret-key "updated!"}
+    {:auth-config {:secret-key AUTH-SECRET-KEY}
      :test/body [:p "Signup page"]}
     {:request-method :get
      :uri "/_/signup"
      :params {:code "invalid"}}
+
+    ;; Loading the signup page after changing :auth/secret-key,
+    ;; using a previously valid code.
+    {:body [:p "Signup page"]
+     :headers {"content-type" "text/html"}
+     :status 404
+     ::bread/data {:not-found? true}}
+    {:auth-config {:secret-key "UPDATED!"}
+     :test/body [:p "Signup page"]}
+    {:request-method :get
+     :uri "/_/signup"
+     :params {:code "qwerty"}}
 
     ,))
 

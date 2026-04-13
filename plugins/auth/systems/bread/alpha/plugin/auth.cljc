@@ -492,7 +492,7 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hash-algorithm max-failed-login-count lock-seconds next-param
+  ([{:keys [secret-key hash-algorithm max-failed-login-count lock-seconds next-param
             login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
             store-session-ip? store-session-user-agent?]
@@ -535,7 +535,8 @@
        :action/description "Merge strings for auth into global i18n strings."
        :strings (i18n/read-strings "auth.i18n.edn")}]}
     :config
-    #:auth{:require-mfa? require-mfa?
+    #:auth{:secret-key secret-key
+           :require-mfa? require-mfa?
            :mfa-issuer mfa-issuer
            :generous-totp-window? generous-totp-window?
            :hash-algorithm hash-algorithm
