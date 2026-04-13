@@ -546,7 +546,7 @@
   ([{:keys [secret-key hash-algorithm max-failed-login-count lock-seconds next-param
             login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
-            store-session-ip? store-session-user-agent?]
+            store-session-ip? store-session-user-agent? reset-expiration-seconds]
      :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -555,6 +555,7 @@
           next-param :next
           login-uri "/login"
           reset-password-uri "/reset"
+          reset-expiration-seconds (* 10 60)
           generous-totp-window? true
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
@@ -598,5 +599,6 @@
            :next-param next-param
            :login-uri login-uri
            :reset-password-uri reset-password-uri
+           :reset-expiration-seconds reset-expiration-seconds
            :store-session-ip? store-session-ip?
            :store-session-user-agent? store-session-user-agent?}}))
