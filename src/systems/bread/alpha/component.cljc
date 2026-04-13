@@ -128,12 +128,10 @@
       :else nil)))
 
 (defmethod bread/action ::render
-  [{:keys [::bread/data body] :as res} _ _]
-  (if body
-    res
-    (let [component (match res)
-          body (render component data)]
-      (assoc res :body body))))
+  [{:as res ::bread/keys [data]} _ _]
+  (update res :body (fn [body]
+                      (or body (let [component (match res)]
+                                 (render component data))))))
 
 (defmethod bread/action ::hook-fn
   [req _ _]
