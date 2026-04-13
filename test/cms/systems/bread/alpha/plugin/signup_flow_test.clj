@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.plugin.signup-test
+(ns systems.bread.alpha.plugin.signup-flow-test
   (:require
     [clojure.test :refer [deftest are is]]
 
