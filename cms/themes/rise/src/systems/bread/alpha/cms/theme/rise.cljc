@@ -590,6 +590,29 @@
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
 
+(defmethod Section ::account/password [{:keys [i18n user config]} _]
+  [:<>
+   [:p.instruct (:account/leave-passwords-blank i18n)]
+   [:.field
+    [:label {:for :password} (:auth/password i18n)]
+    [:input {:id :password
+             :type :password
+             :name :password
+             :maxlength (:auth/max-password-length config)}]]
+   [:.field
+    [:label {:for :password-confirmation} (:auth/password-confirmation i18n)]
+    [:input {:id :password-confirmation
+             :type :password
+             :name :password-confirmation
+             :maxlength (:auth/max-password-length config)}]]])
+
+(defmethod Section ::account/account-form
+  [{:as data :keys [config ring/anti-forgery-token-field]} _]
+  (apply conj [:form.flex.col {:method :post}]
+         (when anti-forgery-token-field
+           (anti-forgery-token-field))
+         (map (partial Section data) (:account/html.account.form config))))
+
 (defmethod Section ::account/logout-form [data _]
   (LogoutForm data))
 
