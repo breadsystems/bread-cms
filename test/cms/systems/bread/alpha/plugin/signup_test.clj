@@ -23,7 +23,8 @@
       (= expected (let [dispatcher {:dispatcher/type ::signup/signup=>}
                         {:keys [signup-config auth-config]} config
                         app (plugins->loaded [db-plugin
-                                              (auth/plugin auth-config)
+                                              (auth/plugin (merge {:secret-key "secret"}
+                                                                  auth-config))
                                               (signup/plugin signup-config)])
                         req* (merge app req {::bread/dispatcher dispatcher})]
                     (binding [t/*now* !now]
@@ -43,7 +44,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[qwerty]"]}
+                                      "sha-512[secret:qwerty]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -64,7 +65,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[qwerty]"]}
+                                      "sha-512[secret:qwerty]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -85,7 +86,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[submitted]"]}
+                                      "sha-512[secret:submitted]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -136,7 +137,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[submitted]"]}
+                                      "sha-512[secret:submitted]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
