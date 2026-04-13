@@ -41,8 +41,10 @@
 (defmethod bread/expand ::check-invitation-age
   [{:keys [invitation-expiration-seconds]} {:keys [invitation]}]
   (let [invited-at (:thing/updated-at invitation)
-        earliest-valid (t/seconds-ago invitation-expiration-seconds)
-        invitation-valid? (and invited-at (.after invited-at earliest-valid))]
+        invitation-valid?
+        (or (zero? invitation-expiration-seconds)
+            (and invited-at (.after invited-at (t/seconds-ago
+                                                 invitation-expiration-seconds))))]
     (when invitation-valid? invitation)))
 
 (defmethod bread/effect ::enact-valid-signup

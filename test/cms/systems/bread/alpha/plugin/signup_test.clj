@@ -345,6 +345,22 @@
     {:invitation {:thing/updated-at #inst "2026-04-12T00:00:00"
                   :invitation/code "qwerty"}}
 
+    ;; Setting expiration seconds < 0 means invitation codes are ALWAYS expired.
+    ;; This could be used e.g. to (temporarily?) disable invitations.
+    nil
+    #inst "2026-04-12T00:01:00"
+    {:invitation-expiration-seconds -1}
+    {:invitation {:thing/updated-at #inst "2026-04-12T00:00:00"
+                  :invitation/code "qwerty"}}
+
+    ;; Setting an expiration of zero means codes never expire.
+    {:thing/updated-at #inst "2026-04-11T00:00:00"
+     :invitation/code "qwerty"}
+    #inst "2026-04-12T00:00:00"
+    {:invitation-expiration-seconds 0}
+    {:invitation {:thing/updated-at #inst "2026-04-11T00:00:00"
+                  :invitation/code "qwerty"}}
+
     ,))
 
 (comment
