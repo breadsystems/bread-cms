@@ -280,7 +280,9 @@
    dispatcher. You typically won't need to call this component from your code,
    except to reference it from your route if implementing custom routing."
    :doc/default-data
-   {:config {:site/name "Site name"}
+   {:config {:site/name "Site name"
+             :auth/min-password-length 15
+             :auth/max-password-length 72}
     :hook (fn hook [_ x & _] x)
     :ring/anti-forgery-token-field (constantly nil)}
    :doc/preview? true
@@ -313,7 +315,7 @@
         (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
         (hook ::html.reset-invalid (ErrorMessage {:message (get i18n error-key)}))]
 
-       ;; Happy path for both :post and :get
+       ;; Happy path for :get, error path for :post.
        :default
        [:main
         [:form.flex.col {:name :bread-login :method :post}
@@ -332,6 +334,11 @@
                 :type :password
                 :label (:auth/password-confirmation i18n)
                 :input-attrs {:maxlength (:auth/max-password-length config)})
+         (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])
          (Submit (:auth/reset i18n))]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
