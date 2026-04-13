@@ -82,7 +82,7 @@
                                 :expansion/description
                                 "Query invitation by code."
                                 :expansion/key :invitation
-                                :expansion/db (db/database req)
+                                :expansion/db (auth/database req)
                                 :expansion/args
                                 ['{:find [(pull ?e [:thing/updated-at
                                                     :invitation/code
@@ -115,7 +115,7 @@
                    :expansion/name ::db/query
                    :expansion/description
                    "Check for existing users by username."
-                   :expansion/db (db/database req)
+                   :expansion/db (auth/database req)
                    :expansion/args
                    ['{:find [?e .]
                       :in [$ ?username]

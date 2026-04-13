@@ -10,6 +10,7 @@
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
+    [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.net URLEncoder]))
@@ -196,12 +197,12 @@
         user-expansion {:expansion/key (:dispatcher/key dispatcher :user)
                         :expansion/name ::db/query
                         :expansion/description "Query for user emails."
-                        :expansion/db (db/database req)
+                        :expansion/db (auth/database req)
                         :expansion/args [query (:db/id user)]}
         email-expansion {:expansion/key :existing-email
                          :expansion/name ::db/query
                          :expansion/description "Query for conflicting emails."
-                         :expansion/db (db/database req)
+                         :expansion/db (auth/database req)
                          :expansion/args ['{:find [?e .]
                                             :in [$ ?email]
                                             :where [[?e :email/address ?email]]}
