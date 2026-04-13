@@ -115,14 +115,14 @@
                                                  :server-port
                                                  :uri])
         ring-data (select-keys req req-keys)]
-    (as-> req $
-        (update $ ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
-        (assoc-in $ [::bread/data :session] (:session req))
+    (-> req
+        (update ::bread/data merge (rename-keys-with-namespace "ring" ring-data))
+        (assoc-in [::bread/data :session] (:session req))
         ;; Reset headers and body - we're working on a response now.
-        (assoc $ :headers {})
-        (dissoc $ :body)
+        (assoc :headers {})
+        (dissoc :body)
         ;; Avoid writing sessions data for anonymous requests.
-        (update $ :session #(when (seq %) %)))))
+        (update :session #(when (seq %) %)))))
 
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
