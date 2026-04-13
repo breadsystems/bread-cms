@@ -501,6 +501,12 @@
       :db/cardinality :db.cardinality/one
       :attr/sensitive? true
       :attr/migration "migration.authentication"}
+     {:db/ident :reset/reset-at
+      :attr/label "Reset at"
+      :db/doc "When this reset was completed, if ever"
+      :db/valueType :db.type/instant
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
      {:db/ident :reset/user
       :attr/label "Reset user"
       :db/doc "The user resetting their password"
