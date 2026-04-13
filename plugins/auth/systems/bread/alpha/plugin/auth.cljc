@@ -8,7 +8,6 @@
     [one-time.qrgen :as qr]
     [ring.middleware.session.store :as ss]
 
-    [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
