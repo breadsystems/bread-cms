@@ -432,7 +432,7 @@
                                                   :user/locked-at
                                                   :user/failed-login-count]) '.]
                           :in '[$ ?code]
-                          :where '[[?code :reset/code ?e]]}
+                          :where '[[?e :reset/code ?code]]}
                          (sha-512 (:code params ""))]}]
     (cond
       get?
