@@ -640,6 +640,9 @@
        (hook ::html.signup-heading [:h1 (:signup/signup i18n)])
        (hook ::html.enter-username
              [:p.instruct (:signup/please-choose-username-password i18n)])
+       (when error-key
+         (hook ::html.invalid-signup
+               (ErrorMessage {:message (i18n/t i18n error-key)})))
        (Field :username :label (:auth/username i18n) :value (:username params))
        (Field :password
               :type :password
@@ -649,9 +652,11 @@
               :type :password
               :label (:auth/password-confirmation i18n)
               :input-attrs {:maxlength (:auth/max-password-length config)})
-       (when error-key
-         (hook ::html.invalid-signup
-               (ErrorMessage {:message (i18n/t i18n error-key)})))
+       (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])
        (Submit (:signup/create-account i18n))]])})
 
 (defmethod Section :flash [{:keys [session ring/flash i18n]} _]
