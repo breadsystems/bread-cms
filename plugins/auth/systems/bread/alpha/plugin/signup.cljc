@@ -73,7 +73,7 @@
       (-> res
           (assoc :status 302)
           (assoc-in [:headers "Location"] to)))
-    res))
+    (assoc res :status 400)))
 
 (comment
   (sha-512 "a7d190e5-d7f4-4b92-a751-3c36add92610")

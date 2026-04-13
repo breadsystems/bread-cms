@@ -357,6 +357,34 @@
 
     ,))
 
+(deftest test-signup-render
+  (are
+    [expected action res]
+    (= expected (let [app (plugins->loaded [{:hooks {::bread/render [action]}}])]
+                  (-> app (merge res) (bread/hook ::bread/render)
+                      (select-keys [:status :headers]))))
+
+    {:status 400 :headers {}}
+    {:action/name ::signup/render
+     :to "/redirect"}
+    {:headers {}
+     ::bread/data {:validation [false :whatever]}}
+
+    {:status 400 :headers {"content-type" "text/html"}}
+    {:action/name ::signup/render
+     :to "/redirect"}
+    {:status 404
+     :headers {"content-type" "text/html"}
+     ::bread/data {:validation [false :whatever]}}
+
+    {:status 302 :headers {"Location" "/redirect"}}
+    {:action/name ::signup/render
+     :to "/redirect"}
+    {:headers {}
+     ::bread/data {:validation [true :whatever]}}
+
+    ,))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))

@@ -96,7 +96,7 @@
 
     ;; Invalid signup.
     {:headers {"content-type" "text/html"}
-     :status 404 ;; TODO 400 ?
+     :status 400
      ::bread/data {:not-found? true
                    :validation [false :signup/all-fields-required]}}
     {:auth-config {:secret-key "UPDATED!"}}
@@ -106,7 +106,7 @@
 
     ;; Invalid signup.
     {:headers {"content-type" "text/html"}
-     :status 404 ;; TODO 400 ?
+     :status 400
      ::bread/data {:not-found? true
                    :validation [false :signup/all-fields-required]}}
     {:auth-config {:secret-key "UPDATED!"}}
@@ -119,7 +119,7 @@
 
     ;; Violating minimum password length requirement.
     {:headers {"content-type" "text/html"}
-     :status 404 ;; TODO 400 ?
+     :status 400
      ::bread/data {:not-found? true
                    :validation [false [:auth/password-must-be-at-least 12]]}}
     {:auth-config {:secret-key "UPDATED!"}}
@@ -132,7 +132,7 @@
 
     ;; Password mismatch.
     {:headers {"content-type" "text/html"}
-     :status 404 ;; TODO 400 ?
+     :status 400
      ::bread/data {:not-found? true
                    :validation [false :auth/passwords-must-match]}}
     {:auth-config {:secret-key "UPDATED!"}}
@@ -145,7 +145,7 @@
 
     ;; Existing username.
     {:headers {"content-type" "text/html"}
-     :status 404 ;; TODO 400 ?
+     :status 400
      ::bread/data {:not-found? true
                    :validation [false :signup/username-exists]}}
     {:auth-config {:secret-key "UPDATED!"}}
@@ -226,7 +226,7 @@
        :params {:code "qwerty"}}
 
       ;; New username exists.
-      {:status 200 ;; TODO 400 ?
+      {:status 400
        ::bread/data {:not-found? false
                      :validation [false :signup/username-exists]}}
       {:request-method :post
