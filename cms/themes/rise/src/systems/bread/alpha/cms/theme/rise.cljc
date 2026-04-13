@@ -323,7 +323,7 @@
                [:p.instruct (:auth/enter-confirm-new-password i18n)])
          (when error-key
            (hook ::html.reset-error
-                 (ErrorMessage {:message (get i18n error-key)})))
+                 (ErrorMessage {:message (i18n/t i18n error-key)})))
          (Field :password
                 :type :password
                 :label (:auth/password i18n)
