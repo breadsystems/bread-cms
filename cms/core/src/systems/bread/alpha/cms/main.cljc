@@ -119,7 +119,8 @@
       ["/signup"
        {:name :signup
         :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'rise/SignupPage}]]
+        :dispatcher/component #'rise/SignupPage
+        :dispatcher/not-found-component #'rise/SignupPage}]]
      ["assets/*"
       (reitit.ring/create-resource-handler
         {})]
