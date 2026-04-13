@@ -9,7 +9,9 @@
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.invitations :as invitations]))
+    [systems.bread.alpha.plugin.invitations :as invitations])
+  (:import
+    [java.text SimpleDateFormat]))
 
 (defn- IntroSection [_]
   {:id :intro
@@ -139,20 +141,6 @@
                                  :id id
                                  :type (or field-type :text)
                                  :value value})]]))
-
-(defc Option [labels selected-value value]
-  [:option {:value value :selected (= selected-value value)}
-   (get labels value)])
-
-(defmethod Section ::account/timezone [{:keys [config i18n user]} _]
-  (let [options (:account/timezone-options config)
-        ;; TODO proper localization...
-        labels (map #(string/replace % "_" " ") options)
-        tz (:timezone (:user/preferences user))]
-    [:.field
-     [:label {:for :timezone} (:account/timezone i18n)]
-     [:select {:id :timezone :name :timezone}
-      (map (partial Option (zipmap options labels) tz) options)]]))
 
 (defc Submit [label & {field-name :name :keys [value]}]
   [:.field
@@ -410,6 +398,74 @@
    :content
    (apply conj [:main]
           (map (partial Section data) (:account/html.account.sections config)))})
+
+(defc Option [labels selected-value value]
+  [:option {:value value :selected (= selected-value value)}
+   (get labels value)])
+
+(defmethod Section ::account/timezone [{:keys [config i18n user]} _]
+  (let [options (:account/timezone-options config)
+        ;; TODO proper localization...
+        labels (map #(string/replace % "_" " ") options)
+        tz (:timezone (:user/preferences user))]
+    [:.field
+     [:label {:for :timezone} (:account/timezone i18n)]
+     [:select {:id :timezone :name :timezone}
+      (map (partial Option (zipmap options labels) tz) options)]]))
+
+(defn- ua->browser [ua]
+  (when ua
+    (let [normalized (string/lower-case ua)]
+    (cond
+      (re-find #"firefox" normalized) "Firefox"
+      (re-find #"chrome" normalized) "Google Chrome"
+      (re-find #"safari" normalized) "Safari"
+      :default "Unknown browser"))))
+
+(defn- ua->os [ua]
+  (when ua
+    (let [normalized (string/lower-case ua)]
+      (cond
+        (re-find #"linux" normalized) "Linux"
+        (re-find #"macintosh" normalized) "Mac"
+        (re-find #"windows" normalized) "Windows"
+        :default "Unknown OS"))))
+
+(defmethod Section ::account/sessions [{:keys [i18n session user]} _]
+  (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n))]
+    [:section
+     [:h3 (:account/your-sessions i18n)]
+     [:.flex.col
+      (map (fn [{:as user-session
+                 {:keys [user-agent remote-addr]} :session/data
+                 :thing/keys [created-at updated-at]}]
+             (if (= (:db/id session) (:db/id user-session))
+               ;; Current session.
+               [:div.user-session
+                [:div
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
+                 [:div (i18n/t i18n [:account/logged-in-at (.format date-fmt created-at)])]
+                 (when updated-at
+                   [:div (i18n/t i18n [:account/last-active-at (.format date-fmt updated-at)])])]
+                [:div [:span.instruct (:account/this-session i18n)]]]
+               ;; Sessions on other devices.
+               [:form.user-session {:method :post}
+                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
+                [:div
+                 (when user-agent
+                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
+                 (when remote-addr
+                   [:div remote-addr])
+                 [:div "Logged in at " (.format date-fmt created-at)]
+                 (when updated-at
+                   [:div "Last active at " (.format date-fmt updated-at)])]
+                [:div
+                 [:button {:type :submit :name :action :value "delete-session"}
+                  (:auth/logout i18n)]]]))
+           (:user/sessions user))]]))
 
 (defmethod Section ::email/settings-link
   [{:keys [i18n] {:email/keys [settings-uri]} :config} _]

@@ -14,30 +14,10 @@
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.invitations :as invitations]
-    [systems.bread.alpha.plugin.email :as email])
-  (:import
-    [java.text SimpleDateFormat]))
+    [systems.bread.alpha.plugin.email :as email]))
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
-
-(defn- ua->browser [ua]
-  (when ua
-    (let [normalized (string/lower-case ua)]
-    (cond
-      (re-find #"firefox" normalized) "Firefox"
-      (re-find #"chrome" normalized) "Google Chrome"
-      (re-find #"safari" normalized) "Safari"
-      :default "Unknown browser"))))
-
-(defn- ua->os [ua]
-  (when ua
-    (let [normalized (string/lower-case ua)]
-      (cond
-        (re-find #"linux" normalized) "Linux"
-        (re-find #"macintosh" normalized) "Mac"
-        (re-find #"windows" normalized) "Windows"
-        :default "Unknown OS"))))
 
 (defmethod Section ::username [{:keys [user]} _]
   [:span.username (:user/username user)])
@@ -72,43 +52,6 @@
              [:option {:selected (= k (:user/lang user)) :value k}
               (get lang-names k (name k))])
            (sort-by name (seq supported-langs)))]]))
-
-(defmethod Section ::sessions [{:keys [i18n session user]} _]
-  (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n "d LLL"))]
-    [:section
-     [:h3 (:account/your-sessions i18n)]
-     [:.flex.col
-      (map (fn [{:as user-session
-                 {:keys [user-agent remote-addr]} :session/data
-                 :thing/keys [created-at updated-at]}]
-             (if (= (:db/id session) (:db/id user-session))
-               ;; Current session.
-               [:div.user-session
-                [:div
-                 (when user-agent
-                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
-                 (when remote-addr
-                   [:div remote-addr])
-                 [:div "Logged in at " (.format date-fmt created-at)]
-                 (when updated-at
-                   ;; TODO i18n
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div [:span.instruct "This session"]]]
-               ;; Sessions on other devices.
-               [:form.user-session {:method :post}
-                [:input {:type :hidden :name :dbid :value (:db/id user-session)}]
-                [:div
-                 (when user-agent
-                   [:div (ua->browser user-agent) " | " (ua->os user-agent)])
-                 (when remote-addr
-                   [:div remote-addr])
-                 [:div "Logged in at " (.format date-fmt created-at)]
-                 (when updated-at
-                   [:div "Last active at " (.format date-fmt updated-at)])]
-                [:div
-                 [:button {:type :submit :name :action :value "delete-session"}
-                  (:auth/logout i18n)]]]))
-           (:user/sessions user))]]))
 
 (defmethod bread/expand ::user [_ {:keys [user]}]
   ;; TODO infer from query/schema...
