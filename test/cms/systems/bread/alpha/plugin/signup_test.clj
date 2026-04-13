@@ -4,24 +4,15 @@
     [clojure.test :refer [deftest are]]
 
     [systems.bread.alpha.test-helpers :refer [db->plugin
-                                              plugins->loaded
-                                              use-db]]
+                                              plugins->loaded]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.signup :as signup]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.schema :as schema])
+    [systems.bread.alpha.plugin.auth :as auth])
   (:import
     [java.util Date]))
-
-(def db-config
-  {:db/type :datahike
-   :db/migrations schema/initial
-   :db/config {:store {:backend :mem :id "signup-test-db"}}})
-
-(use-db :each db-config)
 
 (deftest test-signup=>
   (let [!now (Date.)
