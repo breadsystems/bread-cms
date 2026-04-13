@@ -1,13 +1,11 @@
 (ns systems.bread.alpha.plugin.signup-test
   (:require
-    [buddy.hashers :as hashers]
     [clojure.test :refer [deftest are]]
 
     [systems.bread.alpha.test-helpers :refer [naive-router
                                               plugins->loaded
                                               use-db]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as db]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
@@ -31,11 +29,10 @@
 
 (use-db :each db-config)
 
-(defn- ->signup-data [{:keys [::bread/data headers status body]}]
+(defn- ->signup-data [{:keys [::bread/data headers status]}]
   {::bread/data (select-keys data [:validation :not-found?])
    :headers headers
-   :status status
-   :body body})
+   :status status})
 
 (defmethod bread/action ::route
   [req _ _]
@@ -46,16 +43,14 @@
   [res {:keys [body]} _]
   (if (:body res) res (assoc res :body body)))
 
-(defn- config->handler [{:keys [signup-config auth-config test/body]}]
+(defn- config->handler [{:keys [signup-config auth-config]}]
   (-> (conj (defaults/plugins {:db db-config
                                :routes false})
             (route/plugin {:router (naive-router)})
             {:hooks
              {::bread/route
               [{:action/name ::route
-                :action/description "Hard-code the dispatcher."}]
-              ::bread/expand
-              [{:action/name ::body :body body}]}}
+                :action/description "Hard-code the dispatcher."}]}}
             (auth/plugin auth-config)
             (signup/plugin signup-config))
       plugins->loaded
@@ -68,35 +63,29 @@
                   (-> req handler ->signup-data)))
 
     ;; Just loading the signup page.
-    {:body [:p "Signup page"]
-     :headers {"content-type" "text/html"}
+    {:headers {"content-type" "text/html"}
      :status 200
      ::bread/data {:not-found? false}}
-    {:auth-config {:secret-key AUTH-SECRET-KEY}
-     :test/body [:p "Signup page"]}
+    {:auth-config {:secret-key AUTH-SECRET-KEY}}
     {:request-method :get
      :uri "/_/signup"
      :params {:code "qwerty"}}
 
     ;; Loading the signup page with a bad code.
-    {:body [:p "Signup page"]
-     :headers {"content-type" "text/html"}
+    {:headers {"content-type" "text/html"}
      :status 404
      ::bread/data {:not-found? true}}
-    {:auth-config {:secret-key AUTH-SECRET-KEY}
-     :test/body [:p "Signup page"]}
+    {:auth-config {:secret-key AUTH-SECRET-KEY}}
     {:request-method :get
      :uri "/_/signup"
      :params {:code "invalid"}}
 
     ;; Loading the signup page after changing :auth/secret-key,
     ;; using a previously valid code.
-    {:body [:p "Signup page"]
-     :headers {"content-type" "text/html"}
+    {:headers {"content-type" "text/html"}
      :status 404
      ::bread/data {:not-found? true}}
-    {:auth-config {:secret-key "UPDATED!"}
-     :test/body [:p "Signup page"]}
+    {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :get
      :uri "/_/signup"
      :params {:code "qwerty"}}
