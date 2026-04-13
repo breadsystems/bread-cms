@@ -13,7 +13,8 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
-    [systems.bread.alpha.internal.time :as t])
+    [systems.bread.alpha.internal.time :as t]
+    [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
     [java.net URLEncoder]
@@ -408,47 +409,113 @@
 
 ;; TODO ::forgot-password=>
 
+(defmethod bread/expand ::authenticate-reset
+  [{:keys [reset-expiration-seconds]}
+   {{:as reset :keys [reset/user]} :reset}]
+  (let [earliest-valid (t/seconds-ago reset-expiration-seconds)
+        updated-at (:thing/updated-at reset)
+        valid? (and updated-at (.after updated-at earliest-valid))]
+    (prn 'USER user)
+    ;; TODO check :user/locked-at
+    (if valid?
+      [true nil]
+      [false :auth/invalid-reset])))
+
+(defmethod bread/expand ::validate-reset
+  [{:keys [min-password-length max-password-length]
+    {:keys [password password-confirmation]} :params
+    :or {password "" password-confirmation ""}}
+   {:keys [validation]}]
+  (let [[valid?] validation]
+    (if (not valid?)
+      validation ;; Bad code; don't bother validating user input.
+      (let [password-fields-match? (= password password-confirmation)
+            password-gte-min? (>= (count password) min-password-length)
+            password-lte-max? (<= (count password) max-password-length)
+            valid? (and password-fields-match?
+                        password-gte-min?
+                        password-lte-max?)
+            error (when-not valid?
+                    (cond
+                      (or (empty? password) (empty? password-confirmation))
+                      :auth/enter-confirm-new-password
+                      (not password-fields-match?) :auth/passwords-must-match
+                      (not password-gte-min?)
+                      [:auth/password-must-be-at-least min-password-length]
+                      (not password-lte-max?)
+                      [:auth/password-must-be-at-most max-password-length]))]
+        [valid? error]))))
+
+(defmethod bread/effect ::reset-password
+  [{:keys [params hash-algorithm conn]} {:keys [reset validation]}]
+  (let [user (:reset/user reset)
+        [valid?] validation]
+    (when valid?
+      (let [now (t/now)
+            ;; TODO secret-key
+            hashed (hashers/derive (:password params) {:alg hash-algorithm})
+            user-tx {:db/id (:db/id user)
+                     :user/password hashed
+                     :thing/updated-at now}
+            reset-tx {:db/id (:db/id reset)
+                      :reset/reset-at now
+                      :thing/updated-at now}
+            txs [user-tx reset-tx]]
+        {:effects
+         [{:effect/name ::db/transact
+           :conn conn
+           :txs txs}]}))))
+
 (defmethod bread/dispatch ::reset-password=>
   [{:keys [params request-method] :as req}]
-  (let [;; NOTE: we reuse failed-login-count for pw resets.
-        max-failed-reset-count (bread/config req :auth/max-failed-login-count)
-        lock-seconds (bread/config req :auth/lock-seconds)
-        get? (= :get request-method)
+  (let [get? (= :get request-method)
         post? (= :post request-method)
-        redirect-to (bread/config req :auth/login-uri)
-        validation-expansion {:expansion/name ::authenticate-reset
-                              :expansion/description "Authentication reset code."
-                              :expansion/key :validation
-                              ;; TODO lock-seconds ?
-                              }
-        user-expansion {:expansion/name ::db/query
-                        :expansion/key :user
-                        :expansion/description "Find the user matching the reset code."
-                        :expansion/db (database req)
-                        :expansion/args
-                        [{:find [(list 'pull '?e [:db/id
-                                                  :user/username
-                                                  :user/totp-key
-                                                  :user/locked-at
-                                                  :user/failed-login-count]) '.]
-                          :in '[$ ?code]
-                          :where '[[?e :reset/code ?code]]}
-                         (sha-512 (:code params ""))]}]
-    (cond
-      get?
-      {:expansions [user-expansion validation-expansion]}
-
-      post?
-      {:expansions [user-expansion validation-expansion]
+        authenticate-reset {:expansion/name ::authenticate-reset
+                            :expansion/description "Authentication reset code."
+                            :expansion/key :validation
+                            :reset-expiration-seconds
+                            (bread/config req :auth/reset-expiration-seconds)}
+        secret-key (bread/config req :auth/secret-key)
+        query-user {:expansion/name ::db/query
+                    :expansion/key :reset
+                    :expansion/description "Find the user matching the reset code."
+                    :expansion/db (database req)
+                    :expansion/args
+                    [{:find [(list 'pull '?e [:db/id
+                                              :thing/updated-at
+                                              {:reset/user
+                                               [:db/id
+                                                :user/username
+                                                :user/totp-key
+                                                :user/locked-at
+                                                :user/failed-login-count]}]) '.]
+                      :in '[$ ?code]
+                      :where '[[?e :reset/code ?code]
+                               (not [?e :reset/reset-at])]}
+                     (sha-512 (str secret-key ":" (:code params "")))]}]
+    (if post?
+      {:expansions
+       [query-user
+        authenticate-reset
+        {:expansion/name ::validate-reset
+         :expansion/description "Validate password update."
+         :expansion/key :validation
+         :params params
+         :min-password-length (bread/config req :auth/min-password-length)
+         :max-password-length (bread/config req :auth/max-password-length)}]
        :effects
-       [{:effect/name ::log-attempt
-         :effect/description
-         "Record this reset attempt, locking account after too many."
-         :max-failed-login-count max-failed-reset-count
-         :lock-seconds lock-seconds
-         :conn (db/connection req)}]}
-
-      )))
+       [{:effect/name ::reset-password
+         :effect/description "Update password upon valid submission."
+         :params params
+         :hash-algorithm (bread/config req :auth/hash-algorithm)
+         :conn (db/connection req)}]
+       :hooks
+       {::bread/render
+        [{:action/name ::ring/redirect-when
+          :action/description "Render reset page or redirect to login."
+          :to (bread/config req :auth/login-uri)
+          :path [:validation 0]}]}}
+      {:expansions [query-user authenticate-reset]})))
 
 (def
   ^{:doc "Schema for authentication."}
