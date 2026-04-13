@@ -937,14 +937,15 @@
 (deftest test-session-store
   (let [app (plugins->loaded [(db/plugin config) (auth/plugin)])
         conn (db/connection app)
-        session-store (auth/session-store {:secret-key "qwerty"} conn)
+        secret-key "qwerty"
+        session-store (auth/session-store {:secret-key secret-key} conn)
         get-session-data (fn [sk]
                            (db/q @conn
                                  '{:find [?data .]
                                    :in [$ ?hash]
                                    :where [[?e :session/id ?hash]
                                            [?e :session/data ?data]]}
-                                 (sha-512 (str "qwerty:" sk))))]
+                                 (sha-512 (str secret-key ":" sk))))]
 
     (testing "write-session"
       (testing "passing a random string for session key"
@@ -961,6 +962,11 @@
       (let [sk (ss/write-session session-store nil {:a :b})]
         (is (= {:a :b} (dissoc (ss/read-session session-store sk) :db/id)))
         (is (= {:a :b} (dissoc (ss/read-session session-store (str sk)) :db/id))))
+
+      (testing "updating secret-key invalidates all sessions"
+        (let [sk (ss/write-session session-store nil {:a :b})
+              updated-store (auth/session-store {:secret-key "updated"} conn)]
+          (is (nil? (ss/read-session updated-store sk)))))
 
       (testing "passing nil session key"
         (is (nil? (ss/read-session session-store nil)))))
