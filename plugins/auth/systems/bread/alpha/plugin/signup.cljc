@@ -36,6 +36,7 @@
                   [:auth/password-must-be-at-least min-password-length]
                   (not password-lte-max?)
                   [:auth/password-must-be-at-most max-password-length]))]
+    ;; TODO support custom validations...
     [valid? error]))
 
 (defmethod bread/expand ::check-invitation-age
