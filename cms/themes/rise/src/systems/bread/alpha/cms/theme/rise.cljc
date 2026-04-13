@@ -614,7 +614,8 @@
   [{:as data
     :keys [config hook i18n invitation ring/params ring/anti-forgery-token-field]
     [_valid? error-key] :validation}]
-  {:extends Page}
+  {:extends Page
+   :key :invitation}
   {:title (:signup/signup i18n)
    :content
    (cond

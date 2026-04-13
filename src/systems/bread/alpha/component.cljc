@@ -114,8 +114,8 @@
        (:routes (meta cpt))))
 
 (defmethod bread/action ::not-found
-  [_ {:keys [component]} _]
-  component)
+  [{dispatcher ::bread/dispatcher} {:keys [component]} _]
+  (or (:dispatcher/not-found-component dispatcher) component))
 
 (defn render [component {:as data
                          :keys [component/extend?]
