@@ -614,7 +614,7 @@
             login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
             min-password-length max-password-length generous-totp-window?
             store-session-ip? store-session-user-agent? reset-expiration-seconds]
-     :or {min-password-length 12
+     :or {min-password-length 15
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
