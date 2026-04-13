@@ -41,7 +41,7 @@
         :qr-code "QR code"
         :reset "Reset"
         :reset-password "Reset password"
-        :reset-email-sent "If you have an account, an email has been sent to your primary email"
+        :reset-email-sent "A reset email has been sent to your primary email address."
         :too-many-attempts "You have made too many attempts to log in. Please try again later."
         :username "Username"
         :verify "Verify"
