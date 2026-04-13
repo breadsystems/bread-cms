@@ -116,8 +116,9 @@
                          :user/username "coby"
                          :user/password "[:bcrypt+blake2b-512+password]"}
                   :conn db-conn}]
-       :hooks {::bread/render [{:action/description "Redirect to login"
-                                :action/name ::signup/redirect}]}}
+       :hooks {::bread/render [{:action/description
+                                "Render signup page or redirect to login"
+                                :action/name ::signup/render}]}}
       {}
       {:request-method :post
        :uri "/signup"
@@ -167,8 +168,9 @@
                          :user/username "coby"
                          :user/password "[:bcrypt+blake2b-512+password]"}
                   :conn db-conn}]
-       :hooks {::bread/render [{:action/description "Redirect to login"
-                                :action/name ::signup/redirect}]}}
+       :hooks {::bread/render [{:action/description
+                                "Render signup page or redirect to login"
+                                :action/name ::signup/render}]}}
       {:signup-config {:invite-only? true}
        :auth-config {:min-password-length 4
                      :max-password-length 42}}

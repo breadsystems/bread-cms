@@ -66,7 +66,7 @@
                   :effect/description "Create user"
                   :txs [user]}]})))
 
-(defmethod bread/action ::redirect
+(defmethod bread/action ::render
   [{:as res {[valid? _] :validation} ::bread/data} {:keys [to]} _]
   (if valid?
     (let [to (or to (bread/config res :auth/login-uri))]
@@ -144,8 +144,8 @@
            :conn (db/connection req)}]
          :hooks
          {::bread/render
-          [{:action/name ::redirect
-            :action/description "Redirect to login"}]}}))))
+          [{:action/name ::render
+            :action/description "Render signup page or redirect to login"}]}}))))
 
 (defmethod bread/action ::protected-route?
   [{:as req :keys [uri]} _ [protected?]]
