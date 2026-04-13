@@ -590,7 +590,7 @@
    [:button {:type :submit :name :submit :value "logout"}
     (:auth/logout i18n)]])
 
-(defmethod Section ::account/password [{:keys [i18n user config]} _]
+(defmethod Section ::account/password [{:keys [i18n hook config]} _]
   [:<>
    [:p.instruct (:account/leave-passwords-blank i18n)]
    [:.field
@@ -604,7 +604,12 @@
     [:input {:id :password-confirmation
              :type :password
              :name :password-confirmation
-             :maxlength (:auth/max-password-length config)}]]])
+             :maxlength (:auth/max-password-length config)}]]
+   (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])])
 
 (defmethod Section ::account/account-form
   [{:as data :keys [config ring/anti-forgery-token-field]} _]
