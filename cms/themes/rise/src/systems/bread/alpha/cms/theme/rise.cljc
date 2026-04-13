@@ -490,6 +490,7 @@
 (defc EmailPage
   [{:as data :keys [config i18n]}]
   {:extends SettingsPage
+   :key :user
    :query '[:db/id :user/username {:user/emails [* :thing/created-at]}]}
   {:title (:email/email i18n)
    :content
