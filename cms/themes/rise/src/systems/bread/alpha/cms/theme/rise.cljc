@@ -71,7 +71,6 @@
     :hook (fn hook [_ x & _] x)}
    :examples
    '[{:doc "Language and text direction"
-      ;; TODO support markdown in docs
       :description
       "Specify document language and text direction with `:field/lang` and `:dir`,
       resp. Typically the `i18n` core plugin takes care of this for you, including
