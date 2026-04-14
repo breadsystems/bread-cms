@@ -173,6 +173,59 @@
 
       ,)))
 
+(deftest test-forgot-password=>
+  (let [db-plugin (db->plugin ::FAKEDB)
+        db-conn (:db/connection (:config db-plugin))
+        username->expansion
+        (fn [username]
+          {:expansion/name ::db/query
+           :expansion/description "Query user by username."
+           :expansion/key :user
+           :expansion/db ::FAKEDB
+           :expansion/args ['{:find [(pull ?e [:db/id
+                                               :user/locked-at
+                                               {:reset/_user
+                                                [:db/id
+                                                 :thing/updated-at
+                                                 :reset/reset-at]}
+                                               {:user/emails [*]}]) .]
+                              :in [$ ?username]
+                              :where [[?e :user/username ?username]]}
+                            username]})
+        forgot-effect
+        {:effect/name ::auth/forgot-password
+         :effect/description "Send user a reset link, if they have a confirmed email."
+         :conn db-conn
+         :secret-key "secret"}]
+    (are
+      [expected config req]
+      (= expected (let [dispatcher {:dispatcher/type ::auth/forgot-password=>}
+                        auth-config (merge {:secret-key "secret"} config)
+                        app (plugins->loaded [db-plugin (auth/plugin auth-config)])
+                        req* (merge app req {::bread/dispatcher dispatcher})]
+                    (bread/dispatch req*)))
+
+      ;; Just loading the forgot password page. No special logic for GET requests.
+      nil nil {:request-method :get :uri "/forgot"}
+
+      ;; Submitting the forgot page.
+      {:expansions [(username->expansion "test")]
+       :effects [forgot-effect]}
+      nil
+      {:request-method :post
+       :uri "/forgot"
+       :params {:username "test"}}
+
+      ;; Submitting the forgot page with a differen username.
+      {:expansions [(username->expansion "soandso")]
+       :effects [forgot-effect]}
+      nil
+      {:request-method :post
+       :uri "/forgot"
+       :params {:username "soandso"}}
+
+      ,)))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
