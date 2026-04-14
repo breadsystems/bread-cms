@@ -732,7 +732,7 @@
        [:p.instruct (:invitations/no-invitations-body i18n)])]))
 
 (defc InvitationsPage
-  [{:as data :keys [i18n ring/anti-forgery-token-field]}]
+  [{:as data :keys [hook i18n ring/anti-forgery-token-field]}]
   {:extends SettingsPage
    :key :user
    :query '[:db/id
@@ -743,7 +743,6 @@
    :head (hook ::invitations/html.head [:<>])
    :content
    [:main.flex.col
-    ;; TODO
     (map (partial Section data) [::invitations/invitations-heading
                                  :flash
                                  ::invitations/invite-form
