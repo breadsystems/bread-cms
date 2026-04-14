@@ -694,10 +694,23 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [secret-key hash-algorithm max-failed-login-count lock-seconds next-param
-            login-uri reset-password-uri protected-prefixes require-mfa? mfa-issuer
-            min-password-length max-password-length generous-totp-window?
-            store-session-ip? store-session-user-agent? reset-expiration-seconds]
+  ([{:keys [forgot-password-uri
+            generous-totp-window?
+            hash-algorithm
+            lock-seconds
+            login-uri
+            max-failed-login-count
+            max-password-length
+            mfa-issuer
+            min-password-length
+            next-param
+            protected-prefixes
+            require-mfa?
+            reset-expiration-seconds
+            reset-password-uri
+            secret-key
+            store-session-ip?
+            store-session-user-agent?]
      :or {min-password-length 15
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
@@ -705,6 +718,7 @@
           lock-seconds 3600
           next-param :next
           login-uri "/login"
+          forgot-password-uri "/forgot"
           reset-password-uri "/reset"
           reset-expiration-seconds (* 10 60)
           generous-totp-window? true
@@ -749,6 +763,7 @@
            :lock-seconds lock-seconds
            :next-param next-param
            :login-uri login-uri
+           :forgot-password-uri forgot-password-uri
            :reset-password-uri reset-password-uri
            :reset-expiration-seconds reset-expiration-seconds
            :store-session-ip? store-session-ip?
