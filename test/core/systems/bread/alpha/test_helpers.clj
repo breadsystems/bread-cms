@@ -142,6 +142,12 @@
   map->router to pass to route/plugin."
   (route/plugin {:router (map->router routes)}))
 
+(defn mock-derive [pw {:keys [alg]}]
+  (str "[" alg "+" pw "]"))
+
+(defn mock-sha-512 [s]
+  (str "sha-512[" s "]"))
+
 (comment
   (def $router (map->router {"/one" {:name :one}
                              "/two" {:name :two}}))
