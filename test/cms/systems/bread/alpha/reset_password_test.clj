@@ -2,6 +2,7 @@
   (:require
     [buddy.hashers :as hashers]
     [clojure.test :refer [deftest are]]
+    [crypto.random :as random]
 
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded
@@ -10,6 +11,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring])
   (:import
@@ -225,6 +227,143 @@
        :params {:username "soandso"}}
 
       ,)))
+
+(deftest test-forgot-password!
+  (let [!now (Date.)]
+    (are
+      [expected effect data]
+      (= expected (with-redefs [sha-512 mock-sha-512
+                                random/hex (constantly "randomhex")]
+                    (binding [t/*now* !now]
+                      (bread/effect effect data))))
+
+      ;; Invalid request; noop.
+      nil {:effect/name ::auth/reset-password!} nil
+      nil {:effect/name ::auth/reset-password!} {}
+
+      ;; Bad username.
+      nil {:effect/name ::auth/reset-password!} {:user false}
+
+      ;; User with no emails setup.
+      nil
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; User with no confirmed emails.
+      nil
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "whatever"}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; Unconfirmed primary email. This is an abnormal situation, but we want to assert
+      ;; assert here that both conditions (primary, confirmed) should be true.
+      nil
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "whatever"
+                             :email/primary? true}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; Confirmed, non-primary email. Also abnormal, per above.
+      nil
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "whatever"
+                             :email/confirmed-at (t/seconds-ago 1)}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; First forgot request.
+      {:effects
+       [{:effect/name ::db/transact
+         :effect/description "Create a password reset."
+         :conn ::DBCONN
+         :txs [{:reset/code "sha-512[secret:randomhex]"
+                :reset/user 123
+                :thing/updated-at !now
+                :thing/created-at !now}]}
+        {:effect/name ::auth/reset-password-email!
+         :effect/decsription "Create password reset message."
+         :to "someone@example.com"
+         :code "randomhex"}]}
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "someone@example.com"
+                             :email/primary? true
+                             :email/confirmed-at (t/seconds-ago 1)}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; Subsequent forgot request.
+      {:effects
+       [{:effect/name ::db/transact
+         :effect/description "Create a password reset."
+         :conn ::DBCONN
+         :txs [{:db/id 456 ;; no created-at
+                :reset/code "sha-512[secret:randomhex]"
+                :reset/user 123
+                :thing/updated-at !now}]}
+        {:effect/name ::auth/reset-password-email!
+         :effect/decsription "Create password reset message."
+         :to "someone@example.com"
+         :code "randomhex"}]}
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "someone@example.com"
+                             :email/primary? true
+                             :email/confirmed-at (t/seconds-ago 1)}]
+              :reset/_user [{:db/id 456
+                             :reset/code "oldcode"
+                             :thing/updated-at (t/seconds-ago 60)}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ;; Subsequent forgot request; multiple confirmed emails.
+      {:effects
+       [{:effect/name ::db/transact
+         :effect/description "Create a password reset."
+         :conn ::DBCONN
+         :txs [{:db/id 456 ;; no created-at
+                :reset/code "sha-512[secret:randomhex]"
+                :reset/user 123
+                :thing/updated-at !now}]}
+        {:effect/name ::auth/reset-password-email!
+         :effect/decsription "Create password reset message."
+         :to "primary@example.com"
+         :code "randomhex"}]}
+      {:effect/name ::auth/forgot-password!
+       :secret-key "secret"
+       :conn ::DBCONN}
+      {:user {:db/id 123
+              :user/emails [{:email/address "primary@example.com"
+                             :email/primary? true
+                             :email/confirmed-at (t/seconds-ago 100)}
+                            {:email/address "second@example.com"
+                             :email/confirmed-at (t/seconds-ago 10)}
+                            {:email/address "first@example.com"
+                             :email/confirmed-at (t/seconds-ago 1)}]
+              :reset/_user [{:db/id 456
+                             :reset/code "oldcode"
+                             :thing/updated-at (t/seconds-ago 60)}]}
+       :config {:auth/lock-seconds 3600}}
+
+      ,)))
+
+;; TODO ::reset-password-email! effect
+;; TODO ::authenticate-reset expansion
+;; TODO ::validate-reset expansion
+;; TODO ::reset-password!
 
 (comment
   (require '[kaocha.repl :as k])
