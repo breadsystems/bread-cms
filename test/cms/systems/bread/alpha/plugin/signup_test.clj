@@ -3,14 +3,16 @@
     [buddy.hashers :as hashers]
     [clojure.test :refer [deftest are]]
 
-    [systems.bread.alpha.test-helpers :refer [db->plugin
-                                              plugins->loaded]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.signup :as signup]
-    [systems.bread.alpha.plugin.auth :as auth])
+    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.test-helpers :refer [db->plugin
+                                              mock-derive
+                                              mock-sha-512
+                                              plugins->loaded]])
   (:import
     [java.util Date]))
 
@@ -28,9 +30,8 @@
                                               (signup/plugin signup-config)])
                         req* (merge app req {::bread/dispatcher dispatcher})]
                     (binding [t/*now* !now]
-                      (with-redefs [hashers/derive (fn [pw {:keys [alg]}]
-                                                     (str "[" alg "+" pw "]"))
-                                    sha-512 #(str "sha-512[" % "]")]
+                      (with-redefs [hashers/derive mock-derive
+                                    sha-512 mock-sha-512]
                         (bread/dispatch req*)))))
 
       ;; Just loading the signup page.
