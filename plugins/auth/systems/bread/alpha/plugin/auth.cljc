@@ -711,7 +711,7 @@
             secret-key
             store-session-ip?
             store-session-user-agent?]
-     :or {min-password-length 15
+     :or {min-password-length 12
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
