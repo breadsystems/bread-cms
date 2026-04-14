@@ -13,6 +13,7 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
+    [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.lang IllegalArgumentException]
@@ -406,7 +407,92 @@
         [{:action/name ::=>logged-in
           :action/description "Redirect after login"}]}})))
 
-;; TODO ::forgot-password=>
+(defmethod bread/effect ::forgot-password
+  [{:keys [conn secret-key]} {:keys [user config]}]
+  (let [primary-email (first (filter :email/primary? (:user/emails user)))
+        primary-confirmed? (boolean (:email/confirmed-at primary-email))
+        locked-at (:user/locked-at user)
+        locked-period-start (t/seconds-ago (:auth/lock-seconds config))
+        unlocked? (or (not locked-at) (.before locked-at locked-period-start))
+        allow-reset? (and primary-confirmed? unlocked?)]
+    (when allow-reset?
+      (let [now (t/now)
+            code (random/hex 32)
+            hashed (sha-512 (str secret-key ":" code))
+            existing-reset (->> user :reset/_user
+                                (filter (complement :reset/reset-at))
+                                first)
+            reset-tx (merge {:reset/code hashed
+                             :reset/user (:db/id user)
+                             :thing/updated-at now}
+                            (if existing-reset
+                              {:db/id (:db/id existing-reset)}
+                              {:thing/created-at now}))]
+        {:effects
+         [{:effect/name ::db/transact
+           :effect/description "Create a password reset."
+           :conn conn
+           :txs [reset-tx]}
+          {:effect/name ::reset-password-email
+           :effect/decsription "Create password reset message."
+           :to (:email/address primary-email)
+           :code code}]}))))
+
+(defn reset-link [{:keys [config
+                          reset/code
+                          ring/scheme
+                          ring/server-name
+                          ring/server-port]}]
+  (format "%s://%s%s%s?code=%s"
+          (name scheme) server-name (when server-port (str ":" server-port))
+          (:auth/reset-password-uri config) (URLEncoder/encode code)))
+
+(defmethod bread/effect ::reset-password-email
+  [{:keys [to code]} {:as data :keys [config i18n ring/server-name]}]
+  (let [link (reset-link (assoc data :reset/code code))
+        site-name (:site/name config server-name)
+        body (i18n/t i18n [:auth/reset-password-email-body site-name link])]
+    {:effects
+     [{:effect/name ::email/send!
+       :effect/description "Send reset password email."
+       :message {:from (:email/smtp-from-email config)
+                 :to to
+                 :subject (:auth/reset-password-email-subject i18n)
+                 :body body}}]}))
+
+(comment
+  (:user data)
+  (bread/effect effect data)
+  (let [{:keys [effects]} (bread/effect effect data)
+        email-effect (second effects)]
+    (bread/effect email-effect data))
+  ,)
+
+(defmethod bread/dispatch ::forgot-password=>
+  [{:as req :keys [params request-method]}]
+  (let [post? (= :post request-method)]
+    (when post?
+      {:expansions
+       [{:expansion/name ::db/query
+         :expansion/description "Query user by username."
+         :expansion/key :user
+         :expansion/db (db/database req)
+         :expansion/args ['{:find [(pull ?e [:db/id
+                                             :user/locked-at
+                                             {:reset/_user
+                                              [:db/id
+                                               :thing/updated-at
+                                               :reset/reset-at]}
+                                             {:user/emails [*]}]) .]
+                            :in [$ ?username]
+                            :where [[?e :user/username ?username]]}
+                          (:username params)]}]
+       :effects
+       [{:effect/name ::forgot-password
+         :effect/description
+         "Send user a reset link, if they have a confirmed email."
+         :conn (db/connection req)
+         :secret-key (bread/config req :auth/secret-key)}]})))
 
 (defmethod bread/expand ::authenticate-reset
   [{:keys [reset-expiration-seconds]}

@@ -42,6 +42,9 @@
         :reset "Reset"
         :reset-password "Reset password"
         :reset-email-sent "A reset email has been sent to your primary email address."
+        :reset-password-email-subject "Password reset link"
+        :reset-password-email-body
+        "If you need to reset your password for %s, go here:\n\n%s\n\nIf you did not request a password reset, you can ignore this message."
         :too-many-attempts "You have made too many attempts to log in. Please try again later."
         :username "Username"
         :verify "Verify"
