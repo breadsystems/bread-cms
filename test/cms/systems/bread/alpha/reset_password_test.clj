@@ -10,15 +10,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
-    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.util Date]))
 
 (deftest test-reset-password=>
-  (let [!now (Date.)
-        db-plugin (db->plugin ::FAKEDB)
+  (let [db-plugin (db->plugin ::FAKEDB)
         db-conn (:db/connection (:config db-plugin))
         code->expansion
         (fn [code]
@@ -33,7 +31,8 @@
                                       :user/locked-at
                                       :user/failed-login-count]}]) .]
               :in [$ ?code]
-              :where [[?e :reset/code ?code] (not [?e :reset/reset-at])]}
+              :where [[?e :reset/code ?code]
+                      (not [?e :reset/reset-at])]}
             (mock-sha-512 code)]
            :expansion/db ::FAKEDB
            :expansion/description "Find the user matching the reset code."
@@ -51,10 +50,9 @@
                         auth-config (merge {:secret-key "secret"} config)
                         app (plugins->loaded [db-plugin (auth/plugin auth-config)])
                         req* (merge app req {::bread/dispatcher dispatcher})]
-                    (binding [t/*now* !now]
-                      (with-redefs [hashers/derive mock-derive
-                                    sha-512 mock-sha-512]
-                        (bread/dispatch req*)))))
+                    (with-redefs [hashers/derive mock-derive
+                                  sha-512 mock-sha-512]
+                      (bread/dispatch req*))))
 
       ;; Just loading the reset page.
       {:expansions [(code->expansion "secret:qwerty")
