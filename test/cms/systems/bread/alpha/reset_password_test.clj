@@ -410,7 +410,54 @@
 
 ;; TODO ::authenticate-reset expansion
 ;; TODO ::validate-reset expansion
-;; TODO ::reset-password!
+
+(deftest test-reset-password!
+  (let [!now (Date.)]
+    (are
+      [expected effect data]
+      (= expected (with-redefs [hashers/derive mock-derive]
+                    (binding [t/*now* !now]
+                      (bread/effect effect data))))
+
+      nil {:effect/name ::auth/reset-password!} nil
+      nil {:effect/name ::auth/reset-password!} {}
+      nil {:effect/name ::auth/reset-password!} {:validation nil}
+      nil {:effect/name ::auth/reset-password!} {:validation []}
+      nil {:effect/name ::auth/reset-password!} {:validation [false :whatever]}
+
+      {:effects [{:effect/name ::db/transact
+                  :conn ::DBCONN
+                  :txs [{:db/id 123
+                         ;; TODO secret-key
+                         :user/password "[:algo+password123]"
+                         :thing/updated-at !now}
+                        {:db/id 456
+                         :reset/reset-at !now
+                         :thing/updated-at !now}]}]}
+      {:effect/name ::auth/reset-password!
+       :params {:password "password123"}
+       :conn ::DBCONN
+       :hash-algorithm :algo}
+      {:validation [true nil]
+       :reset {:db/id 456 :reset/user {:db/id 123}}}
+
+      {:effects [{:effect/name ::db/transact
+                  :conn ::DBCONN
+                  :txs [{:db/id 567
+                         ;; TODO secret-key
+                         :user/password "[:roll-yr-own-crypto+newpass]"
+                         :thing/updated-at !now}
+                        {:db/id 345
+                         :reset/reset-at !now
+                         :thing/updated-at !now}]}]}
+      {:effect/name ::auth/reset-password!
+       :params {:password "newpass"}
+       :conn ::DBCONN
+       :hash-algorithm :roll-yr-own-crypto}
+      {:validation [true nil]
+       :reset {:db/id 345 :reset/user {:db/id 567}}}
+
+      ,)))
 
 (comment
   (require '[kaocha.repl :as k])
