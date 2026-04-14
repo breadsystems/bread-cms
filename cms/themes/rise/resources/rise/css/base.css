@@ -218,6 +218,7 @@ button:hover {
 .row {
   flex-flow: row nowrap;
   justify-content: space-between;
+  align-items: center;
 }
 .spacer {
   flex: 1;

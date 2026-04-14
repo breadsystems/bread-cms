@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.plugin.email
   (:require
-    [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [crypto.random :as random]
     [postal.core :as postal]
@@ -11,9 +9,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.time :as t]
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.ring :as ring]
-    [systems.bread.alpha.thing :as thing])
+    [systems.bread.alpha.ring :as ring])
   (:import
     [java.net URLEncoder]))
 

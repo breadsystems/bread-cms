@@ -151,6 +151,14 @@
 (defmethod bread/action ::redirect redirect- [res action _]
   (redirect res action))
 
+(defmethod bread/action ::redirect-when redirect-when
+  [{:as res :keys [::bread/data]}
+   {:as action :keys [error-status path] :or {error-status 400}} _]
+  (let [redirect? (get-in data path)]
+    (if redirect?
+      (redirect res action)
+      (assoc res :status error-status))))
+
 (defn redirect=> [redir]
   {:hooks
    {::bread/expand

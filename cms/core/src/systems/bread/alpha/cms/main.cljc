@@ -107,6 +107,14 @@
          :dispatcher/type ::marx/media.library=>
          :dispatcher/component #'marx/MediaLibrary}]]]
      ["_"
+      ["/forgot"
+       {:name :forgot-password
+        :dispatcher/type ::auth/forgot-password=>
+        :dispatcher/component #'rise/ForgotPasswordPage}]
+      ["/reset"
+       {:name :reset-password
+        :dispatcher/type ::auth/reset-password=>
+        :dispatcher/component #'rise/ResetPasswordPage}]
       ["/confirm-email"
        {:name :confirm-email
         :dispatcher/type ::email/confirm=>
@@ -595,7 +603,7 @@
            :where [[?e :session/id]]})
       (map (comp #(update % :session/data edn/read-string) first)))
 
-  (def coby
+  (def $user
     (-> (q '{:find [(pull ?e [:db/id
                               :thing/created-at
                               :user/username
@@ -615,21 +623,21 @@
                               {:user/sessions [*]}]) .]
              :in [$ ?username]
              :where [[?e :user/username ?username]]}
-           "coby")
+           "bread")
         (update :user/sessions (fn [sessions]
                                  (map #(update % :session/data edn/read-string)
                                       sessions)))))
 
   (q '{:find [(pull ?e [:db/id *])]
        :where [[?e :invitation/code]]})
-  (user/can? coby :edit-posts)
+  (user/can? $user :edit-posts)
   (defn retraction [{e :db/id :as entity}]
     (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
-  (retraction coby)
+  (retraction $user)
   (db/transact (db/connection (:bread/app @system))
-               (retraction coby))
+               (retraction $user))
   (db/transact (db/connection (:bread/app @system))
-               [{:user/username "coby"
+               [{:user/username "bread"
                  :user/locked-at (java.util.Date.)}])
 
 

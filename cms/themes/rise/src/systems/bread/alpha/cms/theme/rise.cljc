@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.cms.theme.rise
   (:require
-    [clojure.java.io :as io]
     [clojure.string :as string]
 
     [systems.bread.alpha.cms.theme :as theme]
@@ -229,29 +228,82 @@
          (when error?
            (hook ::html.invalid-login
                  (ErrorMessage {:message (:auth/invalid-username-password i18n)})))
-         (Submit (:auth/login i18n))]])}))
+         [:.flex.row
+          [:.spacer]
+          [:a {:href (:auth/forgot-password-uri config)}
+           (:auth/forgot-password i18n)]
+          (Submit (:auth/login i18n))]]])}))
+
+(defc ForgotPasswordPage
+  [{:keys [config hook i18n ring/anti-forgery-token-field ring/request-method]}]
+  {:extends Page
+   :doc
+   "The standard Bread forgot password page, designed to work with the
+   `::auth/forgot-password=>` dispatcher.
+   dispatcher. You typically won't need to call this component from your code,
+   except to reference it from your route if implementing custom routing."
+   :doc/preview? true
+   :doc/default-data
+   {:config {:site/name "Site name"}
+    :hook (fn hook [_ x & _] x)
+    :ring/anti-forgery-token-field (constantly nil)}
+   :examples
+   '[{:doc "Forgot password"
+      :description "Initial form"
+      :args ({:ring/request-method :get})}
+     {:doc "Submitted"
+      :description "Submitted form"
+      :args ({:ring/request-method :post})}
+     ,]}
+  (let [post? (= :post request-method)]
+    {:title (:auth/forgot-password i18n)
+     :content
+     (if post?
+       [:main
+        (hook ::html.forgot-heading [:h1 (:auth/forgot-password i18n)])
+        (hook ::html.forgot-acknowledgement
+              [:p.instruct (:auth/reset-email-sent i18n)])]
+       [:main
+        [:form.flex.col {:name :bread-login :method :post}
+         (anti-forgery-token-field)
+         (hook ::html.forgot-heading [:h1 (:auth/forgot-password i18n)])
+         (hook ::html.enter-confirm-new-password
+               [:p.instruct (:auth/enter-username i18n)])
+         (Field :username
+                :label (:auth/username i18n)
+                :input-attrs {:maxlength (:auth/max-password-length config)})
+         (Submit (:auth/reset-password i18n))]])}))
 
 (defc ResetPasswordPage
   [{:as data
-    :keys [config hook i18n session dir ring/anti-forgery-token-field]
-    :auth/keys [result]}]
+    :keys [auth/result config hook i18n session dir ring/anti-forgery-token-field
+           ring/request-method user validation]}]
   {:extends Page
    :doc
    "The standard Bread password reset page, designed to work with the `::auth/reset=>`
    dispatcher. You typically won't need to call this component from your code,
    except to reference it from your route if implementing custom routing."
    :doc/default-data
-   {:config {:site/name "Site name"}
+   {:config {:site/name "Site name"
+             :auth/min-password-length 15
+             :auth/max-password-length 72}
     :hook (fn hook [_ x & _] x)
     :ring/anti-forgery-token-field (constantly nil)}
+   :doc/preview? true
    :examples
    '[{:doc "Password reset"
-      :preview? true
       :description
       "A valid code must be present in the query string."
-      :args ({})}]}
-  (let [user (or (:user session) (:auth/user session))
-        error? (false? (:valid result))]
+      :args ({:validation [true nil]})}
+     {:doc "With error"
+      :args ({:ring/request-method :get
+              :validation [false :auth/invalid-reset]})}
+     {:doc "Submitted with error"
+      :args ({:ring/request-method :post
+              :validation [false :auth/passwords-must-match]})}
+     ,]}
+  (let [get? (= :get request-method)
+        [_ error-key] validation]
     {:title (:auth/reset-password i18n)
      :content
      (cond
@@ -262,10 +314,12 @@
          (hook ::html.locked-heading [:h2 (:auth/account-locked i18n)])
          (hook ::html.locked-explanation [:p (:auth/too-many-attempts i18n)])]]
 
-       ;; Forgot password
+       (and get? error-key)
+       [:main
+        (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
+        (hook ::html.reset-invalid (ErrorMessage {:message (get i18n error-key)}))]
 
-       ;; MFA
-
+       ;; Happy path for :get, error path for :post.
        :default
        [:main
         [:form.flex.col {:name :bread-login :method :post}
@@ -273,9 +327,9 @@
          (hook ::html.reset-heading [:h1 (:auth/reset-password i18n)])
          (hook ::html.enter-confirm-new-password
                [:p.instruct (:auth/enter-confirm-new-password i18n)])
-         (when error?
-           (hook ::html.invalid-password
-                 (ErrorMessage {:message (:auth/invalid-password i18n)})))
+         (when error-key
+           (hook ::html.reset-error
+                 (ErrorMessage {:message (i18n/t i18n error-key)})))
          (Field :password
                 :type :password
                 :label (:auth/password i18n)
@@ -284,6 +338,11 @@
                 :type :password
                 :label (:auth/password-confirmation i18n)
                 :input-attrs {:maxlength (:auth/max-password-length config)})
+         (hook ::html.password-guidelines
+             [:p.instruct
+              (i18n/t i18n [:auth/password-must-be-between
+                            (:auth/min-password-length config)
+                            (:auth/max-password-length config)])])
          (Submit (:auth/reset i18n))]])}))
 
 (defc AccountNav [{:as data :keys [config]}]
@@ -681,6 +740,7 @@
             {:invitation/_invited-by [* :thing/created-at
                                       {:invitation/email [*]}]}]}
   {:title (:invitations/invitations i18n)
+   :head (hook ::invitations/html.head [:<>])
    :content
    [:main.flex.col
     ;; TODO
@@ -793,7 +853,7 @@
                             (:auth/max-password-length config)])])
        (Submit (:signup/create-account i18n))]])})
 
-(defmethod Section :flash [{:keys [session ring/flash i18n]} _]
+(defmethod Section :flash [{:keys [ring/flash i18n]} _]
   [:<>
    (when-let [success-key (:success-key flash)]
      (SuccessMessage {:message (i18n/t i18n success-key)}))
@@ -825,6 +885,7 @@
                   ErrorMessage
                   Page
                   LoginPage
+                  ForgotPasswordPage
                   ResetPasswordPage
                   AccountNav
                   SettingsPage

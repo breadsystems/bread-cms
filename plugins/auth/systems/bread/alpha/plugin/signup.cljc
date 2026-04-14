@@ -170,6 +170,6 @@
        :action/description "Merge strings for signup into global strings."
        :strings (i18n/read-strings "signup.i18n.edn")}]}
     :config
-    {:signup/invite-only? invite-only?
-     :signup/invitation-expiration-seconds invitation-expiration-seconds
-     :signup/signup-uri signup-uri}}))
+    #:signup{:invite-only? invite-only?
+             :invitation-expiration-seconds invitation-expiration-seconds
+             :signup-uri signup-uri}}))
