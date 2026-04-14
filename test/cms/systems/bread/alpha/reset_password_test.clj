@@ -42,11 +42,12 @@
            :expansion/key :reset
            :expansion/name ::db/query})
         seconds->authenticate-expansion
-        (fn [seconds]
+        (fn [expiration-seconds & [lock-seconds]]
           {:expansion/name ::auth/authenticate-reset
            :expansion/description "Authentication reset code."
            :expansion/key :validation
-           :reset-expiration-seconds seconds})]
+           :reset-expiration-seconds expiration-seconds
+           :lock-seconds (or lock-seconds 3600)})]
     (are
       [expected config req]
       (= expected (let [dispatcher {:dispatcher/type ::auth/reset-password=>}
@@ -75,8 +76,9 @@
 
       ;; Loading reset page with non-default expiration seconds.
       {:expansions [(code->expansion "secret:foo")
-                    (seconds->authenticate-expansion 42)]}
-      {:reset-expiration-seconds 42}
+                    (seconds->authenticate-expansion 42 420)]}
+      {:reset-expiration-seconds 42
+       :lock-seconds 420}
       {:request-method :get
        :uri "/reset"
        :params {:code "foo"}}

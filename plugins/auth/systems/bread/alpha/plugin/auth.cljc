@@ -558,7 +558,9 @@
                             :expansion/description "Authentication reset code."
                             :expansion/key :validation
                             :reset-expiration-seconds
-                            (bread/config req :auth/reset-expiration-seconds)}
+                            (bread/config req :auth/reset-expiration-seconds)
+                            :lock-seconds
+                            (bread/config req :auth/lock-seconds)}
         secret-key (bread/config req :auth/secret-key)
         query-user {:expansion/name ::db/query
                     :expansion/key :reset
