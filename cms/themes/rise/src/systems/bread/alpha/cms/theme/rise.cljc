@@ -228,7 +228,11 @@
          (when error?
            (hook ::html.invalid-login
                  (ErrorMessage {:message (:auth/invalid-username-password i18n)})))
-         (Submit (:auth/login i18n))]])}))
+         [:.flex.row
+          [:.spacer]
+          [:a {:href (:auth/forgot-password-uri config)}
+           (:auth/forgot-password i18n)]
+          (Submit (:auth/login i18n))]]])}))
 
 (defc ForgotPasswordPage
   [{:keys [config hook i18n ring/anti-forgery-token-field ring/request-method]}]
