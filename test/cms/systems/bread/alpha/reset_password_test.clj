@@ -454,7 +454,105 @@
 
     ,))
 
-;; TODO ::validate-reset expansion
+(deftest test-validate-reset
+  (are
+    [expected expansion data]
+    (= expected (bread/expand expansion data))
+
+    ;; Prior validation. Pass-through.
+    [false :auth/invalid-reset]
+    {:expansion/name ::auth/validate-reset}
+    {:validation [false :auth/invalid-reset]}
+
+    ;; No params present.
+    [false :auth/enter-confirm-new-password]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 1
+     :max-password-length 2
+     :params {}}
+    {:validation [true nil]}
+
+    ;; No params present.
+    [false :auth/enter-confirm-new-password]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 1
+     :max-password-length 2
+     :params {;; Code does not come into play at this stage.
+              :password ""
+              :password-confirmation ""}}
+    {:validation [true nil]}
+
+    ;; Password but no confirmation.
+    [false :auth/enter-confirm-new-password]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 1
+     :max-password-length 2
+     :params {;; Code does not come into play at this stage.
+              :password "asdf"
+              :password-confirmation ""}}
+    {:validation [true nil]}
+
+    ;; Confirmation; no password.
+    [false :auth/enter-confirm-new-password]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 1
+     :max-password-length 2
+     :params {;; Code does not come into play at this stage.
+              :password ""
+              :password-confirmation "asdf"}}
+    {:validation [true nil]}
+
+    ;; Password mismatch.
+    [false :auth/passwords-must-match]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 3
+     :max-password-length 10
+     :params {;; Code does not come into play at this stage.
+              :password "one"
+              :password-confirmation "two"}}
+    {:validation [true nil]}
+
+    ;; Password under minimum length.
+    [false [:auth/password-must-be-at-least 12]]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 12
+     :max-password-length 72
+     :params {;; Code does not come into play at this stage.
+              :password "elevenchars"
+              :password-confirmation "elevenchars"}}
+    {:validation [true nil]}
+
+    ;; Password under minimum length.
+    [false [:auth/password-must-be-at-least 12]]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 12
+     :max-password-length 72
+     :params {;; Code does not come into play at this stage.
+              :password "2short"
+              :password-confirmation "2short"}}
+    {:validation [true nil]}
+
+    ;; Password over maximum length.
+    [false [:auth/password-must-be-at-most 12]]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 12
+     :max-password-length 12
+     :params {;; Code does not come into play at this stage.
+              :password "thirteenchars"
+              :password-confirmation "thirteenchars"}}
+    {:validation [true nil]}
+
+    ;; Password over maximum length.
+    [false [:auth/password-must-be-at-most 12]]
+    {:expansion/name ::auth/validate-reset
+     :min-password-length 12
+     :max-password-length 12
+     :params {;; Code does not come into play at this stage.
+              :password "this password is way too long"
+              :password-confirmation "this password is way too long"}}
+    {:validation [true nil]}
+
+    ,))
 
 (deftest test-reset-password!
   (let [!now (Date.)]
