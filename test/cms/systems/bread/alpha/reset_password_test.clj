@@ -410,7 +410,50 @@
 
     ,))
 
-;; TODO ::authenticate-reset expansion
+(deftest test-authenticate-reset
+  (are
+    [expected expansion data]
+    (= expected (bread/expand expansion data))
+
+    [false :auth/invalid-reset]
+    {:expansion/name ::auth/authenticate-reset
+     :reset-expiration-seconds 1
+     :lock-seconds 3600}
+    {:reset false}
+
+    [false :auth/invalid-reset]
+    {:expansion/name ::auth/authenticate-reset
+     :reset-expiration-seconds 60
+     :lock-seconds 3600}
+    {:reset false}
+
+    [true nil]
+    {:expansion/name ::auth/authenticate-reset
+     :reset-expiration-seconds 60
+     :lock-seconds 3600}
+    {:reset {:thing/updated-at (t/seconds-ago 59)
+             :reset/user {:db/id 123}}}
+
+    ;; Attempting to reset a locked account.
+    [false :auth/invalid-reset]
+    {:expansion/name ::auth/authenticate-reset
+     :reset-expiration-seconds 60
+     :lock-seconds 3600}
+    {:reset {:thing/updated-at (t/seconds-ago 59)
+             :reset/user {:db/id 123
+                          :user/locked-at (t/seconds-ago 3599)}}}
+
+    ;; Previously locked account.
+    [true nil]
+    {:expansion/name ::auth/authenticate-reset
+     :reset-expiration-seconds 60
+     :lock-seconds 3600}
+    {:reset {:thing/updated-at (t/seconds-ago 59)
+             :reset/user {:db/id 123
+                          :user/locked-at (t/seconds-ago 3601)}}}
+
+    ,))
+
 ;; TODO ::validate-reset expansion
 
 (deftest test-reset-password!

@@ -495,13 +495,14 @@
          :secret-key (bread/config req :auth/secret-key)}]})))
 
 (defmethod bread/expand ::authenticate-reset
-  [{:keys [reset-expiration-seconds]}
+  [{:keys [reset-expiration-seconds lock-seconds]}
    {{:as reset :keys [reset/user]} :reset}]
   (let [earliest-valid (t/seconds-ago reset-expiration-seconds)
         updated-at (:thing/updated-at reset)
-        valid? (and updated-at (.after updated-at earliest-valid))]
-    (prn 'USER user)
-    ;; TODO check :user/locked-at
+        locked-period-start (t/seconds-ago lock-seconds)
+        locked-at (:user/locked-at user)
+        unlocked? (or (not locked-at) (.before locked-at locked-period-start))
+        valid? (and unlocked? updated-at (.after updated-at earliest-valid))]
     (if valid?
       [true nil]
       [false :auth/invalid-reset])))
