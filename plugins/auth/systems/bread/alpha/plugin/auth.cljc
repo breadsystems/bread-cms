@@ -444,7 +444,7 @@
                           ring/server-name
                           ring/server-port]}]
   (format "%s://%s%s%s?code=%s"
-          (name scheme) server-name (when server-port (str ":" server-port))
+          (name scheme) server-name (if server-port (str ":" server-port) "")
           (:auth/reset-password-uri config) (URLEncoder/encode code)))
 
 (defmethod bread/effect ::reset-password-email!

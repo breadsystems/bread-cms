@@ -13,6 +13,7 @@
     [systems.bread.alpha.internal.interop :refer [sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.util Date]))
@@ -360,7 +361,53 @@
 
       ,)))
 
-;; TODO ::reset-password-email! effect
+(deftest test-reset-password-email!
+  (are
+    [expected effect data]
+    (= expected (with-redefs [random/hex (constantly "randomhex")]
+                  (bread/effect effect data)))
+
+    {:effects
+     [{:effect/name ::email/send!
+       :effect/description "Send reset password email."
+       :message {:from "app@bread.systems"
+                 :to "someone@example.com"
+                 :subject "reset yr pwd"
+                 :body (str "site: Example Site "
+                            "link: https://bread.systems/reset?code=qwerty")}}]}
+    {:effect/name ::auth/reset-password-email!
+     :to "someone@example.com"
+     :code "qwerty"}
+    {:config {:site/name "Example Site"
+              :auth/reset-password-uri "/reset"
+              :email/smtp-from-email "app@bread.systems"}
+     :i18n {:auth/reset-password-email-body "site: %s link: %s"
+            :auth/reset-password-email-subject "reset yr pwd"}
+     :ring/scheme :https
+     :ring/server-name "bread.systems"}
+
+    ;; Without a configured :site/name.
+    {:effects
+     [{:effect/name ::email/send!
+       :effect/description "Send reset password email."
+       :message {:from "alt@bread.systems"
+                 :to "other@example.com"
+                 :subject "reset yr pwd"
+                 :body (str "site: bread.systems "
+                            "link: http://bread.systems:8080/reset?code=mycode")}}]}
+    {:effect/name ::auth/reset-password-email!
+     :to "other@example.com"
+     :code "mycode"}
+    {:config {:auth/reset-password-uri "/reset"
+              :email/smtp-from-email "alt@bread.systems"}
+     :i18n {:auth/reset-password-email-body "site: %s link: %s"
+            :auth/reset-password-email-subject "reset yr pwd"}
+     :ring/scheme :http
+     :ring/server-port 8080
+     :ring/server-name "bread.systems"}
+
+    ,))
+
 ;; TODO ::authenticate-reset expansion
 ;; TODO ::validate-reset expansion
 ;; TODO ::reset-password!
