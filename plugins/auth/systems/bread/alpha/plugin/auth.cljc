@@ -407,7 +407,7 @@
         [{:action/name ::=>logged-in
           :action/description "Redirect after login"}]}})))
 
-(defmethod bread/effect ::forgot-password
+(defmethod bread/effect ::forgot-password!
   [{:keys [conn secret-key]} {:keys [user config]}]
   (let [primary-email (first (filter :email/primary? (:user/emails user)))
         primary-confirmed? (boolean (:email/confirmed-at primary-email))
@@ -433,7 +433,7 @@
            :effect/description "Create a password reset."
            :conn conn
            :txs [reset-tx]}
-          {:effect/name ::reset-password-email
+          {:effect/name ::reset-password-email!
            :effect/decsription "Create password reset message."
            :to (:email/address primary-email)
            :code code}]}))))
@@ -447,7 +447,7 @@
           (name scheme) server-name (when server-port (str ":" server-port))
           (:auth/reset-password-uri config) (URLEncoder/encode code)))
 
-(defmethod bread/effect ::reset-password-email
+(defmethod bread/effect ::reset-password-email!
   [{:keys [to code]} {:as data :keys [config i18n ring/server-name]}]
   (let [link (reset-link (assoc data :reset/code code))
         site-name (:site/name config server-name)
@@ -488,7 +488,7 @@
                             :where [[?e :user/username ?username]]}
                           (:username params)]}]
        :effects
-       [{:effect/name ::forgot-password
+       [{:effect/name ::forgot-password!
          :effect/description
          "Send user a reset link, if they have a confirmed email."
          :conn (db/connection req)
@@ -531,7 +531,7 @@
                       [:auth/password-must-be-at-most max-password-length]))]
         [valid? error]))))
 
-(defmethod bread/effect ::reset-password
+(defmethod bread/effect ::reset-password!
   [{:keys [params hash-algorithm conn]} {:keys [reset validation]}]
   (let [user (:reset/user reset)
         [valid?] validation]
@@ -588,7 +588,7 @@
          :min-password-length (bread/config req :auth/min-password-length)
          :max-password-length (bread/config req :auth/max-password-length)}]
        :effects
-       [{:effect/name ::reset-password
+       [{:effect/name ::reset-password!
          :effect/description "Update password upon valid submission."
          :params params
          :hash-algorithm (bread/config req :auth/hash-algorithm)

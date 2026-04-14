@@ -89,7 +89,7 @@
                               :password-confirmation "newpassword"}
                      :min-password-length 12
                      :max-password-length 72}]
-       :effects [{:effect/name ::auth/reset-password
+       :effects [{:effect/name ::auth/reset-password!
                  :effect/description "Update password upon valid submission."
                  :hash-algorithm :bcrypt+blake2b-512
                  :params {:code "foo"
@@ -119,7 +119,7 @@
                               :password-confirmation "newpassword"}
                      :min-password-length 12
                      :max-password-length 72}]
-       :effects [{:effect/name ::auth/reset-password
+       :effects [{:effect/name ::auth/reset-password!
                  :effect/description "Update password upon valid submission."
                  :hash-algorithm :bcrypt+blake2b-512
                  :params {:code "foo"
@@ -149,7 +149,7 @@
                               :password-confirmation "newpassword"}
                      :min-password-length 3
                      :max-password-length 33}]
-       :effects [{:effect/name ::auth/reset-password
+       :effects [{:effect/name ::auth/reset-password!
                  :effect/description "Update password upon valid submission."
                  :hash-algorithm :bcrypt+blake2b-512
                  :params {:code "foo"
@@ -193,7 +193,7 @@
                               :where [[?e :user/username ?username]]}
                             username]})
         forgot-effect
-        {:effect/name ::auth/forgot-password
+        {:effect/name ::auth/forgot-password!
          :effect/description "Send user a reset link, if they have a confirmed email."
          :conn db-conn
          :secret-key "secret"}]
