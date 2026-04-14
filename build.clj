@@ -23,6 +23,9 @@
 (defn tag [_]
   (print (str "v" patch-version)))
 
+(defn tag-release! [_]
+  (b/git-process {:git-args (str "tag v" patch-version)}))
+
 (def libs
   {:core
    {:lib 'systems.bread/bread-core
