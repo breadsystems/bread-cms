@@ -103,13 +103,14 @@
                    first)
         effect (confirmation-effect {:from (:email/smtp-from-email config)
                                      :to (:email/address email)
+                                     ;; TODO hash code
                                      :code (:email/code email)}
                                     data)]
     (when email
       {:effects [effect]
        :flash {:success-key :email/confirmation-resent}})))
 
-(defmethod bread/effect [::update :delete]
+(defmethod bread/effect [::update :delete] delete-email
   [{:keys [conn params]} {:keys [user]}]
   (let [id (->int (:id params))]
     (ensure-own-email-id user id)
@@ -136,6 +137,7 @@
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
                             :user/emails [{:email/address email
+                                           ;; TODO hash code
                                            :email/code code
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
@@ -249,6 +251,7 @@
                                               :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
+                             ;; TODO hash code
                              :where [[?e :email/code ?code]
                                      [?e :email/address ?email]
                                      ;; Only query for unconfirmed emails.
