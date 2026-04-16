@@ -394,7 +394,8 @@
                          {:user/username "test"
                           :user/password "<HASHED PASSWORD>"
                           :user/emails [{:email/address "user@example.com"
-                                         :email/confirmed-at !now}]
+                                         :email/confirmed-at !now
+                                         :email/primary? true}]
                           :thing/created-at ::NOW}}]
                   :conn ::DBCONN}]}
       {:effect/name ::signup/enact-valid-signup

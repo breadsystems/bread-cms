@@ -53,7 +53,9 @@
   (when valid?
     (if invitation
       (let [email (when-let [email (:invitation/email invitation)]
-                    (assoc email :email/confirmed-at (t/now)))
+                    (assoc email
+                           :email/confirmed-at (t/now)
+                           :email/primary? true))
             user (if email
                    (assoc user :user/emails [email])
                    user)]
