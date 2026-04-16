@@ -197,6 +197,7 @@
         {:valid valid :user user}))))
 
 (defmethod bread/action ::logout [res _ _]
+  ;; TODO delete session
   (let [login-uri (bread/config res :auth/login-uri)]
     (-> res
         (assoc :session nil :status 302 :body login-uri)
