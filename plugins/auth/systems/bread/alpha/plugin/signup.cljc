@@ -53,7 +53,9 @@
   (when valid?
     (if invitation
       (let [email (when-let [email (:invitation/email invitation)]
-                    (assoc email :email/confirmed-at (t/now)))
+                    (assoc email
+                           :email/confirmed-at (t/now)
+                           :email/primary? true))
             user (if email
                    (assoc user :user/emails [email])
                    user)]
@@ -64,7 +66,7 @@
                            :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
-                  :effect/description "Create user"
+                  :effect/description "Create user."
                   :txs [user]}]})))
 
 (defmethod bread/action ::render

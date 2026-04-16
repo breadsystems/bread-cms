@@ -115,12 +115,12 @@
        :message message}]}))
 
 (defmethod bread/effect [::invite :send] send-invitation
-  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
+  [{:keys [conn params secret-key]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [email (:email params)
           code (random/url-part 32)
           now (t/now)
-          invitation-tx {:invitation/code (sha-512 code)
+          invitation-tx {:invitation/code (sha-512 (str secret-key ":" code))
                          :invitation/invited-by (:db/id user)
                          :invitation/email {:email/address email
                                             :thing/created-at now
@@ -144,13 +144,13 @@
     {:flash {:error-key error-key}}))
 
 (defmethod bread/effect [::invite :resend] resend-invitation
-  [{:keys [conn params]} {:keys [user] [valid? error-key] :validation}]
+  [{:keys [conn params secret-key]} {:keys [user] [valid? error-key] :validation}]
   (if valid?
     (let [id (->int (:id params))
           code (random/url-part 32)
           now (t/now)
           invitation-tx {:db/id id
-                         :invitation/code (sha-512 code)
+                         :invitation/code (sha-512 (str secret-key ":" code))
                          :thing/updated-at now}
           invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
           to (:email/address (:invitation/email invitation))
@@ -185,7 +185,7 @@
     {:flash {:error-key error-key}}))
 
 (defmethod bread/dispatch ::invitations=>
-  [{:keys [::bread/dispatcher params request-method server-name]
+  [{:keys [::bread/dispatcher params request-method]
     {:keys [user]} :session
     :as req}]
   "Invitations page in the account section"
@@ -218,6 +218,7 @@
          :effect/description "Email an invitation, pending validation."
          :effect/key action
          :params params
+         :secret-key (bread/config req :auth/secret-key)
          :conn (db/connection req)}]
        :hooks
        {::bread/render
