@@ -181,7 +181,7 @@
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
-  [{:keys [generous? lock-seconds two-factor-code]} {user :auth/result}]
+  [{:keys [lock-seconds two-factor-code]} {user :auth/result}]
   (let [;; Don't store password data in session
         user (dissoc user :user/password)
         locked? (and (:user/locked-at user)
@@ -311,8 +311,7 @@
         {:expansion/name ::authenticate-two-factor
          :expansion/key :auth/result
          :two-factor-code (:two-factor-code params)
-         :lock-seconds lock-seconds
-         :generous? (bread/config req :auth/generous-totp-window?)}]
+         :lock-seconds lock-seconds}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
@@ -698,7 +697,6 @@
   ([]
    (plugin {}))
   ([{:keys [forgot-password-uri
-            generous-totp-window?
             hash-algorithm
             lock-seconds
             login-uri
@@ -724,7 +722,6 @@
           forgot-password-uri "/forgot"
           reset-password-uri "/reset"
           reset-expiration-seconds (* 10 60)
-          generous-totp-window? true
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
           store-session-user-agent? false}}]
@@ -758,7 +755,6 @@
     #:auth{:secret-key secret-key
            :require-mfa? require-mfa?
            :mfa-issuer mfa-issuer
-           :generous-totp-window? generous-totp-window?
            :hash-algorithm hash-algorithm
            :max-failed-login-count max-failed-login-count
            :min-password-length min-password-length
