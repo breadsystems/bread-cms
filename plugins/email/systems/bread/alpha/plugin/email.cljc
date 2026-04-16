@@ -88,7 +88,7 @@
                                             :body body})}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
-  [{:keys [conn params]} {:as data :keys [config user]}]
+  [{:keys [params]} {:as data :keys [config user]}]
   (let [emails (:user/emails user)
         ;; Check that the email belongs to the user and that it's still
         ;; actually pending confirmation.
@@ -99,16 +99,16 @@
                    first)
         effect (confirmation-effect {:from (:email/smtp-from-email config)
                                      :to (:email/address email)
+                                     ;; TODO hash code
                                      :code (:email/code email)}
                                     data)]
     (when email
       {:effects [effect]
        :flash {:success-key :email/confirmation-resent}})))
 
-(defmethod bread/effect [::update :delete]
+(defmethod bread/effect [::update :delete] delete-email
   [{:keys [conn params]} {:keys [user]}]
-  (let [emails (:user/emails user)
-        id (Integer. (:id params))]
+  (let [id (Integer. (:id params))]
     (ensure-own-email-id user id)
     (try
       (db/transact conn [[:db/retractEntity id]])
@@ -133,6 +133,7 @@
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
                             :user/emails [{:email/address email
+                                           ;; TODO hash code
                                            :email/code code
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
@@ -246,6 +247,7 @@
                                               :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
+                             ;; TODO hash code
                              :where [[?e :email/code ?code]
                                      [?e :email/address ?email]
                                      ;; Only query for unconfirmed emails.
