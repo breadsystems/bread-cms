@@ -185,7 +185,7 @@
     {:flash {:error-key error-key}}))
 
 (defmethod bread/dispatch ::invitations=>
-  [{:keys [::bread/dispatcher params request-method server-name]
+  [{:keys [::bread/dispatcher params request-method]
     {:keys [user]} :session
     :as req}]
   "Invitations page in the account section"
