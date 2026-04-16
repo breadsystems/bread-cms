@@ -304,6 +304,15 @@
        (recur (try-action h app current-action (cons x args)) actions)
        x))))
 
+(def ^:private $plugins
+  (atom {}))
+
+(defn- config-lookup
+  ([k]
+   (config-lookup k nil))
+  ([k default]
+   (get-in @$plugins [::config k] default)))
+
 (defn app
   "Creates a new Bread app. Optionally accepts an options map. A single option
   is supported, :plugins, a sequence of plugins to load."
@@ -322,7 +331,13 @@
                       :action/description
                       "Do side effects"}]}
       ::expansions []
-      ::config     {}
+      ;; TODO reify ILookup => source from plugin
+      ::config     (reify
+                     clojure.lang.ILookup
+                     (valAt [this k]
+                       (config-lookup k))
+                     (valAt [this k default]
+                       (config-lookup k default)))
       ::data       {}}
      {:type ::app})))
 
@@ -366,3 +381,30 @@
   through the Bread request/response lifecycle."
   [app]
   (partial handle app))
+
+(defmacro defplugin [plugin-name & body]
+  (let [name* (gensym (str plugin-name '$))
+        f `(clojure.core/fn ~name* ~@body)
+        form `(clojure.core/defn ~plugin-name [& args#]
+                (let [{hooks# :hooks config# :config} (apply ~f args#)]
+                  (prn "hooks" (keys hooks#))
+                  {:hooks hooks#
+                   :config config#}))
+        #_#_
+        #_#_
+        plugin-var (eval form)
+        k (symbol (str *ns*) (name plugin-name))]
+    #_
+    (swap! $plugins assoc k plugin-var)
+    form))
+
+(comment
+  (reset! $plugins {})
+  (get (deref $plugins) 'systems.bread.alpha.plugin.auth/plugin)
+  (macroexpand '(defplugin my-plugin
+                  ([] (my-plugin {}))
+                  ([_] {:hooks {::request [{}]}})))
+  (require '[systems.bread.alpha.plugin.auth :as auth])
+  (auth/plugin)
+  (auth/plugin {})
+  ,)

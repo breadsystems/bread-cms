@@ -694,7 +694,12 @@
      :migration/dependencies #{:bread.migration/migrations
                                :bread.migration/users}}))
 
-(defn plugin
+(comment
+  (macroexpand '(bread/defplugin plugin
+                  ([] (plugin {}))))
+  ,)
+
+(bread/defplugin plugin
   ([]
    (plugin {}))
   ([{:keys [forgot-password-uri
@@ -727,7 +732,7 @@
           store-session-ip? false
           store-session-user-agent? false}}]
    {:hooks
-    {::db/migrations
+    {#_#_::db/migrations
      [{:action/name ::db/add-schema-migration
        :action/description
        "Add schema for authentication to the sequence of migrations to be run."
