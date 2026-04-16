@@ -64,7 +64,7 @@
                            :invitation/redeemer user}]}]})
       {:effects [{:effect/name ::db/transact
                   :conn conn
-                  :effect/description "Create user"
+                  :effect/description "Create user."
                   :txs [user]}]})))
 
 (defmethod bread/action ::render
