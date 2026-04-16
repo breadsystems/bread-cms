@@ -8,7 +8,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [->int format*]]
+    [systems.bread.alpha.internal.interop :refer [->int format* sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
@@ -240,6 +240,7 @@
 (defmethod bread/dispatch ::confirm=>
   [{:as req :keys [request-method] {:keys [code email]} :params}]
   (let [post? (= :post request-method)
+        hashed (sha-512 (str (bread/config req :auth/secret-key) ":" code))
         expansions
         [{:expansion/name ::db/query
           :expansion/key :pending-email
@@ -251,12 +252,11 @@
                                               :thing/created-at
                                               :thing/updated-at]) .]
                              :in [$ ?code ?email]
-                             ;; TODO hash code
                              :where [[?e :email/code ?code]
                                      [?e :email/address ?email]
                                      ;; Only query for unconfirmed emails.
                                      (not-join [?e] [?e :email/confirmed-at])]}
-                           code email]}
+                           hashed email]}
          {:expansion/name ::validate-recency
           :expansion/key :pending-email
           :expansion/description "Validate the confirmation link's age."
