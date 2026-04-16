@@ -311,8 +311,7 @@
         {:expansion/name ::authenticate-two-factor
          :expansion/key :auth/result
          :two-factor-code (:two-factor-code params)
-         :lock-seconds lock-seconds
-         :generous? (bread/config req :auth/generous-totp-window?)}]
+         :lock-seconds lock-seconds}]
        :effects
        [{:effect/name ::log-attempt
          :effect/description
@@ -688,7 +687,6 @@
   ([]
    (plugin {}))
   ([{:keys [forgot-password-uri
-            generous-totp-window?
             hash-algorithm
             lock-seconds
             login-uri
@@ -714,7 +712,6 @@
           forgot-password-uri "/forgot"
           reset-password-uri "/reset"
           reset-expiration-seconds (* 10 60)
-          generous-totp-window? true
           secret-key (System/getenv "BREAD_SECRET_KEY")
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
@@ -749,7 +746,6 @@
     #:auth{:secret-key secret-key
            :require-mfa? require-mfa?
            :mfa-issuer mfa-issuer
-           :generous-totp-window? generous-totp-window?
            :hash-algorithm hash-algorithm
            :max-failed-login-count max-failed-login-count
            :min-password-length min-password-length
