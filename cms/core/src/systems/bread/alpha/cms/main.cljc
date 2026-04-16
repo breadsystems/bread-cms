@@ -118,7 +118,8 @@
       ["/confirm-email"
        {:name :confirm-email
         :dispatcher/type ::email/confirm=>
-        :dispatcher/component #'rise/ConfirmPage}]
+        :dispatcher/component #'rise/ConfirmPage
+        :dispatcher/not-found-component #'rise/ConfirmPage}]
       ["/patterns"
        ["/rise"
         {:name :patterns.rise
