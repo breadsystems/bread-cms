@@ -118,7 +118,8 @@
       ["/confirm-email"
        {:name :confirm-email
         :dispatcher/type ::email/confirm=>
-        :dispatcher/component #'rise/ConfirmPage}]
+        :dispatcher/component #'rise/ConfirmPage
+        :dispatcher/not-found-component #'rise/ConfirmPage}]
       ["/patterns"
        ["/rise"
         {:name :patterns.rise
@@ -364,7 +365,7 @@
       {:session-store (auth/session-store config conn)
        :connection conn})))
 
-(defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
+(defmethod ig/resolve-key :ring/session-store [_ {:keys [session-store]}]
   session-store)
 
 (defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]

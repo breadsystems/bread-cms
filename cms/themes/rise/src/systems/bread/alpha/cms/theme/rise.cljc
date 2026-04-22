@@ -795,12 +795,15 @@
      :content
      [:main.gap-large
       [:h2 (:email/please-confirm i18n)]
-      [:p address]
-      [:form {:method :post :action uri}
-       [:input {:type :hidden :name :email :value address}]
-       [:input {:type :hidden :name :code :value code}]
-       [:button {:type :submit}
-        (:email/confirm-email i18n)]]]}))
+      (if (empty? address)
+        [:.error (:email/invalid-reset-link i18n)]
+        [:<>
+         [:p address]
+         [:form {:method :post :action uri}
+          [:input {:type :hidden :name :email :value address}]
+          [:input {:type :hidden :name :code :value code}]
+          [:button {:type :submit}
+           (:email/confirm-email i18n)]]])]}))
 
 (defc SignupPage
   [{:as data
