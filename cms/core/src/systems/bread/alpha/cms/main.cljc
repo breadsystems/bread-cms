@@ -365,7 +365,7 @@
       {:session-store (auth/session-store config conn)
        :connection conn})))
 
-(defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
+(defmethod ig/resolve-key :ring/session-store [_ {:keys [session-store]}]
   session-store)
 
 (defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]
