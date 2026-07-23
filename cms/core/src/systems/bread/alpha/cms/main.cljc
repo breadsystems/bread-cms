@@ -13,6 +13,7 @@
     [reitit.core :as reitit]
     [reitit.ring]
     [ring.middleware.defaults :as ring]
+    [ring.util.response :as response]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
@@ -52,6 +53,21 @@
     [java.util Date Properties UUID]
     [org.sqlite JDBC])
   (:gen-class))
+
+;; In a GraalVM native image, io/resource returns resource: URLs for files
+;; embedded in the image. Ring's resource-data multimethod only implements
+;; :file and :jar, so teach it the :resource protocol. This is a no-op on the
+;; JVM, where the resource: protocol never occurs.
+;; TODO delete once https://github.com/ring-clojure/ring/pull/447 gets merged.
+(defmethod response/resource-data :resource
+  [^java.net.URL url]
+  ;; GraalVM resource scheme
+  (let [resource (.openConnection url)
+        len (.getContentLength resource)
+        last-mod (.getLastModified resource)]
+    {:content (.getInputStream resource)
+     :content-length (if (<= 0 len) len)
+     :last-modified (if-not (zero? last-mod) (Date. last-mod))}))
 
 (defn not-found [req]
   {:body "not found"
