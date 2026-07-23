@@ -53,8 +53,6 @@
     [org.sqlite JDBC])
   (:gen-class))
 
-(set! *print-namespace-maps* false)
-
 (defn not-found [req]
   {:body "not found"
    :status 404})
@@ -423,6 +421,8 @@
   (:bread/router @system)
   (:bread/db @system)
   (:bread/profilers @system)
+
+  (set! *print-namespace-maps* false)
 
   (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
   (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
