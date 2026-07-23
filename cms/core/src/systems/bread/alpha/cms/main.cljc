@@ -205,7 +205,7 @@
                :server-name (System/getenv "SERVER_NAME")
                :server-port (System/getenv "SERVER_PORT")
                :content-type (System/getenv "CONTENT_TYPE")
-               :content-length (Integer.
+               :content-length (Integer/parseInt
                                  (or (System/getenv "CONTENT_LENGTH") "0"))}
           {:keys [status headers body] :as res} (handler req)]
       (println (str "status: " status " " (bread.ring/http-status-codes status)))
@@ -785,6 +785,24 @@
 
   (-main))
 
+(defn- print-error-chain
+  "Print e and its causes without calling .toString on ExceptionInfo, whose
+  data map may contain objects that are unprintable in a native image."
+  [^Throwable e]
+  (binding [*out* *err*]
+    (loop [e e]
+      (println (.getName (class e)) "-" (.getMessage e))
+      (when-let [data (ex-data e)]
+        (try
+          (println "  data:" (pr-str data))
+          (catch Throwable _
+            (println "  data: <unprintable>" (pr-str (keys data))))))
+      (doseq [el (.getStackTrace e)]
+        (println "  at" (str el)))
+      (when-let [cause (.getCause e)]
+        (print "Caused by: ")
+        (recur cause)))))
+
 (defn -main [& args]
   (let [{:keys [options errors] :as cli-env} (cli/parse-opts args cli-options)
         {:keys [help port cgi install config file]} options
@@ -803,15 +821,19 @@
                    :bread-installed "Bread is now installed!"}}
         lang :en
         cli-env (assoc cli-env :i18n (get i18n lang))]
-    (cond
-      errors (show-errors cli-env)
-      help (show-help cli-env)
-      cgi (run-as-cgi cli-env)
-      install (run-install cli-env)
-      config (start! config)
-      file (if-not (.exists (io/file file))
-             (show-errors {:errors [(str "No such file: " file)]})
-             (let [config (-> file aero/read-config
-                              (update-in [:http :port] #(if port port %)))]
-               (start! config)))
-      :else (show-help cli-env))))
+    (try
+      (cond
+        errors (show-errors cli-env)
+        help (show-help cli-env)
+        cgi (run-as-cgi cli-env)
+        install (run-install cli-env)
+        config (start! config)
+        file (if-not (.exists (io/file file))
+               (show-errors {:errors [(str "No such file: " file)]})
+               (let [config (-> file aero/read-config
+                                (update-in [:http :port] #(if port port %)))]
+                 (start! config)))
+        :else (show-help cli-env))
+      (catch Throwable e
+        (print-error-chain e)
+        (System/exit 1)))))
