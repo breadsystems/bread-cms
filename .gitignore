@@ -9,6 +9,7 @@
 *.jar
 *.iml
 *.db
+*.so
 pom.properties
 inputFiles.lst
 /target
