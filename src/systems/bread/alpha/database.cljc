@@ -4,7 +4,8 @@
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
-    [systems.bread.alpha.internal.datalog :as datalog]))
+    [systems.bread.alpha.internal.datalog :as datalog]
+    [systems.bread.alpha.internal.interop :refer [->int]]))
 
 (defmulti connect :db/type)
 (defmulti -exists? :db/type)
@@ -210,9 +211,7 @@
         fmt (bread/config req :db/as-of-format)]
     (when as-of
       (if as-of-tx?
-        (try
-          (Integer. as-of)
-          (catch NumberFormatException _ nil))
+        (->int as-of)
         (try
           (.parse (java.text.SimpleDateFormat. fmt) as-of)
           (catch java.text.ParseException _ nil))))))

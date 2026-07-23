@@ -7,6 +7,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.invitations :as invitations]
@@ -29,7 +30,7 @@
   (throw (ex-info "Invalid action" {:error-key :account/invalid-action})))
 
 (defmethod effects :delete-session [{:as req :keys [params]}]
-  (when (try (Integer. (:dbid params)) (catch Throwable _ nil))
+  (when (->int (:dbid params))
     [{:effect/name [::update :delete-session]
       :effect/description "Update account state"
       :effect/key :delete-session
@@ -81,7 +82,7 @@
 
 (defmethod bread/effect [::update :delete-session]
   [{k :effect/key :keys [conn params success-key]} {user :user}]
-  (let [session-id (try (Integer. (:dbid params)) (catch Throwable _ nil))
+  (let [session-id (->int (:dbid params))
         valid-ids (set (map :db/id (:user/sessions user)))
         valid? (contains? valid-ids session-id)]
     (when valid?

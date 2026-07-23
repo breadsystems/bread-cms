@@ -54,7 +54,7 @@
 
 (defn- ->double [x]
   (try
-    (Double. (str x))
+    (Double/parseDouble (str x))
     (catch java.lang.NumberFormatException _)))
 
 (defn- accepted-lang-ranges [header]

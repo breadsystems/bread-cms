@@ -4,6 +4,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.util.datalog :as datalog])
   (:import
     [java.util UUID]))
@@ -111,9 +112,6 @@
       {:expansions [{:expansion/key (:dispatcher/key dispatcher)
                      :expansion/name ::bread/value
                      :expansion/value false}]})))
-
-(defn- ->int [x]
-  (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
 
 (defmethod bread/dispatch ::by-id=>
   by-id=>

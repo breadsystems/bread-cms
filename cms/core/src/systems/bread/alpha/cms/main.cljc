@@ -22,6 +22,7 @@
     [systems.bread.alpha.cms.theme.rise :as rise]
     [systems.bread.alpha.cms.data :as data]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.post :as post]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.database :as db]
@@ -205,8 +206,7 @@
                :server-name (System/getenv "SERVER_NAME")
                :server-port (System/getenv "SERVER_PORT")
                :content-type (System/getenv "CONTENT_TYPE")
-               :content-length (Integer/parseInt
-                                 (or (System/getenv "CONTENT_LENGTH") "0"))}
+               :content-length (or (->int (System/getenv "CONTENT_LENGTH")) 0)}
           {:keys [status headers body] :as res} (handler req)]
       (println (str "status: " status " " (bread.ring/http-status-codes status)))
       (doseq [[header header-value] headers]
