@@ -66,7 +66,6 @@ main() {
     --verbose \
     --no-fallback \
     --no-server \
-    --static \
     -J-Xmx3g \
     --trace-object-instantiation=java.lang.Thread \
     $JAVA_CLASS
