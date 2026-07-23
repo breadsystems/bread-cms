@@ -47,7 +47,16 @@ main() {
   rm -rf classes/*
   rm -rf target/*
 
-  echo "compiling ${JAVA_CLASS}"
+  # AOT-compile with the GraalVM JDK, not whatever java is first on PATH.
+  # superv.async (a datahike dep) checks at Clojure compile time whether
+  # org.graalvm.nativeimage.ImageInfo is loadable; only then does it skip
+  # starting its supervisor thread, which native-image otherwise detects in
+  # the image heap and aborts with NativeImageError.
+  local native_image_bin="$(readlink -f "$(command -v native-image)")"
+  GRAALVM_HOME=${GRAALVM_HOME:-$(dirname "$(dirname $native_image_bin)")}
+  export JAVA_CMD="${GRAALVM_HOME}/bin/java"
+
+  echo "compiling ${JAVA_CLASS} with ${JAVA_CMD}"
   clojure -M:cms -e "(compile '${JAVA_CLASS})"
 
   if [[ $? -ne 0 ]] ; then
