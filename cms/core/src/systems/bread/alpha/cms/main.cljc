@@ -61,13 +61,15 @@
 ;; TODO delete once https://github.com/ring-clojure/ring/pull/447 gets merged.
 (defmethod response/resource-data :resource
   [^java.net.URL url]
-  ;; GraalVM resource scheme
-  (let [resource (.openConnection url)
-        len (.getContentLength resource)
-        last-mod (.getLastModified resource)]
-    {:content (.getInputStream resource)
-     :content-length (if (<= 0 len) len)
-     :last-modified (if-not (zero? last-mod) (Date. last-mod))}))
+  ;; GraalVM resource scheme. Directory resources serve a listing of their
+  ;; contents as the stream, so exclude them like the :file method does.
+  (when-not (string/ends-with? (.getPath url) "/")
+    (let [resource (.openConnection url)
+          len (.getContentLength resource)
+          last-mod (.getLastModified resource)]
+      {:content (.getInputStream resource)
+       :content-length (if (<= 0 len) len)
+       :last-modified (if-not (zero? last-mod) (Date. last-mod))})))
 
 (defn not-found [req]
   {:body "not found"

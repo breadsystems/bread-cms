@@ -3,7 +3,6 @@
     "includes": [
       {"pattern": ".*\\.i18n\\.edn"},
       {"pattern": "assets/.*"},
-      {"pattern": "public/.*"},
       {"pattern": "crust/.*"},
       {"pattern": "rise/.*"},
       {"pattern": "js/marx\\.js"},
