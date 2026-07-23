@@ -44,8 +44,7 @@
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.account :as account]
-    [systems.bread.alpha.plugin.invitations :as invitations]
-    [systems.bread.alpha.tools.util])
+    [systems.bread.alpha.plugin.invitations :as invitations])
   (:import
     [java.io Console]
     [java.time LocalDateTime]
@@ -409,7 +408,10 @@
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
 
-  (restart! (-> "dev/main.edn" aero/read-config))
+  (do
+    ;; dev config includes some tools.util profiling stuff, so load that ns first.
+    (require ' [systems.bread.alpha.tools.util])
+    (restart! (-> "dev/main.edn" aero/read-config)))
   (stop!)
   (deref system)
   (:http @system)
