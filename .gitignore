@@ -14,6 +14,7 @@ pom.properties
 inputFiles.lst
 /target
 /classes/*
+/*.log
 /reports
 *.cgi
 *.build_artifacts.txt
