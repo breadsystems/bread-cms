@@ -22,7 +22,7 @@
           zulu17
           babashka
           yarn-berry
-          graalvm-ce
+          graalvmPackages.graalvm-ce
         ];
       };
     };
