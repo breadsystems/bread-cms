@@ -220,13 +220,16 @@
             (if (seq recur-attrs)
               ;; Query is recursive:
               ;; Wrap our process chain in a recursive transform.
-              (let [walker (qi/attrs-walker :thing/fields recur-attrs)]
-                [#(s/transform walker process* %) (map butlast spaths)])
+              [#(qi/transform-attrs process* :thing/fields recur-attrs %)
+               (map butlast spaths)]
               ;; Non-recursive query.
               [process* spaths])]
         (reduce
           (fn [e spath]
-            (s/transform spath process e))
+            ;; NOTE: use the compiled-* Specter API with runtime-built paths;
+            ;; the s/transform macro would compile them with eval, which is
+            ;; unsupported in a native image.
+            (s/compiled-transform (s/comp-paths (vec spath)) process e))
           e spaths))
       false)))
 
@@ -262,14 +265,16 @@
       (if (seq bindings)
         [(reduce
            (fn [query {:keys [binding-path relation entity-index]}]
-             (s/transform (concat [:expansion/args 0 ;; datalog query
-                                   :find             ;; find clause
-                                   entity-index      ;; find position
-                                   s/LAST]           ;; pull-expr
-                                  binding-path)      ;; within pull-expr
-                          (partial d/ensure-attrs
-                                   [:field/lang :field/key :db/id])
-                          query))
+             (s/compiled-transform
+               (s/comp-paths
+                 (vec (concat [:expansion/args 0 ;; datalog query
+                               :find             ;; find clause
+                               entity-index      ;; find position
+                               s/LAST]           ;; pull-expr
+                              binding-path)))    ;; within pull-expr
+               (partial d/ensure-attrs
+                        [:field/lang :field/key :db/id])
+               query))
            expansion bindings)
          {:expansion/name ::fields
           :expansion/key (:expansion/key expansion)

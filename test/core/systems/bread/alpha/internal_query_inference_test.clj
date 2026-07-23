@@ -5,11 +5,11 @@
     [systems.bread.alpha.internal.query-inference :as qi]
     [systems.bread.alpha.i18n :as i18n]))
 
-(deftest test-attrs-walker
-  ;; Simple keyword kmod
+(deftest test-select-attrs
+  ;; Simple keyword krecurs
   (are
     [selections data]
-    (= selections (s/select (qi/attrs-walker :a :b) data))
+    (= selections (qi/select-attrs :a :b data))
 
     [] {}
     [] []
@@ -26,7 +26,7 @@
   ;; Passing a set
   (are
     [selections data]
-    (= selections (s/select (qi/attrs-walker :a #{:b}) data))
+    (= selections (qi/select-attrs :a #{:b} data))
 
     [] {}
     [] []
@@ -36,6 +36,24 @@
     [:A] {:a :A :b {:c :C}}
     [:A :AA] {:a :A :b [{:a :AA}]}
     [:A :AA :AAA] [{:a :A :b [{:a :AA}]} {:b [{:a :AAA}]}]
+
+    ;;
+    ))
+
+(deftest test-transform-attrs
+  (are
+    [transformed data]
+    (= transformed (qi/transform-attrs name :a :b data))
+
+    {} {}
+    [] []
+    [[]] [[]]
+    [{}] [{}]
+    {:a "A"} {:a :A}
+    {:a "A" :b {:c :C}} {:a :A :b {:c :C}}
+    {:a "A" :b [{:a "AA"}]} {:a :A :b [{:a :AA}]}
+    [{:a "A" :b [{:a "AA"}]} {:b [{:a "AAA"}]}]
+    [{:a :A :b [{:a :AA}]} {:b [{:a :AAA}]}]
 
     ;;
     ))

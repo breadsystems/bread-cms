@@ -46,7 +46,10 @@
                                        entity-index  ;; find position
                                        s/LAST]       ;; pull-expr
                                       binding-path) ;; within pull-expr
-                         query (s/transform path #(conj % :post/type :post/status) query)
+                         query (s/compiled-transform
+                                 (s/comp-paths (vec path))
+                                 #(conj % :post/type :post/status)
+                                 query)
                          expansion {:expansion/name ::db/query
                                     :expansion/key k
                                     :expansion/db (db/database req)
