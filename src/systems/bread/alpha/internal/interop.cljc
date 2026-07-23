@@ -7,6 +7,9 @@
              (.update (.getBytes in)))]
     (apply str (map (partial format "%02x") (.digest md)))))
 
+(defn ->int [x]
+  #?(:clj (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))))
+
 (comment
   (clojure.string/starts-with? (sha-512 "") "cf83e1357eefb8bdf1542850d66d")
   (clojure.string/starts-with? (sha-512 "hello, world!") "6c2618358da07c830b88c5af8c3")
