@@ -175,7 +175,7 @@
    ["-v" "--log-level LEVEL"
     "Set log verbosity"
     :parse-fn keyword
-    :default :info
+    :default :warn
     :validate [#{:trace :debug :info :warn :error :fatal :report}
                "Must be one of: trace, debug, info, warn, error, fatal, report"]]])
 
