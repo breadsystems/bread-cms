@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.cms.data
+(ns systems.bread.alpha.dev.data
   (:require
     [systems.bread.alpha.i18n :as i18n]))
 

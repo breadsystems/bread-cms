@@ -21,7 +21,7 @@
     [systems.bread.alpha.cms.theme :as theme]
     [systems.bread.alpha.cms.theme.crust :as crust]
     [systems.bread.alpha.cms.theme.rise :as rise]
-    [systems.bread.alpha.cms.data :as data]
+    [systems.bread.alpha.dev.data :as data]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.post :as post]
