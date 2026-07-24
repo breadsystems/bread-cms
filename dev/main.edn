@@ -1,5 +1,5 @@
 {:app/env :development
- :http {:port 1312
+ :http {:port #or [#env PORT 1312]
         :handler #ig/ref :bread/handler
         :wrap-defaults #ig/ref :ring/wrap-defaults}
  :ring/wrap-defaults {:kind :site-defaults
