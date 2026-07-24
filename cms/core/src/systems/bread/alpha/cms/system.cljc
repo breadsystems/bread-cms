@@ -128,5 +128,5 @@
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/handler app))
 
-(defmethod ig/init-key :bread/router [_ router]
+(defmethod ig/init-key :bread/router [_ _]
   #'routes/router)

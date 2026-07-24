@@ -59,84 +59,88 @@
     {:root "rise"
      :path "/rise"}))
 
+(defn default-routes
+  ([] (default-routes {}))
+  ([{:keys [root protected-prefix public-prefix]
+     :or {root "/" protected-prefix "~" public-prefix "_"}}]
+   [root
+    ["" {:dispatcher/type ::i18n/lang=>}]
+    [public-prefix
+     ["/forgot"
+      {:name :forgot-password
+       :dispatcher/type ::auth/forgot-password=>
+       :dispatcher/component #'rise/ForgotPasswordPage}]
+     ["/reset"
+      {:name :reset-password
+       :dispatcher/type ::auth/reset-password=>
+       :dispatcher/component #'rise/ResetPasswordPage}]
+     ["/confirm-email"
+      {:name :confirm-email
+       :dispatcher/type ::email/confirm=>
+       :dispatcher/component #'rise/ConfirmPage}]
+     ["/patterns"
+      ["/rise"
+       {:name :patterns.rise
+        :dispatcher/type ::component/standalone=>
+        :dispatcher/component #'rise/PatternLibrary}]]
+     ["/signup"
+      {:name :signup
+       :dispatcher/type ::signup/signup=>
+       :dispatcher/component #'rise/SignupPage
+       :dispatcher/not-found-component #'rise/SignupPage}]]
+    [protected-prefix
+     ["/login"
+      {:name :login
+       :dispatcher/type ::auth/login=>
+       :dispatcher/component #'rise/LoginPage}]
+     ["/account"
+      {:name :account
+       :dispatcher/type ::account/account=>
+       :dispatcher/component #'rise/AccountPage}]
+     ["/email"
+      {:name :email
+       :dispatcher/type ::email/settings=>
+       :dispatcher/component #'rise/EmailPage}]
+     ["/invitations"
+      {:name :invitations
+       :dispatcher/type ::invitations/invitations=>
+       :dispatcher/component #'rise/InvitationsPage}]
+     ["/edit"
+      {:name :edit
+       :dispatcher/type ::marx/edit=>}]
+     ["/marx"
+      ["/media"
+       {:name :media
+        :dispatcher/type ::marx/media.library=>
+        :dispatcher/component #'marx/MediaLibrary}]]]
+    ["assets/*"
+     (reitit.ring/create-resource-handler
+       {})]
+    ;; TODO publish to assets?
+    ["marx/*" marx-handler]
+    ["crust/*" crust-handler]
+    ["rise/*" rise-handler]
+    ["{field/lang}"
+     [""
+      {:name :home
+       :dispatcher/type ::post/page=>
+       :dispatcher/component #'crust/HomePage}]
+     ["/i/{db/id}"
+      {:name :id
+       :dispatcher/type ::thing/by-id=>
+       :dispatcher/component #'crust/InteriorPage}]
+     ["/tag/{thing/slug}"
+      {:name :tag
+       :dispatcher/type ::taxon/tag=>
+       :dispatcher/component #'crust/Tag
+       :post/type :page}]
+     ["/*slugs"
+      {:name :page
+       :dispatcher/type ::post/page=>
+       :dispatcher/component #'crust/InteriorPage}]]]))
+
 (def router
-  (reitit/router
-    ["/"
-     ["" {:dispatcher/type ::i18n/lang=>}]
-     ["~"
-      ["/login"
-       {:name :login
-        :dispatcher/type ::auth/login=>
-        :dispatcher/component #'rise/LoginPage}]
-      ["/account"
-       {:name :account
-        :dispatcher/type ::account/account=>
-        :dispatcher/component #'rise/AccountPage}]
-      ["/email"
-       {:name :email
-        :dispatcher/type ::email/settings=>
-        :dispatcher/component #'rise/EmailPage}]
-      ["/invitations"
-       {:name :invitations
-        :dispatcher/type ::invitations/invitations=>
-        :dispatcher/component #'rise/InvitationsPage}]
-      ["/edit"
-       {:name :edit
-        :dispatcher/type ::marx/edit=>}]
-      ["/marx"
-       ["/media"
-        {:name :media
-         :dispatcher/type ::marx/media.library=>
-         :dispatcher/component #'marx/MediaLibrary}]]]
-     ["_"
-      ["/forgot"
-       {:name :forgot-password
-        :dispatcher/type ::auth/forgot-password=>
-        :dispatcher/component #'rise/ForgotPasswordPage}]
-      ["/reset"
-       {:name :reset-password
-        :dispatcher/type ::auth/reset-password=>
-        :dispatcher/component #'rise/ResetPasswordPage}]
-      ["/confirm-email"
-       {:name :confirm-email
-        :dispatcher/type ::email/confirm=>
-        :dispatcher/component #'rise/ConfirmPage}]
-      ["/patterns"
-       ["/rise"
-        {:name :patterns.rise
-         :dispatcher/type ::component/standalone=>
-         :dispatcher/component #'rise/PatternLibrary}]]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'rise/SignupPage
-        :dispatcher/not-found-component #'rise/SignupPage}]]
-     ["assets/*"
-      (reitit.ring/create-resource-handler
-        {})]
-     ;; TODO publish to assets?
-     ["marx/*" marx-handler]
-     ["crust/*" crust-handler]
-     ["rise/*" rise-handler]
-     ["{field/lang}"
-      [""
-       {:name :home
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'crust/HomePage}]
-      ["/i/{db/id}"
-       {:name :id
-        :dispatcher/type ::thing/by-id=>
-        :dispatcher/component #'crust/InteriorPage}]
-      ["/tag/{thing/slug}"
-       {:name :tag
-        :dispatcher/type ::taxon/tag=>
-        :dispatcher/component #'crust/Tag
-        :post/type :page}]
-      ["/*slugs"
-       {:name :page
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'crust/InteriorPage}]]]
-    {:conflicts nil}))
+  (reitit/router (default-routes) {:conflicts nil}))
 
 (comment
 
