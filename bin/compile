@@ -5,7 +5,10 @@ usage() {
   echo
   echo '  OPTIONS:'
   echo
-  echo '  -h|--help show this help text'
+  echo '  -h|--help        show this help text'
+  echo '  -b|--binary      filename to write binary to. Default: bread'
+  echo '  -c|--class       Java class name to compile. Default: systems.bread.alpha.cms.main'
+  echo '  -M|--aliases     override -M opt passed to `clojure`. Default: :cms'
 }
 
 POSITIONAL=()
@@ -29,6 +32,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -M|--aliases)
+    ALIASES=$2
+    shift # past argument
+    shift # past value
+    ;;
     *)
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -41,6 +49,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 JAVA_CLASS=${JAVA_CLASS:-'systems.bread.alpha.cms.main'}
 BINARY_NAME=${BINARY_NAME:-'bread'}
+ALIASES=${ALIASES:-':cms'}
 
 
 main() {
@@ -57,7 +66,7 @@ main() {
   export JAVA_CMD="${GRAALVM_HOME}/bin/java"
 
   echo "compiling ${JAVA_CLASS} with ${JAVA_CMD}"
-  clojure -M:cms -e "(compile '${JAVA_CLASS})"
+  clojure "-M${ALIASES}" -e "(compile '${JAVA_CLASS})"
 
   if [[ $? -ne 0 ]] ; then
     echo "Error compiling ${JAVA_CLASS}, aborting"
@@ -66,8 +75,8 @@ main() {
 
   echo "compiling native binary \`${BINARY_NAME}\` from ${JAVA_CLASS}"
   native-image \
-    -cp "$(clojure -Spath -M:cms)":classes \
-    -o bread \
+    -cp "$(clojure -Spath -M${ALIASES})":classes \
+    -o "$BINARY_NAME" \
     -H:+ReportExceptionStackTraces \
     -H:+PrintClassInitialization \
     --enable-url-protocols=http,https \
