@@ -28,12 +28,12 @@
   (apply merge-with concat maps))
 
 (defmethod bread/action ::dispatch
-  [{::bread/keys [dispatcher expansions] :as req} _ _]
+  [{::bread/keys [dispatcher] :as req} _ _]
   (if (fn? dispatcher)
     ;; We have a vanilla fn handler:
     ;; Short-circuit the rest of the lifecycle.
     (dispatcher req)
-    (let [{:as res :keys [expansions data effects hooks]} (bread/dispatch req)
+    (let [{:keys [expansions data effects hooks]} (bread/dispatch req)
           hooks (filter (comp seq val) hooks)
           data (assoc data
                       :query/pull (:dispatcher/pull dispatcher)
