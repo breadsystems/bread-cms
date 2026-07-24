@@ -71,10 +71,6 @@
        :content-length (if (<= 0 len) len)
        :last-modified (if-not (zero? last-mod) (Date. last-mod))})))
 
-(defn not-found [req]
-  {:body "not found"
-   :status 404})
-
 ;; Need to define this outside the router for now, so that it can use an
 ;; explicit :path to match URI => filepath correctly. The long-term fix is:
 ;; https://github.com/breadsystems/bread-cms/issues/184
