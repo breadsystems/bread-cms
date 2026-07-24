@@ -2,6 +2,7 @@
   (:require
     ;; Libs.
     [datahike.api :as d]
+    [datahike-jdbc.core]
     [org.httpkit.server :as http]
     [integrant.core :as ig]
     [ring.middleware.defaults :as ring]
@@ -18,6 +19,7 @@
     [systems.bread.alpha.util.logging :refer [log-redactor]]
     ;; Plugins.
     [systems.bread.alpha.plugin.account :as account]
+    [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.navigation :as navigation]
@@ -25,7 +27,9 @@
     [systems.bread.alpha.plugin.navigation :as navigation]
     [systems.bread.alpha.plugin.rum :as rum]
     [systems.bread.alpha.plugin.invitations :as invitations]
-    [systems.bread.alpha.plugin.signup :as signup])
+    [systems.bread.alpha.plugin.signup :as signup]
+    ;; CMS-layer libs.
+    [systems.bread.alpha.cms.routes :as routes])
   (:import
     [java.time LocalDateTime]
     ))
@@ -123,3 +127,6 @@
 
 (defmethod ig/init-key :bread/handler [_ app]
   (bread/handler app))
+
+(defmethod ig/init-key :bread/router [_ router]
+  #'routes/router)

@@ -5,159 +5,24 @@
     [clojure.string :as string]
     [clojure.tools.cli :as cli]
     [aero.core :as aero]
-    [datahike-jdbc.core]
     [integrant.core :as ig]
     [reitit.core :as reitit]
-    [reitit.ring]
-    [ring.util.response :as response]
     [taoensso.timbre :as log]
-
+    ;; Bread core.
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.component :as component]
-    [systems.bread.alpha.cms.theme.crust :as crust]
-    [systems.bread.alpha.cms.theme.rise :as rise]
-    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
-    [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.ring :as bread.ring]
-    [systems.bread.alpha.taxon :as taxon]
-    ;; Plugins.
-    [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.plugin.datahike]
-    [systems.bread.alpha.plugin.email :as email]
-    [systems.bread.alpha.plugin.marx :as marx]
-    [systems.bread.alpha.plugin.reitit]
-    [systems.bread.alpha.plugin.signup :as signup]
-    [systems.bread.alpha.plugin.account :as account]
-    [systems.bread.alpha.plugin.invitations :as invitations]
-    ;; CMS
-    [systems.bread.alpha.cms.config.bread]  ;; Custom Aero readers
-    [systems.bread.alpha.cms.config.buddy]  ;; Crypto readers
-    [systems.bread.alpha.cms.system]        ;; Integrant config
+    ;; CMS layer libs.
+    [systems.bread.alpha.cms.config.bread]      ;; Custom Aero readers
+    [systems.bread.alpha.cms.config.buddy]      ;; Crypto readers
+    [systems.bread.alpha.cms.routes :as routes]
+    [systems.bread.alpha.cms.system]            ;; Integrant config
     )
   (:import
     [java.io Console]
     [java.util Date Properties UUID]
     [org.sqlite JDBC])
   (:gen-class))
-
-;; In a GraalVM native image, io/resource returns resource: URLs for files
-;; embedded in the image. Ring's resource-data multimethod only implements
-;; :file and :jar, so teach it the :resource protocol. This is a no-op on the
-;; JVM, where the resource: protocol never occurs.
-;; TODO delete once https://github.com/ring-clojure/ring/pull/447 gets merged.
-(defmethod response/resource-data :resource
-  [^java.net.URL url]
-  ;; GraalVM resource scheme. Directory resources serve a listing of their
-  ;; contents as the stream, so exclude them like the :file method does.
-  (when-not (string/ends-with? (.getPath url) "/")
-    (let [resource (.openConnection url)
-          len (.getContentLength resource)
-          last-mod (.getLastModified resource)]
-      {:content (.getInputStream resource)
-       :content-length (if (<= 0 len) len)
-       :last-modified (if-not (zero? last-mod) (Date. last-mod))})))
-
-;; Need to define this outside the router for now, so that it can use an
-;; explicit :path to match URI => filepath correctly. The long-term fix is:
-;; https://github.com/breadsystems/bread-cms/issues/184
-(def marx-handler
-  (reitit.ring/create-resource-handler
-    {:root "marx"
-     :path "/marx"}))
-
-(def crust-handler
-  (reitit.ring/create-resource-handler
-    {:root "crust"
-     :path "/crust"}))
-
-(def rise-handler
-  (reitit.ring/create-resource-handler
-    {:root "rise"
-     :path "/rise"}))
-
-(def router
-  (reitit/router
-    ["/"
-     ["" {:dispatcher/type ::i18n/lang=>}]
-     ["~"
-      ["/login"
-       {:name :login
-        :dispatcher/type ::auth/login=>
-        :dispatcher/component #'rise/LoginPage}]
-      ["/account"
-       {:name :account
-        :dispatcher/type ::account/account=>
-        :dispatcher/component #'rise/AccountPage}]
-      ["/email"
-       {:name :email
-        :dispatcher/type ::email/settings=>
-        :dispatcher/component #'rise/EmailPage}]
-      ["/invitations"
-       {:name :invitations
-        :dispatcher/type ::invitations/invitations=>
-        :dispatcher/component #'rise/InvitationsPage}]
-      ["/edit"
-       {:name :edit
-        :dispatcher/type ::marx/edit=>}]
-      ["/marx"
-       ["/media"
-        {:name :media
-         :dispatcher/type ::marx/media.library=>
-         :dispatcher/component #'marx/MediaLibrary}]]]
-     ["_"
-      ["/forgot"
-       {:name :forgot-password
-        :dispatcher/type ::auth/forgot-password=>
-        :dispatcher/component #'rise/ForgotPasswordPage}]
-      ["/reset"
-       {:name :reset-password
-        :dispatcher/type ::auth/reset-password=>
-        :dispatcher/component #'rise/ResetPasswordPage}]
-      ["/confirm-email"
-       {:name :confirm-email
-        :dispatcher/type ::email/confirm=>
-        :dispatcher/component #'rise/ConfirmPage}]
-      ["/patterns"
-       ["/rise"
-        {:name :patterns.rise
-         :dispatcher/type ::component/standalone=>
-         :dispatcher/component #'rise/PatternLibrary}]]
-      ["/signup"
-       {:name :signup
-        :dispatcher/type ::signup/signup=>
-        :dispatcher/component #'rise/SignupPage
-        :dispatcher/not-found-component #'rise/SignupPage}]]
-     ["assets/*"
-      (reitit.ring/create-resource-handler
-        {})]
-     ;; TODO publish to assets?
-     ["marx/*" marx-handler]
-     ["crust/*" crust-handler]
-     ["rise/*" rise-handler]
-     ["{field/lang}"
-      [""
-       {:name :home
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'crust/HomePage}]
-      ["/i/{db/id}"
-       {:name :id
-        :dispatcher/type ::thing/by-id=>
-        :dispatcher/component #'crust/InteriorPage}]
-      ["/tag/{thing/slug}"
-       {:name :tag
-        :dispatcher/type ::taxon/tag=>
-        :dispatcher/component #'crust/Tag
-        :post/type :page}]
-      ["/*slugs"
-       {:name :page
-        :dispatcher/type ::post/page=>
-        :dispatcher/component #'crust/InteriorPage}]]]
-    {:conflicts nil}))
-
-(defmethod ig/init-key :bread/router [_ router]
-  #'router)
 
 (def cli-options
   [["-h" "--help"
@@ -265,7 +130,7 @@
   (let [log-level (:log-level options)
         config (-> (get-config options)
                    (select-keys [:bread/db :bread/app :app/log])
-                   (update :bread/router #(or % router)))
+                   (update :bread/router #(or % routes/router)))
         config (if log-level (assoc-in config [:app/log :min-level] log-level) config)]
     (when (= :mem (get-in config [:bread/db :store :backend]))
       (println (bold (red (:warning-backend-mem i18n)))))
@@ -367,20 +232,6 @@
                                    :subject "Postal test"
                                    :body "Testing from Clojure Postal"})))
   (deref fut 60000 :timeout)
-
-  ;; Playing with resources/files...
-  (io/resource "public/assets/hi.txt")
-  (io/resource "marx/js/marx.js")
-  ($resources {:uri "/marx/js/marx.js" :request-method :get :scheme :http})
-  (def $resource-handler
-    (reitit.ring/create-resource-handler
-      {:root "marx"
-       :path "/marx"}))
-  ($resource-handler {:uri "/marx/js/marx.js" :request-method :get :scheme :http})
-  (def $file-handler (reitit.ring/create-file-handler
-                       {:root "resources/marx"
-                        :path "/marx"}))
-  ($file-handler {:uri "/marx/js/marx.js"})
 
   (alter-var-root #'bread/*enable-profiling* not)
 
@@ -557,47 +408,6 @@
 
 
 
-
-
-
-  ;; COMPONENT ROUTING
-
-  (require '[systems.bread.alpha.component :as c :refer [defc]]
-           '[systems.bread.alpha.route :as route])
-
-  ;; A "sluggable" thing, with ancestry
-  (def grandchild
-    {:thing/slug "c"
-     :thing/_children [{:thing/slug "b"
-                        :thing/_children [{:thing/slug "a"}]}]})
-
-  (reitit/match-by-path router "/en/a")
-  (reitit/match-by-path router "/en/a/b/c")
-  (-> router
-      (reitit/match-by-path "/en/tag/two")
-      :data :name)
-  (reitit/match->path
-    (reitit/match-by-path router "/en/a/b/c")
-    {:field/lang :en :slugs "a/b/c"})
-  (reitit/match->path
-    (reitit/match-by-name router :page {:field/lang :en :slugs "x"}))
-
-  (bread/routes router)
-  (bread/route-params router $req)
-
-  ;; route/uri infers params and then just calls bread/path under the hood...
-  (bread/path router :page {:field/lang :en :slugs "a/b/c"})
-  (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
-  (route/uri (->app $req) :page! (merge {:field/lang :en} grandchild))
-
-  (route/ancestry grandchild)
-  (bread/infer-param :slugs grandchild)
-  (bread/routes (route/router (->app $req)))
-
-  (route/uri (->app $req) :page (merge {:field/lang :en} grandchild))
-  (route/uri (->app $req) :page {:field/lang :en})
-  (route/uri (->app $req) :page nil)
-  (route/uri (->app $req) :page {})
 
 
 
