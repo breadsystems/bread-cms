@@ -310,18 +310,20 @@
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
-  (expansion/add req {:expansion/name ::db/query
-                      :expansion/key :i18n
-                      :expansion/into {}
-                      :expansion/db (db/database req)
-                      :expansion/args
-                      ['{:find [?key ?content]
-                         :in [$ ?lang]
-                         :where [[?e :field/key ?key]
-                                 [?e :field/content ?content]
-                                 [?e :field/lang ?lang]
-                                 (not-join [?e] [_ :thing/fields ?e])]}
-                       (lang req)]}))
+  ;; TODO do we need this check after https://github.com/breadsystems/bread-cms/issues/184 ?
+  (if (:status req) req ;; short-circuit on HTTP responses.
+    (expansion/add req {:expansion/name ::db/query
+                        :expansion/key :i18n
+                        :expansion/into {}
+                        :expansion/db (db/database req)
+                        :expansion/args
+                        ['{:find [?key ?content]
+                           :in [$ ?lang]
+                           :where [[?e :field/key ?key]
+                                   [?e :field/content ?content]
+                                   [?e :field/lang ?lang]
+                                   (not-join [?e] [_ :thing/fields ?e])]}
+                         (lang req)]})))
 
 (defmethod bread/action ::add-rtl-expansion
   [req _ _]
