@@ -431,6 +431,8 @@
     ;; dev config includes some tools.util profiling stuff, so load that ns first.
     (require ' [systems.bread.alpha.tools.util])
     (restart! (-> "dev/main.edn" aero/read-config)))
+  (restart! (-> "dev/minimal.edn" aero/read-config
+                (assoc-in [:http :port] 1333)))
   (stop!)
   (deref system)
   (:http @system)
