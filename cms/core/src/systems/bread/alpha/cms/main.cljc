@@ -340,12 +340,13 @@
                       :middleware [(log-redactor)]}))
 
 (defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
-  (println "Starting HTTP server on port" port)
-  (let [handler (if wrap-defaults
+  (let [port (->int port)
+        handler (if wrap-defaults
                   (-> handler
                       (bread.ring/wrap-clear-flash)
                       (ring/wrap-defaults wrap-defaults))
                   handler)]
+    (log/info "Starting HTTP server on port" port)
     (http/run-server handler {:port port})))
 
 (defmethod ig/halt-key! :http [_ stop-server]
