@@ -10,7 +10,6 @@
     ;; CMS layer libs.
     [systems.bread.alpha.cms.cli :as cli]
     [systems.bread.alpha.cms.config.bread]      ;; Custom Aero readers
-    [systems.bread.alpha.cms.config.buddy]      ;; Crypto readers
     [systems.bread.alpha.cms.system]            ;; Integrant config
     )
   (:import

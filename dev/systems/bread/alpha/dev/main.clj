@@ -23,4 +23,7 @@
            :db/initial-txns initial
            :db/migrations schema/initial)))
 
+(defmethod aero/reader 'sha-512 [_ _ s]
+  (sha-512 s))
+
 (def -main main/-main)
