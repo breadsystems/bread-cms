@@ -19,6 +19,7 @@ inputFiles.lst
 *.cgi
 *.build_artifacts.txt
 /bread
+/bread.dev
 /ref
 /dist
 dthk.edn
