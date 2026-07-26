@@ -286,6 +286,7 @@
                       html-email-sections
                       mailer]
                :or {smtp-port 587
+                    ;; TODO SMTP env vars
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
                     max-pending-minutes (* 72 60)
