@@ -16,12 +16,12 @@
  {:store/type :datalog
   :store/db #ig/ref :bread/db
   :max-age 259200
-  :secret-key #env AUTH_SECRET_KEY}
+  :secret-key #env BREAD_SECRET_KEY}
  :bread/handler #ig/ref :bread/app
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:secret-key #env AUTH_SECRET_KEY
+  :auth {:secret-key #env BREAD_SECRET_KEY
          :protected-prefixes ["/~/"]
          :login-uri "/~/login"
          :forgot-password-uri "/_/forgot"

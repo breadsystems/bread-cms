@@ -81,7 +81,7 @@
 (comment
   (sha-512 "a7d190e5-d7f4-4b92-a751-3c36add92610")
   (sha-512 ":a7d190e5-d7f4-4b92-a751-3c36add92610")
-  (sha-512 (str (System/getenv "AUTH_SECRET_KEY")
+  (sha-512 (str (System/getenv "BREAD_SECRET_KEY")
                 ":a7d190e5-d7f4-4b92-a751-3c36add92610"))
   ,)
 
