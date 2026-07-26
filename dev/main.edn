@@ -21,8 +21,7 @@
  :bread/app
  {:site {:name "Breadbox"}
   :db #ig/ref :bread/db
-  :auth {:secret-key #env BREAD_SECRET_KEY
-         :protected-prefixes ["/~/"]
+  :auth {:protected-prefixes ["/~/"]
          :login-uri "/~/login"
          :forgot-password-uri "/_/forgot"
          :reset-password-uri "/_/reset"

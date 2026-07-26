@@ -61,8 +61,9 @@
 
 (defn session-store
   ([config conn]
-   (let [config (merge {:max-age (* 72 60 60)} config)]
-     (DatalogSessionStore. config conn)))
+   (let [default-config {:max-age (* 72 60 60)
+                         :secret-key (System/getenv "BREAD_SECRET_KEY")}]
+     (DatalogSessionStore. (merge default-config config) conn)))
   ([conn]
    (session-store {} conn)))
 
@@ -721,6 +722,7 @@
           reset-password-uri "/reset"
           reset-expiration-seconds (* 10 60)
           generous-totp-window? true
+          secret-key (System/getenv "BREAD_SECRET_KEY")
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
           store-session-user-agent? false}}]
