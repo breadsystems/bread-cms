@@ -61,51 +61,7 @@
               ;; STORE_BACKEND=mem
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
   :db/initial-txns
-  [;; TODO move to data/initial
-   {:invitation/code #sha-512 #join [#env AUTH_SECRET_KEY ":" "a7d190e5-d7f4-4b92-a751-3c36add92610"]
-    :invitation/invited-by "user.admin"
-    :invitation/email {:email/address "test@localhost"}
-    :thing/created-at #seconds-ago 3600
-    :thing/updated-at #seconds-ago 0}
-   {:db/id "user.admin"
-    :user/username "bread"
-    :user/name "Bread User"
-    :user/emails [{:email/address "admin@bread.systems"
-                   :email/code "already_confirmed"
-                   :email/confirmed-at #inst "2025-03-06T04:40:00-08:00"
-                   :email/primary? true}
-                  {:email/address "admin2@bread.systems"
-                   :email/confirmed-at #inst "2025-12-30T12:00:00-08:00"
-                   :email/code "qwerty"}
-                  {:thing/created-at #seconds-ago 0
-                   :email/address "admin3@bread.systems"
-                   :email/code "asdf"}]
-    :user/password #buddy/derive ["hello"]
-    #_#_ ;; Uncomment to enable MFA
-    :user/totp-key "B67CWTTTP7UQ5KWT"
-    :user/failed-login-count 0
-    :user/preferences "{}"
-    :user/lang :en
-    :user/roles
-    #{{:role/key :author
-       :role/abilities
-       #{{:ability/key :publish-posts}
-         {:ability/key :edit-posts}
-         {:ability/key :delete-posts}}}}}
-   {:thing/created-at #seconds-ago 0
-    :thing/updated-at #seconds-ago 0
-    :reset/user "user.admin"
-    :reset/code #sha-512 #join [#env AUTH_SECRET_KEY ":" "RESETCODE"]}
-   {:user/username "locke"
-    :user/name "John Locke"
-    :user/locked-at #seconds-ago 10}
-   {:user/username "reader"
-    :user/name "Reader User"
-    ;; No emails yet!
-    :user/password #buddy/derive ["hello"]
-    :user/failed-login-count 0
-    :user/preferences "{}"
-    :user/lang :en}
+  [
    ,]
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
