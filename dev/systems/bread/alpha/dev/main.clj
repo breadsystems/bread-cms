@@ -25,6 +25,11 @@
            :db/initial-txns initial
            :db/migrations schema/initial)))
 
+(defn q [& args]
+  (if-let [app (:bread/app @main/system)]
+    (apply db/q (db/database app) args)
+    (throw (ex-info "No running app detected!" {}))))
+
 (comment
   (require '[flow-storm.api :as flow])
   (flow/local-connect)
@@ -89,18 +94,7 @@
   (do
     (def $req {:uri "/~/signup" :request-method :get})
     (def ->app (partial util/->app (:bread/app @main/system)))
-    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @main/system)))
-
-    (defn db []
-      (db/database (->app $req)))
-    (deref (db/connect (:bread/db @main/system)))
-    (db/database (:bread/app @main/system))
-
-    (defn q [& args]
-      (apply
-        db/q
-        (db/database (->app $req))
-        args)))
+    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @main/system))))
 
   (diagnose-expansions (->app $req))
   (util/do-expansions (->app $req) 1)
@@ -136,11 +130,6 @@
               [::bread/render (select-keys $ [:status :body :headers])])
 
   ;; querying for inverse relationships (post <-> taxon):
-  (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
-       :in [$ ?slug]
-       :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
-               [?t :thing/slug ?slug]]}
-     "one")
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
        :in [$ ?slug]
        :where [[?p :post/type :page]
@@ -175,20 +164,6 @@
      :page
      #{:post.status/published})
 
-  (slurp (io/resource "public/assets/hi.txt"))
-
-  (response ((:bread/handler @main/system) {:uri "/en"}))
-  (response ((:bread/handler @main/system) {:uri "/en/hello"}))
-  (response ((:bread/handler @main/system) {:uri "/en/hello/child-page"}))
-  ;; This should 404:
-  (response ((:bread/handler @main/system) {:uri "/en/child-page"}))
-
-  (response ((:bread/handler @main/system) {:uri "/login"}))
-  (response ((:bread/handler @main/system) {:uri "/login"
-                                            :request-method :post
-                                            :params {:username "coby"
-                                                     :password "hello"}}))
-
 
 
   ;; MEDIA
@@ -200,16 +175,16 @@
                [?e :post/status :post.status/published]]})
 
   ;; AUTH
-
+  (require '[clojure.edn :as edn])
   (->> (q '{:find [(pull ?e [:db/id
-                            :thing/created-at
-                            :thing/updated-at
-                            :session/id
-                            :session/data
-                            {:user/_sessions
-                             [:db/id :user/username]}])]
-           :in [$]
-           :where [[?e :session/id]]})
+                             :thing/created-at
+                             :thing/updated-at
+                             :session/id
+                             :session/data
+                             {:user/_sessions
+                              [:db/id :user/username]}])]
+            :in [$]
+            :where [[?e :session/id]]})
       (map (comp #(update % :session/data edn/read-string) first)))
 
   (def $user
@@ -237,20 +212,8 @@
                                  (map #(update % :session/data edn/read-string)
                                       sessions)))))
 
-  (q '{:find [(pull ?e [:db/id *])]
-       :where [[?e :invitation/code]]})
-  (user/can? $user :edit-posts)
-  (defn retraction [{e :db/id :as entity}]
-    (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
-  (retraction $user)
-  (db/transact (db/connection (:bread/app @main/system))
-               (retraction $user))
-  (db/transact (db/connection (:bread/app @main/system))
-               [{:user/username "bread"
-                 :user/locked-at (java.util.Date.)}])
-
   (require '[kaocha.repl :as k])
-  (k/run :unit)
+  (k/run :cms {:color? false})
 
   (-main "-f" "dev/minimal.edn"))
 
