@@ -88,7 +88,6 @@
 
   (do
     (def $req {:uri "/~/signup" :request-method :get})
-    (require '[systems.bread.alpha.tools.util :as util :refer [do-expansions]])
     (def ->app (partial util/->app (:bread/app @system)))
     (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @system)))
 
@@ -104,9 +103,9 @@
         args)))
 
   (diagnose-expansions (->app $req))
-  (do-expansions (->app $req) 1)
-  (do-expansions (->app $req) 2)
-  (do-expansions (->app $req) 3)
+  (util/do-expansions (->app $req) 1)
+  (util/do-expansions (->app $req) 2)
+  (util/do-expansions (->app $req) 3)
 
   (as-> (->app $req) $
     (bread/hook $ ::bread/route)
