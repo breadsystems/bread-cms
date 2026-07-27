@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo 'usage: $(basename $0) [-h|--help]'
+  echo "usage: $(basename $0) [-h|--help] [-b|--binary] [-c|--class] [-M|--aliases] [--dev]"
   echo
   echo '  OPTIONS:'
   echo
-  echo '  -h|--help        show this help text'
-  echo '  -b|--binary      filename to write binary to. Default: bread'
+  echo '  -h|--help        Show this help text'
+  echo '  -b|--binary      Filename to write binary to. Default: bread'
   echo '  -c|--class       Java class name to compile. Default: systems.bread.alpha.cms.main'
-  echo '  -M|--aliases     override -M opt passed to `clojure`. Default: :cms'
+  echo '  -M|--aliases     Override -M opt passed to `clojure`. Default: :cms'
+  echo '  --dev            Build the development version of Bread. Equivalent to:'
+  echo '                   -M :cms:dev:tools -c systems.bread.alpha.dev.main -b bread.dev'
 }
 
 POSITIONAL=()
@@ -31,6 +33,12 @@ case $key in
     JAVA_CLASS=$2
     shift # past argument
     shift # past value
+    ;;
+    --dev)
+    JAVA_CLASS='systems.bread.alpha.dev.main'
+    BINARY_NAME='bread.dev'
+    ALIASES=':cms:dev:tools'
+    shift # past argument
     ;;
     -M|--aliases)
     ALIASES=$2
