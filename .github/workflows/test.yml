@@ -45,7 +45,11 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
       # Make /nix/store realization cheap.
       - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@main
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5G
       # Install Nix tooling for building the binary.
       - name: Install the Flake
         run: nix develop .#build --command true
