@@ -23,6 +23,12 @@
   :tools
   {:extra-paths ["tools"]
    :extra-deps
+   {http-kit/http-kit                               {:mvn/version "2.6.0"}
+    juji/editscript                                 {:mvn/version "0.6.3"}}}
+
+  :tools-old
+  {:extra-paths ["tools"]
+   :extra-deps
    {com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
     org.clojure/clojurescript                       {:mvn/version "1.11.4"}
     http-kit/http-kit                               {:mvn/version "2.6.0"}
