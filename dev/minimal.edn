@@ -31,14 +31,5 @@
               :keep-history? true
               :store {:backend :mem :id "breadmindb"}}
   ;; db logs can be noisy, so load logging config first
-  :__after #ig/ref :app/log
-  :db/initial-txns
-  [{:user/username "bread"
-    :user/name "Bread User"
-    :user/password #buddy/derive ["bread"]
-    :user/failed-login-count 0
-    :user/preferences "{}"
-    :user/lang :en}
-   ,]
-  }
+  :__after #ig/ref :app/log}
  :app/log {}}
