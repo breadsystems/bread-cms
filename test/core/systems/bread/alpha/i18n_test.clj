@@ -328,8 +328,6 @@
     ;; strings query, and therefore sets :i18n to false.
     false {:fallback-lang nil}))
 
-(deftest ^:kaocha/skip test-lang-param-config)
-
 (deftest test-internationalize-query
   (let [attrs-map {:menu/items     {:db/cardinality :db.cardinality/many}
                    :thing/fields   {:db/cardinality :db.cardinality/many}

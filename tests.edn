@@ -1,1 +1,11 @@
-#kaocha/v1 {}
+#kaocha/v1
+{:tests [{:id :core
+          :source-paths ["src"]
+          :test-paths ["test/core"]}
+         {;; NOTE: for now, :cms is a *superset* of :core
+          :id :cms
+          :source-paths ["src" "cms/core/src"]
+          :test-paths ["test/core" "test/cms"]}
+         {:id :e2e
+          :source-paths []
+          :test-paths ["test/e2e"]}]}
