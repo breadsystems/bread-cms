@@ -33,3 +33,22 @@ jobs:
           clojure -M:cms:dev:tools -m systems.bread.alpha.dev.main -f dev/main.edn &
           timeout 60 bash -c 'until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done'
           bin/run-tests e2e
+
+  compile-dev-binary:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Install the Flake
+        run: nix develop --command true
+      - name: Compile dev binary
+        run: nix develop --command bash -c 'bin/compile --dev'
+      - name: Run end-to-end tests against the binary
+        run: |
+          nix develop --command bash -c '
+            ./bread.dev -f dev/main.edn &
+            timeout 60 bash -c "until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done"
+            bin/run-tests e2e
+          '
