@@ -64,15 +64,15 @@
   (:email/smtp-from-email (::bread/config (:bread/app @main/system)))
 
   (require '[postal.core :as postal])
-  (def $postal-config {:host (System/getenv "SMTP_HOST")
-                       :port (Integer. (System/getenv "SMTP_PORT"))
-                       :user (System/getenv "SMTP_USERNAME")
-                       :pass (System/getenv "SMTP_PASSWORD")
+  (def $postal-config {:host (System/getenv "BREAD_SMTP_HOST")
+                       :port (Integer. (System/getenv "BREAD_SMTP_PORT"))
+                       :user (System/getenv "BREAD_SMTP_USERNAME")
+                       :pass (System/getenv "BREAD_SMTP_PASSWORD")
                        :tls true})
   (def fut (future
              (postal/send-message $postal-config
-                                  {:from (System/getenv "SMTP_FROM_EMAIL")
-                                   :to ["coby@tamayo.email" (System/getenv "SMTP_LIST_EMAIL")]
+                                  {:from (System/getenv "BREAD_SMTP_FROM_EMAIL")
+                                   :to ["coby@tamayo.email" (System/getenv "BREAD_SMTP_LIST_EMAIL")]
                                    :subject "Postal test"
                                    :body "Testing from Clojure Postal"})))
   (deref fut 60000 :timeout)

@@ -70,8 +70,8 @@
         {:flash {:error-key :email/unexpected-error}}))))
 
 (defn- confirmation-effect
-  [{:as effect :keys [from to code]}
-   {:as data :keys [config hook i18n ring/scheme ring/server-name ring/server-port]}]
+  [{:keys [from to code]}
+   {:keys [config hook i18n ring/scheme ring/server-name ring/server-port]}]
   (let [from (or from (:email/smtp-from-email config))
         link-uri (format "%s://%s%s%s?code=%s&email=%s"
                          (name scheme) server-name (when server-port (str ":" server-port))
@@ -89,7 +89,7 @@
                                             :body body})}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
-  [{:keys [conn params]} {:as data :keys [config user]}]
+  [{:keys [params]} {:as data :keys [config user]}]
   (let [emails (:user/emails user)
         ;; Check that the email belongs to the user and that it's still
         ;; actually pending confirmation.
@@ -108,8 +108,7 @@
 
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
-  (let [emails (:user/emails user)
-        id (->int (:id params))]
+  (let [id (->int (:id params))]
     (ensure-own-email-id user id)
     (try
       (db/transact conn [[:db/retractEntity id]])
@@ -143,7 +142,7 @@
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
 
-(defn validate-action [action {params :params {:keys [user]} :session}]
+(defn validate-action [action {:keys [params]}]
   (case action
     :add
     (when-not (string/includes? (:email params) "@")
@@ -285,8 +284,12 @@
                       allow-multiple-pending?
                       html-email-sections
                       mailer]
-               :or {smtp-port 587
-                    ;; TODO SMTP env vars
+               :or {smtp-from-email (System/getenv "BREAD_SMTP_FROM_EMAIL")
+                    smtp-host (System/getenv "BREAD_SMTP_HOST")
+                    smtp-port (or (System/getenv "BREAD_SMTP_PORT") 587)
+                    smtp-username (System/getenv "BREAD_SMTP_USERNAME")
+                    smtp-password (System/getenv "BREAD_SMTP_PASSWORD")
+                    smtp-tls? (boolean (System/getenv "BREAD_SMTP_USE_TLS"))
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
                     max-pending-minutes (* 72 60)
