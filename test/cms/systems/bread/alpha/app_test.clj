@@ -88,64 +88,56 @@
 
   (testing "it renders a localized Ring response"
     (let [routes {"/en"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Home}
-                   :bread/component Home
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Home
                    :route/params {:field/lang "en"}}
                   "/fr"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Home}
-                   :bread/component Home
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Home
                    :route/params {:field/lang "fr"}}
                   "/en/parent-page"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "en"
                                   :slugs "parent-page"}}
                   "/en/parent-page/child-page"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "en"
                                   :slugs "parent-page/child-page"}}
                   "/fr/parent-page"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "fr"
                                   :slugs "parent-page"}}
                   "/fr/parent-page/child-page"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "fr"
                                   :slugs "parent-page/child-page"}}
                   "/en/404"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "en"
                                   :slugs "not-found"}}
                   "/fr/404"
-                  {:bread/dispatcher {:dispatcher/type ::post/page=>
-                                      :dispatcher/key :post
-                                      :dispatcher/component Page}
-                   :bread/component Page
+                  {:dispatcher/type ::post/page=>
+                   :dispatcher/key :post
+                   :dispatcher/component Page
                    :route/params {:field/lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router
                    (bread/route-params [router req]
                      (:route/params (get routes (:uri req))))
                    (bread/route-dispatcher [router req]
-                     (:bread/dispatcher (get routes (:uri req)))))
+                     (get routes (:uri req))))
           plugins (defaults/plugins
                     {:db config
                      :components {:not-found NotFound}
