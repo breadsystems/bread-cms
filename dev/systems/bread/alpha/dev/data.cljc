@@ -26,7 +26,7 @@
                   {:thing/created-at (t/now)
                    :email/address "admin3@bread.systems"
                    :email/code "asdf"}]
-    :user/password (hashers/derive "hello")
+    :user/password (hashers/derive "bread")
     #_#_ ;; Uncomment to enable MFA
     :user/totp-key "B67CWTTTP7UQ5KWT"
     :user/failed-login-count 0
@@ -48,7 +48,7 @@
    {:user/username "reader"
     :user/name "Reader User"
     ;; No emails yet!
-    :user/password (hashers/derive "hello")
+    :user/password (hashers/derive "bread")
     :user/failed-login-count 0
     :user/preferences "{}"
     :user/lang :en}
