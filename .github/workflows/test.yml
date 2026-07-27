@@ -48,7 +48,7 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
       # Install Nix tooling for building the binary.
       - name: Install the Flake
-        run: nix develop --command true
+        run: nix develop .#build --command true
       # Cache source code upstream of the --dev binary.
       - name: Cache dev binary
         id: cache-binary
@@ -58,7 +58,7 @@ jobs:
           key: bread-dev-${{ hashFiles('deps.edn', 'flake.lock', 'flake.nix', 'bin/compile', 'src/**', 'cms/**', 'plugins/**', 'resources/**', 'dev/**', 'tools/**') }}
       - name: Compile dev binary
         if: steps.cache-binary.outputs.cache-hit != 'true'
-        run: nix develop --command bash -c 'bin/compile --dev'
+        run: nix develop .#build --command bash -c 'bin/compile --dev'
       - name: Run end-to-end tests against the binary
         run: |
           ./bread.dev -f dev/main.edn &
