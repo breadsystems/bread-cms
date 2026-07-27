@@ -28,5 +28,5 @@ jobs:
             ~/.deps.clj
           key: cljdeps-${{ hashFiles('deps.edn') }}
 
-      - name: Run tests
-        run: bin/run-tests
+      - name: Run unit/integration tests
+        run: bin/run-tests cms
