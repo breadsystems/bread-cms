@@ -34,4 +34,5 @@ jobs:
       - name: Run end-to-end tests
         run: |
           clojure -M:cms:dev:tools -m systems.bread.alpha.dev.main -f dev/main.edn &
+          timeout 60 bash -c 'until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done'
           bin/run-tests e2e
