@@ -30,3 +30,8 @@ jobs:
 
       - name: Run unit/integration tests
         run: bin/run-tests cms
+
+      - name: Run end-to-end tests
+        run: |
+          clojure -M:cms:dev:tools -m systems.bread.alpha.dev.main -f dev/main.edn &
+          bin/run-tests e2e
