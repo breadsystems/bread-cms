@@ -22,10 +22,11 @@
         # Full development environment.
         default = pkgs.mkShell {
           packages = buildPackages ++ (with pkgs; [
-            nodejs_22
-            zulu17
             babashka
+            clj-kondo
+            nodejs_22
             yarn-berry
+            zulu17
           ]);
         };
         # Lean shell for building the binary in CI. Excludes the JS toolchain
