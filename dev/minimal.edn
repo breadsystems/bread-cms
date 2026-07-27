@@ -17,8 +17,7 @@
          :store-session-user-agent? true}
   :signup {:invite-only? true}
   :account {:account-uri "/~/account"}
-  :i18n {:home-route :home
-         #_#_:query-global-strings? false}
+  :i18n {:home-route :home}
   :routes {:router #ig/ref :bread/router}
   :components {:not-found #var systems.bread.alpha.cms.theme.crust/NotFoundPage}
   :marx {:site-name "Minimal Bread"}
