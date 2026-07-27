@@ -1,0 +1,32 @@
+{:app/env :development
+ :http {:port #or [#env PORT 1312]
+        :handler #ig/ref :bread/handler
+        :wrap-defaults #ig/ref :ring/wrap-defaults}
+ :ring/wrap-defaults {:kind :site-defaults}
+ :bread/handler #ig/ref :bread/app
+ :bread/app
+ {:site {:name "Minimal Bread"}
+  :db #ig/ref :bread/db
+  :auth {;; TODO default auth routes
+         :protected-prefixes ["/~/"]
+         :login-uri "/~/login"
+         :forgot-password-uri "/_/forgot"
+         :reset-password-uri "/_/reset"
+         :min-password-length 4
+         :store-session-ip? true
+         :store-session-user-agent? true}
+  :signup {:invite-only? true}
+  :account {:account-uri "/~/account"}
+  :i18n {:home-route :home}
+  :routes {:router #ig/ref :bread/router}
+  :components {:not-found #var systems.bread.alpha.cms.theme.crust/NotFoundPage}
+  :marx {:site-name "Minimal Bread"}
+  :plugins [] ;; define additional plugins here
+  :__after #ig/ref :app/env}
+ :bread/db
+ {:db/type :datahike
+  :db/recreate? true
+  :db/config {:schema-flexibility :write
+              :keep-history? true
+              :store {:backend :mem :id "breadmindb"}}}
+ :app/log {}}

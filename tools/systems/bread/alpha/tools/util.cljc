@@ -7,7 +7,8 @@
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.core :as bread]))
+    [systems.bread.alpha.core :as bread])
+  (:gen-class))
 
 #?(:cljs
     (defn date-fmt [dt]

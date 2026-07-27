@@ -11,7 +11,7 @@
 (defn seconds-from
   ([seconds]
    (seconds-from (now) seconds))
-  ([now seconds]
+  ([^Date now seconds]
    (.getTime (doto (Calendar/getInstance)
                (.setTime now)
                (.add Calendar/SECOND seconds)))))
@@ -19,13 +19,13 @@
 (defn seconds-ago
   ([seconds]
    (seconds-from (now) (- seconds)))
-  ([now seconds]
+  ([^Date now seconds]
    (seconds-from now (- seconds))))
 
 (defn minutes-ago
   ([minutes]
    (minutes-ago (now) minutes))
-  ([now minutes]
+  ([^Date now minutes]
    (.getTime (doto (Calendar/getInstance)
                (.setTime now)
                (.add Calendar/MINUTE (- minutes))))))

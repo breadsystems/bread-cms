@@ -238,7 +238,6 @@
                "Location" "/custom?special=%2Fprotected%3Fmatz%3D%E3%81%BE%E3%81%A4%E3%82%82%E3%81%A8%E3%82%86%E3%81%8D%E3%81%B2%E3%82%8D"}
      :session nil
      ::bread/data {:session nil}
-     ;; TODO
      :body "/custom?special=%2Fprotected%3Fmatz%3D%E3%81%BE%E3%81%A4%E3%82%82%E3%81%A8%E3%82%86%E3%81%8D%E3%81%B2%E3%82%8D"}
     {:protected-prefixes #{"/protected"}
      :login-uri "/custom"

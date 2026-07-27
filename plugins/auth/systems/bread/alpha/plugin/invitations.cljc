@@ -7,16 +7,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-512 ->int]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring])
   (:import
     [java.net URLEncoder]))
-
-(defn- ->int [x]
-  (try (Integer. x) (catch java.lang.NumberFormatException _ nil)))
 
 (defmethod bread/expand ::validate-invitation
   [{{:invitations/keys [max-window-count

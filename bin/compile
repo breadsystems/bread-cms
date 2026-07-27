@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo 'usage: $(basename $0) [-h|--help]'
+  echo "usage: $(basename $0) [-h|--help] [-b|--binary] [-c|--class] [-M|--aliases] [--dev]"
   echo
   echo '  OPTIONS:'
   echo
-  echo '  -h|--help show this help text'
+  echo '  -h|--help        Show this help text'
+  echo '  -b|--binary      Filename to write binary to. Default: bread'
+  echo '  -c|--class       Java class name to compile. Default: systems.bread.alpha.cms.main'
+  echo '  -M|--aliases     Override -M opt passed to `clojure`. Default: :cms'
+  echo '  --dev            Build the development version of Bread. Equivalent to:'
+  echo '                   -M :cms:dev:tools -c systems.bread.alpha.dev.main -b bread.dev'
 }
 
 POSITIONAL=()
@@ -29,6 +34,17 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --dev)
+    JAVA_CLASS='systems.bread.alpha.dev.main'
+    BINARY_NAME='bread.dev'
+    ALIASES=':cms:dev:tools'
+    shift # past argument
+    ;;
+    -M|--aliases)
+    ALIASES=$2
+    shift # past argument
+    shift # past value
+    ;;
     *)
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -41,14 +57,24 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 JAVA_CLASS=${JAVA_CLASS:-'systems.bread.alpha.cms.main'}
 BINARY_NAME=${BINARY_NAME:-'bread'}
+ALIASES=${ALIASES:-':cms'}
 
 
 main() {
   rm -rf classes/*
   rm -rf target/*
 
-  echo "compiling ${JAVA_CLASS}"
-  clojure -M:cms -e "(compile '${JAVA_CLASS})"
+  # AOT-compile with the GraalVM JDK, not whatever java is first on PATH.
+  # superv.async (a datahike dep) checks at Clojure compile time whether
+  # org.graalvm.nativeimage.ImageInfo is loadable; only then does it skip
+  # starting its supervisor thread, which native-image otherwise detects in
+  # the image heap and aborts with NativeImageError.
+  local native_image_bin="$(readlink -f "$(command -v native-image)")"
+  GRAALVM_HOME=${GRAALVM_HOME:-$(dirname "$(dirname $native_image_bin)")}
+  export JAVA_CMD="${GRAALVM_HOME}/bin/java"
+
+  echo "compiling ${JAVA_CLASS} with ${JAVA_CMD}"
+  clojure "-M${ALIASES}" -e "(compile '${JAVA_CLASS})"
 
   if [[ $? -ne 0 ]] ; then
     echo "Error compiling ${JAVA_CLASS}, aborting"
@@ -57,17 +83,17 @@ main() {
 
   echo "compiling native binary \`${BINARY_NAME}\` from ${JAVA_CLASS}"
   native-image \
-    -cp "$(clojure -Spath -M:cms)":classes \
-    -o bread \
+    -cp "$(clojure -Spath -M${ALIASES})":classes \
+    -o "$BINARY_NAME" \
     -H:+ReportExceptionStackTraces \
     -H:+PrintClassInitialization \
     --enable-url-protocols=http,https \
     --initialize-at-build-time \
+    --initialize-at-run-time=com.mchange.v2.c3p0.C3P0Registry,com.mchange.v2.c3p0.management.ActiveManagementCoordinator \
     --verbose \
     --no-fallback \
     --no-server \
-    --static \
-    -J-Xmx3g \
+    -J-Xmx16g \
     --trace-object-instantiation=java.lang.Thread \
     $JAVA_CLASS
 }

@@ -1,0 +1,510 @@
+{
+  "reflection" : [ {
+    "type" : "com.mchange.v1.cachedstore.CachedStore",
+    "methods" : [ {
+      "name" : "find",
+      "parameterTypes" : [ "java.lang.Object" ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.AbstractComboPooledDataSource",
+    "methods" : [ {
+      "name" : "setJdbcUrl",
+      "parameterTypes" : [ "java.lang.String" ]
+    }, {
+      "name" : "setPassword",
+      "parameterTypes" : [ "java.lang.String" ]
+    }, {
+      "name" : "setUser",
+      "parameterTypes" : [ "java.lang.String" ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.AbstractComboPooledDataSourceBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.AbstractComboPooledDataSourceCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.ComboPooledDataSource",
+    "methods" : [ {
+      "name" : "<init>",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.ComboPooledDataSourceBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.ComboPooledDataSourceCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.DriverManagerDataSource",
+    "methods" : [ {
+      "name" : "getPassword",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getUser",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.DriverManagerDataSourceBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.DriverManagerDataSourceCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.PooledDataSource"
+  }, {
+    "type" : "com.mchange.v2.c3p0.WrapperConnectionPoolDataSource",
+    "methods" : [ {
+      "name" : "getPassword",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getUser",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.WrapperConnectionPoolDataSourceBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.WrapperConnectionPoolDataSourceCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.cfg.C3P0ConfigXmlUtils"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractIdentityTokenized"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractIdentityTokenizedBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractIdentityTokenizedCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSourceBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSourceCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.C3P0Defaults",
+    "methods" : [ {
+      "name" : "acquireIncrement",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "acquireRetryAttempts",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "acquireRetryDelay",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "autoCommitOnClose",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "automaticTestTable",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "breakAfterAcquireFailure",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "checkoutTimeout",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "connectionCustomizerClassName",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "connectionTesterClassName",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "contextClassLoaderSource",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "dataSourceName",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "debugUnreturnedConnectionStackTraces",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "driverClass",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "extensions",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "factoryClassLocation",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "forceIgnoreUnresolvedTransactions",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "forceSynchronousCheckins",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "forceUseNamedDriverClass",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "idleConnectionTestPeriod",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "initialPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "jdbcUrl",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxAdministrativeTaskTime",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxConnectionAge",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxIdleTime",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxIdleTimeExcessConnections",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxStatements",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "maxStatementsPerConnection",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "minPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "numHelperThreads",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "overrideDefaultPassword",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "overrideDefaultUser",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "password",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "preferredTestQuery",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "privilegeSpawnedThreads",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "propertyCycle",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "statementCacheNumDeferredCloseThreads",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "testConnectionOnCheckin",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "testConnectionOnCheckout",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "unreturnedConnectionTimeout",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "user",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "userOverridesAsString",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "usesTraditionalReflectiveProxies",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.DefaultConnectionTester",
+    "methods" : [ {
+      "name" : "<init>",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.DriverManagerDataSourceBase",
+    "methods" : [ {
+      "name" : "getDescription",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getDriverClass",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getFactoryClassLocation",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getIdentityToken",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getJdbcUrl",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.DriverManagerDataSourceBaseBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.DriverManagerDataSourceBaseCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.IdentityTokenResolvable"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.IdentityTokenResolvableBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.IdentityTokenResolvableCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.IdentityTokenized"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.PoolBackedDataSourceBaseBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.PoolBackedDataSourceBaseCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.WrapperConnectionPoolDataSourceBase",
+    "methods" : [ {
+      "name" : "getAcquireIncrement",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getAcquireRetryAttempts",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getAcquireRetryDelay",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getAutomaticTestTable",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getCheckoutTimeout",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getConnectionCustomizerClassName",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getConnectionTesterClassName",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getContextClassLoaderSource",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getFactoryClassLocation",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getIdentityToken",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getIdleConnectionTestPeriod",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getInitialPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxAdministrativeTaskTime",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxConnectionAge",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxIdleTime",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxIdleTimeExcessConnections",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxStatements",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMaxStatementsPerConnection",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getMinPoolSize",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getOverrideDefaultPassword",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getOverrideDefaultUser",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getPreferredTestQuery",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getPropertyCycle",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getStatementCacheNumDeferredCloseThreads",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getUnreturnedConnectionTimeout",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "getUserOverridesAsString",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isBreakAfterAcquireFailure",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isDebugUnreturnedConnectionStackTraces",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isForceSynchronousCheckins",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isPrivilegeSpawnedThreads",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isTestConnectionOnCheckin",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "isTestConnectionOnCheckout",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.WrapperConnectionPoolDataSourceBaseBeanInfo"
+  }, {
+    "type" : "com.mchange.v2.c3p0.impl.WrapperConnectionPoolDataSourceBaseCustomizer"
+  }, {
+    "type" : "com.mchange.v2.c3p0.management.ActiveManagementCoordinator",
+    "methods" : [ {
+      "name" : "<init>",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.c3p0.management.C3P0RegistryManager"
+  }, {
+    "type" : "com.mchange.v2.c3p0.management.C3P0RegistryManagerMBean"
+  }, {
+    "type" : "com.mchange.v2.c3p0.management.DynamicPooledDataSourceManagerMBean"
+  }, {
+    "type" : "com.mchange.v2.cfg.DelayedLogItem"
+  }, {
+    "type" : "com.mchange.v2.cfg.MConfig",
+    "methods" : [ {
+      "name" : "dumpToLogger",
+      "parameterTypes" : [ "com.mchange.v2.cfg.DelayedLogItem", "com.mchange.v2.log.MLogger" ]
+    } ]
+  }, {
+    "type" : "com.mchange.v2.log.MLevel",
+    "fields" : [ {
+      "name" : "ALL"
+    }, {
+      "name" : "CONFIG"
+    }, {
+      "name" : "FINE"
+    }, {
+      "name" : "FINER"
+    }, {
+      "name" : "FINEST"
+    }, {
+      "name" : "INFO"
+    }, {
+      "name" : "OFF"
+    }, {
+      "name" : "SEVERE"
+    }, {
+      "name" : "WARNING"
+    } ]
+  }, {
+    "type" : "com.mchange.v2.log.slf4j.Slf4jMLog",
+    "methods" : [ {
+      "name" : "<init>",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "org.sqlite.BusyHandler",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "callback",
+      "parameterTypes" : [ "int" ]
+    } ]
+  }, {
+    "type" : "org.sqlite.Collation",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "xCompare",
+      "parameterTypes" : [ "java.lang.String", "java.lang.String" ]
+    } ]
+  }, {
+    "type" : "org.sqlite.Function",
+    "jniAccessible" : true,
+    "fields" : [ {
+      "name" : "args"
+    }, {
+      "name" : "context"
+    }, {
+      "name" : "value"
+    } ],
+    "methods" : [ {
+      "name" : "xFunc",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "org.sqlite.Function$Aggregate",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "clone",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "xFinal",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "xStep",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "org.sqlite.Function$Window",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "xInverse",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "xValue",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "org.sqlite.JDBC"
+  }, {
+    "type" : "org.sqlite.ProgressHandler",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "progress",
+      "parameterTypes" : [ ]
+    } ]
+  }, {
+    "type" : "org.sqlite.core.DB",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "onCommit",
+      "parameterTypes" : [ "boolean" ]
+    }, {
+      "name" : "onUpdate",
+      "parameterTypes" : [ "int", "java.lang.String", "java.lang.String", "long" ]
+    }, {
+      "name" : "throwex",
+      "parameterTypes" : [ ]
+    }, {
+      "name" : "throwex",
+      "parameterTypes" : [ "int" ]
+    } ]
+  }, {
+    "type" : "org.sqlite.core.DB$ProgressObserver",
+    "jniAccessible" : true,
+    "methods" : [ {
+      "name" : "progress",
+      "parameterTypes" : [ "int", "int" ]
+    } ]
+  }, {
+    "type" : "org.sqlite.core.NativeDB",
+    "jniAccessible" : true,
+    "fields" : [ {
+      "name" : "busyHandler"
+    }, {
+      "name" : "commitListener"
+    }, {
+      "name" : "pointer"
+    }, {
+      "name" : "progressHandler"
+    }, {
+      "name" : "updateListener"
+    } ],
+    "methods" : [ {
+      "name" : "stringToUtf8ByteArray",
+      "parameterTypes" : [ "java.lang.String" ]
+    }, {
+      "name" : "throwex",
+      "parameterTypes" : [ "java.lang.String" ]
+    } ]
+  }, {
+    "type" : "org.sqlite.jdbc4.JDBC4Connection"
+  } ]
+}

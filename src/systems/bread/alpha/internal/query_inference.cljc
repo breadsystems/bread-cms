@@ -3,17 +3,41 @@
     [com.rpl.specter :as s]
     [systems.bread.alpha.util.datalog :as d]))
 
-(def attrs-walker
-  (s/recursive-path
-    [kmod krecur] path
-    (s/if-path sequential?
-               [s/ALL path]
-               (apply
-                 s/multi-path
-                 (s/if-path #(get % kmod) [kmod])
-                 (map (fn [krecur]
-                        (s/if-path #(get % krecur) [krecur path]))
-                      (if (set? krecur) krecur #{krecur}))))))
+(defn select-attrs
+  "Walks node, selecting the value at kmod in every map where it is present,
+  recursing into any of the krecurs keys also present. Sequential nodes are
+  walked element-wise. Plain-Clojure companion to transform-attrs."
+  [kmod krecurs node]
+  (cond
+    (sequential? node)
+    (mapcat (partial select-attrs kmod krecurs) node)
+    (map? node)
+    (concat
+      (when (get node kmod) [(get node kmod)])
+      (mapcat (fn [krecur]
+                (when (get node krecur)
+                  (select-attrs kmod krecurs (get node krecur))))
+              (if (set? krecurs) krecurs #{krecurs})))))
+
+(defn transform-attrs
+  "Walks node, transforming the value at kmod with f in every map where it is
+  present, recursing into any of the krecurs keys also present. Sequential
+  nodes are walked element-wise. We do this because Specter recursive paths use
+  runtime eval, which is unsupported in a native image."
+  [f kmod krecurs node]
+  (cond
+    (sequential? node)
+    ((if (vector? node) mapv map)
+     (partial transform-attrs f kmod krecurs) node)
+    (map? node)
+    (as-> node $
+      (if (get $ kmod) (update $ kmod f) $)
+      (reduce (fn [m krecur]
+                (if (get m krecur)
+                  (update m krecur (partial transform-attrs f kmod krecurs))
+                  m))
+              $ (if (set? krecurs) krecurs #{krecurs})))
+    :else node))
 
 (defn- spec-paths [kp vp data]
   (let [k? (if (keyword? kp) #(= kp %) kp)
@@ -22,18 +46,16 @@
                    (and (map? node)
                         (let [[k v] (first node)]
                           (and (k? k) (v? v)))))
-        walker (s/recursive-path
-                 [] p
-                 [(s/if-path map? s/ALL s/INDEXED-VALS)
-                  (s/if-path [s/LAST (s/pred binding?)]
-                             s/FIRST
-                             [(s/collect-one s/FIRST) s/LAST coll? p])])]
-    (->> data (s/select walker)
-         (map (fn [path]
-                (let [path (if (or (nil? path) (vector? path))
-                             path
-                             [path])]
-                 [path (get-in data path)]))))))
+        ;; Collect the (get-in) path to each binding node.
+        walk (fn walk [path node]
+               (mapcat
+                 (fn [[k child]]
+                   (cond
+                     (binding? child) [(conj path k)]
+                     (coll? child) (walk (conj path k) child)))
+                 (if (map? node) node (map-indexed vector node))))]
+    (map (fn [path] [path (get-in data path)])
+         (walk [] data))))
 
 (comment
   (spec-paths :k :v [1 {:k [:a {:k :v} :c]} {:k :v}])

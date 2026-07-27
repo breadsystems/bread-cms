@@ -4,8 +4,10 @@
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [systems.bread.alpha.internal.time :as t])
-  #?(:clj (:import
-            [java.io Writer])))
+  #?(:clj
+     (:import
+       [java.io Writer]
+       [java.util Date])))
 
 ;; TODO move protocols, profiling stuff into helper nss
 
@@ -239,7 +241,7 @@
                                        :args ~args
                                        :result result#
                                        ;; TODO CLJS
-                                       :millis (.getTime (t/now))}))
+                                       :millis (.getTime ^Date (t/now))}))
        result#)
      (catch java.lang.Throwable e#
        ;; If bread core threw this exception, don't wrap it.

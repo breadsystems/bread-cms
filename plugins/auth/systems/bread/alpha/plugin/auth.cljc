@@ -11,7 +11,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-512 ->int]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
@@ -61,8 +61,9 @@
 
 (defn session-store
   ([config conn]
-   (let [config (merge {:max-age (* 72 60 60)} config)]
-     (DatalogSessionStore. config conn)))
+   (let [default-config {:max-age (* 72 60 60)
+                         :secret-key (System/getenv "BREAD_SECRET_KEY")}]
+     (DatalogSessionStore. (merge default-config config) conn)))
   ([conn]
    (session-store {} conn)))
 
@@ -188,9 +189,7 @@
                      (account-locked? (t/now) (:user/locked-at user) lock-seconds))]
     (if locked?
       {:valid false :locked? true :user user}
-      (let [code (try
-                   (Integer. two-factor-code)
-                   (catch java.lang.NumberFormatException _ 0))
+      (let [code (or (->int two-factor-code) 0)
             valid (or (ot/is-valid-totp-token? code (:user/totp-key user))
                       (ot/is-valid-totp-token? code (:user/totp-key user)
                                                {:time-step-offset -1}))]
@@ -339,9 +338,7 @@
 
       (and post? setup-two-factor?)
       (let [totp-key (:totp-key params)
-            code (try
-                   (Integer. (:two-factor-code params))
-                   (catch java.lang.NumberFormatException _ 0))
+            code (or (->int (:two-factor-code params)) 0)
             valid? (ot/is-valid-totp-token? code totp-key)
             user (cond-> (:auth/user session)
                    valid? (assoc :user/totp-key totp-key))
@@ -725,6 +722,7 @@
           reset-password-uri "/reset"
           reset-expiration-seconds (* 10 60)
           generous-totp-window? true
+          secret-key (System/getenv "BREAD_SECRET_KEY")
           ;; Don't track Personally Identfiable Information (PII) by default.
           store-session-ip? false
           store-session-user-agent? false}}]

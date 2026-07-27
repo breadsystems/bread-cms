@@ -1,0 +1,18 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": ".*\\.i18n\\.edn"},
+      {"pattern": "assets/.*"},
+      {"pattern": "crust/.*"},
+      {"pattern": "rise/.*"},
+      {"pattern": "js/marx\\.js"},
+      {"pattern": "js/ui\\.js"},
+      {"pattern": "js/manifest\\.edn"},
+      {"pattern": "css/marx\\.css"},
+      {"pattern": "marx/js/marx\\.js"},
+      {"pattern": "marx/js/ui\\.js"},
+      {"pattern": "marx/js/manifest\\.edn"},
+      {"pattern": "marx/css/marx\\.css"}
+    ]
+  }
+}

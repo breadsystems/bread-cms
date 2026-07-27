@@ -8,6 +8,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
@@ -57,7 +58,7 @@
 (defmethod bread/effect [::update :make-primary]
   [{:keys [conn params]} {:keys [user]}]
   (let [emails (:user/emails user)
-        id (Integer. (:id params))
+        id (->int (:id params))
         _ (ensure-own-email-id user id)
         current-id (->> emails (filter :email/primary?) first :db/id)]
     (try
@@ -108,7 +109,7 @@
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
   (let [emails (:user/emails user)
-        id (Integer. (:id params))]
+        id (->int (:id params))]
     (ensure-own-email-id user id)
     (try
       (db/transact conn [[:db/retractEntity id]])
@@ -285,6 +286,7 @@
                       html-email-sections
                       mailer]
                :or {smtp-port 587
+                    ;; TODO SMTP env vars
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
                     max-pending-minutes (* 72 60)
@@ -297,7 +299,7 @@
                 :email/allow-multiple-pending? allow-multiple-pending?
                 :email/smtp-from-email smtp-from-email
                 :email/smtp-host smtp-host
-                :email/smtp-port (Integer. smtp-port)
+                :email/smtp-port (or (->int smtp-port) 587)
                 :email/smtp-username smtp-username
                 :email/smtp-password smtp-password
                 :email/smtp-tls? (boolean smtp-tls?)

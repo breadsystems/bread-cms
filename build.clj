@@ -82,7 +82,11 @@
     :aliases [:theme-rise]
     :src-dirs ["cms/themes/rise/src" "cms/themes/rise/resources"]}
 
-   ;; TODO CRUST
+   ;; CRUST theme.
+   :theme-crust
+   {:lib 'systems.bread/bread-theme-crust
+    :aliases [:theme-rise]
+    :src-dirs ["cms/themes/crust/src" "cms/themes/crust/resources"]}
 
    ;;
    })

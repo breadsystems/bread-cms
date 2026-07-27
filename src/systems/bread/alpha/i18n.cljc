@@ -54,7 +54,7 @@
 
 (defn- ->double [x]
   (try
-    (Double. (str x))
+    (Double/parseDouble (str x))
     (catch java.lang.NumberFormatException _)))
 
 (defn- accepted-lang-ranges [header]
@@ -220,13 +220,16 @@
             (if (seq recur-attrs)
               ;; Query is recursive:
               ;; Wrap our process chain in a recursive transform.
-              (let [walker (qi/attrs-walker :thing/fields recur-attrs)]
-                [#(s/transform walker process* %) (map butlast spaths)])
+              [#(qi/transform-attrs process* :thing/fields recur-attrs %)
+               (map butlast spaths)]
               ;; Non-recursive query.
               [process* spaths])]
         (reduce
           (fn [e spath]
-            (s/transform spath process e))
+            ;; NOTE: use the compiled-* Specter API with runtime-built paths;
+            ;; the s/transform macro would compile them with eval, which is
+            ;; unsupported in a native image.
+            (s/compiled-transform (s/comp-paths (vec spath)) process e))
           e spaths))
       false)))
 
@@ -262,14 +265,16 @@
       (if (seq bindings)
         [(reduce
            (fn [query {:keys [binding-path relation entity-index]}]
-             (s/transform (concat [:expansion/args 0 ;; datalog query
-                                   :find             ;; find clause
-                                   entity-index      ;; find position
-                                   s/LAST]           ;; pull-expr
-                                  binding-path)      ;; within pull-expr
-                          (partial d/ensure-attrs
-                                   [:field/lang :field/key :db/id])
-                          query))
+             (s/compiled-transform
+               (s/comp-paths
+                 (vec (concat [:expansion/args 0 ;; datalog query
+                               :find             ;; find clause
+                               entity-index      ;; find position
+                               s/LAST]           ;; pull-expr
+                              binding-path)))    ;; within pull-expr
+               (partial d/ensure-attrs
+                        [:field/lang :field/key :db/id])
+               query))
            expansion bindings)
          {:expansion/name ::fields
           :expansion/key (:expansion/key expansion)
@@ -305,18 +310,20 @@
 
 (defmethod bread/action ::add-strings-query
   [req _ _]
-  (expansion/add req {:expansion/name ::db/query
-                      :expansion/key :i18n
-                      :expansion/into {}
-                      :expansion/db (db/database req)
-                      :expansion/args
-                      ['{:find [?key ?content]
-                         :in [$ ?lang]
-                         :where [[?e :field/key ?key]
-                                 [?e :field/content ?content]
-                                 [?e :field/lang ?lang]
-                                 (not-join [?e] [_ :thing/fields ?e])]}
-                       (lang req)]}))
+  ;; TODO do we need this check after https://github.com/breadsystems/bread-cms/issues/184 ?
+  (if (:status req) req ;; short-circuit on HTTP responses.
+    (expansion/add req {:expansion/name ::db/query
+                        :expansion/key :i18n
+                        :expansion/into {}
+                        :expansion/db (db/database req)
+                        :expansion/args
+                        ['{:find [?key ?content]
+                           :in [$ ?lang]
+                           :where [[?e :field/key ?key]
+                                   [?e :field/content ?content]
+                                   [?e :field/lang ?lang]
+                                   (not-join [?e] [_ :thing/fields ?e])]}
+                         (lang req)]})))
 
 (defmethod bread/action ::add-rtl-expansion
   [req _ _]

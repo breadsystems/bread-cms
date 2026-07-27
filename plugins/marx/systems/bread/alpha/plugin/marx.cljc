@@ -11,6 +11,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.util.datalog :as datalog])
@@ -101,7 +102,7 @@
           paginate {:expansion/name ::thing/paginate
                     :expansion/key k
                     :expansion/description "Paginate media items."
-                    :page (Integer. (:page params 1))
+                    :page (or (->int (:page params 1)) 1)
                     :per-page (:per-page dispatcher 25)}]
       {:expansions (conj (bread/hook req ::i18n/expansions query) paginate)})))
 

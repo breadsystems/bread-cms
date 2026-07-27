@@ -60,9 +60,11 @@ main() {
   # These rely on bread-plugins-theme, and so deploy in a second round.
   if [[ -z $SKIP_JARS ]] ; then
     clojure -T:build jar :lib :theme-rise
+    clojure -T:build jar :lib :theme-crust
   fi
   if [[ -z $SKIP_DEPLOY ]] ; then
     clojure -T:build deploy :lib :theme-rise
+    clojure -T:build deploy :lib :theme-crust
   fi
 }
 

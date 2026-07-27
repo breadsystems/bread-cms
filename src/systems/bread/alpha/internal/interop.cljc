@@ -2,10 +2,13 @@
   (:import
     [java.security MessageDigest]))
 
-(defn sha-512 [in]
+(defn sha-512 [^String in]
   (let [md (doto (MessageDigest/getInstance "SHA-512")
              (.update (.getBytes in)))]
     (apply str (map (partial format "%02x") (.digest md)))))
+
+(defn ->int [x]
+  #?(:clj (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))))
 
 (comment
   (clojure.string/starts-with? (sha-512 "") "cf83e1357eefb8bdf1542850d66d")
