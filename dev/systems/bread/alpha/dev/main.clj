@@ -33,16 +33,16 @@
   (main/restart! (-> "dev/minimal.edn" aero/read-config
                 (assoc-in [:http :port] 1333)))
   (main/stop!)
-  (deref system)
-  (:http @system)
-  (:ring/wrap-defaults @system)
-  (:ring/session-store @system)
-  (-> @system :initial-config :ring/session-store :secret-key)
-  (:bread/app @system)
-  (:bread/routes @system)
-  (:bread/router @system)
-  (:bread/db @system)
-  (:bread/profilers @system)
+  (deref main/system)
+  (:http @main/system)
+  (:ring/wrap-defaults @main/system)
+  (:ring/session-store @main/system)
+  (-> @main/system :initial-config :ring/session-store :secret-key)
+  (:bread/app @main/system)
+  (:bread/routes @main/system)
+  (:bread/router @main/system)
+  (:bread/db @main/system)
+  (:bread/profilers @main/system)
 
   (set! *print-namespace-maps* false)
 
@@ -51,17 +51,17 @@
   (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
   (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
 
-  (= (db/connection (:bread/app @system))
-     (db/connect (:bread/db @system)))
+  (= (db/connection (:bread/app @main/system))
+     (db/connect (:bread/db @main/system)))
   ;; => true
 
   ;; Connection pool...
-  (db/connection (:bread/app @system))
+  (db/connection (:bread/app @main/system))
 
   ;; EMAIL
-  (:email (:bread/app (:initial-config @system)))
-  (email/config->postal (::bread/config (:bread/app @system)))
-  (:email/smtp-from-email (::bread/config (:bread/app @system)))
+  (:email (:bread/app (:initial-config @main/system)))
+  (email/config->postal (::bread/config (:bread/app @main/system)))
+  (:email/smtp-from-email (::bread/config (:bread/app @main/system)))
 
   (require '[postal.core :as postal])
   (def $postal-config {:host (System/getenv "SMTP_HOST")
@@ -88,13 +88,13 @@
 
   (do
     (def $req {:uri "/~/signup" :request-method :get})
-    (def ->app (partial util/->app (:bread/app @system)))
-    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @system)))
+    (def ->app (partial util/->app (:bread/app @main/system)))
+    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @main/system)))
 
     (defn db []
       (db/database (->app $req)))
-    (deref (db/connect (:bread/db @system)))
-    (db/database (:bread/app @system))
+    (deref (db/connect (:bread/db @main/system)))
+    (db/database (:bread/app @main/system))
 
     (defn q [& args]
       (apply
@@ -177,17 +177,17 @@
 
   (slurp (io/resource "public/assets/hi.txt"))
 
-  (response ((:bread/handler @system) {:uri "/en"}))
-  (response ((:bread/handler @system) {:uri "/en/hello"}))
-  (response ((:bread/handler @system) {:uri "/en/hello/child-page"}))
+  (response ((:bread/handler @main/system) {:uri "/en"}))
+  (response ((:bread/handler @main/system) {:uri "/en/hello"}))
+  (response ((:bread/handler @main/system) {:uri "/en/hello/child-page"}))
   ;; This should 404:
-  (response ((:bread/handler @system) {:uri "/en/child-page"}))
+  (response ((:bread/handler @main/system) {:uri "/en/child-page"}))
 
-  (response ((:bread/handler @system) {:uri "/login"}))
-  (response ((:bread/handler @system) {:uri "/login"
-                                       :request-method :post
-                                       :params {:username "coby"
-                                                :password "hello"}}))
+  (response ((:bread/handler @main/system) {:uri "/login"}))
+  (response ((:bread/handler @main/system) {:uri "/login"
+                                            :request-method :post
+                                            :params {:username "coby"
+                                                     :password "hello"}}))
 
 
 
@@ -243,9 +243,9 @@
   (defn retraction [{e :db/id :as entity}]
     (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
   (retraction $user)
-  (db/transact (db/connection (:bread/app @system))
+  (db/transact (db/connection (:bread/app @main/system))
                (retraction $user))
-  (db/transact (db/connection (:bread/app @system))
+  (db/transact (db/connection (:bread/app @main/system))
                [{:user/username "bread"
                  :user/locked-at (java.util.Date.)}])
 
