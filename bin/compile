@@ -89,6 +89,7 @@ main() {
     -H:+PrintClassInitialization \
     --enable-url-protocols=http,https \
     --initialize-at-build-time \
+    --initialize-at-run-time=com.mchange.v2.c3p0.C3P0Registry,com.mchange.v2.c3p0.management.ActiveManagementCoordinator \
     --verbose \
     --no-fallback \
     --no-server \
