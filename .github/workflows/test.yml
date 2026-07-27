@@ -39,16 +39,28 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      # Install the Nix package manager.
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
+      # Make /nix/store realization cheap.
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+      # Install Nix tooling for building the binary.
       - name: Install the Flake
         run: nix develop --command true
+      # Cache source code upstream of the --dev binary.
+      - name: Cache dev binary
+        id: cache-binary
+        uses: actions/cache@v3
+        with:
+          path: bread.dev
+          key: bread-dev-${{ hashFiles('deps.edn', 'flake.lock', 'flake.nix', 'bin/compile', 'src/**', 'cms/**', 'plugins/**', 'resources/**', 'dev/**', 'tools/**') }}
       - name: Compile dev binary
+        if: steps.cache-binary.outputs.cache-hit != 'true'
         run: nix develop --command bash -c 'bin/compile --dev'
       - name: Run end-to-end tests against the binary
         run: |
-          nix develop --command bash -c '
-            ./bread.dev -f dev/main.edn &
-            timeout 60 bash -c "until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done"
-            bin/run-tests e2e
-          '
+          ./bread.dev -f dev/main.edn &
+          timeout 60 bash -c "until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done"
+          bin/run-tests e2e
