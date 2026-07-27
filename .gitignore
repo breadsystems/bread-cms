@@ -16,6 +16,7 @@ inputFiles.lst
 /classes/*
 /*.log
 /reports
+/scratchpad/
 *.cgi
 *.build_artifacts.txt
 /bread
