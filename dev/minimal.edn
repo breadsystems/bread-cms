@@ -29,7 +29,5 @@
   :db/recreate? true
   :db/config {:schema-flexibility :write
               :keep-history? true
-              :store {:backend :mem :id "breadmindb"}}
-  ;; db logs can be noisy, so load logging config first
-  :__after #ig/ref :app/log}
+              :store {:backend :mem :id "breadmindb"}}}
  :app/log {}}

@@ -6,7 +6,7 @@
                       :session-store #ig/ref :ring/session-store
                       :overrides {[:security :anti-forgery] false
                                   [:session :cookie-name] "bread-session"
-                                  ;; https://github.com/ring-clojure/ring/blob/fd08dd8d905bc8062866cfec938c8cbf65afc7b0/ring-core/src/ring/middleware/cookies.clj#L101
+                                  ;; https://github.com/ring-clojure/ring/blob/fd08dd8/ring-core/src/ring/middleware/cookies.clj#L101
                                   [:session :cookie-attrs] {:http-only true
                                                             :secure true
                                                             :max-age 259200 ;; 72h
@@ -60,9 +60,6 @@
               ;; STORE_BACKEND=jdbc
               ;; STORE_BACKEND=mem
               :store #include #join ["db-store." #or [#env STORE_BACKEND "jdbc"] ".edn"]}
-  :db/initial-txns
-  [
-   ,]
   ;; db logs can be noisy, so load logging config first
   :__after #ig/ref :app/log}
  :app/log
