@@ -32,7 +32,7 @@
   (main/restart! (-> "dev/main.edn" aero/read-config))
   (main/restart! (-> "dev/minimal.edn" aero/read-config
                 (assoc-in [:http :port] 1333)))
-  (stop!)
+  (main/stop!)
   (deref system)
   (:http @system)
   (:ring/wrap-defaults @system)
