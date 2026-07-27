@@ -72,7 +72,7 @@
   (def fut (future
              (postal/send-message $postal-config
                                   {:from (System/getenv "BREAD_SMTP_FROM_EMAIL")
-                                   :to ["coby@tamayo.email" (System/getenv "BREAD_SMTP_LIST_EMAIL")]
+                                   :to ["coby@tamayo.email"]
                                    :subject "Postal test"
                                    :body "Testing from Clojure Postal"})))
   (deref fut 60000 :timeout)
