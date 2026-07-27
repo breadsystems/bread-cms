@@ -2,7 +2,7 @@
   (:import
     [java.security MessageDigest]))
 
-(defn sha-512 [in]
+(defn sha-512 [^String in]
   (let [md (doto (MessageDigest/getInstance "SHA-512")
              (.update (.getBytes in)))]
     (apply str (map (partial format "%02x") (.digest md)))))
