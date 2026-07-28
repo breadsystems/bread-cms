@@ -50,7 +50,7 @@
     (conj (apply vector init-q i18n-expansions) items-q)))
 
 (defmulti menu-expansions (fn [_req opts]
-                         (:menu/type opts)))
+                            (:menu/type opts)))
 
 (defmethod menu-expansions ::posts
   menu-expansions?type=posts
