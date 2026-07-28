@@ -445,11 +445,6 @@
     {:type :bread/schema
      :bread/schema ::core}))
 
-;; TODO move this into tooling
-(defmethod print-method :bread/schema [schema writer]
-  (.write writer (str "#schema[" {:bread/schema (:bread/schema (meta schema))
-                                  :migration-count (count schema)} "]")))
-
 (comment
   (map (juxt (comp :db/id first) (comp :migration/dependencies meta)) initial)
   (hash initial)

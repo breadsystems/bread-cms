@@ -10,6 +10,11 @@
     [systems.bread.alpha.core :as bread])
   (:gen-class))
 
+#?(:clj
+   (defmethod print-method :bread/schema [schema writer]
+     (.write writer (str "#schema[" {:bread/schema (:bread/schema (meta schema))
+                                     :migration-count (count schema)} "]"))))
+
 #?(:cljs
     (defn date-fmt [dt]
       (when dt
