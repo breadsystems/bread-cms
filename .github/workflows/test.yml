@@ -19,9 +19,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
-      # DO NOT cache the Nix store for this job.
+      # Make /nix/store realization cheap.
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix', '.clj-kondo/**') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
       - name: Lint with clj-kondo
-        run: nix-shell -p clj-kondo --command "clj-kondo --lint src:test:plugins:marx:dev:tools"
+        run: nix develop .#lint --command bash -c 'clj-kondo --lint src:test:plugins:marx:dev:tools'
 
   run-unit-and-integration-tests:
     runs-on: ubuntu-latest
