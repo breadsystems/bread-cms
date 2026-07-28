@@ -2,8 +2,7 @@
   (:require
     [clojure.string :as string]
     [systems.bread.alpha.component :as component]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as db]))
+    [systems.bread.alpha.core :as bread]))
 
 (defn ancestry [thing]
   (loop [slugs [] {slug :thing/slug [parent] :thing/_children} thing]
@@ -13,13 +12,15 @@
 (defmethod bread/infer-param :slugs [_ thing]
   (string/join "/" (ancestry thing)))
 
-(defn router [app]
+(defn router
   "Returns the Router configured for the given app"
+  [app]
   (bread/hook app ::router nil))
 
-(defn dispatcher [req]
-  "Get the full dispatcher for the given request. Router implementations should
-  call this function."
+(defn dispatcher
+  "Get the full dispatcher for the given request. Router implementations should call
+  this function."
+  [req]
   (let [disp (bread/hook req ::route-dispatcher
                          (bread/route-dispatcher (router req) req))
         component (bread/hook req ::component (:dispatcher/component disp))

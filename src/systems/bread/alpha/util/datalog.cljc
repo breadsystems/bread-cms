@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.util.datalog
   "Database helper utilities."
   (:require
-    [clojure.walk :as walk]
     [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -74,12 +73,6 @@
                      pull
                      (cons attr pull)))
                  pull attrs))))
-
-(comment
-  (attr-binding :taxon/fields {:taxon/fields [:field/content]})
-  (attr-binding :taxon/fields {:taxon/fields [:field/key :field/content]})
-  (attr-binding :taxon/fields {:taxon/fields '[*]})
-  (attr-binding :post/fields {:post/fields '[*]}))
 
 (defn attrs
   "Get all schema data available about every attr present in db"
@@ -173,9 +166,8 @@
 
   ;; Do some minimal setup to get an example database instance.
   (do
-    (require '[clojure.repl :as repl]
-             '[breadbox.app :as breadbox :refer [app]])
-    (def $db (db/database @app)))
+    (require '[systems.bread.alpha.cms.main :as main])
+    (def $db (db/database (:bread/app @main/system))))
 
   (migrations $db)
   (map (fn [migration]

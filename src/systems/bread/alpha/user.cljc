@@ -16,6 +16,7 @@
 (defn can?
   ([user ability-key]
    (get (or (:user/abilities user) (abilities* user)) ability-key))
+  #_
   ([user ability subject]
    ;; TODO extend this with a multimethod or something...
    ))

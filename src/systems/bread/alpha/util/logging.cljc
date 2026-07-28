@@ -3,7 +3,8 @@
   (:require
     [clojure.walk :as walk]))
 
-(def ^:dynamic ^:private *sensitive-keys* #{:user/password :user/totp-key :session/id})
+(def ^:dynamic ^:private *sensitive-keys*
+  #{:user/password :user/totp-key :session/id})
 
 (defn log-redactor
   ([]
@@ -17,7 +18,8 @@
                     data))))
 
 (defn mark-sensitve-keys! [& ks]
-  (alter-var-root #'*sensitive-keys* #(apply conj % ks)))
+  #?(:clj (alter-var-root #'*sensitive-keys* #(apply conj % ks))
+     :cljs (set! *sensitive-keys* (apply conj *sensitive-keys* ks))))
 
 (comment
   (def bobby {:name "bobby" :secret "don't tell!" :new-secret "me neither"})

@@ -1,6 +1,8 @@
 (ns systems.bread.alpha.internal.query-inference
   (:require
+    [clojure.string :as string]
     [com.rpl.specter :as s]
+
     [systems.bread.alpha.util.datalog :as d]))
 
 (defn select-attrs
@@ -84,7 +86,7 @@
        (filter identity)))
 
 (defn- inverted-rel? [attr]
-  (clojure.string/starts-with? (name attr) "_"))
+  (string/starts-with? (name attr) "_"))
 
 (defn- revert-rel [attr]
   (keyword (namespace attr) (subs (name attr) 1)))
@@ -190,7 +192,7 @@
   [kpred vpred query]
   (reduce (fn [{:keys [bindings]} {:keys [index sym ops] :as _clause}]
             (reduce
-              (fn [{:keys [query bindings]} [path b]]
+              (fn [{:keys [bindings]} [path b]]
                 (let [;; Get the attr we actually found with the predicate.
                       attr (key (first b))
                       binding-path (conj (vec path) attr)

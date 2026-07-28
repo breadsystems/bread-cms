@@ -42,9 +42,6 @@
 (defn pp [x]
   (with-out-str (pprint x)))
 
-(defn- response [res]
-  (select-keys res [:status :headers :body :session]))
-
 (defn ->app [app req]
   (when app (merge app req)))
 

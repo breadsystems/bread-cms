@@ -11,10 +11,12 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.internal.query-inference :as qi]
-    [systems.bread.alpha.util.datalog :as d]))
+    [systems.bread.alpha.util.datalog :as d])
+  (:import
+    [java.lang Double]))
 
 (comment
-  (alter-var-root #'*read-eagerly* not)
+  #?(:clj (alter-var-root #'*read-eagerly* not))
 
   (map (comp :auth/reset-password :en)
        [(read-strings "auth.i18n.edn")
@@ -25,16 +27,17 @@
 
 (def ^:dynamic *read-eagerly* true)
 
-(defn read-strings [path]
+(defn read-strings
   "Read strings from the filesystem. If *read-eagerly* is true (the default),
   returns a plain i18n map, keyed by lang/locale; if false, returns an ILookup
   instance that dynamically reads from the filesystem on each call to (get)."
+  [path]
   (if *read-eagerly*
     (-> path io/resource slurp edn/read-string)
     (reify clojure.lang.ILookup
-      (valAt [this k]
+      (valAt [_ k]
         (-> path io/resource slurp edn/read-string (get k)))
-      (valAt [this k not-found]
+      (valAt [_ k not-found]
         (-> path io/resource slurp edn/read-string (get k not-found))))))
 
 (defn supported-langs
@@ -88,9 +91,10 @@
                  (reduced (range-prefix lang-range)))))
             [] lang-ranges)))
 
-(defn t [i18n k]
+(defn t
   "Translates k into its value in the given i18n map. If k is a sequence,
   treats (first k) as i18n key and (rest k) as args to format."
+  [i18n k]
   (if (sequential? k)
     (let [[k & args] k]
       (when-let [s (get i18n k)] (apply format s args)))
@@ -235,7 +239,7 @@
 
 (defmethod bread/action ::expansions
   i18n-queries
-  [req _ [{:as expansion :expansion/keys [db i18n?] :or {i18n? true}}]]
+  [req _ [{:as expansion :expansion/keys [i18n?] :or {i18n? true}}]]
   "Internationalizes the given db expansion, returning a vector of queries for
   translated content (i.e. :field/content in the appropriate lang).
   If no translation is needed, returns a length-1 vector containing only the
@@ -264,7 +268,7 @@
           querying-many? (not= '. (last (:find (d/normalize-query dbq))))]
       (if (seq bindings)
         [(reduce
-           (fn [query {:keys [binding-path relation entity-index]}]
+           (fn [query {:keys [binding-path entity-index]}]
              (s/compiled-transform
                (s/comp-paths
                  (vec (concat [:expansion/args 0 ;; datalog query

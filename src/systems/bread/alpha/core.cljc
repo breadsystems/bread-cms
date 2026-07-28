@@ -1,7 +1,5 @@
 (ns systems.bread.alpha.core
   (:require
-    [clojure.spec.alpha :as s]
-    [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [systems.bread.alpha.internal.time :as t])
   #?(:clj
@@ -31,13 +29,14 @@
   (route-dispatcher [this req])
   (routes [this]))
 
-(extend-protocol Router
-  clojure.lang.Var
-  (path [v route-name params] (path (deref v) route-name params))
-  (route-spec [v req] (route-spec (deref v) req))
-  (route-params [v req] (route-params (deref v) req))
-  (route-dispatcher [v req] (route-dispatcher (deref v) req))
-  (routes [v] (routes (deref v))))
+#?(:clj
+   (extend-protocol Router
+     clojure.lang.Var
+     (path [v route-name params] (path (deref v) route-name params))
+     (route-spec [v req] (route-spec (deref v) req))
+     (route-params [v req] (route-params (deref v) req))
+     (route-dispatcher [v req] (route-dispatcher (deref v) req))
+     (routes [v] (routes (deref v)))))
 
 
 
@@ -70,7 +69,7 @@
   wrapper fn. Returns wrapper for use with remove-tap."
   [f]
   (let [wrapper (fn [x]
-                  (if (::profile.type x)
+                  (when (::profile.type x)
                     (f x)))]
     (add-tap wrapper)
     wrapper))
@@ -133,10 +132,8 @@
 (defmulti action (fn [_app hook _args]
                    (:action/name hook)))
 
-(defmethod action ::value
-  return-value
+(defmethod action ::value return-value
   [_ {:action/keys [value]} _]
-  "Pass-through action that simply returns the value given by :action/value."
   value)
 
 (defmulti effect (fn [effect _data]
@@ -153,10 +150,8 @@
 (defmethod infer-param :default [k thing]
   (get thing k))
 
-(defmethod expand ::value
-  return-value
+(defmethod expand ::value pass-thru-expand
   [{:expansion/keys [value]} _]
-  "Pass-through expansion that simply returns the value given by :expansion/value."
   value)
 
 (defn value->expansion [k value & {desc :expansion/description}]
@@ -170,15 +165,16 @@
   [req e]
   (update req ::effects (comp vec conj) e))
 
-(deftype DerefableWithMeta [v m]
-  clojure.lang.IObj
-  (meta [_] m)
-  (withMeta [_ m] (DerefableWithMeta. v m))
-  clojure.lang.IDeref
-  (deref [_] (if (instance? clojure.lang.IDeref v) (deref v) v))
-  Object
-  (toString [this]
-    (str (.getName (class this)) ": " (pr-str v))))
+#?(:clj
+   (deftype DerefableWithMeta [v m]
+     clojure.lang.IObj
+     (meta [_] m)
+     (withMeta [_ m] (DerefableWithMeta. v m))
+     clojure.lang.IDeref
+     (deref [_] (if (instance? clojure.lang.IDeref v) (deref v) v))
+     Object
+     (toString [this]
+       (str (.getName (class this)) ": " (pr-str v)))))
 
 #?(:clj
    (defmethod print-method DerefableWithMeta [obj, ^Writer w]
@@ -202,7 +198,7 @@
               {k :effect/key max-retries :effect/retries} e
               [result ex] (try
                             [(effect e data) nil]
-                            (catch Throwable ex
+                            (catch #?(:clj Throwable :cljs js/Object) ex
                               [nil ex]))
               {more-effects :effects} result
               result (DerefableWithMeta. result (meta e))]
@@ -254,7 +250,7 @@
                                               ::core? true})
                          e#))))))
 
-(defn- load-plugin [app {:keys [config hooks expansions effects] :as plugin}]
+(defn- load-plugin [app {:keys [config hooks expansions effects]}]
   (letfn [(configure [app config]
             (if config
               (apply set-config app (mapcat (juxt key val) config))
@@ -328,9 +324,10 @@
       ::data       {}}
      {:type ::app})))
 
-(defmethod print-method ::app
-  [app ^java.io.Writer writer]
-  (.write writer (str "#app[" (hash app) "]")))
+#?(:clj
+   (defmethod print-method ::app
+     [app ^java.io.Writer writer]
+     (.write writer (str "#app[" (hash app) "]"))))
 
 (defn load-app
   "Loads the given app by calling bootstrap, load-plugins, and init hooks."
@@ -351,8 +348,9 @@
                    (str (namespace k)) "systems.bread")))]
     (apply dissoc (hook app ::shutdown) (filter bread-key? (keys app)))))
 
-(defn handle [app req]
+(defn handle
   "Takes a Ring request and threads it through the Bread request/response lifecycle."
+  [app req]
   (-> app
       (merge req)
       (hook ::request)

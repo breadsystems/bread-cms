@@ -1,10 +1,8 @@
 ;; TODO move to plugins/navigation
 (ns systems.bread.alpha.navigation
   (:require
-    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.post :as post]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.database :as db]
@@ -22,10 +20,10 @@
     route-name :route/name
     route-params :route/params
     :as opts}
-   {fields :thing/fields
+   {:as _item
+    fields :thing/fields
     children :thing/children
-    {thing-fields :thing/fields :as thing} :menu.item/entity
-    :as item}]
+    {thing-fields :thing/fields :as thing} :menu.item/entity}]
   (let [route-data (merge route-params thing)
         path-params (route/path-params router route-name route-data)
         fields (if (:merge-entities? opts)
@@ -260,7 +258,7 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [hooks menus menus-key]
+  ([{:keys [menus menus-key]
      :or {menus-key :menus}
      :as opts}]
    (if-not opts

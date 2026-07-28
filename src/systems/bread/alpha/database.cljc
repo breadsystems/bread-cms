@@ -5,7 +5,9 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
     [systems.bread.alpha.internal.datalog :as datalog]
-    [systems.bread.alpha.internal.interop :refer [->int]]))
+    [systems.bread.alpha.internal.interop :refer [->int]])
+  #?(:clj (:import
+            [java.text ParseException SimpleDateFormat])))
 
 (defmulti connect :db/type)
 (defmulti -exists? :db/type)
@@ -46,6 +48,7 @@
                    " Did you forget to load a plugin?"))]
     (throw (ex-info msg {:config spec :bread.context :db/connect}))))
 
+#_{:clj-kondo/ignore [:redefined-var]}
 (defn exists? [db-spec]
   (-exists? db-spec))
 
@@ -102,17 +105,19 @@
           nil migration))
 
 (comment
+  (require '[systems.bread.alpha.schema :as schema])
   (migration-key schema/migrations)
   (migration-key schema/posts))
 
-(defn migration-keys [db]
+(defn migration-keys
   "Returns the :migration/key of each migration that has been run on db."
+  [db]
   (set (map first (q db '[:find ?key :where [_ :migration/key ?key]]))))
 
-(defn migration-ran? [db migration]
+(defn migration-ran?
   "Returns true if the given migration has been run on db, false otherwise."
-  (let [key-tx (first migration)
-        ks (migration-keys db)]
+  [db migration]
+  (let [ks (migration-keys db)]
     (contains? ks (migration-key migration))))
 
 (defmethod bread/effect ::transact
@@ -120,7 +125,7 @@
   (try
     {:db (transact conn {:tx-data txs})
      :flash {:success-key success-key}}
-    (catch Throwable e
+    (catch #?(:clj Throwable :cljs js/Object) e
       {:ex e
        :flash {:error-key error-key}})))
 
@@ -212,9 +217,10 @@
     (when as-of
       (if as-of-tx?
         (->int as-of)
-        (try
-          (.parse (java.text.SimpleDateFormat. fmt) as-of)
-          (catch java.text.ParseException _ nil))))))
+        #?(:clj (try
+                  (.parse (SimpleDateFormat. fmt) as-of)
+                  (catch ParseException _ nil))
+           :cljs (throw (ex-info "Not implemented" {:fmt fmt})))))))
 
 (defn plugin
   "Helper for instantiating a database. Do not call this fn directly from
