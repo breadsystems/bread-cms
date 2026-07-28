@@ -84,6 +84,9 @@ jobs:
           primary-key: nix-${{ runner.os }}-bin-${{ hashFiles('flake.lock', 'flake.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-bin-
           gc-max-store-size-linux: 5G
+      # Install Nix tooling for building the binary.
+      - name: Install the Flake
+        run: nix develop .#build --command true
       - name: Cache Clojure deps
         uses: actions/cache@v3
         with:
@@ -92,9 +95,6 @@ jobs:
             ~/.gitlibs
             ~/.deps.clj
           key: cljdeps-${{ hashFiles('deps.edn') }}
-      # Install Nix tooling for building the binary.
-      - name: Install the Flake
-        run: nix develop .#build --command true
       # Cache source code upstream of the --dev binary.
       - name: Cache dev binary
         id: cache-binary
