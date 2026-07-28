@@ -16,24 +16,28 @@
         clojure
         graalvmPackages.graalvm-ce
       ];
+      lintPackages = with pkgs; [
+        clj-kondo
+      ];
     in
     {
       devShells."${system}" = {
         # Full development environment.
         default = pkgs.mkShell {
-          packages = buildPackages ++ (with pkgs; [
+          packages = buildPackages ++ lintPackages ++ (with pkgs; [
             babashka
-            clj-kondo
             nodejs_22
             yarn-berry
             zulu17
           ]);
         };
-        # Lean shell for building the binary in CI. Excludes the JS toolchain
-        # (nodejs/yarn) and extra JDK so the /nix/store closure that CI caches
-        # stays small.
+        # Lean shell for building the binary in CI.
         build = pkgs.mkShell {
           packages = buildPackages;
+        };
+        # Ditto for linting.
+        lint = pkgs.mkShell {
+          packages = lintPackages;
         };
       };
     };
