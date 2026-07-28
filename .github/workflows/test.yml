@@ -33,9 +33,25 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/setup
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-clj-${{ hashFiles('flake.lock', 'flake.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-clj-
+      - name: Install the Flake
+        run: nix develop .#clj --command true
+      - name: Cache Clojure deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          key: cljdeps-${{ hashFiles('deps.edn') }}
       - name: Run unit and integration tests
-        run: bin/run-tests cms
+        run: nix develop .#clj --command bin/run-tests cms
 
   run-e2e-tests:
     runs-on: ubuntu-latest
