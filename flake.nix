@@ -11,37 +11,24 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-      cljPackages = with pkgs; [
-        clojure
-      ];
-      buildPackages = with pkgs; [
-        clojure
-        graalvmPackages.graalvm-ce
-      ];
-      lintPackages = with pkgs; [
-        clj-kondo
-      ];
+      jdk = pkgs.jdk21;
+      clojure = pkgs.clojure.override { inherit jdk; };
+
+      lintPackages = with pkgs; [ clj-kondo ];
+      cljPackages = with pkgs; [ clojure ];
+      buildPackages = with pkgs; [ clojure graalvmPackages.graalvm-ce ];
       devPackages = with pkgs; [
         babashka
         nodejs_22
         yarn-berry
-        zulu17
       ];
     in
     {
       devShells."${system}" = {
-        # Lean shell for running clojure commands in isolation.
-        clj = pkgs.mkShell {
-          packages = cljPackages;
-        };
-        # Shell for building the binary in CI.
-        build = pkgs.mkShell {
-          packages = buildPackages;
-        };
-        # Ditto for linting.
-        lint = pkgs.mkShell {
-          packages = lintPackages;
-        };
+        # Lean shells for running clojure, lint, binary builds in isolation.
+        clj = pkgs.mkShell { packages = cljPackages; };
+        build = pkgs.mkShell { packages = buildPackages; };
+        lint = pkgs.mkShell { packages = lintPackages; };
         # Full development environment.
         default = pkgs.mkShell {
           packages = cljPackages ++ buildPackages ++ lintPackages ++ devPackages;
