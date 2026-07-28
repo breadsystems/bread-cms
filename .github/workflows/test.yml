@@ -23,8 +23,8 @@ jobs:
       - name: Cache Nix store
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix', '.clj-kondo/**') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-lint-${{ hashFiles('flake.lock', 'flake.nix', '.clj-kondo/**') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-lint-
       - name: Lint with clj-kondo
         run: nix develop .#lint --command bash -c 'clj-kondo --lint src:test:plugins:marx:dev:tools'
 
@@ -61,8 +61,8 @@ jobs:
       - name: Cache Nix store
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-bin-${{ hashFiles('flake.lock', 'flake.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-bin-
           gc-max-store-size-linux: 5G
       - name: Cache Clojure deps
         uses: actions/cache@v3
