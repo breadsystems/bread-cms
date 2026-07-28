@@ -2,6 +2,7 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [clojure.string :as string]
+    [clojure.set :refer [difference]]
     #?(:cljs ["date-fns" :refer [formatISO9075]])
     [integrant.core :as ig]
     [taoensso.timbre :as log]
@@ -62,7 +63,7 @@
                               (bread/hook ::bread/expand)
                               ::bread/data)]
                       {:data data :n (inc n) :data-before before})
-                    (catch Throwable err
+                    (catch #?(:clj Throwable :cljs js/Object) err
                       (reduced {:err err :n n}))))
                 {:data {} :err nil :n 0} expansions)]
     (if err
@@ -97,12 +98,13 @@
 (defn- safe-match? [profiler profile]
   (try
     (profile-match? profiler profile)
-    (catch Throwable e
+    (catch #?(:clj Throwable :cljs js/Object) e
       (log/error e))))
 
 (defmethod ig/init-key :bread/profilers [_ profilers]
   ;; Enable hook profiling.
-  (alter-var-root #'bread/*enable-profiling* (constantly true))
+  #?(:clj (alter-var-root #'bread/*enable-profiling* (constantly true))
+     :cljs (set! bread/*enable-profiling* true))
   (map
     (fn [{:keys [f] :as profiler}]
       (let [f (if (symbol? f) (resolve f) f)
@@ -121,9 +123,9 @@
 (defn log-lifecycle-hook [{:keys [hook action app result]}]
   (let [app-data-keys (-> app ::bread/data keys set)
         res-data-keys (-> result ::bread/data keys set)
-        new-keys (clojure.set/difference res-data-keys app-data-keys)
+        new-keys (difference res-data-keys app-data-keys)
         data (select-keys (::bread/data result) new-keys)]
     (log/info hook action data)))
 
-(defn log-query [{:keys [expansion result] :as profile}]
+(defn log-query [{:keys [expansion result] :as _profile}]
   (log/info ::db/query (:expansion/key expansion) result))

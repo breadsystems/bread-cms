@@ -2,7 +2,6 @@
   (:require
     [clojure.string :as string :refer [split starts-with?]]
     [systems.bread.alpha.core :as core]
-    [systems.bread.alpha.cache]
     [systems.bread.alpha.database :as db])
   (:import
     [clojure.lang Keyword]

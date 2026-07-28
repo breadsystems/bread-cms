@@ -10,7 +10,8 @@
                                       datahike.api/q
                                       datahike.api/transact
                                       org.httpkit.client/get]}}
- :ns-groups [{:name tests :pattern "(-test|test-helpers)$"}]
+ :ns-groups [{:name tests :pattern "(-test|test-helpers)$"}
+             {:name legacy-debugger :pattern "systems.bread.alpha.tools.debug"}]
  ;; NOTE: all {:ignore true} rules should be fixed.
  :config-in-ns {;; Core.
                 systems.bread.alpha.internal.route-cache {:ignore true}
@@ -23,5 +24,7 @@
                 systems.bread.alpha.plugin.marx {:ignore true}
                 systems.bread.alpha.plugin.bidi {:ignore true}
                 ;; Tests.
-                tests {:ignore [:missing-protocol-method]}}
+                tests {:ignore [:missing-protocol-method]}
+                ;; Tools.
+                legacy-debugger {:ignore true}}
  :lint-as {systems.bread.alpha.component/defc clojure.core/defn}}
