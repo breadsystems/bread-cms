@@ -1,4 +1,5 @@
-{:linters {:unresolved-var {:exclude [com.rpl.specter/ALL]}}
+{:linters {:unresolved-var {:exclude [com.rpl.specter/ALL
+                                      org.httpkit.client/get]}}
  ;; NOTE: all :ignore rules should be fixed.
  :config-in-ns {systems.bread.alpha.internal.route-cache {:ignore true}
                 systems.bread.alpha.internal.html-cache {:ignore true}
