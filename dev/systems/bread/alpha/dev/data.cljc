@@ -3,7 +3,9 @@
     [buddy.hashers :as hashers]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
-    [systems.bread.alpha.internal.time :as t]))
+    [systems.bread.alpha.internal.time :as t])
+  (:import
+    [java.lang System]))
 
 (def ^:private secret-key (System/getenv "BREAD_SECRET_KEY"))
 

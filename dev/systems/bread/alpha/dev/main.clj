@@ -10,7 +10,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.dev.data :as data]
-    [systems.bread.alpha.tools.util])
+    [systems.bread.alpha.tools.util :as util])
   (:gen-class))
 
 (defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
@@ -51,8 +51,6 @@
 
   (set! *print-namespace-maps* false)
 
-  (require '[systems.bread.alpha.database :as db])
-
   (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
   (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
 
@@ -64,6 +62,7 @@
   (db/connection (:bread/app @main/system))
 
   ;; EMAIL
+  (require '[systems.bread.alpha.plugin.email :as email])
   (:email (:bread/app (:initial-config @main/system)))
   (email/config->postal (::bread/config (:bread/app @main/system)))
   (:email/smtp-from-email (::bread/config (:bread/app @main/system)))
@@ -123,6 +122,7 @@
   (bread/config (->app $req) :i18n/supported-langs)
 
   ;; TODO Nice debug mechanism:
+  #_
   (catch-as-> (->app $req)
               [::bread/route ::bread/dispatcher]
               [::bread/dispatch ::bread/expansions]
