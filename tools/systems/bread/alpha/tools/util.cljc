@@ -3,9 +3,9 @@
     [clojure.pprint :refer [pprint]]
     [clojure.string :as string]
     [clojure.set :refer [difference]]
+    [clojure.tools.logging :as log]
     #?(:cljs ["date-fns" :refer [formatISO9075]])
     [integrant.core :as ig]
-    [taoensso.timbre :as log]
 
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread])

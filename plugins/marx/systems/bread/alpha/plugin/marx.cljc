@@ -4,7 +4,7 @@
     [clojure.string :as string]
     [cognitect.transit :as transit]
     [editscript.core :as edit]
-    [taoensso.timbre :as log]
+    [clojure.tools.logging :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc Section]]

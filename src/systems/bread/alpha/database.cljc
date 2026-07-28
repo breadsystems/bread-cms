@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.database
   (:require
-    [taoensso.timbre :as log]
+    [clojure.tools.logging :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
