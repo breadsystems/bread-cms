@@ -36,7 +36,6 @@ dthk.edn
 /.idea
 /.yarn
 
-/resources/editor/js
 /marx/out
 
 *storybook.log
