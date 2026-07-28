@@ -11,29 +11,27 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-      # Minimal toolchain needed to compile the native binary.
-      buildPackages = with pkgs; [
-        clojure
-        graalvmPackages.graalvm-ce
+      jdk = pkgs.jdk21;
+      clojure = pkgs.clojure.override { inherit jdk; };
+
+      lintPackages = with pkgs; [ clj-kondo ];
+      cljPackages = with pkgs; [ clojure ];
+      buildPackages = with pkgs; [ clojure graalvmPackages.graalvm-ce ];
+      devPackages = with pkgs; [
+        babashka
+        nodejs_22
+        yarn-berry
       ];
     in
     {
       devShells."${system}" = {
+        # Lean shells for running clojure, lint, binary builds in isolation.
+        clj = pkgs.mkShell { packages = cljPackages; };
+        build = pkgs.mkShell { packages = buildPackages; };
+        lint = pkgs.mkShell { packages = lintPackages; };
         # Full development environment.
         default = pkgs.mkShell {
-          packages = buildPackages ++ (with pkgs; [
-            babashka
-            clj-kondo
-            nodejs_22
-            yarn-berry
-            zulu17
-          ]);
-        };
-        # Lean shell for building the binary in CI. Excludes the JS toolchain
-        # (nodejs/yarn) and extra JDK so the /nix/store closure that CI caches
-        # stays small.
-        build = pkgs.mkShell {
-          packages = buildPackages;
+          packages = cljPackages ++ buildPackages ++ lintPackages ++ devPackages;
         };
       };
     };
