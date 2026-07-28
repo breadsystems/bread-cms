@@ -1,13 +1,10 @@
 ;; TODO write tests for this ns
 (ns systems.bread.alpha.plugin.reitit
   (:require
-    [clojure.core.protocols :refer [Datafiable datafy]]
+    [clojure.core.protocols :refer [Datafiable]]
     [clojure.string :as string]
     [reitit.core :as reitit]
-    [systems.bread.alpha.core :as bread :refer [Router]]
-    [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.route :as route])
+    [systems.bread.alpha.core :as bread :refer [Router]])
   (:import
     [reitit.core Match]))
 
@@ -26,8 +23,9 @@
   (if (string? s) (string/replace s #"/" "-/") s))
 
 ;; TODO move this to route ns & make public
-(defn- template->spec [template]
+(defn- template->spec
   "Parse a route template into a vector of param keys."
+  [template]
   (loop [[c & cs] template
          param ""
          params []
@@ -40,12 +38,10 @@
       \{ (recur cs "" params {:keyword? true})
       \* (recur cs "" params {:keyword? true})
       \} (recur cs "" (conj params (keyword param)) {:keyword? false})
-      \/ (let [param? (seq param)
-               parsing-keyword? (:keyword? ctx)]
-           (cond
-             (:keyword? ctx) (recur cs (str param c) params ctx)
-             (seq param) (recur cs param (conj params param) ctx)
-             :else (recur cs param params ctx)))
+      \/ (cond
+           (:keyword? ctx) (recur cs (str param c) params ctx)
+           (seq param) (recur cs param (conj params param) ctx)
+           :else (recur cs param params ctx))
       (recur cs (str param c) params ctx))))
 
 (comment

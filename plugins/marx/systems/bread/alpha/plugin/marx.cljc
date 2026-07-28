@@ -1,15 +1,14 @@
 (ns systems.bread.alpha.plugin.marx
   (:require
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [cognitect.transit :as transit]
-    [com.rpl.specter :as s]
     [editscript.core :as edit]
     [taoensso.timbre :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc Section]]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.route :as route]
@@ -22,8 +21,6 @@
 (defn on-websocket-message [app message]
   (let [message (bread/hook app ::websocket-message (edn/read-string message))]
     (prn message)
-    (def $app (assoc app :marx/edit message))
-    (def $db (db/database $app))
     (-> app
         (assoc :marx/edit message)
         (bread/hook ::bread/route)
@@ -109,7 +106,7 @@
 (defn ->sig [x]
   (if (map? x)
     (str "{"
-         (clojure.string/join
+         (string/join
            ", "
            (reduce (fn [signals [k v]]
                      (conj signals (str (name k) ": " (->sig v)))) [] x))
@@ -141,7 +138,7 @@
    (doall (map (partial Section data) bar-sections))])
 
 (defn Embed [{{:marx/keys [backend bar-settings datastar-uri editor-name marx-css-uri
-                           marx-js-uri site-name]}
+                           site-name]}
               :config
               :keys [hook user]
               :as data}]
@@ -194,13 +191,9 @@
      :revision/note (:revision/note edit)}))
 
 (comment
-  (:user $app)
-  (:marx/edit $app)
+  (require '[systems.bread.alpha.cms.main :as main])
 
-  (db/q (db/database $app) '{:find [(pull ?e [*])]
-                             :where [[?e :revision/diffs]]})
-
-  (let [db $db
+  (let [db (db/database (:bread/app @main/system))
         id 76
         txs (edit->transactions (:marx/edit $app))
         revised-db (db/db-with db {:tx-data txs})
@@ -294,16 +287,16 @@
      "Special dispatcher for saving edits made in the Marx editor."}
     dispatcher))
 
-(defn plugin [{:as config :keys [backend
-                                 bar-position
-                                 bar-sections
-                                 datastar-uri
-                                 default-theme
-                                 editor-name
-                                 marx-js-uri
-                                 marx-css-uri
-                                 sanitizer-policy
-                                 site-name]
+(defn plugin [{:keys [backend
+                      bar-position
+                      bar-sections
+                      datastar-uri
+                      default-theme
+                      editor-name
+                      marx-js-uri
+                      marx-css-uri
+                      sanitizer-policy
+                      site-name]
                :or {site-name "My Bread Site"
                     backend {:type :bread/http :endpoint "/~/edit"}
                     #_ {:type :bread/websocket
@@ -314,6 +307,7 @@
                                   ::media
                                   :spacer
                                   ::publish]
+                    ;; TODO vendor datastar
                     datastar-uri "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"
                     default-theme :dark
                     editor-name "marx-editor"

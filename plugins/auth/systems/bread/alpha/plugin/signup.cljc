@@ -9,7 +9,7 @@
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
-    [java.net URLEncoder]))
+    [java.lang System]))
 
 (defmethod bread/expand ::validate
   [{:keys [min-password-length max-password-length invite-only?]

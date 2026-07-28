@@ -7,12 +7,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512 ->int]]
+    [systems.bread.alpha.internal.interop :refer [sha-512 ->int format*]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.ring :as ring])
   (:import
+    [clojure.lang ExceptionInfo]
     [java.net URLEncoder]))
 
 (defmethod bread/expand ::validate-invitation
@@ -57,36 +58,14 @@
         valid? (not error-key)]
     [valid? error-key]))
 
-(comment
-  (def $effect
-    {:effect/name ::email
-     :effect/description "Send an invitation email."
-     :code "asdfqwerty"
-     :params
-     {:email "test@tamayo.email",
-      :action "send"}})
-
-  (:code $effect)
-  (:signup/signup-uri (:config $data))
-  (:user $data)
-  (:ring/scheme $data)
-  (:ring/server-name $data)
-  (:ring/server-port $data)
-  (invitation-email-subject $data)
-  (invitation-email-body
-    (assoc $data
-           :link
-           (invitation-link (assoc $data :invitation/code (:code $effect)))))
-  ,)
-
 (defn invitation-link [{:keys [config
                                invitation/code
                                ring/scheme
                                ring/server-name
                                ring/server-port]}]
-  (format "%s://%s%s%s?code=%s"
-          (name scheme) server-name (when server-port (str ":" server-port))
-          (:signup/signup-uri config) (URLEncoder/encode code)))
+  (format* "%s://%s%s%s?code=%s"
+           (name scheme) server-name (when server-port (str ":" server-port))
+           (:signup/signup-uri config) (URLEncoder/encode code)))
 
 (defn invitation-email-subject [{:keys [config i18n ring/server-name]}]
   (let [site-name (:site/name config server-name)]
@@ -135,7 +114,7 @@
         (db/transact conn [invitation-tx])
         {:effects [email-effect]
          :flash {:success-key :invitations/invitation-sent}}
-        (catch clojure.lang.ExceptionInfo e
+        (catch ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))
     {:flash {:error-key error-key}}))
@@ -161,7 +140,7 @@
         (db/transact conn [invitation-tx])
         {:effects [email-effect]
          :flash {:success-key :invitations/invitation-resent}}
-        (catch clojure.lang.ExceptionInfo e
+        (catch ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))
     {:flash {:error-key error-key}}))
@@ -176,7 +155,7 @@
         (db/transact conn [[:db/retractEntity id]
                            [:db/retractEntity email-id]])
         {:flash {:success-key :invitations/invitation-revoked}}
-        (catch clojure.lang.ExceptionInfo e
+        (catch ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))
     {:flash {:error-key error-key}}))
@@ -185,7 +164,6 @@
   [{:keys [::bread/dispatcher params request-method]
     {:keys [user]} :session
     :as req}]
-  "Invitations page in the account section"
   (let [post? (= :post request-method)
         action (when (seq (:action params)) (keyword (:action params)))
         pull (conj (:dispatcher/pull dispatcher) :user/name)

@@ -12,6 +12,13 @@
    (defn ->int [x]
      (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))))
 
+#?(:clj
+   (defn format* [s & args]
+     (apply format s args))
+   :cljs
+   (defn format* [& _]
+     (throw (ex-info "Not implemented" {}))))
+
 (comment
   (require 'clojure.string)
   (clojure.string/starts-with? (sha-512 "") "cf83e1357eefb8bdf1542850d66d")

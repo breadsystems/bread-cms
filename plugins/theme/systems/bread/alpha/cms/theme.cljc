@@ -1,16 +1,20 @@
 (ns systems.bread.alpha.cms.theme
   (:require
+    [clojure.pprint :as pprint]
+    [clojure.string :as string]
     [clojure.walk :as walk]
     [markdown-to-hiccup.core :as md2h]
     [rum.core :as rum]
 
-    [systems.bread.alpha.component :refer [defc] :as component]))
+    [systems.bread.alpha.component :refer [defc] :as component])
+  (:import
+    [java.lang Character]))
 
 (defn title [& strs]
-  (clojure.string/join " | " (filter seq strs)))
+  (string/join " | " (filter seq strs)))
 
 (defn- pp [x]
-  (with-out-str (clojure.pprint/pprint x)))
+  (with-out-str (pprint/pprint x)))
 
 (defn pattern-type [_data pattern]
   (or (:type pattern)
@@ -35,7 +39,7 @@
 (comment
   (->id "How to do stuff"))
 
-(defc TableOfContents [{:as data :keys [patterns]}]
+(defc TableOfContents [{:keys [patterns]}]
   [:nav
    [:h1#contents "Table of contents"]
    [:ul
@@ -44,7 +48,7 @@
                          [:li
                           [:a {:href (str "#" (name id))} title]
                           [:ul
-                           (map (fn [{:as child :keys [doc]}]
+                           (map (fn [{:keys [doc]}]
                                   (when doc
                                     [:li [:a {:href (str "#" (name id) "_" (->id doc))} doc]]))
                                 children)]]))
@@ -88,47 +92,46 @@
 
 (defmethod Pattern ::component/component ComponentSection [data component]
   (let [{component-name :name
-         :keys [doc doc/show-html? doc/default-data expr examples doc/preview?
+         :keys [doc doc/default-data expr examples doc/preview?
                 doc/post-render]
-         :or {show-html? true
-              post-render identity}}
-        (meta component)]
-    (let [component-name (name component-name)]
-      [:article.pattern {:id component-name :data-component component-name}
-       [:h1 component-name]
-       [:a.section-link {:href (str "#" component-name)
-                         :title (str "Link to " component-name)}
-        "#"]
-       (md->hiccup doc)
-       (map (fn [{:as example :keys [doc description args]}]
-              (let [preview? (or (:doc/preview? example) preview?)
-                    post-render (or (:doc/post-render example) post-render)
-                    args' (cons (merge-with merge default-data (first args)) (rest args))
-                    id (str (->id component-name) "_" (->id doc))
-                    rendered-content (when preview?
-                                       (let [data (merge data (first args'))]
-                                         (component-content
-                                           (component/render component data))))
-                    content (apply component args')
-                    formatted-content (-> content remove-noop-elements post-render pp)
-                    formatted-html (-> content post-render render-html)]
-                [:section.example {:id id}
-                 (when doc
-                   [:<>
-                    [:h2 doc]
-                    [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]])
-                 (md->hiccup description)
-                 ;; TODO why the abbrevz?
-                 [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
-                 (when preview?
-                   [:.pattern-preview rendered-content])
-                 [:pre [:code.clj formatted-content]]
-                 [:pre [:code.xml formatted-html]]]))
-            examples)
-       [:details
-        [:summary "Show source"]
-        [:pre [:code.clj (pp (apply list 'defc (symbol component-name) expr))]]]
-       [:a {:href "#contents"} "Back to top"]])))
+         :or {post-render identity}}
+        (meta component)
+        component-name (name component-name)]
+    [:article.pattern {:id component-name :data-component component-name}
+     [:h1 component-name]
+     [:a.section-link {:href (str "#" component-name)
+                       :title (str "Link to " component-name)}
+      "#"]
+     (md->hiccup doc)
+     (map (fn [{:as example :keys [doc description args]}]
+            (let [preview? (or (:doc/preview? example) preview?)
+                  post-render (or (:doc/post-render example) post-render)
+                  args' (cons (merge-with merge default-data (first args)) (rest args))
+                  id (str (->id component-name) "_" (->id doc))
+                  rendered-content (when preview?
+                                     (let [data (merge data (first args'))]
+                                       (component-content
+                                         (component/render component data))))
+                  content (apply component args')
+                  formatted-content (-> content remove-noop-elements post-render pp)
+                  formatted-html (-> content post-render render-html)]
+              [:section.example {:id id}
+               (when doc
+                 [:<>
+                  [:h2 doc]
+                  [:a.section-link {:href (str "#" id) :title (str "Link to " doc)} "#"]])
+               (md->hiccup description)
+               ;; TODO why the abbrevz?
+               [:pre [:code.clj (pp (apply list (symbol component-name) args))]]
+               (when preview?
+                 [:.pattern-preview rendered-content])
+               [:pre [:code.clj formatted-content]]
+               [:pre [:code.xml formatted-html]]]))
+          examples)
+     [:details
+      [:summary "Show source"]
+      [:pre [:code.clj (pp (apply list 'defc (symbol component-name) expr))]]]
+     [:a {:href "#contents"} "Back to top"]]))
 
 (defn pattern->section [pattern]
   (if (= ::component/component (:type (meta pattern)))
@@ -145,4 +148,4 @@
           {:doc "With default text"
            :args ({})}]}
        [:p text]))
-  (ComponentSection {:component P}))
+  ,)
