@@ -42,12 +42,30 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/setup
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-clj-${{ hashFiles('flake.lock', 'flake.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-clj-
+      - name: Install the Flake
+        run: nix develop .#clj --command true
+      - name: Cache Clojure deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          key: cljdeps-${{ hashFiles('deps.edn') }}
       - name: Run end-to-end tests
         run: |
-          clojure -M:cms:dev:tools -m systems.bread.alpha.dev.main -f dev/main.edn &
-          timeout 60 bash -c 'until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done'
-          bin/run-tests e2e
+          nix develop .#clj --command bash -c '
+            clojure -M:cms:dev:tools -m systems.bread.alpha.dev.main -f dev/main.edn &
+            timeout 60 bash -c "until curl -s -o /dev/null http://localhost:1312/; do sleep 1; done"
+            bin/run-tests e2e
+          '
 
   compile-and-test-dev-binary:
     runs-on: ubuntu-latest
