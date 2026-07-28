@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.marx.core
   (:require
-    ["react-dom/client" :as rdom]
     [clojure.edn :as edn]))
 
 (defn read-attr [elem attr]

@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.datahike-query-test
   (:require
-    [clojure.test :refer [are deftest is]]
-    [kaocha.repl :as k]
+    [clojure.test :refer [are deftest]]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]

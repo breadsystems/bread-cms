@@ -43,12 +43,12 @@
                         :route/name :page}}}
   :marx {:site-name "Breadbox"}
   :email {:dry-run? true
-          :smtp-from-email #env SMTP_FROM_EMAIL
-          :smtp-host #env SMTP_HOST
-          :smtp-port #env SMTP_PORT
-          :smtp-username #env SMTP_USERNAME
-          :smtp-password #env SMTP_PASSWORD
-          :smtp-tls? #env SMTP_USE_TLS}
+          :smtp-from-email #env BREAD_SMTP_FROM_EMAIL
+          :smtp-host #env BREAD_SMTP_HOST
+          :smtp-port #env BREAD_SMTP_PORT
+          :smtp-username #env BREAD_SMTP_USERNAME
+          :smtp-password #env BREAD_SMTP_PASSWORD
+          :smtp-tls? #env BREAD_SMTP_USE_TLS}
   :plugins [] ;; define additional plugins here
   :__after #ig/ref :app/env}
  :bread/db

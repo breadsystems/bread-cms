@@ -14,6 +14,7 @@
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as bread.ring]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.util.logging :refer [log-redactor]]
@@ -29,10 +30,7 @@
     [systems.bread.alpha.plugin.invitations :as invitations]
     [systems.bread.alpha.plugin.signup :as signup]
     ;; CMS-layer libs.
-    [systems.bread.alpha.cms.routes :as routes])
-  (:import
-    [java.time LocalDateTime]
-    ))
+    [systems.bread.alpha.cms.routes :as routes]))
 
 (defmethod ig/init-key :initial-config [_ config]
   config)
@@ -41,7 +39,7 @@
   (clojure-version))
 
 (defmethod ig/init-key :started-at [_ _]
-  (LocalDateTime/now))
+  (t/now))
 
 (defmethod ig/init-key :app/env [_ env]
   (when (= :development env)
@@ -93,7 +91,7 @@
       {:session-store (auth/session-store config conn)
        :connection conn})))
 
-(defmethod ig/resolve-key :ring/session-store [_ {:as x :keys [session-store]}]
+(defmethod ig/resolve-key :ring/session-store [_ {:keys [session-store]}]
   session-store)
 
 (defmethod ig/halt-key! :ring/session-store [_ {:keys [connection]}]

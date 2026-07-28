@@ -22,7 +22,7 @@
   ;;
   )
 
-(defn query-fs [data params opts]
+(defn query-fs [_data params opts]
   (let [{:keys [root ext lang-param slug-param parse]} opts
         sep java.io.File/separator
         path (string/join sep (map params [lang-param slug-param]))
@@ -35,7 +35,7 @@
           (assoc metadata :html html))))))
 
 (defmethod bread/dispatch ::static
-  [{::bread/keys [dispatcher config] :as req}]
+  [{::bread/keys [dispatcher config]}]
   (let [params (:route/params dispatcher)
         opts (-> config
                  (rename-keys

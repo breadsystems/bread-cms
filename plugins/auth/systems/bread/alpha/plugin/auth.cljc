@@ -11,12 +11,13 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512 ->int]]
+    [systems.bread.alpha.internal.interop :refer [->int format* sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
   (:import
-    [java.lang IllegalArgumentException]
+    [clojure.lang ExceptionInfo]
+    [java.lang System]
     [java.net URLEncoder]
     [java.util Base64]))
 
@@ -80,7 +81,7 @@
 
 (defn qr-datauri [data]
   (when-let [stream (try (qr/totp-stream data)
-                         (catch Throwable _ nil))]
+                         (catch #?(:clj Throwable :cljs js/Object) _ nil))]
     (->> stream
          (.toByteArray)
          (.encodeToString (Base64/getEncoder))
@@ -174,15 +175,15 @@
            (account-locked? (t/now) (:user/locked-at user) lock-seconds))
       {:valid false :locked? true :user user}
 
-      :default
+      :else
       (let [result (try
                      (hashers/verify plaintext-password hashed)
-                     (catch clojure.lang.ExceptionInfo e
+                     (catch ExceptionInfo _
                        {:valid false}))]
         (assoc result :user user)))))
 
 (defmethod bread/expand ::authenticate-two-factor
-  [{:keys [generous? lock-seconds two-factor-code]} {user :auth/result}]
+  [{:keys [lock-seconds two-factor-code]} {user :auth/result}]
   (let [;; Don't store password data in session
         user (dissoc user :user/password)
         locked? (and (:user/locked-at user)
@@ -249,7 +250,7 @@
                                 :user/locked-at (t/now)
                                 :user/failed-login-count 0)])
 
-      :default
+      :else
       (let [incremented (inc (:user/failed-login-count user))]
         (db/transact conn [(assoc transaction
                                   :user/failed-login-count incremented)])))))
@@ -398,7 +399,7 @@
           :require-mfa? require-mfa?
           :max-failed-login-count max-failed-login-count}]}}
 
-      :default
+      :else
       {:hooks
        {::bread/expand
         [{:action/name ::=>logged-in
@@ -440,9 +441,9 @@
                           ring/scheme
                           ring/server-name
                           ring/server-port]}]
-  (format "%s://%s%s%s?code=%s"
-          (name scheme) server-name (if server-port (str ":" server-port) "")
-          (:auth/reset-password-uri config) (URLEncoder/encode code)))
+  (format* "%s://%s%s%s?code=%s"
+           (name scheme) server-name (if server-port (str ":" server-port) "")
+           (:auth/reset-password-uri config) (URLEncoder/encode code)))
 
 (defmethod bread/effect ::reset-password-email!
   [{:keys [to code]} {:as data :keys [config i18n ring/server-name]}]
@@ -456,14 +457,6 @@
                  :to to
                  :subject (:auth/reset-password-email-subject i18n)
                  :body body}}]}))
-
-(comment
-  (:user data)
-  (bread/effect effect data)
-  (let [{:keys [effects]} (bread/effect effect data)
-        email-effect (second effects)]
-    (bread/effect email-effect data))
-  ,)
 
 (defmethod bread/dispatch ::forgot-password=>
   [{:as req :keys [params request-method]}]

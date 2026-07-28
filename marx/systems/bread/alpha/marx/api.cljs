@@ -1,8 +1,7 @@
 (ns systems.bread.alpha.marx.api
   (:require
-    ["react" :as react]
     [clojure.edn :as edn]
-    [clojure.math :refer [pow]]
+    [clojure.string :as string]
 
     ;; TODO support (authenticated) websocket
     [systems.bread.alpha.marx.http]
@@ -19,7 +18,7 @@
                        "&#039;" "'"
                        "&#39;" "'"
                        "&ndash;" "-"}]
-    (clojure.string/replace s #"&[\w#]+;" #(html-entities % %))))
+    (string/replace s #"&[\w#]+;" #(html-entities % %))))
 
 (comment
   (unescape "&quot;hello&quot;?" ))
@@ -47,9 +46,7 @@
   ^{:doc "Creates a MarxBackend instance, dispatching off of :type"}
   backend core/backend)
 
-(defn init! [ed {:keys [attr]
-                 :or {attr "data-marx"}
-                 :as config}]
+(defn init! [ed config]
   (let [fields (or
                  (core/fields-from-editor ed)
                  (core/fields-from-dom config))

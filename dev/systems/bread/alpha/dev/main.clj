@@ -10,7 +10,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.dev.data :as data]
-    [systems.bread.alpha.tools.util])
+    [systems.bread.alpha.tools.util :as util])
   (:gen-class))
 
 (defmethod aero/reader 'buddy/derive [_ _ [pw algo]]
@@ -24,6 +24,11 @@
     (assoc db-spec
            :db/initial-txns initial
            :db/migrations schema/initial)))
+
+(defn q [& args]
+  (if-let [app (:bread/app @main/system)]
+    (apply db/q (db/database app) args)
+    (throw (ex-info "No running app detected!" {}))))
 
 (comment
   (require '[flow-storm.api :as flow])
@@ -46,8 +51,6 @@
 
   (set! *print-namespace-maps* false)
 
-  (require '[systems.bread.alpha.database :as db])
-
   (db/exists? (-> "dev/main.edn" aero/read-config :bread/db))
   (deref (db/connect (-> "dev/main.edn" aero/read-config :bread/db)))
 
@@ -59,20 +62,21 @@
   (db/connection (:bread/app @main/system))
 
   ;; EMAIL
+  (require '[systems.bread.alpha.plugin.email :as email])
   (:email (:bread/app (:initial-config @main/system)))
   (email/config->postal (::bread/config (:bread/app @main/system)))
   (:email/smtp-from-email (::bread/config (:bread/app @main/system)))
 
   (require '[postal.core :as postal])
-  (def $postal-config {:host (System/getenv "SMTP_HOST")
-                       :port (Integer. (System/getenv "SMTP_PORT"))
-                       :user (System/getenv "SMTP_USERNAME")
-                       :pass (System/getenv "SMTP_PASSWORD")
+  (def $postal-config {:host (System/getenv "BREAD_SMTP_HOST")
+                       :port (Integer. (System/getenv "BREAD_SMTP_PORT"))
+                       :user (System/getenv "BREAD_SMTP_USERNAME")
+                       :pass (System/getenv "BREAD_SMTP_PASSWORD")
                        :tls true})
   (def fut (future
              (postal/send-message $postal-config
-                                  {:from (System/getenv "SMTP_FROM_EMAIL")
-                                   :to ["coby@tamayo.email" (System/getenv "SMTP_LIST_EMAIL")]
+                                  {:from (System/getenv "BREAD_SMTP_FROM_EMAIL")
+                                   :to ["coby@tamayo.email"]
                                    :subject "Postal test"
                                    :body "Testing from Clojure Postal"})))
   (deref fut 60000 :timeout)
@@ -89,18 +93,7 @@
   (do
     (def $req {:uri "/~/signup" :request-method :get})
     (def ->app (partial util/->app (:bread/app @main/system)))
-    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @main/system)))
-
-    (defn db []
-      (db/database (->app $req)))
-    (deref (db/connect (:bread/db @main/system)))
-    (db/database (:bread/app @main/system))
-
-    (defn q [& args]
-      (apply
-        db/q
-        (db/database (->app $req))
-        args)))
+    (def diagnose-expansions (partial util/diagnose-expansions (:bread/app @main/system))))
 
   (diagnose-expansions (->app $req))
   (util/do-expansions (->app $req) 1)
@@ -129,6 +122,7 @@
   (bread/config (->app $req) :i18n/supported-langs)
 
   ;; TODO Nice debug mechanism:
+  #_
   (catch-as-> (->app $req)
               [::bread/route ::bread/dispatcher]
               [::bread/dispatch ::bread/expansions]
@@ -136,18 +130,13 @@
               [::bread/render (select-keys $ [:status :body :headers])])
 
   ;; querying for inverse relationships (post <-> taxon):
-  (q '{:find [(pull ?t [:db/id {:post/_taxons [*]}])]
-       :in [$ ?slug]
-       :where [[?t :taxon/taxonomy :taxon.taxonomy/tag]
-               [?t :thing/slug ?slug]]}
-     "one")
   (q '{:find [(pull ?p [:db/id {:post/taxons [*]}])]
        :in [$ ?slug]
        :where [[?p :post/type :page]
                [?p :thing/slug ?slug]]}
      "hello")
 
-  ;; Menu expansions
+  ;; MENU EXPANSIONS
 
   (q '{:find [(pull ?e [:db/id
                         :taxon/taxonomy
@@ -175,20 +164,6 @@
      :page
      #{:post.status/published})
 
-  (slurp (io/resource "public/assets/hi.txt"))
-
-  (response ((:bread/handler @main/system) {:uri "/en"}))
-  (response ((:bread/handler @main/system) {:uri "/en/hello"}))
-  (response ((:bread/handler @main/system) {:uri "/en/hello/child-page"}))
-  ;; This should 404:
-  (response ((:bread/handler @main/system) {:uri "/en/child-page"}))
-
-  (response ((:bread/handler @main/system) {:uri "/login"}))
-  (response ((:bread/handler @main/system) {:uri "/login"
-                                            :request-method :post
-                                            :params {:username "coby"
-                                                     :password "hello"}}))
-
 
 
   ;; MEDIA
@@ -200,16 +175,16 @@
                [?e :post/status :post.status/published]]})
 
   ;; AUTH
-
+  (require '[clojure.edn :as edn])
   (->> (q '{:find [(pull ?e [:db/id
-                            :thing/created-at
-                            :thing/updated-at
-                            :session/id
-                            :session/data
-                            {:user/_sessions
-                             [:db/id :user/username]}])]
-           :in [$]
-           :where [[?e :session/id]]})
+                             :thing/created-at
+                             :thing/updated-at
+                             :session/id
+                             :session/data
+                             {:user/_sessions
+                              [:db/id :user/username]}])]
+            :in [$]
+            :where [[?e :session/id]]})
       (map (comp #(update % :session/data edn/read-string) first)))
 
   (def $user
@@ -237,20 +212,8 @@
                                  (map #(update % :session/data edn/read-string)
                                       sessions)))))
 
-  (q '{:find [(pull ?e [:db/id *])]
-       :where [[?e :invitation/code]]})
-  (user/can? $user :edit-posts)
-  (defn retraction [{e :db/id :as entity}]
-    (mapv #(vector :db/retract e %) (filter #(not= :db/id %) (keys entity))))
-  (retraction $user)
-  (db/transact (db/connection (:bread/app @main/system))
-               (retraction $user))
-  (db/transact (db/connection (:bread/app @main/system))
-               [{:user/username "bread"
-                 :user/locked-at (java.util.Date.)}])
-
   (require '[kaocha.repl :as k])
-  (k/run :unit)
+  (k/run :cms {:color? false})
 
   (-main "-f" "dev/minimal.edn"))
 

@@ -1,12 +1,8 @@
 (ns systems.bread.alpha.post
   (:require
     [clojure.edn :as edn]
-    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.dispatcher :as dispatcher]
-    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.util.datalog :as datalog]))
 
@@ -19,15 +15,15 @@
     (assoc post :post/fields fields)))
 
 (defn by-slug*-expansion
+  "Returns an expansion for querying a single post by :slugs. Observes
+  the options in ::bread/dispatcher, which may specify:
+  - :post/type (default nil, meaning all types)
+  - :post/status (default :post.status/published)"
   [{{post-type :post/type
      post-status :post/status
      :or {post-status :post.status/published}
      :as dispatcher} ::bread/dispatcher
     :as req}]
-  "Returns an expansion for querying a single post by :slugs. Observes
-  the options in ::bread/dispatcher, which may specify:
-  - :post/type (default nil, meaning all types)
-  - :post/status (default :post.status/published)"
   (let [{:as expansion args :expansion/args} (thing/by-slug*-expansion req)
         args (->> [(when post-type ['?type :post/type post-type])
                    ['?status :post/status post-status]]

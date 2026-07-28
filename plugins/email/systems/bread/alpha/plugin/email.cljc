@@ -8,10 +8,12 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [->int]]
+    [systems.bread.alpha.internal.interop :refer [->int format*]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
+    [clojure.lang ExceptionInfo]
+    [java.lang System]
     [java.net URLEncoder]))
 
 (defn- summarize [email]
@@ -34,7 +36,7 @@
 
 (deftype PostalMailer [postal-config]
   Mailer
-  (send! [this message]
+  (send! [_this message]
     (postal/send-message postal-config message)))
 
 (defmethod bread/effect ::send! send-smtp!
@@ -46,7 +48,7 @@
       (try
         (log/info "sending email" (summarize message))
         (send! mailer message)
-        (catch Throwable e
+        (catch #?(:clj Throwable :cljs js/Object) e
           (log/error (ex-info "Error sending email" {:mailer mailer :message message} e))))
       (log/info "simulating email" (summarize message)))))
 
@@ -65,21 +67,22 @@
       (db/transact conn [{:db/id current-id :email/primary? false}
                          {:db/id id :email/primary? true}])
       {:flash {:success-key :email/updated-primary}}
-      (catch clojure.lang.ExceptionInfo e
+      (catch ExceptionInfo e
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
 
 (defn- confirmation-effect
-  [{:as effect :keys [from to code]}
-   {:as data :keys [config hook i18n ring/scheme ring/server-name ring/server-port]}]
+  [{:keys [from to code]}
+   {:keys [config hook i18n ring/scheme ring/server-name ring/server-port]}]
   (let [from (or from (:email/smtp-from-email config))
-        link-uri (format "%s://%s%s%s?code=%s&email=%s"
-                         (name scheme) server-name (when server-port (str ":" server-port))
-                         (:email/confirm-uri config)
-                         (URLEncoder/encode code) (URLEncoder/encode to))
+        link-uri
+        (format* "%s://%s%s%s?code=%s&email=%s"
+                 (name scheme) server-name (when server-port (str ":" server-port))
+                 (:email/confirm-uri config)
+                 (URLEncoder/encode code) (URLEncoder/encode to))
         site-name (or (:site/name config) server-name)
-        subject (format (:email/confirmation-email-subject i18n) site-name)
-        body (format (:email/confirmation-email-body i18n) link-uri)]
+        subject (format* (:email/confirmation-email-subject i18n) site-name)
+        body (format* (:email/confirmation-email-body i18n) link-uri)]
     (log/info "generated email confirmation link" link-uri)
     {:effect/name ::send!
      :effect/description "Send a confirmation email."
@@ -89,7 +92,7 @@
                                             :body body})}))
 
 (defmethod bread/effect [::update :resend-confirmation] resend-confirmation
-  [{:keys [conn params]} {:as data :keys [config user]}]
+  [{:keys [params]} {:as data :keys [config user]}]
   (let [emails (:user/emails user)
         ;; Check that the email belongs to the user and that it's still
         ;; actually pending confirmation.
@@ -108,13 +111,12 @@
 
 (defmethod bread/effect [::update :delete]
   [{:keys [conn params]} {:keys [user]}]
-  (let [emails (:user/emails user)
-        id (->int (:id params))]
+  (let [id (->int (:id params))]
     (ensure-own-email-id user id)
     (try
       (db/transact conn [[:db/retractEntity id]])
       {:flash {:success-key :email/email-deleted}}
-      (catch clojure.lang.ExceptionInfo e
+      (catch ExceptionInfo e
         (log/error e)
         {:flash {:error-key :email/unexpected-error}}))))
 
@@ -139,11 +141,11 @@
                                            :thing/created-at now}]}])
         {:effects [effect]
          :flash {:success-key :email/email-added-please-confirm}}
-        (catch clojure.lang.ExceptionInfo e
+        (catch ExceptionInfo e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
 
-(defn validate-action [action {params :params {:keys [user]} :session}]
+(defn validate-action [action {:keys [params]}]
   (case action
     :add
     (when-not (string/includes? (:email params) "@")
@@ -203,7 +205,7 @@
            :params params})]}
 
       ;; Show settings page.
-      :default
+      :else
       {:expansions [expansion]})))
 
 (defmethod bread/effect ::confirm! confirm!
@@ -220,7 +222,7 @@
       (try
         (db/transact conn txs)
         {:flash {:success-key :email/email-confirmed}}
-        (catch Throwable e
+        (catch #?(:clj Throwable :cljs js/Object) e
           (log/error e)
           {:flash {:error-key :email/unexpected-error}})))))
 
@@ -285,8 +287,12 @@
                       allow-multiple-pending?
                       html-email-sections
                       mailer]
-               :or {smtp-port 587
-                    ;; TODO SMTP env vars
+               :or {smtp-from-email (System/getenv "BREAD_SMTP_FROM_EMAIL")
+                    smtp-host (System/getenv "BREAD_SMTP_HOST")
+                    smtp-port (or (System/getenv "BREAD_SMTP_PORT") 587)
+                    smtp-username (System/getenv "BREAD_SMTP_USERNAME")
+                    smtp-password (System/getenv "BREAD_SMTP_PASSWORD")
+                    smtp-tls? (boolean (System/getenv "BREAD_SMTP_USE_TLS"))
                     settings-uri "/~/email"
                     confirm-uri "/_/confirm-email"
                     max-pending-minutes (* 72 60)

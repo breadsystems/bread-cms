@@ -13,6 +13,16 @@ jobs:
           clojure -P -M:test:cms
           clojure -P -M:cms:dev:tools
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      # DO NOT cache the Nix store for this job.
+      - name: Lint with clj-kondo
+        run: nix-shell -p clj-kondo --command "clj-kondo --lint src:test:plugins:marx:dev:tools"
+
   run-unit-and-integration-tests:
     runs-on: ubuntu-latest
     needs: install

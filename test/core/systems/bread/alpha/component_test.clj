@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.component-test
   (:require
-    [clojure.test :refer [deftest are is testing]]
+    [clojure.test :refer [deftest are is]]
     [systems.bread.alpha.component :as component :refer [defc]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
@@ -91,9 +91,9 @@
 
 (deftest test-query
   (is (nil? (component/query blank)))
-  (is (= [:db/id :thing/slug] (component/query my-component))
+  (is (= [:db/id :thing/slug] (component/query my-component)))
   (is (= [:db/id {:my/post [:db/id :thing/slug]}]
-         (component/query recursive-component))))
+         (component/query recursive-component)))
   (is (= [:level/next {:level/below [:db/id {:my/post [:db/id :thing/slug]}]}]
          (component/query next-level))))
 

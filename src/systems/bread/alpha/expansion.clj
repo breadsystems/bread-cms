@@ -3,11 +3,6 @@
     [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]))
 
-(defn- keyword-namespace [x]
-  (if-not (keyword? x)
-    nil
-    (keyword (namespace x))))
-
 (defn get-at [m k]
   ((if (sequential? k) get-in get) m k))
 
@@ -54,18 +49,6 @@
   (populate-in {} [:x] :y)
   (populate-in {:a :A} [:x] :y)
   (populate-in {:a :A} [:x :y] :z)
-
-  (defn- do-effect* [data {k :effect/key :as effect}]
-    (let [result (bread/effect effect data)]
-      (if k
-        (assoc data k result)
-        data)))
-
-  (defn- apply-expansion* [data expansion]
-    (let [{:keys [expansions effects] :as expanded} (bread/expand expansion data)]
-      (as-> data $
-        (reduce apply-expansion* $ expansions)
-        (reduce do-effect* $ effects))))
 
   ;;
   )

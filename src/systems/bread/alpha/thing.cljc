@@ -6,8 +6,8 @@
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.util.datalog :as datalog])
-  (:import
-    [java.util UUID]))
+  #?(:clj (:import
+            [java.util UUID])))
 
 (defn- syms
   ([prefix]
@@ -50,10 +50,11 @@
         (assoc-in [0 :in] in)
         (add-rule-def rules-idx rule-def))))
 
-(defn ancestralize [query-args slugs & {e :e-sym :or {e '?e}}]
+(defn ancestralize
   "Given ::db/query args vector and a list of slugs, returns an args vector
   asserting that the ancestry of things corresponding to each :thing/slug is an
   unbroken chain of :thing/children ancestors."
+  [query-args slugs & {e :e-sym :or {e '?e}}]
   (let [depth (count slugs)
         slug-syms (take depth (syms "?slug_"))
         ;; Place slug input args in ancestral order (earliest ancestor first),
@@ -68,13 +69,10 @@
            slugs)))
 
 (defn by-slug*-expansion
-  [{{post-type :post/type
-     post-status :post/status
-     :or {post-status :post.status/published}
-     :as dispatcher} ::bread/dispatcher
-    :as req}]
   "Returns an expansion for querying a single thing matching the ancestry
   (according to :thing/children) given by the :slugs from the route."
+  [{:keys [::bread/dispatcher]
+    :as req}]
   (let [params (:route/params dispatcher)
         ;; Ensure we always have :db/id
         pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
@@ -91,12 +89,11 @@
      "Query for a single thing matching the current request URI"}))
 
 (defn- ->uuid [x]
-  (try (UUID/fromString x) (catch java.lang.NullPointerException _ nil)))
+  #?(:clj (try (UUID/fromString x) (catch java.lang.NullPointerException _ nil))
+     :cljs (throw (ex-info "Not implemented" {:x x}))))
 
-(defmethod bread/dispatch ::by-uuid=>
-  by-uuid=>
+(defmethod bread/dispatch ::by-uuid=> by-uuid=>
   [{:as req ::bread/keys [dispatcher]}]
-  "Dispatch req by the UUID in :route/params"
   (let [k (:params-key dispatcher :thing/uuid)]
     (if-let [uuid (->uuid (get (:route/params dispatcher) k))]
       (let [pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
@@ -113,10 +110,8 @@
                      :expansion/name ::bread/value
                      :expansion/value false}]})))
 
-(defmethod bread/dispatch ::by-id=>
-  by-id=>
+(defmethod bread/dispatch ::by-id=> by-id=>
   [{:as req ::bread/keys [dispatcher]}]
-  "Dispatch req by the db/id in :route/params"
   (let [k (:params-key dispatcher :db/id)]
     (if-let [id (->int (get (:route/params dispatcher) k))]
       (let [pull (datalog/ensure-db-id (:dispatcher/pull dispatcher))
@@ -132,10 +127,8 @@
                      :expansion/key (:dispatcher/key dispatcher)
                      :expansion/value false}]})))
 
-(defmethod bread/dispatch ::by-slug*=>
-  by-slug*=>
+(defmethod bread/dispatch ::by-slug*=> by-slug*=>
   [req]
-  "Dispatch req by the :slugs in the URI."
   {:expansions (bread/hook req ::i18n/expansions (by-slug*-expansion req))})
 
 (derive ::thing=> ::by-slug*=>)

@@ -62,7 +62,9 @@
 (defn default-routes
   ([] (default-routes {}))
   ([{:keys [root protected-prefix public-prefix]
-     :or {root "/" protected-prefix "~" public-prefix "_"}}]
+     :or {root "/"
+          protected-prefix "~"
+          public-prefix "_"}}]
    [root
     ["" {:dispatcher/type ::i18n/lang=>}]
     [public-prefix

@@ -1,10 +1,11 @@
 (ns systems.bread.alpha.component
   (:require
     [clojure.string :as string]
+    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]))
 
 (defn- macro-symbolize [tree]
-  (clojure.walk/postwalk
+  (walk/postwalk
     (fn [node]
       (cond
         (list? node) (cons 'list node)
@@ -28,9 +29,10 @@
                           :ns *ns*
                           :expr expr)))))
 
-(defmethod print-method ::component [c ^java.io.Writer w]
-  (let [m (meta c)]
-    (.write w (str (:ns m) ".component$" (:name m)))))
+#?(:clj
+   (defmethod print-method ::component [c ^java.io.Writer w]
+     (let [m (meta c)]
+       (.write w (str (:ns m) ".component$" (:name m))))))
 
 (comment
   (macroexpand '(defc Hello []
@@ -89,7 +91,7 @@
       content)))
 
 (defn route-segment [x]
-  (if (string? x) x (format "{%s/%s}" (namespace x) (name x))))
+  (if (string? x) x (str "{" (namespace x) "/" (name x) "}")))
 
 (defn- build-route-pattern [segments]
   (string/join "/" (map route-segment segments)))

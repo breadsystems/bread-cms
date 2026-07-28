@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.pages-test
   (:require
-    [clojure.test :refer [are deftest is]]
+    [clojure.string :as string]
+    [clojure.test :refer [deftest is]]
     [org.httpkit.client :as http])
   (:import
     [org.jsoup Jsoup]))
@@ -26,7 +27,7 @@
     (is (= "The Title" (.text (.getElementsByTag doc "h1"))))
     (is (= ["Some content" "More content" "And some more..."]
            (map #(.text %) (.getElementsByTag doc "h2"))))
-    (is (clojure.string/starts-with?
+    (is (string/starts-with?
           (.text (.getElementsByTag doc "article"))
           "The Title Some content Lorem ipsum dolor sit amet, consectetur")))
 
@@ -53,6 +54,17 @@
     ;; TODO i18n
     (is (= "404 The page you are looking for was not found."
            (.text (.getElementsByTag doc "article"))))))
+
+(deftest test-assets
+  (let [{:keys [body status]} (GET "/marx/css/marx.css")]
+    (is (= 200 status))
+    (is (.contains body "[data-bread]")))
+  (let [{:keys [body status]} (GET "/rise/css/base.css")]
+    (is (= 200 status))
+    (is (.contains body ":root")))
+  (let [{:keys [body status]} (GET "/crust/css/base.css")]
+    (is (= 200 status))
+    (is (.contains body ":root"))))
 
 (comment
   (require '[kaocha.repl :as k])

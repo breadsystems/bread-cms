@@ -3,7 +3,9 @@
     [buddy.hashers :as hashers]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [sha-512]]
-    [systems.bread.alpha.internal.time :as t]))
+    [systems.bread.alpha.internal.time :as t])
+  (:import
+    [java.lang System]))
 
 (def ^:private secret-key (System/getenv "BREAD_SECRET_KEY"))
 
@@ -26,7 +28,7 @@
                   {:thing/created-at (t/now)
                    :email/address "admin3@bread.systems"
                    :email/code "asdf"}]
-    :user/password (hashers/derive "hello")
+    :user/password (hashers/derive "bread")
     #_#_ ;; Uncomment to enable MFA
     :user/totp-key "B67CWTTTP7UQ5KWT"
     :user/failed-login-count 0
@@ -48,7 +50,7 @@
    {:user/username "reader"
     :user/name "Reader User"
     ;; No emails yet!
-    :user/password (hashers/derive "hello")
+    :user/password (hashers/derive "bread")
     :user/failed-login-count 0
     :user/preferences "{}"
     :user/lang :en}

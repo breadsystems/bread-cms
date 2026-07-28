@@ -2,8 +2,7 @@
   (:require
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.internal.html-cache :as html]
-    [systems.bread.alpha.internal.route-cache :as cache]
-    [systems.bread.alpha.route :as route]))
+    [systems.bread.alpha.internal.route-cache :as cache]))
 
 ;; TODO refactor this into the action itself
 (defn- process-txs! [res {:keys [router] :as config}]
@@ -23,9 +22,10 @@
                    (:cache/strategy config)))
 
 (defmethod cache! :html
-  [{:keys [body uri status] ::keys [internal?]}
-   {:keys [root index-file router] :or {index-file "index.html"
-                                        root "resources/public"}}]
+  [{:keys [body uri] ::keys [internal?]}
+   {:keys [root index-file]
+    :or {index-file "index.html"
+         root "resources/public"}}]
   (when internal?
     (html/render-static! (str root uri) index-file body)))
 

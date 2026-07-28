@@ -1,17 +1,14 @@
 (ns systems.bread.alpha.i18n-test
   (:require
-    [clojure.string :as string]
-    [clojure.test :refer [are deftest is testing use-fixtures]]
+    [clojure.test :refer [are deftest]]
     [com.rpl.specter :as s]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded
-                                              naive-plugin
                                               naive-router
                                               use-db]]))
 
@@ -32,12 +29,6 @@
               {:field/key :two :field/content "Dos" :field/lang :es}]})
 
 (use-db :each config)
-
-(defn- load-app [i18n-config]
-  (plugins->loaded [(db/plugin config)
-                    (i18n/plugin i18n-config)
-                    naive-plugin]))
-
 
 (deftest test-supported-langs
   (are
@@ -349,8 +340,7 @@
                        {::i18n/lang [{:action/name ::bread/value
                                       :action/value lang}]
                         ::bread/attrs-map [{:action/name ::bread/value
-                                            :action/value attrs-map}]}}])
-               counter (atom 0)]
+                                            :action/value attrs-map}]}}])]
            (bread/hook app ::i18n/expansions expansion)))
 
       ;; No translatable content; noop.

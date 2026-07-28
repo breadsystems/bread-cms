@@ -16,5 +16,5 @@
                             :headers #js {"content-type" "application/transit+json"}
                             :body (transit-encode data)})))
 
-(defmethod core/backend :bread/http [{:as config :keys [endpoint]}]
+(defmethod core/backend :bread/http [{:keys [endpoint]}]
   (HttpBackend. endpoint))

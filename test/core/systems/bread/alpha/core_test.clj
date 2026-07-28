@@ -1,10 +1,8 @@
 (ns systems.bread.alpha.core-test
   (:require
-    [clojure.string :refer [ends-with? upper-case]]
     [clojure.test :refer [are deftest is testing]]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.test-helpers :refer [distill-hooks
-                                              plugins->loaded]])
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded]])
   (:import (clojure.lang ExceptionInfo)))
 
 (deftest test-response
@@ -121,11 +119,11 @@
                             (bread/add-effect prn-str)))))
 
 (defmethod bread/effect :inc
-  [{:keys [world]} data]
+  [{:keys [world]} _data]
   (swap! world update :count #(inc (or % 0))))
 
 (defmethod bread/effect :dec
-  [{:keys [world]} data]
+  [{:keys [world]} _data]
   (swap! world update :count #(dec (or % 0))))
 
 (deftest test-effects
@@ -269,11 +267,6 @@
       :effect/key :a
       :v (atom "Up and atom!")}]
 
-    {:a "my var value"}
-    [{:effect/name ::passthru
-      :effect/key :a
-      :v (do (def my-var "my var value") (var my-var))}]
-
     {:a "referenced value"}
     [{:effect/name ::passthru
       :effect/key :a
@@ -394,7 +387,6 @@
 (deftest test-hook
 
   (let [plugin-a {:hooks {:hook/a [{:action/name ::my.hook :v "A"}]}}
-        plugin-b {:hooks {:hook/b [{:action/name ::my.hook :v "B"}]}}
         plugin-aa {:hooks {:hook/a [{:action/name ::my.hook :v "AA"}
                                     {:action/name ::my.hook :v "AA"}]}}
         plugin-ab {:hooks {:hook/a [{:action/name ::my.hook :v "A"}

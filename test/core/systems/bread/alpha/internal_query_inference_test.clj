@@ -151,8 +151,7 @@
 (deftest test-infer-query-bindings
   (are
     [result attr pred query]
-    (= result (let [counter (atom 0)]
-                (qi/infer-query-bindings attr pred query)))
+    (= result (qi/infer-query-bindings attr pred query))
 
     {:bindings []} nil nil nil
     {:bindings []} :attr nil {}

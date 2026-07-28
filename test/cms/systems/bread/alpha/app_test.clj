@@ -1,10 +1,10 @@
 (ns systems.bread.alpha.app-test
   (:require
-    [clojure.test :refer [are deftest is testing]]
+    [clojure.test :refer [are deftest testing]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.component :refer [defc]]
     [systems.bread.alpha.post :as post]
-    [systems.bread.alpha.test-helpers :refer [naive-params use-db]]
+    [systems.bread.alpha.test-helpers :refer [use-db]]
     [systems.bread.alpha.defaults :as defaults]))
 
 (defn edn-field [k lang content]
@@ -134,9 +134,9 @@
                    :route/params {:field/lang "fr"
                                   :slugs "not-found"}}}
           router (reify bread/Router
-                   (bread/route-params [router req]
+                   (bread/route-params [_ req]
                      (:route/params (get routes (:uri req))))
-                   (bread/route-dispatcher [router req]
+                   (bread/route-dispatcher [_ req]
                      (get routes (:uri req))))
           plugins (defaults/plugins
                     {:db config

@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.internal.route-cache
   (:require
-    [clojure.string :as string]
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -29,9 +28,7 @@
                 (into {} (map (fn [[attr spec]]
                                 [attr (walk (conj path attr) spec)])
                               node))
-                :else node))
-            (walk-path [entity path]
-              (get-in entity path))]
+                :else node))]
       (let [spec (walk [] spec)
             query {:find [(list 'pull '?e spec) '.]
                    :in '[$ ?e]
@@ -76,15 +73,14 @@
         ;; by definition, not the primary entity being transacted.
         datoms (sort-by (complement (comp #(datalog/ref? db %) second)) datoms)
         normalized (normalize db datoms)]
-    (first (keys (reduce (fn [norm [eid attr v]]
+    (first (keys (reduce (fn [norm [_eid attr v]]
                            (cond
                              (= 1 (count norm))        (reduced norm)
                              (datalog/ref? db attr) (dissoc norm v)
                              :else                     norm))
                          normalized datoms)))))
 
-(defn- eid [req router mapping tx]
-  ;; TODO might have broken during the Great Component Refactor... :shrug:
+(defn- eid [req mapping tx]
   (as-> (component/match req) $
     (component/query $)
     (affecting-attrs $ mapping)
@@ -108,7 +104,7 @@
   (let [{route-name :name cache-config :bread/cache} route
         {mapping :param->attr pull :pull} cache-config
         param-sets (param-sets mapping pull)]
-    (->> (eid req router mapping tx)
+    (->> (eid req mapping tx)
          (param-sets req)
          (cartesian-maps)
          (map (fn [params]
@@ -117,10 +113,9 @@
 
 (defn gather-affected-uris [res router]
   (->> (doall (for [route (bread/routes router)
-             tx (::bread/transactions (::bread/data res))]
-         (future
-           ;; TODO abstract route data behind a protocol
-           (affected-uris res router (second route) tx))))
+                    tx (::bread/transactions (::bread/data res))]
+                (future
+                  (affected-uris res router (second route) tx))))
        (mapcat deref)
        set))
 

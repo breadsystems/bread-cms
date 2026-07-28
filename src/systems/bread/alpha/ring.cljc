@@ -1,5 +1,7 @@
 (ns systems.bread.alpha.ring
   (:require
+    [clojure.set]
+    [clojure.string :as string]
     [systems.bread.alpha.core :as bread]))
 
 (def http-status-codes
@@ -76,14 +78,15 @@
    510 "Not Extended"
    511 "Network Authentication Required"})
 
-(defn wrap-clear-flash [f]
+(defn wrap-clear-flash
   "Middleware for clearing (:flash req) after a redirect."
+  [f]
   (fn [req]
     (let [res (f req)]
       (cond
         (:clear? (:flash res)) (dissoc res :flash)
         (:flash res) (assoc-in res [:flash :clear?] true)
-        :default res))))
+        :else res))))
 
 (defn- rename-keys-with-namespace [n m]
   (let [renames (into {} (map (juxt identity (comp (partial keyword n) name)) (keys m)))]
@@ -132,7 +135,7 @@
       (update-in [:headers "content-type"] #(or % default-content-type))))
 
 (defn redirect [{:as res :keys [headers]} & {:as action :keys [flash permanent? to]}]
-  (let [internal? (clojure.string/starts-with? to "/")
+  (let [internal? (string/starts-with? to "/")
         allowed? (bread/hook res ::allow-redirect? internal? action)]
     (if allowed?
       (let [headers (assoc headers "Location" to)]

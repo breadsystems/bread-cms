@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.marx.tiptap
   (:require
-    ["@tiptap/core" :refer [Editor] :rename {Editor TiptapEditor}]
     ["@tiptap/extension-blockquote" :refer [Blockquote]]
     ["@tiptap/extension-bold" :refer [Bold]]
     ["@tiptap/extension-bubble-menu" :refer [BubbleMenu]]
@@ -11,14 +10,12 @@
     ["@tiptap/extension-code-block" :refer [CodeBlock]]
     ["@tiptap/extension-document" :refer [Document]]
     ["@tiptap/extension-dropcursor" :refer [Dropcursor]]
-    ["@tiptap/extension-gapcursor" :refer [Gapcursor]]
     ["@tiptap/extension-floating-menu" :refer [FloatingMenu]]
     ["@tiptap/extension-hard-break" :refer [HardBreak]]
     ["@tiptap/extension-heading" :refer [Heading]]
     ["@tiptap/extension-highlight" :refer [Highlight]]
     ["@tiptap/extension-history" :refer [History]]
     ["@tiptap/extension-horizontal-rule" :refer [HorizontalRule]]
-    ["@tiptap/extension-image" :refer [Image]]
     ["@tiptap/extension-italic" :refer [Italic]]
     ["@tiptap/extension-list-item" :refer [ListItem]]
     ["@tiptap/extension-ordered-list" :refer [OrderedList]]
@@ -28,11 +25,9 @@
     ["@tiptap/extension-subscript" :refer [Subscript]]
     ["@tiptap/extension-superscript" :refer [Superscript]]
     ["@tiptap/extension-text" :refer [Text]]
-    ["@tiptap/extension-typography" :refer [Typography]]
-    ["yjs" :as Y]
-    ["y-webrtc" :refer [WebrtcProvider]]))
+    ["@tiptap/extension-typography" :refer [Typography]]))
 
-(defmulti extension (fn [ed tool]
+(defmulti extension (fn [_ed tool]
                       (if (map? tool) (:type tool) tool)))
 
 (defmethod extension :heading
@@ -95,7 +90,7 @@
    {:type :br     :tooltip "Line break"}])
 
 (defn extensions [ed tools {:keys [menu-element] :as _opts}]
-  (let [{:keys [collab menu tiptap]
+  (let [{:keys [collab menu]
          :or {menu {:style :floating}}} @ed
         {:keys [ydoc provider user]} collab
         placeholder-opts (clj->js {;; TODO parameterize this

@@ -41,13 +41,13 @@
   margin: 0;
   padding: var(--gap-standard);
   gap: var(--gap-standard);
-  &[data-bar-position=bottom] {
+  &[data-bar-position="bottom"] {
     width: 100%;
     bottom: 0;
     left: 0;
     border-width: 0 0 0 var(--border-width);
   }
-  &[data-bar-position=top] {
+  &[data-bar-position="top"] {
     width: 100%;
     top: 0;
     left: 0;
@@ -55,16 +55,36 @@
   }
 
   font-size: 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, Cantarell, Ubuntu, roboto, noto, helvetica, arial, sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    avenir next,
+    avenir,
+    segoe ui,
+    helvetica neue,
+    Cantarell,
+    Ubuntu,
+    roboto,
+    noto,
+    helvetica,
+    arial,
+    sans-serif;
   line-height: 1.5;
 
   color: var(--color-text-body);
   background: var(--color-bg);
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     color: var(--color-text-emphasis);
   }
-  h1, h2, p {
+  h1,
+  h2,
+  p {
     margin: 0;
   }
   .flex {
@@ -116,11 +136,14 @@
   select {
     cursor: pointer;
   }
-  input, select {
+  input,
+  select {
     padding: 12px;
     border: var(--border-width) solid var(--color-text-body);
   }
-  button, input, select {
+  button,
+  input,
+  select {
     color: var(--color-text-body);
     background: var(--color-bg);
     border: var(--border-width) solid var(--color-text-body);

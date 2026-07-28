@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.expansion-test
   (:require
-    [clojure.test :as t :refer [are deftest is]]
+    [clojure.test :as t :refer [are deftest]]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))

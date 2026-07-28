@@ -84,7 +84,7 @@
              spec (:route/spec route)]
          (str "/" (clojure.string/join "/" (map #(get params % %) spec)))))
      (bread/route-dispatcher [_ _])
-     (bread/route-params [this req]
+     (bread/route-params [_this req]
        (naive-params (:uri req)))
      (bread/route-spec [_ req]
        (let [route (if (keyword? req)
@@ -96,7 +96,7 @@
          (:route/spec route)))
      (bread/routes [_] routes))))
 
-(defn map->router [routes]
+(defn map->router
   "Takes a map m like:
 
   {\"/first/route\"
@@ -110,6 +110,7 @@
 
   and returns a router that does a simple (get m (:uri req))
   to get the matched route."
+  [routes]
   (reify bread/Router
     (bread/path [_ route-name _]
       (reduce (fn [_ [path route]]
@@ -125,7 +126,7 @@
     (bread/routes [_]
       routes)))
 
-(defn map->route-plugin [routes]
+(defn map->route-plugin
   "Takes a map m like:
 
   {\"/first/route\"
@@ -140,6 +141,7 @@
   and returns a plugin that does a simple (get m (:uri req))
   to get the matched route. Reifies a Router instance internally using
   map->router to pass to route/plugin."
+  [routes]
   (route/plugin {:router (map->router routes)}))
 
 (defn mock-derive [pw {:keys [alg]}]

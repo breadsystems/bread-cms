@@ -1,15 +1,12 @@
 (ns systems.bread.alpha.dispatcher
   (:require
-    [clojure.spec.alpha :as s]
-    [clojure.string :as string]
-    [systems.bread.alpha.component :as component :refer [defc]]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.database :as db]))
+    [systems.bread.alpha.component :as component]
+    [systems.bread.alpha.core :as bread]))
 
-(defn query-key [dispatcher]
+(defn query-key
   "Get from the component layer the key at which to db the dispatched query
   within the ::bread/expansions map"
+  [dispatcher]
   (component/query-key (:dispatcher/component dispatcher)))
 
 (defn pull

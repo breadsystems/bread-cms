@@ -1,11 +1,9 @@
 (ns systems.bread.alpha.taxon
   (:require
-    [clojure.set :refer [rename-keys]]
     [com.rpl.specter :as s]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.post :as post]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.internal.query-inference :as qi]))
@@ -59,13 +57,12 @@
                                :expansion/key k
                                :post/type post-type
                                :post/status post-status}]))
-                   (do
-                     (bread/hook
+                   (bread/hook
                      req ::i18n/expansions
                      {:expansion/name ::db/query
                       :expansion/key k
                       :expansion/db (db/database req)
-                      :expansion/args [query taxonomy (slug-param params)]})))}))
+                      :expansion/args [query taxonomy (slug-param params)]}))}))
 
 (defmethod bread/dispatch ::tag=>
   [{::bread/keys [dispatcher] :as req}]

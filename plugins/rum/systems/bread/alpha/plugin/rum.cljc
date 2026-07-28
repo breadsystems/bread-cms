@@ -15,7 +15,7 @@
 
 (deftype HtmlString [s]
   Object
-  (toString [this] s))
+  (toString [_] s))
 
 (defmethod i18n/deserialize :html [field]
   (HtmlString. (:field/content field)))

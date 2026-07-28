@@ -11,7 +11,9 @@
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.invitations :as invitations]
-    [systems.bread.alpha.plugin.email :as email]))
+    [systems.bread.alpha.plugin.email :as email])
+  #?(:clj (:import
+            [clojure.lang ExceptionInfo])))
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
@@ -39,10 +41,10 @@
       :conn (db/connection req)}]))
 
 (defn validate-password-fields
-  [{:auth/keys [min-password-length max-password-length]}
-   {:keys [password password-confirmation]}]
   "Returns an error code as a keyword if the :password and/or :password-confirmation
   params are invalid."
+  [{:auth/keys [min-password-length max-password-length]}
+   {:keys [password password-confirmation]}]
   (cond
     ;; If the user submitted only the password confirmation, assume they intended
     ;; to update password but forgot to fill out both fields.
@@ -111,7 +113,7 @@
       ;; Account update.
       (let [[effects error-key] (try
                                   [(effects req) nil]
-                                  (catch clojure.lang.ExceptionInfo e
+                                  (catch ExceptionInfo e
                                     [nil (-> e ex-data :error-key)]))]
         (if error-key
           {:hooks

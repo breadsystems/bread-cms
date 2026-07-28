@@ -3,7 +3,7 @@
  :dev-http
  {1315 "resources/debug"
   1316 "resources/editor"
-  1317 {:root "resources/marx"
+  1317 {:root "resources/marx/marx"
         :proxy-url "http://localhost:1312"}}
 
  :builds
@@ -11,7 +11,7 @@
   ;; npx shadow-cljs -A:tools:marx watch marx
   :marx
   {:target :browser
-   :output-dir "resources/marx/js"
+   :output-dir "resources/marx/marx/js"
    :asset-path "/js"
    :modules {:marx ; becomes resources/marx/js/marx.js
              {:init-fn systems.bread.alpha.marx.main/init}}}

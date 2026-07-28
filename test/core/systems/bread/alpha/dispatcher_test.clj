@@ -1,7 +1,6 @@
 (ns systems.bread.alpha.dispatcher-test
   (:require
     [clojure.test :as t :refer [deftest are is]]
-    [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
@@ -109,8 +108,7 @@
 (deftest test-dispatch-fn-handler
 
   ;; A fn dispatcher short-circuits query expansion.
-  (let [response {:body "Returned from fn" :status 200}
-        dispatcher (constantly response)]
+  (let [response {:body "Returned from fn" :status 200}]
     (is (= response
            (-> (plugins->loaded [(dispatcher/plugin)])
                (assoc ::bread/dispatcher (constantly response))

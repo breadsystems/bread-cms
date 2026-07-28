@@ -1,11 +1,10 @@
 (ns systems.bread.alpha.datahike-plugin-test
   (:require
-    [clojure.test :refer :all]
+    [clojure.test :refer [deftest is testing]]
     [datahike.api :as d]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.plugin.datahike :as plugin]
     [systems.bread.alpha.schema :as schema]
     [systems.bread.alpha.test-helpers :refer [db-config->loaded
                                               db-config->handler

@@ -1,32 +1,36 @@
 (ns systems.bread.alpha.tools.protocols
   (:require
-    [clojure.core.protocols :as proto :refer [Datafiable]]
+    [clojure.core.protocols :as proto]
     [clojure.datafy :refer [datafy]]
-    [clojure.walk :as walk]))
+    [clojure.walk :as walk])
+  (:import
+    [clojure.lang Atom Fn Namespace Symbol]
+    [clojure.core.async.impl.channels ManyToManyChannel]
+    [java.lang Class]))
 
-(extend-protocol Datafiable
-  clojure.lang.Fn
+(extend-protocol proto/Datafiable
+  Fn
   (proto/datafy [f]
     (str f))
 
-  java.lang.Class
+  Class
   (proto/datafy [c]
     (str c))
 
-  clojure.lang.Atom
+  Atom
   (proto/datafy [a]
     {:type 'clojure.lang.Atom
      :value (walk/prewalk datafy @a)})
 
-  clojure.core.async.impl.channels.ManyToManyChannel
+  ManyToManyChannel
   (proto/datafy [ch]
     (str ch))
 
-  clojure.lang.Symbol
+  Symbol
   (proto/datafy [sym]
     (name sym))
 
-  clojure.lang.Namespace
+  Namespace
   (proto/datafy [ns*]
     (ns-name ns*)))
 

@@ -3,15 +3,12 @@
   (:require
     [clojure.core.protocols :refer [Datafiable]]
     [datahike.api :as d]
-    [datahike.db :as dhdb]
-    [taoensso.timbre :as log]
 
-    [systems.bread.alpha.schema :as schema]
-    [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db])
   (:import
     [java.lang IllegalArgumentException]
-    [java.util UUID]))
+    [datahike.db AsOfDB DB HistoricalDB]
+    [datahike.connector Connection]))
 
 
 
@@ -40,7 +37,7 @@
 ;;
 
 (extend-protocol db/TemporalDatabase
-  datahike.db.DB
+  DB
   (as-of [db instant]
     (d/as-of db instant))
   (history [db]
@@ -87,7 +84,7 @@
   (db-with [db tx]
     (d/db-with db tx))
 
-  datahike.db.AsOfDB
+  AsOfDB
   (q
     ([db query]
      (d/q query db))
@@ -127,8 +124,14 @@
      (d/q query db a b c d e f g h i j k l m n o p r)))
   (pull [db query ident]
     (d/pull db query ident))
+  (as-of [_ _]
+    (throw (ex-info "as-of on AsOfDB is not allowed" {})))
+  (history [_]
+    (throw (ex-info "history on AsOfDB is not allowed" {})))
+  (db-with [_ _]
+    (throw (ex-info "db-with on AsOfDB is not allowed" {})))
 
-  datahike.db.HistoricalDB
+  HistoricalDB
   (q
     ([db query]
      (d/q query db))
@@ -165,24 +168,32 @@
     ([db query a b c d e f g h i j k l m n o p]
      (d/q query db a b c d e f g h i j k l m n o p))
     ([db query a b c d e f g h i j k l m n o p r]
-     (d/q query db a b c d e f g h i j k l m n o p r))))
+     (d/q query db a b c d e f g h i j k l m n o p r)))
+  (pull [_ _ _]
+    (throw (ex-info "pull on HistoricalDB is not allowed" {})))
+  (as-of [_ _]
+    (throw (ex-info "as-of on HistoricalDB is not allowed" {})))
+  (history [_]
+    (throw (ex-info "history on HistoricalDB is not allowed" {})))
+  (db-with [_ _]
+    (throw (ex-info "db-with on HistoricalDB is not allowed" {}))))
 
 
 (extend-protocol db/TransactionalDatabaseConnection
-  datahike.connector.Connection
+  Connection
   (db [conn] (deref conn))
   (transact [conn tx]
     (d/transact conn tx)))
 
 #_ ;; FIXME
-(extend-type datahike.db.AsOfDB
+(extend-type AsOfDB
   Datafiable
   (datafy [db]
     {:type 'datahike.db.AsOfDB
      :max-tx (dhdb/-max-tx db)
      :max-eid (dhdb/-max-eid db)}))
 
-(extend-type datahike.db.DB
+(extend-type DB
   Datafiable
   (datafy [db]
     {:type 'datahike.db.DB
