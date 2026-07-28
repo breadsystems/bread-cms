@@ -2,17 +2,6 @@ name: tests
 run-name: Run test suites
 on: pull_request
 jobs:
-  install:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/setup
-      - name: Prefetch deps
-        shell: bash
-        run: |
-          clojure -P -M:test:cms
-          clojure -P -M:cms:dev:tools
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -30,7 +19,6 @@ jobs:
 
   run-unit-and-integration-tests:
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -55,7 +43,6 @@ jobs:
 
   run-e2e-tests:
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -85,7 +72,6 @@ jobs:
 
   compile-and-test-dev-binary:
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - uses: actions/checkout@v3
       # Install the Nix package manager.
