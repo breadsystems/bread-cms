@@ -136,7 +136,7 @@
                [?p :thing/slug ?slug]]}
      "hello")
 
-  ;; Menu expansions
+  ;; MENU EXPANSIONS
 
   (q '{:find [(pull ?e [:db/id
                         :taxon/taxonomy
