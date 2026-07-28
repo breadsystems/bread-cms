@@ -55,6 +55,17 @@
     (is (= "404 The page you are looking for was not found."
            (.text (.getElementsByTag doc "article"))))))
 
+(deftest test-assets
+  (let [{:keys [body status]} (GET "/marx/css/marx.css")]
+    (is (= 200 status))
+    (is (.contains body "[data-bread]")))
+  (let [{:keys [body status]} (GET "/rise/css/base.css")]
+    (is (= 200 status))
+    (is (.contains body ":root")))
+  (let [{:keys [body status]} (GET "/crust/css/base.css")]
+    (is (= 200 status))
+    (is (.contains body ":root"))))
+
 (comment
   (require '[kaocha.repl :as k])
   (k/run {:color? false}))
