@@ -1,8 +1,17 @@
 {:linters {:unresolved-var {:exclude [com.rpl.specter/ALL
-                                      org.httpkit.client/get]}}
+                                      org.httpkit.client/get
+                                      datahike.api/create-database
+                                      datahike.api/connect
+                                      datahike.api/delete-database]}}
+ :ns-groups [{:name tests :pattern "(-test|test-helpers)$"}]
  ;; NOTE: all :ignore rules should be fixed.
- :config-in-ns {systems.bread.alpha.internal.route-cache {:ignore true}
+ :config-in-ns {;; Core.
+                systems.bread.alpha.internal.route-cache {:ignore true}
                 systems.bread.alpha.internal.html-cache {:ignore true}
                 systems.bread.alpha.cache {:ignore true}
-                systems.bread.alpha.i18n {:ignore [:unresolved-symbol]}}
+                systems.bread.alpha.i18n {:ignore [:unresolved-symbol]}
+                ;; TODO Plugins.
+                systems.bread.alpha.markdown-test {:ignore true}
+                ;; Tests.
+                tests {:ignore [:missing-protocol-method]}}
  :lint-as {systems.bread.alpha.component/defc clojure.core/defn}}

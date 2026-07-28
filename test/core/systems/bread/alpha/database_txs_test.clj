@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.database-txs-test
   (:require
-    [clojure.test :refer [are deftest testing use-fixtures]]
+    [clojure.test :refer [are deftest testing]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.test-helpers :refer [db-config->loaded

@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.debug-test
   (:require
-    [clojure.test :refer [are deftest is testing use-fixtures]]
+    [clojure.test :refer [deftest is testing use-fixtures]]
     [kaocha.repl :as k]
     [systems.bread.alpha.core :as bread]))
 

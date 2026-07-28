@@ -1,9 +1,9 @@
 (ns systems.bread.alpha.database-test
   (:require
     [clojure.test :refer [are deftest is testing]]
+
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]])
   (:import
     [clojure.lang ExceptionInfo]))

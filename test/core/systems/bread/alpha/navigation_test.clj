@@ -9,18 +9,17 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.test-helpers :refer [db->plugin
-                                              plugins->loaded
-                                              map->router]]))
+                                              plugins->loaded]]))
 
 (defrecord MockRouter [params]
   bread/Router
-  (bread/route-params [this _] params)
-  (bread/route-spec [this _]
+  (bread/route-params [_this _] params)
+  (bread/route-spec [_this _]
     [:field/lang :slugs])
-  (bread/path [this route-name params]
+  (bread/path [_this route-name params]
     (let [route (get {::page [:field/lang :slugs]} route-name)]
       (str "/" (string/join "/" (map #(some-> % params name) route)))))
-  (bread/routes [this] []))
+  (bread/routes [_this] []))
 
 (deftest test-expansions-hook
   (are

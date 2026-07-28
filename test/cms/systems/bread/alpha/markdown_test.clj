@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.markdown-test
   (:require
-    [clojure.test :refer [are deftest is]]
+    [clojure.test :refer [are deftest]]
     [markdown.core :as md]
     [systems.bread.alpha.plugin.markdown :as markdown]))
 

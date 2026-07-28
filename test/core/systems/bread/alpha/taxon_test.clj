@@ -29,10 +29,9 @@
 
     (are
       [expansions dispatcher]
-      (= expansions (let [counter (atom 0)]
-                   (-> (assoc app ::bread/dispatcher dispatcher)
-                       (bread/hook ::bread/dispatch)
-                       ::bread/expansions)))
+      (= expansions (-> (assoc app ::bread/dispatcher dispatcher)
+                        (bread/hook ::bread/dispatch)
+                        ::bread/expansions))
 
       ;; {:uri "/en/by-taxon/category/some-tag"}
       ;; Not querying for any translatable content.

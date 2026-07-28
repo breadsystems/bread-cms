@@ -987,6 +987,7 @@
   (def app (plugins->loaded [(db/plugin config)]))
   (def $conn (db/connection app))
   (def $store (auth/session-store $conn))
+  (import '[java.util UUID])
   (def $uuid (UUID/randomUUID))
   (satisfies? ss/SessionStore $store)
   (ss/write-session $store $uuid {:a :b})

@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.plugin.signup-flow-test
   (:require
-    [clojure.test :refer [deftest are is]]
+    [clojure.test :refer [deftest are]]
 
     [systems.bread.alpha.test-helpers :refer [naive-router
                                               plugins->loaded
@@ -13,9 +13,7 @@
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.plugin.auth :as auth]
-    [systems.bread.alpha.schema :as schema])
-  (:import
-    [java.util Date]))
+    [systems.bread.alpha.schema :as schema]))
 
 (def AUTH-SECRET-KEY "secret!")
 

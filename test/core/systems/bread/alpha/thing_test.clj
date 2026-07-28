@@ -6,7 +6,6 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.thing :as thing]
     [systems.bread.alpha.route :as route]
-    [systems.bread.alpha.dispatcher :as dispatcher]
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded]]))
 

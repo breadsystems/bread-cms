@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.plugin-reitit-router-test
   (:require
-    [clojure.test :refer [deftest are is]]
+    [clojure.test :refer [deftest are]]
     [reitit.core :as reitit]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.route :as route]

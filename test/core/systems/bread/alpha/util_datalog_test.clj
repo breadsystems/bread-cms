@@ -1,8 +1,7 @@
 (ns systems.bread.alpha.util-datalog-test
   (:require
     [clojure.test :refer [deftest are is]]
-    [systems.bread.alpha.util.datalog :as d]
-    [systems.bread.alpha.i18n :as i18n]))
+    [systems.bread.alpha.util.datalog :as d]))
 
 (deftest test-normalize-query
   (are
