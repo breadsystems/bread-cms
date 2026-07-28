@@ -6,7 +6,7 @@
   (.-innerText (:elem field)))
 
 (defmethod marx/field-lifecycle :text
-  [ed {:as field :keys [state elem]}]
+  [_ed {:keys [elem]}]
   {:render
    (fn [_state]
      (.setAttribute elem "contenteditable" true)

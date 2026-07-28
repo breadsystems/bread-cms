@@ -7,7 +7,7 @@
     [systems.bread.alpha.marx.core :as core]
     [systems.bread.alpha.marx.tiptap :as tiptap]))
 
-(defmethod core/tool-props :bold [ed tool]
+(defmethod core/tool-props :bold [_ _]
   {:tooltip "Bold"
    :icon "bold"})
 
@@ -15,7 +15,7 @@
   (when tiptap (.getHTML ^TiptapEditor tiptap)))
 
 (defmethod core/field-lifecycle :rich-text
-  [ed {:keys [state elem] :as field}]
+  [ed {:keys [elem] :as field}]
   (let [tools (or (:tools field) (:tools ed) tiptap/default-rich-text-tools)]
     {:init-state
      (fn []
