@@ -3,7 +3,7 @@
     [aero.core :as aero]
     [buddy.hashers :as hashers]
     [integrant.core :as ig]
-    [taoensso.timbre :as log]
+    [clojure.tools.logging :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.cms.main :as main]

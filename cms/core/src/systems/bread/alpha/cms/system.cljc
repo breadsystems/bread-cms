@@ -1,12 +1,13 @@
 (ns systems.bread.alpha.cms.system
   (:require
     ;; Libs.
+    [clojure.tools.logging :as log]
     [datahike.api :as d]
     [datahike-jdbc.core]
-    [org.httpkit.server :as http]
     [integrant.core :as ig]
+    [org.httpkit.server :as http]
     [ring.middleware.defaults :as ring]
-    [taoensso.timbre :as log]
+    [taoensso.timbre :as timbre]
     ;; Core.
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.core :as bread]
@@ -47,8 +48,8 @@
   env)
 
 (defmethod ig/init-key :app/log [_ log-config]
-  (log/merge-config! {:min-level (:min-level log-config :info)
-                      :middleware [(log-redactor)]}))
+  (timbre/merge-config! {:min-level (:min-level log-config :info)
+                         :middleware [(log-redactor)]}))
 
 (defmethod ig/init-key :http [_ {:keys [port handler wrap-defaults]}]
   (let [port (->int port)

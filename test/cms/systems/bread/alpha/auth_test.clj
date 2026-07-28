@@ -6,7 +6,6 @@
     [crypto.random :as random]
     [one-time.core :as ot]
     [ring.middleware.session.store :as ss]
-    [taoensso.timbre :as timbre]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
@@ -21,8 +20,6 @@
                                               use-db]])
   (:import
     [java.util Date]))
-
-(timbre/merge-config! {:min-level :warn})
 
 (def SECRET "keep it secret, keep it safe")
 
@@ -996,7 +993,10 @@
                  :in [$ ?sk]
                  :where [[?e :session/data]]})
 
-  (require '[kaocha.repl :as k])
+  (require '[kaocha.repl :as k]
+           '[taoensso.timbre :as timbre])
+  ;; Avoid noisy migration logs...
+  (timbre/merge-config! {:min-level :error})
   (k/run #'test-authentication-flow {:color? false})
   (k/run #'test-authentication-flow-with-mfa {:color? false})
   (k/run #'test-authentication-flow #'test-authentication-flow-with-mfa {:color? false})

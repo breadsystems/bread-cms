@@ -1,21 +1,15 @@
 (ns systems.bread.alpha.cms.main
   (:require
-    [clojure.edn :as edn]
     [clojure.java.io :as io]
     [aero.core :as aero]
     [integrant.core :as ig]
-    [reitit.core :as reitit]
-    ;; Bread core.
-    [systems.bread.alpha.core :as bread]
     ;; CMS layer libs.
     [systems.bread.alpha.cms.cli :as cli]
-    [systems.bread.alpha.cms.config.bread]      ;; Custom Aero readers
-    [systems.bread.alpha.cms.system]            ;; Integrant config
-    )
+    [systems.bread.alpha.cms.config.bread]  ;; Custom Aero readers
+    [systems.bread.alpha.cms.system]        ;; Integrant config
+    ,)
   (:import
-    [java.io Console]
-    [java.util Date Properties UUID]
-    [org.sqlite JDBC])
+    [java.lang System])
   (:gen-class))
 
 (defonce system (atom nil))
