@@ -51,4 +51,4 @@ jobs:
         env:
           CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
           CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
-        run: nix develop .#clj --command bin/deploy
+        run: nix develop .#clj --command clojure -T:build release :lib :all
