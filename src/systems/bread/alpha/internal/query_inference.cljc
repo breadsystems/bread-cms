@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.query-inference
+(ns ^:no-doc systems.bread.alpha.internal.query-inference
   (:require
     [clojure.string :as string]
     [com.rpl.specter :as s]

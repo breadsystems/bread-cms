@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.datalog)
+(ns ^:no-doc systems.bread.alpha.internal.datalog)
 
 (defn normalize-query
   "Normalize a datalog query to map form. Treats lists as vectors."

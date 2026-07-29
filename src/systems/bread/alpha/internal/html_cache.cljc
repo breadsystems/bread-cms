@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.html-cache
+(ns ^:no-doc systems.bread.alpha.internal.html-cache
   (:require
     [clojure.string :as string]
     #?(:cljs ["fs" :as fs]))

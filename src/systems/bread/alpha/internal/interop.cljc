@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.interop
+(ns ^:no-doc systems.bread.alpha.internal.interop
   #?(:clj (:import
             [java.security MessageDigest])))
 

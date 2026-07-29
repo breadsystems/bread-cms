@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.time
+(ns ^:no-doc systems.bread.alpha.internal.time
   (:import
     [java.util Calendar]
     [java.util Date]))

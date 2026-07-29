@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.internal.route-cache
+(ns ^:no-doc systems.bread.alpha.internal.route-cache
   (:require
     [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
