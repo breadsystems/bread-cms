@@ -23,8 +23,9 @@
 
   :build
   {:deps
-   {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}
-    slipset/deps-deploy           {:mvn/version "0.2.0"}}
+   {io.github.cljdoc/cljdoc-analyzer {:git/tag "v1.0.914" :git/sha "52a1281"}
+    io.github.clojure/tools.build    {:git/tag "v0.8.1" :git/sha "7d40500"}
+    slipset/deps-deploy              {:mvn/version "0.2.0"}}
    :ns-default build}
 
   :tools

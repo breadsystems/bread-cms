@@ -1,5 +1,6 @@
 (ns build
   (:require
+    [clojure.java.shell :as shell]
     [clojure.tools.build.api :as b]
     [deps-deploy.deps-deploy :as dd]))
 
@@ -118,6 +119,35 @@
     (dd/deploy {:installer :remote
                 :artifact jar-file
                 :pom-file (b/pom-path {:lib lib :class-dir class-dir})})))
+
+(defn- interpret-libs [lib]
+  (cond
+    (= :all lib) [:core :auth :datahike :email :reitit :rum
+                  :theme-rise :theme-crust]
+    (= :plugins lib) [:auth :datahike :email :reitit :rum]
+    (= :themes lib) [:theme-rise :theme-crust]
+    :else [lib]))
+
+(defn release [opts]
+  (doseq [lib (interpret-libs (:lib opts :all))]
+    (let [opts (assoc opts :lib lib)]
+      (jar opts)
+      (deploy opts))))
+
+(defn cljdoc-analyze [opts]
+  (doseq [k (interpret-libs (:lib opts :all))]
+    (let [{lib-name :lib} (get libs k)
+          cmd ["clojure" "-Tcljdoc" "analyze"
+               ":project" (pr-str (str lib-name))
+               ":version" (pr-str patch-version)
+               ":jarpath" (pr-str (jar-path lib-name patch-version))
+               ":pompath" (pr-str (b/pom-path {:lib lib-name :class-dir class-dir}))]]
+      (jar (assoc opts :lib k))
+      (println cmd)
+      (let [{:keys [exit out]} (apply shell/sh cmd)]
+        (print out)
+        (flush)
+        (System/exit exit)))))
 
 (defn uber [_]
   (println "Cleaning target directory...")
