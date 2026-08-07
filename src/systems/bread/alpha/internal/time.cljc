@@ -1,7 +1,7 @@
 (ns ^:no-doc systems.bread.alpha.internal.time
-  (:import
-    [java.util Calendar]
-    [java.util Date]))
+  #?(:clj (:import
+            [java.util Calendar]
+            [java.util Date])))
 
 (def ^:dynamic *now* nil)
 
