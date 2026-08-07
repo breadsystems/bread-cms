@@ -9,9 +9,10 @@
                 (.update (.getBytes in)))]
        (apply str (map (partial format "%02x") (.digest md))))))
 
-#?(:clj
-   (defn ->int [x]
-     (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))))
+(defn ->int [x]
+  #?(:clj
+     (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))
+     :cljs (js/parseInt (str x))))
 
 (comment
   (->double "0.4")
