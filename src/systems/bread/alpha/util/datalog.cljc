@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.util.datalog
+(ns ^:no-doc systems.bread.alpha.util.datalog
   "Database helper utilities."
   (:require
     [clojure.string :as string]

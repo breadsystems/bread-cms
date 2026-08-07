@@ -1,4 +1,4 @@
-(ns systems.bread.alpha.cache
+(ns ^:no-doc systems.bread.alpha.cache
   (:require
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.internal.html-cache :as html]
