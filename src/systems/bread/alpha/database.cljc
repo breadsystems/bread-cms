@@ -1,6 +1,7 @@
 (ns systems.bread.alpha.database
   (:require
-    [clojure.tools.logging :as log]
+    #?(:clj [clojure.tools.logging :as log]
+       :cljs ["goog.log" :as log])
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
