@@ -31,13 +31,14 @@
   returns a plain i18n map, keyed by lang/locale; if false, returns an ILookup
   instance that dynamically reads from the filesystem on each call to (get)."
   [path]
-  (if *read-eagerly*
-    (-> path io/resource slurp edn/read-string)
-    (reify clojure.lang.ILookup
-      (valAt [_ k]
-        (-> path io/resource slurp edn/read-string (get k)))
-      (valAt [_ k not-found]
-        (-> path io/resource slurp edn/read-string (get k not-found))))))
+  #?(:clj (if *read-eagerly*
+            (-> path io/resource slurp edn/read-string)
+            (reify clojure.lang.ILookup
+              (valAt [_ k]
+                (-> path io/resource slurp edn/read-string (get k)))
+              (valAt [_ k not-found]
+                (-> path io/resource slurp edn/read-string (get k not-found)))))
+     :cljs (throw (ex-info "not implemented" {:path path}))))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs

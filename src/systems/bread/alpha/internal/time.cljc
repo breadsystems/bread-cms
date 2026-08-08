@@ -6,15 +6,18 @@
 (def ^:dynamic *now* nil)
 
 (defn now []
-  (or *now* (Date.)))
+  #?(:clj (or *now* (Date.))
+     :cljs (or *now* (js/Date.))))
 
 (defn seconds-from
   ([seconds]
    (seconds-from (now) seconds))
-  ([^Date now seconds]
-   (.getTime (doto (Calendar/getInstance)
-               (.setTime now)
-               (.add Calendar/SECOND seconds)))))
+  #?(:clj ([^Date now seconds]
+           (.getTime (doto (Calendar/getInstance)
+                       (.setTime now)
+                       (.add Calendar/SECOND seconds))))
+     :cljs ([^js/Date _now _seconds]
+            (throw (ex-info "not implemented" {})))))
 
 (defn seconds-ago
   ([seconds]
@@ -25,13 +28,16 @@
 (defn minutes-ago
   ([minutes]
    (minutes-ago (now) minutes))
-  ([^Date now minutes]
-   (.getTime (doto (Calendar/getInstance)
-               (.setTime now)
-               (.add Calendar/MINUTE (- minutes))))))
+  #?(:clj ([^Date now minutes]
+           (.getTime (doto (Calendar/getInstance)
+                       (.setTime now)
+                       (.add Calendar/MINUTE (- minutes)))))
+     :cljs ([^js/Date _now _minutes]
+            (throw (ex-info "not implemented" {})))))
 
 (comment
 
+  #_
   (doto (Calendar/getInstance)
     (.setTime (now))
     (.add Calendar/MINUTE -60))
