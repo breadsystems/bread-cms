@@ -103,7 +103,6 @@
                    first)
         effect (confirmation-effect {:from (:email/smtp-from-email config)
                                      :to (:email/address email)
-                                     ;; TODO hash code
                                      :code (:email/code email)}
                                     data)]
     (when email
@@ -128,6 +127,7 @@
     (let [email (:email params)
           user-id (:db/id user)
           code (random/url-part 32)
+          hashed (sha-512 (str (:auth/secret-key config) ":" code))
           now (t/now)
           effect (confirmation-effect {:from (:email/smtp-from-email config)
                                        :to email
@@ -137,8 +137,7 @@
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
                             :user/emails [{:email/address email
-                                           ;; TODO hash code
-                                           :email/code code
+                                           :email/code hashed
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
         {:effects [effect]
