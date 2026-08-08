@@ -108,7 +108,7 @@
                   :src-dirs src-dirs
                   :scm {:connection "scm:git:git://github.com/breadsystems/bread-cms.git"
                         :developerConnection "scm:git:ssh://git@github.com/breadsystems/bread-cms.git"
-                        :tag patch-version}})
+                        :tag (tag nil)}})
     (b/copy-dir {:src-dirs src-dirs
                  :target-dir class-dir})
     (println "Writing jar:" jar-file)
