@@ -3,6 +3,9 @@
 <p align="center">
   <img alt="Build status" src="https://github.com/breadsystems/bread-cms/actions/workflows/test.yml/badge.svg" />
   <a href="https://clojars.org/systems.bread/bread-core"><img alt="Clojars Project" src="https://img.shields.io/clojars/v/systems.bread/bread-core.svg" /></a>
+  <a href="https://cljdoc.org/d/systems.bread/bread-core">
+    <img alt="API docs on cljdoc" src="https://cljdoc.org/badge/systems.bread/bread-core" />
+  </a>
 </p>
 
 <p align="center">
