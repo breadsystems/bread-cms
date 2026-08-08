@@ -2,13 +2,11 @@
 ;; rather than from the database.
 (ns systems.bread.alpha.plugin.markdown
   (:require
-    [clojure.instant :as instant]
     [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.java.io :as io]
     [markdown.core :as md]
-    [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.dispatcher :as dispatcher]))
+    [systems.bread.alpha.core :as bread]))
 
 (comment
 
