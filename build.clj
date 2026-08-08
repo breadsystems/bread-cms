@@ -105,7 +105,10 @@
                   :version patch-version
                   :basis (b/create-basis {:project "deps.edn"
                                           :aliases aliases})
-                  :src-dirs src-dirs})
+                  :src-dirs src-dirs
+                  :scm {:connection "scm:git:git://github.com/breadsystems/bread-cms.git"
+                        :developerConnection "scm:git:ssh://git@github.com/breadsystems/bread-cms.git"
+                        :tag patch-version}})
     (b/copy-dir {:src-dirs src-dirs
                  :target-dir class-dir})
     (println "Writing jar:" jar-file)
