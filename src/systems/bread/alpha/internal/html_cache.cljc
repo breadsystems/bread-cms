@@ -1,7 +1,8 @@
 (ns ^:no-doc systems.bread.alpha.internal.html-cache
   (:require
     [clojure.string :as string]
-    #?(:cljs ["fs" :as fs]))
+    #?@(:cljs [["fs" :as fs]
+               ["path" :as path]]))
   #?(:clj (:import
             [java.io File])))
 
@@ -13,16 +14,14 @@
      (fs/mkdir path {:recursive true})))
 
 (defonce ^:private sep
-  #?(:clj
-     File/separator))
+  #?(:clj File/separator
+     :cljs (.-sep path)))
 
 (defonce ^:private leading-slash
-  #?(:clj
-     (re-pattern (str "^" sep))))
+  (re-pattern (str "^" sep)))
 
 (defonce ^:private trailing-slash
-  #?(:clj
-     (re-pattern (str sep "$"))))
+  (re-pattern (str sep "$")))
 
 (defn- trim-slashes [s]
   (-> s

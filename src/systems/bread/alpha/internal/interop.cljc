@@ -1,6 +1,7 @@
 (ns ^:no-doc systems.bread.alpha.internal.interop
   #?(:clj (:import
-            [java.security MessageDigest])))
+            [java.security MessageDigest]
+            [java.lang Double])))
 
 #?(:clj
    (defn sha-512 [^String in]
@@ -8,9 +9,22 @@
                 (.update (.getBytes in)))]
        (apply str (map (partial format "%02x") (.digest md))))))
 
-#?(:clj
-   (defn ->int [x]
-     (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))))
+(defn ->int [x]
+  #?(:clj
+     (try (Integer/parseInt (str x)) (catch java.lang.NumberFormatException _ nil))
+     :cljs (js/parseInt (str x))))
+
+(comment
+  (->double "0.4")
+  (->double "1.4234")
+  (->double "1.4234x")
+  ,)
+
+(defn ->double [x]
+  #?(:clj (try
+            (Double/parseDouble (str x))
+            (catch java.lang.NumberFormatException _))
+     :cljs (js/parseFloat x)))
 
 #?(:clj
    (defn format* [s & args]

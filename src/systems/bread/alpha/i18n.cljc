@@ -1,9 +1,9 @@
 (ns systems.bread.alpha.i18n
   (:require
     [clojure.edn :as edn]
-    [clojure.java.io :as io]
     [clojure.string :as string]
     [com.rpl.specter :as s]
+    #?(:clj [clojure.java.io :as io])
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -11,9 +11,8 @@
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.internal.query-inference :as qi]
-    [systems.bread.alpha.util.datalog :as d])
-  (:import
-    [java.lang Double]))
+    [systems.bread.alpha.internal.interop :refer [->double]]
+    [systems.bread.alpha.util.datalog :as d]))
 
 (comment
   #?(:clj (alter-var-root #'*read-eagerly* not))
@@ -32,13 +31,14 @@
   returns a plain i18n map, keyed by lang/locale; if false, returns an ILookup
   instance that dynamically reads from the filesystem on each call to (get)."
   [path]
-  (if *read-eagerly*
-    (-> path io/resource slurp edn/read-string)
-    (reify clojure.lang.ILookup
-      (valAt [_ k]
-        (-> path io/resource slurp edn/read-string (get k)))
-      (valAt [_ k not-found]
-        (-> path io/resource slurp edn/read-string (get k not-found))))))
+  #?(:clj (if *read-eagerly*
+            (-> path io/resource slurp edn/read-string)
+            (reify clojure.lang.ILookup
+              (valAt [_ k]
+                (-> path io/resource slurp edn/read-string (get k)))
+              (valAt [_ k not-found]
+                (-> path io/resource slurp edn/read-string (get k not-found)))))
+     :cljs (throw (ex-info "not implemented" {:path path}))))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
@@ -47,18 +47,10 @@
   (bread/hook req ::supported-langs (bread/config req :i18n/supported-langs)))
 
 (comment
-  (->double "0.4")
-  (->double "1.4234")
-  (->double "1.4234x")
   (accepted-lang-ranges "*")
   (accepted-lang-ranges "; DROP TABLE users;--")
   ;;
   )
-
-(defn- ->double [x]
-  (try
-    (Double/parseDouble (str x))
-    (catch java.lang.NumberFormatException _)))
 
 (defn- accepted-lang-ranges [header]
   (when header

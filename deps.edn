@@ -23,8 +23,9 @@
 
   :build
   {:deps
-   {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}
-    slipset/deps-deploy           {:mvn/version "0.2.0"}}
+   {io.github.cljdoc/cljdoc-analyzer {:git/tag "v1.0.914" :git/sha "52a1281"}
+    io.github.clojure/tools.build    {:git/tag "v0.8.1" :git/sha "7d40500"}
+    slipset/deps-deploy              {:mvn/version "0.2.0"}}
    :ns-default build}
 
   :tools
@@ -152,23 +153,6 @@
   {:extra-paths ["cms/themes/crust/src" "cms/themes/crust/resources"]
    :extra-deps {systems.bread/bread-plugin-theme {:mvn/version "0.10.2385"}}}
 
-
-  :build-cli
-  {:main-opts ["-e" "(set! *warn-on-reflection* true)"
-               "-m" "clj.native-image" "systems.bread.alpha.cms.cli"
-               "-o" "bread"
-               "--initialize-at-build-time"
-               "--no-fallback"
-               "-J-Xmx3g"
-               "--trace-object-instantiation=java.lang.Thread"]
-   :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
-   :extra-deps
-   {clj.native-image/clj.native-image
-    {:git/url "https://github.com/taylorwood/clj.native-image"
-     :sha "4604ae76855e09cdabc0a2ecc5a7de2cc5b775d6"}
-    com.cognitect/transit-clj {:mvn/version "1.0.333"}
-    babashka/pods             {:git/url "https://github.com/babashka/pods"
-                               :git/sha "8b717eb001811bc5da5d15d1163565de00b4ffa4"}}}
   ,}
 
   :mvn/repos {"jitpack" {:url "https://jitpack.io"}}}
