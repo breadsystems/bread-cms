@@ -19,46 +19,46 @@
 
       {:a "first\nsecond\nthird"}
       {}
-      {:dispatcher/type ::markdown/markdown=>}
+      {:dispatcher/type ::markdown/page=>}
       nil
 
       {:a "first\nsecond\nthird"}
       {:join-metadata? true}
-      {:dispatcher/type ::markdown/markdown=>}
+      {:dispatcher/type ::markdown/page=>}
       nil
 
       metadata*
       {:join-metadata? false}
-      {:dispatcher/type ::markdown/markdown=>}
+      {:dispatcher/type ::markdown/page=>}
       nil
 
       metadata*
       {:join-metadata? nil}
-      {:dispatcher/type ::markdown/markdown=>}
+      {:dispatcher/type ::markdown/page=>}
       nil
 
       {:a "first\nsecond\nthird"}
       {:join-metadata? false}
-      {:dispatcher/type ::markdown/markdown=>
+      {:dispatcher/type ::markdown/page=>
        :join-metadata? true}
       nil
 
       metadata*
       {:join-metadata? true}
-      {:dispatcher/type ::markdown/markdown=>
+      {:dispatcher/type ::markdown/page=>
        :join-metadata? false}
       nil
 
       metadata*
       {:join-metadata? true}
-      {:dispatcher/type ::markdown/markdown=>
+      {:dispatcher/type ::markdown/page=>
        :join-metadata? true}
       {::markdown/join-metadata? [{:action/name ::bread/value
                                           :action/value false}]}
 
       {:a "first\nsecond\nthird"}
       {:join-metadata? false}
-      {:dispatcher/type ::markdown/markdown=>}
+      {:dispatcher/type ::markdown/page=>}
       {::markdown/join-metadata? [{:action/name ::bread/value
                                           :action/value true}]}
 
@@ -82,48 +82,41 @@
                       (bread/expand expansion {})))
 
         nil
-        {:expansion/name ::markdown/markdown
+        {:expansion/name ::markdown/page
          :filepaths ["non-existent/file/path"]}
         {}
 
         nil
-        {:expansion/name ::markdown/markdown
+        {:expansion/name ::markdown/page
          :filepaths ["non-existent/file/path" "another/non-existent/path"]}
         {}
 
         {:metadata nil
          :html "<p>Markdown doc in English under /public</p>"}
-        {:expansion/name ::markdown/markdown
+        {:expansion/name ::markdown/page
          :filepaths ["public/en/page.md"]}
         {}
 
         {:metadata {:title ["Whoa, Meta!"]}
          :html "<p>Doc with metadata</p>"}
-        {:expansion/name ::markdown/markdown
+        {:expansion/name ::markdown/page
          :filepaths ["public/en/meta.md"]
          :hook (partial bread/hook {::bread/hooks
                                     {::markdown/parsed
                                      [{:action/name ::markdown/join-metadata}]}})}
+        {}
 
         {:metadata {:title "Whoa, Meta!"}
          :html "<p>Doc with metadata</p>"}
-        {:expansion/name ::markdown/markdown
-         :filepaths ["public/en/meta.md"]
-         :hook (partial bread/hook {::bread/config
-                                    {:markdown/join-metadata? true}
-                                    ::bread/hooks
-                                    {::markdown/parsed
-                                     [{:action/name ::markdown/join-metadata}]}})}
+        {:expansion/name ::markdown/page
+         :filepaths ["public/en/meta.md"]}
+        {:markdown/join-metadata? true}
 
         {:metadata {:title "One\nTwo"}
          :html "<p>Doc with multi-line metadata</p>"}
-        {:expansion/name ::markdown/markdown
-         :filepaths ["public/en/multi.md"]
-         :hook (partial bread/hook {::bread/config
-                                    {:markdown/join-metadata? true}
-                                    ::bread/hooks
-                                    {::markdown/parsed
-                                     [{:action/name ::markdown/join-metadata}]}})}
+        {:expansion/name ::markdown/page
+         :filepaths ["public/en/multi.md"]}
+        {:markdown/join-metadata? true}
 
         ,))))
 

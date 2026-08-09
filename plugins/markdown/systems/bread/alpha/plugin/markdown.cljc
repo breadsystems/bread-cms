@@ -20,7 +20,7 @@
       (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
       content)))
 
-(defmethod bread/expand ::markdown
+(defmethod bread/expand ::page
   [{:keys [filepaths hook]} _]
   (let [file (loop [[filepath & filepaths] filepaths]
                (let [file (io/resource filepath)]
@@ -30,7 +30,7 @@
     (when file
       (hook ::parsed (md/md-to-html-string-with-meta (slurp file)) file))))
 
-(defmethod bread/dispatch ::markdown=>
+(defmethod bread/dispatch ::page=>
   [{:as req dispatcher ::bread/dispatcher}]
   (let [params (:route/params dispatcher)
         slug (get params (bread/config req :markdown/slug-param))
@@ -45,7 +45,7 @@
                       (->path path (i18n/lang req) (str slug ext)))
                     (for [path paths]
                       (->path path (i18n/lang req) index-filename)))]
-    {:expansions [{:expansion/name ::markdown
+    {:expansions [{:expansion/name ::page
                    :expansion/key (:dispatcher/key dispatcher :markdown)
                    :filepaths (bread/hook req ::filepaths filepaths params)
                    :hook (partial bread/hook req)}]}))
