@@ -2,12 +2,12 @@
 ;; rather than from the database.
 (ns systems.bread.alpha.plugin.markdown
   (:require
-    [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.java.io :as io]
     [markdown.core :as md]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.i18n :as i18n])
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [separator]])
   (:import
     #?(:clj [java.io File])))
 
@@ -39,8 +39,7 @@
         index-filename (bread/config req :markdown/index-filename)
         ->path (fn [& path-components]
                  (let [path-components (filter identity path-components)]
-                   ;; TODO interop
-                   (string/join (File/separator) (map name path-components))))
+                   (string/join separator (map name path-components))))
         filepaths (if slug
                     (for [path paths ext extensions]
                       (->path path (i18n/lang req) (str slug ext)))

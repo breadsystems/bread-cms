@@ -1,5 +1,8 @@
 (ns ^:no-doc systems.bread.alpha.internal.interop
+  #?(:cljs (:require
+             ["path" :as path]))
   #?(:clj (:import
+            [java.io File]
             [java.security MessageDigest]
             [java.lang Double])))
 
@@ -32,6 +35,10 @@
    :cljs
    (defn format* [& _]
      (throw (ex-info "Not implemented" {}))))
+
+(defonce separator
+  #?(:clj File/separator
+     :cljs (.-sep path)))
 
 (comment
   (require 'clojure.string)
