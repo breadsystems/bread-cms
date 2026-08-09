@@ -6,9 +6,8 @@
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]
     [systems.bread.alpha.plugin.markdown :as markdown]))
 
-(deftest singularize-metadata-hook
-  (let [metadata* {:a [:first :second :third]
-                   :b [0 1 2]}]
+(deftest join-metadata-hook
+  (let [metadata* {:a ["first" "second" "third"]}]
     (are
       [expected markdown-config dispatcher hooks]
       (= expected (let [app (plugins->loaded [(markdown/plugin markdown-config)
@@ -18,57 +17,58 @@
                         result (bread/hook req ::markdown/parsed content)]
                     (:metadata result)))
 
-      {:a :first :b 0}
+      {:a "first\nsecond\nthird"}
       {}
       {:dispatcher/type ::markdown/markdown=>}
       nil
 
-      {:a :first :b 0}
-      {:singularize-metadata? true}
+      {:a "first\nsecond\nthird"}
+      {:join-metadata? true}
       {:dispatcher/type ::markdown/markdown=>}
       nil
 
       metadata*
-      {:singularize-metadata? false}
+      {:join-metadata? false}
       {:dispatcher/type ::markdown/markdown=>}
       nil
 
       metadata*
-      {:singularize-metadata? nil}
+      {:join-metadata? nil}
       {:dispatcher/type ::markdown/markdown=>}
       nil
 
-      {:a :first :b 0}
-      {:singularize-metadata? false}
+      {:a "first\nsecond\nthird"}
+      {:join-metadata? false}
       {:dispatcher/type ::markdown/markdown=>
-       :singularize-metadata? true}
+       :join-metadata? true}
       nil
 
       metadata*
-      {:singularize-metadata? true}
+      {:join-metadata? true}
       {:dispatcher/type ::markdown/markdown=>
-       :singularize-metadata? false}
+       :join-metadata? false}
       nil
 
       metadata*
-      {:singularize-metadata? true}
+      {:join-metadata? true}
       {:dispatcher/type ::markdown/markdown=>
-       :singularize-metadata? true}
-      {::markdown/singularize-metadata? [{:action/name ::bread/value
+       :join-metadata? true}
+      {::markdown/join-metadata? [{:action/name ::bread/value
                                           :action/value false}]}
 
-      {:a :first :b 0}
-      {:singularize-metadata? false}
+      {:a "first\nsecond\nthird"}
+      {:join-metadata? false}
       {:dispatcher/type ::markdown/markdown=>}
-      {::markdown/singularize-metadata? [{:action/name ::bread/value
+      {::markdown/join-metadata? [{:action/name ::bread/value
                                           :action/value true}]}
 
       ,)))
 
 (deftest test-markdown-expansion
   (let [mock-fs
-        {"public/en/page.md"   "Markdown doc in English under /public"
-         "public/en/meta.md"   "Title: Whoa, Meta!\n\nDoc with metadata"}]
+        {"public/en/page.md"  "Markdown doc in English under /public"
+         "public/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
+         "public/en/multi.md" "Title: One\n    Two\n\nDoc with multi-line metadata"}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
@@ -97,19 +97,27 @@
          :filepaths ["public/en/meta.md"]
          :hook (partial bread/hook {::bread/hooks
                                     {::markdown/parsed
-                                     [{:action/name ::markdown/singularize-metadata}]}})}
+                                     [{:action/name ::markdown/join-metadata}]}})}
 
         {:metadata {:title "Whoa, Meta!"}
          :html "<p>Doc with metadata</p>"}
         {:expansion/name ::markdown/markdown
          :filepaths ["public/en/meta.md"]
          :hook (partial bread/hook {::bread/config
-                                    {:markdown/singularize-metadata? true}
+                                    {:markdown/join-metadata? true}
                                     ::bread/hooks
                                     {::markdown/parsed
-                                     [{:action/name ::markdown/singularize-metadata}]}})}
+                                     [{:action/name ::markdown/join-metadata}]}})}
 
-        ;; TODO singularize-metadata-keys
+        {:metadata {:title "One\nTwo"}
+         :html "<p>Doc with multi-line metadata</p>"}
+        {:expansion/name ::markdown/markdown
+         :filepaths ["public/en/multi.md"]
+         :hook (partial bread/hook {::bread/config
+                                    {:markdown/join-metadata? true}
+                                    ::bread/hooks
+                                    {::markdown/parsed
+                                     [{:action/name ::markdown/join-metadata}]}})}
 
         ,))))
 
@@ -117,4 +125,4 @@
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))

@@ -11,13 +11,13 @@
   (:import
     #?(:clj [java.io File])))
 
-(defmethod bread/action ::singularize-metadata
+(defmethod bread/action ::join-metadata
   [{:as req :keys [::bread/dispatcher]} _action [content]]
-  (let [configured? (bread/config req :markdown/singularize-metadata?)
-        singularize? (bread/hook req ::singularize-metadata?
-                                 (:singularize-metadata? dispatcher configured?))]
-    (if singularize?
-      (update content :metadata #(into {} (map (juxt key (comp first val)) %)))
+  (let [configured? (bread/config req :markdown/join-metadata?)
+        join? (bread/hook req ::join-metadata?
+                          (:join-metadata? dispatcher configured?))]
+    (if join?
+      (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
       content)))
 
 (defmethod bread/expand ::markdown
@@ -53,18 +53,18 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [paths extensions index-filename singularize-metadata? slug-param]
+  ([{:keys [paths extensions index-filename join-metadata? slug-param]
      :or {paths ["public"]
           extensions [".md"]
           index-filename "index.md"
-          singularize-metadata? true
+          join-metadata? true
           slug-param :slug}}]
    {:config {:markdown/paths paths
              :markdown/extensions extensions
              :markdown/index-filename index-filename
-             :markdown/singularize-metadata? singularize-metadata?
+             :markdown/join-metadata? join-metadata?
              :markdown/slug-param slug-param}
     :hooks
     {::parsed
-     [{:action/name ::singularize-metadata
-       :action/description "Singularize metadata from a markdown file."}]}}))
+     [{:action/name ::join-metadata
+       :action/description "join metadata from a markdown file."}]}}))
