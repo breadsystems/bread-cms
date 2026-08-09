@@ -3,6 +3,7 @@
     [clojure.test :refer [are deftest]]
 
     [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]
     [systems.bread.alpha.plugin.markdown :as markdown]))
 
@@ -120,7 +121,40 @@
 
         ,))))
 
-;; TODO test ::markdown=>
+(deftest test-page=>
+  (are
+    [expected config dispatcher]
+    (= expected (let [app (assoc (plugins->loaded [(i18n/plugin)
+                                                   (markdown/plugin config)])
+                                 ::bread/dispatcher dispatcher)]
+                  (-> (bread/dispatch app)
+                      ;; :hook is a partial, and not guaranteed equal
+                      :expansions first (dissoc :hook))))
+
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["public/en/mypage.md"]}
+    nil
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en" :slug "mypage"}}
+
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["content/en/mypage.ext" "other/en/mypage.ext"]}
+    {:paths ["content" "other"]
+     :extensions [".ext"]
+     :slug-param :my/slug}
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en" :my/slug "mypage"}}
+
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["public/en/index.md"]}
+    {:slug-param :my/slug}
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en"}}
+
+    ,))
 
 (comment
   (require '[kaocha.repl :as k])
