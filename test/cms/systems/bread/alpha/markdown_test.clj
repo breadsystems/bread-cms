@@ -15,7 +15,7 @@
                                               {:hooks hooks}])
                         req (assoc app ::bread/dispatcher dispatcher)
                         content {:metadata metadata*}
-                        result (bread/hook req ::markdown/html content)]
+                        result (bread/hook req ::markdown/parsed content)]
                     (:metadata result)))
 
       {:a :first :b 0}
@@ -96,7 +96,7 @@
         {:expansion/name ::markdown/markdown
          :filepaths ["public/en/meta.md"]
          :hook (partial bread/hook {::bread/hooks
-                                    {::markdown/html
+                                    {::markdown/parsed
                                      [{:action/name ::markdown/singularize-metadata}]}})}
 
         {:metadata {:title "Whoa, Meta!"}
@@ -106,7 +106,7 @@
          :hook (partial bread/hook {::bread/config
                                     {:markdown/singularize-metadata? true}
                                     ::bread/hooks
-                                    {::markdown/html
+                                    {::markdown/parsed
                                      [{:action/name ::markdown/singularize-metadata}]}})}
 
         ;; TODO singularize-metadata-keys

@@ -28,7 +28,7 @@
                    file file
                    (seq filepaths) (recur filepaths))))]
     (when file
-      (hook ::html (md/md-to-html-string-with-meta (slurp file)) file))))
+      (hook ::parsed (md/md-to-html-string-with-meta (slurp file)) file))))
 
 (defmethod bread/dispatch ::markdown=>
   [{:as req dispatcher ::bread/dispatcher}]
@@ -65,6 +65,6 @@
              :markdown/singularize-metadata? singularize-metadata?
              :markdown/slug-param slug-param}
     :hooks
-    {::html
+    {::parsed
      [{:action/name ::singularize-metadata
        :action/description "Singularize metadata from a markdown file."}]}}))
