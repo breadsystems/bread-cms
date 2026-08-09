@@ -13,9 +13,9 @@
 
 (defmethod bread/action ::join-metadata
   [{:as req :keys [::bread/dispatcher]} _action [content]]
-  (let [configured? (bread/config req :markdown/join-metadata?)
-        join? (bread/hook req ::join-metadata?
-                          (:join-metadata? dispatcher configured?))]
+  (let [join? (->> (bread/config req :markdown/join-metadata?)
+                   (:join-metadata? dispatcher)
+                   (bread/hook req ::join-metadata?))]
     (if join?
       (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
       content)))

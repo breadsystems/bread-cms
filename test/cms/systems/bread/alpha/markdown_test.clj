@@ -72,24 +72,30 @@
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
-        [expected expansion]
-        (= expected (bread/expand expansion {}))
+        [expected expansion* config]
+        (= expected (let [app {::bread/config config
+                               ::bread/hooks
+                               {::markdown/parsed
+                                [{:action/name ::markdown/join-metadata}]}}
+                          hook (partial bread/hook app)
+                          expansion (assoc expansion* :hook hook)]
+                      (bread/expand expansion {})))
 
         nil
         {:expansion/name ::markdown/markdown
-         :filepaths ["non-existent/file/path"]
-         :hook (partial bread/hook {})}
+         :filepaths ["non-existent/file/path"]}
+        {}
 
         nil
         {:expansion/name ::markdown/markdown
-         :filepaths ["non-existent/file/path" "another/non-existent/path"]
-         :hook (partial bread/hook {})}
+         :filepaths ["non-existent/file/path" "another/non-existent/path"]}
+        {}
 
         {:metadata nil
          :html "<p>Markdown doc in English under /public</p>"}
         {:expansion/name ::markdown/markdown
-         :filepaths ["public/en/page.md"]
-         :hook (partial bread/hook {})}
+         :filepaths ["public/en/page.md"]}
+        {}
 
         {:metadata {:title ["Whoa, Meta!"]}
          :html "<p>Doc with metadata</p>"}
