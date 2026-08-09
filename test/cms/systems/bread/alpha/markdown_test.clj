@@ -109,7 +109,11 @@
                                     {::markdown/html
                                      [{:action/name ::markdown/singularize-metadata}]}})}
 
+        ;; TODO singularize-metadata-keys
+
         ,))))
+
+;; TODO test ::markdown=>
 
 (comment
   (require '[kaocha.repl :as k])
