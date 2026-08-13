@@ -16,6 +16,7 @@
     ;; Bread plugins.
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.email :as email]
+    [systems.bread.alpha.plugin.markdown :as markdown]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.plugin.reitit] ;; Implements Router protocol
     [systems.bread.alpha.plugin.signup :as signup]
@@ -136,6 +137,10 @@
        :dispatcher/type ::taxon/tag=>
        :dispatcher/component #'crust/Tag
        :post/type :page}]
+     ["/m/{slug}"
+      {:name :markdown-page
+       :dispatcher/type ::markdown/page=>
+       :dispatcher/component #'crust/MarkdownPage}]
      ["/*slugs"
       {:name :page
        :dispatcher/type ::post/page=>

@@ -25,7 +25,7 @@
   ,)
 
 (defmethod bread/expand ::page
-  [{:keys [filepaths hook]} _]
+  [{:keys [filepaths hook expansion/key]} _]
   (let [file (loop [[filepath & filepaths] filepaths]
                (let [file (io/resource filepath)]
                  (cond
@@ -50,7 +50,7 @@
                     (for [path paths]
                       (->path path (i18n/lang req) index-filename)))]
     {:expansions [{:expansion/name ::page
-                   :expansion/key (:dispatcher/key dispatcher :markdown)
+                   :expansion/key (or (:dispatcher/key dispatcher) :markdown)
                    :filepaths (bread/hook req ::filepaths filepaths params)
                    :hook (partial bread/hook req)}]}))
 

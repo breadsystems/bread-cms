@@ -1,11 +1,8 @@
 (ns systems.bread.alpha.cms.theme.crust
   (:require
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.component :refer [defc Section]]
-    [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.user :as user]
-    [systems.bread.alpha.plugin.account :as account]
-    [systems.bread.alpha.plugin.auth :as auth]
+    [systems.bread.alpha.component :refer [defc]]
+    #_[systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.marx :as marx])
   (:import
     [java.text SimpleDateFormat]))
@@ -98,9 +95,7 @@
 
 (defc InteriorPage
   [{{{:as fields field-defs :bread/fields} :thing/fields tags :post/taxons :as post} :post
-    {:keys [main-nav]} :menus
-    {:keys [user]} :session
-    :keys [hook route/uri]}]
+    :keys [route/uri]}]
   {:extends MainLayout
    :key :post
    :query '[{:thing/fields [*]}
@@ -114,3 +109,14 @@
        (map (fn [{:as tag {tag-name :name} :thing/fields}]
               [:a.tag-link {:href (uri :tag tag)} (str "#" tag-name)])
             tags)]]]))
+
+(defc MarkdownPage [{:as data {:keys [metadata html]} :post}]
+  {:extends MainLayout
+   :key :post}
+  [:article
+   [:h1 (:title metadata)]
+   [:.post-content {:dangerouslySetInnerHTML {:__html html}}]
+   [:footer
+    [:.tags-list {:role :list}
+     ;; TODO how do tags work in Markdown?
+     ]]])
