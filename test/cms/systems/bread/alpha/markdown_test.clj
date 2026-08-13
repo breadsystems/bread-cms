@@ -67,9 +67,9 @@
 
 (deftest test-markdown-expansion
   (let [mock-fs
-        {"public/en/page.md"  "Markdown doc in English under /public"
-         "public/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
-         "public/en/multi.md" "Title: One\n    Two\n\nDoc with multi-line metadata"}]
+        {"pages/en/page.md"  "Markdown doc in English under /pages"
+         "pages/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
+         "pages/en/multi.md" "Title: One\n    Two\n\nDoc with multi-line metadata"}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
@@ -93,15 +93,15 @@
         {}
 
         {:metadata nil
-         :html "<p>Markdown doc in English under /public</p>"}
+         :html "<p>Markdown doc in English under /pages</p>"}
         {:expansion/name ::markdown/page
-         :filepaths ["public/en/page.md"]}
+         :filepaths ["pages/en/page.md"]}
         {}
 
         {:metadata {:title ["Whoa, Meta!"]}
          :html "<p>Doc with metadata</p>"}
         {:expansion/name ::markdown/page
-         :filepaths ["public/en/meta.md"]
+         :filepaths ["pages/en/meta.md"]
          :hook (partial bread/hook {::bread/hooks
                                     {::markdown/parsed
                                      [{:action/name ::markdown/join-metadata}]}})}
@@ -110,13 +110,13 @@
         {:metadata {:title "Whoa, Meta!"}
          :html "<p>Doc with metadata</p>"}
         {:expansion/name ::markdown/page
-         :filepaths ["public/en/meta.md"]}
+         :filepaths ["pages/en/meta.md"]}
         {:markdown/join-metadata? true}
 
         {:metadata {:title "One\nTwo"}
          :html "<p>Doc with multi-line metadata</p>"}
         {:expansion/name ::markdown/page
-         :filepaths ["public/en/multi.md"]}
+         :filepaths ["pages/en/multi.md"]}
         {:markdown/join-metadata? true}
 
         ,))))
@@ -133,15 +133,15 @@
 
     {:expansion/name ::markdown/page
      :expansion/key :markdown
-     :filepaths ["public/en/mypage.md"]}
+     :filepaths ["pages/en/mypage.md"]}
     nil
     {:dispatcher/type ::markdown/page=>
      :route/params {:field/lang "en" :slug "mypage"}}
 
     {:expansion/name ::markdown/page
      :expansion/key :markdown
-     :filepaths ["content/en/mypage.ext" "other/en/mypage.ext"]}
-    {:paths ["content" "other"]
+     :filepaths ["dir/en/mypage.ext" "other/en/mypage.ext"]}
+    {:paths ["dir" "other"]
      :extensions [".ext"]
      :slug-param :my/slug}
     {:dispatcher/type ::markdown/page=>
@@ -149,7 +149,7 @@
 
     {:expansion/name ::markdown/page
      :expansion/key :markdown
-     :filepaths ["public/en/index.md"]}
+     :filepaths ["pages/en/index.md"]}
     {:slug-param :my/slug}
     {:dispatcher/type ::markdown/page=>
      :route/params {:field/lang "en"}}

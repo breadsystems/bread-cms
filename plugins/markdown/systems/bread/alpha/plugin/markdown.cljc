@@ -20,6 +20,10 @@
       (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
       content)))
 
+(comment
+  (md/md-to-html-string-with-meta (slurp (io/resource "pages/en/markdown-example.md")))
+  ,)
+
 (defmethod bread/expand ::page
   [{:keys [filepaths hook]} _]
   (let [file (loop [[filepath & filepaths] filepaths]
@@ -54,7 +58,7 @@
   ([]
    (plugin {}))
   ([{:keys [paths extensions index-filename join-metadata? slug-param]
-     :or {paths ["public"]
+     :or {paths ["pages"]
           extensions [".md"]
           index-filename "index.md"
           join-metadata? true
