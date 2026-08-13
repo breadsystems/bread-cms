@@ -12,7 +12,7 @@
     [systems.bread.alpha.internal.interop :refer [->int]]
     [systems.bread.alpha.ring :as bread.ring])
   (:import
-    [java.util Date Properties UUID]))
+    [java.util Date]))
 
 (def cli-options
   [["-h" "--help"
