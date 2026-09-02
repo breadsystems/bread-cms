@@ -110,12 +110,11 @@
               [:a.tag-link {:href (uri :tag tag)} (str "#" tag-name)])
             tags)]]]))
 
-(defc MarkdownPage [{:as data {:keys [metadata html]} :post}]
-  {:extends MainLayout
-   :key :post}
+(defc MarkdownPage [{:as data {:keys [metadata html]} :markdown}]
+  {:extends MainLayout}
   [:article
    [:h1 (:title metadata)]
-   [:.post-content {:dangerouslySetInnerHTML {:__html html}}]
+   [:.post-content {:dangerouslySetInnerHTML {:__html (str html)}}]
    [:footer
     [:.tags-list {:role :list}
      ;; TODO how do tags work in Markdown?
