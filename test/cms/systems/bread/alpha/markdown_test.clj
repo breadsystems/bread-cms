@@ -24,44 +24,44 @@
       nil
 
       {:a "first\nsecond\nthird"}
-      {:join-metadata? true}
+      {:join-metadata-keys true}
       {:dispatcher/type ::markdown/page=>}
       nil
 
       metadata*
-      {:join-metadata? false}
+      {:join-metadata-keys false}
       {:dispatcher/type ::markdown/page=>}
       nil
 
       metadata*
-      {:join-metadata? nil}
+      {:join-metadata-keys nil}
       {:dispatcher/type ::markdown/page=>}
       nil
 
       {:a "first\nsecond\nthird"}
-      {:join-metadata? false}
+      {:join-metadata-keys false}
       {:dispatcher/type ::markdown/page=>
-       :join-metadata? true}
+       :join-metadata-keys true}
       nil
 
       metadata*
-      {:join-metadata? true}
+      {:join-metadata-keys true}
       {:dispatcher/type ::markdown/page=>
-       :join-metadata? false}
+       :join-metadata-keys false}
       nil
 
       metadata*
-      {:join-metadata? true}
+      {:join-metadata-keys true}
       {:dispatcher/type ::markdown/page=>
-       :join-metadata? true}
-      {::markdown/join-metadata? [{:action/name ::bread/value
-                                          :action/value false}]}
+       :join-metadata-keys true}
+      {::markdown/join-metadata-keys [{:action/name ::bread/value
+                                       :action/value false}]}
 
       {:a "first\nsecond\nthird"}
-      {:join-metadata? false}
+      {:join-metadata-keys false}
       {:dispatcher/type ::markdown/page=>}
-      {::markdown/join-metadata? [{:action/name ::bread/value
-                                          :action/value true}]}
+      {::markdown/join-metadata-keys [{:action/name ::bread/value
+                                       :action/value true}]}
 
       ,)))
 
@@ -69,7 +69,12 @@
   (let [mock-fs
         {"pages/en/page.md"  "Markdown doc in English under /pages"
          "pages/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
-         "pages/en/multi.md" "Title: One\n    Two\n\nDoc with multi-line metadata"}]
+         "pages/en/multi.md" (str "Title: One"
+                                  "\n    Two"
+                                  "\nTags: one"
+                                  "\n    two"
+                                  "\n"
+                                  "\nDoc with multi-line metadata")}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
@@ -111,13 +116,19 @@
          :html "<p>Doc with metadata</p>"}
         {:expansion/name ::markdown/page
          :filepaths ["pages/en/meta.md"]}
-        {:markdown/join-metadata? true}
+        {:markdown/join-metadata-keys true}
 
-        {:metadata {:title "One\nTwo"}
+        {:metadata {:title "One\nTwo" :tags "one\ntwo"}
          :html "<p>Doc with multi-line metadata</p>"}
         {:expansion/name ::markdown/page
          :filepaths ["pages/en/multi.md"]}
-        {:markdown/join-metadata? true}
+        {:markdown/join-metadata-keys true}
+
+        {:metadata {:title "One\nTwo" :tags ["one" "two"]}
+         :html "<p>Doc with multi-line metadata</p>"}
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/multi.md"]}
+        {:markdown/join-metadata-keys [:title]}
 
         ,))))
 

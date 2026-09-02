@@ -13,12 +13,19 @@
 
 (defmethod bread/action ::join-metadata
   [{:as req :keys [::bread/dispatcher]} _action [content]]
-  (let [join? (->> (bread/config req :markdown/join-metadata?)
-                   (:join-metadata? dispatcher)
-                   (bread/hook req ::join-metadata?))]
-    (if join?
+  (let [ks (->> (bread/config req :markdown/join-metadata-keys)
+                   (:join-metadata-keys dispatcher)
+                   (bread/hook req ::join-metadata-keys))]
+    (cond
+      (true? ks)
       (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
-      content)))
+      ks
+      (let [ks (set ks)]
+        (update content :metadata #(into {} (map (fn [[k v]]
+                                                   (if (contains? (set ks) k)
+                                                     [k (string/join "\n" v)]
+                                                     [k v])) %))))
+      :else content)))
 
 (comment
   (md/md-to-html-string-with-meta (slurp (io/resource "pages/en/markdown-example.md")))
@@ -57,16 +64,16 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [paths extensions index-filename join-metadata? slug-param]
+  ([{:keys [paths extensions index-filename join-metadata-keys slug-param]
      :or {paths ["pages"]
           extensions [".md"]
           index-filename "index.md"
-          join-metadata? true
+          join-metadata-keys true
           slug-param :slug}}]
    {:config {:markdown/paths paths
              :markdown/extensions extensions
              :markdown/index-filename index-filename
-             :markdown/join-metadata? join-metadata?
+             :markdown/join-metadata-keys join-metadata-keys
              :markdown/slug-param slug-param}
     :hooks
     {::parsed
