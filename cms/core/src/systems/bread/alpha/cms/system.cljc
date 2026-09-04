@@ -23,6 +23,7 @@
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.datahike]
     [systems.bread.alpha.plugin.email :as email]
+    [systems.bread.alpha.plugin.markdown :as markdown]
     [systems.bread.alpha.plugin.marx :as marx]
     [systems.bread.alpha.navigation :as navigation]
     #_ ;; TODO
@@ -118,6 +119,7 @@
                    (signup/plugin (:signup app-config))
                    (account/plugin (:account app-config))
                    (invitations/plugin (:invitation app-config))
+                   (markdown/plugin (:markdown app-config))
                    (marx/plugin (:marx app-config))
                    (navigation/plugin (:navigation app-config))
                    (rum/plugin (:renderer app-config))

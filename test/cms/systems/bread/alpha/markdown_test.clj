@@ -1,113 +1,172 @@
 (ns systems.bread.alpha.markdown-test
   (:require
     [clojure.test :refer [are deftest]]
-    [markdown.core :as md]
+
+    [systems.bread.alpha.core :as bread]
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.test-helpers :refer [plugins->loaded]]
     [systems.bread.alpha.plugin.markdown :as markdown]))
 
-(deftest test-query-fs
+(deftest join-metadata-hook
+  (let [metadata* {:a ["first" "second" "third"]}]
+    (are
+      [expected markdown-config dispatcher hooks]
+      (= expected (let [app (plugins->loaded [(markdown/plugin markdown-config)
+                                              {:hooks hooks}])
+                        req (assoc app ::bread/dispatcher dispatcher)
+                        content {:metadata metadata*}
+                        result (bread/hook req ::markdown/parsed content)]
+                    (:metadata result)))
+
+      {:a "first\nsecond\nthird"}
+      {}
+      {:dispatcher/type ::markdown/page=>}
+      nil
+
+      {:a "first\nsecond\nthird"}
+      {:join-metadata-keys true}
+      {:dispatcher/type ::markdown/page=>}
+      nil
+
+      metadata*
+      {:join-metadata-keys false}
+      {:dispatcher/type ::markdown/page=>}
+      nil
+
+      metadata*
+      {:join-metadata-keys nil}
+      {:dispatcher/type ::markdown/page=>}
+      nil
+
+      {:a "first\nsecond\nthird"}
+      {:join-metadata-keys false}
+      {:dispatcher/type ::markdown/page=>
+       :join-metadata-keys true}
+      nil
+
+      metadata*
+      {:join-metadata-keys true}
+      {:dispatcher/type ::markdown/page=>
+       :join-metadata-keys false}
+      nil
+
+      metadata*
+      {:join-metadata-keys true}
+      {:dispatcher/type ::markdown/page=>
+       :join-metadata-keys true}
+      {::markdown/join-metadata-keys [{:action/name ::bread/value
+                                       :action/value false}]}
+
+      {:a "first\nsecond\nthird"}
+      {:join-metadata-keys false}
+      {:dispatcher/type ::markdown/page=>}
+      {::markdown/join-metadata-keys [{:action/name ::bread/value
+                                       :action/value true}]}
+
+      ,)))
+
+(deftest test-markdown-expansion
   (let [mock-fs
-        {"content/en/page.md"  "Markdown doc in English under /content"
-         "alt/en/page.md"      "Markdown doc in English under /alt"
-         "content/fr/page.md"  "Markdown doc in French under /content"
-         "alt/fr/page.md"      "Markdown doc in French under /alt"
-         "content/en/other.md" "OTHER doc in English under /content"
-         "content/fr/other.md" "OTHER doc in French under /content"
-         "content/en/page.ext" ".ext doc in English under /content"
-         "content/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"}
-        default-opts {:root "content"
-                      :ext ".md"
-                      :lang-param :lang
-                      :slug-param :slug
-                      :parse md/md-to-html-string-with-meta}]
+        {"pages/en/page.md"  "Markdown doc in English under /pages"
+         "pages/en/meta.md"  "Title: Whoa, Meta!\n\nDoc with metadata"
+         "pages/en/multi.md" (str "Title: One"
+                                  "\n    Two"
+                                  "\nTags: one"
+                                  "\n    two"
+                                  "\n"
+                                  "\nDoc with multi-line metadata")}]
     (with-redefs [clojure.java.io/resource str
                   slurp mock-fs]
       (are
-        [content args]
-        (= content (let [[params opts] args]
-                     (markdown/query-fs {} params (merge default-opts opts))))
+        [expected expansion* config]
+        (= expected (let [app {::bread/config config
+                               ::bread/hooks
+                               {::markdown/parsed
+                                [{:action/name ::markdown/join-metadata}]}}
+                          hook (partial bread/hook app)
+                          expansion (assoc expansion* :hook hook)]
+                      (bread/expand expansion {})))
 
-        {:html "<p>Markdown doc in English under /alt</p>"}
-        [{:lang "en" :slug "page"} {:root "alt"}]
+        nil
+        {:expansion/name ::markdown/page
+         :filepaths ["non-existent/file/path"]}
+        {}
 
-        {:html "<p>Markdown doc in French under /content</p>"}
-        [{:lang "fr" :slug "page"} {:root "content"}]
+        nil
+        {:expansion/name ::markdown/page
+         :filepaths ["non-existent/file/path" "another/non-existent/path"]}
+        {}
 
-        {:html "<p>Markdown doc in French under /alt</p>"}
-        [{:lang "fr" :slug "page"} {:root "alt"}]
+        {:metadata nil
+         :html "<p>Markdown doc in English under /pages</p>"}
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/page.md"]}
+        {}
 
-        {:html "<p>OTHER doc in English under /content</p>"}
-        [{:lang "en" :slug "other"}]
-
-        {:html "<p>OTHER doc in French under /content</p>"}
-        [{:lang "fr" :slug "other"}]
-
-        {:html "<p>.ext doc in English under /content</p>"}
-        [{:lang "en" :slug "page"} {:ext ".ext"}]
-
-        {:title ["Whoa, Meta!"]
+        {:metadata {:title ["Whoa, Meta!"]}
          :html "<p>Doc with metadata</p>"}
-        [{:lang "en" :slug "meta"}]
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/meta.md"]
+         :hook (partial bread/hook {::bread/hooks
+                                    {::markdown/parsed
+                                     [{:action/name ::markdown/join-metadata}]}})}
+        {}
 
-        ;; Ignore meta data
-        {:html "<p>Title: Whoa, Meta!</p><p>Doc with metadata</p>"}
-        [{:lang "en" :slug "meta"} {:parse md/md-to-html-string}]
+        {:metadata {:title "Whoa, Meta!"}
+         :html "<p>Doc with metadata</p>"}
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/meta.md"]}
+        {:markdown/join-metadata-keys true}
 
-        ;; With custom parser
-        {:html "<div>Markdown doc in English under /content</div>"}
-        [{:lang "en" :slug "page"}
-         {:parse (fn [markdown]
-                   {:html (str "<div>" markdown "</div>")})}]
+        {:metadata {:title "One\nTwo" :tags "one\ntwo"}
+         :html "<p>Doc with multi-line metadata</p>"}
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/multi.md"]}
+        {:markdown/join-metadata-keys true}
 
-        ;; With custom lang & slug param keys
-        {:html "<p>Markdown doc in English under /content</p>"}
-        [{:custom-lang "en" :custom-slug "page"}
-         {:lang-param :custom-lang :slug-param :custom-slug}]))))
+        {:metadata {:title "One\nTwo" :tags ["one" "two"]}
+         :html "<p>Doc with multi-line metadata</p>"}
+        {:expansion/name ::markdown/page
+         :filepaths ["pages/en/multi.md"]}
+        {:markdown/join-metadata-keys [:title]}
 
-(deftest test-request-creator
+        ,))))
+
+(deftest test-page=>
   (are
-    [req args]
-    (= req (let [[file config] args
-                 creator (markdown/request-creator config)]
-             (markdown/create-request creator file config)))
+    [expected config dispatcher]
+    (= expected (let [app (assoc (plugins->loaded [(i18n/plugin)
+                                                   (markdown/plugin config)])
+                                 ::bread/dispatcher dispatcher)]
+                  (-> (bread/dispatch app)
+                      ;; :hook is a partial, and not guaranteed equal
+                      :expansions first (dissoc :hook))))
 
-    {:uri "/en/one"}
-    ["/var/www/content/en/one.md" {:dir "/var/www/content"
-                                   :ext ".md"}]
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["pages/en/mypage.md"]}
+    nil
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en" :slug "mypage"}}
 
-    {:uri "/en/one"}
-    ["/var/www/content/en/one.markdown" {:dir "/var/www/content"
-                                         :ext ".markdown"}]
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["dir/en/mypage.ext" "other/en/mypage.ext"]}
+    {:paths ["dir" "other"]
+     :extensions [".ext"]
+     :slug-param :my/slug}
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en" :my/slug "mypage"}}
 
-    {:uri "/override"}
-    ["path.md" {:path->req (constantly {:uri "/override"})}]
+    {:expansion/name ::markdown/page
+     :expansion/key :markdown
+     :filepaths ["pages/en/index.md"]}
+    {:slug-param :my/slug}
+    {:dispatcher/type ::markdown/page=>
+     :route/params {:field/lang "en"}}
 
-    ;; A map with a :uri key is treated as a shorthand for
-    ;; a simple URI formatter.
-    {:uri "/override"}
-    ["/var/www/content/en/one.md" {:dir "/var/www/content"
-                                   :path->req
-                                   {:uri ["override"]}}]
-
-    {:uri "/a/b/c"}
-    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
-                                  :ext ".md"
-                                  :path->req
-                                  {:uri [0 1 2]}}]
-
-    {:uri "/c/b/a"}
-    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
-                                  :ext ".md"
-                                  :path->req
-                                  {:uri [2 1 0]}}]
-
-    ;; A vector v is shorthand for {:uri v}
-    {:uri "/a/b/c"}
-    ["/var/www/content/a/b/c.md" {:dir "/var/www/content"
-                                  :ext ".md"
-                                  :path->req
-                                  [0 1 2]}]
-    ))
+    ,))
 
 (comment
   (require '[kaocha.repl :as k])
-  (k/run))
+  (k/run {:color? false}))

@@ -2,121 +2,80 @@
 ;; rather than from the database.
 (ns systems.bread.alpha.plugin.markdown
   (:require
-    [clojure.instant :as instant]
-    [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.java.io :as io]
     [markdown.core :as md]
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.dispatcher :as dispatcher]))
+    [systems.bread.alpha.i18n :as i18n]
+    [systems.bread.alpha.internal.interop :refer [separator]])
+  (:import
+    #?(:clj [java.io File])))
+
+(defmethod bread/action ::join-metadata
+  [{:as req :keys [::bread/dispatcher]} _action [content]]
+  (let [ks (->> (bread/config req :markdown/join-metadata-keys)
+                   (:join-metadata-keys dispatcher)
+                   (bread/hook req ::join-metadata-keys))]
+    (cond
+      (true? ks)
+      (update content :metadata #(into {} (map (juxt key (comp (partial string/join "\n") val)) %)))
+      ks
+      (let [ks (set ks)]
+        (update content :metadata #(into {} (map (fn [[k v]]
+                                                   (if (contains? (set ks) k)
+                                                     [k (string/join "\n" v)]
+                                                     [k v])) %))))
+      :else content)))
 
 (comment
+  (md/md-to-html-string-with-meta (slurp (io/resource "pages/en/markdown-example.md")))
+  ,)
 
-  (slurp "dev/content/en/one.md")
-  (slurp (io/resource "content/en/one.md"))
+(defmethod bread/expand ::page
+  [{:keys [filepaths hook expansion/key]} _]
+  (let [file (loop [[filepath & filepaths] filepaths]
+               (let [file (io/resource filepath)]
+                 (cond
+                   file file
+                   (seq filepaths) (recur filepaths))))]
+    (when file
+      (hook ::parsed (md/md-to-html-string-with-meta (slurp file)) file))))
 
-  (md/md-to-html-string (slurp (io/resource "content/en/one.md")))
-
-  (clojure.string/join java.io.File/separator (map {:lang "en" :slug "one"} [:lang :slug]))
-
-  ;;
-  )
-
-(defn query-fs [_data params opts]
-  (let [{:keys [root ext lang-param slug-param parse]} opts
-        sep java.io.File/separator
-        path (string/join sep (map params [lang-param slug-param]))
-        path (str root sep path ext)
-        parsed (some-> path io/resource slurp parse)]
-    (if (string? parsed)
-      {:html parsed}
-      (let [{:keys [html metadata]} parsed]
-        (when html
-          (assoc metadata :html html))))))
-
-(defmethod bread/dispatch ::static
-  [{::bread/keys [dispatcher config]}]
+(defmethod bread/dispatch ::page=>
+  [{:as req dispatcher ::bread/dispatcher}]
   (let [params (:route/params dispatcher)
-        opts (-> config
-                 (rename-keys
-                   {:static/root :root
-                    :static/ext :ext
-                    :static/lang-param :lang-param
-                    :static/slug-param :slug-param
-                    :static/parse :parse})
-                 (select-keys [:root :ext :lang-param :slug-param :parse]))]
-    {:expansions [[:post query-fs params opts]]}))
-
-(defprotocol ^:private RequestCreator
-  (create-request [this path config]))
-
-(defn- get-path-segment [segments i]
-  (if (integer? i)
-    (get segments i)
-    i))
-
-(defn- extrapolate-uri [v path]
-  (let [segments (vec (filter (complement empty?) (string/split path #"/")))]
-    (str "/" (string/join "/" (map (partial get-path-segment segments) v)))))
-
-(defn abs-path->uri [abs-path dir ext]
-  (subs abs-path (count dir) (- (count abs-path) (count ext))))
-
-(comment
-  (extrapolate-uri ["a"] "whatever")
-  (extrapolate-uri [0 1 2] "/a/b/c")
-  (extrapolate-uri [2 1 0] "/a/b/c")
-  (extrapolate-uri [0 "then" 1 "then" 2] "/a/b/c")
-
-  (abs-path->uri "/var/www/a/b/c.md" "/var/www" ".md")
-
-  (query-fs {}
-            {:slug "one" :lang "en"}
-            {:root "content" :ext "md" :lang-param :lang :slug-param :slug
-             :parse md/md-to-html-string-with-meta})
-  )
-
-(extend-protocol RequestCreator
-  clojure.lang.Fn
-  (create-request [f path config]
-    (f path config))
-
-  clojure.lang.PersistentArrayMap
-  (create-request [m path config]
-    (let [v (:uri m)
-          path (abs-path->uri path (:dir config) (:ext config))]
-      (when-not (vector? v)
-        (throw (IllegalArgumentException.
-                 "(:uri path->req) must be a vector")))
-      (assoc m :uri (extrapolate-uri v path))))
-
-  clojure.lang.PersistentVector
-  (create-request [v path config]
-    (let [path (abs-path->uri path (:dir config) (:ext config))]
-      {:uri (extrapolate-uri v path)})))
-
-(defn request-creator [{:keys [dir ext path->req]}]
-  (or path->req
-      (fn [path _]
-        {:uri (abs-path->uri path dir ext)})))
+        slug (get params (bread/config req :markdown/slug-param))
+        extensions (bread/config req :markdown/extensions)
+        paths (bread/config req :markdown/paths)
+        index-filename (bread/config req :markdown/index-filename)
+        ->path (fn [& path-components]
+                 (let [path-components (filter identity path-components)]
+                   (string/join separator (map name path-components))))
+        filepaths (if slug
+                    (for [path paths ext extensions]
+                      (->path path (i18n/lang req) (str slug ext)))
+                    (for [path paths]
+                      (->path path (i18n/lang req) index-filename)))]
+    {:expansions [{:expansion/name ::page
+                   :expansion/key (or (:dispatcher/key dispatcher) :markdown)
+                   :filepaths (bread/hook req ::filepaths filepaths params)
+                   :hook (partial bread/hook req)}]}))
 
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [root ext lang-param slug-param parse-meta? parse]
-     :or {root "content"
-          ext ".md"
-          lang-param :lang
-          slug-param :slug
-          parse-meta? true}}]
-   (let [parse (cond
-                 parse parse
-                 parse-meta? md/md-to-html-string-with-meta
-                 :else md/md-to-html-string)]
-     {:config
-      {:static/root root
-       :static/ext ext
-       :static/lang-param lang-param
-       :static/slug-param slug-param
-       :static/parse parse
-       :static/parse-meta? parse-meta?}})))
+  ([{:keys [paths extensions index-filename join-metadata-keys slug-param]
+     :or {paths ["pages"]
+          extensions [".md"]
+          index-filename "index.md"
+          join-metadata-keys true
+          slug-param :slug}}]
+   {:config {:markdown/paths paths
+             :markdown/extensions extensions
+             :markdown/index-filename index-filename
+             :markdown/join-metadata-keys join-metadata-keys
+             :markdown/slug-param slug-param}
+    :hooks
+    {::parsed
+     [{:action/name ::join-metadata
+       :action/description "join metadata from a markdown file."}]}}))

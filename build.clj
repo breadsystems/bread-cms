@@ -138,19 +138,22 @@
       (deploy opts))))
 
 (defn cljdoc-analyze [opts]
-  (doseq [k (interpret-libs (:lib opts :all))]
-    (let [{lib-name :lib} (get libs k)
-          cmd ["clojure" "-Tcljdoc" "analyze"
-               ":project" (pr-str (str lib-name))
-               ":version" (pr-str patch-version)
-               ":jarpath" (pr-str (jar-path lib-name patch-version))
-               ":pompath" (pr-str (b/pom-path {:lib lib-name :class-dir class-dir}))]]
-      (jar (assoc opts :lib k))
-      (println cmd)
-      (let [{:keys [exit out]} (apply shell/sh cmd)]
-        (print out)
-        (flush)
-        (System/exit exit)))))
+  (loop [[k & ks] (interpret-libs (:lib opts :all))
+         exit-status 0]
+    (if k
+      (let [{lib-name :lib} (get libs k)
+            cmd ["clojure" "-Tcljdoc" "analyze"
+                 ":project" (pr-str (str lib-name))
+                 ":version" (pr-str patch-version)
+                 ":jarpath" (pr-str (jar-path lib-name patch-version))
+                 ":pompath" (pr-str (b/pom-path {:lib lib-name :class-dir class-dir}))]]
+        (jar (assoc opts :lib k))
+        (println cmd)
+        (let [{:keys [exit out]} (apply shell/sh cmd)]
+          (print out)
+          (flush)
+          (recur ks (max exit exit-status))))
+      (System/exit exit-status))))
 
 (defn uber [_]
   (println "Cleaning target directory...")

@@ -61,6 +61,7 @@
 
                  "resources/marx"
                  "resources/public"
+                 "resources/content"
 
                  "plugins/auth"
                  "plugins/datahike"
@@ -125,7 +126,7 @@
    :extra-deps {garden/garden {:mvn/version "1.3.10"}}}
 
   :markdown
-  {:extra-paths ["plugins/markdown"]
+  {:extra-paths ["plugins/markdown" "resources/content"]
    :extra-deps {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}}
 
   :reitit
