@@ -8,7 +8,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [->int format*]]
+    [systems.bread.alpha.internal.interop :refer [->int format* sha-512]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring])
   (:import
@@ -109,7 +109,7 @@
       {:effects [effect]
        :flash {:success-key :email/confirmation-resent}})))
 
-(defmethod bread/effect [::update :delete]
+(defmethod bread/effect [::update :delete] delete-email
   [{:keys [conn params]} {:keys [user]}]
   (let [id (->int (:id params))]
     (ensure-own-email-id user id)
@@ -127,6 +127,7 @@
     (let [email (:email params)
           user-id (:db/id user)
           code (random/url-part 32)
+          hashed (sha-512 (str (:auth/secret-key config) ":" code))
           now (t/now)
           effect (confirmation-effect {:from (:email/smtp-from-email config)
                                        :to email
@@ -136,7 +137,7 @@
         (log/info "adding email" {:email email :user-id user-id})
         (db/transact conn [{:db/id (:db/id user)
                             :user/emails [{:email/address email
-                                           :email/code code
+                                           :email/code hashed
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
         {:effects [effect]
@@ -238,6 +239,7 @@
 (defmethod bread/dispatch ::confirm=>
   [{:as req :keys [request-method] {:keys [code email]} :params}]
   (let [post? (= :post request-method)
+        hashed (sha-512 (str (bread/config req :auth/secret-key) ":" code))
         expansions
         [{:expansion/name ::db/query
           :expansion/key :pending-email
@@ -253,7 +255,7 @@
                                      [?e :email/address ?email]
                                      ;; Only query for unconfirmed emails.
                                      (not-join [?e] [?e :email/confirmed-at])]}
-                           code email]}
+                           hashed email]}
          {:expansion/name ::validate-recency
           :expansion/key :pending-email
           :expansion/description "Validate the confirmation link's age."
