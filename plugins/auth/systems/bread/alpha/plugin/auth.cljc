@@ -90,8 +90,9 @@
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
+        forgot-uri (bread/config req :auth/forgot-password-uri)
         reset-uri (bread/config req :auth/reset-password-uri)
-        exempt? (contains? #{login-uri reset-uri} uri)
+        exempt? (contains? #{login-uri forgot-uri reset-uri} uri)
         protected? (bread/hook req ::protected-route? (not exempt?))
         anonymous? (empty? (:user session))
         next-param (name (bread/config req :auth/next-param))

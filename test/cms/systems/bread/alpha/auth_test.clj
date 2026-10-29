@@ -58,13 +58,14 @@
 (use-db :each config)
 
 (defmethod bread/action ::route
-  [req _ _]
-  (assoc req ::bread/dispatcher {:dispatcher/type ::auth/login=>}))
+  [req action _]
+  (assoc req ::bread/dispatcher {:dispatcher/type (:dispatcher/type action)}))
 
 (defmethod bread/action ::body
   [res {:keys [body]} _]
   (if (:body res) res (assoc res :body body)))
 
+#_
 (defmethod bread/action ::debug-expand
   [res _ _]
   (when (= :special (bread/config res :auth/next-param))
@@ -79,7 +80,8 @@
     {:hooks
      {::bread/route
       [{:action/name ::route
-        :action/description "Hard-code the dispatcher."}]
+        :action/description "Hard-code the dispatcher."
+        :dispatcher/type (:test/dispatcher auth-config ::auth/login=>)}]
       ::bread/expand
       [(when body
          {:action/name ::body
@@ -103,6 +105,7 @@
     (= expected (let [handler (-> auth-config config->plugins plugins->loaded bread/handler)
                       data (-> req handler ->auth-data)]
                   (if (get-in data [::bread/data :auth/result])
+                    ;; Avoid having to assert specific :db/id values.
                     (walk/postwalk #(if (map? %) (dissoc % :db/id) %) data)
                     data)))
 
@@ -180,6 +183,57 @@
      :test/body [:p "login page"]}
     {:request-method :get
      :uri "/protected/login"}
+
+    ;; Requesting forgot password page.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}
+     :body [:p "forgot page"]}
+    {:test/body [:p "forgot page"]}
+    {:request-method :get
+     :uri "/forgot"}
+
+    ;; Custom forgot URI under the /protected route tree gets exempted
+    ;; (otherwise no one could ever reset their password).
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}
+     :body [:p "forgot page"]}
+    {:protected-prefixes #{"/protected"}
+     :forgot-password-uri "/protected/forgot"
+     :test/body [:p "forgot page"]}
+    {:request-method :get
+     :uri "/protected/forgot"}
+
+    ;; Submitting forgot password form.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}
+     :body [:p "forgot page"]}
+    {;:protected-prefixes #{"/protected"}
+     ;:reset-password-uri "/protected/reset"
+     :test/dispatcher ::auth/forgot-password=>
+     :test/body [:p "forgot page"]}
+    {:request-method :post
+     :uri "/forgot"
+     :params {:username "angela"}}
+
+    ;; Submitting forgot password form with custom URI.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session nil
+     ::bread/data {:session nil}
+     :body [:p "forgot page"]}
+    {:protected-prefixes #{"/protected"}
+     :forgot-password-uri "/protected/forgot"
+     :test/dispatcher ::auth/forgot-password=>
+     :test/body [:p "forgot page"]}
+    {:request-method :post
+     :uri "/protected/forgot"
+     :params {:username "angela"}}
 
     ;; Custom reset URI under the /protected route tree gets exempted
     ;; (otherwise no one could ever reset their password).
