@@ -139,23 +139,15 @@
    :effect/description desc
    :effect/key k})
 
-(defn- data-path? [x]
-  (and (sequential? x) (= ::bread/data (first x))))
-
 (defmethod bread/expand ::query
   query-db
-  [{:expansion/keys [db args] :as expansion} data]
+  [{:expansion/keys [db args] :as expansion} _]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
         query (datalog/normalize-query query)
         find-scalar? (some #{'.} (:find query))
         flatten-many? (:flatten-many? expansion (not find-scalar?))
-        args (map (fn [arg]
-                    (if (data-path? arg)
-                      (get-in data (rest arg))
-                      arg))
-                  args)
         result (when (every? some? args)
                  (apply q db query args))
         ;; If nothing is found, set explicit false so we don't try to write
