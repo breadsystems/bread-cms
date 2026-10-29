@@ -15,31 +15,6 @@
 (defn- entity? [x]
   (and (map? x) ((set (keys x)) :db/id)))
 
-;; TODO mv to bread.internal
-;; TODO redefine with Specter
-(defn populate-in [m k v]
-  (cond
-    (not (sequential? k)) (assoc m k v)
-    (get-in m (or (butlast k) k))
-    (update-in
-      m (or (butlast k) k)
-      (fn [current]
-        (cond
-          (and (sequential? current) (sequential? v))
-          (let [v (map #(if (sequential? %) (first %) %) v)
-                by-id (into {} (map (juxt :db/id identity) v))]
-            (walk/postwalk (fn [node]
-                             (if (entity? node)
-                               (get by-id (:db/id node))
-                               node))
-                           current))
-          ;; If current is sequential but v isn't, the query returned
-          ;; something we can't use. Bail.
-          (sequential? current) current
-          :else (assoc current (last k) v))))
-    (false? (get-in m (or (butlast k) k))) m
-    :else (assoc-in m k v)))
-
 (comment
   (entity? nil)
   (entity? {})
@@ -68,12 +43,12 @@
             effected (reduce (fn do-effect [data effect]
                                (let [result (bread/effect effect data)]
                                  (if (:effect/key effect)
-                                   (populate-in data (:effect/key effect) result)
+                                   (assoc data (:effect/key effect) result)
                                    data)))
                              expanded
                              effects)]
         effected)
-      (populate-in data (:expansion/key expansion) result))))
+      (assoc data (:expansion/key expansion) result))))
 
 (defmethod bread/action ::expand
   [{::bread/keys [expansions data] :as req} _ _]
