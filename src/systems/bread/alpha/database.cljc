@@ -83,23 +83,6 @@
         db (db (connection app))]
     (bread/hook app ::db (if timepoint (as-of db timepoint) db))))
 
-(defn add-txs
-  "Adds the given txs as effects to be run on the app database.
-  Options include:
-  * :description - a custom description to use for :effect/description in the
-    Effect map. Default is \"Run database transactions\".
-  * :key - the :effect/key to set in the Effect map. Default is nil."
-  {:arglists '([req txs] [req txs opts])}
-  ([req txs]
-   (add-txs req txs {}))
-  ([req txs opts]
-   (bread/add-effect req {:effect/name ::transact
-                          :effect/description
-                          (:description opts "Run database transactions")
-                          :effect/key (:key opts)
-                          :conn (connection req)
-                          :txs txs})))
-
 (defn migration-key [migration]
   (reduce (fn [_ {k :migration/key}]
             (when k (reduced k)))
