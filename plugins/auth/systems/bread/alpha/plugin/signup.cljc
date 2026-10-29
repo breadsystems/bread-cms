@@ -59,15 +59,15 @@
             user (if email
                    (assoc user :user/emails [email])
                    user)]
-        {:effects [{:effect/name ::db/transact
-                    :conn conn
-                    :effect/description "Redeem invitation and create user."
-                    :txs [{:invitation/code (:invitation/code invitation)
-                           :invitation/redeemer user}]}]})
-      {:effects [{:effect/name ::db/transact
-                  :conn conn
-                  :effect/description "Create user."
-                  :txs [user]}]})))
+        {::bread/effects [{:effect/name ::db/transact
+                           :conn conn
+                           :effect/description "Redeem invitation and create user."
+                           :txs [{:invitation/code (:invitation/code invitation)
+                                  :invitation/redeemer user}]}]})
+      {::bread/effects [{:effect/name ::db/transact
+                         :conn conn
+                         :effect/description "Create user."
+                         :txs [user]}]})))
 
 (defmethod bread/action ::render
   [{:as res {[valid? _] :validation} ::bread/data} {:keys [to]} _]

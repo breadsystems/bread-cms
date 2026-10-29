@@ -286,7 +286,7 @@
        :config {:auth/lock-seconds 3600}}
 
       ;; First forgot request.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -308,7 +308,7 @@
        :config {:auth/lock-seconds 3600}}
 
       ;; Subsequent forgot request.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -333,7 +333,7 @@
        :config {:auth/lock-seconds 3600}}
 
       ;; Subsequent forgot request; multiple confirmed emails.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -369,7 +369,7 @@
     (= expected (with-redefs [random/hex (constantly "randomhex")]
                   (bread/effect effect data)))
 
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from "app@bread.systems"
@@ -389,7 +389,7 @@
      :ring/server-name "bread.systems"}
 
     ;; Without a configured :site/name.
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from "alt@bread.systems"
@@ -568,15 +568,15 @@
       nil {:effect/name ::auth/reset-password!} {:validation []}
       nil {:effect/name ::auth/reset-password!} {:validation [false :whatever]}
 
-      {:effects [{:effect/name ::db/transact
-                  :conn ::DBCONN
-                  :txs [{:db/id 123
-                         ;; TODO secret-key
-                         :user/password "[:algo+password123]"
-                         :thing/updated-at !now}
-                        {:db/id 456
-                         :reset/reset-at !now
-                         :thing/updated-at !now}]}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :conn ::DBCONN
+                         :txs [{:db/id 123
+                                ;; TODO secret-key
+                                :user/password "[:algo+password123]"
+                                :thing/updated-at !now}
+                               {:db/id 456
+                                :reset/reset-at !now
+                                :thing/updated-at !now}]}]}
       {:effect/name ::auth/reset-password!
        :params {:password "password123"}
        :conn ::DBCONN
@@ -584,15 +584,15 @@
       {:validation [true nil]
        :reset {:db/id 456 :reset/user {:db/id 123}}}
 
-      {:effects [{:effect/name ::db/transact
-                  :conn ::DBCONN
-                  :txs [{:db/id 567
-                         ;; TODO secret-key
-                         :user/password "[:roll-yr-own-crypto+newpass]"
-                         :thing/updated-at !now}
-                        {:db/id 345
-                         :reset/reset-at !now
-                         :thing/updated-at !now}]}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :conn ::DBCONN
+                         :txs [{:db/id 567
+                                ;; TODO secret-key
+                                :user/password "[:roll-yr-own-crypto+newpass]"
+                                :thing/updated-at !now}
+                               {:db/id 345
+                                :reset/reset-at !now
+                                :thing/updated-at !now}]}]}
       {:effect/name ::auth/reset-password!
        :params {:password "newpass"}
        :conn ::DBCONN

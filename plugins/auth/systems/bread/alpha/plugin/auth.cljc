@@ -427,7 +427,7 @@
                             (if existing-reset
                               {:db/id (:db/id existing-reset)}
                               {:thing/created-at now}))]
-        {:effects
+        {::bread/effects
          [{:effect/name ::db/transact
            :effect/description "Create a password reset."
            :conn conn
@@ -451,7 +451,7 @@
   (let [link (reset-link (assoc data :reset/code code))
         site-name (:site/name config server-name)
         body (i18n/t i18n [:auth/reset-password-email-body site-name link])]
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from (:email/smtp-from-email config)
@@ -538,7 +538,7 @@
                       :reset/reset-at now
                       :thing/updated-at now}
             txs [user-tx reset-tx]]
-        {:effects
+        {::bread/effects
          [{:effect/name ::db/transact
            :conn conn
            :txs txs}]}))))

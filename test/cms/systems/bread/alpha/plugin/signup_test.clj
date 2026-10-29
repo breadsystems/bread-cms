@@ -373,12 +373,12 @@
       nil {:effect/name ::signup/enact-valid-signup} {:validation [false :whatever]}
 
       ;; Open signup - not by invite.
-      {:effects [{:effect/name ::db/transact
-                  :effect/description "Create user."
-                  :txs [{:user/username "test"
-                         :user/password "<HASHED PASSWORD>"
-                         :thing/created-at !now}]
-                  :conn ::DBCONN}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :effect/description "Create user."
+                         :txs [{:user/username "test"
+                                :user/password "<HASHED PASSWORD>"
+                                :thing/created-at !now}]
+                         :conn ::DBCONN}]}
       {:effect/name ::signup/enact-valid-signup
        :user {:user/username "test"
               :user/password "<HASHED PASSWORD>"
@@ -387,17 +387,17 @@
       {:validation [true nil]}
 
       ;; By invitation.
-      {:effects [{:effect/name ::db/transact
-                  :effect/description "Redeem invitation and create user."
-                  :txs [{:invitation/code "<HASHED CODE>"
-                         :invitation/redeemer
-                         {:user/username "test"
-                          :user/password "<HASHED PASSWORD>"
-                          :user/emails [{:email/address "user@example.com"
-                                         :email/confirmed-at !now
-                                         :email/primary? true}]
-                          :thing/created-at ::NOW}}]
-                  :conn ::DBCONN}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :effect/description "Redeem invitation and create user."
+                         :txs [{:invitation/code "<HASHED CODE>"
+                                :invitation/redeemer
+                                {:user/username "test"
+                                 :user/password "<HASHED PASSWORD>"
+                                 :user/emails [{:email/address "user@example.com"
+                                                :email/confirmed-at !now
+                                                :email/primary? true}]
+                                 :thing/created-at ::NOW}}]
+                         :conn ::DBCONN}]}
       {:effect/name ::signup/enact-valid-signup
        :user {:user/username "test"
               :user/password "<HASHED PASSWORD>"

@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as string]
     [crypto.random :as random]
-    [taoensso.timbre :as log]
+    [clojure.tools.logging :as log]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -85,7 +85,7 @@
                        :to to
                        :subject (invitation-email-subject data)
                        :body (invitation-email-body (assoc data :link link))})]
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send invitation email."
        :message message}]}))
@@ -112,7 +112,7 @@
         (log/info "sending invitation email" {:email email
                                               :invitation/invited-by (:db/id user)})
         (db/transact conn [invitation-tx])
-        {:effects [email-effect]
+        {::bread/effects [email-effect]
          :flash {:success-key :invitations/invitation-sent}}
         (catch ExceptionInfo e
           (log/error e)
@@ -138,7 +138,7 @@
         (log/info "resending invitation email" {:email to
                                                 :invitation/invited-by (:db/id user)})
         (db/transact conn [invitation-tx])
-        {:effects [email-effect]
+        {::bread/effects [email-effect]
          :flash {:success-key :invitations/invitation-resent}}
         (catch ExceptionInfo e
           (log/error e)

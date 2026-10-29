@@ -88,7 +88,7 @@
         valid-ids (set (map :db/id (:user/sessions user)))
         valid? (contains? valid-ids session-id)]
     (when valid?
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Delete a user session."
          :effect/key k

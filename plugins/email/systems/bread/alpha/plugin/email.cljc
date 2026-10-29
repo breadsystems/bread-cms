@@ -106,7 +106,7 @@
                                      :code (:email/code email)}
                                     data)]
     (when email
-      {:effects [effect]
+      {::bread/effects [effect]
        :flash {:success-key :email/confirmation-resent}})))
 
 (defmethod bread/effect [::update :delete]
@@ -139,7 +139,7 @@
                                            :email/code code
                                            :thing/updated-at now
                                            :thing/created-at now}]}])
-        {:effects [effect]
+        {::bread/effects [effect]
          :flash {:success-key :email/email-added-please-confirm}}
         (catch ExceptionInfo e
           (log/error e)
