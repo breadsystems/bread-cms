@@ -12,10 +12,39 @@
       numbers
       {::bread/expansions [(assoc expansion :numbers numbers)]})))
 
+(deftest test-expand-not-found
+  (are
+    [data dk expansions]
+    (= data (-> (plugins->loaded [(expansion/plugin)])
+                (assoc ::bread/expansions expansions
+                       ::bread/dispatcher {:dispatcher/type :whatevs
+                                           :dispatcher/key dk})
+                (bread/hook ::bread/expand)
+                ::bread/data))
+
+    {:not-found? nil} nil []
+    {:not-found? nil} nil [nil]
+    {:not-found? nil} nil [nil nil]
+    {:not-found? nil} nil [nil false]
+
+    {:not-found? true} :post []
+    {:not-found? true} :post [nil]
+    {:not-found? true} :post [nil nil]
+    {:not-found? true} :post [nil false]
+
+    {:post {:thing/slug "my-post"}
+     :not-found? false}
+    :post
+    [{:expansion/key :post
+      :expansion/name ::bread/value
+      :expansion/value {:thing/slug "my-post"}}]
+
+    ,))
+
 (deftest test-expand
   (are
     [data expansions]
-    (= data (-> (plugins->loaded [(expansion/plugin)])
+    (= data (-> (plugins->loaded [(expansion/plugin {:expand-not-found? false})])
                 (assoc ::bread/expansions expansions
                        ::bread/dispatcher
                        {:dispatcher/type :whatevs
@@ -23,20 +52,13 @@
                 (bread/hook ::bread/expand)
                 ::bread/data))
 
-    {:not-found? nil} []
-    {:not-found? nil} [nil]
-    {:not-found? nil} [nil nil]
-    {:not-found? nil} [nil false]
-
-    {:my/result false
-     :not-found? true}
+    {:my/result false}
     [{:expansion/key :my/result
       :expansion/name ::bread/value
       :expansion/value false}]
 
     ;; Arbitrary functions are supported via ::bread/fn.
-    {:my/result {:nested "some value"}
-     :not-found? false}
+    {:my/result {:nested "some value"}}
     [{:expansion/key :my/result
       :expansion/name ::bread/value
       :expansion/value "some value"}
@@ -45,8 +67,7 @@
       :expansion/f (fn nest [v] {:nested v})}]
 
     ;; Any arity-1 function is OK.
-    {:my/result 3
-     :not-found? false}
+    {:my/result 3}
     [{:expansion/key :my/result
       :expansion/name ::bread/value
       :expansion/value {:init 2}}
@@ -54,34 +75,29 @@
       :expansion/key :my/result
       :expansion/f (comp inc :init)}]
 
-    {:my/result "the result"
-     :not-found? false}
+    {:my/result "the result"}
     [{:expansion/key :my/result
       :expansion/name ::bread/value
       :expansion/value "the result"}]
 
-    {:my/result "the result"
-     :not-found? false}
+    {:my/result "the result"}
     [{:expansion/key :my/result
       :expansion/name ::bread/value
       :expansion/value "the result"}]
 
-    {:numbers [0]
-     :not-found? false}
+    {:numbers [0]}
     [{:expansion/key :numbers
       :expansion/name ::higher-order
       :numbers []
       :max-len 1}]
 
-    {:numbers [0 1]
-     :not-found? false}
+    {:numbers [0 1]}
     [{:expansion/key :numbers
       :expansion/name ::higher-order
       :numbers []
       :max-len 2}]
 
-    {:numbers [0 1 2]
-     :not-found? false}
+    {:numbers [0 1 2]}
     [{:expansion/key :numbers
       :expansion/name ::higher-order
       :numbers []
