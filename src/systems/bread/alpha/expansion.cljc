@@ -93,12 +93,17 @@
   [req {:keys [query]} _]
   (add req query))
 
-(defn plugin []
-  {:hooks
-   {::bread/expand
-    [{:action/name ::expand
-      :action/description
-      "Expand ::bread/expansions into their respective results"}
-     {:action/name ::expand-not-found
-      :action/description
-      "Record whether the main content was found"}]}})
+(defn plugin
+  ([]
+   (plugin {}))
+  ([{:keys [expand-not-found?]
+     :or {expand-not-found? true}}]
+   {:hooks
+    {::bread/expand
+     [{:action/name ::expand
+       :action/description
+       "Expand ::bread/expansions into their respective results"}
+      (when expand-not-found?
+        {:action/name ::expand-not-found
+         :action/description
+         "Record whether the main content was found"})]}}))
