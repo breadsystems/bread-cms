@@ -55,17 +55,27 @@
 
 (defn- expand [data expansion]
   (let [{:as result ::bread/keys [expansions effects]} (bread/expand expansion data)
+        expansions (filter seq expansions)
+        effects (filter seq effects)
         higher-order? (or (seq expansions) (seq effects))]
     (when bread/*enable-profiling*
       (bread/profile> :profile.type/expansion {:expansion expansion
                                                :result result}))
     (if higher-order?
-      (loop [data data
-             [x & xs] expansions]
-        (if x
-          (recur (expand data x) xs)
-          ;; No more expansions. We're done!
-          data))
+      (let [expanded (loop [data data
+                            [x & xs] expansions]
+                       (if x
+                         (recur (expand data x) xs)
+                         ;; No more expansions. We're done!
+                         data))
+            effected (reduce (fn do-effect [data effect]
+                               (let [result (bread/effect effect data)]
+                                 (if (:effect/key effect)
+                                   (populate-in data (:effect/key effect) result)
+                                   data)))
+                             expanded
+                             effects)]
+        effected)
       (populate-in data (:expansion/key expansion) result))))
 
 (defmethod bread/action ::expand
