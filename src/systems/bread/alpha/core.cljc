@@ -1,5 +1,6 @@
 (ns systems.bread.alpha.core
   (:require
+    [clojure.tools.logging :as log]
     [clojure.string :as string]
     [systems.bread.alpha.internal.time :as t])
   #?(:clj
@@ -190,46 +191,19 @@
 
 (defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
-  (letfn [(add-error [e ex] (vary-meta e update :errors conj ex))
-          (success [e success?] (vary-meta e assoc :succeeded? success?))
-          (retried [e] (vary-meta e update :retried inc))]
-    (loop [[e & effects] effects data data completed []]
-      (if e
-        (let [e (vary-meta e #(or % {:errors []
-                                     :succeeded? false
-                                     :retried 0}))
-              retry-count (:retried (meta e))
-              {k :effect/key max-retries :effect/retries} e
-              [result ex] (try
-                            [(effect e data) nil]
-                            (catch #?(:clj Throwable :cljs js/Object) ex
-                              [nil ex]))
-              {more-effects :effects} result
-              result (DerefableWithMeta. result (meta e))]
-          (cond
-            (nil? ex)
-            (recur (concat more-effects effects)
-                   (if k
-                     (assoc data k (success result true))
-                     data)
-                   (conj completed (success e true)))
-            (and ex max-retries (> max-retries retry-count))
-            (recur (cons (-> e
-                             (add-error ex)
-                             (retried))
-                         effects)
-                   data completed)
-            ex
-            (recur effects
-                   (if k
-                     (assoc data k (add-error (success result false) ex))
-                     data)
-                   (conj completed (-> e
-                                       (add-error ex)
-                                       (success false))))
-            :else
-            (recur effects data (conj completed (success e true)))))
-        (assoc req ::data data ::effects completed)))))
+  (loop [[e & effects] effects data data]
+    (if e
+      (let [result (effect e data)
+            deprecated-effects (:effects result)
+            _ (when (seq deprecated-effects)
+                (log/warn "Returning an unqualified :effects key in effect result is deprecated. Use ::bread/effects instead."))
+            more-effects (or (::effects result) deprecated-effects)
+            result (DerefableWithMeta. result (meta e))]
+        (recur (concat more-effects effects)
+               (if (:effect/key e)
+                 (assoc data (:effect/key e) result)
+                 data)))
+      (assoc req ::data data))))
 
 (defmacro ^:private try-action [hook app current-action args]
   `(try
