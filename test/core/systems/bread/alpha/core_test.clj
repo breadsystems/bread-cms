@@ -102,22 +102,6 @@
                                            :action/value "the value"}]}}]
       (is (= "the value" (bread/hook app :my/action))))))
 
-(deftest test-add-effect
-
-  (testing "it adds the given Effect to ::effects"
-    (are [effects app] (= effects (::bread/effects app))
-
-      [prn] (-> (bread/app)
-                (bread/add-effect prn))
-
-      [inc] (-> (bread/app)
-                (bread/add-effect inc))
-
-      [inc dec prn-str] (-> (bread/app)
-                            (bread/add-effect inc)
-                            (bread/add-effect dec)
-                            (bread/add-effect prn-str)))))
-
 (defmethod bread/effect :inc
   [{:keys [world]} _data]
   (swap! world update :count #(inc (or % 0))))

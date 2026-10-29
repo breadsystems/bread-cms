@@ -165,7 +165,7 @@
    :expansion/description desc})
 
 (defn add-effect
-  "Adds e as an Effect to be run during the apply-effects lifecycle phase."
+  "Deprecated."
   [req e]
   (update req ::effects (comp vec conj) e))
 
@@ -317,12 +317,10 @@
      {::plugins    (or plugins [])
       ::hooks      {::load-plugins
                     [{:action/name ::load-plugins
-                      :action/description
-                      "Load hooks declared in all plugins"}]
+                      :action/description "Load hooks declared in all plugins"}]
                     ::effects!
                     [{:action/name ::effects!
-                      :action/description
-                      "Do side effects"}]}
+                      :action/description "Do side effects"}]}
       ::expansions []
       ::config     {}
       ::data       {}}
