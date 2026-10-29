@@ -57,12 +57,12 @@
        (reduce expand data)
        (assoc req ::bread/data)))
 
-(defmethod bread/action ::expand-not-found
+(defmethod bread/action ::expand-content-found
   [{::bread/keys [dispatcher data] :as req} _ _]
   (let [k (:dispatcher/key dispatcher)
-        not-found? (and k (not (get-at data k)))]
-    (assoc-in req [::bread/data :not-found?]
-              (bread/hook req ::not-found? not-found?))))
+        content-found? (and k (boolean (get data k)))]
+    (assoc-in req [::bread/data :content-found?]
+              (bread/hook req ::content-found? content-found?))))
 
 (defn add
   "Add query to the vector of expansions to be run."
@@ -78,14 +78,14 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:keys [expand-not-found?]
-     :or {expand-not-found? true}}]
+  ([{:keys [expand-content-found?]
+     :or {expand-content-found? true}}]
    {:hooks
     {::bread/expand
      [{:action/name ::expand
        :action/description
        "Expand ::bread/expansions into their respective results"}
-      (when expand-not-found?
-        {:action/name ::expand-not-found
+      (when expand-content-found?
+        {:action/name ::expand-content-found
          :action/description
          "Record whether the main content was found"})]}}))

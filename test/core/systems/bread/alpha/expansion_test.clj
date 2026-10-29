@@ -12,7 +12,7 @@
       numbers
       {::bread/expansions [(assoc expansion :numbers numbers)]})))
 
-(deftest test-expand-not-found
+(deftest test-expand-content-found
   (are
     [data dk expansions]
     (= data (-> (plugins->loaded [(expansion/plugin)])
@@ -22,18 +22,18 @@
                 (bread/hook ::bread/expand)
                 ::bread/data))
 
-    {:not-found? nil} nil []
-    {:not-found? nil} nil [nil]
-    {:not-found? nil} nil [nil nil]
-    {:not-found? nil} nil [nil false]
+    {:content-found? nil} nil []
+    {:content-found? nil} nil [nil]
+    {:content-found? nil} nil [nil nil]
+    {:content-found? nil} nil [nil false]
 
-    {:not-found? true} :post []
-    {:not-found? true} :post [nil]
-    {:not-found? true} :post [nil nil]
-    {:not-found? true} :post [nil false]
+    {:content-found? false} :post []
+    {:content-found? false} :post [nil]
+    {:content-found? false} :post [nil nil]
+    {:content-found? false} :post [nil false]
 
     {:post {:thing/slug "my-post"}
-     :not-found? false}
+     :content-found? true}
     :post
     [{:expansion/key :post
       :expansion/name ::bread/value
@@ -44,7 +44,7 @@
 (deftest test-expand
   (are
     [data expansions]
-    (= data (-> (plugins->loaded [(expansion/plugin {:expand-not-found? false})])
+    (= data (-> (plugins->loaded [(expansion/plugin {:expand-content-found? false})])
                 (assoc ::bread/expansions expansions
                        ::bread/dispatcher
                        {:dispatcher/type :whatevs
@@ -143,7 +143,7 @@
     [data expansions]
     (= data (do
               (reset! state 0)
-              (-> (plugins->loaded [(expansion/plugin {:expand-not-found? false})])
+              (-> (plugins->loaded [(expansion/plugin {:expand-content-found? false})])
                   (assoc ::bread/expansions expansions)
                   (bread/hook ::bread/expand)
                   ::bread/data)))

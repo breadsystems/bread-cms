@@ -68,7 +68,7 @@
 
        ;; Querying for a non-existent post
        {:post false
-        :not-found? true}
+        :content-found? false}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db
@@ -84,7 +84,7 @@
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
-        :not-found? false}
+        :content-found? true}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db
@@ -100,7 +100,7 @@
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
-        :not-found? false}
+        :content-found? true}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db

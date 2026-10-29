@@ -74,7 +74,7 @@
   (:content-path (meta component) [:content]))
 
 (defn match [{::bread/keys [data dispatcher] :as res}]
-  (if (:not-found? data)
+  (if (false? (:content-found? data))
     (bread/hook res ::not-found nil)
     (bread/hook res ::match (:dispatcher/component dispatcher))))
 
