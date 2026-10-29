@@ -154,6 +154,10 @@
   [{:expansion/keys [value]} _]
   value)
 
+(defmethod expand ::fn fn-expand
+  [{k :expansion/key :expansion/keys [f]} data]
+  (f (get data k)))
+
 (defn value->expansion [k value & {desc :expansion/description}]
   {:expansion/key k
    :expansion/name ::value

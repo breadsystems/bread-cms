@@ -46,9 +46,6 @@
   (entity? {:db/id 123})
 
   (butlast [:x])
-  (populate-in {} [:x] :y)
-  (populate-in {:a :A} [:x] :y)
-  (populate-in {:a :A} [:x :y] :z)
 
   ;;
   )

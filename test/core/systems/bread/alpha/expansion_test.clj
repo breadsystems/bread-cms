@@ -34,11 +34,25 @@
       :expansion/name ::bread/value
       :expansion/value false}]
 
-    {:my/result {:nested false}
-     :not-found? true}
-    [{:expansion/key [:my/result :nested]
+    ;; Arbitrary functions are supported via ::bread/fn.
+    {:my/result {:nested "some value"}
+     :not-found? false}
+    [{:expansion/key :my/result
       :expansion/name ::bread/value
-      :expansion/value false}]
+      :expansion/value "some value"}
+     {:expansion/name ::bread/fn
+      :expansion/key :my/result
+      :expansion/f (fn nest [v] {:nested v})}]
+
+    ;; Any arity-1 function is OK.
+    {:my/result 3
+     :not-found? false}
+    [{:expansion/key :my/result
+      :expansion/name ::bread/value
+      :expansion/value {:init 2}}
+     {:expansion/name ::bread/fn
+      :expansion/key :my/result
+      :expansion/f (comp inc :init)}]
 
     {:my/result "the result"
      :not-found? false}
@@ -49,15 +63,6 @@
     {:my/result "the result"
      :not-found? false}
     [{:expansion/key :my/result
-      :expansion/name ::bread/value
-      :expansion/value "the result"}]
-
-    {:my/map {:my/result "the result"}
-     :not-found? false}
-    [{:expansion/key :my/map
-      :expansion/name ::bread/value
-      :expansion/value {}}
-     {:expansion/key [:my/map :my/result]
       :expansion/name ::bread/value
       :expansion/value "the result"}]
 
