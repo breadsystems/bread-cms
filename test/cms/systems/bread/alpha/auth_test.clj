@@ -213,9 +213,7 @@
      :session nil
      ::bread/data {:session nil}
      :body [:p "forgot page"]}
-    {;:protected-prefixes #{"/protected"}
-     ;:reset-password-uri "/protected/reset"
-     :test/dispatcher ::auth/forgot-password=>
+    {:test/dispatcher ::auth/forgot-password=>
      :test/body [:p "forgot page"]}
     {:request-method :post
      :uri "/forgot"

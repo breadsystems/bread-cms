@@ -201,7 +201,8 @@
         {:effect/name ::auth/forgot-password!
          :effect/description "Send user a reset link, if they have a confirmed email."
          :conn db-conn
-         :secret-key "secret"}]
+         :secret-key "secret"
+         :lock-seconds 3600}]
     (are
       [expected config req]
       (= expected (let [dispatcher {:dispatcher/type ::auth/forgot-password=>}
@@ -251,39 +252,39 @@
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
-      {:user {:db/id 123}
-       :config {:auth/lock-seconds 3600}}
+       :conn ::DBCONN
+       :lock-seconds 3600}
+      {:user {:db/id 123}}
 
       ;; User with no confirmed emails.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
-              :user/emails [{:email/address "whatever"}]}
-       :config {:auth/lock-seconds 3600}}
+              :user/emails [{:email/address "whatever"}]}}
 
       ;; Unconfirmed primary email. This is an abnormal situation, but we want to assert
       ;; assert here that both conditions (primary, confirmed) should be true.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "whatever"
-                             :email/primary? true}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/primary? true}]}}
 
       ;; Confirmed, non-primary email. Also abnormal, per above.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "whatever"
-                             :email/confirmed-at (t/seconds-ago 1)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/confirmed-at (t/seconds-ago 1)}]}}
 
       ;; First forgot request.
       {::bread/effects
@@ -300,12 +301,12 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "someone@example.com"
                              :email/primary? true
-                             :email/confirmed-at (t/seconds-ago 1)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/confirmed-at (t/seconds-ago 1)}]}}
 
       ;; Subsequent forgot request.
       {::bread/effects
@@ -322,15 +323,15 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "someone@example.com"
                              :email/primary? true
                              :email/confirmed-at (t/seconds-ago 1)}]
               :reset/_user [{:db/id 456
                              :reset/code "oldcode"
-                             :thing/updated-at (t/seconds-ago 60)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :thing/updated-at (t/seconds-ago 60)}]}}
 
       ;; Subsequent forgot request; multiple confirmed emails.
       {::bread/effects
@@ -347,7 +348,8 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "primary@example.com"
                              :email/primary? true
@@ -358,8 +360,7 @@
                              :email/confirmed-at (t/seconds-ago 1)}]
               :reset/_user [{:db/id 456
                              :reset/code "oldcode"
-                             :thing/updated-at (t/seconds-ago 60)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :thing/updated-at (t/seconds-ago 60)}]}}
 
       ,)))
 

@@ -407,11 +407,11 @@
           :action/description "Redirect after login"}]}})))
 
 (defmethod bread/effect ::forgot-password!
-  [{:keys [conn secret-key]} {:keys [user config]}]
+  [{:keys [conn secret-key lock-seconds]} {:keys [user]}]
   (let [primary-email (first (filter :email/primary? (:user/emails user)))
         primary-confirmed? (boolean (:email/confirmed-at primary-email))
         locked-at (:user/locked-at user)
-        locked-period-start (t/seconds-ago (:auth/lock-seconds config))
+        locked-period-start (t/seconds-ago lock-seconds)
         unlocked? (or (not locked-at) (.before locked-at locked-period-start))
         allow-reset? (and primary-confirmed? unlocked?)]
     (when allow-reset?
@@ -483,7 +483,8 @@
          :effect/description
          "Send user a reset link, if they have a confirmed email."
          :conn (db/connection req)
-         :secret-key (bread/config req :auth/secret-key)}]})))
+         :secret-key (bread/config req :auth/secret-key)
+         :lock-seconds (bread/config req :auth/lock-seconds)}]})))
 
 (defmethod bread/expand ::authenticate-reset
   [{:keys [reset-expiration-seconds lock-seconds]}

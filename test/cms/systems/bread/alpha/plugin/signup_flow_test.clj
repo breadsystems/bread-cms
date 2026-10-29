@@ -15,6 +15,9 @@
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.schema :as schema]))
 
+(require '[taoensso.timbre :as timbre])
+(timbre/merge-config! {:min-level :error})
+
 (def AUTH-SECRET-KEY "secret!")
 
 (def db-config
