@@ -239,7 +239,10 @@
   ,)
 
 (comment
-  (require '[kaocha.repl :as k])
+  (require '[kaocha.repl :as k]
+           '[taoensso.timbre :as timbre])
+  ;; Avoid noisy migration logs...
+  (timbre/merge-config! {:min-level :error})
   (k/run #'test-signup-flow-successful-signup {:color? false})
   (k/run #'test-signup-flow {:color? false})
   (k/run {:color? false}))
