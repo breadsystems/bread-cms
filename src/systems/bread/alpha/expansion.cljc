@@ -54,11 +54,19 @@
   )
 
 (defn- expand [data expansion]
-  (let [result (bread/expand expansion data)]
+  (let [{:as result ::bread/keys [expansions effects]} (bread/expand expansion data)
+        higher-order? (or (seq expansions) (seq effects))]
     (when bread/*enable-profiling*
       (bread/profile> :profile.type/expansion {:expansion expansion
                                                :result result}))
-    (populate-in data (:expansion/key expansion) result)))
+    (if higher-order?
+      (loop [data data
+             [x & xs] expansions]
+        (if x
+          (recur (expand data x) xs)
+          ;; No more expansions. We're done!
+          data))
+      (populate-in data (:expansion/key expansion) result))))
 
 (defmethod bread/action ::expand
   [{::bread/keys [expansions data] :as req} _ _]

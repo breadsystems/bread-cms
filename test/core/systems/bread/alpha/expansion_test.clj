@@ -5,6 +5,13 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.test-helpers :refer [plugins->loaded]]))
 
+(defmethod bread/expand ::higher-order
+  [{:as expansion :keys [numbers max-len]} _]
+  (let [numbers (conj numbers (count numbers))]
+    (if (>= (count numbers) max-len)
+      numbers
+      {::bread/expansions [(assoc expansion :numbers numbers)]})))
+
 (deftest test-expand
   (are
     [data expansions]
@@ -52,7 +59,30 @@
       :expansion/value {}}
      {:expansion/key [:my/map :my/result]
       :expansion/name ::bread/value
-      :expansion/value "the result"}]))
+      :expansion/value "the result"}]
+
+    {:numbers [0]
+     :not-found? false}
+    [{:expansion/key :numbers
+      :expansion/name ::higher-order
+      :numbers []
+      :max-len 1}]
+
+    {:numbers [0 1]
+     :not-found? false}
+    [{:expansion/key :numbers
+      :expansion/name ::higher-order
+      :numbers []
+      :max-len 2}]
+
+    {:numbers [0 1 2]
+     :not-found? false}
+    [{:expansion/key :numbers
+      :expansion/name ::higher-order
+      :numbers []
+      :max-len 3}]
+
+    ,))
 
 (deftest test-populate-in
   (are
