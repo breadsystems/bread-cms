@@ -108,13 +108,8 @@
                              :expansion/key :invitation
                              :invitation-expiration-seconds
                              (bread/config req :signup/invitation-expiration-seconds)}]]
-    (cond
-      ;; Viewing signup page
-      (= :get request-method)
-      {:expansions invitation-queries}
-
+    (if (= :post request-method)
       ;; Submitting new username/password
-      (= :post request-method)
       (let [hash-algo (bread/config req :auth/hash-algorithm)
             password-hash (hashers/derive (:password params) {:alg hash-algo})
             user {:user/username (:username params)
@@ -148,7 +143,10 @@
          :hooks
          {::bread/render
           [{:action/name ::render
-            :action/description "Render signup page or redirect to login"}]}}))))
+            :action/description "Render signup page or redirect to login"}]}})
+
+      ;; Viewing signup page
+      {:expansions invitation-queries})))
 
 (defmethod bread/action ::protected-route?
   [{:as req :keys [uri]} _ [protected?]]

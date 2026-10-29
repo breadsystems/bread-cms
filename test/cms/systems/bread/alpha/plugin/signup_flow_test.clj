@@ -200,14 +200,14 @@
 
 (deftest test-signup-flow-successful-signup
   (let [handler (config->handler {:auth-config {:secret-key AUTH-SECRET-KEY}})
-        signup {:request-method :post
-                :uri "/_/signup"
-                :params {:code "qwerty"
-                         :username "test"
-                         :password "password1234"
-                         :password-confirmation "password1234"}}]
+        prev-signup {:request-method :post
+                     :uri "/_/signup"
+                     :params {:code "qwerty"
+                              :username "test"
+                              :password "password1234"
+                              :password-confirmation "password1234"}}]
     ;; Complete successful signup
-    (-> signup handler)
+    (handler prev-signup)
     (are
       [expected req]
       (= expected
