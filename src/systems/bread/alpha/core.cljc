@@ -191,6 +191,7 @@
 
 (defmethod action ::effects!
   [{::keys [effects data] :as req} _ _]
+  (log/warn "The ::bread/effects lifecycle phase is deprecated. Use expansions instead.")
   (loop [[e & effects] effects data data]
     (if e
       (let [result (effect e data)
