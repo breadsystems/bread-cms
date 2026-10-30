@@ -1,6 +1,5 @@
 (ns systems.bread.alpha.expansion
   (:require
-    [clojure.walk :as walk]
     [systems.bread.alpha.core :as bread]))
 
 (defn get-at [m k]
@@ -11,19 +10,6 @@
     (not (sequential? k)) (assoc m k v)
     (get-in m (butlast k)) (assoc-in m k v)
     :else m))
-
-(defn- entity? [x]
-  (and (map? x) ((set (keys x)) :db/id)))
-
-(comment
-  (entity? nil)
-  (entity? {})
-  (entity? {:db/id 123})
-
-  (butlast [:x])
-
-  ;;
-  )
 
 (defn- expand [data expansion]
   (let [{:as result ::bread/keys [expansions effects]} (bread/expand expansion data)

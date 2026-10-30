@@ -3,8 +3,7 @@
     [clojure.test :refer [are deftest is testing]]
 
     [systems.bread.alpha.core :as bread]
-    [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.test-helpers :refer [plugins->loaded]])
+    [systems.bread.alpha.database :as db])
   (:import
     [clojure.lang ExceptionInfo]))
 

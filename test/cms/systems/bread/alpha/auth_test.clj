@@ -1051,4 +1051,5 @@
   (k/run #'test-authentication-flow-with-mfa {:color? false})
   (k/run #'test-authentication-flow #'test-authentication-flow-with-mfa {:color? false})
   (k/run #'test-session-store {:color? false})
+  (k/run #'test-log-attempt {:color? false})
   (k/run {:color? false}))
