@@ -10,6 +10,26 @@ Notes on potential ideas for Bread. Almost all of this is entirely hypothetical,
 - JVM on Heroku: ???
 - JVM on Fly.io: WORKING
 
+## RAD
+
+```
+{:dispatcher/type :rad/list=>
+ :dispatcher/component rad/Table ;; rad/List
+ :filters [{:attr :thing/created-at :kind :before}
+           {:attr :thing/created-at :kind :after}
+           {:attr [:user/username :user/name] :kind :search}]
+ :columns [:db/id
+           :user/username
+           :user/name
+           [:user/preferences :pronouns]
+           {:attr :thing/created-at}
+           {:kind :action :route ::account/unlock=> :check :user/locked-at}
+           {:kind :action :route ::thing/delete=>}]
+ :pagination {:per-page 25}
+ ,}
+```
+
+
 ## Marx
 
 1. Boost api/init-field! logic into a smarter, encapsulated thing that decides
