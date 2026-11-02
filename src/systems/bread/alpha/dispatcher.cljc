@@ -31,6 +31,12 @@
     ;; Short-circuit the rest of the lifecycle.
     (dispatcher req)
     (let [{:keys [expansions data effects hooks]} (bread/dispatch req)
+          expansions (if (seq effects)
+                       (concat expansions [{:expansion/name ::bread/value
+                                            :expansion/value {::bread/effects effects}
+                                            :expansion/description
+                                            "Effects returned from the dispatch method."}])
+                       expansions)
           hooks (filter (comp seq val) hooks)
           data (assoc data
                       :query/pull (:dispatcher/pull dispatcher)
@@ -39,7 +45,6 @@
       (-> req
           (update ::bread/data merge data)
           (update ::bread/expansions concat expansions)
-          (update ::bread/effects concat effects)
           (update ::bread/hooks merge-with-concat hooks)))))
 
 (defn plugin []

@@ -77,9 +77,13 @@
     {::bread/data {:query/pull [:db/id :thing/slug]
                    :query/key :post
                    :route/params {}}
-     ::bread/expansions []
-     ::bread/effects [{:effect/name :do-stuff
-                       :effect/description "Example effect"}]}
+     ::bread/expansions [{:expansion/name ::bread/value
+                          :expansion/value {::bread/effects
+                                            [{:effect/name :do-stuff
+                                              :effect/description "Example effect"}]}
+                          :expansion/description
+                          "Effects returned from the dispatch method."}]
+     ::bread/effects []}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
@@ -91,9 +95,14 @@
                    :query/pull [:db/id :thing/slug]
                    :query/key :post
                    :route/params  {}}
-     ::bread/expansions [[:key "example query"]]
-     ::bread/effects [{:effect/name :do-stuff
-                       :effect/description "Example effect"}]}
+     ::bread/expansions [[:key "example query"]
+                         {:expansion/name ::bread/value
+                          :expansion/value {::bread/effects
+                                            [{:effect/name :do-stuff
+                                              :effect/description "Example effect"}]}
+                          :expansion/description
+                          "Effects returned from the dispatch method."}]
+     ::bread/effects []}
     {:dispatcher/type ::passthru
      :dispatcher/pull [:db/id :thing/slug]
      :dispatcher/key :post
