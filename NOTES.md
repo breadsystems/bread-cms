@@ -4,11 +4,11 @@ Notes on potential ideas for Bread. Almost all of this is entirely hypothetical,
 
 ## Progress
 
-- native-image with Markdown: BLOCKED
-- native-image with Datahike: BLOCKED
-- Babashka with Datahike: BLOCKED
+- native-image with Markdown: WIP
+- native-image with Datahike: WIP
+- Babashka with Datahike: ???
 - JVM on Heroku: ???
-- JVM on Fly.io: ???
+- JVM on Fly.io: WORKING
 
 ## Marx
 
