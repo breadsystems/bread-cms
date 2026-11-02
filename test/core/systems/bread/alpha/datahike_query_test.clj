@@ -68,7 +68,7 @@
 
        ;; Querying for a non-existent post
        {:post false
-        :not-found? true}
+        :content-found? false}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db
@@ -79,35 +79,12 @@
             :where [[?e :thing/slug ?slug]]}
           "non-existent-slug"]}]
 
-       ;; Querying for a non-existent post and its fields
-       {:post false
-        :not-found? true}
-       [{:expansion/name ::db/query
-         :expansion/key :post
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:thing/slug {:post/fields
-                                          [:field/key :field/lang]}]) .]
-            :in [$ ?slug]
-            :where [[?e :thing/slug ?slug]]}
-          "non-existent-slug"]}
-        {:expansion/key [:post :post/fields]
-         :expansion/name ::db/query
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:field/key :field/content])]
-            :in [$ ?p ?lang]
-            :where [[?p :post/fields ?e]
-                    [?e :field/lang ?lang]]}
-          [::bread/data :post :db/id]
-          :en]}]
-
        {:post {:thing/slug "parent-post"
                :post/fields [{:field/key :stuff :field/lang :en}
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
-        :not-found? false}
+        :content-found? true}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db
@@ -123,7 +100,7 @@
                              {:field/key :thingy :field/lang :en}
                              {:field/key :stuff :field/lang :fr}
                              {:field/key :thingy :field/lang :fr}]}
-        :not-found? false}
+        :content-found? true}
        [{:expansion/name ::db/query
          :expansion/key :post
          :expansion/db db
@@ -135,53 +112,7 @@
             :where [[?e :thing/slug ?slug]]}
           "parent-post"]}]
 
-       ;; with explicit input args (for i18n)
-       {:post {:thing/slug "parent-post"
-               :post/fields [{:field/key :thingy :field/content "thing"}
-                             {:field/key :stuff :field/content "hello"}]}
-        :not-found? false}
-       [{:expansion/name ::db/query
-         :expansion/key :post
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:thing/slug]) .]
-            :in [$ ?slug]
-            :where [[?e :thing/slug ?slug]]}
-          "parent-post"]}
-        {:expansion/name ::db/query
-         :expansion/key [:post :post/fields]
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:field/key :field/content])]
-            :in [$ ?p ?lang]
-            :where [[?p :post/fields ?e]
-                    [?e :field/lang ?lang]]}
-          100
-          :en]}]
-
-       ;; deriving input args from previous data (for i18n)
-       {:post {:db/id 100 :thing/slug "parent-post"
-               :post/fields [{:field/key :thingy :field/content "thing"}
-                             {:field/key :stuff :field/content "hello"}]}
-        :not-found? false}
-       [{:expansion/name ::db/query
-         :expansion/key :post
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:db/id :thing/slug]) .]
-            :in [$ ?slug]
-            :where [[?e :thing/slug ?slug]]}
-          "parent-post"]}
-        {:expansion/name ::db/query
-         :expansion/key [:post :post/fields]
-         :expansion/db db
-         :expansion/args
-         ['{:find [(pull ?e [:field/key :field/content])]
-           :in [$ ?p ?lang]
-           :where [[?p :post/fields ?e]
-                   [?e :field/lang ?lang]]}
-          [::bread/data :post :db/id]
-          :en]}])))
+        ,)))
 
 (comment
   (require '[kaocha.repl :as k])

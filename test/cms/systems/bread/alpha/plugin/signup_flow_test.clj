@@ -32,7 +32,7 @@
 (use-db :each db-config)
 
 (defn- ->signup-data [{:keys [::bread/data headers status]}]
-  {::bread/data (select-keys data [:validation :not-found?])
+  {::bread/data (select-keys data [:validation :content-found?])
    :headers headers
    :status status})
 
@@ -67,7 +67,7 @@
     ;; Just loading the signup page.
     {:headers {"content-type" "text/html"}
      :status 200
-     ::bread/data {:not-found? false}}
+     ::bread/data {:content-found? true}}
     {:auth-config {:secret-key AUTH-SECRET-KEY}}
     {:request-method :get
      :uri "/_/signup"
@@ -76,7 +76,7 @@
     ;; Loading the signup page with a bad code.
     {:headers {"content-type" "text/html"}
      :status 404
-     ::bread/data {:not-found? true}}
+     ::bread/data {:content-found? false}}
     {:auth-config {:secret-key AUTH-SECRET-KEY}}
     {:request-method :get
      :uri "/_/signup"
@@ -86,7 +86,7 @@
     ;; using a previously valid code.
     {:headers {"content-type" "text/html"}
      :status 404
-     ::bread/data {:not-found? true}}
+     ::bread/data {:content-found? false}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :get
      :uri "/_/signup"
@@ -95,7 +95,7 @@
     ;; Invalid signup.
     {:headers {"content-type" "text/html"}
      :status 400
-     ::bread/data {:not-found? true
+     ::bread/data {:content-found? false
                    :validation [false :signup/all-fields-required]}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :post
@@ -105,7 +105,7 @@
     ;; Invalid signup.
     {:headers {"content-type" "text/html"}
      :status 400
-     ::bread/data {:not-found? true
+     ::bread/data {:content-found? false
                    :validation [false :signup/all-fields-required]}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :post
@@ -118,7 +118,7 @@
     ;; Violating minimum password length requirement.
     {:headers {"content-type" "text/html"}
      :status 400
-     ::bread/data {:not-found? true
+     ::bread/data {:content-found? false
                    :validation [false [:auth/password-must-be-at-least 12]]}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :post
@@ -131,7 +131,7 @@
     ;; Password mismatch.
     {:headers {"content-type" "text/html"}
      :status 400
-     ::bread/data {:not-found? true
+     ::bread/data {:content-found? false
                    :validation [false :auth/passwords-must-match]}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :post
@@ -144,7 +144,7 @@
     ;; Existing username.
     {:headers {"content-type" "text/html"}
      :status 400
-     ::bread/data {:not-found? true
+     ::bread/data {:content-found? false
                    :validation [false :signup/username-exists]}}
     {:auth-config {:secret-key "UPDATED!"}}
     {:request-method :post
@@ -158,7 +158,7 @@
     {:headers {"Location" "/login"
                "content-type" "text/html"}
      :status 302
-     ::bread/data {:not-found? false
+     ::bread/data {:content-found? true
                    :validation [true nil]}}
     {:auth-config {:secret-key AUTH-SECRET-KEY}}
     {:request-method :post
@@ -200,14 +200,14 @@
 
 (deftest test-signup-flow-successful-signup
   (let [handler (config->handler {:auth-config {:secret-key AUTH-SECRET-KEY}})
-        signup {:request-method :post
-                :uri "/_/signup"
-                :params {:code "qwerty"
-                         :username "test"
-                         :password "password1234"
-                         :password-confirmation "password1234"}}]
+        prev-signup {:request-method :post
+                     :uri "/_/signup"
+                     :params {:code "qwerty"
+                              :username "test"
+                              :password "password1234"
+                              :password-confirmation "password1234"}}]
     ;; Complete successful signup
-    (-> signup handler)
+    (handler prev-signup)
     (are
       [expected req]
       (= expected
@@ -218,14 +218,14 @@
 
       ;; Code is redeemed.
       {:status 404
-       ::bread/data {:not-found? true}}
+       ::bread/data {:content-found? false}}
       {:request-method :get
        :uri "/_/signup"
        :params {:code "qwerty"}}
 
       ;; New username exists.
       {:status 400
-       ::bread/data {:not-found? false
+       ::bread/data {:content-found? true
                      :validation [false :signup/username-exists]}}
       {:request-method :post
        :uri "/_/signup"
@@ -239,6 +239,10 @@
   ,)
 
 (comment
-  (require '[kaocha.repl :as k])
+  (require '[kaocha.repl :as k]
+           '[taoensso.timbre :as timbre])
+  ;; Avoid noisy migration logs...
+  (timbre/merge-config! {:min-level :error})
   (k/run #'test-signup-flow-successful-signup {:color? false})
+  (k/run #'test-signup-flow {:color? false})
   (k/run {:color? false}))

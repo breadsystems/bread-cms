@@ -130,7 +130,7 @@
 (defmethod bread/action ::response
   [{::bread/keys [data] :as res} {:keys [default-content-type]} _]
   (-> res
-      (update :status #(or % (if (:not-found? data) 404 200)))
+      (update :status #(or % (if (false? (:content-found? data)) 404 200)))
       ;; TODO content negotiation
       (update-in [:headers "content-type"] #(or % default-content-type))))
 

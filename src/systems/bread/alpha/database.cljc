@@ -83,23 +83,6 @@
         db (db (connection app))]
     (bread/hook app ::db (if timepoint (as-of db timepoint) db))))
 
-(defn add-txs
-  "Adds the given txs as effects to be run on the app database.
-  Options include:
-  * :description - a custom description to use for :effect/description in the
-    Effect map. Default is \"Run database transactions\".
-  * :key - the :effect/key to set in the Effect map. Default is nil."
-  {:arglists '([req txs] [req txs opts])}
-  ([req txs]
-   (add-txs req txs {}))
-  ([req txs opts]
-   (bread/add-effect req {:effect/name ::transact
-                          :effect/description
-                          (:description opts "Run database transactions")
-                          :effect/key (:key opts)
-                          :conn (connection req)
-                          :txs txs})))
-
 (defn migration-key [migration]
   (reduce (fn [_ {k :migration/key}]
             (when k (reduced k)))
@@ -139,23 +122,15 @@
    :effect/description desc
    :effect/key k})
 
-(defn- data-path? [x]
-  (and (sequential? x) (= ::bread/data (first x))))
-
 (defmethod bread/expand ::query
   query-db
-  [{:expansion/keys [db args] :as expansion} data]
+  [{:expansion/keys [db args] :as expansion} _]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
         query (datalog/normalize-query query)
         find-scalar? (some #{'.} (:find query))
         flatten-many? (:flatten-many? expansion (not find-scalar?))
-        args (map (fn [arg]
-                    (if (data-path? arg)
-                      (get-in data (rest arg))
-                      arg))
-                  args)
         result (when (every? some? args)
                  (apply q db query args))
         ;; If nothing is found, set explicit false so we don't try to write

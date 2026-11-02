@@ -102,22 +102,6 @@
                                            :action/value "the value"}]}}]
       (is (= "the value" (bread/hook app :my/action))))))
 
-(deftest test-add-effect
-
-  (testing "it adds the given Effect to ::effects"
-    (are [effects app] (= effects (::bread/effects app))
-
-      [prn] (-> (bread/app)
-                (bread/add-effect prn))
-
-      [inc] (-> (bread/app)
-                (bread/add-effect inc))
-
-      [inc dec prn-str] (-> (bread/app)
-                            (bread/add-effect inc)
-                            (bread/add-effect dec)
-                            (bread/add-effect prn-str)))))
-
 (defmethod bread/effect :inc
   [{:keys [world]} _data]
   (swap! world update :count #(inc (or % 0))))
@@ -149,53 +133,6 @@
     ;; to check equality.
     (do (swap! state inc) (throw ex))
     (swap! state inc)))
-
-(deftest test-effects-retries
-
-  (let [ex (ex-info "ERROR" {})]
-    (are
-      [metadata effects]
-      (= metadata (let [state (atom 0)
-                        app (plugins->loaded
-                              [{:effects
-                                (map #(assoc % :state state) effects)}])]
-                    (->> (bread/hook app ::bread/effects!)
-                         (::bread/effects)
-                         (map meta))))
-
-      [] []
-
-      [{:retried 0
-        :errors [ex]
-        :succeeded? false}]
-      [{:effect/name ::flaky
-        :flakes 1
-        :ex ex}]
-
-      [{:retried 3
-        :errors [ex ex ex]
-        :succeeded? true}]
-      [{:effect/name ::flaky
-        :effect/retries 5
-        :flakes 3
-        :ex ex}]
-
-      [{:retried 2
-        :errors [ex ex ex]
-        :succeeded? false}
-       {:retried 1
-        :errors [ex]
-        :succeeded? true}]
-      [{:effect/name ::flaky
-        :effect/retries 2
-        :flakes 4
-        :ex ex}
-       {:effect/name ::flaky
-        :effect/retries 2
-        :flakes 4
-        :ex ex}]
-
-      )))
 
 (defmethod bread/effect ::passthru
   [{:keys [v]} _]
@@ -281,11 +218,11 @@
 
 (defmethod bread/effect ::chain.one
   [_ _]
-  {:effects [{:effect/name ::chain.two :effect/key :two}]})
+  {::bread/effects [{:effect/name ::chain.two :effect/key :two}]})
 
 (defmethod bread/effect ::chain.two
   [_ _]
-  {:effects [{:effect/name ::chain.three :effect/key :three}
+  {::bread/effects [{:effect/name ::chain.three :effect/key :three}
              {:effect/name ::chain.four :effect/key :four}]})
 
 (defmethod bread/effect ::chain.three [_ _] 3)
@@ -300,81 +237,30 @@
                 (fn [acc [k v]] (assoc acc k (deref v))) {}
                 (::bread/data (bread/hook app ::bread/effects!)))))
 
-    {:one {:effects [{:effect/key :two :effect/name ::chain.two}]}
-     :two {:effects [{:effect/key :three :effect/name ::chain.three}
-                     {:effect/key :four :effect/name ::chain.four}]}
+    {:one {::bread/effects [{:effect/key :two :effect/name ::chain.two}]}
+     :two {::bread/effects [{:effect/key :three :effect/name ::chain.three}
+                            {:effect/key :four :effect/name ::chain.four}]}
      :three 3
      :four 4}
     [{:effect/key :one :effect/name ::chain.one}]
 
     {:ZERO 0
      :FINAL 3.1415926535
-     :one {:effects [{:effect/key :two :effect/name ::chain.two}]}
-     :two {:effects [{:effect/key :three :effect/name ::chain.three}
-                     {:effect/key :four :effect/name ::chain.four}]}
+     :one {::bread/effects [{:effect/key :two :effect/name ::chain.two}]}
+     :two {::bread/effects [{:effect/key :three :effect/name ::chain.three}
+                            {:effect/key :four :effect/name ::chain.four}]}
      :three 3
      :four 4}
     [{:effect/key :ZERO :effect/name ::passthru :v 0}
      {:effect/key :one :effect/name ::chain.one}
      {:effect/key :FINAL :effect/name ::passthru :v 3.1415926535}]
 
-    ))
+    ,))
 
 (def thrown-in-effect (ex-info "Something bad happened" {}))
 
 (defmethod bread/effect ::throw [_ _]
   (throw thrown-in-effect))
-
-(deftest test-effects-meta
-  (are
-    [data effects]
-    (= data (let [app (plugins->loaded [{:effects effects}])]
-              (reduce
-                (fn [acc [k v]] (assoc acc k (meta v))) {}
-                (::bread/data (bread/hook app ::bread/effects!)))))
-
-    {} []
-
-    {:a {:succeeded? true
-         :errors []
-         :retried 0}}
-    [{:effect/name ::passthru
-      :effect/key :a
-      :v (future "I AM FROM THE FUTURE")}]
-
-    {:a {:succeeded? true
-         :errors []
-         :retried 0}}
-    [{:effect/name ::passthru
-      :effect/key :a
-      :v nil}]
-
-    ;; NOTE: If a Derefable effect can throw an exception,
-    ;; it's on the user to catch it.
-    {:a {:succeeded? true
-         :errors []
-         :retried 0}}
-    [{:effect/name ::passthru
-      :effect/key :a
-      :v (future (throw (Exception. "ERROR")))}]
-
-    ;; Any errors thrown during an effect should be caught and stored in
-    ;; metadata on a derefable around a nil value.
-    {:a {:succeeded? false
-         :errors [thrown-in-effect]
-         :retried 0}}
-    [{:effect/name ::throw
-      :effect/key :a}]
-
-    ;; Same is true of retried errors.
-    {:a {:succeeded? false
-         :errors [thrown-in-effect thrown-in-effect thrown-in-effect]
-         :retried 2}}
-    [{:effect/name ::throw
-      :effect/key :a
-      :effect/retries 2}]
-
-    ))
 
 (defmethod bread/action ::my.hook
   [_ {:keys [v]} [arg]]

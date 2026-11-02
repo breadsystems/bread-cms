@@ -90,8 +90,9 @@
 (defmethod bread/action ::require-auth
   [{:keys [headers session query-string uri] :as req} _ _]
   (let [login-uri (bread/config req :auth/login-uri)
+        forgot-uri (bread/config req :auth/forgot-password-uri)
         reset-uri (bread/config req :auth/reset-password-uri)
-        exempt? (contains? #{login-uri reset-uri} uri)
+        exempt? (contains? #{login-uri forgot-uri reset-uri} uri)
         protected? (bread/hook req ::protected-route? (not exempt?))
         anonymous? (empty? (:user session))
         next-param (name (bread/config req :auth/next-param))
@@ -406,11 +407,11 @@
           :action/description "Redirect after login"}]}})))
 
 (defmethod bread/effect ::forgot-password!
-  [{:keys [conn secret-key]} {:keys [user config]}]
+  [{:keys [conn secret-key lock-seconds]} {:keys [user]}]
   (let [primary-email (first (filter :email/primary? (:user/emails user)))
         primary-confirmed? (boolean (:email/confirmed-at primary-email))
         locked-at (:user/locked-at user)
-        locked-period-start (t/seconds-ago (:auth/lock-seconds config))
+        locked-period-start (t/seconds-ago lock-seconds)
         unlocked? (or (not locked-at) (.before locked-at locked-period-start))
         allow-reset? (and primary-confirmed? unlocked?)]
     (when allow-reset?
@@ -426,7 +427,7 @@
                             (if existing-reset
                               {:db/id (:db/id existing-reset)}
                               {:thing/created-at now}))]
-        {:effects
+        {::bread/effects
          [{:effect/name ::db/transact
            :effect/description "Create a password reset."
            :conn conn
@@ -450,7 +451,7 @@
   (let [link (reset-link (assoc data :reset/code code))
         site-name (:site/name config server-name)
         body (i18n/t i18n [:auth/reset-password-email-body site-name link])]
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from (:email/smtp-from-email config)
@@ -482,7 +483,8 @@
          :effect/description
          "Send user a reset link, if they have a confirmed email."
          :conn (db/connection req)
-         :secret-key (bread/config req :auth/secret-key)}]})))
+         :secret-key (bread/config req :auth/secret-key)
+         :lock-seconds (bread/config req :auth/lock-seconds)}]})))
 
 (defmethod bread/expand ::authenticate-reset
   [{:keys [reset-expiration-seconds lock-seconds]}
@@ -537,7 +539,7 @@
                       :reset/reset-at now
                       :thing/updated-at now}
             txs [user-tx reset-tx]]
-        {:effects
+        {::bread/effects
          [{:effect/name ::db/transact
            :conn conn
            :txs txs}]}))))

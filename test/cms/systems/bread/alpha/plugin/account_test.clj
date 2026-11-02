@@ -436,7 +436,7 @@
     {:user {:user/sessions [{:db/id 234} {:db/id 456} {:db/id 567}]}}
 
     ;; Happy path.
-    {:effects
+    {::bread/effects
      [{:effect/name ::db/transact
        :effect/description "Delete a user session."
        :effect/key :delete-session
@@ -452,7 +452,7 @@
     {:user {:user/sessions [{:db/id 123}]}}
 
     ;; Happy path; more than one session.
-    {:effects
+    {::bread/effects
      [{:effect/name ::db/transact
        :effect/description "Delete a user session."
        :effect/key :delete-session

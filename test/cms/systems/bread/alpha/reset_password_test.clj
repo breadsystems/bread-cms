@@ -201,7 +201,8 @@
         {:effect/name ::auth/forgot-password!
          :effect/description "Send user a reset link, if they have a confirmed email."
          :conn db-conn
-         :secret-key "secret"}]
+         :secret-key "secret"
+         :lock-seconds 3600}]
     (are
       [expected config req]
       (= expected (let [dispatcher {:dispatcher/type ::auth/forgot-password=>}
@@ -251,42 +252,42 @@
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
-      {:user {:db/id 123}
-       :config {:auth/lock-seconds 3600}}
+       :conn ::DBCONN
+       :lock-seconds 3600}
+      {:user {:db/id 123}}
 
       ;; User with no confirmed emails.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
-              :user/emails [{:email/address "whatever"}]}
-       :config {:auth/lock-seconds 3600}}
+              :user/emails [{:email/address "whatever"}]}}
 
       ;; Unconfirmed primary email. This is an abnormal situation, but we want to assert
       ;; assert here that both conditions (primary, confirmed) should be true.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "whatever"
-                             :email/primary? true}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/primary? true}]}}
 
       ;; Confirmed, non-primary email. Also abnormal, per above.
       nil
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "whatever"
-                             :email/confirmed-at (t/seconds-ago 1)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/confirmed-at (t/seconds-ago 1)}]}}
 
       ;; First forgot request.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -300,15 +301,15 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "someone@example.com"
                              :email/primary? true
-                             :email/confirmed-at (t/seconds-ago 1)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :email/confirmed-at (t/seconds-ago 1)}]}}
 
       ;; Subsequent forgot request.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -322,18 +323,18 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "someone@example.com"
                              :email/primary? true
                              :email/confirmed-at (t/seconds-ago 1)}]
               :reset/_user [{:db/id 456
                              :reset/code "oldcode"
-                             :thing/updated-at (t/seconds-ago 60)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :thing/updated-at (t/seconds-ago 60)}]}}
 
       ;; Subsequent forgot request; multiple confirmed emails.
-      {:effects
+      {::bread/effects
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
@@ -347,7 +348,8 @@
          :code "randomhex"}]}
       {:effect/name ::auth/forgot-password!
        :secret-key "secret"
-       :conn ::DBCONN}
+       :conn ::DBCONN
+       :lock-seconds 3600}
       {:user {:db/id 123
               :user/emails [{:email/address "primary@example.com"
                              :email/primary? true
@@ -358,8 +360,7 @@
                              :email/confirmed-at (t/seconds-ago 1)}]
               :reset/_user [{:db/id 456
                              :reset/code "oldcode"
-                             :thing/updated-at (t/seconds-ago 60)}]}
-       :config {:auth/lock-seconds 3600}}
+                             :thing/updated-at (t/seconds-ago 60)}]}}
 
       ,)))
 
@@ -369,7 +370,7 @@
     (= expected (with-redefs [random/hex (constantly "randomhex")]
                   (bread/effect effect data)))
 
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from "app@bread.systems"
@@ -389,7 +390,7 @@
      :ring/server-name "bread.systems"}
 
     ;; Without a configured :site/name.
-    {:effects
+    {::bread/effects
      [{:effect/name ::email/send!
        :effect/description "Send reset password email."
        :message {:from "alt@bread.systems"
@@ -568,15 +569,15 @@
       nil {:effect/name ::auth/reset-password!} {:validation []}
       nil {:effect/name ::auth/reset-password!} {:validation [false :whatever]}
 
-      {:effects [{:effect/name ::db/transact
-                  :conn ::DBCONN
-                  :txs [{:db/id 123
-                         ;; TODO secret-key
-                         :user/password "[:algo+password123]"
-                         :thing/updated-at !now}
-                        {:db/id 456
-                         :reset/reset-at !now
-                         :thing/updated-at !now}]}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :conn ::DBCONN
+                         :txs [{:db/id 123
+                                ;; TODO secret-key
+                                :user/password "[:algo+password123]"
+                                :thing/updated-at !now}
+                               {:db/id 456
+                                :reset/reset-at !now
+                                :thing/updated-at !now}]}]}
       {:effect/name ::auth/reset-password!
        :params {:password "password123"}
        :conn ::DBCONN
@@ -584,15 +585,15 @@
       {:validation [true nil]
        :reset {:db/id 456 :reset/user {:db/id 123}}}
 
-      {:effects [{:effect/name ::db/transact
-                  :conn ::DBCONN
-                  :txs [{:db/id 567
-                         ;; TODO secret-key
-                         :user/password "[:roll-yr-own-crypto+newpass]"
-                         :thing/updated-at !now}
-                        {:db/id 345
-                         :reset/reset-at !now
-                         :thing/updated-at !now}]}]}
+      {::bread/effects [{:effect/name ::db/transact
+                         :conn ::DBCONN
+                         :txs [{:db/id 567
+                                ;; TODO secret-key
+                                :user/password "[:roll-yr-own-crypto+newpass]"
+                                :thing/updated-at !now}
+                               {:db/id 345
+                                :reset/reset-at !now
+                                :thing/updated-at !now}]}]}
       {:effect/name ::auth/reset-password!
        :params {:password "newpass"}
        :conn ::DBCONN
