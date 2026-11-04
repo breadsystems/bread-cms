@@ -684,7 +684,45 @@
       :db/doc "Arbitrary session data."
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.authentication"}]
+      :attr/migration "migration.authentication"}
+
+     ;; Account locks
+     {:db/ident :user/account-events
+      :attr/label "Account events"
+      :db/doc "Audit trail of account events for this user"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/type
+      :attr/label "Event type"
+      :db/doc "Type of event (lock, unlock, etc.)"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/actor
+      :attr/label "Event actor"
+      :db/doc "Who enacted this event (e.g. an admin). Self when caused by failed logins."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/reason
+      :attr/label "Reason"
+      :db/doc "Reason this event was enacted, e.g. failed login"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/seconds
+      :attr/label "Effective seconds"
+      :db/doc "Snapshot of effective window (config can change)"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     ;; Event enums
+     {:db/ident :event.type/locked   :db/doc "Account locked"}
+     {:db/ident :event.type/unlocked :db/doc "Account unlocked"}
+     {:db/ident :event.type/disabled :db/doc "Account disabled"}
+     {:db/ident :event.type/enabled  :db/doc "Account enabled"}
+     ,]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
