@@ -140,6 +140,8 @@
   (q '[:find ?e :where [?e :user/username "locke"]])
   (db/transact (db/connection (:bread/app @main/system))
                [[:db/retract 91 :user/locked-at]])
+  (db/transact (db/connection (:bread/app @main/system))
+               [[:db/retractEntity 91 :db/doc "Locke is LOST"]])
 
   ;; MENU EXPANSIONS
 
