@@ -26,6 +26,10 @@
       :db/doc "Whether values of this attr are considered sensitive (e.g. :user/password)"
       :db/valueType :db.type/boolean
       :db/cardinality :db.cardinality/one}
+     {:db/ident :attr/format
+      :db/doc "Storage format for this attr"
+      :db/valueType :db.type/keyword
+      :db/cardinality :db.cardinality/one}
      {:migration/key :bread.migration/migrations
       :migration/description
       "Minimal schema for safely performing future migrations."}]
@@ -169,6 +173,7 @@
       :attr/migration "migration.users"}
      {:db/ident :user/preferences
       :attr/label "User Preferences"
+      :attr/format :edn
       :db/doc "The user's preferences, as an EDN-encoded string"
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
