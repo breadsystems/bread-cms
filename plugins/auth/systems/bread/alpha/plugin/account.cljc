@@ -23,6 +23,7 @@
   (when user
     (as-> user $
       (update $ :user/preferences edn/read-string)
+      ;; TODO filter out sessions by max-age
       (s/transform [:user/sessions s/ALL :session/data] edn/read-string $))))
 
 (defmulti effects (fn [{:keys [params]}] (keyword (:action params))))
@@ -105,6 +106,7 @@
                     :expansion/name ::db/query
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)
+                    ;; TODO infer edn/read-string here?
                     :expansion/args [user-pull id]}
         expand-user {:expansion/key :user
                      :expansion/name ::user
