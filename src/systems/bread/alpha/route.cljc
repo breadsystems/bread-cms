@@ -55,8 +55,11 @@
        (path-params router route-name)
        (bread/path router route-name)))
 
-(defn uri [app route-name thing]
-  (bread/hook app ::uri nil route-name thing))
+(defn uri
+  ([app route-name]
+   (uri app route-name nil))
+  ([app route-name thing]
+   (bread/hook app ::uri nil route-name thing)))
 
 (defmethod bread/action ::uri-fn [req _ _]
   (let [uri-helper (fn
