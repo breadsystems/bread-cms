@@ -164,6 +164,10 @@
         unlock-at-seconds (+ locked-at-seconds seconds)]
     (> unlock-at-seconds now-seconds)))
 
+(defmethod bread/action ::locked? [req _ [_ {:user/keys [locked-at]}]]
+  (let [lock-seconds (bread/config req :auth/lock-seconds)]
+    (and locked-at (account-locked? (t/now) locked-at lock-seconds))))
+
 (defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
   (let [hashed (or (:user/password user) "")
@@ -746,7 +750,10 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for auth into global i18n strings."
-       :strings (i18n/read-strings "auth.i18n.edn")}]}
+       :strings (i18n/read-strings "auth.i18n.edn")}]
+     ::locked?
+     [{:action/name ::locked?
+       :action/description "Check whether user account is locked."}]}
     :config
     #:auth{:secret-key secret-key
            :require-mfa? require-mfa?
