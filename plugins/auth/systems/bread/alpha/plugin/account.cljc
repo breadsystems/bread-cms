@@ -88,11 +88,12 @@
          :txs [[:db/retractEntity session-id]]}]})))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [data dispatcher]}]
+  [{:as req :keys [params request-method session ::bread/data]
+    {:as dispatcher :keys [dispatcher/component]} ::bread/dispatcher}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
-        query-user {:expansion/key :user
+        query-user {:expansion/key (:dispatcher/key dispatcher)
                     :expansion/name ::db/query
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)

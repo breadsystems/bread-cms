@@ -42,7 +42,8 @@
     (are
       [expected config req]
       (= expected (let [dispatcher {:dispatcher/type ::account/account=>
-                                    :dispatcher/pull [:user/attrs]}
+                                    :dispatcher/pull [:user/attrs]
+                                    :dispatcher/key :user-key}
                         {:keys [account-config auth-config]} config
                         app (plugins->loaded [db-plugin
                                               (i18n/plugin
