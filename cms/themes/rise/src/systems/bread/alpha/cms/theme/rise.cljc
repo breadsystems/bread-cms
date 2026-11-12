@@ -3,7 +3,7 @@
     [clojure.string :as string]
 
     [systems.bread.alpha.cms.theme :as theme]
-    [systems.bread.alpha.component :refer [defc Section]]
+    [systems.bread.alpha.component :as component :refer [defc Section]]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.plugin.account :as account]
     [systems.bread.alpha.plugin.email :as email]
@@ -461,45 +461,45 @@
   [:option {:value value :selected (= selected-value value)}
    (get labels value)])
 
-(defmethod Section ::account/username [{:keys [user]} _]
-  [:span.username (:user/username user)])
+(defmethod Section ::account/username [data _]
+  [:span.username (:user/username (component/thing data))])
 
 (defmethod Section ::account/account-link
-  [{:keys [user i18n] {:account/keys [account-uri]} :config} _]
+  [{:as data :keys [i18n] {:account/keys [account-uri]} :config} _]
   [:a {:href account-uri :title (:account/account-details i18n)}
-   (:user/username user)])
+   (:user/username (component/thing data))])
 
 (defmethod Section ::account/heading [{:keys [i18n]} _]
   [:h3 (:account/account i18n)])
 
-(defmethod Section ::account/name [{:keys [user i18n]} _]
+(defmethod Section ::account/name [{:as data :keys [i18n]} _]
   [:.field
    [:label {:for :name} (:account/name i18n)]
-   [:input {:id :name :name :name :value (:user/name user)}]])
+   [:input {:id :name :name :name :value (:user/name (component/thing data))}]])
 
-(defmethod Section ::account/pronouns [{:keys [user i18n]} _]
+(defmethod Section ::account/pronouns [{:as data :keys [i18n]} _]
   [:.field
    [:label {:for :pronouns} (:account/pronouns i18n)]
    [:input {:id :pronouns
             :name :pronouns
-            :value (:pronouns (:user/preferences user))
+            :value (:pronouns (:user/preferences (component/thing data)))
             :placeholder (:account/pronouns-example i18n)}]])
 
-(defmethod Section ::account/lang [{:keys [i18n lang-names supported-langs user]} _]
+(defmethod Section ::account/lang [{:as data :keys [i18n lang-names supported-langs]} _]
   (when (> (count supported-langs) 1)
     [:.field
      [:label {:for :lang} (:account/preferred-language i18n)]
      [:select {:id :lang :name :lang}
       (map (fn [k]
-             [:option {:selected (= k (:user/lang user)) :value k}
+             [:option {:selected (= k (:user/lang (component/thing data))) :value k}
               (get lang-names k (name k))])
            (sort-by name (seq supported-langs)))]]))
 
-(defmethod Section ::account/timezone [{:keys [config i18n user]} _]
+(defmethod Section ::account/timezone [{:as data :keys [config i18n]} _]
   (let [options (:account/timezone-options config)
         ;; TODO proper localization...
         labels (map #(string/replace % "_" " ") options)
-        tz (:timezone (:user/preferences user))]
+        tz (:timezone (:user/preferences (component/thing data)))]
     [:.field
      [:label {:for :timezone} (:account/timezone i18n)]
      [:select {:id :timezone :name :timezone}
@@ -523,7 +523,7 @@
         (re-find #"windows" normalized) "Windows"
         :default "Unknown OS"))))
 
-(defmethod Section ::account/sessions [{:keys [i18n session user]} _]
+(defmethod Section ::account/sessions [{:as data :keys [i18n session]} _]
   (let [date-fmt (SimpleDateFormat. (:account/date-format-default i18n))]
     [:section
      [:h3 (:account/your-sessions i18n)]
@@ -557,7 +557,7 @@
                 [:div
                  [:button {:type :submit :name :action :value "delete-session"}
                   (:auth/logout i18n)]]]))
-           (:user/sessions user))]]))
+           (:user/sessions (component/thing data)))]]))
 
 (defmethod Section ::email/settings-link
   [{:keys [i18n] {:email/keys [settings-uri]} :config} _]

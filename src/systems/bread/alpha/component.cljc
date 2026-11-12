@@ -57,8 +57,8 @@
   ;;
   )
 
-(defn queried
-  "Returns the queried thing based on the :query/key in data"
+(defn thing
+  "Returns the queried entity based on the :query/key in data"
   [data]
   (get data (:query/key data)))
 
