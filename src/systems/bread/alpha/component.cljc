@@ -57,13 +57,18 @@
   ;;
   )
 
+(defn queried
+  "Returns the queried thing based on the :query/key in data"
+  [data]
+  (get data (:query/key data)))
+
 (defn query-key
-  "Get the key at which this component should show up in ::bread/data."
+  "Returns the key at which component should show up in ::bread/data."
   [component]
   (:key (meta component)))
 
 (defn query
-  "Get the query for this component."
+  "Returns the query for component."
   [component]
   (:query (meta component)))
 
