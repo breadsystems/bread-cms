@@ -98,17 +98,18 @@
          :txs [[:db/retractEntity session-id]]}]})))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+  [{:as req :keys [params request-method session]
+    {:as dispatcher :keys [dispatcher/component]} ::bread/dispatcher}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
-        query-user {:expansion/key :user
+        query-user {:expansion/key (:dispatcher/key dispatcher)
                     :expansion/name ::db/query
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)
                     ;; TODO infer edn/read-string here?
                     :expansion/args [user-pull id]}
-        expand-user {:expansion/key :user
+        expand-user {:expansion/key (:dispatcher/key dispatcher)
                      :expansion/name ::user
                      :expansion/description "Expand user data"}]
     (if (= :post request-method)

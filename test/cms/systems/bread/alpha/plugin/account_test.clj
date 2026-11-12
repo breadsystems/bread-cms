@@ -30,11 +30,11 @@
                           123]
          :expansion/db ::FAKEDB
          :expansion/description "Query for all user account data"
-         :expansion/key :user
+         :expansion/key :user-key
          :expansion/name ::db/query}
         expand-user
         {:expansion/description "Expand user data"
-         :expansion/key :user
+         :expansion/key :user-key
          :expansion/name ::account/user}
         success-hook
         {:action/name ::ring/effect-redirect
@@ -44,7 +44,8 @@
     (are
       [expected config req]
       (= expected (let [dispatcher {:dispatcher/type ::account/account=>
-                                    :dispatcher/pull [:user/attrs]}
+                                    :dispatcher/pull [:user/attrs]
+                                    :dispatcher/key :user-key}
                         {:keys [account-config auth-config]} config
                         app (plugins->loaded [db-plugin
                                               (i18n/plugin
