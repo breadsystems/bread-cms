@@ -37,22 +37,32 @@
   "Read strings from the filesystem. If *read-eagerly* is true (the default),
   returns a plain i18n map, keyed by lang/locale; if false, returns an ILookup
   instance that dynamically reads from the filesystem on each call to (get)."
-  #?@(:clj [([path]
-             ;; TODO DEPRECATE
-             (if *read-eagerly*
-               (-> path io/resource slurp edn/read-string)
-               (reify clojure.lang.ILookup
-                 (valAt [_ k]
-                   (-> path io/resource slurp edn/read-string (get k)))
-                 (valAt [_ k not-found]
-                   (-> path io/resource slurp edn/read-string (get k not-found))))))
-            ([langs dir filename]
-             (reduce (fn [i18n lang]
-                       (let [file (io/file dir (name lang) filename)]
-                         (assoc i18n lang (when (.exists file)
-                                            (-> file slurp edn/read-string)))))
-                     {} langs))]
-           :cljs [(throw (ex-info "not implemented" {:path path}))]))
+  #?@(:clj
+       [([path]
+         ;; TODO DEPRECATE
+         (if *read-eagerly*
+           (-> path io/resource slurp edn/read-string)
+           (reify clojure.lang.ILookup
+             (valAt [_ lang]
+               (-> path io/resource slurp edn/read-string (get lang)))
+             (valAt [_ lang not-found]
+               (-> path io/resource slurp edn/read-string (get lang not-found))))))
+        ([langs dir filename]
+         (if *read-eagerly*
+           (reduce (fn [i18n lang]
+                     (let [file (io/file dir (name lang) filename)]
+                       (assoc i18n lang (when (.exists file)
+                                          (-> file slurp edn/read-string)))))
+                   {} langs)
+           (reify clojure.lang.ILookup
+             (valAt [_ lang]
+               (let [file (io/file dir (name lang) filename)]
+                 (when (.exists file)
+                   (-> file slurp edn/read-string))))
+             (valAt [_ _ not-found] not-found))))]
+           :cljs
+           [([path]
+             (throw (ex-info "not implemented" {:path path})))]))
 
 (defn supported-langs
   "Checks all supported languages in the database. Returns supported langs
