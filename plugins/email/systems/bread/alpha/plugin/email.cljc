@@ -286,7 +286,8 @@
                       allow-delete-primary?
                       allow-multiple-pending?
                       html-email-sections
-                      mailer]
+                      mailer
+                      supported-langs]
                :or {smtp-from-email (System/getenv "BREAD_SMTP_FROM_EMAIL")
                     smtp-host (System/getenv "BREAD_SMTP_HOST")
                     smtp-port (or (System/getenv "BREAD_SMTP_PORT") 587)
@@ -299,7 +300,8 @@
                     html-email-sections [::heading
                                          :flash
                                          ::emails
-                                         ::add-email]}}]
+                                         ::add-email]
+                    supported-langs [:en]}}]
   (let [config {:email/dry-run? dry-run?
                 :email/allow-delete-primary? allow-delete-primary?
                 :email/allow-multiple-pending? allow-multiple-pending?
@@ -318,5 +320,5 @@
      {::i18n/global-strings
       [{:action/name ::i18n/merge-global-strings
         :action/description "Merge strings for email page into global i18n strings."
-        :strings (i18n/read-strings "email.i18n.edn")}]}
+        :strings (i18n/read-strings supported-langs "plugins/email" "email.i18n.edn")}]}
      :config (assoc config :email/mailer mailer)}))
