@@ -16,18 +16,14 @@
 (defn db-config->app [config]
   (plugins->app [(db/plugin config)]))
 
-(defmethod bread/action ::db
-  [_ {:keys [db]} _]
-  db)
-
 (defn db->plugin [db]
-  {:hooks {::db/db [{:action/name ::db
-                        :action/description "Mock database"
-                        :db db}]}
+  {:hooks {::db/db [{:action/name ::bread/value
+                     :action/value db
+                     :action/description "Mock database"}]}
    ;; Configure a sensible connection object we can call (db conn) on.
    :config {:db/connection (reify
                              db/TransactionalDatabaseConnection
-                             (db/db [_] db))}})
+                             (db [_] db))}})
 
 (defn db-config->loaded [config]
   (-> config db-config->app bread/load-app))

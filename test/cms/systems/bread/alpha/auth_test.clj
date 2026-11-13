@@ -1031,14 +1031,12 @@
   (require '[datahike.api :as d])
   (d/create-database config)
   (d/delete-database config)
-  (require '[systems.bread.alpha.util.datalog :as datalog])
 
   (def app (plugins->loaded [(db/plugin config)]))
   (def $conn (db/connection app))
   (def $store (auth/session-store $conn))
   (satisfies? ss/SessionStore $store)
   (ss/write-session $store (random/hex 32) {:a :b})
-  (datalog/attrs @$conn)
   (db/q @$conn '{:find [(pull ?e [*]) .]
                  :in [$ ?sk]
                  :where [[?e :session/data]]})

@@ -249,11 +249,15 @@
         :db/as-of-tx? as-of-tx?}
        :hooks
        {::bread/init
-        [{:action/name ::migrate :initial migrations}
-         {:action/name ::transact-initial :txs initial-txns}
+        [{:action/name ::migrate
+          :initial migrations
+          :action/description "Run db migrations."}
+         {:action/name ::transact-initial
+          :txs initial-txns
+          :action/description "Run configured initial transactions."}
          (when query-attrs?
            {:action/name ::query-attrs
-            :action/description "Query all db attrs for schema metadata."})]
+            :action/description "Query for attribute schema."})]
         ::timepoint
         [{:action/name ::timepoint
           :action/description
