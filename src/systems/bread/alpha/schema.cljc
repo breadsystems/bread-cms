@@ -27,6 +27,7 @@
       :db/valueType :db.type/boolean
       :db/cardinality :db.cardinality/one}
      {:db/ident :attr/format
+      :attr/label "Format"
       :db/doc "Storage format for this attr"
       :db/valueType :db.type/keyword
       :db/cardinality :db.cardinality/one}
