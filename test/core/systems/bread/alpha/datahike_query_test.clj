@@ -11,30 +11,29 @@
              :db/query-attrs? false
              :db/initial-txns
              [;; init simplified schema
+              {:db/ident :attr/format
+               :db/valueType :db.type/keyword
+               :db/cardinality :db.cardinality/one
+               :db/doc "Attribute format"}
               {:db/ident :thing/slug
                :db/valueType :db.type/string
-               :db/index true
                :db/cardinality :db.cardinality/one}
               {:db/ident :post/parent
                :db/valueType :db.type/ref
-               :db/index true
                :db/cardinality :db.cardinality/one}
               {:db/ident :post/fields
                :db/valueType :db.type/ref
-               :db/index true
                :db/cardinality :db.cardinality/many}
               {:db/ident :field/key
                :db/valueType :db.type/keyword
-               :db/index true
                :db/cardinality :db.cardinality/one}
               {:db/ident :field/lang
                :db/valueType :db.type/keyword
-               :db/index true
                :db/cardinality :db.cardinality/one}
               {:db/ident :field/content
                :db/valueType :db.type/string
-               :db/index true
-               :db/cardinality :db.cardinality/one}
+               :db/cardinality :db.cardinality/one
+               :attr/format :edn}
 
               ;; init post content
               {:db/id 100
@@ -55,36 +54,36 @@
 (use-db :each config)
 
 (def $attrs-map
-  {:thing/slug
+  {:attr/format
+   {:db/ident :attr/format
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/doc "Attribute format"}
+   :thing/slug
    {:db/ident :thing/slug
     :db/valueType :db.type/string
-    :db/index true
     :db/cardinality :db.cardinality/one}
    :post/parent
    {:db/ident :post/parent
     :db/valueType :db.type/ref
-    :db/index true
     :db/cardinality :db.cardinality/one}
    :post/fields
    {:db/ident :post/fields
     :db/valueType :db.type/ref
-    :db/index true
     :db/cardinality :db.cardinality/many}
    :field/key
    {:db/ident :field/key
     :db/valueType :db.type/keyword
-    :db/index true
     :db/cardinality :db.cardinality/one}
    :field/lang
    {:db/ident :field/lang
     :db/valueType :db.type/keyword
-    :db/index true
     :db/cardinality :db.cardinality/one}
    :field/content
    {:db/ident :field/content
     :db/valueType :db.type/string
-    :db/index true
-    :db/cardinality :db.cardinality/one}})
+    :db/cardinality :db.cardinality/one
+    :attr/format :edn}})
 
 (deftest test-datahike-query
 
