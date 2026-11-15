@@ -31,11 +31,9 @@
          :expansion/db ::FAKEDB
          :expansion/description "Query for all user account data"
          :expansion/key :user
-         :expansion/name ::db/query}
-        expand-user
-        {:expansion/description "Expand user data"
-         :expansion/key :user
-         :expansion/name ::account/user}
+         :expansion/name ::db/query
+         :attr/format {:user/preferences :edn
+                       :session/data :edn}}
         success-hook
         {:action/name ::ring/effect-redirect
          :action/description "Redirect to account page after taking an account action"
@@ -60,7 +58,6 @@
 
       ;; Just loading the account page.
       {:expansions [query-user
-                    expand-user
                     {:expansion/description "Supported languages"
                      :expansion/key :supported-langs
                      :expansion/name ::bread/value
@@ -75,8 +72,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating name.
-      {:expansions
-       [query-user expand-user]
+      {:expansions [query-user]
        :effects
        [{:effect/name ::db/transact
          :effect/key :update-details
@@ -93,7 +89,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating preferences.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/key :update-details
                   :effect/description "Update account details"
@@ -113,7 +109,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating preferences; custom account-uri.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/key :update-details
                   :effect/description "Update account details"
@@ -161,7 +157,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Any custom fields on the account form are treated as preferences.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/key :update-details
                   :effect/description "Update account details"
@@ -253,7 +249,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - just long enough with custom config.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
                   :effect/key :update-details
@@ -272,7 +268,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - meets default 12-char minimum.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
                   :effect/key :update-details
@@ -291,7 +287,7 @@
        :session {:user {:db/id 123}}}
 
       ;; Updating password - meets default 12-char minimum.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name ::db/transact
                   :effect/description "Update account details"
                   :effect/key :update-details
@@ -354,7 +350,7 @@
          :session {:user {:db/id 123}}})
 
       ;; Deleting a session.
-      {:expansions [query-user expand-user]
+      {:expansions [query-user]
        :effects [{:effect/name [::account/update :delete-session]
                   :effect/description "Update account state"
                   :effect/key :delete-session

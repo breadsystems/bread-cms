@@ -2,6 +2,8 @@
   (:require
     #?(:clj [clojure.tools.logging :as log]
        :cljs ["goog.log" :as log])
+    [clojure.walk :as  walk]
+    [clojure.edn :as edn]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
@@ -16,6 +18,10 @@
 (defmulti -delete :db/type)
 (defmulti max-tx (fn [app]
                    (:db/type (bread/config app :db/config))))
+
+(defmulti deserialize (fn [fmt _v] fmt))
+
+(defmethod deserialize :edn [_ s] (edn/read-string s))
 
 (defprotocol TemporalDatabase
   (as-of [db timepoint])
@@ -124,24 +130,31 @@
 
 (defmethod bread/expand ::query
   query-db
-  [{:expansion/keys [db args] :as expansion} _]
+  [{:keys [expansion/db expansion/args attr/format] :as expansion} _]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
         query (datalog/normalize-query query)
         find-scalar? (some #{'.} (:find query))
         flatten-many? (:flatten-many? expansion (not find-scalar?))
+        ;; TODO do we need this check?
         result (when (every? some? args)
                  (apply q db query args))
-        ;; If nothing is found, set explicit false so we don't try to write
-        ;; nested data to the expansion key (e.g. at [:post :post/fields]).
-        result (or result false)
-        results? (seqable? result)]
-    (cond
-      (and (:expansion/into expansion) results?)
-      (into (:expansion/into expansion) result)
-      (and flatten-many? results?) (map first result)
-      :else result)))
+        results? (seqable? result)
+        result (cond
+                 ;; If nothing is found, set explicit false so we don't try to write
+                 ;; nested data to the expansion key (e.g. at [:post :post/fields]).
+                 (not result) false
+                 (and (:expansion/into expansion) results?)
+                 (into (:expansion/into expansion) result)
+                 (and flatten-many? results?) (map first result)
+                 :else result)]
+    ;; TODO optimize w/ specter
+    (walk/postwalk (fn [x]
+                     (if-let [fmt (and (map-entry? x) (get format (key x)))]
+                       [(key x) (deserialize fmt (val x))]
+                       x))
+                   result)))
 
 (defn- mark-sensitive-attrs! [migration]
   (doseq [{:keys [db/ident attr/sensitive?]} migration]
