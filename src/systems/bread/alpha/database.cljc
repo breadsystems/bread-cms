@@ -103,7 +103,13 @@
   (->> '[:find ?i (pull ?e [*]) :where [?e :db/ident ?i]] (q db) (into {})))
 
 (defmethod bread/action ::query-attrs [req _ _]
-  (assoc-in req [::bread/data :db/attrs] (attrs (database req))))
+  (let [all-attrs (attrs (database req))
+        fmt (into {}
+                  (map (juxt :db/ident :attr/format))
+                  (filter :attr/format (vals all-attrs)))]
+    (-> req
+        (assoc-in [::bread/data :db/attrs] all-attrs)
+        (assoc-in [::bread/data :attr/format] fmt))))
 
 (defn migration-keys
   "Returns the :migration/key of each migration that has been run on db."

@@ -156,9 +156,10 @@
 (deftest test-attrs-expansion
 
   (let [app (plugins->loaded [(db/plugin (assoc config :db/query-attrs? true))])
-        attrs (-> app ::bread/data :db/attrs)]
+        data (::bread/data app)]
     (is (= $attrs-map
-           (into {} (map (juxt key (comp #(dissoc % :db/id) val)) attrs))))))
+           (into {} (map (juxt key (comp #(dissoc % :db/id) val)) (:db/attrs data)))))
+    (is (= {:field/content :edn} (:attr/format data)))))
 
 (comment
   (require '[kaocha.repl :as k])
