@@ -90,6 +90,16 @@
                                [{:db/id 2 :thing/slug "two"}]])
        :expansion/args ['[:find [(pull ?e [...])] .]]}
 
+      ;; Passing :attr/formats automatically deserializes
+      [{:db/id 1 :field/content {:one "one"}}
+       {:db/id 2 :field/content {:two "two"}}]
+      {:expansion/name ::db/query
+       :expansion/db (mock-db [[{:db/id 1 :field/content (pr-str {:one "one"})}]
+                               [{:db/id 2 :field/content (pr-str {:two "two"})}]])
+       :expansion/args ['{:find [(pull ?e [...])]}]
+       :flatten-many? true
+       :attr/formats {:field/content :edn}}
+
       ;;
       )))
 

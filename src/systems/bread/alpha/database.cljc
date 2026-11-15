@@ -142,7 +142,7 @@
 
 (defmethod bread/expand ::query
   query-db
-  [{:keys [expansion/db expansion/args attr/format] :as expansion} _]
+  [{:keys [expansion/db expansion/args attr/formats] :as expansion} _]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
@@ -163,7 +163,7 @@
                  :else result)]
     ;; TODO optimize w/ specter
     (walk/postwalk (fn [x]
-                     (if-let [fmt (and (map-entry? x) (get format (key x)))]
+                     (if-let [fmt (and (map-entry? x) (get formats (key x)))]
                        [(key x) (deserialize fmt (val x))]
                        x))
                    result)))
