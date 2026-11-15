@@ -90,7 +90,7 @@
          :txs [[:db/retractEntity session-id]]}]})))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+  [{:as req :keys [params request-method session] ::bread/keys [data dispatcher]}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
@@ -99,8 +99,7 @@
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)
                     :expansion/args [user-pull id]
-                    :attr/format {:user/preferences :edn
-                                  :session/data :edn}}]
+                    :attr/format (:attr/format data)}]
     (if (= :post request-method)
       ;; Account update.
       (let [[effects error-key] (try

@@ -32,8 +32,8 @@
          :expansion/description "Query for all user account data"
          :expansion/key :user
          :expansion/name ::db/query
-         :attr/format {:user/preferences :edn
-                       :session/data :edn}}
+         ;; NOTE: With a real db, this will reflect schema.
+         :attr/format nil}
         success-hook
         {:action/name ::ring/effect-redirect
          :action/description "Redirect to account page after taking an account action"
