@@ -99,7 +99,7 @@
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)
                     :expansion/args [user-pull id]
-                    :attr/format (:attr/format data)}]
+                    :attr/formats (:attr/formats data)}]
     (if (= :post request-method)
       ;; Account update.
       (let [[effects error-key] (try

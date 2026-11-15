@@ -109,7 +109,7 @@
                   (filter :attr/format (vals all-attrs)))]
     (-> req
         (assoc-in [::bread/data :db/attrs] all-attrs)
-        (assoc-in [::bread/data :attr/format] fmt))))
+        (assoc-in [::bread/data :attr/formats] fmt))))
 
 (defn migration-keys
   "Returns the :migration/key of each migration that has been run on db."

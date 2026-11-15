@@ -159,7 +159,7 @@
         data (::bread/data app)]
     (is (= $attrs-map
            (into {} (map (juxt key (comp #(dissoc % :db/id) val)) (:db/attrs data)))))
-    (is (= {:field/content :edn} (:attr/format data)))))
+    (is (= {:field/content :edn} (:attr/formats data)))))
 
 (comment
   (require '[kaocha.repl :as k])

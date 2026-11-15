@@ -33,7 +33,7 @@
          :expansion/key :user
          :expansion/name ::db/query
          ;; NOTE: With a real db, this will reflect schema.
-         :attr/format nil}
+         :attr/formats nil}
         success-hook
         {:action/name ::ring/effect-redirect
          :action/description "Redirect to account page after taking an account action"
