@@ -2,6 +2,8 @@
   (:require
     #?(:clj [clojure.tools.logging :as log]
        :cljs ["goog.log" :as log])
+    [clojure.walk :as  walk]
+    [clojure.edn :as edn]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.util.logging :refer [mark-sensitve-keys!]]
@@ -16,6 +18,10 @@
 (defmulti -delete :db/type)
 (defmulti max-tx (fn [app]
                    (:db/type (bread/config app :db/config))))
+
+(defmulti deserialize (fn [fmt _v] fmt))
+
+(defmethod deserialize :edn [_ s] (edn/read-string s))
 
 (defprotocol TemporalDatabase
   (as-of [db timepoint])
@@ -93,6 +99,18 @@
   (migration-key schema/migrations)
   (migration-key schema/posts))
 
+(defn attrs [db]
+  (->> '[:find ?i (pull ?e [*]) :where [?e :db/ident ?i]] (q db) (into {})))
+
+(defmethod bread/action ::query-attrs [req _ _]
+  (let [all-attrs (attrs (database req))
+        fmt (into {}
+                  (map (juxt :db/ident :attr/format))
+                  (filter :attr/format (vals all-attrs)))]
+    (-> req
+        (assoc-in [::bread/data :db/attrs] all-attrs)
+        (assoc-in [::bread/data :attr/formats] fmt))))
+
 (defn migration-keys
   "Returns the :migration/key of each migration that has been run on db."
   [db]
@@ -124,24 +142,31 @@
 
 (defmethod bread/expand ::query
   query-db
-  [{:expansion/keys [db args] :as expansion} _]
+  [{:keys [expansion/db expansion/args attr/format] :as expansion} _]
   "Run the query given as :expansion/args against db.
   If :expansion/into is present, returns (into into-val query-result)."
   (let [[query & args] args
         query (datalog/normalize-query query)
         find-scalar? (some #{'.} (:find query))
         flatten-many? (:flatten-many? expansion (not find-scalar?))
+        ;; TODO do we need this check?
         result (when (every? some? args)
                  (apply q db query args))
-        ;; If nothing is found, set explicit false so we don't try to write
-        ;; nested data to the expansion key (e.g. at [:post :post/fields]).
-        result (or result false)
-        results? (seqable? result)]
-    (cond
-      (and (:expansion/into expansion) results?)
-      (into (:expansion/into expansion) result)
-      (and flatten-many? results?) (map first result)
-      :else result)))
+        results? (seqable? result)
+        result (cond
+                 ;; If nothing is found, set explicit false so we don't try to write
+                 ;; nested data to the expansion key (e.g. at [:post :post/fields]).
+                 (not result) false
+                 (and (:expansion/into expansion) results?)
+                 (into (:expansion/into expansion) result)
+                 (and flatten-many? results?) (map first result)
+                 :else result)]
+    ;; TODO optimize w/ specter
+    (walk/postwalk (fn [x]
+                     (if-let [fmt (and (map-entry? x) (get format (key x)))]
+                       [(key x) (deserialize fmt (val x))]
+                       x))
+                   result)))
 
 (defn- mark-sensitive-attrs! [migration]
   (doseq [{:keys [db/ident attr/sensitive?]} migration]
@@ -209,11 +234,13 @@
                      as-of-param
                      as-of-tx?
                      initial-txns
-                     migrations]
+                     migrations
+                     query-attrs?]
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
-                migrations []}} config]
+                migrations []
+                query-attrs? true}} config]
       {:config
        {:db/config config
         :db/connection connection
@@ -223,7 +250,10 @@
        :hooks
        {::bread/init
         [{:action/name ::migrate :initial migrations}
-         {:action/name ::transact-initial :txs initial-txns}]
+         {:action/name ::transact-initial :txs initial-txns}
+         (when query-attrs?
+           {:action/name ::query-attrs
+            :action/description "Query all db attrs for schema metadata."})]
         ::timepoint
         [{:action/name ::timepoint
           :action/description

@@ -1,8 +1,6 @@
 (ns systems.bread.alpha.plugin.account
   (:require
     [buddy.hashers :as hashers]
-    [clojure.edn :as edn]
-    [com.rpl.specter :as s]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -17,13 +15,6 @@
 
 (defmethod bread/action ::account-uri? [{:as req :keys [uri]} _ [protected?]]
   (or protected? (= (bread/config req :account/account-uri) uri)))
-
-(defmethod bread/expand ::user [_ {:keys [user]}]
-  ;; TODO infer from query/schema...
-  (when user
-    (as-> user $
-      (update $ :user/preferences edn/read-string)
-      (s/transform [:user/sessions s/ALL :session/data] edn/read-string $))))
 
 (defmulti effects (fn [{:keys [params]}] (keyword (:action params))))
 
@@ -97,7 +88,7 @@
          :txs [[:db/retractEntity session-id]]}]})))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session] ::bread/keys [dispatcher]}]
+  [{:as req :keys [params request-method session] ::bread/keys [data dispatcher]}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
@@ -105,10 +96,8 @@
                     :expansion/name ::db/query
                     :expansion/description "Query for all user account data"
                     :expansion/db (db/database req)
-                    :expansion/args [user-pull id]}
-        expand-user {:expansion/key :user
-                     :expansion/name ::user
-                     :expansion/description "Expand user data"}]
+                    :expansion/args [user-pull id]
+                    :attr/formats (:attr/formats data)}]
     (if (= :post request-method)
       ;; Account update.
       (let [[effects error-key] (try
@@ -123,7 +112,7 @@
               :flash (when error-key {:error-key error-key})
               :action/description
               "Redirect to account page after an error"}]}}
-          {:expansions [query-user expand-user]
+          {:expansions [query-user]
            :effects effects
            :hooks
            {::bread/render
@@ -135,7 +124,6 @@
       ;; Rendering the account page.
       {:expansions
        [query-user
-        expand-user
         {;; TODO => i18n
          :expansion/key :supported-langs
          :expansion/name ::bread/value

@@ -677,6 +677,7 @@
       :attr/migration "migration.authentication"}
      {:db/ident :session/data
       :attr/label "Session Data"
+      :attr/format :edn
       :db/doc "Arbitrary session data."
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
