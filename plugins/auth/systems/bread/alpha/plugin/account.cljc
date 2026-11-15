@@ -1,8 +1,6 @@
 (ns systems.bread.alpha.plugin.account
   (:require
     [buddy.hashers :as hashers]
-    [clojure.edn :as edn]
-    [com.rpl.specter :as s]
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
