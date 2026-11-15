@@ -1,6 +1,6 @@
 (ns systems.bread.alpha.datahike-query-test
   (:require
-    [clojure.test :refer [are deftest]]
+    [clojure.test :refer [are deftest is]]
     [systems.bread.alpha.expansion :as expansion]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
@@ -8,6 +8,7 @@
 
 (def config {:db/type :datahike
              :db/config {:store {:backend :mem :id "expand-db"}}
+             :db/query-attrs? false
              :db/initial-txns
              [;; init simplified schema
               {:db/ident :thing/slug
@@ -52,6 +53,38 @@
                               :field/content "chose"}]}]})
 
 (use-db :each config)
+
+(def $attrs-map
+  {:thing/slug
+   {:db/ident :thing/slug
+    :db/valueType :db.type/string
+    :db/index true
+    :db/cardinality :db.cardinality/one}
+   :post/parent
+   {:db/ident :post/parent
+    :db/valueType :db.type/ref
+    :db/index true
+    :db/cardinality :db.cardinality/one}
+   :post/fields
+   {:db/ident :post/fields
+    :db/valueType :db.type/ref
+    :db/index true
+    :db/cardinality :db.cardinality/many}
+   :field/key
+   {:db/ident :field/key
+    :db/valueType :db.type/keyword
+    :db/index true
+    :db/cardinality :db.cardinality/one}
+   :field/lang
+   {:db/ident :field/lang
+    :db/valueType :db.type/keyword
+    :db/index true
+    :db/cardinality :db.cardinality/one}
+   :field/content
+   {:db/ident :field/content
+    :db/valueType :db.type/string
+    :db/index true
+    :db/cardinality :db.cardinality/one}})
 
 (deftest test-datahike-query
 
@@ -113,6 +146,20 @@
           "parent-post"]}]
 
         ,)))
+
+(deftest test-attrs
+
+  (let [app (plugins->loaded [(db/plugin config)])
+        attrs (db/attrs (db/database app))]
+    (is (= $attrs-map
+           (into {} (map (juxt key (comp #(dissoc % :db/id) val)) attrs))))))
+
+(deftest test-attrs-expansion
+
+  (let [app (plugins->loaded [(db/plugin (assoc config :db/query-attrs? true))])
+        attrs (-> app ::bread/data :db/attrs)]
+    (is (= $attrs-map
+           (into {} (map (juxt key (comp #(dissoc % :db/id) val)) attrs))))))
 
 (comment
   (require '[kaocha.repl :as k])

@@ -99,6 +99,12 @@
   (migration-key schema/migrations)
   (migration-key schema/posts))
 
+(defn attrs [db]
+  (->> '[:find ?i (pull ?e [*]) :where [?e :db/ident ?i]] (q db) (into {})))
+
+(defmethod bread/action ::query-attrs [req _ _]
+  (assoc-in req [::bread/data :db/attrs] (attrs (database req))))
+
 (defn migration-keys
   "Returns the :migration/key of each migration that has been run on db."
   [db]
@@ -222,11 +228,13 @@
                      as-of-param
                      as-of-tx?
                      initial-txns
-                     migrations]
+                     migrations
+                     query-attrs?]
            :or {as-of-param :as-of
                 as-of-format "yyyy-MM-dd HH:mm:ss z" ;; TODO T
                 as-of-tx? false
-                migrations []}} config]
+                migrations []
+                query-attrs? true}} config]
       {:config
        {:db/config config
         :db/connection connection
@@ -236,7 +244,10 @@
        :hooks
        {::bread/init
         [{:action/name ::migrate :initial migrations}
-         {:action/name ::transact-initial :txs initial-txns}]
+         {:action/name ::transact-initial :txs initial-txns}
+         (when query-attrs?
+           {:action/name ::query-attrs
+            :action/description "Query all db attrs for schema metadata."})]
         ::timepoint
         [{:action/name ::timepoint
           :action/description
