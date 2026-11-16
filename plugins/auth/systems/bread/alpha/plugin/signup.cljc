@@ -5,7 +5,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth])
   (:import
@@ -79,9 +79,9 @@
     (assoc res :status 400)))
 
 (comment
-  (sha-512 "a7d190e5-d7f4-4b92-a751-3c36add92610")
-  (sha-512 ":a7d190e5-d7f4-4b92-a751-3c36add92610")
-  (sha-512 (str (System/getenv "BREAD_SECRET_KEY")
+  (sha-256 "a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-256 ":a7d190e5-d7f4-4b92-a751-3c36add92610")
+  (sha-256 (str (System/getenv "BREAD_SECRET_KEY")
                 ":a7d190e5-d7f4-4b92-a751-3c36add92610"))
   ,)
 
@@ -101,7 +101,7 @@
                                    :in [$ ?code]
                                    :where [[?e :invitation/code ?code]
                                            (not [?e :invitation/redeemer])]}
-                                 (sha-512 (str secret-key ":" (:code params)))]})
+                                 (sha-256 (str secret-key ":" (:code params)))]})
                             {:expansion/name ::check-invitation-age
                              :expansion/description
                              "Ensure invitation is sufficiently recent."

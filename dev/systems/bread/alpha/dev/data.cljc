@@ -2,7 +2,7 @@
   (:require
     [buddy.hashers :as hashers]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t])
   (:import
     [java.lang System]))
@@ -10,7 +10,7 @@
 (def ^:private secret-key (System/getenv "BREAD_SECRET_KEY"))
 
 (defn users []
-  [{:invitation/code (sha-512 (str secret-key ":" "fresh-invite"))
+  [{:invitation/code (sha-256 (str secret-key ":" "fresh-invite"))
     :invitation/invited-by "user.admin"
     :invitation/email {:email/address "test@localhost"}
     :thing/created-at (t/seconds-ago 3600)
@@ -43,7 +43,7 @@
    {:thing/created-at (t/now)
     :thing/updated-at (t/now)
     :reset/user "user.admin"
-    :reset/code (sha-512 (str secret-key ":" "reset"))}
+    :reset/code (sha-256 (str secret-key ":" "reset"))}
    {:user/username "locke"
     :user/name "John Locke"
     :user/locked-at (t/seconds-ago 10)}

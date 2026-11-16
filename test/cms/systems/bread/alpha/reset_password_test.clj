@@ -7,10 +7,10 @@
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               plugins->loaded
                                               mock-derive
-                                              mock-sha-512]]
+                                              mock-sha-256]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.email :as email]
@@ -36,7 +36,7 @@
               :in [$ ?code]
               :where [[?e :reset/code ?code]
                       (not [?e :reset/reset-at])]}
-            (mock-sha-512 code)]
+            (mock-sha-256 code)]
            :expansion/db ::FAKEDB
            :expansion/description "Find the user matching the reset code."
            :expansion/key :reset
@@ -55,7 +55,7 @@
                         app (plugins->loaded [db-plugin (auth/plugin auth-config)])
                         req* (merge app req {::bread/dispatcher dispatcher})]
                     (with-redefs [hashers/derive mock-derive
-                                  sha-512 mock-sha-512]
+                                  sha-256 mock-sha-256]
                       (bread/dispatch req*))))
 
       ;; Just loading the reset page.
@@ -236,7 +236,7 @@
   (let [!now (Date.)]
     (are
       [expected effect data]
-      (= expected (with-redefs [sha-512 mock-sha-512
+      (= expected (with-redefs [sha-256 mock-sha-256
                                 random/hex (constantly "randomhex")]
                     (binding [t/*now* !now]
                       (bread/effect effect data))))
@@ -291,7 +291,7 @@
        [{:effect/name ::db/transact
          :effect/description "Create a password reset."
          :conn ::DBCONN
-         :txs [{:reset/code "sha-512[secret:randomhex]"
+         :txs [{:reset/code "sha-256[secret:randomhex]"
                 :reset/user 123
                 :thing/updated-at !now
                 :thing/created-at !now}]}
@@ -314,7 +314,7 @@
          :effect/description "Create a password reset."
          :conn ::DBCONN
          :txs [{:db/id 456 ;; no created-at
-                :reset/code "sha-512[secret:randomhex]"
+                :reset/code "sha-256[secret:randomhex]"
                 :reset/user 123
                 :thing/updated-at !now}]}
         {:effect/name ::auth/reset-password-email!
@@ -339,7 +339,7 @@
          :effect/description "Create a password reset."
          :conn ::DBCONN
          :txs [{:db/id 456 ;; no created-at
-                :reset/code "sha-512[secret:randomhex]"
+                :reset/code "sha-256[secret:randomhex]"
                 :reset/user 123
                 :thing/updated-at !now}]}
         {:effect/name ::auth/reset-password-email!

@@ -143,8 +143,8 @@
 (defn mock-derive [pw {:keys [alg]}]
   (str "[" alg "+" pw "]"))
 
-(defn mock-sha-512 [s]
-  (str "sha-512[" s "]"))
+(defn mock-sha-256 [s]
+  (str "sha-256[" s "]"))
 
 (comment
   (def $router (map->router {"/one" {:name :one}

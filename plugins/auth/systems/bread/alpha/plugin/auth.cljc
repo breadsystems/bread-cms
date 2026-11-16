@@ -11,7 +11,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [->int format* sha-512]]
+    [systems.bread.alpha.internal.interop :refer [->int format* sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
@@ -25,7 +25,7 @@
   (db/db (db/connection req)))
 
 (defn- hash-session-key [config sk]
-  (sha-512 (str (:secret-key config) ":" sk)))
+  (sha-256 (str (:secret-key config) ":" sk)))
 
 (deftype DatalogSessionStore [config conn]
   ss/SessionStore
@@ -421,7 +421,7 @@
     (when allow-reset?
       (let [now (t/now)
             code (random/hex 32)
-            hashed (sha-512 (str secret-key ":" code))
+            hashed (sha-256 (str secret-key ":" code))
             existing-reset (->> user :reset/_user
                                 (filter (complement :reset/reset-at))
                                 first)
@@ -575,7 +575,7 @@
                       :in '[$ ?code]
                       :where '[[?e :reset/code ?code]
                                (not [?e :reset/reset-at])]}
-                     (sha-512 (str secret-key ":" (:code params "")))]}]
+                     (sha-256 (str secret-key ":" (:code params "")))]}]
     (if post?
       {:expansions
        [query-user

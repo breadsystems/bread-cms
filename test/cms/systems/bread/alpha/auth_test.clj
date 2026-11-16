@@ -10,7 +10,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
@@ -993,7 +993,7 @@
                                    :in [$ ?hash]
                                    :where [[?e :session/id ?hash]
                                            [?e :session/data ?data]]}
-                                 (sha-512 (str secret-key ":" sk))))]
+                                 (sha-256 (str secret-key ":" sk))))]
 
     (testing "write-session"
       (testing "passing a random string for session key"

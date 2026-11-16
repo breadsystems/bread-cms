@@ -5,13 +5,13 @@
 
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.signup :as signup]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.test-helpers :refer [db->plugin
                                               mock-derive
-                                              mock-sha-512
+                                              mock-sha-256
                                               plugins->loaded]])
   (:import
     [java.util Date]))
@@ -31,7 +31,7 @@
                         req* (merge app req {::bread/dispatcher dispatcher})]
                     (binding [t/*now* !now]
                       (with-redefs [hashers/derive mock-derive
-                                    sha-512 mock-sha-512]
+                                    sha-256 mock-sha-256]
                         (bread/dispatch req*)))))
 
       ;; Just loading the signup page.
@@ -45,7 +45,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[secret:qwerty]"]}
+                                      "sha-256[secret:qwerty]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -66,7 +66,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[secret:qwerty]"]}
+                                      "sha-256[secret:qwerty]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -87,7 +87,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[secret:submitted]"]}
+                                      "sha-256[secret:submitted]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
@@ -139,7 +139,7 @@
                                         :in [$ ?code]
                                         :where [[?e :invitation/code ?code]
                                                 (not [?e :invitation/redeemer])]}
-                                      "sha-512[secret:submitted]"]}
+                                      "sha-256[secret:submitted]"]}
                     {:expansion/name ::signup/check-invitation-age
                      :expansion/description "Ensure invitation is sufficiently recent."
                      :expansion/key :invitation
