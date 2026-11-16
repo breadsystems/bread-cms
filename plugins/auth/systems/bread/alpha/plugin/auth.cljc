@@ -736,6 +736,7 @@
             generous-totp-window?
             hash-algorithm
             lock-seconds
+            session-max-age-seconds
             login-uri
             max-failed-login-count
             max-password-length
@@ -753,7 +754,8 @@
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
-          lock-seconds 3600
+          lock-seconds (* 60 60)
+          session-max-age-seconds (* 72 60 60)
           next-param :next
           login-uri "/login"
           forgot-password-uri "/forgot"
@@ -803,6 +805,7 @@
            :min-password-length min-password-length
            :max-password-length max-password-length
            :lock-seconds lock-seconds
+           :session-max-age-seconds session-max-age-seconds
            :next-param next-param
            :login-uri login-uri
            :forgot-password-uri forgot-password-uri
