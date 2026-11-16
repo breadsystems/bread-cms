@@ -7,12 +7,6 @@
             [java.lang Double])))
 
 #?(:clj
-   (defn sha-512 [^String in]
-     (let [md (doto (MessageDigest/getInstance "SHA-512")
-                (.update (.getBytes in)))]
-       (apply str (map (partial format "%02x") (.digest md))))))
-
-#?(:clj
    (defn sha-256 [^String in]
      (let [md (doto (MessageDigest/getInstance "SHA-256")
                 (.update (.getBytes in)))]
@@ -47,12 +41,8 @@
      :cljs (.-sep path)))
 
 (comment
-  (require 'clojure.string)
-
   (sha-256 "")
   (sha-256 "abcd")
-  (clojure.string/starts-with? (sha-512 "") "cf83e1357eefb8bdf1542850d66d")
-  (clojure.string/starts-with? (sha-512 "hello, world!") "6c2618358da07c830b88c5af8c3")
-  (clojure.string/starts-with? (sha-512 "xyz") "cf83e1357eefb8bdf1542850d66d")
-  (clojure.string/starts-with? (sha-512 "xyz") "6c2618358da07c830b88c5af8c3")
+  (= (sha-256 "") "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+  (= (sha-256 "hello, world!") "68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728")
   ,)
