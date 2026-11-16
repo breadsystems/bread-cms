@@ -42,7 +42,7 @@
                     :in [$ ?sk]
                     :where [[?e :session/id ?sk]]}
                   hashed)
-            earliest-valid (t/seconds-ago (:max-age config))
+            earliest-valid (t/seconds-ago (:max-age-seconds config))
             valid? (when session (.after updated-at earliest-valid))]
         (when (and valid? id)
           (-> data edn/read-string (assoc :db/id id))))))
@@ -62,7 +62,7 @@
 
 (defn session-store
   ([config conn]
-   (let [default-config {:max-age (* 72 60 60)
+   (let [default-config {:max-age-seconds (* 72 60 60)
                          :secret-key (System/getenv "BREAD_SECRET_KEY")}]
      (DatalogSessionStore. (merge default-config config) conn)))
   ([conn]
