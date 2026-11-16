@@ -2,10 +2,12 @@
   (:require
     [buddy.hashers :as hashers]
 
+    [systems.bread.alpha.component :as component]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
     [systems.bread.alpha.internal.interop :refer [->int]]
+    [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.ring :as ring]
     [systems.bread.alpha.plugin.auth :as auth]
     [systems.bread.alpha.plugin.invitations :as invitations]
@@ -87,6 +89,15 @@
          :conn conn
          :txs [[:db/retractEntity session-id]]}]})))
 
+(defmethod bread/expand ::filter-sessions [{:keys [max-age-seconds]} data]
+  (let [user (component/thing data)]
+    (if-not (and max-age-seconds user)
+      user ;; presume false
+      (let [earliest-valid (t/seconds-ago max-age-seconds)
+            valid-session? (fn [{:as session :keys [thing/updated-at]}]
+                             (.after updated-at earliest-valid))]
+        (update user :user/sessions (partial filter valid-session?))))))
+
 (defmethod bread/dispatch ::account=>
   [{:as req :keys [params request-method session ::bread/data]
     {:as dispatcher :keys [dispatcher/component]} ::bread/dispatcher}]
@@ -125,6 +136,10 @@
       ;; Rendering the account page.
       {:expansions
        [query-user
+        {:expansion/key (:dispatcher/key dispatcher)
+         :expansion/name ::filter-sessions
+         :expansion/description "Filter sessions by max-age-seconds"
+         :max-age-seconds (bread/config req :auth/session-max-age-seconds)}
         {;; TODO => i18n
          :expansion/key :supported-langs
          :expansion/name ::bread/value

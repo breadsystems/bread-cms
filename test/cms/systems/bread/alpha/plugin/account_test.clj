@@ -30,10 +30,15 @@
                           123]
          :expansion/db ::FAKEDB
          :expansion/description "Query for all user account data"
-         :expansion/key :user
+         :expansion/key :user-key
          :expansion/name ::db/query
          ;; NOTE: With a real db, this will reflect schema.
          :attr/formats nil}
+        expand-user
+        {:expansion/key :user-key
+         :expansion/name ::account/filter-sessions
+         :expansion/description "Filter sessions by max-age-seconds"
+         :max-age-seconds 259200}
         success-hook
         {:action/name ::ring/effect-redirect
          :action/description "Redirect to account page after taking an account action"
@@ -59,6 +64,7 @@
 
       ;; Just loading the account page.
       {:expansions [query-user
+                    expand-user
                     {:expansion/description "Supported languages"
                      :expansion/key :supported-langs
                      :expansion/name ::bread/value
