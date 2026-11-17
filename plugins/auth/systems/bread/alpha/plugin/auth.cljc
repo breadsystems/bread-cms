@@ -151,6 +151,12 @@
       valid (assoc-in [:headers "Location"] redirect-to)
       (not valid) (assoc :status 401))))
 
+(defmethod bread/action ::reset-session-auth [{:as req :keys [session]} _ _]
+  (let [session (dissoc session :auth/user)]
+    (-> req
+        (assoc :session session)
+        (assoc-in [::bread/data :session] session))))
+
 (comment
   (def $now #inst "2025-01-01T00:00:00")
   (def $locked-at #inst "2025-01-01T00:30:00")
@@ -400,7 +406,9 @@
       :else
       {:hooks
        {::bread/expand
-        [{:action/name ::=>logged-in
+        [{:action/name ::reset-session-auth
+          :action/description "Clear session :auth/user to avoid stale account lock"}
+         {:action/name ::=>logged-in
           :action/description "Redirect after login"}]}})))
 
 (defmethod bread/effect ::forgot-password!

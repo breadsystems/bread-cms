@@ -171,6 +171,18 @@
     {:request-method :get
      :uri "/protected"}
 
+    ;; Requesting login page with a stale account lock.
+    ;; Should get :auth/user cleared in session.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session {}
+     ::bread/data {:session {}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
+    {:request-method :get
+     :uri "/login"
+     :session {:auth/user {:user/locked-at (t/now)}}}
+
     ;; Custom login URI under the /protected route tree gets exempted
     ;; (otherwise no one could ever login).
     {:status 200
