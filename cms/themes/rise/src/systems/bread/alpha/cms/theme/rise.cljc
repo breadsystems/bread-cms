@@ -396,8 +396,7 @@
    Contains settings for name, pronouns, timezone, etc. You typically won't have
    to call this component except to reference it from your route if implementing
    custom routing."
-   ;; TODO :account/user
-   :key :user
+   :key :account/user
    :query '[:db/id
             :thing/created-at
             :user/username
