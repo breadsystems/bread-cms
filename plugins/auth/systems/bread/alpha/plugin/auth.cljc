@@ -217,7 +217,7 @@
 
 (defmethod bread/action ::session
   [{:as req :keys [headers remote-addr session]} _ _]
-  ;; Only store session metadata for authenticated users to avoid writing
+  ;; Only store session metadata for authenticated users. This avoids writing
   ;; sessions to the database on every anonymous request.
   (if (:user session)
     (cond-> req
@@ -300,7 +300,12 @@
          [{:find [(list 'pull '?e user-keys) '.]
            :in '[$ ?username]
            :where '[[?e :user/username ?username]]}
-          username]}]
+          username]}
+        session-expansion
+        {:action/name ::set-session
+         :action/description "Set :session in Ring response"
+         :require-mfa? require-mfa?
+         :max-failed-login-count max-failed-login-count}]
     (cond
       ;; Logout - destroy session
       (and post? logout?)
@@ -327,11 +332,7 @@
          :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response"
-          :require-mfa? require-mfa?
-          :max-failed-login-count max-failed-login-count}]}}
+       {::bread/expand [session-expansion]}}
 
       (and get? setup-two-factor?)
       {:expansions
@@ -374,11 +375,7 @@
                         :conn (db/connection req)
                         :effect/description "Persist TOTP key"})]
          :hooks
-         {::bread/expand
-          [{:action/name ::set-session
-            :action/description "Set :session in Ring response."
-            :require-mfa? require-mfa?
-            :max-failed-login-count max-failed-login-count}]}})
+         {::bread/expand [session-expansion]}})
 
       ;; Login
       post?
@@ -398,11 +395,7 @@
          :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response."
-          :require-mfa? require-mfa?
-          :max-failed-login-count max-failed-login-count}]}}
+       {::bread/expand [session-expansion]}}
 
       :else
       {:hooks
