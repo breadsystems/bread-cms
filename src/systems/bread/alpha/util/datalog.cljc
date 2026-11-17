@@ -169,7 +169,6 @@
        (migrations $db))
   (latest-migration $db)
 
-  (attrs $db)
   (attr $db :post/fields)
   (doc $db :post/fields)
 

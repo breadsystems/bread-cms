@@ -94,13 +94,13 @@
     (if-not (and max-age-seconds user)
       user ;; presume false
       (let [earliest-valid (t/seconds-ago max-age-seconds)
-            valid-session? (fn [{:as session :keys [thing/updated-at]}]
+            valid-session? (fn [{:keys [thing/updated-at]}]
                              (.after updated-at earliest-valid))]
         (update user :user/sessions (partial filter valid-session?))))))
 
 (defmethod bread/dispatch ::account=>
   [{:as req :keys [params request-method session ::bread/data]
-    {:as dispatcher :keys [dispatcher/component]} ::bread/dispatcher}]
+    {:as dispatcher} ::bread/dispatcher}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
