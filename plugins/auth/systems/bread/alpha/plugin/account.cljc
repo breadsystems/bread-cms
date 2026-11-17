@@ -92,7 +92,7 @@
 (defmethod bread/expand ::filter-sessions [{:keys [max-age-seconds]} data]
   (let [user (component/thing data)]
     (if-not (and max-age-seconds user)
-      user ;; presume false
+      user
       (let [earliest-valid (t/seconds-ago max-age-seconds)
             valid-session? (fn [{:keys [thing/updated-at]}]
                              (.after updated-at earliest-valid))]
