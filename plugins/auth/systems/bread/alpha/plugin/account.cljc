@@ -99,8 +99,7 @@
         (update user :user/sessions (partial filter valid-session?))))))
 
 (defmethod bread/dispatch ::account=>
-  [{:as req :keys [params request-method session ::bread/data]
-    {:as dispatcher} ::bread/dispatcher}]
+  [{:as req :keys [params request-method session ::bread/data ::bread/dispatcher]}]
   (let [id (:db/id (:user session))
         pull (:dispatcher/pull dispatcher)
         user-pull {:find [(list 'pull '?e pull) '.] :in '[$ ?e]}
