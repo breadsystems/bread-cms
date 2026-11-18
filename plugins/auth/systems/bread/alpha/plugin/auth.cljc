@@ -69,7 +69,6 @@
    (session-store {} conn)))
 
 (comment
-  (random/base64 512)
   (URLEncoder/encode "/")
   (URLEncoder/encode "/destination")
   (URLEncoder/encode "/destination?param=1")
