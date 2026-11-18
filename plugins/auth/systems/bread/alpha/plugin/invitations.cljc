@@ -7,7 +7,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [sha-512 ->int format*]]
+    [systems.bread.alpha.internal.interop :refer [sha-256 ->int format*]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.plugin.auth :as auth]
@@ -96,7 +96,7 @@
     (let [email (:email params)
           code (random/url-part 32)
           now (t/now)
-          invitation-tx {:invitation/code (sha-512 (str secret-key ":" code))
+          invitation-tx {:invitation/code (sha-256 (str secret-key ":" code))
                          :invitation/invited-by (:db/id user)
                          :invitation/email {:email/address email
                                             :thing/created-at now
@@ -126,7 +126,7 @@
           code (random/url-part 32)
           now (t/now)
           invitation-tx {:db/id id
-                         :invitation/code (sha-512 (str secret-key ":" code))
+                         :invitation/code (sha-256 (str secret-key ":" code))
                          :thing/updated-at now}
           invitation (first (filter #(= id (:db/id %)) (:invitation/_invited-by user)))
           to (:email/address (:invitation/email invitation))

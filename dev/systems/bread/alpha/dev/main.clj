@@ -136,6 +136,20 @@
                [?p :thing/slug ?slug]]}
      "hello")
 
+  ;; LOCKED ACCOUNT
+  (q '[:find ?e :where [?e :user/username "locke"]])
+  (db/transact (db/connection (:bread/app @main/system))
+               [[:db/retract 91 :user/locked-at]])
+  (db/transact (db/connection (:bread/app @main/system))
+               [[:db/retractEntity 91]])
+
+  (q '[:find (pull ?e [:db/id :user/username :user/locked-at :user/failed-login-count])
+       :where [?e :user/locked-at]])
+  (q '[:find (pull ?e [*])
+       :where [?e :user/username]])
+  (db/transact (db/connection (:bread/app @main/system))
+               [[:db/retract 90 :user/locked-at]])
+
   ;; MENU EXPANSIONS
 
   (q '{:find [(pull ?e [:db/id

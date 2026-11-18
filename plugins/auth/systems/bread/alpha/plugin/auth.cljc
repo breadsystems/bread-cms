@@ -11,7 +11,7 @@
     [systems.bread.alpha.database :as db]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.i18n :as i18n]
-    [systems.bread.alpha.internal.interop :refer [->int format* sha-512]]
+    [systems.bread.alpha.internal.interop :refer [->int format* sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.email :as email]
     [systems.bread.alpha.ring :as ring])
@@ -25,7 +25,7 @@
   (db/db (db/connection req)))
 
 (defn- hash-session-key [config sk]
-  (sha-512 (str (:secret-key config) ":" sk)))
+  (sha-256 (str (:secret-key config) ":" sk)))
 
 (deftype DatalogSessionStore [config conn]
   ss/SessionStore
@@ -42,7 +42,7 @@
                     :in [$ ?sk]
                     :where [[?e :session/id ?sk]]}
                   hashed)
-            earliest-valid (t/seconds-ago (:max-age config))
+            earliest-valid (t/seconds-ago (:max-age-seconds config))
             valid? (when session (.after updated-at earliest-valid))]
         (when (and valid? id)
           (-> data edn/read-string (assoc :db/id id))))))
@@ -62,14 +62,13 @@
 
 (defn session-store
   ([config conn]
-   (let [default-config {:max-age (* 72 60 60)
+   (let [default-config {:max-age-seconds (* 72 60 60)
                          :secret-key (System/getenv "BREAD_SECRET_KEY")}]
      (DatalogSessionStore. (merge default-config config) conn)))
   ([conn]
    (session-store {} conn)))
 
 (comment
-  (random/base64 512)
   (URLEncoder/encode "/")
   (URLEncoder/encode "/destination")
   (URLEncoder/encode "/destination?param=1")
@@ -151,6 +150,12 @@
       valid (assoc-in [:headers "Location"] redirect-to)
       (not valid) (assoc :status 401))))
 
+(defmethod bread/action ::reset-session-auth [{:as req :keys [session]} _ _]
+  (let [session (dissoc session :auth/user)]
+    (-> req
+        (assoc :session session)
+        (assoc-in [::bread/data :session] session))))
+
 (comment
   (def $now #inst "2025-01-01T00:00:00")
   (def $locked-at #inst "2025-01-01T00:30:00")
@@ -163,6 +168,10 @@
         locked-at-seconds (/ (inst-ms locked-at) 1000.0)
         unlock-at-seconds (+ locked-at-seconds seconds)]
     (> unlock-at-seconds now-seconds)))
+
+(defmethod bread/action ::locked? [req _ [_ {:user/keys [locked-at]}]]
+  (let [lock-seconds (bread/config req :auth/lock-seconds)]
+    (and locked-at (account-locked? (t/now) locked-at lock-seconds))))
 
 (defmethod bread/expand ::authenticate
   [{:keys [plaintext-password lock-seconds]} {user :auth/result}]
@@ -213,7 +222,7 @@
 
 (defmethod bread/action ::session
   [{:as req :keys [headers remote-addr session]} _ _]
-  ;; Only store session metadata for authenticated users to avoid writing
+  ;; Only store session metadata for authenticated users. This avoids writing
   ;; sessions to the database on every anonymous request.
   (if (:user session)
     (cond-> req
@@ -296,7 +305,12 @@
          [{:find [(list 'pull '?e user-keys) '.]
            :in '[$ ?username]
            :where '[[?e :user/username ?username]]}
-          username]}]
+          username]}
+        session-expansion
+        {:action/name ::set-session
+         :action/description "Set :session in Ring response"
+         :require-mfa? require-mfa?
+         :max-failed-login-count max-failed-login-count}]
     (cond
       ;; Logout - destroy session
       (and post? logout?)
@@ -323,11 +337,7 @@
          :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response"
-          :require-mfa? require-mfa?
-          :max-failed-login-count max-failed-login-count}]}}
+       {::bread/expand [session-expansion]}}
 
       (and get? setup-two-factor?)
       {:expansions
@@ -370,11 +380,7 @@
                         :conn (db/connection req)
                         :effect/description "Persist TOTP key"})]
          :hooks
-         {::bread/expand
-          [{:action/name ::set-session
-            :action/description "Set :session in Ring response."
-            :require-mfa? require-mfa?
-            :max-failed-login-count max-failed-login-count}]}})
+         {::bread/expand [session-expansion]}})
 
       ;; Login
       post?
@@ -394,16 +400,14 @@
          :lock-seconds lock-seconds
          :conn (db/connection req)}]
        :hooks
-       {::bread/expand
-        [{:action/name ::set-session
-          :action/description "Set :session in Ring response."
-          :require-mfa? require-mfa?
-          :max-failed-login-count max-failed-login-count}]}}
+       {::bread/expand [session-expansion]}}
 
       :else
       {:hooks
        {::bread/expand
-        [{:action/name ::=>logged-in
+        [{:action/name ::reset-session-auth
+          :action/description "Clear session :auth/user to avoid stale account lock"}
+         {:action/name ::=>logged-in
           :action/description "Redirect after login"}]}})))
 
 (defmethod bread/effect ::forgot-password!
@@ -417,7 +421,7 @@
     (when allow-reset?
       (let [now (t/now)
             code (random/hex 32)
-            hashed (sha-512 (str secret-key ":" code))
+            hashed (sha-256 (str secret-key ":" code))
             existing-reset (->> user :reset/_user
                                 (filter (complement :reset/reset-at))
                                 first)
@@ -571,7 +575,7 @@
                       :in '[$ ?code]
                       :where '[[?e :reset/code ?code]
                                (not [?e :reset/reset-at])]}
-                     (sha-512 (str secret-key ":" (:code params "")))]}]
+                     (sha-256 (str secret-key ":" (:code params "")))]}]
     (if post?
       {:expansions
        [query-user
@@ -681,7 +685,45 @@
       :db/doc "Arbitrary session data."
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
-      :attr/migration "migration.authentication"}]
+      :attr/migration "migration.authentication"}
+
+     ;; Account locks
+     {:db/ident :user/account-events
+      :attr/label "Account events"
+      :db/doc "Audit trail of account events for this user"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/many
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/type
+      :attr/label "Event type"
+      :db/doc "Type of event (lock, unlock, etc.)"
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/actor
+      :attr/label "Event actor"
+      :db/doc "Who enacted this event (e.g. an admin). Self when caused by failed logins."
+      :db/valueType :db.type/ref
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/reason
+      :attr/label "Reason"
+      :db/doc "Reason this event was enacted, e.g. failed login"
+      :db/valueType :db.type/string
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     {:db/ident :event/seconds
+      :attr/label "Effective seconds"
+      :db/doc "Snapshot of effective window (config can change)"
+      :db/valueType :db.type/number
+      :db/cardinality :db.cardinality/one
+      :attr/migration "migration.authentication"}
+     ;; Event enums
+     {:db/ident :event.type/locked   :db/doc "Account locked"}
+     {:db/ident :event.type/unlocked :db/doc "Account unlocked"}
+     {:db/ident :event.type/disabled :db/doc "Account disabled"}
+     {:db/ident :event.type/enabled  :db/doc "Account enabled"}
+     ,]
 
     {:type :bread/migration
      :migration/dependencies #{:bread.migration/migrations
@@ -694,6 +736,7 @@
             generous-totp-window?
             hash-algorithm
             lock-seconds
+            session-max-age-seconds
             login-uri
             max-failed-login-count
             max-password-length
@@ -711,7 +754,8 @@
           max-password-length 72
           hash-algorithm :bcrypt+blake2b-512
           max-failed-login-count 5
-          lock-seconds 3600
+          lock-seconds (* 60 60)
+          session-max-age-seconds (* 72 60 60)
           next-param :next
           login-uri "/login"
           forgot-password-uri "/forgot"
@@ -747,7 +791,10 @@
      ::i18n/global-strings
      [{:action/name ::i18n/merge-global-strings
        :action/description "Merge strings for auth into global i18n strings."
-       :strings (i18n/read-strings "auth.i18n.edn")}]}
+       :strings (i18n/read-strings "auth.i18n.edn")}]
+     ::locked?
+     [{:action/name ::locked?
+       :action/description "Check whether user account is locked."}]}
     :config
     #:auth{:secret-key secret-key
            :require-mfa? require-mfa?
@@ -758,6 +805,7 @@
            :min-password-length min-password-length
            :max-password-length max-password-length
            :lock-seconds lock-seconds
+           :session-max-age-seconds session-max-age-seconds
            :next-param next-param
            :login-uri login-uri
            :forgot-password-uri forgot-password-uri

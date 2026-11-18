@@ -74,12 +74,6 @@
                      (cons attr pull)))
                  pull attrs))))
 
-(defn attrs
-  "Get all schema data available about every attr present in db"
-  [db]
-  (map first (db/q db '{:find [(pull ?e [*])]
-                        :where [[?e :db/ident _]]})))
-
 (defn attr
   "Get all schema data available about attr itself"
   [db attr]
@@ -154,13 +148,9 @@
              :where [[?e :migration/key ?key ?inst]
                      [?e :migration/description ?desc]]})))
 
-(defmethod bread/action ::attrs
-  [req _ _]
-  (attrs (db/database req)))
-
 (defmethod bread/action ::attrs-map
   [req _ _]
-  (into {} (map (juxt :db/ident identity)) (bread/hook req ::bread/attrs nil)))
+  (get-in req [::bread/data :db/attrs]))
 
 (comment
 
@@ -179,7 +169,6 @@
        (migrations $db))
   (latest-migration $db)
 
-  (attrs $db)
   (attr $db :post/fields)
   (doc $db :post/fields)
 

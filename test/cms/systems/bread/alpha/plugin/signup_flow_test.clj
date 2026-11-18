@@ -7,7 +7,7 @@
                                               use-db]]
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.plugin.invitations :as invitations]
     [systems.bread.alpha.plugin.signup :as signup]
@@ -22,10 +22,10 @@
    :db/migrations (conj schema/initial auth/schema invitations/schema)
    :db/initial-txns [{:thing/created-at (t/now)
                       :thing/updated-at (t/now)
-                      :invitation/code (sha-512 (str AUTH-SECRET-KEY ":" "qwerty"))}
+                      :invitation/code (sha-256 (str AUTH-SECRET-KEY ":" "qwerty"))}
                      {:thing/created-at (t/now)
                       :thing/updated-at (t/now)
-                      :invitation/code (sha-512 (str AUTH-SECRET-KEY ":" "validcode"))}
+                      :invitation/code (sha-256 (str AUTH-SECRET-KEY ":" "validcode"))}
                      {:user/username "existing"}]
    :db/config {:store {:backend :mem :id "signup-test-db"}}})
 

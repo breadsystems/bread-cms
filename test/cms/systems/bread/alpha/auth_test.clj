@@ -10,7 +10,7 @@
     [systems.bread.alpha.core :as bread]
     [systems.bread.alpha.defaults :as defaults]
     [systems.bread.alpha.database :as db]
-    [systems.bread.alpha.internal.interop :refer [sha-512]]
+    [systems.bread.alpha.internal.interop :refer [sha-256]]
     [systems.bread.alpha.internal.time :as t]
     [systems.bread.alpha.route :as route]
     [systems.bread.alpha.schema :as schema]
@@ -170,6 +170,18 @@
      :test/body  [:p "response body"]}
     {:request-method :get
      :uri "/protected"}
+
+    ;; Requesting login page with a stale account lock.
+    ;; Should get :auth/user cleared in session.
+    {:status 200
+     :headers {"content-type" "text/html"}
+     :session {}
+     ::bread/data {:session {}}
+     :body [:p "login page"]}
+    {:test/body [:p "login page"]}
+    {:request-method :get
+     :uri "/login"
+     :session {:auth/user {:user/locked-at (t/now)}}}
 
     ;; Custom login URI under the /protected route tree gets exempted
     ;; (otherwise no one could ever login).
@@ -993,7 +1005,7 @@
                                    :in [$ ?hash]
                                    :where [[?e :session/id ?hash]
                                            [?e :session/data ?data]]}
-                                 (sha-512 (str secret-key ":" sk))))]
+                                 (sha-256 (str secret-key ":" sk))))]
 
     (testing "write-session"
       (testing "passing a random string for session key"
@@ -1031,14 +1043,12 @@
   (require '[datahike.api :as d])
   (d/create-database config)
   (d/delete-database config)
-  (require '[systems.bread.alpha.util.datalog :as datalog])
 
   (def app (plugins->loaded [(db/plugin config)]))
   (def $conn (db/connection app))
   (def $store (auth/session-store $conn))
   (satisfies? ss/SessionStore $store)
   (ss/write-session $store (random/hex 32) {:a :b})
-  (datalog/attrs @$conn)
   (db/q @$conn '{:find [(pull ?e [*]) .]
                  :in [$ ?sk]
                  :where [[?e :session/data]]})

@@ -62,8 +62,8 @@
 (defn plugin
   ([]
    (plugin {}))
-  ([{:users/keys [data-key]
-     :or {data-key :user}}]
+  ([{:keys [data-key]
+     :or {data-key :session/user}}]
    {:hooks
     {::bread/request
      [{:action/name ::query
