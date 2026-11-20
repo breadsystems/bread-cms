@@ -140,7 +140,8 @@
   (assoc-in req [::bread/data :hook] (fn [h & args]
                                        (apply bread/hook req h args))))
 
-(defmulti Section (fn [_data section-type] section-type))
+(defmulti Section (fn [_data section]
+                    (if (map? section) (:section section) section)))
 
 (defmethod Section :default [data section]
   (if (fn? section) (section data) section))
